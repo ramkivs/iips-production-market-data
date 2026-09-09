@@ -6,13 +6,14 @@
 > No phase is promoted by technical completion, by authority clearance, or by the passage of
 > time. Every gate requires an **explicit acceptance act** with its minimum evidence.
 
-**Current formal gate status: 5 of 18 accepted.**
+**Current formal gate status: 6 of 18 accepted.**
 **P00 is ACCEPTED** — see `P00_GATE_ACCEPTANCE.md` (checkpoint `d29ad2f`).
 **P01 is ACCEPTED** — see `../p01/P01_GATE_ACCEPTANCE.md` (package `547de1b`).
 **P02 is ACCEPTED** — see `../p02/P02_GATE_ACCEPTANCE.md` (package `2dd43cd`).
 **P03 is ACCEPTED** — see `../p03/P03_GATE_ACCEPTANCE.md` (checkpoint `d99c557`).
 **P04 is ACCEPTED** — see `../p04/P04_GATE_ACCEPTANCE.md` (package `6ec3b288c8deeee317a63341297bd33b9a090f4f`).
-**P05–P17 remain NOT ACCEPTED.**
+**P05 is ACCEPTED** — see `../p05/P05_GATE_ACCEPTANCE.md` (pinned baseline `cdc684435ad41982b49f832e37d1c153866da6e8`). ⚠ **PIT repeatability = MISSING / NOT DEMONSTRATED — recorded and open, not discharged. P05-04 `NOT_AUTHORIZED`.**
+**P06–P17 remain NOT ACCEPTED.**
 
 Gate names and intents derive from the tracker's *Phase Gates* sheet (read-only) and the
 corrected D4-B phase taxonomy (`docs/d4/D4_12_PHASE_SEQUENCE.md`).
@@ -37,7 +38,7 @@ baseline**: *phase-specific tests + artifacts + lineage/evidence + concessions r
 | **P02** | Provider abstraction/entitlement gate | Provider-neutral adapter contracts; explicit licensing/entitlement | Adapter contract; entitlement model; provider identity never surfaced | P01 ✅ | **YES** | No | **✅ ACCEPTED** |
 | **P03** | Security gate | Provider credentials, service identities, tenant isolation | Secrets handling; tenant scoping proof; ⚠ M-5 limitation recorded | P01 ✅, P02 ✅ | **YES** | No | **✅ ACCEPTED** |
 | **P04** | Identity/master gate | Instrument identity, mappings, listings | Mapping records; versioning; audit log; **OI-08 + OI-09 decided**; CSIP non-regression | P02 ✅, P03 ✅ | ⚠ Bounded — see `../p04/P04_GATE_ACCEPTANCE.md` §4.2 | No | **✅ ACCEPTED** |
-| **P05** | Acquisition gate | Deterministic/local ingestion first, then provider | **Exact namespace token recorded**; PIT repeatability; degraded-state classification | P02, P04 | Not yet | No | **NO** |
+| **P05** | Acquisition gate | Deterministic/local ingestion first, then provider | **Exact namespace token recorded**; PIT repeatability; degraded-state classification | P02 ✅, P04 ✅ | ⚠ **PIT repeatability MISSING / NOT DEMONSTRATED — accepted with the gap recorded and open, see `../p05/P05_GATE_ACCEPTANCE.md` §4.5** | No | **✅ ACCEPTED** |
 | **P06** | Canonical pipeline gate | Normalize provider payloads into governed canonical form | **Token recorded**; C1–C6 collision guard evidence; 13-engine oracle byte-identity | P05 | Not yet | No | **NO** |
 | **P07** | Data quality gate | Detect missing, stale, malformed, contradictory, out-of-order data | Quality classification; completeness; **no coercion** proof | P05, P06 | Not yet | **YES** (C7, C8) | **NO** |
 | **P08** | Historical/PIT gate | Historical and PIT semantics; adjusted/unadjusted series | ADR-02 evidence: byte-identical golden replay; vintage ambiguity detection | P06, P07 | Not yet | **YES** (C3, C4, C11) | **NO** |
@@ -87,5 +88,15 @@ acceptance covers **P04 specification only**; **OI-08 is RESOLVED (1:N)** and **
 (FIGI/OpenFIGI)**, while ⚠ **OI-P04-03 remains OPEN and bounds implementation**, and
 **DO-P04-1…DO-P04-5 remain deferred**.
 
-**All other gates (P05–P17) remain NOT ACCEPTED.** No further gate is accepted by this
+**P05 — Acquisition gate — was subsequently ACCEPTED** by the explicit **A3** act recorded in
+`../p05/P05_GATE_ACCEPTANCE.md` (acceptor **Ramakrishnan V. S. (Ramki)**, pinned baseline
+`cdc684435ad41982b49f832e37d1c153866da6e8`). That acceptance covers **P05-01 implementation
+plus the P05-02 and P05-03 specification / adapter-contract packages**. ⚠ **PIT repeatability —
+a P05 minimum-evidence item — is MISSING / NOT DEMONSTRATED**; the A3 decision accepts P05 with
+that gap **recorded and open**, and the gap does not become evidence because acceptance
+occurred. ⚠ **P05-04 remains `NOT_AUTHORIZED` with no completion evidence (D9 N-3)**; provider
+execution and licensed historical acquisition remain **`NOT_AUTHORIZED` (N-1 / N-2)**;
+**OI-P04-03, OI-P04-04 and DEP-P01-04 remain OPEN**.
+
+**All other gates (P06–P17) remain NOT ACCEPTED.** No further gate is accepted by this
 document, and none is promoted automatically.

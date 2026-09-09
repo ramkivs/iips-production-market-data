@@ -1,5 +1,20 @@
 # PROGRAM STATE — SESSION RECOVERY MANIFEST
 
+> **▶ CURRENT AUTHORITY ACT: P05 GATE ACCEPTED — EXPLICIT A3 ACCEPTANCE ACT**
+> (`docs/p05/P05_GATE_ACCEPTANCE.md`, recorded **2026-09-10** against pinned baseline
+> `cdc684435ad41982b49f832e37d1c153866da6e8`). **A3 acceptor = Ramakrishnan V. S. (Ramki)**
+> (`A3-P05-GATE-ACCEPTOR-DESIGNATION`, `docs/p00/P00_DECISION_LOG.md` §7/§7.1). Authority
+> decision selected: **ACCEPT P05**. Boundary applied: the committed
+> `docs/p05/P05_ACCEPTANCE_CRITERIA.md` (122 criteria). **Formal gate status 5 of 18 → 6 of 18.**
+> Supersedes the D9 block below **as to P05 acceptance state only**; D9 remains authoritative and
+> unedited for entry/authorization scope and for every boundary **N-1…N-7**.
+> ⚠ **PIT REPEATABILITY = MISSING / NOT DEMONSTRATED — recorded and open, NOT discharged by this
+> acceptance.** ⚠ **P05-04 = `NOT_AUTHORIZED` / NO COMPLETION EVIDENCE (D9 N-3)** · **provider
+> execution = `NOT_AUTHORIZED` (N-1)** · **licensed historical acquisition = `NOT_AUTHORIZED`
+> (N-2)** · **CERTIFICATION = `NONE_GRANTED`** · **PRODUCTION ACTIVATION = `NOT_AUTHORIZED`** ·
+> **P16 not reached**. Acceptance is **not** authorization: this act confers no execution
+> authority of any kind.
+>
 > **▶ CURRENT AUTHORITY ACT: D9 — P05 ENTRY / EXPLICIT AUTHORIZATION**
 > (`docs/d9/D9_P05_ENTRY_AUTHORIZATION.md`, recorded **2026-09-09** against baseline
 > `efe33eae287d2181cfdd5a838b0d9e5112fcdad3`). **P05 — Market Data Acquisition & Ingestion is
@@ -44,7 +59,7 @@
 | `program_status` | **`AUTHORIZED_TO_PROCEED`** |
 | `implementation_status` | **`AUTHORIZED_TO_PROCEED`** — currently executable: **P00 only** |
 | `certification_status` | **`NONE_GRANTED`** |
-| `formal_gate_status` | **5 of 18 accepted — P00, P01, P02, P03, P04 ACCEPTED**; P05–P17 NOT ACCEPTED |
+| `formal_gate_status` | **6 of 18 accepted — P00, P01, P02, P03, P04, P05 ACCEPTED**; P06–P17 NOT ACCEPTED |
 | `production_activation_status` | **`NOT_AUTHORIZED`** |
 
 ---
@@ -218,6 +233,50 @@ explicit acceptance act by a named A3 gate acceptor** — *no automatic promotio
 
 ---
 
+## 6f. P05 status — ACCEPTED (explicit A3 act)
+
+# **ACCEPTED**
+
+> ⚠ **SUPERSEDES §6e as to P05 acceptance state only — §6e is left unedited as the record of its
+> own moment.** D9 remains authoritative and unedited for entry/authorization scope and for
+> boundaries **N-1…N-7**.
+
+Explicit **A3** acceptance act recorded in `docs/p05/P05_GATE_ACCEPTANCE.md` against pinned
+baseline `cdc684435ad41982b49f832e37d1c153866da6e8`. **A3 acceptor = Ramakrishnan V. S. (Ramki)**.
+Authority decision selected: **ACCEPT P05**. Acceptance boundary = the committed
+`docs/p05/P05_ACCEPTANCE_CRITERIA.md` (blob `480a4c9630152606a7b5f182dce1bbb3f7477f7d`,
+**122 criteria**).
+
+| Field | Value |
+|---|---|
+| `p05_acceptance` | **`ACCEPTED`** *(prior state `NOT_ACCEPTED`)* |
+| `formal_gate_status` | **6 of 18 accepted** — P00, P01, P02, P03, P04, P05 |
+| **Scope accepted** | **P05-01** implemented deterministic/local feed (evidence reviewed) · **P05-02** specification + adapter-contract **LA-1…LA-31** · **P05-03** specification + adapter-contract **HA-1…HA-35** |
+| **P05 is ONE gate** | Spanning **P05-01…P05-04** together (criteria **A-1/A-2**); no work item severed |
+| **PIT repeatability** | ⚠ # **`MISSING / NOT DEMONSTRATED`** — a P00 minimum-evidence item (`P00_GATE_MODEL.md`:40, criteria **B-2**). **Recorded and open. NOT discharged by this acceptance; the gap does not become evidence because acceptance occurred** (`P05_GATE_ACCEPTANCE.md` §4.5 **PIT-1…PIT-7**). Obligation travels to **P08** undischarged |
+| **Namespace token** | ✅ Evidenced — `MD:`, `MD:<domain>.<field>`, version `1.0` (**B-1**) |
+| **Degraded-state classification** | ✅ Evidenced — `classifyQuality` (`p05/src/validate.js`:286) (**B-3**) |
+| **P05-04** | ⚠ # **`NOT_AUTHORIZED` / NO COMPLETION EVIDENCE** (D9 **N-3**). Inside the accepted gate, but **acceptance does NOT authorize its execution**; no such effect exists in the accepted corpus and none was inferred |
+| **Tracker exit criteria** | **C-2 UNMET** · **C-3 UNMET** · **C-4 NO EVIDENCE EXISTS** — ⚠ **recorded statuses unchanged**. **A3 decision on C-5**: tracker exit criteria are program-management exit criteria, **not** binding minimum conditions of gate acceptance; the historical tracker XLSX and all work-item statuses are **unmodified** |
+| **Provider execution** | ⚠ **`NOT_AUTHORIZED`** (D9 **N-1**) · no provider selected, named, contacted or bound |
+| **Licensed historical acquisition** | ⚠ **`NOT_AUTHORIZED`** (D9 **N-2**) · `licensedDataAcquired: false` |
+| **Per-record tenant/region governance** | ⚠ **`NOT_AUTHORIZED`** (D9 **N-4/N-5**), bounded by **IB-1…IB-5** |
+| `certification_status` | **`NONE_GRANTED`** — unchanged; **C12 BLOCKED** on M-5 |
+| `production_activation_status` | **`NOT_AUTHORIZED`** — unchanged; **A4** exercised at **P16 only** |
+| **P16** | **NOT REACHED** — downstream licensing / credentials / connectivity / entitlement gate; upstream **P15** still **BLOCKED** on **M-1/AD-4** |
+| **Open, NOT resolved by this act** | **OI-P04-03** (governance attribute set, A1) · **OI-P04-04** (FIGI sourcing/licensing/coverage) · **DEP-P01-04** (P08 storage) · **OI-D9-01** · **28 of 30 BD items** · **M-1/AD-4 · M-5 · M-6 · AD-17/M-2** · **DO-P04-1…5 / DO-1…DO-5** deferred |
+| **Concessions** | **No concession mechanism invoked · no concessions register created · no concessions authority invented.** The PIT limitation is recorded by the acceptance record itself (**PIT-7**, criteria **NG-14**) |
+| **Carried forward unchanged** | Token `MD:` · **C1–C6 UNCHANGED** · OI-08 1:N · OI-09 FIGI/OpenFIGI · `snapshotId` `data-${provider}-${dataVersion}-${asOf}` · existing-IIPS untouched |
+| **Implementation performed by this act** | **NONE** · provider work **NONE** · `p05/src`, `p05/fixtures`, `p05/evidence*` **UNMODIFIED** |
+| ⚠ **Test-suite change (disclosed)** | **5 files touched in total.** **2 superseded governance guards** — one each in `p05/tests/no-provider-dependency.test.js` and `p05/tests/adapter-contract.test.js` — formerly asserted *"P05 remains NOT_ACCEPTED and no acceptance artifact exists"*. That tripwire was correct while P05 was unaccepted; the explicit A3 act is the event it guarded against happening **silently**. ⚠ **The guards are REPLACED, NOT WEAKENED — the protective surface is enlarged.** They now additionally require this acceptance record to carry every limitation they previously protected by absence: `D9_STATUS.json` still `NOT_ACCEPTED` / `gate_acceptance_artifact_exists: false` / `a3_gate_acceptor: "UNKNOWN"` (proving acceptance was **added by a separate act, never retro-edited into D9**) · **P05-04 `NOT_AUTHORIZED`** · **N-1/N-2/N-3** preserved · **PIT `MISSING / NOT DEMONSTRATED`** · **C-2/C-3/C-4 not relabelled** · **no concessions register in `docs/`** · **no `waiv` string in the record**. **No assertion deleted; `existing-iips-boundary.test.js` (which guards `P0[0-4]_GATE_ACCEPTANCE.md`) untouched.** Suite **228 / 228 PASS** |
+| **Test suite at pinned baseline** | **228 / 228 PASS** |
+
+⚠ **Acceptance ≠ authorization.** `P00_GATE_MODEL.md`:62 — silence, completion or clearance is
+never acceptance; equally, **acceptance is never authorization**. Every D9 boundary stands after
+this act exactly as before.
+
+---
+
 ## 7. D4 / D5 / D7 / D8 / D9 artifact locations
 
 ### `docs/d4/` — specification baseline (16 files, corrected by D4-B)
@@ -353,7 +412,7 @@ No G2 layer, interface, module or DTO family. Product-plane basis: `EngineApiAda
 | # | Field | Value |
 |---|---|---|
 | 14 | Certification | **`NONE_GRANTED`** |
-| 15 | Formal gates | **5 of 18 accepted (P00, P01, P02, P03, P04)** — P05–P17 NOT ACCEPTED |
+| 15 | Formal gates | **6 of 18 accepted (P00, P01, P02, P03, P04, P05)** — P06–P17 NOT ACCEPTED |
 | 16 | Production activation | **`NOT_AUTHORIZED`** |
 
 ## 17–24. Open items
@@ -471,6 +530,7 @@ governance baseline in the repository, so a future Arena session can recover ful
 | 8g | ⚠ **SUPERSEDES rows 8 and 8a–8f as to current state — all six are left unedited as the record of their own moment.** **P05-03-A — HISTORICAL OHLCV INGESTION CONTRACT** was executed **2026-09-09** under **D9 §3 A-3** (*“Specification and adapter-contract only — historical OHLCV ingestion contract, reproducibility and load/reconcile requirements”*). It adds contract **`P05-03-HISTORICAL-OHLCV-INGESTION-CONTRACT` v1.0** with **35 rules `HA-1…HA-35`** (`p05/src/historicalAdapterContract.js`), **28** contract tests, **13** evidence artifacts and the `P05_03_{SPECIFICATION,EVIDENCE,OPEN_ITEMS}.md` trio. Suite **200 → 228**, all passing; evidence byte-identical across regenerations. **No canonical surface was forked** (`forked: false`), **no error class added** (E1–E8 reused), **`snapshotId` composition unchanged**, **lifecycle vocabulary unchanged**. ⚠ **`DEP-P01-04` remains UNRESOLVED** — the P05-01 one-bar-per-snapshot precedent is **reused** but does **not** pre-empt the P08 series-structure decision; no series storage, PIT storage or PIT query was built. ⚠ **`1D` remains the only `barInterval` value** — the enum is not enumerated by any accepted artifact, so no interval was invented (**D9 N-6**). ⚠ **No adjusted series and no adjustment engine** (**RC-5**, P08). **Accepted P01/P02/P04 artifacts: 0 differing from `efe33ea` · OI-08/09/10 unchanged · ADR-01 C1–C6 unchanged · `MD:` unchanged · no provider selected · 0 credentials · 0 network surface · existing-IIPS untouched.** ⚠ **This unit closed NOTHING provider-dependent** — the tracker exit criterion *“Historical load reproducible”* and evidence *“Historical sample”* both remain **UNMET** (**D9 N-2** / **OI-P04-04**); evidence class is **`CONTRACT_VALIDATION`**, never provider evidence. Ten items recorded open as **BD-P05-03-01…10**, including **DEP-P01-04**, the unenumerated `barInterval`, the `sessionRef` catalog/dictionary discrepancy, and a newly observed **A-23 secret-scanner blind spot**. ⚠ **Two disclosures:** one existing boundary test was **scoped, not weakened** (the contract-module retry carve-out extended to the P05-03 module, with the identical behavioural assertions applied and re-asserted in HA/19; **no P05-01 assertion altered**), and two long keys were shortened to satisfy that scanner (**the P05-01 scanner was NOT modified**). ⚠ **P05 ACCEPTANCE = `NOT_ACCEPTED` · CERTIFICATION = `NONE_GRANTED` · PRODUCTION ACTIVATION = `NOT_AUTHORIZED` · P05-04 `NOT AUTHORIZED` · P06/P07/P08 `NOT STARTED` · still 5 of 18 gates · no `P05_GATE_ACCEPTANCE.md`.** Evidence: `docs/p05/P05_03_EVIDENCE.md` · `docs/p05/P05_03_OPEN_ITEMS.md` | Program owner (Sai/Ramki) via D9 §3 A-3 | 2026-09-09 |
 | 8h | ⚠ **SUPERSEDES NOTHING as to program state — rows 8 and 8a–8g all stand unchanged. Evidence-maintenance correction only: no phase status, gate, authority decision or open item moves.** **P05-01 EVIDENCE CURRENCY REPAIR** was executed **2026-09-09** as the narrowly scoped corrective action identified by the **PRE-A3 / PRE-P05-ACCEPTANCE CHECKPOINT** (checkpoint §12-A, taken at `4b37b17`). That checkpoint found that `p05/evidence/` no longer matched a fresh `npm run evidence`: **P05-02-B had legitimately expanded the *shared* `p05/fixtures/identity-fixtures.json` from 6 → 11 securities and 5 → 10 mappings**, but the P05-01 evidence set was never regenerated, so `01-fixture-manifest.json` still manifested the P05-01-era corpus and row `24b-2`'s present-tense *"evidence byte-reproducible"* was momentarily inaccurate. **Resolution — the P05-01 evidence was REGENERATED against the current authoritative fixtures; the generator itself was NOT modified** (it was already deterministic by construction: fixed run stamp, no `Date.now` / `Math.random` / `process.env`). Exactly **3 of 13** files changed and **purely additively** — `00-INDEX.json` (2 digests) · `01-fixture-manifest.json` (+5 securities, +5 mappings) · `09-namespace-identity.json` (+2 issuer groups, +2 company groups); **0 entries removed or altered**; the other **10 files byte-identical**; all 12 index digests self-consistent. Determinism re-proved: **3 isolated generations → identical digest `1af92f6a2a78a59ffd4705da186332000ad25049b478043d16da9ad9e381cb22`**, and the regenerated repository evidence matches it byte-for-byte. **No P05-01 implementation semantic changed** — no rule, canonical field key, error class, `snapshotId` composition, lifecycle vocabulary or `MD:` token moved; **OI-08 / MC-1 1:N is now evidenced by 3 issuer groups and 3 company groups instead of 2 and 1** (strengthened, not altered). No P05-01 document asserts a fixture count, so **no historical P05-01 claim was edited**; row `24b-2` is accurate again as written. Suite **228/228**; accepted P01–P04 and CHECKPOINT artifacts **byte-identical to `efe33ea`**; **P05-02-B and P05-03-A untouched**. **P05 remains AUTHORIZED / NOT_ACCEPTED · A3 gate acceptor still UNKNOWN · certification `NONE_GRANTED` · production activation `NOT_AUTHORIZED` · P05-04 NOT AUTHORIZED.** |
 | 8i | ⚠ **SUPERSEDES rows 8 and 8a–8h ONLY as to the A3 gate-acceptor field — all eight are left unedited as the record of their own moment. No phase status, gate, certification or activation state moves.** **A3 P05 GATE-ACCEPTOR DESIGNATION** was recorded **2026-09-10** against baseline `78839091c7d199a9c69ee583fd9702b151a49158` in **`docs/p00/P00_DECISION_LOG.md` §7** (append-only, per that log's own rule 1 — no new governance instrument, directory or register was created). **A3 phase-gate acceptance authority for the P05 gate = Ramakrishnan V. S. (Ramki)**, program owner of record. ⚠ **This is a DESIGNATION of the person authorized to *perform* the P05 gate-acceptance decision — it is NOT the acceptance.** No acceptance act has occurred; **`P05_GATE_ACCEPTANCE.md` deliberately does NOT exist**; **P05 remains `AUTHORIZED / NOT_ACCEPTED`**, still **5 of 18** gates accepted; **certification `NONE_GRANTED`**; **production activation `NOT_AUTHORIZED`**; **P05-04 `NOT_AUTHORIZED`** (D9 N-3). Superseded as to current state — **all left unedited as the record of their own moment**: the *"A3 gate acceptor UNKNOWN"* statement in the §4 D9 block above · `docs/p00/P00_AUTHORITY_REGISTER.md` §4 (`Person named? NO`) · `docs/d9/D9_STATUS.json` (`a3_gate_acceptor: "UNKNOWN"`) · **BD-P05-01-09 · BD-P05-02-10 · BD-P05-03-09**. ⚠ **No other role is designated or inferred — A1, A2 and A4 remain `person_named: false`, and no P06–P17 acceptor is assigned.** **Zero technical change**: no methodology, contract, rule, canonical field key, lifecycle vocabulary, `snapshotId` composition, OI-08/OI-09/OI-10 decision, ADR-01 **C1–C6** rule or accepted **P00–P04** artifact altered; **no `p05/src`, `p05/tests`, `p05/fixtures` or `p05/evidence*` file modified**; no provider, credential, network or licensed-data work. **Remaining P05 acceptance blockers stand** — **OI-P04-04** · **OI-P04-03** · **DEP-P01-04** (P08) · **P05-04** authorization · **P16** licensing / credentials / entitlement · tracker **P05-02** *"Authenticated ingestion works"* and **P05-03** *"Historical load reproducible"* exit criteria · **BD-P05-03-01…08, 10**. **Next act: P05 acceptance-readiness assessment — NOT performed here.** |
+| 8j | ⚠ **SUPERSEDES rows 8 and 8a–8i as to P05 acceptance state and formal gate count — all nine are left unedited as the record of their own moment. No other phase status, no D9 authorization boundary, no certification and no activation state moves.** **P05 — ACQUISITION GATE — ACCEPTED** by **explicit A3 acceptance act** recorded **2026-09-10** against pinned baseline `cdc684435ad41982b49f832e37d1c153866da6e8` (`docs/p05/P05_GATE_ACCEPTANCE.md`). **A3 acceptor = Ramakrishnan V. S. (Ramki)** (`A3-P05-GATE-ACCEPTOR-DESIGNATION`, `docs/p00/P00_DECISION_LOG.md` §7/§7.1) — the designation made acceptance possible; **this act performs it**. Acceptance boundary = the committed `docs/p05/P05_ACCEPTANCE_CRITERIA.md` (blob `480a4c9630152606a7b5f182dce1bbb3f7477f7d`, **122 criteria**). **Formal gate status 5 of 18 → 6 of 18.** **Scope accepted:** P05-01 implemented deterministic/local feed (evidence reviewed; **228/228** tests; replay 3 passes → **0 duplicates**; idempotency 5× NOOP) · P05-02 **specification + adapter-contract only** (**LA-1…LA-31**) · P05-03 **specification + adapter-contract only** (**HA-1…HA-35**). **P05 is ONE gate spanning P05-01…P05-04** (criteria **A-1/A-2**) — no work item severed. ⚠ **PIT REPEATABILITY = `MISSING / NOT DEMONSTRATED`** — a declared P00 minimum-evidence item (`P00_GATE_MODEL.md`:40, criteria **B-2**). The A3 authority decision is that **P05 is accepted with that evidence gap remaining recorded and open**; the gap **does not become evidence because acceptance occurred**, and the obligation travels to **P08 undischarged**. Run determinism (5 runs / 1 digest) is **not** offered as a substitute — **B-2** expressly forbids it. ⚠ **P05-04 = `NOT_AUTHORIZED` / NO COMPLETION EVIDENCE** (D9 **N-3**) — inside the accepted gate, but **acceptance does NOT authorize its execution**; no such effect exists in the accepted corpus and none was inferred. ⚠ **Tracker exit criteria unchanged:** **C-2 UNMET** · **C-3 UNMET** · **C-4 NO EVIDENCE EXISTS**. **A3 decision on C-5:** they are program-management exit criteria, **not** binding minimum conditions of gate acceptance; the historical tracker XLSX and every work-item status are **unmodified**. ⚠ **UNCHANGED:** provider execution **`NOT_AUTHORIZED`** (**N-1**) · licensed historical acquisition **`NOT_AUTHORIZED`** (**N-2**) · per-record tenant/region governance **`NOT_AUTHORIZED`** (**N-4/N-5**, **IB-1…IB-5**) · **certification `NONE_GRANTED`** (C12 BLOCKED on M-5) · **production activation `NOT_AUTHORIZED`** (**A4** at **P16 only**) · **P16 NOT REACHED** · **P06–P17 NOT ACCEPTED**. ⚠ **Open, NOT resolved by this act:** **OI-P04-03** · **OI-P04-04** · **DEP-P01-04** (P08) · **OI-D9-01** · **28 of 30 BD items** · **M-1/AD-4 · M-5 · M-6 · AD-17/M-2** · **DO-P04-1…5 / DO-1…DO-5** deferred. ⚠ **No concession mechanism invoked · no concessions register created · no concessions authority invented** — the PIT limitation is recorded by the acceptance record itself (criteria **NG-14**). ⚠ **Historical A3-`UNKNOWN` records left unedited** (`D9_STATUS.json`, **BD-P05-01-09 / -02-10 / -03-09**, both evidence JSONs, the fixture and both generators) — **stale as to current state**; the controlling record is `P00_DECISION_LOG.md` §7/§7.1 plus the acceptance record. **5 files touched by this act**: the acceptance record (new) · this manifest · `docs/p00/P00_GATE_MODEL.md` current-state ledger lines · **2 superseded `p05/tests` governance guards**. **Zero historical record rewritten.** `p05/src`, `p05/fixtures` and `p05/evidence*` **UNMODIFIED**. ⚠ **The 2 test guards are REPLACED, NOT WEAKENED** — they formerly asserted *"P05 remains NOT_ACCEPTED and no acceptance artifact exists"*, correct while P05 was unaccepted; the new guards are **stronger**, requiring this acceptance record to carry every limitation the old ones protected by absence (D9 record unedited · P05-04 `NOT_AUTHORIZED` · N-1/N-2/N-3 · PIT `MISSING / NOT DEMONSTRATED` · C-2/C-3/C-4 not relabelled · no concessions register · no waiver language). **No assertion deleted; `existing-iips-boundary.test.js` untouched.** No provider, credential, network or licensed-data work. **No implementation performed.** |
 
 ### Known documentation gaps (recorded, not defects)
 

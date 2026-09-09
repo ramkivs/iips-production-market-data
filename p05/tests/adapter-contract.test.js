@@ -923,12 +923,29 @@ test('O/7 — no tenant or region governance attribute is invented (D9 N-4, N-5 
   assert.match(JSON.stringify(CONTRACT_FX), /BD-P05-02-01/);
 });
 
-test('O/8 — P05 remains NOT_ACCEPTED and no acceptance artifact exists', () => {
+/**
+ * ⚠ SUPERSEDED ASSERTION — DISCLOSED. This test formerly read "O/8 — P05 remains NOT_ACCEPTED and
+ * no acceptance artifact exists". P05 has since been accepted by an explicit A3 act
+ * (`docs/p05/P05_GATE_ACCEPTANCE.md`). The assertion is re-scoped, not weakened: it still proves
+ * the immutable D9 authority record was not rewritten to manufacture that acceptance, and it now
+ * additionally proves the acceptance record preserves the D9 non-authorizations. The full
+ * post-acceptance guard lives in `no-provider-dependency.test.js`.
+ */
+test('O/8 — P05 acceptance is recorded by a separate act; the immutable D9 record is unedited', () => {
   const status = JSON.parse(readFileSync(join(p05Root, '..', 'docs', 'd9', 'D9_STATUS.json'), 'utf8'));
+  // The D9 record still reads NOT_ACCEPTED: acceptance was added, never retro-edited into D9.
   assert.equal(status.p05_status.acceptance, 'NOT_ACCEPTED');
   assert.equal(status.p05_status.gate_acceptance_artifact_exists, false);
   assert.equal(status.program_status.certification_status, 'NONE_GRANTED');
   assert.equal(status.program_status.production_activation_status, 'NOT_AUTHORIZED');
+
+  // The controlling current record is the acceptance artifact, and it preserves every boundary.
+  const acc = readFileSync(
+    join(p05Root, '..', 'docs', 'p05', 'P05_GATE_ACCEPTANCE.md'), 'utf8');
+  assert.match(acc, /P05 — Acquisition gate — is ACCEPTED/);
+  assert.match(acc, /Ramakrishnan V\. S\. \(Ramki\)/);
+  assert.match(acc, /P05-04 = `NOT_AUTHORIZED` \/ NO COMPLETION EVIDENCE/);
+  assert.match(acc, /PIT repeatability: MISSING \/ NOT DEMONSTRATED/);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────

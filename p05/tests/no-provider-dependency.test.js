@@ -266,14 +266,76 @@ test('OI-P04-04 — no FIGI sourcing, licensing or coverage decision was made', 
   assert.doesNotMatch(text, /openfigi\.com|api\.openfigi|bloomberg\.com/i, 'no FIGI source is named or contacted');
 });
 
-test('P05 remains NOT_ACCEPTED and no acceptance artifact exists', () => {
+/**
+ * ⚠ SUPERSEDED ASSERTION — DISCLOSED, NOT EVADED.
+ *
+ * This test formerly asserted that P05 remained NOT_ACCEPTED and that no
+ * `P05_GATE_ACCEPTANCE.md` could exist. That tripwire was correct, and load-bearing, while P05 was
+ * unaccepted: it made a silent or unauthorized acceptance impossible to commit.
+ *
+ * The A3 phase-gate acceptor has since performed an **explicit** acceptance act
+ * (`docs/p05/P05_GATE_ACCEPTANCE.md`, acceptor Ramakrishnan V. S. (Ramki),
+ * `A3-P05-GATE-ACCEPTOR-DESIGNATION`). The tripwire is therefore **replaced, not weakened**: every
+ * condition it protected is still asserted, and the guard is *strengthened* — it now additionally
+ * requires that the acceptance record itself carry each limitation and non-authorization that the
+ * old test protected by absence.
+ *
+ * Nothing is deleted from the protective surface:
+ *   (a) the immutable D9 record must still read NOT_ACCEPTED — proving acceptance was recorded by
+ *       a new, separate authority act and NOT by rewriting the D9 authority record;
+ *   (b) certification must still be NONE_GRANTED and activation NOT_AUTHORIZED;
+ *   (c) P05-04, provider execution and licensed acquisition must still be NOT_AUTHORIZED;
+ *   (d) the PIT repeatability gap must be recorded as MISSING / NOT DEMONSTRATED;
+ *   (e) no concessions register may exist and no waiver language may appear.
+ */
+test('P05 is ACCEPTED by an explicit A3 act, with every limitation and non-authorization preserved', () => {
+  const docsP05 = join(p05Root, '..', 'docs', 'p05');
+  const files = readdirSync(docsP05);
+  assert.ok(files.includes('P05_GATE_ACCEPTANCE.md'),
+    'the explicit A3 acceptance record must exist once the acceptance act has been performed');
+  const acc = readRepo('docs/p05/P05_GATE_ACCEPTANCE.md');
+
+  // (a) The immutable D9 authority record was NOT rewritten to manufacture the acceptance.
   const status = JSON.parse(readRepo('docs/d9/D9_STATUS.json'));
-  assert.equal(status.p05_status.acceptance, 'NOT_ACCEPTED');
-  assert.equal(status.p05_status.gate_acceptance_artifact_exists, false);
+  assert.equal(status.p05_status.acceptance, 'NOT_ACCEPTED',
+    'D9_STATUS.json is the historical record of the D9 moment and must remain unedited');
+  assert.equal(status.p05_status.gate_acceptance_artifact_exists, false,
+    'D9 recorded no acceptance artifact; that historical value is not retro-edited');
+  assert.equal(status.authority_of_record.a3_gate_acceptor, 'UNKNOWN',
+    'the A3 designation lives in P00_DECISION_LOG §7, not by rewriting D9');
+
+  // (b) Certification and activation are untouched by gate acceptance.
   assert.equal(status.program_status.certification_status, 'NONE_GRANTED');
   assert.equal(status.program_status.production_activation_status, 'NOT_AUTHORIZED');
-  const docsP05 = join(p05Root, '..', 'docs', 'p05');
-  let files = [];
-  try { files = readdirSync(docsP05); } catch { files = []; }
-  assert.ok(!files.includes('P05_GATE_ACCEPTANCE.md'), 'no P05_GATE_ACCEPTANCE.md may exist');
+  assert.match(acc, /`NONE_GRANTED`/);
+  assert.match(acc, /NA-4[^\n]*Production activation[^\n]*`NOT_AUTHORIZED`[^\n]*P16 only/);
+  assert.match(acc, /`production_activation_status` \| \*\*`NOT_AUTHORIZED`\*\* \*\(unchanged/);
+
+  // (c) P05-04, provider execution and licensed acquisition remain NOT_AUTHORIZED.
+  assert.match(acc, /P05-04 = `NOT_AUTHORIZED` \/ NO COMPLETION EVIDENCE/);
+  assert.match(acc, /D9 \*\*N-3\*\*/);
+  assert.match(acc, /D9 \*\*N-1\*\*/);
+  assert.match(acc, /D9 \*\*N-2\*\*/);
+  assert.match(acc, /Acceptance ≠ authorization/);
+
+  // (d) The PIT repeatability gap is recorded, and acceptance did not launder it.
+  assert.match(acc, /PIT repeatability: MISSING \/ NOT DEMONSTRATED/);
+  assert.match(acc, /the gap does not become evidence because acceptance occurred/i);
+  assert.doesNotMatch(acc,
+    /PIT[^.\n]{0,90}\b(?:was|is|has been)\s+(?:demonstrated|satisfied|met|passed)\b/i,
+    'acceptance must never state that PIT repeatability was demonstrated');
+
+  // (e) No concession mechanism, no concessions register, no waiver language.
+  assert.match(acc, /No concession mechanism is invoked/);
+  assert.doesNotMatch(acc, /waiv/i, 'no waiver language anywhere in the acceptance record');
+  assert.doesNotMatch(acc, /silently conceded/i);
+  const repoDocs = join(p05Root, '..', 'docs');
+  assert.ok(!readdirSync(repoDocs).some((f) => /concession/i.test(f)),
+    'no concessions register may exist');
+
+  // The tracker exit criteria are not relabelled by the acceptance act.
+  assert.match(acc, /\*\*C-2 UNMET\*\*/);
+  assert.match(acc, /\*\*C-3 UNMET\*\*/);
+  assert.match(acc, /\*\*C-4 NO EVIDENCE EXISTS\*\*/);
 });
+
