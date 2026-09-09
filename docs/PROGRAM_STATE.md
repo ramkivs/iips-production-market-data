@@ -1,7 +1,13 @@
 # PROGRAM STATE — SESSION RECOVERY MANIFEST
 
+> **CURRENT CHECKPOINT: CHECKPOINT-03 — Post-P04 / OI-10 Resolved / Pre-P05 Boundary**
+> (`docs/CHECKPOINT-03.md`, source acceptance commit
+> `faf1317eccaf77dbdab2a520899802043c851cca`). Supersedes CHECKPOINT-02 as to current state;
+> CHECKPOINT-02 remains an immutable historical record.
+>
 > **CHECKPOINT-02 — P03 Accepted Program-State Preservation** (`docs/CHECKPOINT-02.md`,
-> source acceptance commit `7b8fa9d`). Supersedes **CHECKPOINT-01 — Pre-P01 Program Continuity
+> source acceptance commit `7b8fa9d` — ⚠ **pin not independently establishable**, see
+> `docs/INCIDENT-01_HISTORY_LOSS.md`). Supersedes **CHECKPOINT-01 — Pre-P01 Program Continuity
 > Baseline** (`d29ad2f`), which remains an immutable historical record.
 >
 > This is a **recovery / index artifact only**. It introduces **no new decision, no new
@@ -42,7 +48,10 @@ Status: **COMPLETE — READY FOR P00 GATE**
 
 ## 4. Current gate
 
-**P05 — Acquisition gate** — **NOT STARTED, NOT ACCEPTED** · ⚠ requires the exact namespace token (**OI-10**, unrecorded)
+**P05 — Acquisition gate** — **NOT_STARTED · NOT_ACCEPTED · NOT_AUTHORIZED**
+✅ **Entry preconditions MET** (P02 accepted · P04 accepted · OI-10 token `MD:` recorded — `docs/CHECKPOINT-03.md` §5.1).
+⚠ **Preconditions MET is NOT authorization.** An explicit **P05 entry/authorization act** is still required.
+⚠ Independent of OI-10 and still open: **OI-P04-04** FIGI sourcing/licensing/coverage · no provider selected · entitlement matrix EMPTY.
 Accepted gates: **P00 — Scope/authority baseline** (`docs/p00/P00_GATE_ACCEPTANCE.md`) ·
 **P01 — Canonical contract gate** (`docs/p01/P01_GATE_ACCEPTANCE.md`) ·
 **P02 — Provider abstraction/entitlement gate** (`docs/p02/P02_GATE_ACCEPTANCE.md`) ·
@@ -124,9 +133,33 @@ It does **not** invalidate contract acceptance, but **bounds implementation**: p
 governance application must remain bounded until the A1 decision is recorded
 (`P04_GATE_ACCEPTANCE.md` §4.2, IB-1…IB-5). **It is not decided here.**
 
-⚠ OI-P04-01/02/04/05 open; **OI-10, AD-17, M-1, M-5, M-6 preserved unresolved**;
-**DO-P04-1…DO-P04-5 deferred and NOT passed**. **P05 is not authorized** — it additionally
-requires the exact namespace token (OI-10), which is **not recorded**.
+⚠ OI-P04-01/02/04/05 open; **AD-17, M-1, M-5, M-6 preserved unresolved**;
+**DO-P04-1…DO-P04-5 deferred and NOT passed**. **P05 is not authorized.**
+⚠ **Superseded as to OI-10:** the token was subsequently **RESOLVED = `MD:`** — see §6d and
+`docs/CHECKPOINT-03.md` §3. P05's entry preconditions are now **MET**, which is **not**
+authorization.
+
+## 6d. OI-10 status — RESOLVED
+
+# **RESOLVED**
+
+| Field | Value |
+|---|---|
+| **Exact namespace token** | **`MD:`** |
+| **Canonical field-key form** | **`MD:<domain>.<field>`** |
+| **Prior status** | `APPROVED-BUT-REQUIRES-EXACT-TOKEN-RECORDING` |
+| **Recording artifact** | `docs/CHECKPOINT-03.md` §3 |
+| **Design basis** | `docs/d4/D4_07_FIELD_NAMESPACE.md` §I.2 — adopts the existing recommendation; **no new token, no design change** |
+| **Competing token** | **NONE** — none was ever proposed or recorded |
+| **Collision rules C1–C6** | **UNCHANGED** (`docs/d5/ADR-01_NAMESPACE_COLLISION_GUARD.md` §C.2) |
+| **Blocked phases released** | P05, P06, P11 — **from the OI-10 blocker only** |
+
+⚠ **Does NOT mean:** P05/P06/P11 authorized · collision guard implemented (`DataBoundExecutor`
+**untouched**) · `namespaceVersion` first value set · accepted P01/P02 `<NS>` keys rewritten
+(**they are NOT edited**) · certification C1/C2 satisfied · OI-P04-04 or provider/entitlement
+affected.
+
+---
 
 ## 7. D4 / D5 / D7 / D8 artifact locations
 
@@ -245,11 +278,18 @@ No G2 layer, interface, module or DTO family. Product-plane basis: `EngineApiAda
 | 19 | **E2E-030** | **NOT REVOKED · NOT RENEWED** — AD-4 = revalidation required, not revocation | Existing-IIPS | — |
 | 20 | **OI-08** identity cardinality 1→N | ✅ **RESOLVED — 1:N** by explicit program authority (`docs/p04/P04_GATE_ACCEPTANCE.md` §3) | New program | ⚠ downstream consequences remain: P11, P12, P13 (OI-P04-02) |
 | 21 | **OI-09** external identifier standard | ✅ **RESOLVED — FIGI / OpenFIGI authoritative** (`docs/p04/P04_GATE_ACCEPTANCE.md` §3) | New program | ⚠ sourcing/licensing remains: P05 (OI-P04-04) |
-| 22 | **OI-10** exact namespace token | **APPROVED-BUT-REQUIRES-EXACT-TOKEN-RECORDING** | Ramki/Sai | P05, P06, P11 |
+| 22 | **OI-10** exact namespace token | ✅ **RESOLVED — token `MD:` · form `MD:<domain>.<field>`** (`docs/CHECKPOINT-03.md` §3) | ADR-01 authority (`person_named:false`) | ⚠ blocker released for P05/P06/P11; **implementation still unauthorized**; literal-key rewrite is P05/P06 work |
 | 23 | **M-5** authentication/session | **OPEN** | Existing-IIPS | P03 limitation |
 | 24 | **M-6** retention enforcement | **OPEN** | Existing-IIPS | C10, P17 |
 
-### ⚠ OI-10 — critical recovery note
+### ⚠ OI-10 — critical recovery note — ⚠ SUPERSEDED, see the note immediately following
+
+> ⚠ **SUPERSEDED AS TO CURRENT STATE by `docs/CHECKPOINT-03.md` §3 and §6d above.** The
+> paragraph below is **left unedited as the record of its own moment** and was correct when
+> written. **OI-10 is now RESOLVED; the exact token `MD:` has been RECORDED by explicit
+> program authority — it was recorded, NOT invented, and it adopts the pre-existing D4_07
+> recommendation.** The prohibition below on *inventing* a token remains in force for all
+> other tokens and all future work; what is now closed is the recording action itself.
 
 **Do NOT convert `MD:<domain>.<field>` into a final approved token.** It remains an
 **illustrative recommendation only** (`docs/d5/ADR-01_NAMESPACE_COLLISION_GUARD.md` lines
@@ -323,6 +363,7 @@ governance baseline in the repository, so a future Arena session can recover ful
 | 7 | Authority approval is never certification, never gate acceptance, never production activation |
 | 8 | **P00, P01, P02 and P03 gates are ACCEPTED.** P03 acceptance is **specification only**: ⚠ **M-5 remains OPEN (existing-IIPS)**, **C12 remains BLOCKED**, **DO-1…DO-5 remain deferred**. The D4/D5/D7 *"P03 BLOCKED — AUTHORITY"* language is **superseded by D8**. **CHECKPOINT-02 is created** (`docs/CHECKPOINT-02.md`, source commit `7b8fa9d`). Next: a **P04 entry assessment** — P04 is **not** authorized, and **OI-08 / OI-09 remain OPEN**. |
 | 8a | ⚠ **SUPERSEDES row 8 as to current state — row 8 is left unedited as the record of its own moment.** The **P04 entry assessment was performed** and returned `P04 ENTRY BLOCKED — CONTENT DECISION`; **OI-08 and OI-09 were then RESOLVED by explicit program authority** (1:N · FIGI/OpenFIGI); the P04 work package was prepared (`6ec3b288c8deeee317a63341297bd33b9a090f4f`) and the **P04 gate is ACCEPTED** (`docs/p04/P04_GATE_ACCEPTANCE.md`) — **5 of 18**. ⚠ **OI-P04-03 remains OPEN and bounds implementation.** Next: **P05 is NOT authorized** — it requires the exact namespace token (**OI-10**, unrecorded). Git-history provenance qualification: `docs/INCIDENT-01_HISTORY_LOSS.md` |
+| 8b | ⚠ **SUPERSEDES rows 8 and 8a as to current state — both are left unedited as the record of their own moment.** **CHECKPOINT-03** (`docs/CHECKPOINT-03.md`) was taken after P04 acceptance (`faf1317eccaf77dbdab2a520899802043c851cca`). **OI-10 is RESOLVED — exact token `MD:`, canonical form `MD:<domain>.<field>`; C1–C6 unchanged.** **P05 entry preconditions are MET** — ⚠ **which is NOT authorization**: P05 remains **NOT_STARTED / NOT_ACCEPTED / NOT_AUTHORIZED** and requires an explicit entry/authorization act. ⚠ **OI-P04-04 (FIGI sourcing/licensing/coverage), provider selection and the empty entitlement matrix are NOT resolved by OI-10.** P06/P07 not promoted; **P08 not started** (AD-17 firewall preserved); P14 unchanged; P15 still BLOCKED on M-1. Certification **NONE_GRANTED**; activation **NOT_AUTHORIZED** |
 
 ### Known documentation gaps (recorded, not defects)
 
