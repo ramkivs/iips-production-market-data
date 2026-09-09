@@ -222,6 +222,14 @@
       "CI-LOCAL-ALPHA": [
         "CS-LOCAL-0001",
         "CS-LOCAL-0002"
+      ],
+      "CI-LOCAL-THETA": [
+        "CS-LOCAL-0007",
+        "CS-LOCAL-0009"
+      ],
+      "CI-LOCAL-IOTA": [
+        "CS-LOCAL-0008",
+        "CS-LOCAL-0010"
       ]
     },
     "manyCanonicalToOneCompanyId": {
@@ -229,6 +237,14 @@
         "CS-LOCAL-0001",
         "CS-LOCAL-0002",
         "CS-LOCAL-0099"
+      ],
+      "industrials-H1": [
+        "CS-LOCAL-0007",
+        "CS-LOCAL-0009"
+      ],
+      "utilities-H1": [
+        "CS-LOCAL-0008",
+        "CS-LOCAL-0010"
       ]
     }
   },

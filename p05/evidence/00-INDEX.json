@@ -13,7 +13,7 @@
   "evidenceFiles": [
     {
       "file": "p05/evidence/01-fixture-manifest.json",
-      "sha256": "19143dcb67c7e6f109b1d2a5e63087de62a48c24d12c2b0a2794f5aa0a102ea2"
+      "sha256": "87a24ffdeac8af3acc28e58a30b09a273386e7515ef5f47bf7a014a140beb30a"
     },
     {
       "file": "p05/evidence/02-input-payloads.json",
@@ -45,7 +45,7 @@
     },
     {
       "file": "p05/evidence/09-namespace-identity.json",
-      "sha256": "34aa4214cc2418ea25db1e11bdc1ca878cfd7a2616e8a4df7e30c927605fda13"
+      "sha256": "614fab07cf47aa5aa8cbbfcec713a19c2397c6249e60c735428d26243e77d746"
     },
     {
       "file": "p05/evidence/10-repeatability.json",

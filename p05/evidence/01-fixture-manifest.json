@@ -130,6 +130,31 @@
         "id": "CS-LOCAL-UNMAPPED",
         "issuer": "CI-LOCAL-ZETA",
         "lifecycle": "active"
+      },
+      {
+        "id": "CS-LOCAL-0006",
+        "issuer": "CI-LOCAL-KAPPA",
+        "lifecycle": "suspended"
+      },
+      {
+        "id": "CS-LOCAL-0007",
+        "issuer": "CI-LOCAL-THETA",
+        "lifecycle": "merged"
+      },
+      {
+        "id": "CS-LOCAL-0008",
+        "issuer": "CI-LOCAL-IOTA",
+        "lifecycle": "superseded"
+      },
+      {
+        "id": "CS-LOCAL-0009",
+        "issuer": "CI-LOCAL-THETA",
+        "lifecycle": "active"
+      },
+      {
+        "id": "CS-LOCAL-0010",
+        "issuer": "CI-LOCAL-IOTA",
+        "lifecycle": "active"
       }
     ],
     "mappings": [
@@ -157,6 +182,31 @@
         "canonical": "CS-LOCAL-0099",
         "target": "technology-H1",
         "method": "MANUAL_APPROVAL"
+      },
+      {
+        "canonical": "CS-LOCAL-0006",
+        "target": "financials-H1",
+        "method": "MANUAL_APPROVAL"
+      },
+      {
+        "canonical": "CS-LOCAL-0007",
+        "target": "industrials-H1",
+        "method": "AUTHORITATIVE_IDENTIFIER_MATCH"
+      },
+      {
+        "canonical": "CS-LOCAL-0009",
+        "target": "industrials-H1",
+        "method": "AUTHORITATIVE_IDENTIFIER_MATCH"
+      },
+      {
+        "canonical": "CS-LOCAL-0008",
+        "target": "utilities-H1",
+        "method": "REGISTRY_ASSERTION"
+      },
+      {
+        "canonical": "CS-LOCAL-0010",
+        "target": "utilities-H1",
+        "method": "REGISTRY_ASSERTION"
       }
     ],
     "negativeFixtures": {
