@@ -63,9 +63,10 @@
     {
       "id": "BD-P05-02-07",
       "item": "Lifecycle fixture coverage exercises 2 of 5 states",
-      "status": "OPEN",
+      "status": "RESOLVED",
       "blocks": "Nothing — non-blocking test-coverage improvement",
-      "note": "suspended / merged / superseded are unexercised by the P05-01 fixtures."
+      "resolvedBy": "P05-02-B — lifecycle-state coverage completion (2026-09-09)",
+      "note": "suspended / merged / superseded were unexercised. P05-02-B added fixture identities for all three (plus the two successor identities LC-4 requires for merged/superseded) and adapter-contract tests Q/1…Q/8. Coverage is now 5 of 5. ⚠ This closed a fixture/test gap ONLY — it did not select a provider, provision a credential, open a connection, or close any provider-dependent tracker exit criterion."
     },
     {
       "id": "BD-P05-02-08",

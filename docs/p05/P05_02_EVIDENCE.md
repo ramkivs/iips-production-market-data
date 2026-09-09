@@ -185,6 +185,11 @@
 **118 P05-01 tests + 74 P05-02 tests.** The P05-01 suite passes **unchanged in substance** alongside
 the new contract (see §10 for the one disclosed test-file change).
 
+> ⚠ **SUPERSEDED IN PART by §15 (P05-02-B).** The table above is the P05-02 record **as first
+> committed** and is left unedited. The follow-on unit **P05-02-B** added **8** tests to
+> `adapter-contract.test.js` (group **Q**), so the suite is now **200** (82 P05-02 + 118 P05-01).
+> §15 is the current authoritative count.
+
 **Coverage of the 74 P05-02 tests**, by the groups the tasking required:
 
 | Group | Tests | What is established |
@@ -295,3 +300,95 @@ tracker columns as **UNMET**.
 `Phase Gates!P05` defines **one** acquisition gate spanning P05-01…P05-04, promoted only by
 **"Explicit gate acceptance; no automatic promotion."** No acceptance act was performed here, and
 the **A3 gate acceptor remains UNKNOWN**.
+
+---
+
+## 15. P05-02-B addendum — lifecycle-state coverage completion (BD-P05-02-07)
+
+**Unit:** P05-02-B · **Date:** 2026-09-09 · **Authority:** D9 §3 **A-2** (specification /
+adapter-contract scope only) · **Closes:** **BD-P05-02-07** and **nothing else**.
+
+### 15.1 Lifecycle coverage before / after
+
+| State | Before | After | How it is exercised after |
+|---|---|---|---|
+| `active` | ✅ fixture | ✅ | 7 fixture securities; 5 emit at the observation instant |
+| `suspended` | ❌ unexercised | ✅ | `CS-LOCAL-0006` emits; identity intact (**LC-2**) |
+| `delisted` | ✅ fixture | ✅ | `CS-LOCAL-0004` — **fail-closed** at the observation instant (**ADP-7**), resolvable inside its window (**Q/5**) |
+| `merged` | ❌ unexercised | ✅ | `CS-LOCAL-0007` emits; **LC-4** successor `CS-LOCAL-0009` |
+| `superseded` | ❌ unexercised | ✅ | `CS-LOCAL-0008` emits; **LC-4** successor `CS-LOCAL-0010` |
+| **Total** | **2 of 5** | **5 of 5** | — |
+
+`lifecycleStatesNotExercised` in `06-identity-mapping-venue-lifecycle.json` is now **`[]`**.
+
+### 15.2 Test result
+
+**`cd p05 && npm test` → `# tests 200 · # pass 200 · # fail 0`**
+
+| File | Tests | Pass | Fail |
+|---|---|---|---|
+| **`adapter-contract.test.js`** | **82** *(was 74; +**Q/1…Q/8**)* | **82** | **0** |
+| all other files | 118 *(unchanged)* | 118 | 0 |
+| **Total** | **200** | **200** | **0** |
+
+| Q-group test | Establishes |
+|---|---|
+| **Q/1** | All five authoritative states are exercised; `LIFECYCLE_STATES` is **unchanged** and has exactly 5 members |
+| **Q/2** | **LC-1** — each state is carried verbatim into the canonical identity ref, from the register and never from the payload |
+| **Q/3** | **LC-2** — one immutable anchor across all five states; a successor is a **distinct** identity |
+| **Q/4** | **LC-4** — `merged`/`superseded` carry an effective-dated successor that exists in the register; states that do not require one carry **none** |
+| **Q/5** | **LC-3** / **ADP-7** — retired identities stay resolvable; expired windows fail closed (**FC-1/ADP-2/MC-7**); **MC-2/MC-4** N:1 with distinct securities |
+| **Q/6** | **LC-6** — absence never changes the state; `PRESENT`/`NOT_PROVIDED`/`NULL_ASSERTED` are state-independent (**NL-1/3/4/7**) |
+| **Q/7** | **D-1**/**ST-2**/**ST-3** — `snapshotId` is a function of (provider, dataVersion, asOf) **only**; **1** distinct id across all emitting states |
+| **Q/8** | **D-3** — 5 runs → 1 digest across all emitting states |
+
+**Load-bearing proof:** with the fixture additions reverted, **all 8 Q-tests fail** (192/200); with
+them present, **200/200 pass**. They are not vacuous.
+
+### 15.3 What was changed
+
+| Path | Change |
+|---|---|
+| `p05/fixtures/identity-fixtures.json` | 6 → **11** securities; 5 → **10** mappings; `successorRef` (**LC-4**) on the two predecessors; **10** authoring notes appended to `_comment` |
+| `p05/tests/adapter-contract.test.js` | **+8** tests (group **Q**) + 3 import lines |
+| `p05/scripts/generate-p05-02-evidence.js` | lifecycle block now **computes** per-state coverage; `BD-P05-02-07` → **RESOLVED**; one evidence key renamed (below) |
+| `p05/evidence-p05-02/{00-INDEX,06-identity-mapping-venue-lifecycle,11-blocked-provider-dependent-items}.json` | regenerated — **3** files |
+| `docs/p05/P05_02_OPEN_ITEMS.md` | §3 row status → RESOLVED (item/impact text verbatim); **§6.1 added** |
+
+**No `p05/src/` file was modified.** The contract already declared all five states correctly, so
+only fixtures, tests and evidence changed.
+
+> ⚠ **One evidence key was renamed:** `lifecycleStatesExercisedByP05_01Fixtures` →
+> **`lifecycleStatesExercisedByFixtures`**. After P05-02-B the fixtures are shared across P05-01 and
+> P05-02, so a P05-01-only label would have been inaccurate. No test pinned the old key.
+
+> ⚠ **One regression was resolved without editing an assertion.** `identity-collision.test.js`
+> pins `CI-LOCAL-ALPHA` to **exactly 2** securities (**MC-1 / OI-08**). Rather than weaken that
+> committed assertion, the new `suspended` fixture was given its **own** canonical issuer
+> `CI-LOCAL-KAPPA`. **No existing test was modified.**
+
+### 15.4 Boundaries — re-verified after the change
+
+| Check | Result |
+|---|---|
+| Accepted P04 artifacts vs `efe33ea` | **0 differing** |
+| `OI-08` / `OI-09` / `OI-10` | unchanged |
+| **ADR-01 C1–C6** | unchanged |
+| Namespace token / key form | `MD:` · `MD:<domain>.<field>` — unchanged |
+| Provider register | **1** identity: `localfix`, `LOCAL_FIXTURE`, `liveConnectivity:false`, `credentialsRequired:false`, retired `[]` |
+| Provider selected / contacted | **NO** |
+| Credentials / API keys / secrets | **0** literal assignments, **0** AKIA, **0** PEM, **0** bearer |
+| Network / HTTP surface | **0** URLs, **0** `node:net\|tls\|http\|https\|dns` imports, **0** dependencies |
+| **P05-04** | **NOT AUTHORIZED** (**D9 N-3**) |
+| Existing-IIPS | untouched |
+
+### 15.5 ⚠ What P05-02-B did **NOT** do
+
+> **This unit closed a fixture/test gap ONLY. It does NOT close the provider-dependent tracker exit
+> criteria.** `BD-P05-02-01` (provider selection / entitlement / credentials), `BD-P05-02-02`
+> (*"Authenticated ingestion works"*) and `BD-P05-02-03` (*"Provider evidence"*) all remain **UNMET**
+> and can only be closed by live execution, which **D9 N-1 does not authorize**. `BD-P05-02-05`
+> (ISO-4217 vocabulary as provider-specific configuration) remains **OPEN** and was deliberately not
+> expanded. **No P05 acceptance, no certification, no production activation, no P06/P07/P08 work.**
+> The evidence classification is unchanged: `evidenceClass: CONTRACT_VALIDATION`,
+> `isProviderEvidence: false`, `establishesAuthenticatedIngestionWorks: false`.

@@ -84,16 +84,123 @@
     ],
     "source": "P04_LIFECYCLE_AND_EFFECTIVE_DATING §2 — five values, fixed by D4_05 §G.2 and P01_FIELD_DICTIONARY §7. None added.",
     "emittedForThisRun": "active",
-    "lifecycleStatesExercisedByP05_01Fixtures": [
+    "lifecycleStatesExercisedByFixtures": [
       "active",
-      "delisted"
-    ],
-    "lifecycleStatesNotExercised": [
-      "suspended",
+      "delisted",
       "merged",
-      "superseded"
+      "superseded",
+      "suspended"
     ],
+    "lifecycleStatesNotExercised": [],
     "rule": "LC-1…LC-6 — effective-dated; a transition never mutates the canonical security ID (LC-2); state is never inferred from absence of data (LC-6).",
-    "note": "⚠ The lifecycle vocabulary is CARRIED and validated; the P05-01 fixtures exercise only a subset of the five states. Widening fixture coverage is a non-blocking improvement and is recorded as BD-P05-02-07, not silently claimed as complete."
+    "coverageUnit": "P05-02-B — lifecycle-state coverage completion (BD-P05-02-07)",
+    "bdP05_02_07Status": "RESOLVED — all five authoritative states are exercised by the fixtures and by the adapter-contract test group Q/1…Q/8. Fixture and test coverage only.",
+    "perState": [
+      {
+        "state": "active",
+        "fixtureSecurities": 7,
+        "fixtureIds": [
+          "CS-LOCAL-0001",
+          "CS-LOCAL-0002",
+          "CS-LOCAL-0003",
+          "CS-LOCAL-0005",
+          "CS-LOCAL-UNMAPPED",
+          "CS-LOCAL-0009",
+          "CS-LOCAL-0010"
+        ],
+        "emittedAtObservationInstant": [
+          "CS-LOCAL-0001",
+          "CS-LOCAL-0002",
+          "CS-LOCAL-0003",
+          "CS-LOCAL-0009",
+          "CS-LOCAL-0010"
+        ],
+        "failClosedAtObservationInstant": [
+          "CS-LOCAL-0005 (E8)",
+          "CS-LOCAL-UNMAPPED (E8)"
+        ],
+        "successorRefRequired": false,
+        "successorRefsPresent": 0,
+        "covered": true
+      },
+      {
+        "state": "suspended",
+        "fixtureSecurities": 1,
+        "fixtureIds": [
+          "CS-LOCAL-0006"
+        ],
+        "emittedAtObservationInstant": [
+          "CS-LOCAL-0006"
+        ],
+        "failClosedAtObservationInstant": [],
+        "successorRefRequired": false,
+        "successorRefsPresent": 0,
+        "covered": true
+      },
+      {
+        "state": "delisted",
+        "fixtureSecurities": 1,
+        "fixtureIds": [
+          "CS-LOCAL-0004"
+        ],
+        "emittedAtObservationInstant": [],
+        "failClosedAtObservationInstant": [
+          "CS-LOCAL-0004 (E8)"
+        ],
+        "successorRefRequired": false,
+        "successorRefsPresent": 0,
+        "covered": true
+      },
+      {
+        "state": "merged",
+        "fixtureSecurities": 1,
+        "fixtureIds": [
+          "CS-LOCAL-0007"
+        ],
+        "emittedAtObservationInstant": [
+          "CS-LOCAL-0007"
+        ],
+        "failClosedAtObservationInstant": [],
+        "successorRefRequired": true,
+        "successorRefsPresent": 1,
+        "covered": true
+      },
+      {
+        "state": "superseded",
+        "fixtureSecurities": 1,
+        "fixtureIds": [
+          "CS-LOCAL-0008"
+        ],
+        "emittedAtObservationInstant": [
+          "CS-LOCAL-0008"
+        ],
+        "failClosedAtObservationInstant": [],
+        "successorRefRequired": true,
+        "successorRefsPresent": 1,
+        "covered": true
+      }
+    ],
+    "coverageDefinition": "A state counts as covered when at least one fixture security carries it AND adapter-contract test group Q/1…Q/8 exercises it. ⚠ A fail-closed outcome at the observation instant is CORRECT behaviour, not a coverage gap: CS-LOCAL-0004 (delisted) has an effective window that closed 2023-12-29, so ADP-7 requires resolution to fail rather than to fall back (FC-1/ADP-2/MC-7). Q/5 additionally proves it resolves INSIDE its window.",
+    "successorLinks": [
+      {
+        "predecessor": "CS-LOCAL-0007",
+        "predecessorState": "merged",
+        "successor": "CS-LOCAL-0009",
+        "linkEffectiveFrom": "2025-11-28T00:00:00.000Z",
+        "linkEffectiveTo": null,
+        "rule": "LC-4 — merged/superseded require a successor reference, itself effective-dated."
+      },
+      {
+        "predecessor": "CS-LOCAL-0008",
+        "predecessorState": "superseded",
+        "successor": "CS-LOCAL-0010",
+        "linkEffectiveFrom": "2026-01-15T00:00:00.000Z",
+        "linkEffectiveTo": null,
+        "rule": "LC-4 — merged/superseded require a successor reference, itself effective-dated."
+      }
+    ],
+    "snapshotIdDependsOnLifecycle": false,
+    "snapshotIdInputs": "provider, dataVersion, asOf (ST-2). LC-2: a transition changes state and relationships, never the snapshot or identity anchor.",
+    "note": "⚠ P05-02-B widened FIXTURE and TEST coverage only. It closes BD-P05-02-07 and nothing else. It selects no provider, provisions no credential, opens no connection, and does NOT close the provider-dependent tracker exit criteria: BD-P05-02-01 (provider selection / entitlement / credentials), BD-P05-02-02 (\"authenticated ingestion works\") and BD-P05-02-03 (\"provider evidence\") all remain UNMET and require live execution, which D9 N-1 does not authorize."
   }
 }

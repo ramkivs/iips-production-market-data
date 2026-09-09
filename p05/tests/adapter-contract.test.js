@@ -67,6 +67,14 @@ import {
 import { makeFeed, p05Root } from './helpers.js';
 import { NAMESPACE_TOKEN, NAMESPACE_VERSION, isNamespaced, parseKey } from '../src/namespace.js';
 import { DISPOSITION, RETRY_PROHIBITED, CLASSIFICATION_GATE_ORDER, scanForSecrets } from '../src/errors.js';
+import {
+  MappingRegister,
+  buildIdentityRef,
+  LIFECYCLE_STATES,
+  IdentityResolutionFailure,
+} from '../src/identity.js';
+import { buildSnapshotId, assertSnapshotIdConsistent } from '../src/contract.js';
+import { canonicalDigest } from '../src/serialize.js';
 
 const VOCAB = CONTRACT_FX.nativeVocabulary;
 const clean = () => new MockLiveAdapter().snapshot(mockRequest());
@@ -957,4 +965,217 @@ test('P/3 — PB-2: provider identity stays in lineage and never becomes a produ
   // The emission receipt is an internal governed artifact, not a DTO.
   assert.equal(r.receipt.contractId, ADAPTER_CONTRACT_ID);
   assert.equal(r.receipt.contractVersion, P05_02_CONTRACT_VERSION);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// Q. LIFECYCLE-STATE COVERAGE — P05-02-B / BD-P05-02-07
+//
+// Authority: docs/p04/P04_LIFECYCLE_AND_EFFECTIVE_DATING.md §2 (LC-1…LC-6) and
+// P04_CANONICAL_SECURITY_MODEL.md:46. The five states are fixed by D4_05 §G.2 and
+// P01_FIELD_DICTIONARY §7 — none added, none reinterpreted here.
+//
+// ⚠ SCOPE: this group widens FIXTURE and TEST coverage only. It selects no provider, provisions
+//   no credential, opens no connection and executes no licensed historical acquisition. It does
+//   NOT close any provider-dependent tracker exit criterion: BD-P05-02-01 (provider selection /
+//   entitlement / credentials), BD-P05-02-02 ("authenticated ingestion works") and BD-P05-02-03
+//   ("provider evidence") all remain UNMET and can only be closed by live execution, which D9
+//   N-1 does not authorize.
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+
+/** The authoritative enumeration, in the accepted order. UNCHANGED by this unit. */
+const LC_STATES = ['active', 'suspended', 'delisted', 'merged', 'superseded'];
+
+/** One fixture security per authoritative state. */
+const LC_FIXTURE = {
+  active: 'CS-LOCAL-0001',
+  suspended: 'CS-LOCAL-0006',
+  delisted: 'CS-LOCAL-0004',
+  merged: 'CS-LOCAL-0007',
+  superseded: 'CS-LOCAL-0008',
+};
+
+/** States exercised through a SUCCESSFUL adapter emission at the observation instant. */
+const LC_EMITTING = ['active', 'suspended', 'merged', 'superseded'];
+
+/** The P05-02 observation instant, taken from the LQ-0001 fixture (D-3: a fixed literal). */
+const LC_AS_OF = '2026-03-04T09:31:00.000Z';
+
+const lcSec = (cs) => IDENTITY_FX.securities.find((s) => s.canonicalSecurityId === cs);
+const lcRegister = () => new MappingRegister({
+  version: IDENTITY_FX.mappingRegisterVersion,
+  records: IDENTITY_FX.mappings,
+});
+const lcSnapshot = (cs, over = {}) =>
+  new MockLiveAdapter().snapshot(mockRequest({ canonicalSecurityId: cs, ...over }));
+
+test('Q/1 — BD-P05-02-07: all five authoritative lifecycle states are now exercised by the fixtures', () => {
+  const exercised = [...new Set(IDENTITY_FX.securities.map((s) => s.lifecycleStatus))].sort();
+  assert.deepEqual(exercised, [...LC_STATES].sort(),
+    'every authoritative state is carried by at least one fixture security');
+  // The vocabulary itself is UNCHANGED — this unit widened coverage, it did not extend the enum.
+  assert.deepEqual([...LIFECYCLE_STATES], LC_STATES, 'the lifecycle vocabulary is exactly the accepted five');
+  assert.equal(LIFECYCLE_STATES.length, 5, 'no state was added');
+  for (const [state, cs] of Object.entries(LC_FIXTURE)) {
+    assert.equal(lcSec(cs).lifecycleStatus, state, `${cs} must carry '${state}'`);
+  }
+  assert.deepEqual(LC_STATES.filter((st) => !IDENTITY_FX.securities.some((s) => s.lifecycleStatus === st)), [],
+    'no authoritative state is left unexercised');
+});
+
+test('Q/2 — LC-1: each state is carried verbatim through the adapter into the canonical identity ref', () => {
+  for (const state of LC_EMITTING) {
+    const cs = LC_FIXTURE[state];
+    const r = lcSnapshot(cs);
+    assert.equal(r.ok, true, `${cs} (${state}) must emit through the sole ingress`);
+    assert.equal(r.snapshot.identity.lifecycleStatus, state, 'the state is carried, never rewritten');
+    assert.equal(r.snapshot.identity.canonicalSecurityId, cs, 'CS-1: the anchor is the fixture identity');
+    assert.ok(LIFECYCLE_STATES.includes(r.snapshot.identity.lifecycleStatus));
+    // The state arrives from the P04-shaped register, not from the provider payload.
+    assert.equal(r.snapshot.identity.lifecycleStatus, lcSec(cs).lifecycleStatus);
+  }
+  // 'delisted' at the observation instant is FAIL-CLOSED rather than emitted — see Q/5.
+  const delisted = lcSnapshot(LC_FIXTURE.delisted);
+  assert.equal(delisted.ok, false,
+    'ADP-7: its mapping window closed before the observation instant, so resolution fails closed');
+  assert.equal(delisted.failure.code, 'E8');
+  assert.equal(delisted.failure.detail.isQualityState, false, 'FC-5: identity failure is not a quality state');
+});
+
+test('Q/3 — LC-2: a lifecycle transition never mutates the immutable canonical security ID', () => {
+  const anchorId = 'CS-LOCAL-0007';
+  const base = lcSec(anchorId);
+  const anchors = new Set();
+  for (const state of LC_STATES) {
+    const ref = buildIdentityRef({
+      canonicalSecurityId: base.canonicalSecurityId,
+      canonicalIssuerId: base.canonicalIssuerId,
+      instrumentType: base.instrumentType,
+      lifecycleStatus: state,
+      validFrom: base.validFrom,
+      ...(base.validTo !== null ? { validTo: base.validTo } : {}),
+      externalIdentifiers: base.externalIdentifiers,
+    });
+    assert.equal(ref.canonicalSecurityId, anchorId, `${state}: the anchor is unchanged`);
+    assert.equal(ref.lifecycleStatus, state, 'only the STATE moves');
+    anchors.add(ref.canonicalSecurityId);
+  }
+  assert.equal(anchors.size, 1, 'LC-2: one immutable anchor across all five states');
+  // A successor is a NEW canonical identity; it never reuses the predecessor anchor.
+  for (const pre of ['CS-LOCAL-0007', 'CS-LOCAL-0008']) {
+    const succ = lcSec(pre).successorRef.canonicalSecurityId;
+    assert.notEqual(succ, pre, 'a successor is a distinct canonical identity');
+    assert.equal(lcSec(succ).lifecycleStatus, 'active', 'the successor is itself active');
+  }
+});
+
+test('Q/4 — LC-4: merged and superseded REQUIRE an effective-dated successor reference', () => {
+  for (const pre of ['CS-LOCAL-0007', 'CS-LOCAL-0008']) {
+    const s = lcSec(pre);
+    assert.ok(['merged', 'superseded'].includes(s.lifecycleStatus));
+    assert.ok(s.successorRef, `${pre} (${s.lifecycleStatus}) must carry a successor reference`);
+    assert.equal(typeof s.successorRef.canonicalSecurityId, 'string');
+    assert.equal(typeof s.successorRef.effective.from, 'string', 'LC-4: the link is itself effective-dated');
+    assert.ok(lcSec(s.successorRef.canonicalSecurityId),
+      'the successor must exist in the register — a dangling successor would be an invented identity');
+    assert.ok(s.validTo !== null && s.successorRef.effective.from >= s.validTo,
+      `${pre}: the successor link is effective no earlier than the predecessor closes (ED-2)`);
+  }
+  // States that do NOT require a successor must not claim one: a fabricated link would assert a
+  // corporate event that never happened.
+  for (const s of IDENTITY_FX.securities) {
+    if (!['merged', 'superseded'].includes(s.lifecycleStatus)) {
+      assert.equal(s.successorRef, undefined,
+        `${s.canonicalSecurityId} (${s.lifecycleStatus}) must carry no successor reference`);
+    }
+  }
+});
+
+test('Q/5 — LC-3: retired identities stay resolvable for PIT; outside the window resolution fails closed', () => {
+  const reg = lcRegister();
+  for (const state of LC_EMITTING) {
+    const cs = LC_FIXTURE[state];
+    const r = reg.resolveCanonicalToCompany(cs, LC_AS_OF);
+    assert.equal(typeof r.companyId, 'string', `${cs} (${state}) remains resolvable — LC-3`);
+    assert.equal(r.mappingVersion, IDENTITY_FX.mappingRegisterVersion, 'ADP-4: versioned');
+  }
+  // A merged predecessor and its successor are DISTINCT securities under ONE companyId.
+  const pred = reg.resolveCanonicalToCompany('CS-LOCAL-0007', LC_AS_OF);
+  const succ = reg.resolveCanonicalToCompany('CS-LOCAL-0009', LC_AS_OF);
+  assert.equal(pred.companyId, succ.companyId, 'MC-2: an expected N:1 projection after a merger');
+  const set = reg.resolveCompanyToCanonical(pred.companyId, LC_AS_OF);
+  assert.deepEqual([...set].map((x) => x.canonicalSecurityId).sort(), ['CS-LOCAL-0007', 'CS-LOCAL-0009'],
+    'MC-4: two DISTINCT securities, never collapsed into one');
+  // delisted: resolvable INSIDE its effective window, FAIL-CLOSED outside it.
+  assert.equal(reg.resolveCanonicalToCompany('CS-LOCAL-0004', '2023-06-01T00:00:00.000Z').companyId, 'realty-H1');
+  assert.throws(
+    () => reg.resolveCanonicalToCompany('CS-LOCAL-0004', '2024-06-01T00:00:00.000Z'),
+    (e) => e instanceof IdentityResolutionFailure && e.rules.includes('ADP-2') && e.rules.includes('FC-1'),
+    'LC-6: an expired window is an explicit failure, never an inferred lifecycle change');
+});
+
+test('Q/6 — LC-6: absence of data is never read as a lifecycle change, and absence semantics are state-independent', () => {
+  // The three absence semantics must behave IDENTICALLY for every state:
+  //   key absent from the payload  => NOT_PROVIDED   (A-20, NL-4)
+  //   explicit null in the payload => NULL_ASSERTED  (NL-1)
+  //   present                      => PRESENT        (NL-2)
+  const expected = {
+    'LQ-0001': { 'MD:price.bidSize': 'PRESENT', 'MD:price.askSize': 'PRESENT' },
+    'LQ-0002': { 'MD:price.bidSize': 'NOT_PROVIDED', 'MD:price.askSize': 'NOT_PROVIDED' },
+    'LQ-0003': { 'MD:price.bidSize': 'NULL_ASSERTED', 'MD:price.askSize': 'NULL_ASSERTED' },
+  };
+  for (const state of LC_EMITTING) {
+    for (const [fid, exp] of Object.entries(expected)) {
+      const r = lcSnapshot(LC_FIXTURE[state], { fixtureId: fid });
+      assert.equal(r.ok, true, `${state}/${fid} must emit`);
+      for (const [k, a] of Object.entries(exp)) {
+        assert.equal(r.snapshot.fields[k].availability, a, `${state}/${fid}/${k}`);
+        if (a !== 'PRESENT') {
+          assert.equal(r.snapshot.fields[k].value, null,
+            `NL-3/NL-7: ${a} never carries a substituted value (no zero, no carry-forward)`);
+        }
+      }
+      // LC-6 — the state comes from the identity register, never from payload silence.
+      assert.equal(r.snapshot.identity.lifecycleStatus, state,
+        'LC-6: missing market data did not turn this instrument into a delisting or any other state');
+    }
+  }
+});
+
+test('Q/7 — D-1/LC-2: snapshot identity does not depend on lifecycle state', () => {
+  const ids = new Set();
+  for (const state of LC_EMITTING) {
+    const r = lcSnapshot(LC_FIXTURE[state]);
+    assert.equal(r.ok, true);
+    const s = r.snapshot;
+    // ST-2 — the snapshotId is a function of (provider, dataVersion, asOf) and nothing else.
+    assert.equal(s.snapshotId, buildSnapshotId(s.provider, s.dataVersion, s.asOf));
+    // ST-3 — and it is consistent with its own parts.
+    assertSnapshotIdConsistent(s.snapshotId,
+      { provider: s.provider, dataVersion: s.dataVersion, asOf: s.asOf });
+    ids.add(s.snapshotId);
+  }
+  assert.equal(ids.size, 1,
+    'LC-2: a lifecycle transition changes state and relationships, never the snapshot anchor');
+  // By construction: lifecycleStatus is not an input to snapshot identity at all.
+  assert.equal(buildSnapshotId.length, 3, 'buildSnapshotId takes exactly (provider, dataVersion, asOf)');
+  assert.equal(
+    buildSnapshotId('mocklive', 'v1', LC_AS_OF),
+    buildSnapshotId('mocklive', 'v1', LC_AS_OF),
+    'D-1: identical (provider, dataVersion, asOf) => identical snapshotId');
+});
+
+test('Q/8 — the widened lifecycle coverage stays deterministic and offline', () => {
+  const digests = new Set();
+  for (let run = 0; run < 5; run += 1) {
+    const parts = [];
+    for (const state of LC_EMITTING) {
+      // A brand-new adapter instance each time — no shared state between runs.
+      const r = lcSnapshot(LC_FIXTURE[state]);
+      assert.equal(r.ok, true, `${state} must emit on run ${run}`);
+      assert.match(canonicalDigest(r.snapshot), /^[0-9a-f]{64}$/);
+      parts.push(canonicalDigest(r.snapshot));
+    }
+    digests.add(parts.join('|'));
+  }
+  assert.equal(digests.size, 1, 'D-3: repeated execution across all states is byte-reproducible');
 });

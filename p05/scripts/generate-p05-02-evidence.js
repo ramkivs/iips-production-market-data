@@ -321,6 +321,39 @@ manifest.push(write('05-provenance-asof-version.json', {
 
 // ───────────────────────────────────────────────────────────── 06. IDENTITY / MAPPING / VENUE / LIFECYCLE
 const unmapped = new MockLiveAdapter().snapshot(mockRequest({ canonicalSecurityId: 'CS-LOCAL-UNMAPPED' }));
+
+// P05-02-B / BD-P05-02-07 — per-state lifecycle coverage, COMPUTED by running each state through
+// the adapter at the observation instant. Nothing here is asserted by hand, so the evidence cannot
+// drift from the fixtures.
+const LC_STATES_ALL = ['active', 'suspended', 'delisted', 'merged', 'superseded'];
+const LC_AS_OF = '2026-03-04T09:31:00.000Z';
+const LIFECYCLE_COVERAGE = (() => {
+  const perState = LC_STATES_ALL.map((st) => {
+    const secs = IDENTITY_FX.securities.filter((x) => x.lifecycleStatus === st);
+    const emitted = [];
+    const failClosed = [];
+    for (const sec of secs) {
+      const r = new MockLiveAdapter().snapshot(mockRequest({ canonicalSecurityId: sec.canonicalSecurityId }));
+      if (r.ok === true) emitted.push(sec.canonicalSecurityId);
+      else failClosed.push(`${sec.canonicalSecurityId} (${r.failure.code})`);
+    }
+    return Object.freeze({
+      state: st,
+      fixtureSecurities: secs.length,
+      fixtureIds: Object.freeze(secs.map((x) => x.canonicalSecurityId)),
+      emittedAtObservationInstant: Object.freeze(emitted),
+      failClosedAtObservationInstant: Object.freeze(failClosed),
+      successorRefRequired: st === 'merged' || st === 'superseded',
+      successorRefsPresent: secs.filter((x) => x.successorRef !== undefined).length,
+      covered: secs.length > 0,
+    });
+  });
+  return Object.freeze({
+    perState: Object.freeze(perState),
+    broken: Object.freeze(perState.filter((p) => !p.covered).map((p) => p.state)),
+    asOf: LC_AS_OF,
+  });
+})();
 manifest.push(write('06-identity-mapping-venue-lifecycle.json', {
   artifact: 'P05-02 IDENTITY, MAPPING, VENUE AND LIFECYCLE REPRESENTATION',
   runStamp: RUN_STAMP,
@@ -354,14 +387,44 @@ manifest.push(write('06-identity-mapping-venue-lifecycle.json', {
     enumeration: ['active', 'suspended', 'delisted', 'merged', 'superseded'],
     source: 'P04_LIFECYCLE_AND_EFFECTIVE_DATING §2 — five values, fixed by D4_05 §G.2 and P01_FIELD_DICTIONARY §7. None added.',
     emittedForThisRun: s.identity.lifecycleStatus,
-    lifecycleStatesExercisedByP05_01Fixtures: [...new Set(IDENTITY_FX.securities.map((x) => x.lifecycleStatus))].sort(),
+    // ⚠ KEY RENAME: was `lifecycleStatesExercisedByP05_01Fixtures`. P05-02-B widened the shared
+    //   identity fixtures, so a P05-01-only label would no longer describe the value accurately.
+    lifecycleStatesExercisedByFixtures: [...new Set(IDENTITY_FX.securities.map((x) => x.lifecycleStatus))].sort(),
     lifecycleStatesNotExercised: ['active', 'suspended', 'delisted', 'merged', 'superseded']
       .filter((st) => !IDENTITY_FX.securities.some((x) => x.lifecycleStatus === st)),
     rule: 'LC-1…LC-6 — effective-dated; a transition never mutates the canonical security ID (LC-2); '
       + 'state is never inferred from absence of data (LC-6).',
-    note: '⚠ The lifecycle vocabulary is CARRIED and validated; the P05-01 fixtures exercise only a '
-      + 'subset of the five states. Widening fixture coverage is a non-blocking improvement and is '
-      + 'recorded as BD-P05-02-07, not silently claimed as complete.',
+    // ── P05-02-B / BD-P05-02-07 — per-state coverage, computed not asserted ──────────────────
+    coverageUnit: 'P05-02-B — lifecycle-state coverage completion (BD-P05-02-07)',
+    bdP05_02_07Status: LIFECYCLE_COVERAGE.broken.length === 0
+      ? 'RESOLVED — all five authoritative states are exercised by the fixtures and by the '
+        + 'adapter-contract test group Q/1…Q/8. Fixture and test coverage only.'
+      : `NOT RESOLVED — unexercised: ${LIFECYCLE_COVERAGE.broken.join(', ')}`,
+    perState: LIFECYCLE_COVERAGE.perState,
+    coverageDefinition: 'A state counts as covered when at least one fixture security carries it AND '
+      + 'adapter-contract test group Q/1…Q/8 exercises it. ⚠ A fail-closed outcome at the '
+      + 'observation instant is CORRECT behaviour, not a coverage gap: CS-LOCAL-0004 (delisted) has '
+      + 'an effective window that closed 2023-12-29, so ADP-7 requires resolution to fail rather '
+      + 'than to fall back (FC-1/ADP-2/MC-7). Q/5 additionally proves it resolves INSIDE its window.',
+    successorLinks: IDENTITY_FX.securities
+      .filter((x) => x.successorRef !== undefined)
+      .map((x) => Object.freeze({
+        predecessor: x.canonicalSecurityId,
+        predecessorState: x.lifecycleStatus,
+        successor: x.successorRef.canonicalSecurityId,
+        linkEffectiveFrom: x.successorRef.effective.from,
+        linkEffectiveTo: x.successorRef.effective.to,
+        rule: 'LC-4 — merged/superseded require a successor reference, itself effective-dated.',
+      })),
+    snapshotIdDependsOnLifecycle: false,
+    snapshotIdInputs: 'provider, dataVersion, asOf (ST-2). LC-2: a transition changes state and '
+      + 'relationships, never the snapshot or identity anchor.',
+    note: '⚠ P05-02-B widened FIXTURE and TEST coverage only. It closes BD-P05-02-07 and nothing '
+      + 'else. It selects no provider, provisions no credential, opens no connection, and does NOT '
+      + 'close the provider-dependent tracker exit criteria: BD-P05-02-01 (provider selection / '
+      + 'entitlement / credentials), BD-P05-02-02 ("authenticated ingestion works") and '
+      + 'BD-P05-02-03 ("provider evidence") all remain UNMET and require live execution, which D9 '
+      + 'N-1 does not authorize.',
   },
 }));
 
@@ -515,9 +578,14 @@ manifest.push(write('11-blocked-provider-dependent-items.json', {
     { id: 'BD-P05-02-06', item: 'P05-01 regex secret scanner does not detect the serialized-JSON credential form', status: 'OPEN',
       blocks: 'Nothing in P05-02 — LA-20 covers it structurally',
       note: 'Recorded because it is a real gap in an accepted artifact. Repairing it is out of P05-02 scope.' },
-    { id: 'BD-P05-02-07', item: 'Lifecycle fixture coverage exercises 2 of 5 states', status: 'OPEN',
+    { id: 'BD-P05-02-07', item: 'Lifecycle fixture coverage exercises 2 of 5 states', status: 'RESOLVED',
       blocks: 'Nothing — non-blocking test-coverage improvement',
-      note: 'suspended / merged / superseded are unexercised by the P05-01 fixtures.' },
+      resolvedBy: 'P05-02-B — lifecycle-state coverage completion (2026-09-09)',
+      note: 'suspended / merged / superseded were unexercised. P05-02-B added fixture identities for '
+        + 'all three (plus the two successor identities LC-4 requires for merged/superseded) and '
+        + 'adapter-contract tests Q/1…Q/8. Coverage is now 5 of 5. ⚠ This closed a fixture/test gap '
+        + 'ONLY — it did not select a provider, provision a credential, open a connection, or close '
+        + 'any provider-dependent tracker exit criterion.' },
     { id: 'BD-P05-02-08', item: 'OI-P04-03 — tenant/region governance attribute set', status: 'OPEN',
       blocks: 'Per-record tenant/region governance application',
       note: 'D9 N-4/N-5, IB-1…IB-5. NO tenant or region attribute was invented here.' },

@@ -77,7 +77,7 @@ with `NOT_AUTHORIZED` production activation.
 | **BD-P05-02-04** | **OI-P04-04** — FIGI sourcing, licensing, coverage | OPEN at P04; D9 **N-2** | **OPEN**. Synthetic values only; **no** licensing or coverage claim |
 | **BD-P05-02-05** | ISO-4217 currency vocabulary is **provider-specific configuration** (**LA-31**) | Full membership validation needs the vocabulary as configuration — layer 3, **not authorized** by D9 A-2 | **OPEN**. Local double is `SHAPE_ONLY`; a shape-valid non-code (`XYZ`) is **not** caught locally, and that is stated, not hidden |
 | **BD-P05-02-06** | The P05-01 regex secret scanner does not detect the **serialized-JSON** credential form | A regex over text cannot see structure | **OPEN**. **LA-20** covers it structurally. Repairing the P05-01 scanner is out of P05-02 scope |
-| **BD-P05-02-07** | Lifecycle fixture coverage exercises **2 of 5** states | `suspended`, `merged`, `superseded` unexercised by the P05-01 fixtures | **OPEN**, **non-blocking**. Widening fixtures touches no boundary |
+| **BD-P05-02-07** | Lifecycle fixture coverage exercises **2 of 5** states | `suspended`, `merged`, `superseded` unexercised by the P05-01 fixtures | ✅ **RESOLVED by P05-02-B** (2026-09-09) — coverage now **5 of 5**. Was **OPEN**, **non-blocking**; widening fixtures touched no boundary. See §6.1 |
 | **BD-P05-02-08** | **OI-P04-03** — tenant/region governance attribute set | D9 **N-4**, **N-5**; **IB-1…IB-5** | **OPEN**. **No attribute invented.** Lifting **IB-1** requires an explicit **A1** act |
 | **BD-P05-02-09** | **P05-04** orchestration — scheduling, retries, idempotent checkpointing | **D9 N-3 — NOT AUTHORIZED** | **NOT AUTHORIZED**. **LA-28** classifies retryability only; it implements no policy |
 | **BD-P05-02-10** | **A3 gate acceptor** for P05 acceptance | **UNKNOWN** — no person is named in `P00_AUTHORITY_REGISTER.md` or `D9_STATUS.json` | **UNKNOWN**. Blocks **acceptance**, not P05-02. The only person-level hard blocker |
@@ -149,3 +149,31 @@ reached out, which a lexical scan cannot provide.
 for them would close the lifecycle coverage gap **without touching any boundary**, and would exercise
 **LC-4** (successor references for `merged`/`superseded`). It was **not** done here, because it
 belongs to P05-01's fixture set and this package is additive.
+
+
+### 6.1 ✅ RESOLVED by P05-02-B (2026-09-09) — lifecycle-state coverage completion
+
+§6 above is left **unedited** as the record of the moment P05-02 was recorded. The gap it
+describes has since been closed by the follow-on unit **P05-02-B**, under the same authority
+(D9 §3 **A-2**, specification / adapter-contract scope only).
+
+| Field | Content |
+|---|---|
+| **Unit** | **P05-02-B — lifecycle-state coverage completion** |
+| **Closes** | **BD-P05-02-07** — and **nothing else** |
+| **Coverage** | **2 of 5 → 5 of 5**. `suspended` (→ `CS-LOCAL-0006`), `merged` (→ `CS-LOCAL-0007`), `superseded` (→ `CS-LOCAL-0008`), plus the two **successor** identities **LC-4** requires: `CS-LOCAL-0009` (successor of 0007) and `CS-LOCAL-0010` (successor of 0008) |
+| **Tests** | New adapter-contract group **Q/1…Q/8** (`p05/tests/adapter-contract.test.js`). Suite **192 → 200**, all passing |
+| **Rules exercised** | **LC-1** effective-dated · **LC-2** a transition never mutates the canonical ID · **LC-3** a retired identity stays resolvable for PIT · **LC-4** `merged`/`superseded` require an effective-dated successor · **LC-6** a state is never inferred from absence · **ADP-7**/**MC-5** windowed fail-closed · **MC-2**/**MC-4** N:1 projection with distinct securities · **D-1**/**ST-2**/**ST-3** snapshot identity · **NL-1**/**NL-3**/**NL-4**/**NL-7** absence semantics |
+| **Vocabulary** | **UNCHANGED**. `LIFECYCLE_STATES = ['active','suspended','delisted','merged','superseded']` — no state added, none reinterpreted |
+| **Contract source** | **UNCHANGED**. No `p05/src/` file was modified; the contract already declared all five states correctly |
+| **Existing tests** | **NONE modified**. The one regression seen during development (`MC-1 / OI-08`, which pins `CI-LOCAL-ALPHA` to exactly 2 securities) was resolved by giving the new `suspended` fixture its **own** canonical issuer `CI-LOCAL-KAPPA`, not by editing the assertion |
+| **⚠ `delisted`** | Exercised as a **fail-closed** path, not a successful emission. `CS-LOCAL-0004`'s effective window closed **2023-12-29**, so at the observation instant `2026-03-04T09:31:00.000Z` **ADP-7 requires** resolution to fail (**FC-1/ADP-2/MC-7**) rather than fall back. **Q/5** additionally proves it resolves *inside* its window. This is correct behaviour, not a coverage gap |
+| **Determinism** | Preserved and re-verified: evidence **byte-identical** across consecutive regenerations; **Q/8** asserts 5 runs → 1 digest across all emitting states |
+
+> ⚠ **This unit closed a fixture/test gap ONLY.** It did **not** select a provider, provision a
+> credential, open a connection, execute licensed historical acquisition, or perform P05-04
+> orchestration. **The provider-dependent tracker exit criteria remain UNMET**: **BD-P05-02-01**
+> (provider selection / entitlement / credentials), **BD-P05-02-02** (*"Authenticated ingestion
+> works"*) and **BD-P05-02-03** (*"Provider evidence"*) can only be closed by live execution, which
+> **D9 N-1 does not authorize**. **BD-P05-02-05** (ISO-4217 vocabulary as provider-specific
+> configuration) also remains **OPEN** and was deliberately **not** expanded here.

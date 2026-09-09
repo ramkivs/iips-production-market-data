@@ -51,7 +51,7 @@
     },
     {
       "file": "p05/evidence-p05-02/06-identity-mapping-venue-lifecycle.json",
-      "sha256": "503ba328ccc0907104f681733b3ac6f2e156b101958c600add7dc67a2c35b593"
+      "sha256": "14a60f68b4108df25788c48a6dae6388dd875fa5b70da1f2ef1b1ed24ef081b3"
     },
     {
       "file": "p05/evidence-p05-02/07-namespace.json",
@@ -71,7 +71,7 @@
     },
     {
       "file": "p05/evidence-p05-02/11-blocked-provider-dependent-items.json",
-      "sha256": "a8ccc799a582131652bee4e91e873054f60ef81fa48c20084de54c1abde597e4"
+      "sha256": "80c4ebd49b55dea4e3c5fc4d1a831518add99ba9878a7a8ffc411dc66942c9ef"
     },
     {
       "file": "p05/evidence-p05-02/12-boundary-attestations.json",
