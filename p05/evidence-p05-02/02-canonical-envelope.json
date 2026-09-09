@@ -1,0 +1,107 @@
+{
+  "artifact": "P05-02 CANONICAL INPUT / OUTPUT ENVELOPE",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "canonicalModelForked": false,
+  "canonicalModelOwner": "P05-01 — p05/src/{contract,namespace,identity,validate,errors,serialize}.js",
+  "request": {
+    "domain": "D01",
+    "mode": "LIVE",
+    "fixtureId": "LQ-0001",
+    "canonicalSecurityId": "CS-LOCAL-0001",
+    "venueRef": "XSYN",
+    "identifierInput": "CANONICAL_SECURITY_ID",
+    "requestedFields": [
+      "bid",
+      "ask",
+      "last",
+      "bidSize",
+      "askSize",
+      "venueRef"
+    ],
+    "receivedAt": "2026-03-04T10:00:00.000Z",
+    "entitlementFixture": "ENT-0001",
+    "entitlementRef": "ENT-REQ-D01-QUOTE",
+    "authFixture": "AUTH-OK"
+  },
+  "outputEnvelopeSlots": [
+    "asOf",
+    "completenessPct",
+    "dataVersion",
+    "domain",
+    "fields",
+    "identity",
+    "identityMappingVersion",
+    "lineage",
+    "mode",
+    "namespaceVersion",
+    "provider",
+    "quality",
+    "receivedAt",
+    "schemaVersion",
+    "snapshotId"
+  ],
+  "snapshot": {
+    "snapshotId": "data-mocklive-v888435d2c98a6161-2026-03-04T09:31:00.000Z",
+    "provider": "mocklive",
+    "dataVersion": "v888435d2c98a6161",
+    "schemaVersion": "canonical-1.0",
+    "namespaceVersion": "1.0",
+    "asOf": "2026-03-04T09:31:00.000Z",
+    "receivedAt": "2026-03-04T10:00:00.000Z",
+    "mode": "LIVE",
+    "quality": "good",
+    "completenessPct": 100,
+    "domain": "D01",
+    "fieldKeys": [
+      "MD:price.ask",
+      "MD:price.askSize",
+      "MD:price.bid",
+      "MD:price.bidSize",
+      "MD:price.last",
+      "MD:price.venueRef"
+    ],
+    "digest": "bf00aa1a0805e3e20560e00e6ee60f3817e25d5ab1a43888ec01a3fc101dfb86"
+  },
+  "resultEnvelope": {
+    "ok": true,
+    "quality": "good",
+    "completenessPct": 100,
+    "trace": [
+      "preflight",
+      "entitlement",
+      "authenticate",
+      "fetch",
+      "fetched",
+      "normalize",
+      "map",
+      "validate",
+      "emit"
+    ],
+    "note": "The result envelope shape is IDENTICAL to the P05-01 local feed's, which is what makes the two adapters substitutable behind MarketDataSource<T> (P02 B-3, PS-1)."
+  },
+  "p05_01Compatibility": {
+    "sameSoleIngress": true,
+    "sameResultEnvelope": true,
+    "sameEnvelopeSlots": true,
+    "sameNamespaceVersion": true,
+    "sameIdentityMappingVersion": true,
+    "distinctProviderIdentity": "localfix (P05-01) vs mocklive (P05-02 test double) — PS-3",
+    "localFeedIsALiveAdapter": false,
+    "localFeedCanSatisfyP05_02": false
+  }
+}

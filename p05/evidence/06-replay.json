@@ -1,0 +1,228 @@
+{
+  "artifact": "P05-01 DETERMINISTIC REPLAY EVIDENCE (D-2, SI-4, SN-4, RI-1…RI-6)",
+  "note": "⚠ This is a LOCAL P05-01 canonical record store. It is NOT the existing-IIPS ReplayService, which is UNTOUCHED (S-8). AD-17 remains UNRESOLVED.",
+  "passes": 3,
+  "recordCountAfterThreePasses": 8,
+  "expectedRecordCount": 8,
+  "duplicateRecordsCreated": 0,
+  "ingestOutcomes": {
+    "pass1": [
+      "INSERTED",
+      "INSERTED",
+      "INSERTED",
+      "INSERTED",
+      "INSERTED",
+      "INSERTED",
+      "INSERTED",
+      "INSERTED"
+    ],
+    "pass2": [
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP"
+    ],
+    "pass3": [
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP",
+      "IDEMPOTENT_NOOP"
+    ]
+  },
+  "byteIdenticalAcrossPasses": true,
+  "effectiveReplayIdentity": "d1792882323c0ca6911143063b7ebc1945f23b995a5f8b2cde92a428f06d6951",
+  "replayReproducible": true,
+  "orderIsSignificant": true,
+  "contributing": [
+    {
+      "dataSnapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "provider": "localfix",
+      "dataVersion": "v10220dc2c33df0e4",
+      "asOf": "2026-03-02T14:30:00.000Z",
+      "receivedAt": "2026-03-03T15:00:00.000Z",
+      "mode": "LIVE",
+      "quality": "good",
+      "completenessPct": 100,
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:Q-0001"
+        ]
+      },
+      "digest": "1ac45dff809206b832df294b292eb01010b1c2e954d512414a4449a27877e107"
+    },
+    {
+      "dataSnapshotId": "data-localfix-v7ff01f9f702518bd-2026-03-02T14:30:00.000Z",
+      "provider": "localfix",
+      "dataVersion": "v7ff01f9f702518bd",
+      "asOf": "2026-03-02T14:30:00.000Z",
+      "receivedAt": "2026-03-03T15:00:00.000Z",
+      "mode": "LIVE",
+      "quality": "partial",
+      "completenessPct": 50,
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:Q-0002"
+        ]
+      },
+      "digest": "d38e9cb559c872f04b8acb7cfe7efbe6c01ff6cd0e0e385a0707306f1099117d"
+    },
+    {
+      "dataSnapshotId": "data-localfix-vd4521c1ece53346f-2026-03-02T00:00:00.000Z",
+      "provider": "localfix",
+      "dataVersion": "vd4521c1ece53346f",
+      "asOf": "2026-03-02T00:00:00.000Z",
+      "receivedAt": "2026-03-03T15:00:00.000Z",
+      "mode": "SNAPSHOT",
+      "quality": "good",
+      "completenessPct": 100,
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:C-0001"
+        ]
+      },
+      "digest": "a02558ab9549b7ee8d6f65eff913c14c3a335a4200103026ac411d0cc5e003ed"
+    },
+    {
+      "dataSnapshotId": "data-localfix-v499ed6f25513a959-2026-03-03T00:00:00.000Z",
+      "provider": "localfix",
+      "dataVersion": "v499ed6f25513a959",
+      "asOf": "2026-03-03T00:00:00.000Z",
+      "receivedAt": "2026-03-03T15:00:00.000Z",
+      "mode": "SNAPSHOT",
+      "quality": "partial",
+      "completenessPct": 85.71,
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:C-0002"
+        ]
+      },
+      "digest": "da50777d541adb859ea03ff5a5bc1bafefa44b703acfd0e5eb6736c7bc58f89f"
+    },
+    {
+      "dataSnapshotId": "data-localfix-v2823e367943de8ce-2026-03-02T00:00:00.000Z",
+      "provider": "localfix",
+      "dataVersion": "v2823e367943de8ce",
+      "asOf": "2026-03-02T00:00:00.000Z",
+      "receivedAt": "2026-03-03T15:00:00.000Z",
+      "mode": "SNAPSHOT",
+      "quality": "partial",
+      "completenessPct": 75,
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:V-0001"
+        ]
+      },
+      "digest": "67aa04a7a6c88f2cd7ab0abb572dc99f72c839f77a8b85fe9f5b3f4f40e192cf"
+    },
+    {
+      "dataSnapshotId": "data-localfix-v1c3bd7d7048e1cc6-2026-03-02T00:00:00.000Z",
+      "provider": "localfix",
+      "dataVersion": "v1c3bd7d7048e1cc6",
+      "asOf": "2026-03-02T00:00:00.000Z",
+      "receivedAt": "2026-03-03T15:00:00.000Z",
+      "mode": "SNAPSHOT",
+      "quality": "good",
+      "completenessPct": 100,
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:H-0001:bar:2026-03-02"
+        ]
+      },
+      "digest": "4e3c7e8a290faf037ffc29c969837716fde1555078977ee72db823133323d9e9"
+    },
+    {
+      "dataSnapshotId": "data-localfix-v083dd54992e57ce9-2018-01-01T00:00:00.000Z",
+      "provider": "localfix",
+      "dataVersion": "v083dd54992e57ce9",
+      "asOf": "2018-01-01T00:00:00.000Z",
+      "receivedAt": "2026-03-03T15:00:00.000Z",
+      "mode": "SNAPSHOT",
+      "quality": "good",
+      "completenessPct": 100,
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:venue:XSYN"
+        ]
+      },
+      "digest": "728908dd2d03eaf61af359c9c0759c1205f0df49a27292ac4d94292b70260603"
+    },
+    {
+      "dataSnapshotId": "data-localfix-vc010b8366e3fcd20-2018-01-01T00:00:00.000Z",
+      "provider": "localfix",
+      "dataVersion": "vc010b8366e3fcd20",
+      "asOf": "2018-01-01T00:00:00.000Z",
+      "receivedAt": "2026-03-03T15:00:00.000Z",
+      "mode": "SNAPSHOT",
+      "quality": "good",
+      "completenessPct": 100,
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:venue:XSYNSG1"
+        ]
+      },
+      "digest": "eaf3123a7dcc383ca1a7c872493ab8903ca20ed3354dde78ff7e27c0440a4f44"
+    }
+  ]
+}

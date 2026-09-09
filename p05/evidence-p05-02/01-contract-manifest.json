@@ -1,0 +1,212 @@
+{
+  "artifact": "P05-02 ADAPTER CONTRACT MANIFEST",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "contract": {
+    "contractId": "P05-02-LIVE-MARKET-DATA-ADAPTER-CONTRACT",
+    "contractVersion": "1.0",
+    "minorChangeRule": "AV-3 — shape, phase, gate-order or conformance-rule change",
+    "majorChangeRule": "AV-4 — change to the canonical output a conforming adapter must produce",
+    "immutableOnceReleased": "AV-5 — corrections produce a new contract version, never an edit"
+  },
+  "interface": {
+    "soleIngress": "snapshot(request) — MarketDataSource<T> (P02 B-4 / AD-2). The phases are the adapter's INTERNAL decomposition, not a second public ingress contract.",
+    "providerKinds": [
+      "LOCAL_FIXTURE",
+      "LIVE"
+    ],
+    "commonOperations": [
+      "declare",
+      "preflight",
+      "normalize",
+      "map",
+      "validate",
+      "emit"
+    ],
+    "liveOnlyOperations": [
+      "checkEntitlement",
+      "authenticate",
+      "fetch"
+    ],
+    "phases": [
+      {
+        "order": 1,
+        "phase": "declare",
+        "op": "declare",
+        "liveOnly": false,
+        "performsIO": false,
+        "failureClass": null,
+        "authority": [
+          "P02_PROVIDER_ABSTRACTION_CONTRACT A-1…A-8",
+          "P02_PROVIDER_CAPABILITY_MODEL CD-1, C-1…C-18"
+        ]
+      },
+      {
+        "order": 2,
+        "phase": "preflight",
+        "op": "preflight",
+        "liveOnly": false,
+        "performsIO": false,
+        "failureClass": "E6",
+        "authority": [
+          "P02 A-10",
+          "P02_PROVIDER_CAPABILITY_MODEL CE-1…CE-8, UC-1…UC-5"
+        ]
+      },
+      {
+        "order": 3,
+        "phase": "entitlement",
+        "op": "checkEntitlement",
+        "liveOnly": true,
+        "performsIO": false,
+        "failureClass": "E3",
+        "authority": [
+          "P02 A-11",
+          "P02_ENTITLEMENT_MODEL EV-1…EV-8, EN-1…EN-12, EM-1…EM-4"
+        ]
+      },
+      {
+        "order": 4,
+        "phase": "authenticate",
+        "op": "authenticate",
+        "liveOnly": true,
+        "performsIO": true,
+        "failureClass": "E2",
+        "authority": [
+          "P02_ERROR_TAXONOMY E2",
+          "P02_ENTITLEMENT_MODEL SP-1…SP-6",
+          "P04 SEC-1"
+        ]
+      },
+      {
+        "order": 5,
+        "phase": "fetch",
+        "op": "fetch",
+        "liveOnly": true,
+        "performsIO": true,
+        "failureClass": "E1|E4|E5|E7",
+        "authority": [
+          "P02 A-12, A-13"
+        ]
+      },
+      {
+        "order": 6,
+        "phase": "normalize",
+        "op": "normalize",
+        "liveOnly": false,
+        "performsIO": false,
+        "failureClass": "E5",
+        "authority": [
+          "P02 A-13",
+          "P02_COMPATIBILITY_AND_SUBSTITUTION IC-4, IC-5"
+        ]
+      },
+      {
+        "order": 7,
+        "phase": "map",
+        "op": "map",
+        "liveOnly": false,
+        "performsIO": false,
+        "failureClass": "E8",
+        "authority": [
+          "P02 A-14, A-15",
+          "P02_PROVIDER_MAPPING_RULES MD-1…MD-8, MR-1…MR-5, N-1…N-2"
+        ]
+      },
+      {
+        "order": 8,
+        "phase": "validate",
+        "op": "validate",
+        "liveOnly": false,
+        "performsIO": false,
+        "failureClass": "RJ",
+        "authority": [
+          "P01_VALIDATION_RULES S1…S4"
+        ]
+      },
+      {
+        "order": 9,
+        "phase": "emit",
+        "op": "emit",
+        "liveOnly": false,
+        "performsIO": false,
+        "failureClass": null,
+        "authority": [
+          "P02 A-16, A-18, S-1…S-7",
+          "P02_OBSERVABILITY_REQUIREMENTS R-1…R-15, SL-1…SL-4"
+        ]
+      }
+    ],
+    "gateOrder": {
+      "execution": [
+        "preflight",
+        "entitlement",
+        "authenticate",
+        "fetch"
+      ],
+      "classificationPrecedence": [
+        "E6",
+        "E3",
+        "E2",
+        "E1"
+      ],
+      "note": "LA-4 — the execution order reproduces the EXISTING classification precedence (E6→E3→E2→E1) rather than inventing one, and honours EV-1 (entitlement before acquisition). Authentication is not acquisition."
+    },
+    "rulePrefix": "LA-",
+    "ruleCount": 31
+  },
+  "authorizationMatrix": [
+    {
+      "layer": "ADAPTER_SPECIFICATION",
+      "what": "The provider-neutral live-adapter specification (docs/p05/P05_02_SPECIFICATION.md)",
+      "authorized": true,
+      "authority": "D9 A-2"
+    },
+    {
+      "layer": "ADAPTER_CONTRACT",
+      "what": "The executable contract/conformance surface (this module) + contract validation tests",
+      "authorized": true,
+      "authority": "D9 A-2"
+    },
+    {
+      "layer": "PROVIDER_SPECIFIC_CONFIGURATION",
+      "what": "Real provider identity, endpoint, schema binding, entitlement values, credentials",
+      "authorized": false,
+      "authority": "D9 N-1 — provider selection NONE MADE; entitlement matrix EMPTY; credentials NONE; P16 authority not held"
+    },
+    {
+      "layer": "LIVE_PROVIDER_EXECUTION",
+      "what": "Contacting a provider, authenticating, ingesting live quotes/prices",
+      "authorized": false,
+      "authority": "D9 N-1 — ⚠ No live provider execution"
+    }
+  ],
+  "moduleSurfaceRule": {
+    "rule": "LA-19",
+    "prohibits": [
+      "network module import",
+      "process-spawning module import",
+      "wall-clock read",
+      "random source",
+      "environment/ambient state read",
+      "credential material",
+      "endpoint URL"
+    ],
+    "patternListLocation": "tests/adapter-contract.test.js",
+    "verifiedBy": "tests/adapter-contract.test.js — source-surface scan"
+  }
+}

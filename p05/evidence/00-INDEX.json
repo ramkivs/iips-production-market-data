@@ -1,0 +1,78 @@
+{
+  "artifact": "P05-01 EVIDENCE PACKAGE INDEX",
+  "phase": "P05-01 — Local deterministic market feed",
+  "authorization": "D9 §3 A-1 (docs/d9/D9_P05_ENTRY_AUTHORIZATION.md)",
+  "authorizationCommit": "D9 — see docs/d9/D9_STATUS.json",
+  "baselineCommit": "efe33eae287d2181cfdd5a838b0d9e5112fcdad3",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "deterministic": true,
+  "commands": {
+    "runTests": "cd p05 && npm test",
+    "regenerateEvidence": "cd p05 && npm run evidence"
+  },
+  "evidenceFiles": [
+    {
+      "file": "p05/evidence/01-fixture-manifest.json",
+      "sha256": "19143dcb67c7e6f109b1d2a5e63087de62a48c24d12c2b0a2794f5aa0a102ea2"
+    },
+    {
+      "file": "p05/evidence/02-input-payloads.json",
+      "sha256": "1f2441e93da55780167ac0eaa8d727beb47db6da6c91aed14e57862288e669b2"
+    },
+    {
+      "file": "p05/evidence/03-canonical-output.json",
+      "sha256": "da828910063b5f73bce4170a05ffe63d889900804786e6d3dcdd3abbba592e7f"
+    },
+    {
+      "file": "p05/evidence/04-provenance.json",
+      "sha256": "3413e07e0946ea2291629ae43ef255f79daf123cbe29e89f1f5c318a5a320ee2"
+    },
+    {
+      "file": "p05/evidence/05-asof-and-version.json",
+      "sha256": "2a3578315551e004e3bd47b3a8a6095d7dd153a99f4a5e30fb4d255b472aa4bb"
+    },
+    {
+      "file": "p05/evidence/06-replay.json",
+      "sha256": "cc61ad987c29555dd8b96076923f06dd0eab7f2f2d50a7e13fac6165dcae7a94"
+    },
+    {
+      "file": "p05/evidence/07-idempotency.json",
+      "sha256": "c6352141a960d3632b174692b006c2cfb95adfe30eed375c30417779a3671b26"
+    },
+    {
+      "file": "p05/evidence/08-negative-and-error.json",
+      "sha256": "582e37b78e6f21ca2dd8532201e9b6a43e1e28c06cdf22ac81d0e7b699e0ea33"
+    },
+    {
+      "file": "p05/evidence/09-namespace-identity.json",
+      "sha256": "34aa4214cc2418ea25db1e11bdc1ca878cfd7a2616e8a4df7e30c927605fda13"
+    },
+    {
+      "file": "p05/evidence/10-repeatability.json",
+      "sha256": "e084b33154691772365f193f3175eee6ed9bbdd31e8215be1160d162a4cb073c"
+    },
+    {
+      "file": "p05/evidence/11-vintage-drift.json",
+      "sha256": "4356252ac4890d03b6102c3e8cb001e26f4ebec85ae53a6739c04c3878b86d7e"
+    },
+    {
+      "file": "p05/evidence/12-existing-iips-boundary.json",
+      "sha256": "7ecbfb83be039832eae7c4bf4be25349604611863d0ca0136fb6fe90a57827c3"
+    }
+  ],
+  "gateStatus": {
+    "p05EntryAuthorization": "AUTHORIZED",
+    "p05Acceptance": "NOT_ACCEPTED",
+    "p05GateAcceptanceArtifactCreated": false,
+    "certification": "NONE_GRANTED",
+    "productionActivation": "NOT_AUTHORIZED",
+    "p06": "NOT_STARTED_NOT_PROMOTED",
+    "p07": "NOT_STARTED_NOT_PROMOTED",
+    "p08": "NOT_STARTED"
+  },
+  "openItemsUnchanged": {
+    "OI-P04-04": "OPEN — FIGI sourcing/licensing/coverage. Not resolved here.",
+    "OI-P04-03": "OPEN — tenant/region governance attribute set. IB-1…IB-5 bound intact; no attribute invented.",
+    "OI-D9-01": "See docs/p05/P05_01_OPEN_ITEMS.md — the recorded premise was corrected by evidence."
+  }
+}

@@ -1,0 +1,290 @@
+{
+  "artifact": "P05-02 ERROR CLASSIFICATION MAPPING (P02 E1–E8 — UNCHANGED)",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "taxonomyUnchanged": "INV-6 / FC-6: E1–E8 is UNCHANGED. No class is added, removed or reclassified.",
+  "errorClasses": {
+    "E1": "PROVIDER_UNAVAILABLE",
+    "E2": "AUTHENTICATION_FAILURE",
+    "E3": "ENTITLEMENT_FAILURE",
+    "E4": "TRANSIENT_FAILURE",
+    "E5": "MALFORMED_RESPONSE",
+    "E6": "UNSUPPORTED_CAPABILITY",
+    "E7": "RATE_LIMIT_FAILURE",
+    "E8": "CONTRACT_MAPPING_FAILURE"
+  },
+  "dispositions": {
+    "E1": {
+      "code": "E1",
+      "label": "PROVIDER_UNAVAILABLE",
+      "kind": "DATA_CONDITION",
+      "producesSnapshot": true,
+      "quality": "unavailable",
+      "retryable": false
+    },
+    "E2": {
+      "code": "E2",
+      "label": "AUTHENTICATION_FAILURE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "quality": null,
+      "retryable": false
+    },
+    "E3": {
+      "code": "E3",
+      "label": "ENTITLEMENT_FAILURE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "quality": null,
+      "retryable": false
+    },
+    "E4": {
+      "code": "E4",
+      "label": "TRANSIENT_FAILURE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "quality": null,
+      "retryable": true
+    },
+    "E5": {
+      "code": "E5",
+      "label": "MALFORMED_RESPONSE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "quality": null,
+      "retryable": false
+    },
+    "E6": {
+      "code": "E6",
+      "label": "UNSUPPORTED_CAPABILITY",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "quality": null,
+      "retryable": false
+    },
+    "E7": {
+      "code": "E7",
+      "label": "RATE_LIMIT_FAILURE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "quality": null,
+      "retryable": true
+    },
+    "E8": {
+      "code": "E8",
+      "label": "CONTRACT_MAPPING_FAILURE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "quality": null,
+      "retryable": false
+    }
+  },
+  "classificationGateOrder": [
+    "E6",
+    "E3",
+    "E2",
+    "E1"
+  ],
+  "retryContract": {
+    "retryableClasses": [
+      "E4",
+      "E7"
+    ],
+    "retryProhibitedClasses": [
+      "E2",
+      "E3",
+      "E5",
+      "E6",
+      "E8"
+    ],
+    "ownerOfExecution": "P05-04 (NOT AUTHORIZED — D9 N-3)",
+    "rules": [
+      "ES-4 — retry must never be applied to a deterministic failure (E2, E3, E5, E6, E8)",
+      "E4 — rejection AFTER the retry policy is exhausted; may degrade to E1 under policy",
+      "E7 — rejection; may degrade to E1 under policy",
+      "E4/E7 → E1 escalation must be RECORDED, never silent (P02_OBSERVABILITY R-11, MQ M-6)",
+      "A retry must not mutate an already-emitted snapshot (A-22); a correction is a new dataVersion",
+      "Idempotent re-delivery of an identical (provider, dataVersion, asOf) must yield the identical snapshotId (D-1)"
+    ]
+  },
+  "qualityBearingClasses": [
+    "E1"
+  ],
+  "retryProhibited": [
+    "E2",
+    "E3",
+    "E5",
+    "E6",
+    "E8"
+  ],
+  "scenarios": [
+    {
+      "case": "LQ-E6-DOM",
+      "expected": "E6",
+      "observed": "E6",
+      "matched": true,
+      "producesSnapshot": false,
+      "trace": [
+        "preflight"
+      ]
+    },
+    {
+      "case": "LQ-E6-GRAN",
+      "expected": "E6",
+      "observed": "E6",
+      "matched": true,
+      "producesSnapshot": false,
+      "trace": [
+        "preflight"
+      ]
+    },
+    {
+      "case": "LQ-E6-MODE",
+      "expected": "E6",
+      "observed": "E6",
+      "matched": true,
+      "producesSnapshot": false,
+      "trace": [
+        "preflight"
+      ]
+    },
+    {
+      "case": "LQ-E3",
+      "expected": "E3",
+      "observed": "E3",
+      "matched": true,
+      "producesSnapshot": false,
+      "trace": [
+        "preflight",
+        "entitlement"
+      ]
+    },
+    {
+      "case": "LQ-E2",
+      "expected": "E2",
+      "observed": "E2",
+      "matched": true,
+      "producesSnapshot": false,
+      "trace": [
+        "preflight",
+        "entitlement",
+        "authenticate"
+      ]
+    },
+    {
+      "case": "LQ-E1",
+      "expected": "E1",
+      "observed": "ok(quality=unavailable)",
+      "matched": true,
+      "producesSnapshot": true,
+      "trace": [
+        "preflight",
+        "entitlement",
+        "authenticate",
+        "fetch"
+      ]
+    },
+    {
+      "case": "LQ-E4",
+      "expected": "E4",
+      "observed": "E4",
+      "matched": true,
+      "producesSnapshot": false,
+      "trace": [
+        "preflight",
+        "entitlement",
+        "authenticate",
+        "fetch"
+      ]
+    },
+    {
+      "case": "LQ-E7",
+      "expected": "E7",
+      "observed": "E7",
+      "matched": true,
+      "producesSnapshot": false,
+      "trace": [
+        "preflight",
+        "entitlement",
+        "authenticate",
+        "fetch"
+      ]
+    },
+    {
+      "case": "CS-LOCAL-UNMAPPED",
+      "expected": "E8",
+      "observed": "E8",
+      "matched": true,
+      "producesSnapshot": false,
+      "trace": [
+        "preflight",
+        "entitlement",
+        "authenticate",
+        "fetch",
+        "fetched",
+        "normalize",
+        "map"
+      ]
+    },
+    {
+      "case": "LQ-E5-TYPE",
+      "expected": "E5",
+      "observed": "E5",
+      "matched": true,
+      "phase": "normalize",
+      "producesSnapshot": false
+    },
+    {
+      "case": "LQ-E5-MISSING",
+      "expected": "E5",
+      "observed": "E5",
+      "matched": true,
+      "phase": "normalize",
+      "producesSnapshot": false
+    },
+    {
+      "case": "LQ-E8-CCY",
+      "expected": "E8",
+      "observed": "E8",
+      "matched": true,
+      "phase": "map",
+      "producesSnapshot": false
+    },
+    {
+      "case": "LQ-E8-AMBIG-TS",
+      "expected": "E8",
+      "observed": "E8",
+      "matched": true,
+      "phase": "map",
+      "producesSnapshot": false
+    }
+  ],
+  "allMatched": true,
+  "failureRecordSlots": [
+    "F-1",
+    "F-2",
+    "F-3",
+    "F-4",
+    "F-5",
+    "F-6",
+    "F-7",
+    "F-8",
+    "F-9",
+    "F-10",
+    "F-11"
+  ]
+}

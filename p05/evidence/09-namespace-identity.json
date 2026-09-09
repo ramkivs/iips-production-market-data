@@ -1,0 +1,241 @@
+{
+  "artifact": "P05-01 NAMESPACE AND IDENTITY CONFORMANCE (OI-10, ADR-01 C1–C6, OI-08, OI-09)",
+  "namespaceToken": "MD:",
+  "canonicalForm": "MD:<domain>.<field>",
+  "namespaceVersion": "1.0",
+  "permittedDomainSegments": [
+    "alt",
+    "corpaction",
+    "estimates",
+    "fundamentals",
+    "identity",
+    "macro",
+    "news",
+    "ohlcv",
+    "price",
+    "valuation",
+    "venue"
+  ],
+  "domainSegmentsByDomain": {
+    "D01": [
+      "price",
+      "valuation"
+    ],
+    "D02": [
+      "ohlcv"
+    ],
+    "D03": [
+      "fundamentals"
+    ],
+    "D04": [
+      "corpaction"
+    ],
+    "D05": [
+      "identity"
+    ],
+    "D06": [
+      "news"
+    ],
+    "D07": [
+      "estimates"
+    ],
+    "D08": [
+      "macro"
+    ],
+    "D09": [
+      "alt"
+    ],
+    "D10": [
+      "venue"
+    ]
+  },
+  "emittedKeys": [
+    "MD:ohlcv.adjusted",
+    "MD:ohlcv.barInterval",
+    "MD:ohlcv.close",
+    "MD:ohlcv.high",
+    "MD:ohlcv.low",
+    "MD:ohlcv.open",
+    "MD:ohlcv.volume",
+    "MD:price.ask",
+    "MD:price.askSize",
+    "MD:price.bid",
+    "MD:price.bidSize",
+    "MD:price.close",
+    "MD:price.last",
+    "MD:price.previousClose",
+    "MD:price.tradeCount",
+    "MD:price.venueRef",
+    "MD:price.volume",
+    "MD:price.vwap",
+    "MD:valuation.evEbitda",
+    "MD:valuation.evRevenue",
+    "MD:valuation.fcfYield",
+    "MD:valuation.peRatio",
+    "MD:venue.micCode",
+    "MD:venue.name",
+    "MD:venue.quotationCurrency",
+    "MD:venue.settlementCycle",
+    "MD:venue.timezone",
+    "MD:venue.validFrom"
+  ],
+  "everyKeyNamespaced": true,
+  "everyKeySegmentInPermittedVocabulary": true,
+  "bareEngineKeysEmitted": [],
+  "collisionCriticalValuationKeys": [
+    "MD:valuation.evEbitda",
+    "MD:valuation.evRevenue",
+    "MD:valuation.fcfYield",
+    "MD:valuation.peRatio"
+  ],
+  "identity": [
+    {
+      "snapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "lifecycleStatus": "active",
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH01",
+          "authority": "AUTHORITATIVE"
+        },
+        {
+          "type": "ISIN",
+          "value": "XS00SYNTH010",
+          "authority": "NON_AUTHORITATIVE"
+        }
+      ],
+      "localSymbolAuthoritative": null,
+      "mappedCompanyId": "technology-H1",
+      "identityMappingVersion": "idmap-localfix-1.0.0"
+    },
+    {
+      "snapshotId": "data-localfix-v7ff01f9f702518bd-2026-03-02T14:30:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0003",
+      "canonicalIssuerId": "CI-LOCAL-BETA",
+      "lifecycleStatus": "active",
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH03",
+          "authority": "AUTHORITATIVE"
+        },
+        {
+          "type": "CUSIP",
+          "value": "00SYNTH03",
+          "authority": "NON_AUTHORITATIVE"
+        }
+      ],
+      "localSymbolAuthoritative": null,
+      "mappedCompanyId": "chemicals-H1",
+      "identityMappingVersion": "idmap-localfix-1.0.0"
+    },
+    {
+      "snapshotId": "data-localfix-vd4521c1ece53346f-2026-03-02T00:00:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "lifecycleStatus": "active",
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH01",
+          "authority": "AUTHORITATIVE"
+        },
+        {
+          "type": "ISIN",
+          "value": "XS00SYNTH010",
+          "authority": "NON_AUTHORITATIVE"
+        }
+      ],
+      "localSymbolAuthoritative": null,
+      "mappedCompanyId": "technology-H1",
+      "identityMappingVersion": "idmap-localfix-1.0.0"
+    },
+    {
+      "snapshotId": "data-localfix-v499ed6f25513a959-2026-03-03T00:00:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "lifecycleStatus": "active",
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH01",
+          "authority": "AUTHORITATIVE"
+        },
+        {
+          "type": "ISIN",
+          "value": "XS00SYNTH010",
+          "authority": "NON_AUTHORITATIVE"
+        }
+      ],
+      "localSymbolAuthoritative": null,
+      "mappedCompanyId": "technology-H1",
+      "identityMappingVersion": "idmap-localfix-1.0.0"
+    },
+    {
+      "snapshotId": "data-localfix-v2823e367943de8ce-2026-03-02T00:00:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "lifecycleStatus": "active",
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH01",
+          "authority": "AUTHORITATIVE"
+        },
+        {
+          "type": "ISIN",
+          "value": "XS00SYNTH010",
+          "authority": "NON_AUTHORITATIVE"
+        }
+      ],
+      "localSymbolAuthoritative": null,
+      "mappedCompanyId": "technology-H1",
+      "identityMappingVersion": "idmap-localfix-1.0.0"
+    },
+    {
+      "snapshotId": "data-localfix-v1c3bd7d7048e1cc6-2026-03-02T00:00:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "lifecycleStatus": "active",
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH01",
+          "authority": "AUTHORITATIVE"
+        },
+        {
+          "type": "ISIN",
+          "value": "XS00SYNTH010",
+          "authority": "NON_AUTHORITATIVE"
+        }
+      ],
+      "localSymbolAuthoritative": null,
+      "mappedCompanyId": "technology-H1",
+      "identityMappingVersion": "idmap-localfix-1.0.0"
+    }
+  ],
+  "cardinalityEvidence": {
+    "rule": "MC-1 / OI-08 = 1:N",
+    "oneIssuerToManySecurities": {
+      "CI-LOCAL-ALPHA": [
+        "CS-LOCAL-0001",
+        "CS-LOCAL-0002"
+      ]
+    },
+    "manyCanonicalToOneCompanyId": {
+      "technology-H1": [
+        "CS-LOCAL-0001",
+        "CS-LOCAL-0002",
+        "CS-LOCAL-0099"
+      ]
+    }
+  },
+  "authoritativeExternalIdentifier": "FIGI",
+  "nonAuthoritativeIdentifiers": [
+    "ISIN",
+    "CUSIP",
+    "SEDOL"
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "artifact": "P05-02 NAMESPACE ENFORCEMENT",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "oi10Token": "MD:",
+  "canonicalFieldKeyForm": "MD:<domain>.<field>",
+  "namespaceVersion": "1.0",
+  "emittedKeys": [
+    "MD:price.ask",
+    "MD:price.askSize",
+    "MD:price.bid",
+    "MD:price.bidSize",
+    "MD:price.last",
+    "MD:price.venueRef"
+  ],
+  "everyKeyNamespaced": true,
+  "everyKeyCanonicalForm": true,
+  "parsedKeys": [
+    {
+      "key": "MD:price.ask",
+      "token": "MD:",
+      "domain": "price",
+      "field": "ask"
+    },
+    {
+      "key": "MD:price.askSize",
+      "token": "MD:",
+      "domain": "price",
+      "field": "askSize"
+    },
+    {
+      "key": "MD:price.bid",
+      "token": "MD:",
+      "domain": "price",
+      "field": "bid"
+    },
+    {
+      "key": "MD:price.bidSize",
+      "token": "MD:",
+      "domain": "price",
+      "field": "bidSize"
+    },
+    {
+      "key": "MD:price.last",
+      "token": "MD:",
+      "domain": "price",
+      "field": "last"
+    },
+    {
+      "key": "MD:price.venueRef",
+      "token": "MD:",
+      "domain": "price",
+      "field": "venueRef"
+    }
+  ],
+  "domainSegmentsUsed": [
+    "price"
+  ],
+  "domainSegmentsInvented": [],
+  "collisionGuard": "ADR-01 C1…C6 UNCHANGED. C5 fail-closed abort was exercised and confirmed.",
+  "noNamespaceRewrite": "D9 N-7 — accepted P01/P02 <NS> records were NOT rewritten; MD: binds new work only."
+}

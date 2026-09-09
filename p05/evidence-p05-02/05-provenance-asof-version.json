@@ -1,0 +1,76 @@
+{
+  "artifact": "P05-02 PROVENANCE, asOf / receivedAt AND THE SIX VERSION AXES",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "lineageBlock": {
+    "sourceRef": "src-mocklive-synthetic-test-double",
+    "adapterId": "adapter-mocklive-contract-double",
+    "adapterVersion": "1.0",
+    "transformationChainRef": "chain-mocklive-contract-1.0",
+    "receivedAt": "2026-03-04T10:00:00.000Z",
+    "namespaceVersion": "1.0",
+    "identityMappingVersion": "idmap-localfix-1.0.0",
+    "fieldProvenance": [
+      "lineage:src-mocklive-synthetic-test-double:LQ-0001"
+    ]
+  },
+  "lineageComplete": true,
+  "sixVersionAxes": {
+    "dataVersion": "v888435d2c98a6161",
+    "adapterVersion": "1.0",
+    "providerSchemaVersion": "mocklive-wire-1.0",
+    "schemaVersion": "canonical-1.0",
+    "namespaceVersion": "1.0",
+    "identityMappingVersion": "idmap-localfix-1.0.0",
+    "note": "P02_PROVIDER_IDENTITY_VERSIONING §2.1 — six INDEPENDENT axes; none may be substituted for another (VX-1…VX-4). Two axes sharing the literal \"1.0\" is a numbering coincidence, not a conflation: they are separate slots with separate owners. Independence is proven by showing that an adapterVersion bump moves only adapterVersion (SI-4 keeps it out of snapshotId)."
+  },
+  "times": {
+    "asOf": "2026-03-04T09:31:00.000Z",
+    "receivedAt": "2026-03-04T10:00:00.000Z",
+    "distinct": true,
+    "rule": "T-1 — the five P01 times are preserved distinctly; collapsing any two is prohibited. D-4 / TS-6 — receivedAt is stamped once at the ingest boundary and never recomputed."
+  },
+  "freshness": {
+    "contract": {
+      "reportsInputs": true,
+      "setsThresholds": false,
+      "thresholdOwner": "P07",
+      "requiredInputs": [
+        "asOf",
+        "receivedAt",
+        "venueSessionRef",
+        "completenessBasis"
+      ]
+    },
+    "computedForCleanRun": {
+      "ageMs": 1740000,
+      "negativeAge": false,
+      "thresholdApplied": false,
+      "verdict": null,
+      "owner": "P07"
+    },
+    "thresholdsSet": false,
+    "thresholdOwner": "P07 (MQ-1, MQ-2)"
+  },
+  "provenanceResolution": {
+    "fieldProvenanceRefs": [
+      "lineage:src-mocklive-synthetic-test-double:LQ-0001"
+    ],
+    "allFieldProvenanceResolvesIntoLineage": true,
+    "rule": "RF-7 — each CanonicalField.provenance is a REFERENCE INTO the lineage block."
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "artifact": "P05-01 IDEMPOTENCY EVIDENCE (INV-2, RJ-6)",
+  "firstIngest": "INSERTED",
+  "repeatIngests": [
+    "IDEMPOTENT_NOOP",
+    "IDEMPOTENT_NOOP",
+    "IDEMPOTENT_NOOP",
+    "IDEMPOTENT_NOOP",
+    "IDEMPOTENT_NOOP"
+  ],
+  "repeatCount": 5,
+  "allRepeatsNoOp": true,
+  "recordCountAfterRepeats": 1,
+  "expectedRecordCount": 1,
+  "duplicateRecordsCreated": 0,
+  "conflictAtSameSnapshotId": {
+    "outcome": "CONFLICT_REJECTED",
+    "reason": "INV-2: a correction must be a NEW dataVersion, never a mutation of an existing snapshot",
+    "overwroteExistingRecord": false
+  },
+  "eventLog": [
+    {
+      "type": "INSERTED",
+      "snapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "digest": "1ac45dff809206b832df294b292eb01010b1c2e954d512414a4449a27877e107",
+      "ingestSeq": 1
+    },
+    {
+      "type": "IDEMPOTENT_NOOP",
+      "snapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "digest": "1ac45dff809206b832df294b292eb01010b1c2e954d512414a4449a27877e107",
+      "ingestSeq": 2,
+      "existingIngestSeq": 1
+    },
+    {
+      "type": "IDEMPOTENT_NOOP",
+      "snapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "digest": "1ac45dff809206b832df294b292eb01010b1c2e954d512414a4449a27877e107",
+      "ingestSeq": 3,
+      "existingIngestSeq": 1
+    },
+    {
+      "type": "IDEMPOTENT_NOOP",
+      "snapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "digest": "1ac45dff809206b832df294b292eb01010b1c2e954d512414a4449a27877e107",
+      "ingestSeq": 4,
+      "existingIngestSeq": 1
+    },
+    {
+      "type": "IDEMPOTENT_NOOP",
+      "snapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "digest": "1ac45dff809206b832df294b292eb01010b1c2e954d512414a4449a27877e107",
+      "ingestSeq": 5,
+      "existingIngestSeq": 1
+    },
+    {
+      "type": "IDEMPOTENT_NOOP",
+      "snapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "digest": "1ac45dff809206b832df294b292eb01010b1c2e954d512414a4449a27877e107",
+      "ingestSeq": 6,
+      "existingIngestSeq": 1
+    },
+    {
+      "type": "CONFLICT_REJECTED",
+      "snapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "existingDigest": "1ac45dff809206b832df294b292eb01010b1c2e954d512414a4449a27877e107",
+      "attemptedDigest": "a180dca366a33e6cf9a8dde97c73154320702bcfd7f3b0a340f9af9d26cb23c7",
+      "ingestSeq": 7,
+      "reason": "INV-2: a correction must be a NEW dataVersion, never a mutation of an existing snapshot"
+    }
+  ]
+}

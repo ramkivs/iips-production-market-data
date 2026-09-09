@@ -1,0 +1,15 @@
+{
+  "artifact": "P05-01 VINTAGE-DRIFT EVIDENCE (RI-4)",
+  "rule": "RI-4: two executions differing in ANY contributing vintage MUST have different effective replay identities",
+  "setA": [
+    "data-localfix-vd4521c1ece53346f-2026-03-02T00:00:00.000Z",
+    "data-localfix-v1c3bd7d7048e1cc6-2026-03-02T00:00:00.000Z"
+  ],
+  "setB": [
+    "data-localfix-v499ed6f25513a959-2026-03-03T00:00:00.000Z",
+    "data-localfix-v1c3bd7d7048e1cc6-2026-03-02T00:00:00.000Z"
+  ],
+  "identitiesDiffer": true,
+  "identityA": "e17cbbeb21ca176e792c8ae4b0275e29a1248bb40d8858d1b8f87d97081a63e6",
+  "identityB": "224ad2ded3436b512777cb77b59f6849f7861a2b99b91a355f9719599c5534aa"
+}

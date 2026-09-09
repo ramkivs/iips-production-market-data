@@ -1,0 +1,323 @@
+{
+  "artifact": "P05-01 PROVENANCE EVIDENCE (L-1…L-11, RF-7, LN-1…LN-7)",
+  "evidence": [
+    {
+      "snapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:Q-0001"
+        ]
+      },
+      "fieldProvenanceResolution": {
+        "MD:price.ask": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.askSize": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.bid": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.bidSize": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.last": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.venueRef": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0001",
+          "resolvesInLineageBlock": true
+        }
+      }
+    },
+    {
+      "snapshotId": "data-localfix-v7ff01f9f702518bd-2026-03-02T14:30:00.000Z",
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:Q-0002"
+        ]
+      },
+      "fieldProvenanceResolution": {
+        "MD:price.ask": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0002",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.askSize": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0002",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.bid": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0002",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.bidSize": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0002",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.last": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0002",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.venueRef": {
+          "provenance": "lineage:src-localfix-synthetic:Q-0002",
+          "resolvesInLineageBlock": true
+        }
+      }
+    },
+    {
+      "snapshotId": "data-localfix-vd4521c1ece53346f-2026-03-02T00:00:00.000Z",
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:C-0001"
+        ]
+      },
+      "fieldProvenanceResolution": {
+        "MD:price.close": {
+          "provenance": "lineage:src-localfix-synthetic:C-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.previousClose": {
+          "provenance": "lineage:src-localfix-synthetic:C-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.tradeCount": {
+          "provenance": "lineage:src-localfix-synthetic:C-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.venueRef": {
+          "provenance": "lineage:src-localfix-synthetic:C-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.volume": {
+          "provenance": "lineage:src-localfix-synthetic:C-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.vwap": {
+          "provenance": "lineage:src-localfix-synthetic:C-0001",
+          "resolvesInLineageBlock": true
+        }
+      }
+    },
+    {
+      "snapshotId": "data-localfix-v499ed6f25513a959-2026-03-03T00:00:00.000Z",
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:C-0002"
+        ]
+      },
+      "fieldProvenanceResolution": {
+        "MD:price.close": {
+          "provenance": "lineage:src-localfix-synthetic:C-0002",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.previousClose": {
+          "provenance": "lineage:src-localfix-synthetic:C-0002",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.tradeCount": {
+          "provenance": "lineage:src-localfix-synthetic:C-0002",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.venueRef": {
+          "provenance": "lineage:src-localfix-synthetic:C-0002",
+          "resolvesInLineageBlock": true
+        },
+        "MD:price.volume": {
+          "provenance": "lineage:src-localfix-synthetic:C-0002",
+          "resolvesInLineageBlock": true
+        }
+      }
+    },
+    {
+      "snapshotId": "data-localfix-v2823e367943de8ce-2026-03-02T00:00:00.000Z",
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:V-0001"
+        ]
+      },
+      "fieldProvenanceResolution": {
+        "MD:valuation.evEbitda": {
+          "provenance": "lineage:src-localfix-synthetic:V-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:valuation.evRevenue": {
+          "provenance": "lineage:src-localfix-synthetic:V-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:valuation.fcfYield": {
+          "provenance": "lineage:src-localfix-synthetic:V-0001",
+          "resolvesInLineageBlock": true
+        },
+        "MD:valuation.peRatio": {
+          "provenance": "lineage:src-localfix-synthetic:V-0001",
+          "resolvesInLineageBlock": true
+        }
+      }
+    },
+    {
+      "snapshotId": "data-localfix-v1c3bd7d7048e1cc6-2026-03-02T00:00:00.000Z",
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:H-0001:bar:2026-03-02"
+        ]
+      },
+      "fieldProvenanceResolution": {
+        "MD:ohlcv.adjusted": {
+          "provenance": "lineage:src-localfix-synthetic:H-0001:bar:2026-03-02",
+          "resolvesInLineageBlock": true
+        },
+        "MD:ohlcv.barInterval": {
+          "provenance": "lineage:src-localfix-synthetic:H-0001:bar:2026-03-02",
+          "resolvesInLineageBlock": true
+        },
+        "MD:ohlcv.close": {
+          "provenance": "lineage:src-localfix-synthetic:H-0001:bar:2026-03-02",
+          "resolvesInLineageBlock": true
+        },
+        "MD:ohlcv.high": {
+          "provenance": "lineage:src-localfix-synthetic:H-0001:bar:2026-03-02",
+          "resolvesInLineageBlock": true
+        },
+        "MD:ohlcv.low": {
+          "provenance": "lineage:src-localfix-synthetic:H-0001:bar:2026-03-02",
+          "resolvesInLineageBlock": true
+        },
+        "MD:ohlcv.open": {
+          "provenance": "lineage:src-localfix-synthetic:H-0001:bar:2026-03-02",
+          "resolvesInLineageBlock": true
+        },
+        "MD:ohlcv.volume": {
+          "provenance": "lineage:src-localfix-synthetic:H-0001:bar:2026-03-02",
+          "resolvesInLineageBlock": true
+        }
+      }
+    },
+    {
+      "snapshotId": "data-localfix-v083dd54992e57ce9-2018-01-01T00:00:00.000Z",
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:venue:XSYN"
+        ]
+      },
+      "fieldProvenanceResolution": {
+        "MD:venue.micCode": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYN",
+          "resolvesInLineageBlock": true
+        },
+        "MD:venue.name": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYN",
+          "resolvesInLineageBlock": true
+        },
+        "MD:venue.quotationCurrency": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYN",
+          "resolvesInLineageBlock": true
+        },
+        "MD:venue.settlementCycle": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYN",
+          "resolvesInLineageBlock": true
+        },
+        "MD:venue.timezone": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYN",
+          "resolvesInLineageBlock": true
+        },
+        "MD:venue.validFrom": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYN",
+          "resolvesInLineageBlock": true
+        }
+      }
+    },
+    {
+      "snapshotId": "data-localfix-vc010b8366e3fcd20-2018-01-01T00:00:00.000Z",
+      "lineage": {
+        "sourceRef": "src-localfix-synthetic",
+        "adapterId": "adapter-localfix",
+        "adapterVersion": "1.0",
+        "transformationChainRef": "chain-localfix-1.0",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "namespaceVersion": "1.0",
+        "fieldProvenance": [
+          "lineage:src-localfix-synthetic:venue:XSYNSG1"
+        ]
+      },
+      "fieldProvenanceResolution": {
+        "MD:venue.micCode": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYNSG1",
+          "resolvesInLineageBlock": true
+        },
+        "MD:venue.name": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYNSG1",
+          "resolvesInLineageBlock": true
+        },
+        "MD:venue.quotationCurrency": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYNSG1",
+          "resolvesInLineageBlock": true
+        },
+        "MD:venue.settlementCycle": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYNSG1",
+          "resolvesInLineageBlock": true
+        },
+        "MD:venue.timezone": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYNSG1",
+          "resolvesInLineageBlock": true
+        },
+        "MD:venue.validFrom": {
+          "provenance": "lineage:src-localfix-synthetic:venue:XSYNSG1",
+          "resolvesInLineageBlock": true
+        }
+      }
+    }
+  ]
+}

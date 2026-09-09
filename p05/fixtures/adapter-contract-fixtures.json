@@ -1,0 +1,262 @@
+{
+  "_comment": [
+    "P05-02 — LIVE MARKET-DATA ADAPTER CONTRACT: LOCAL TEST-DOUBLE FIXTURES.",
+    "",
+    "⚠ THIS FILE DOES NOT DESCRIBE A REAL PROVIDER.",
+    "   `mocklive` is a SYNTHETIC TEST DOUBLE used to exercise the adapter contract OFFLINE.",
+    "   It is NOT an issuance from the governed provider-identity register",
+    "   (p05/fixtures/provider-register.json), which remains UNMODIFIED and still contains",
+    "   exactly one issued identity: `localfix`. PG-1 governs real sources; a test double is",
+    "   not a source and is not issued.",
+    "",
+    "AUTHORITY: docs/d9/D9_P05_ENTRY_AUTHORIZATION.md §3 A-2 — specification / adapter-contract",
+    "   work only. ⚠ No live provider execution (D9 N-1). No provider is selected here.",
+    "",
+    "PROHIBITED HERE AND ABSENT: credentials, API keys, tokens, secrets, endpoint URLs,",
+    "hostnames, account identifiers, vendor SDKs, vendor names (A-23, SP-1…SP-6, SM-4).",
+    "",
+    "DETERMINISM: every value below is a fixed literal. No wall-clock, random or environmental",
+    "input. Repeated runs are byte-identical (P02 D-2, D-3)."
+  ],
+
+  "contractId": "P05-02-LIVE-MARKET-DATA-ADAPTER-CONTRACT",
+  "contractVersion": "1.0",
+
+  "testDouble": {
+    "provider": "mocklive",
+    "_status": "SYNTHETIC_TEST_DOUBLE",
+    "_registeredInProviderRegister": false,
+    "_note": [
+      "PI-1: `provider` is a program-internal stable identity token, never a vendor name.",
+      "PI-3/PG-1: NOT issued. A real live provider identity requires a governed register",
+      "issuance plus provider selection — and provider selection is NONE MADE (D9 N-1)."
+    ],
+    "adapterId": "adapter-mocklive-contract-double",
+    "adapterVersion": "1.0",
+    "providerSchemaVersion": "mocklive-wire-1.0",
+    "schemaVersion": "canonical-1.0",
+    "sourceRef": "src-mocklive-synthetic-test-double",
+    "transformationChainRef": "chain-mocklive-contract-1.0",
+    "domains": ["D01"],
+    "modes": ["LIVE", "SNAPSHOT"],
+    "granularities": ["1D"],
+    "identifierInputs": ["FIGI", "CANONICAL_SECURITY_ID"],
+    "transportClass": "REQUEST_RESPONSE",
+    "rateLimits": { "declared": true, "requestsPerMinute": 60, "burst": 10 },
+    "deterministicReplayable": true,
+    "entitlementRequirements": [
+      {
+        "entitlementRef": "ENT-REQ-D01-QUOTE",
+        "dimensions": ["EN-1", "EN-2", "EN-3", "EN-4", "EN-8"],
+        "_note": "P05-02 declares the REQUIREMENT shape only. No entitlement value exists: the entitlement matrix is EMPTY (EM-2) and populating it needs provider selection + P16 authority (EM-3)."
+      }
+    ],
+    "credentialRequirements": [
+      {
+        "credentialRef": "CRED-REQ-LIVE-QUOTE",
+        "kind": "API_KEY",
+        "storageClass": "EXTERNAL_SECRET_MANAGER",
+        "scopes": ["quotes:read"],
+        "rotationPolicy": "UNKNOWN",
+        "_note": "SP-5: a credential REQUIREMENT, never a credential. The value is never present in this program. Secrets are P03 (P02 E-1); nothing is provisioned here (D9 N-1)."
+      }
+    ],
+    "knownLimitations": [
+      "SYNTHETIC TEST DOUBLE — there is no real source behind it and no acquisition occurs.",
+      "PIT mode not declared: PIT storage is P08, which is NOT_STARTED.",
+      "D02–D10 not served by this double.",
+      "No adjusted series: adjustment modelling is P08.",
+      "Per-record tenant/region governance NOT applied — OI-P04-03 OPEN, bounded by IB-1.",
+      "FIGI values are synthetic and carry no licensing or coverage claim — OI-P04-04 OPEN.",
+      "Passing conformance against this double is CONTRACT VALIDATION, not live-provider evidence."
+    ]
+  },
+
+  "_nativeVocabularyNote": [
+    "LA-18 / A-19 / M-3 — every token below is PROVIDER-NATIVE and must never appear in a",
+    "canonical snapshot, lineage block, evidence record or contract-level error record.",
+    "The list is deliberately disjoint from the P05-01 local feed's native vocabulary so that a",
+    "leak is unambiguous rather than a coincidence of naming."
+  ],
+  "nativeVocabulary": [
+    "qBid", "qAsk", "qLast", "qBSz", "qASz", "instRef", "mktCode", "pxCcy", "obsTime",
+    "respCode", "RC-4001", "RC-5003", "MOCK-EQ-0001"
+  ],
+
+  "providerWireSchema": {
+    "_note": [
+      "A-13 — the DECLARED provider wire schema, validated BEFORE mapping, so a presence or type",
+      "violation of a REQUIRED element is E5, while a well-formed payload that cannot be mapped",
+      "is E8 (CL-6).",
+      "",
+      "⚠ REQUIRED vs OPTIONAL is a real distinction, not a convenience. An OPTIONAL element the",
+      "source omits is SILENCE and maps to availability NOT_PROVIDED (A-20 / NL-4) — it is NOT a",
+      "malformed response. Modelling silence as E5 would conflate a data condition with a contract",
+      "condition, which P02_ERROR_TAXONOMY §2 forbids. This mirrors the P05-01 local feed, whose",
+      "QUOTE_WIRE likewise declares only the required native elements."
+    ],
+    "QUOTE_WIRE": {
+      "required": {
+        "instRef": "string",
+        "mktCode": "string",
+        "qBid": "numeric-string",
+        "qAsk": "numeric-string",
+        "qLast": "numeric-string",
+        "pxCcy": "string",
+        "obsTime": "iso-utc",
+        "respCode": "integer"
+      },
+      "optional": {
+        "qBSz": "integer",
+        "qASz": "integer"
+      }
+    }
+  },
+
+  "_fieldMapNote": [
+    "MD-1…MD-8 / MR-1…MR-5 — the mapping is DECLARED as data, inspectable without reading code.",
+    "MR-2: no heuristic, fuzzy or name-similarity matching is permitted.",
+    "VN-5 / PN-2: the provider's own market code (`mktCode`) is NEVER venue identity. `venueRef`",
+    "is therefore taken from the P04-resolved venue reference, not from the provider payload."
+  ],
+  "fieldMap": [
+    { "native": "qBid",  "domainSegment": "price", "fieldSegment": "bid",     "dataType": "decimal", "precision": 4, "currencyFrom": "pxCcy", "timestampSlot": "observationTime", "pitEligible": false, "md": ["MD-1", "MD-2", "MD-3", "MD-4", "MD-5", "MD-7"] },
+    { "native": "qAsk",  "domainSegment": "price", "fieldSegment": "ask",     "dataType": "decimal", "precision": 4, "currencyFrom": "pxCcy", "timestampSlot": "observationTime", "pitEligible": false, "md": ["MD-1", "MD-2", "MD-3", "MD-4", "MD-5", "MD-7"] },
+    { "native": "qLast", "domainSegment": "price", "fieldSegment": "last",    "dataType": "decimal", "precision": 4, "currencyFrom": "pxCcy", "timestampSlot": "observationTime", "pitEligible": false, "md": ["MD-1", "MD-2", "MD-3", "MD-4", "MD-5", "MD-7"] },
+    { "native": "qBSz",  "domainSegment": "price", "fieldSegment": "bidSize", "dataType": "integer", "precision": null, "currencyFrom": null, "timestampSlot": "observationTime", "pitEligible": false, "md": ["MD-1", "MD-2", "MD-4", "MD-5", "MD-7"] },
+    { "native": "qASz",  "domainSegment": "price", "fieldSegment": "askSize", "dataType": "integer", "precision": null, "currencyFrom": null, "timestampSlot": "observationTime", "pitEligible": false, "md": ["MD-1", "MD-2", "MD-4", "MD-5", "MD-7"] }
+  ],
+  "derivedFields": [
+    {
+      "domainSegment": "venue", "fieldSegment": "micCode", "dataType": "identifier",
+      "source": "REQUEST_VENUE_REFERENCE",
+      "_note": "VN-1/VN-3/VN-5 — venue identity is MIC-based and comes from the P04 venue reference, never from the provider's own market code."
+    }
+  ],
+
+  "responses": [
+    {
+      "_fixtureId": "LQ-0001",
+      "_label": "well-formed LIVE quote, complete",
+      "instRef": "MOCK-EQ-0001",
+      "mktCode": "XSYN",
+      "qBid": "102.3500",
+      "qAsk": "102.4100",
+      "qLast": "102.3800",
+      "qBSz": 1200,
+      "qASz": 900,
+      "pxCcy": "USD",
+      "obsTime": "2026-03-04T09:31:00.000Z",
+      "respCode": 0,
+      "_dataVersion": "2026.03.04-r1",
+      "_asOf": "2026-03-04T09:31:00.000Z"
+    },
+    {
+      "_fixtureId": "LQ-0002",
+      "_label": "well-formed LIVE quote, OPTIONAL size elements ABSENT → NOT_PROVIDED (never zero, never fabricated)",
+      "instRef": "MOCK-EQ-0001",
+      "mktCode": "XSYN",
+      "qBid": "102.3500",
+      "qAsk": "102.4100",
+      "qLast": "102.3800",
+      "pxCcy": "USD",
+      "obsTime": "2026-03-04T09:32:00.000Z",
+      "respCode": 0,
+      "_dataVersion": "2026-03-04-r2",
+      "_asOf": "2026-03-04T09:32:00.000Z",
+      "_note": "The source said NOTHING about qBSz/qASz. A-20 / NL-4: silence is NOT_PROVIDED, never a zero, an empty string or a carried-forward value. They are OPTIONAL in the declared wire schema, so their absence is NOT E5."
+    },
+    {
+      "_fixtureId": "LQ-0003",
+      "_label": "well-formed LIVE quote, OPTIONAL size elements explicitly NULL → NULL_ASSERTED",
+      "instRef": "MOCK-EQ-0001",
+      "mktCode": "XSYN",
+      "qBid": "102.3500",
+      "qAsk": "102.4100",
+      "qLast": "102.3800",
+      "qBSz": null,
+      "qASz": null,
+      "pxCcy": "USD",
+      "obsTime": "2026-03-04T09:33:30.000Z",
+      "respCode": 0,
+      "_dataVersion": "2026-03-04-r3",
+      "_asOf": "2026-03-04T09:33:30.000Z",
+      "_note": "The source EXPLICITLY asserted null. NL-1 distinguishes this from silence: NULL_ASSERTED ≠ NOT_PROVIDED ≠ WITHHELD. All three come from the accepted AVAILABILITY enum; none is invented here."
+    }
+  ],
+
+  "_absenceSemantics": {
+    "_note": "The three distinct absence semantics, all drawn from the accepted P01 AVAILABILITY enumeration. Conflating any two is prohibited.",
+    "ABSENT_FROM_PAYLOAD": "NOT_PROVIDED — the source said nothing (A-20, NL-4)",
+    "EXPLICIT_NULL_IN_PAYLOAD": "NULL_ASSERTED — the source explicitly asserted null (NL-1)",
+    "UNENTITLED": "WITHHELD — suppressed by entitlement, carries an entitlementRef (EV-8, RD-1, NL-5)",
+    "prohibitedSubstitutes": ["zero", "empty string", "carried-forward value", "omission of the field entirely"]
+  },
+
+  "authFixtures": [
+    { "_fixtureId": "AUTH-OK",   "status": "AUTHENTICATED", "credentialRef": "CRED-REQ-LIVE-QUOTE" },
+    { "_fixtureId": "AUTH-FAIL", "status": "FAILED",        "credentialRef": "CRED-REQ-LIVE-QUOTE", "_expectedClass": "E2" }
+  ],
+
+  "entitlementFixtures": [
+    { "_fixtureId": "ENT-0001", "status": "ENTITLED", "entitlementRef": "ENT-REQ-D01-QUOTE", "_expectPermit": true,  "_note": "EV-6: the decision is evidence-bearing, so a ref is required." },
+    { "_fixtureId": "ENT-0002", "status": "DENIED",   "entitlementRef": "ENT-REQ-D01-QUOTE", "_expectPermit": false, "_note": "EV-4: fail closed — no data, no partial data, no cached substitute." },
+    { "_fixtureId": "ENT-0003", "status": "EXPIRED",  "entitlementRef": "ENT-REQ-D01-QUOTE", "_expectPermit": false, "_note": "Distinguishable from never-entitled in the audit record." },
+    { "_fixtureId": "ENT-0004", "status": "UNKNOWN",  "entitlementRef": null,                "_expectPermit": false, "_note": "EV-3: UNKNOWN denies. Never optimistic." },
+    { "_fixtureId": "ENT-0005", "status": "PARTIAL",  "entitlementRef": "ENT-REQ-D01-QUOTE", "withheldFields": ["bidSize", "askSize"], "_expectPermit": true, "_note": "EV-8 / RD-1: entitled fields plus explicit WITHHELD markers. WITHHELD ≠ NOT_PROVIDED." },
+    { "_fixtureId": "ENT-0006", "_expectPermit": false, "_note": "ABSENT status → DENY (EV-3). An empty matrix means nothing is entitled (EM-4)." }
+  ],
+
+  "negativeCases": [
+    { "_fixtureId": "LQ-E6-DOM",  "_expectedClass": "E6", "_phase": "preflight", "request": { "domain": "D07", "mode": "LIVE" }, "_note": "CE-1: domain outside the declared capability. Pre-flight, before any provider call." },
+    { "_fixtureId": "LQ-E6-GRAN", "_expectedClass": "E6", "_phase": "preflight", "request": { "domain": "D01", "mode": "LIVE", "granularity": "1M" }, "_note": "CE-4: granularity outside the declared capability." },
+    { "_fixtureId": "LQ-E6-MODE", "_expectedClass": "E6", "_phase": "preflight", "request": { "domain": "D01", "mode": "PIT" }, "_note": "CE-3 / A-24: mode is honoured exactly or the request fails. No mode inference." },
+    { "_fixtureId": "LQ-E3",      "_expectedClass": "E3", "_phase": "entitlement", "entitlementFixture": "ENT-0002", "_note": "E3 is a REJECTION, not quality:'unavailable' (RD-3)." },
+    { "_fixtureId": "LQ-E2",      "_expectedClass": "E2", "_phase": "authenticate", "authFixture": "AUTH-FAIL", "_note": "ES-4: E2 is retry-prohibited." },
+    { "_fixtureId": "LQ-E1",      "_expectedClass": "E1", "_phase": "fetch", "_note": "E1 is the ONLY quality-bearing class: it yields a snapshot with EMPTY fields and quality 'unavailable' (ST-9)." },
+    { "_fixtureId": "LQ-E4",      "_expectedClass": "E4", "_phase": "fetch", "_note": "E4 is retryable and is a rejection AFTER the retry policy is exhausted. Retry EXECUTION is P05-04 (NOT AUTHORIZED)." },
+    { "_fixtureId": "LQ-E7",      "_expectedClass": "E7", "_phase": "fetch", "_note": "E7 is retryable; may degrade to E1 under policy, and any escalation must be RECORDED (R-11)." },
+    {
+      "_fixtureId": "LQ-E5-TYPE", "_expectedClass": "E5", "_phase": "normalize",
+      "payload": { "instRef": "MOCK-EQ-0001", "mktCode": "XSYN", "qBid": "not-a-number", "qAsk": "102.4100", "qLast": "102.3800", "qBSz": 1200, "qASz": 900, "pxCcy": "USD", "obsTime": "2026-03-04T09:33:00.000Z", "respCode": 0 },
+      "_note": "A-13: the payload violates the DECLARED provider wire schema. E5 before any mapping is attempted."
+    },
+    {
+      "_fixtureId": "LQ-E5-MISSING", "_expectedClass": "E5", "_phase": "normalize",
+      "payload": { "instRef": "MOCK-EQ-0001", "mktCode": "XSYN", "qBid": "102.3500", "qAsk": "102.4100", "qLast": "102.3800", "qBSz": 1200, "qASz": 900, "obsTime": "2026-03-04T09:34:00.000Z", "respCode": 0 },
+      "_note": "A required native element is absent (IC-5). Still E5 — presence is part of the declared wire schema."
+    },
+    {
+      "_fixtureId": "LQ-E8-CCY", "_expectedClass": "E8", "_phase": "map",
+      "payload": { "instRef": "MOCK-EQ-0001", "mktCode": "XSYN", "qBid": "102.3500", "qAsk": "102.4100", "qLast": "102.3800", "qBSz": 1200, "qASz": 900, "pxCcy": "US$", "obsTime": "2026-03-04T09:35:00.000Z", "respCode": 0 },
+      "_note": "P02_PROVIDER_MAPPING_RULES C-1/C-2: a monetary value whose currency cannot be established is E8 — never defaulted, never inferred from the venue. ⚠ The token here is deliberately NOT ISO-4217-shaped. See LA-31 and docs/p05/P05_02_OPEN_ITEMS.md BD-P05-02-05: a shape-valid but non-existent code (e.g. 'XYZ') is a real E8 case that a SHAPE-ONLY check does not catch, and the local double validates shape only."
+    },
+    {
+      "_fixtureId": "LQ-E8-AMBIG-TS", "_expectedClass": "E8", "_phase": "map",
+      "payload": { "instRef": "MOCK-EQ-0001", "mktCode": "XSYN", "qBid": "102.3500", "qAsk": "102.4100", "qLast": "102.3800", "qBSz": 1200, "qASz": 900, "pxCcy": "USD", "obsTime": "2026-03-04T09:36:00.000Z", "respCode": 0, "_ambiguousTimestampSlot": true },
+      "_note": "P02_PROVIDER_MAPPING_RULES T-6: a provider timestamp of ambiguous meaning that cannot be assigned to a slot is E8. T-1: the five P01 times are never collapsed."
+    }
+  ],
+
+  "unsupportedRequests": [
+    { "_fixtureId": "UR-D09", "domain": "D09", "mode": "LIVE", "_expectedClass": "E6" },
+    { "_fixtureId": "UR-PIT", "domain": "D01", "mode": "PIT", "_expectedClass": "E6" }
+  ],
+
+  "leakageFixture": {
+    "_fixtureId": "LEAK-0001",
+    "_note": "LA-18 — a DELIBERATELY NON-CONFORMING double. It leaks a provider-native field name into a canonical key and a native error string into a record. Used only to prove the leakage guard DETECTS a violation; it is never presented as conforming.",
+    "leakedCanonicalKey": "qBid",
+    "leakedErrorString": "provider returned RC-4001 for MOCK-EQ-0001"
+  },
+
+  "determinismRepeats": 5,
+
+  "_blockedItemsNote": [
+    "BD-P05-02-01 — provider selection / entitlement / credentials / P16 authority: OPEN.",
+    "OI-P04-04 — FIGI sourcing, licensing, coverage: OPEN. Synthetic FIGI values here carry",
+    "  no licensing or coverage claim.",
+    "OI-P04-03 — tenant/region governance attribute set: OPEN. NO tenant or region attribute",
+    "  is invented in this fixture (D9 N-4, N-5 / IB-2)."
+  ]
+}

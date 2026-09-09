@@ -1,0 +1,99 @@
+{
+  "artifact": "P05-02 IDENTITY, MAPPING, VENUE AND LIFECYCLE REPRESENTATION",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "identityRef": {
+    "canonicalSecurityId": "CS-LOCAL-0001",
+    "canonicalIssuerId": "CI-LOCAL-ALPHA",
+    "instrumentType": "EQUITY",
+    "lifecycleStatus": "active",
+    "validFrom": "2020-01-01T00:00:00.000Z",
+    "externalIdentifiers": [
+      {
+        "type": "FIGI",
+        "value": "BBG00SYNTH01",
+        "authority": "AUTHORITATIVE"
+      },
+      {
+        "type": "ISIN",
+        "value": "XS00SYNTH010",
+        "authority": "NON_AUTHORITATIVE"
+      }
+    ],
+    "venueRef": "XSYN",
+    "mappedCompanyId": "technology-H1",
+    "adapterCrossing": true,
+    "identityMappingVersion": "idmap-localfix-1.0.0"
+  },
+  "mappingRegisterVersion": "idmap-localfix-1.0.0",
+  "identityMappingVersionPassedThrough": true,
+  "cardinality": "OI-08 = 1:N (RESOLVED). canonical → companyId is an N:1 projection (MC-2), expected not an error.",
+  "authoritativeExternalIdentifier": "OI-09 = FIGI / OpenFIGI (RESOLVED)",
+  "figiValueIsSynthetic": true,
+  "figiSourcingDecided": false,
+  "figiSourcingStatus": "OI-P04-04 OPEN — source, licensing, coverage and refresh cadence are UNSPECIFIED",
+  "failClosed": {
+    "scenario": "CS-LOCAL-UNMAPPED (a security with no mapping record)",
+    "rejected": true,
+    "errorClass": "E8",
+    "violatedRules": [
+      "FC-1",
+      "ADP-2",
+      "MC-7"
+    ],
+    "isQualityState": false,
+    "rule": "FC-1…FC-7 — an unmapped identity FAILS EXPLICITLY: no coercion, no placeholder, no synthesised companyId, and NOT reported as data quality (FC-5). Identity failure is not E1 (FC-6)."
+  },
+  "venue": {
+    "venueRefEmitted": "XSYN",
+    "identitySource": "MIC-based (VN-1). A venue is REFERENCE DATA, not an instrument (VN-2).",
+    "providerCodeIsNeverVenueIdentity": "VN-5 / PN-2 — the provider market code is at most a non-authoritative alias; venueRef is taken from the P04 venue reference, never from the payload.",
+    "operatingVsSegmentMicDistinguished": "VN-3 — XSYN (OPERATING_MIC) and XSYNSG1 (SEGMENT_MIC) are never interchangeable.",
+    "micKindValuesInIdentityFixtures": [
+      {
+        "micCode": "XSYN",
+        "micKind": "OPERATING_MIC"
+      },
+      {
+        "micCode": "XSYNSG1",
+        "micKind": "SEGMENT_MIC"
+      }
+    ]
+  },
+  "lifecycle": {
+    "enumeration": [
+      "active",
+      "suspended",
+      "delisted",
+      "merged",
+      "superseded"
+    ],
+    "source": "P04_LIFECYCLE_AND_EFFECTIVE_DATING §2 — five values, fixed by D4_05 §G.2 and P01_FIELD_DICTIONARY §7. None added.",
+    "emittedForThisRun": "active",
+    "lifecycleStatesExercisedByP05_01Fixtures": [
+      "active",
+      "delisted"
+    ],
+    "lifecycleStatesNotExercised": [
+      "suspended",
+      "merged",
+      "superseded"
+    ],
+    "rule": "LC-1…LC-6 — effective-dated; a transition never mutates the canonical security ID (LC-2); state is never inferred from absence of data (LC-6).",
+    "note": "⚠ The lifecycle vocabulary is CARRIED and validated; the P05-01 fixtures exercise only a subset of the five states. Widening fixture coverage is a non-blocking improvement and is recorded as BD-P05-02-07, not silently claimed as complete."
+  }
+}

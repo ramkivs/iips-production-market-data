@@ -1,0 +1,203 @@
+{
+  "_comment": [
+    "P05-01 — DETERMINISTIC LOCAL MARKET-DATA FEED FIXTURES.",
+    "",
+    "These are PROVIDER-NATIVE shaped payloads for the single local synthetic source 'localfix'.",
+    "They deliberately use provider-native field names so that the adapter mapping boundary is",
+    "genuinely exercised:",
+    "  B-1  the adapter is the ONLY place provider-native schemas/symbols/units may exist",
+    "  A-19 no provider-native field name, symbol, error code or enum may CROSS the boundary",
+    "  A-14 map provider-native -> canonical per P02_PROVIDER_MAPPING_RULES",
+    "  A-20 no default/placeholder/zero/empty-string/carried-forward substitution",
+    "",
+    "SYNTHETIC DATA. No live provider, no network, no credential, no entitlement.",
+    "DETERMINISTIC: every value is a fixed literal. Decimals are carried as STRINGS so that",
+    "NP-2 exact decimal semantics hold without binary floating-point fidelity loss."
+  ],
+
+  "provider": "localfix",
+  "providerSchemaVersion": "localfix-wire-1.0",
+  "adapterId": "adapter-localfix",
+  "adapterVersion": "1.0",
+  "sourceRef": "src-localfix-synthetic",
+  "transformationChainRef": "chain-localfix-1.0",
+  "schemaVersion": "canonical-1.0",
+  "namespaceVersion": "1.0",
+
+  "quotes": [
+    {
+      "_fixtureId": "Q-0001",
+      "sym": "ALFA",
+      "venue": "XSYN",
+      "tradePrice": "101.25",
+      "bidPx": "101.20",
+      "askPx": "101.30",
+      "bidSz": 500,
+      "askSz": 400,
+      "ccy": "USD",
+      "quoteTs": "2026-03-02T14:30:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "_mode": "LIVE",
+      "_note": "price.last/.bid/.ask are pitEligible=false (LIVE intraday) per P01_FIELD_DICTIONARY §3."
+    },
+    {
+      "_fixtureId": "Q-0002",
+      "sym": "BETA",
+      "venue": "XSYN",
+      "tradePrice": "47.80",
+      "ccy": "USD",
+      "quoteTs": "2026-03-02T14:30:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0003",
+      "_mode": "LIVE",
+      "_note": "NEGATIVE-DATA FIXTURE: bid/ask absent. Silence is NOT_PROVIDED, never zero (NL-4, NL-7, A-20)."
+    }
+  ],
+
+  "closes": [
+    {
+      "_fixtureId": "C-0001",
+      "sym": "ALFA",
+      "venue": "XSYN",
+      "officialClose": "100.50",
+      "prevClose": "99.75",
+      "vol": 1250000,
+      "trades": 8421,
+      "vwap": "100.12",
+      "ccy": "USD",
+      "sessionDate": "2026-03-02",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "_mode": "SNAPSHOT",
+      "_note": "price.close/.previousClose/.volume/.vwap are pitEligible=true; effectiveTime is the session boundary."
+    },
+    {
+      "_fixtureId": "C-0002",
+      "sym": "ALFA",
+      "venue": "XSYN",
+      "officialClose": "101.00",
+      "prevClose": "100.50",
+      "vol": 980000,
+      "ccy": "USD",
+      "sessionDate": "2026-03-03",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "_mode": "SNAPSHOT",
+      "_note": "DV-3 fixture: a NEW dataVersion at a DIFFERENT asOf — a distinct snapshot, not an edit."
+    }
+  ],
+
+  "valuations": [
+    {
+      "_fixtureId": "V-0001",
+      "sym": "ALFA",
+      "pe": "18.40",
+      "evEbitda": "9.15",
+      "fcfYield": "0.0520",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "asOfTs": "2026-03-02T00:00:00.000Z",
+      "_mode": "SNAPSHOT",
+      "_note": "COLLISION-CRITICAL (D4_07 §I.1): these correspond to existing free-form engine keys shared across 2-6 engines. They are namespaced MD:valuation.* and may only reach an engine through an explicit declared mapping (P11) — never by name coincidence."
+    }
+  ],
+
+  "ohlcv": [
+    {
+      "_fixtureId": "H-0001",
+      "sym": "ALFA",
+      "interval": "1D",
+      "bars": [
+        { "barDate": "2026-02-26", "o": "98.10", "h": "99.40", "l": "97.85", "c": "99.10", "v": 1100000, "adj": false },
+        { "barDate": "2026-02-27", "o": "99.10", "h": "100.05", "l": "98.90", "c": "99.75", "v": 1180000, "adj": false },
+        { "barDate": "2026-03-02", "o": "99.80", "h": "100.90", "l": "99.60", "c": "100.50", "v": 1250000, "adj": false }
+      ],
+      "ccy": "USD",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "_mode": "SNAPSHOT",
+      "_note": "AJ-1: adjusted and unadjusted are BOTH retained. AJ-3: adjusted=true without adjustmentBasisRef is invalid — so adj=false here carries no basis ref."
+    }
+  ],
+
+  "malformed": [
+    {
+      "_fixtureId": "M-0001",
+      "sym": "ALFA",
+      "venue": "XSYN",
+      "tradePrice": "not-a-number",
+      "ccy": "USD",
+      "quoteTs": "2026-03-02T14:30:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "_expectedClass": "E5",
+      "_note": "E5 MALFORMED_RESPONSE: violates the declared provider schema. Rejection, never quality."
+    },
+    {
+      "_fixtureId": "M-0002",
+      "sym": "ALFA",
+      "venue": "XSYN",
+      "tradePrice": "101.25",
+      "ccy": "XX1",
+      "quoteTs": "2026-03-02T14:30:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "_expectedClass": "E8",
+      "_note": "SM-2: currency is not ISO-4217 -> CONTRACT_MAPPING_FAILURE. Rejected, not defaulted (CU-2)."
+    },
+    {
+      "_fixtureId": "M-0003",
+      "sym": "ALFA",
+      "venue": "XSYN",
+      "tradePrice": "101.2567",
+      "ccy": "USD",
+      "quoteTs": "2026-03-02T14:30:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "_expectedClass": "E8",
+      "_note": "NP-3: value carries 4 decimals against declared precision 2. Silent rounding is prohibited."
+    },
+    {
+      "_fixtureId": "M-0004",
+      "sym": "GAMMA",
+      "venue": "XSYN",
+      "tradePrice": "12.00",
+      "ccy": "USD",
+      "quoteTs": "2026-03-02T14:30:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-UNMAPPED",
+      "_expectedClass": "E8",
+      "_expectedViolatedRules": ["ADP-2", "FC-1", "MC-7"],
+      "_note": "FC-1: an unmapped canonical identity must FAIL EXPLICITLY - no coercion, no placeholder, no synthesised companyId, no null join key (ADP-2). FC-6: E1-E8 is UNCHANGED, so at the provider boundary this surfaces as the EXISTING class E8 carrying violatedRules FC-1/ADP-2/MC-7 - and it is explicitly NOT E1 and NOT a quality state (FC-5)."
+    },
+    {
+      "_fixtureId": "M-0005",
+      "sym": "ALFA",
+      "venue": "XSYN",
+      "tradePrice": "101.25",
+      "ccy": "USD",
+      "quoteTs": "2026-03-02 14:30:00",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "_expectedClass": "E5",
+      "_note": "TS-1: local-time-only / non-ISO-8601-UTC timestamp is invalid."
+    }
+  ],
+
+  "unsupportedRequests": [
+    {
+      "_fixtureId": "U-0001",
+      "domain": "D07",
+      "_expectedClass": "E6",
+      "_note": "CL-4: E6 is evaluated PRE-FLIGHT, before any provider call. The local feed declares D01/D02/D10 only."
+    },
+    {
+      "_fixtureId": "U-0002",
+      "domain": "D01",
+      "mode": "PIT",
+      "requestNonPitEligible": ["MD:price.last"],
+      "_expectedClass": "E6",
+      "_note": "This feed declares LIVE|SNAPSHOT only (PIT storage is P08, NOT_STARTED), so a PIT request fails PRE-FLIGHT as E6 (CL-4) before any acquisition. The SM-7 / FD-6 / MD-4 rejection for a PIT snapshot carrying a non-PIT-eligible field is proven separately at the validation layer in tests/validation.test.js."
+    }
+  ],
+
+  "providerUnavailable": [
+    {
+      "_fixtureId": "X-0001",
+      "domain": "D01",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "_expectedClass": "E1",
+      "_note": "E1 is the ONLY quality-bearing class (P02 §1.2): produces a snapshot with EMPTY fields and quality='unavailable'. ST-9 permits empty fields only here."
+    }
+  ]
+}

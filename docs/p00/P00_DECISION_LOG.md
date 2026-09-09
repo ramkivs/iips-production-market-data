@@ -76,3 +76,41 @@ Source: `docs/d4/D4_14_AUTHORITY_ADR_REGISTER.md` §P.1 (G-A Integration Baselin
 3. No entry may alter the meaning of a G-A decision.
 4. Authority approval is **never** recorded as certification or gate acceptance.
 5. An open item is not resolved by being recorded.
+
+---
+
+## 6. D9 — P05 entry / explicit authorization decision (appended 2026-09-09)
+
+> **Append-only entry per rule 1.** It **cites and supersedes as to current state** the §3
+> program-authority decision of record and the §4 D8 authorization state — **both are left
+> unedited above as the record of their own moment.** No entry above is altered, re-litigated or
+> reinterpreted.
+
+| Field | Content |
+|---|---|
+| **ID** | **D9-AUTH-P05-ENTRY** |
+| **Decision** | **P05 — Market Data Acquisition & Ingestion is ENTERED / AUTHORIZED.** |
+| **Authority** | **Sai/Ramki** — program owner of record (§3 convention: *"consider this as decision approved by Sai/Ramki to move forward"*). ⚠ No individual beyond the established authority of record is named or inferred; **A1–A4 remain `person_named: false`**; **A3 gate acceptor remains UNKNOWN** |
+| **Decision date** | **2026-09-09** · recorded `2026-09-09T12:29:00Z` (Asia/Calcutta `17:59:00+0530`) |
+| **Recorded against baseline** | **`efe33eae287d2181cfdd5a838b0d9e5112fcdad3`** — *"CHECKPOINT-03: post-P04 / OI-10 resolved / pre-P05 boundary"* (tree `a11ea8646b9025c2fe58ca7466bb910e7dc5fdef`) |
+| **Applies to** | P05 **entry/authorization only**, within the exact scope of `docs/d9/D9_P05_ENTRY_AUTHORIZATION.md` §3 — **A-1** P05-01 local deterministic feed (full acquisition work) · **A-2** P05-02 specification/adapter-contract only · **A-3** P05-03 specification/adapter-contract only |
+| **Preconditions** | **15 of 15 PASS** — `docs/d9/D9_EVIDENCE_NOTES.md` |
+| **Source artifacts** | `docs/d9/D9_P05_ENTRY_AUTHORIZATION.md` · `docs/d9/D9_STATUS.json` · `docs/d9/D9_EVIDENCE_NOTES.md` |
+| **Cites / supersedes as to current state** | §3 program-authority decision of record · §4 D8 authorization state (`implementation_status`: *"executable now: P00 only"*) · `docs/CHECKPOINT-03.md` §5.2/§6 P05 row · `docs/PROGRAM_STATE.md` §4 |
+| **Does NOT apply to** | **AD-17 / M-2** · **M-1 / AD-4** (existing-IIPS, AD-10) · **M-5** · **M-6** · **OI-P04-01** · **OI-P04-02** |
+| **Does NOT confer** *(rule 4)* | **Gate acceptance** — P05 acceptance remains a separate future gate requiring a **named A3 acceptor** · **certification** — **C1–C12 remain `NONE_GRANTED`** · **production activation** — remains **`NOT_AUTHORIZED`** · **provider selection** · **credentials** · resolution of any open item |
+| **Open items NOT resolved** *(rule 5)* | **OI-P04-04** FIGI sourcing/licensing/coverage — **OPEN** · **OI-P04-03** tenant/region governance attribute set — **OPEN**, bounded by **IB-1…IB-5**; ⚠ no attribute invented, inferred or defaulted · **OI-D9-01** domain-segment label vocabulary — **OPEN, newly recorded**; ⚠ **no label invented**. **OI-08, OI-09, OI-10 and ADR-01 C1–C6 are unaltered** |
+| **Not authorized by this entry** | P05-02 live provider execution · P05-03 licensed/deeper historical acquisition · **P05-04 ingestion-orchestration build-out** · per-record tenant/region governance application · inventing the governance attribute set · inventing domain-segment labels · `<NS>` → `MD:` rewriting of accepted P01/P02 records · any P06/P07/P08 work · any modification of the tracker XLSX or SPEC DOCX |
+| **Recording integrity** | All edits **additive**; **0** historical or accepted records rewritten; `CHECKPOINT-03.md` unmodified; `docs/d8/D8_STATUS.json` unmodified (immutable historical — stale by design); **0** executable/implementation files created; **no `P05_GATE_ACCEPTANCE.md`**; existing-IIPS untouched; **not pushed** |
+
+### 6.1 Resulting authority state (by addition; §4 above left unedited)
+
+| Field | Value |
+|---|---|
+| `program_status` | **`AUTHORIZED_TO_PROCEED`** *(unchanged)* |
+| `p05_entry_authorization_status` | **`AUTHORIZED`** *(was `NOT_AUTHORIZED`)* |
+| `p05_acceptance_status` | **`NOT_ACCEPTED`** *(unchanged)* |
+| `formal_gate_status` | **5 of 18 accepted — P00, P01, P02, P03, P04**; P05–P17 **NOT ACCEPTED** |
+| `certification_status` | **`NONE_GRANTED`** *(unchanged)* |
+| `production_activation_status` | **`NOT_AUTHORIZED`** *(unchanged)* |
+| Current machine-readable state | **`docs/d9/D9_STATUS.json`** — extends `docs/d8/D8_STATUS.json`, does **not** supersede or edit it |

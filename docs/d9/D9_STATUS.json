@@ -1,0 +1,378 @@
+{
+  "document": "D9_STATUS",
+  "purpose": "Machine-readable P05 entry/authorization state recorded by D9.",
+  "supersedes": null,
+  "extends": "docs/d8/D8_STATUS.json",
+  "note_on_supersession": "D8_STATUS.json is an immutable historical record and is NOT edited. Its fields 'implementation_status: executable now P00 only' and 'formal_gate_status: NONE_ACCEPTED (0 of 18)' are stale by design. Current state is recorded here, by addition.",
+  "authority_of_record": {
+    "authority": "Sai/Ramki",
+    "role": "PROGRAM_OWNER_OF_RECORD",
+    "person_beyond_authority_of_record_named": false,
+    "a1_a4_person_named": false,
+    "a3_gate_acceptor": "UNKNOWN",
+    "decision": "P05 - Market Data Acquisition & Ingestion is ENTERED / AUTHORIZED.",
+    "decision_date": "2026-09-09",
+    "recorded_utc": "2026-09-09T12:29:00Z",
+    "recorded_local": "2026-09-09T17:59:00+0530",
+    "recorded_local_tz": "Asia/Calcutta",
+    "instrument": [
+      "docs/d9/D9_P05_ENTRY_AUTHORIZATION.md",
+      "docs/d9/D9_STATUS.json",
+      "docs/d9/D9_EVIDENCE_NOTES.md"
+    ]
+  },
+  "authoritative_baseline": {
+    "commit": "efe33eae287d2181cfdd5a838b0d9e5112fcdad3",
+    "subject": "CHECKPOINT-03: post-P04 / OI-10 resolved / pre-P05 boundary",
+    "tree_oid": "a11ea8646b9025c2fe58ca7466bb910e7dc5fdef",
+    "branch_of_record": "arena/01a0814b-iips-production-market-data",
+    "track_b_branch": "arena/01a0853c-iips-production-market-data"
+  },
+  "precondition_verification": {
+    "all_pass": true,
+    "total": 15,
+    "passed": 15,
+    "failed": 0,
+    "results": {
+      "1_head_is_efe33ea": "PASS",
+      "2_working_tree_clean": "PASS",
+      "3_tree_oid_equals_efe33ea": "PASS",
+      "4_p00_p01_p02_p03_p04_accepted": "PASS",
+      "5_checkpoint03_authoritative_and_gate1_passed": "PASS_WITH_DISCLOSURE",
+      "6_p05_entry_assessment_entry_ready": "PASS",
+      "7_entry_preconditions_satisfied": "PASS",
+      "8_oi10_resolved_token_MD": "PASS",
+      "9_oi08_resolved_1_to_N": "PASS",
+      "10_oi09_resolved_figi_openfigi": "PASS",
+      "11_adr01_c1_c6_unchanged": "PASS",
+      "12_no_p05_gate_acceptance": "PASS",
+      "13_no_p05_implementation_or_executable_files": "PASS",
+      "14_p06_p07_p08_untouched": "PASS",
+      "15_oi_p04_03_and_oi_p04_04_open": "PASS"
+    },
+    "disclosure_precondition_5": "CHECKPOINT-03.md is present, authoritative and byte-exact. Track B Checkpoint Gate 1's PASS result was reported in-session on 2026-09-09 and was deliberately not committed as a competing checkpoint record. D9 is the first committed record of that result; no historical record was rewritten to produce it."
+  },
+  "p05_status": {
+    "entry_authorization": "AUTHORIZED",
+    "entry_authorization_prior_state": "NOT_AUTHORIZED",
+    "acceptance": "NOT_ACCEPTED",
+    "gate_acceptance_artifact_exists": false,
+    "implementation": "AUTHORIZED_WITHIN_SCOPE_ONLY",
+    "phase": "P05",
+    "phase_name": "Market Data Acquisition & Ingestion"
+  },
+  "authorized_scope": {
+    "A-1": {
+      "tracker_item": "P05-01",
+      "name": "Local deterministic market feed",
+      "authorized": "FULL",
+      "covers": [
+        "specification",
+        "adapter_conformance",
+        "fixture_design_and_construction",
+        "provenance_asOf_version_handling",
+        "deterministic_replay_and_idempotency",
+        "negative_and_error_contract_work"
+      ],
+      "dependencies": [
+        "P02-01",
+        "P04-01"
+      ],
+      "readiness": "Provider contract + master",
+      "evidence": [
+        "Repeat-run tests",
+        "Fixture dataset"
+      ]
+    },
+    "A-2": {
+      "tracker_item": "P05-02",
+      "name": "LIVE market adapter",
+      "authorized": "SPECIFICATION_AND_ADAPTER_CONTRACT_ONLY",
+      "live_provider_execution_authorized": false,
+      "dependencies": [
+        "P02-01",
+        "P02-02",
+        "P03-01",
+        "P04-02"
+      ]
+    },
+    "A-3": {
+      "tracker_item": "P05-03",
+      "name": "Historical market adapter",
+      "authorized": "SPECIFICATION_AND_ADAPTER_CONTRACT_ONLY",
+      "licensed_or_deeper_historical_acquisition_authorized": false,
+      "dependencies": [
+        "P05-01",
+        "P04-02"
+      ]
+    },
+    "not_in_scope": {
+      "P05-04": "Ingestion orchestration build-out NOT included; depends on P05-01,P05-02; requires a further explicit act",
+      "expansion_by_implication": false
+    }
+  },
+  "scope_constraints": {
+    "P05-02_live_execution_blocked_by": [
+      "provider_selection_NONE_MADE",
+      "entitlement_matrix_EMPTY_INV-10",
+      "credentials_NONE_P03_specification_only",
+      "connectivity",
+      "P16_provider_entitlement_authority"
+    ],
+    "P05-03_licensed_depth_blocked_by": [
+      "OI-P04-04"
+    ],
+    "per_record_governance_blocked_by": [
+      "OI-P04-03",
+      "IB-1",
+      "IB-2",
+      "IB-3",
+      "IB-4",
+      "IB-5"
+    ]
+  },
+  "open_items": {
+    "OI-P04-04": {
+      "subject": "FIGI source availability, licensing and coverage",
+      "state": "OPEN",
+      "resolved_by_this_authorization": false,
+      "owner": "P05",
+      "blocks_entry": false,
+      "blocks_preparation": false,
+      "blocks_implementation": "PARTIALLY - P05-02 live execution and P05-03 licensed depth",
+      "blocks_figi_population": true
+    },
+    "OI-P04-03": {
+      "subject": "Tenant / region governance attribute set",
+      "state": "OPEN",
+      "resolved_by_this_authorization": false,
+      "owner": "A1",
+      "person_named": false,
+      "attribute_set_invented_or_defaulted": false,
+      "blocks_entry": false,
+      "blocks_preparation": false,
+      "blocks_implementation": "PARTIALLY - per-record governance application bounded by IB-1; lifting requires an explicit A1 act"
+    },
+    "OI-D9-01": {
+      "subject": "Enumeration of MD:<domain>.<field> domain-segment labels",
+      "state": "OPEN",
+      "newly_recorded_here": true,
+      "prior_authoritative_item_bore_this_id": false,
+      "owner": "Ramki/Sai",
+      "labels_exemplified": [
+        "price",
+        "ohlcv",
+        "valuation",
+        "fundamentals",
+        "estimates"
+      ],
+      "domains_without_exemplified_label": [
+        "D04",
+        "D05",
+        "D06",
+        "D08",
+        "D09",
+        "D10"
+      ],
+      "label_invented_or_defaulted": false,
+      "blocks_p05_entry": false,
+      "blocks_p05_01": false,
+      "reopens_oi10": false,
+      "note": "Token and form are settled (MD: / MD:<domain>.<field>). Only the per-domain label vocabulary is incomplete. This is a vocabulary decision, not a token decision.",
+      "correction_2026_09_09": {
+        "recorded_by": "P05-01 execution (docs/p05/P05_01_OPEN_ITEMS.md \u00a72)",
+        "method": "additive \u2014 the original OI-D9-01 fields above are left UNEDITED as the record of their own moment, per the corpus's additive/supersession convention and P00_DECISION_LOG.md rule 1",
+        "corrected_state": "RESOLVED_BY_EVIDENCE \u2014 no gap exists",
+        "original_observation_was_wrong": true,
+        "why_wrong": "The 'labels_exemplified' and 'domains_without_exemplified_label' fields above were derived by counting LITERAL 'MD:' strings in the corpus. The accepted field dictionary predates the OI-10 recording and writes its keys with the <NS> placeholder (<NS>corpaction.actionType, <NS>news.headline, <NS>macro.value, ...), so those labels are present and authoritative but contain no 'MD:' substring.",
+        "evidence_artifact": "docs/p01/P01_FIELD_DICTIONARY.md \u00a73-\u00a712",
+        "evidence_artifact_accepted": "docs/p01/P01_GATE_ACCEPTANCE.md:16 = **ACCEPTED**",
+        "segments_by_domain": {
+          "D01": [
+            "price",
+            "valuation"
+          ],
+          "D02": [
+            "ohlcv"
+          ],
+          "D03": [
+            "fundamentals"
+          ],
+          "D04": [
+            "corpaction"
+          ],
+          "D05": [
+            "identity"
+          ],
+          "D06": [
+            "news"
+          ],
+          "D07": [
+            "estimates"
+          ],
+          "D08": [
+            "macro"
+          ],
+          "D09": [
+            "alt"
+          ],
+          "D10": [
+            "venue"
+          ]
+        },
+        "domains_with_a_segment": "10 of 10",
+        "domains_without_a_segment": [],
+        "distinct_segment_count": 11,
+        "distinct_segments": [
+          "alt",
+          "corpaction",
+          "estimates",
+          "fundamentals",
+          "identity",
+          "macro",
+          "news",
+          "ohlcv",
+          "price",
+          "valuation",
+          "venue"
+        ],
+        "substitution_legitimacy": "CHECKPOINT-03.md \u00a73.3(5) and recovery rule 14 bind <NS> to MD: for NEW P05/P06 work; \u00a710 states recording the token later is 'a substitution, not a redesign.' Applying it to the accepted dictionary is applying the accepted contract, not inventing vocabulary.",
+        "vocabulary_invented_or_altered": false,
+        "oi10_reopened_or_redesigned": false,
+        "namespace_token_preserved": "MD:",
+        "canonical_form_preserved": "MD:<domain>.<field>",
+        "namespace_version": "1.0",
+        "mechanically_enforced_by": "p05/tests/namespace.test.js \u2014 parses the accepted dictionary and asserts the implementation vocabulary EQUALS the dictionary's set exactly",
+        "closes_only": "OI-D9-01",
+        "does_not_resolve": [
+          "OI-P04-04",
+          "OI-P04-03"
+        ]
+      }
+    }
+  },
+  "carried_forward_constraints": {
+    "namespace_token": "MD:",
+    "canonical_field_key_form": "MD:<domain>.<field>",
+    "namespace_mandatory_for_market_data_field_keys": true,
+    "adr01_rules_unchanged": [
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5",
+      "C6"
+    ],
+    "oi08": "RESOLVED_1_TO_N",
+    "oi09": "RESOLVED_FIGI_OPENFIGI",
+    "oi10": "RESOLVED",
+    "unmapped_identity_must_fail_explicitly": true,
+    "absent_figi_is_explicit_unresolved_never_fallback": true,
+    "snapshot_id_format": "data-${provider}-${dataVersion}-${asOf}",
+    "snapshot_id_components_added": 0,
+    "identity_mapping_version_location": "LINEAGE_NOT_SNAPSHOT_ID",
+    "engine_identity_format": "SNAP_*",
+    "identity_layers_conflated": false,
+    "lineage_axes": 6,
+    "seventh_axis_added": false,
+    "venue_identity": "MIC_BASED",
+    "lifecycle_effective_dated": true,
+    "transition_mutates_canonical_security_id": false,
+    "sole_ingress": "MarketDataSource<T> -> DataSnapshot<T>",
+    "provider_native_payloads_confined_to_adapters": true,
+    "error_taxonomy": [
+      "E1",
+      "E2",
+      "E3",
+      "E4",
+      "E5",
+      "E6",
+      "E7",
+      "E8"
+    ],
+    "ad17_replay_firewall_preserved": true,
+    "existing_iips_read_only": true,
+    "deferred_obligations_discharged": [],
+    "deferred_obligations_still_deferred": [
+      "DO-P04-1",
+      "DO-P04-2",
+      "DO-P04-3",
+      "DO-P04-4",
+      "DO-P04-5",
+      "DO-1",
+      "DO-2",
+      "DO-3",
+      "DO-4",
+      "DO-5"
+    ],
+    "p01_p02_namespace_artifacts_rewritten": false,
+    "ns_placeholder_binding": "Applies to NEW P05/P06 work only; accepted P01/P02 records stand unedited"
+  },
+  "explicit_exclusions": {
+    "constitutes_p05_acceptance": false,
+    "creates_p05_gate_acceptance_md": false,
+    "grants_certification": false,
+    "authorizes_production_activation": false,
+    "authorizes_p06": false,
+    "authorizes_p07": false,
+    "authorizes_p08": false,
+    "resolves_oi_p04_04": false,
+    "resolves_oi_p04_03": false,
+    "selects_provider": false,
+    "provisions_credentials": false,
+    "rewrites_historical_p01_p02_namespace_artifacts": false,
+    "alters_oi08": false,
+    "alters_oi09": false,
+    "alters_oi10": false,
+    "alters_adr01_c1_c6": false,
+    "modifies_existing_iips": false,
+    "promotes_any_downstream_gate": false,
+    "modifies_tracker_or_spec": false
+  },
+  "program_status": {
+    "program_status": "AUTHORIZED_TO_PROCEED",
+    "p05_entry_authorization_status": "AUTHORIZED",
+    "p05_acceptance_status": "NOT_ACCEPTED",
+    "certification_status": "NONE_GRANTED",
+    "formal_gate_status": "5 of 18 accepted - P00, P01, P02, P03, P04 ACCEPTED; P05-P17 NOT ACCEPTED",
+    "gates_accepted_count": 5,
+    "gates_total": 18,
+    "production_activation_status": "NOT_AUTHORIZED",
+    "p06_status": "NOT_STARTED_NOT_PROMOTED",
+    "p07_status": "NOT_STARTED_NOT_PROMOTED",
+    "p08_status": "NOT_STARTED",
+    "p15_status": "BLOCKED_UNCHANGED_M1_AD4",
+    "p16_p17_status": "NOT_STARTED"
+  },
+  "existing_iips_boundary": {
+    "modified": false,
+    "may_depend_on_without_modifying": true,
+    "m1_ad4": "OPEN_REVALIDATION_REQUIRED",
+    "m5": "OPEN",
+    "m6": "OPEN",
+    "ad17_m2": "UNRESOLVED",
+    "e2e_030": "NOT_REVOKED_NOT_RENEWED",
+    "methodology_changed": false,
+    "scoring_or_calibration_changed": false,
+    "certified_contract_changed": false
+  },
+  "recording_integrity": {
+    "working_tree_clean_before": true,
+    "historical_records_rewritten": 0,
+    "edits_additive_only": true,
+    "gate_acceptance_records_modified": 0,
+    "gate_acceptance_records_modified_list": [],
+    "existing_files_modified": [
+      "docs/PROGRAM_STATE.md",
+      "docs/p00/P00_DECISION_LOG.md"
+    ],
+    "note_on_existing_files_modified": "Both edits are additive. docs/p00/P00_DECISION_LOG.md is the append-only decision log and was extended per its own rule 1 (new entry citing the prior one); no entry in it was altered, re-litigated or reinterpreted. docs/PROGRAM_STATE.md is a recovery/index artifact; its prior current-state lines (section 4, rows 8/8a/8b, recovery steps 2 and 4) are left unedited and superseded by addition. Two lines register as replacements rather than pure insertions: the section 7 heading (expanded to include D9) and the closing sentence 'This manifest records no new decision.' (preserved verbatim, then clarified). Neither erased historical content.",
+    "checkpoint03_modified": false,
+    "tracker_or_spec_modified": false,
+    "executable_files_created": 0,
+    "p05_implementation_artifacts_created": 0,
+    "provider_selected": false,
+    "credentials_provisioned": false,
+    "pushed": false
+  }
+}

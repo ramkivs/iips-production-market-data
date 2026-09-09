@@ -1,0 +1,198 @@
+{
+  "artifact": "P05-01 REPRESENTATIVE PROVIDER-NATIVE INPUT PAYLOADS",
+  "note": "Provider-native shapes. B-1: these shapes exist ONLY inside the adapter and never cross the boundary (A-19).",
+  "payloads": [
+    {
+      "fixtureId": "Q-0001",
+      "label": "D01 LIVE quote, complete",
+      "request": {
+        "domain": "D01",
+        "mode": "LIVE"
+      },
+      "providerNative": {
+        "_fixtureId": "Q-0001",
+        "sym": "ALFA",
+        "venue": "XSYN",
+        "tradePrice": "101.25",
+        "bidPx": "101.20",
+        "askPx": "101.30",
+        "bidSz": 500,
+        "askSz": 400,
+        "ccy": "USD",
+        "quoteTs": "2026-03-02T14:30:00.000Z",
+        "canonicalSecurityId": "CS-LOCAL-0001",
+        "_mode": "LIVE",
+        "_note": "price.last/.bid/.ask are pitEligible=false (LIVE intraday) per P01_FIELD_DICTIONARY §3."
+      }
+    },
+    {
+      "fixtureId": "Q-0002",
+      "label": "D01 LIVE quote, bid/ask silent (NOT_PROVIDED)",
+      "request": {
+        "domain": "D01",
+        "mode": "LIVE"
+      },
+      "providerNative": {
+        "_fixtureId": "Q-0002",
+        "sym": "BETA",
+        "venue": "XSYN",
+        "tradePrice": "47.80",
+        "ccy": "USD",
+        "quoteTs": "2026-03-02T14:30:00.000Z",
+        "canonicalSecurityId": "CS-LOCAL-0003",
+        "_mode": "LIVE",
+        "_note": "NEGATIVE-DATA FIXTURE: bid/ask absent. Silence is NOT_PROVIDED, never zero (NL-4, NL-7, A-20)."
+      }
+    },
+    {
+      "fixtureId": "C-0001",
+      "label": "D01 official close, session 2026-03-02",
+      "request": {
+        "domain": "D01",
+        "mode": "SNAPSHOT"
+      },
+      "providerNative": {
+        "_fixtureId": "C-0001",
+        "sym": "ALFA",
+        "venue": "XSYN",
+        "officialClose": "100.50",
+        "prevClose": "99.75",
+        "vol": 1250000,
+        "trades": 8421,
+        "vwap": "100.12",
+        "ccy": "USD",
+        "sessionDate": "2026-03-02",
+        "canonicalSecurityId": "CS-LOCAL-0001",
+        "_mode": "SNAPSHOT",
+        "_note": "price.close/.previousClose/.volume/.vwap are pitEligible=true; effectiveTime is the session boundary."
+      }
+    },
+    {
+      "fixtureId": "C-0002",
+      "label": "D01 official close, session 2026-03-03 (distinct dataVersion)",
+      "request": {
+        "domain": "D01",
+        "mode": "SNAPSHOT"
+      },
+      "providerNative": {
+        "_fixtureId": "C-0002",
+        "sym": "ALFA",
+        "venue": "XSYN",
+        "officialClose": "101.00",
+        "prevClose": "100.50",
+        "vol": 980000,
+        "ccy": "USD",
+        "sessionDate": "2026-03-03",
+        "canonicalSecurityId": "CS-LOCAL-0001",
+        "_mode": "SNAPSHOT",
+        "_note": "DV-3 fixture: a NEW dataVersion at a DIFFERENT asOf — a distinct snapshot, not an edit."
+      }
+    },
+    {
+      "fixtureId": "V-0001",
+      "label": "D01 valuation ratios (collision-critical MD:valuation.*)",
+      "request": {
+        "domain": "D01",
+        "mode": "SNAPSHOT",
+        "fixtureKind": "valuation"
+      },
+      "providerNative": {
+        "_fixtureId": "V-0001",
+        "sym": "ALFA",
+        "pe": "18.40",
+        "evEbitda": "9.15",
+        "fcfYield": "0.0520",
+        "canonicalSecurityId": "CS-LOCAL-0001",
+        "asOfTs": "2026-03-02T00:00:00.000Z",
+        "_mode": "SNAPSHOT",
+        "_note": "COLLISION-CRITICAL (D4_07 §I.1): these correspond to existing free-form engine keys shared across 2-6 engines. They are namespaced MD:valuation.* and may only reach an engine through an explicit declared mapping (P11) — never by name coincidence."
+      }
+    },
+    {
+      "fixtureId": "H-0001",
+      "label": "D02 historical OHLCV bar (unadjusted)",
+      "request": {
+        "domain": "D02",
+        "mode": "SNAPSHOT"
+      },
+      "providerNative": {
+        "_fixtureId": "H-0001",
+        "sym": "ALFA",
+        "interval": "1D",
+        "bars": [
+          {
+            "barDate": "2026-02-26",
+            "o": "98.10",
+            "h": "99.40",
+            "l": "97.85",
+            "c": "99.10",
+            "v": 1100000,
+            "adj": false
+          },
+          {
+            "barDate": "2026-02-27",
+            "o": "99.10",
+            "h": "100.05",
+            "l": "98.90",
+            "c": "99.75",
+            "v": 1180000,
+            "adj": false
+          },
+          {
+            "barDate": "2026-03-02",
+            "o": "99.80",
+            "h": "100.90",
+            "l": "99.60",
+            "c": "100.50",
+            "v": 1250000,
+            "adj": false
+          }
+        ],
+        "ccy": "USD",
+        "canonicalSecurityId": "CS-LOCAL-0001",
+        "_mode": "SNAPSHOT",
+        "_note": "AJ-1: adjusted and unadjusted are BOTH retained. AJ-3: adjusted=true without adjustmentBasisRef is invalid — so adj=false here carries no basis ref."
+      }
+    },
+    {
+      "fixtureId": "VEN-XSYN",
+      "label": "D10 venue reference, operating MIC",
+      "request": {
+        "domain": "D10",
+        "mode": "SNAPSHOT",
+        "micCode": "XSYN"
+      },
+      "providerNative": {
+        "micCode": "XSYN",
+        "micKind": "OPERATING_MIC",
+        "name": "Synthetic Operating Exchange",
+        "timezone": "UTC",
+        "quotationCurrency": "USD",
+        "settlementCycle": "T+1",
+        "validFrom": "2018-01-01T00:00:00.000Z",
+        "validTo": null,
+        "_note": "VN-1: venue identity is MIC-based. VN-3: operating MIC and segment MIC are never interchangeable."
+      }
+    },
+    {
+      "fixtureId": "VEN-XSYNSG1",
+      "label": "D10 venue reference, segment MIC",
+      "request": {
+        "domain": "D10",
+        "mode": "SNAPSHOT",
+        "micCode": "XSYNSG1"
+      },
+      "providerNative": {
+        "micCode": "XSYNSG1",
+        "micKind": "SEGMENT_MIC",
+        "operatingMic": "XSYN",
+        "name": "Synthetic Exchange - Segment 1",
+        "timezone": "UTC",
+        "quotationCurrency": "USD",
+        "settlementCycle": "T+1",
+        "validFrom": "2018-01-01T00:00:00.000Z",
+        "validTo": null
+      }
+    }
+  ]
+}

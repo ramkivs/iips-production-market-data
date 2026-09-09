@@ -1,0 +1,196 @@
+{
+  "artifact": "P05-02 FIELD MAPPING BOUNDARY + PROVIDER-NATIVE LEAKAGE PREVENTION",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "containmentRule": "P02_PROVIDER_MAPPING_RULES M-1…M-6 / A-19: provider-native schemas, field names, symbols, enums, units, time conventions and error codes exist ONLY inside the adapter.",
+  "declaredWireSchema": {
+    "required": {
+      "instRef": "string",
+      "mktCode": "string",
+      "qBid": "numeric-string",
+      "qAsk": "numeric-string",
+      "qLast": "numeric-string",
+      "pxCcy": "string",
+      "obsTime": "iso-utc",
+      "respCode": "integer"
+    },
+    "optional": {
+      "qBSz": "integer",
+      "qASz": "integer"
+    }
+  },
+  "declaredFieldMap": [
+    {
+      "native": "qBid",
+      "domainSegment": "price",
+      "fieldSegment": "bid",
+      "dataType": "decimal",
+      "precision": 4,
+      "currencyFrom": "pxCcy",
+      "timestampSlot": "observationTime",
+      "pitEligible": false,
+      "md": [
+        "MD-1",
+        "MD-2",
+        "MD-3",
+        "MD-4",
+        "MD-5",
+        "MD-7"
+      ]
+    },
+    {
+      "native": "qAsk",
+      "domainSegment": "price",
+      "fieldSegment": "ask",
+      "dataType": "decimal",
+      "precision": 4,
+      "currencyFrom": "pxCcy",
+      "timestampSlot": "observationTime",
+      "pitEligible": false,
+      "md": [
+        "MD-1",
+        "MD-2",
+        "MD-3",
+        "MD-4",
+        "MD-5",
+        "MD-7"
+      ]
+    },
+    {
+      "native": "qLast",
+      "domainSegment": "price",
+      "fieldSegment": "last",
+      "dataType": "decimal",
+      "precision": 4,
+      "currencyFrom": "pxCcy",
+      "timestampSlot": "observationTime",
+      "pitEligible": false,
+      "md": [
+        "MD-1",
+        "MD-2",
+        "MD-3",
+        "MD-4",
+        "MD-5",
+        "MD-7"
+      ]
+    },
+    {
+      "native": "qBSz",
+      "domainSegment": "price",
+      "fieldSegment": "bidSize",
+      "dataType": "integer",
+      "precision": null,
+      "currencyFrom": null,
+      "timestampSlot": "observationTime",
+      "pitEligible": false,
+      "md": [
+        "MD-1",
+        "MD-2",
+        "MD-4",
+        "MD-5",
+        "MD-7"
+      ]
+    },
+    {
+      "native": "qASz",
+      "domainSegment": "price",
+      "fieldSegment": "askSize",
+      "dataType": "integer",
+      "precision": null,
+      "currencyFrom": null,
+      "timestampSlot": "observationTime",
+      "pitEligible": false,
+      "md": [
+        "MD-1",
+        "MD-2",
+        "MD-4",
+        "MD-5",
+        "MD-7"
+      ]
+    }
+  ],
+  "derivedFields": [
+    {
+      "domainSegment": "venue",
+      "fieldSegment": "micCode",
+      "dataType": "identifier",
+      "source": "REQUEST_VENUE_REFERENCE",
+      "_note": "VN-1/VN-3/VN-5 — venue identity is MIC-based and comes from the P04 venue reference, never from the provider's own market code."
+    }
+  ],
+  "mappingIsDeclaredAsData": true,
+  "mappingRequiresNoCodeReading": "MR-4",
+  "heuristicMatchingPermitted": "MR-2 — PROHIBITED (no fuzzy or name-similarity matching)",
+  "nativeVocabulary": [
+    "qBid",
+    "qAsk",
+    "qLast",
+    "qBSz",
+    "qASz",
+    "instRef",
+    "mktCode",
+    "pxCcy",
+    "obsTime",
+    "respCode",
+    "RC-4001",
+    "RC-5003",
+    "MOCK-EQ-0001"
+  ],
+  "leakageResults": {
+    "conformingRun": {
+      "snapshot": {
+        "ok": true,
+        "violations": []
+      },
+      "attemptRecord": {
+        "ok": true,
+        "violations": []
+      }
+    },
+    "smuggledIntoProvenanceString": {
+      "_note": "LA-18 / M-4 — every field key is correctly namespaced, so ADR-01 C1…C4 PASS; only the native-vocabulary scan detects this. This is the case M-4 prohibits and RD-4 forbids.",
+      "c1ToC4Passed": true,
+      "detectedByLA18": true,
+      "violations": [
+        {
+          "token": "qBid",
+          "occurrences": 7
+        }
+      ]
+    },
+    "nonNamespacedKey": {
+      "_note": "A bare provider-native key is caught by the namespace partition (ADR-01 C1/C5) and ABORTS the execution. RD-4: the contract-level record reports a COUNT, not the native key.",
+      "rejected": true,
+      "violatedRules": [
+        "C1"
+      ],
+      "recordLeaksNativeToken": false
+    }
+  },
+  "absenceSemantics": {
+    "_note": "The three distinct absence semantics, all drawn from the accepted P01 AVAILABILITY enumeration. Conflating any two is prohibited.",
+    "ABSENT_FROM_PAYLOAD": "NOT_PROVIDED — the source said nothing (A-20, NL-4)",
+    "EXPLICIT_NULL_IN_PAYLOAD": "NULL_ASSERTED — the source explicitly asserted null (NL-1)",
+    "UNENTITLED": "WITHHELD — suppressed by entitlement, carries an entitlementRef (EV-8, RD-1, NL-5)",
+    "prohibitedSubstitutes": [
+      "zero",
+      "empty string",
+      "carried-forward value",
+      "omission of the field entirely"
+    ]
+  }
+}

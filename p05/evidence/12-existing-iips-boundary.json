@@ -1,0 +1,18 @@
+{
+  "artifact": "P05-01 EXISTING-IIPS NON-REGRESSION BOUNDARY",
+  "recordedFact": "This repository contains NO existing-IIPS executable source. git ls-files returns 0 matches for iips-platform / LiveDataRuntime / DataBoundExecutor / ReplayService / NormalizedHolding / cross-sector / EngineRegistry / OntologyMapper. The boundary is therefore verified STRUCTURALLY — nothing here can touch it — and that fact is recorded rather than a test being manufactured.",
+  "existingIipsSourceTracked": 0,
+  "replayServiceTouched": false,
+  "dataBoundExecutorTouched": false,
+  "liveDataRuntimeTouched": false,
+  "ad17Status": "UNRESOLVED — existing-IIPS authority (M-2). Replay firewall AF-1…AF-5 preserved.",
+  "m1Ad4Status": "OPEN_REVALIDATION_REQUIRED — E2E-030 neither revoked nor renewed",
+  "m5Status": "OPEN — C12 BLOCKED",
+  "m6Status": "OPEN",
+  "methodologyChanged": false,
+  "scoringOrCalibrationChanged": false,
+  "certifiedContractChanged": false,
+  "sectorTaxonomyRedefined": false,
+  "companyIdSemanticsChanged": false,
+  "normalizedHoldingFieldsAdded": 0
+}

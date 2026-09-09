@@ -1,5 +1,13 @@
 # PROGRAM STATE — SESSION RECOVERY MANIFEST
 
+> **▶ CURRENT AUTHORITY ACT: D9 — P05 ENTRY / EXPLICIT AUTHORIZATION**
+> (`docs/d9/D9_P05_ENTRY_AUTHORIZATION.md`, recorded **2026-09-09** against baseline
+> `efe33eae287d2181cfdd5a838b0d9e5112fcdad3`). **P05 — Market Data Acquisition & Ingestion is
+> ENTERED / AUTHORIZED**, within the exact scope of D9 §3. Supersedes CHECKPOINT-03 **as to P05
+> entry/authorization state only**; CHECKPOINT-03 remains authoritative and unedited for
+> everything else. ⚠ **P05 ACCEPTANCE = NOT_ACCEPTED · CERTIFICATION = `NONE_GRANTED` ·
+> PRODUCTION ACTIVATION = `NOT_AUTHORIZED`** — none of these is conferred by D9.
+>
 > **CURRENT CHECKPOINT: CHECKPOINT-03 — Post-P04 / OI-10 Resolved / Pre-P05 Boundary**
 > (`docs/CHECKPOINT-03.md`, source acceptance commit
 > `faf1317eccaf77dbdab2a520899802043c851cca`). Supersedes CHECKPOINT-02 as to current state;
@@ -57,6 +65,25 @@ Accepted gates: **P00 — Scope/authority baseline** (`docs/p00/P00_GATE_ACCEPTA
 **P02 — Provider abstraction/entitlement gate** (`docs/p02/P02_GATE_ACCEPTANCE.md`) ·
 **P03 — Security gate** (`docs/p03/P03_GATE_ACCEPTANCE.md`) ·
 **P04 — Identity/master gate** (`docs/p04/P04_GATE_ACCEPTANCE.md`)
+
+> ### ⚠ SUPERSEDED AS TO CURRENT STATE by **D9** — the three lines above are **left unedited as
+> ### the record of their own moment** and were correct when written.
+>
+> **P05 — Acquisition gate** — **ENTRY/AUTHORIZATION = AUTHORIZED · ACCEPTANCE = NOT_ACCEPTED**
+> The explicit **P05 entry/authorization act has now been performed** and is recorded at
+> `docs/d9/D9_P05_ENTRY_AUTHORIZATION.md` (**2026-09-09**, authority **Sai/Ramki**, baseline
+> `efe33ea`). **All 15 preconditions PASS** (`docs/d9/D9_EVIDENCE_NOTES.md`).
+>
+> **Authorized scope (exact, not expanded by implication):** **P05-01** local deterministic feed —
+> full acquisition work (specification · adapter conformance · fixture · provenance/`asOf`/version ·
+> deterministic replay/idempotency · negative/error contract) · **P05-02** and **P05-03**
+> **specification and adapter-contract work only**.
+> **NOT authorized:** P05-02 live provider execution (provider selection · entitlement ·
+> credentials · connectivity · P16 authority) · P05-03 licensed/deeper historical (**OI-P04-04**) ·
+> P05-04 build-out · per-record tenant/region governance (**OI-P04-03**, **IB-1…IB-5**).
+> ⚠ Still open and **not** resolved by D9: **OI-P04-04** FIGI sourcing/licensing/coverage · no
+> provider selected · entitlement matrix EMPTY · **OI-P04-03** governance attribute set ·
+> **OI-D9-01** domain-segment label vocabulary.
 
 ## 5. P00 status
 
@@ -159,9 +186,39 @@ authorization.
 (**they are NOT edited**) · certification C1/C2 satisfied · OI-P04-04 or provider/entitlement
 affected.
 
+> ⚠ **As to P05 only, the first clause above is now superseded by §6e below** — P05 **entry** is
+> authorized. **P06 and P11 remain unauthorized**, and every other clause above stands unchanged.
+
 ---
 
-## 7. D4 / D5 / D7 / D8 artifact locations
+## 6e. P05 status — ENTRY / AUTHORIZATION = AUTHORIZED (D9)
+
+# **ENTRY AUTHORIZED · ACCEPTANCE NOT_ACCEPTED**
+
+| Field | Value |
+|---|---|
+| **Authority act** | **D9 — P05 Entry / Explicit Authorization** (`docs/d9/D9_P05_ENTRY_AUTHORIZATION.md`) |
+| **Authority of record** | **Sai/Ramki** — program owner of record. ⚠ A1–A4 remain cleared, not person-assigned (`person_named:false`); **A3 gate acceptor UNKNOWN** |
+| **Decision date** | **2026-09-09** · recorded `2026-09-09T12:29:00Z` (IST `17:59:00+0530`) |
+| **Baseline** | `efe33eae287d2181cfdd5a838b0d9e5112fcdad3` — *CHECKPOINT-03* (tree `a11ea864…`) |
+| **Preconditions** | **15 of 15 PASS** — `docs/d9/D9_EVIDENCE_NOTES.md` |
+| `p05_entry_authorization` | **`AUTHORIZED`** (prior state `NOT_AUTHORIZED`) |
+| `p05_acceptance` | **`NOT_ACCEPTED`** — no `P05_GATE_ACCEPTANCE.md` exists; **5 of 18** gates accepted |
+| `p05_implementation` | **`AUTHORIZED_WITHIN_SCOPE_ONLY`** — D9 §3 |
+| **Authorized** | **A-1** P05-01 local deterministic feed (full acquisition work) · **A-2** P05-02 spec/adapter-contract only · **A-3** P05-03 spec/adapter-contract only |
+| **NOT authorized** | P05-02 live provider execution · P05-03 licensed/deeper historical · **P05-04 build-out** · per-record tenant/region governance · inventing the governance attribute set · inventing domain-segment labels · `<NS>`→`MD:` rewriting of accepted P01/P02 records |
+| `certification_status` | **`NONE_GRANTED`** — unchanged |
+| `production_activation_status` | **`NOT_AUTHORIZED`** — unchanged |
+| **Open, NOT resolved by D9** | **OI-P04-04** (FIGI sourcing/licensing/coverage) · **OI-P04-03** (governance attribute set, IB-1…IB-5) · **OI-D9-01** (domain-segment label vocabulary) · provider selection NONE MADE · entitlement matrix EMPTY |
+| **Carried forward unchanged** | Token `MD:` · form `MD:<domain>.<field>` · **C1–C6 UNCHANGED** · OI-08 1:N · OI-09 FIGI/OpenFIGI · `snapshotId` `data-${provider}-${dataVersion}-${asOf}` · `identityMappingVersion` in lineage · `SNAP_*` distinct · six lineage axes · MIC venue identity · effective-dated lifecycle · sole ingress `MarketDataSource<T>`→`DataSnapshot<T>` · E1–E8 · **AD-17 firewall** · existing-IIPS read-only · **DO-P04-1…5 / DO-1…5 still DEFERRED — NOT PASSED** |
+
+⚠ **These states are distinct and are not collapsed.** Entering P05 is not passing it. P05
+acceptance remains a **separate future gate** requiring the D9 §8 evidence package and **an
+explicit acceptance act by a named A3 gate acceptor** — *no automatic promotion*.
+
+---
+
+## 7. D4 / D5 / D7 / D8 / D9 artifact locations
 
 ### `docs/d4/` — specification baseline (16 files, corrected by D4-B)
 `D4_00_EXECUTIVE_SUMMARY` · `D4_01_INTEGRATION_REUSE_BASELINE` · `D4_02_DATA_DOMAINS` ·
@@ -183,6 +240,36 @@ affected.
 ### `docs/d8/` — authority reconciliation and execution authorization (5 files)
 `D8_AUTHORITY_RECONCILIATION` · `D8_EXECUTION_AUTHORIZATION` · `D8_STATUS.json` ·
 `D8_FIRST_WORK_PACKAGE` · `D8_EVIDENCE_NOTES`
+
+### `docs/d9/` — P05 entry / explicit authorization (3 files)
+`D9_P05_ENTRY_AUTHORIZATION` · `D9_STATUS.json` · `D9_EVIDENCE_NOTES`
+
+### `docs/p05/` — P05-01 execution record (3 files)
+`P05_01_SPECIFICATION` · `P05_01_EVIDENCE` · `P05_01_OPEN_ITEMS`
+⚠ **There is no `P05_GATE_ACCEPTANCE.md`** — P05 is entered, **not** accepted.
+
+### `docs/p05/` — P05-02 execution record (3 more files; ⚠ supersedes the count above **by addition** — the block above is left unedited)
+`P05_02_SPECIFICATION` · `P05_02_EVIDENCE` · `P05_02_OPEN_ITEMS` — created under D9 §3 **A-2**
+(specification / adapter-contract only). `docs/p05/` now holds **6 files**.
+⚠ **There is still no `P05_GATE_ACCEPTANCE.md`.**
+
+### `p05/` — P05-01 implementation and evidence (executable, 35 files)
+The program's **first executable surface**, created under D9 §3 **A-1** only.
+`src/` (8 modules) · `tests/` (8 suites, **118 tests**) · `fixtures/` (3) · `evidence/` (13) ·
+`scripts/generate-evidence.js` · `package.json` (**zero dependencies**).
+⚠ Local deterministic feed only — **no live provider, no credentials, no network.**
+⚠ `p05/src/replay.js` is **not** the existing-IIPS `ReplayService`; **AD-17 remains UNRESOLVED**.
+
+### `p05/` — P05-02 adapter-contract additions (⚠ supersedes the counts above **by addition** — the block above is left unedited)
+Added under D9 §3 **A-2** — **specification / adapter-contract only**:
+`src/liveAdapterContract.js` (**LA-1…LA-31**) · `tests/mockLiveAdapter.js` (offline **synthetic test
+double**, `mocklive`) · `tests/adapter-contract.test.js` (**74 contract-validation tests**) ·
+`fixtures/adapter-contract-fixtures.json` · `evidence-p05-02/` (**13 files**) ·
+`scripts/generate-p05-02-evidence.js` · `package.json` + `evidence:p05-02`.
+`p05/` now holds **41 tracked files**; the suite is **192 tests**.
+⚠ **Still zero dependencies, zero network, zero credentials.** `mocklive` is **NOT** a
+provider-register issuance — `provider-register.json` is **unmodified** with exactly **1** identity.
+⚠ These tests are **CONTRACT VALIDATION**, **not** provider evidence and **not** integration tests.
 
 *Note: D6 (authority reconciliation, result "NO AUTHORITY CHANGE") produced no artifacts by
 design — it was a read-only run. Its conclusion is carried forward in `docs/d8/`.*
@@ -281,6 +368,11 @@ No G2 layer, interface, module or DTO family. Product-plane basis: `EngineApiAda
 | 22 | **OI-10** exact namespace token | ✅ **RESOLVED — token `MD:` · form `MD:<domain>.<field>`** (`docs/CHECKPOINT-03.md` §3) | ADR-01 authority (`person_named:false`) | ⚠ blocker released for P05/P06/P11; **implementation still unauthorized**; literal-key rewrite is P05/P06 work |
 | 23 | **M-5** authentication/session | **OPEN** | Existing-IIPS | P03 limitation |
 | 24 | **M-6** retention enforcement | **OPEN** | Existing-IIPS | C10, P17 |
+| 24a | **OI-D9-01** `MD:<domain>.<field>` domain-segment label vocabulary | **OPEN — newly recorded by D9** (no prior authoritative item bore this ID). Five labels exemplified (`price`, `ohlcv`, `valuation`, `fundamentals`, `estimates`) against the ten-domain baseline; **D04, D05, D06, D08, D09, D10 have none**. ⚠ **No label invented, inferred or defaulted.** Token and form are settled — **OI-10 is NOT reopened**; this is a vocabulary decision | Ramki/Sai | ⚠ Does **not** block P05 entry or **P05-01**; blocks only work that must mint a new domain-segment label (`docs/d9/D9_P05_ENTRY_AUTHORIZATION.md` §6) |
+| 24b | **P05 entry/authorization** | ✅ **AUTHORIZED by D9** (2026-09-09, Sai/Ramki, baseline `efe33ea`) — within D9 §3 scope only | Program authority | ⚠ **P05 acceptance is a separate future gate**; **A3 gate acceptor UNKNOWN**; no automatic promotion |
+| 24b-1 | ⚠ **CORRECTS row 24a by addition — row 24a is left UNEDITED as the record of its own moment.** **OI-D9-01 = RESOLVED BY EVIDENCE — no gap exists.** The P05-01 execution parsed the **accepted** `docs/p01/P01_FIELD_DICTIONARY.md` §3–§12 (`P01_GATE_ACCEPTANCE.md`:16 `**ACCEPTED**`) directly and found a domain segment for **all ten** domains: D01 `price`+`valuation` · D02 `ohlcv` · D03 `fundamentals` · D04 `corpaction` · D05 `identity` · D06 `news` · D07 `estimates` · D08 `macro` · D09 `alt` · D10 `venue` — **11 distinct segments**. ⚠ Row 24a's premise was wrong because it counted **literal `MD:` strings**; the dictionary predates the OI-10 recording and uses the **`<NS>` placeholder**, which `CHECKPOINT-03` §3.3(5)/rule 14 binds to `MD:` for new work (*"a substitution, not a redesign"*, §10). **No vocabulary invented or altered. OI-10 NOT reopened — token `MD:` and form `MD:<domain>.<field>` preserved exactly.** Mechanically enforced by `p05/tests/namespace.test.js`. ⚠ Closes **OI-D9-01 only** — **OI-P04-04 and OI-P04-03 remain OPEN** (`docs/p05/P05_01_OPEN_ITEMS.md` §2) |
+| 24b-2 | **P05-01 — local deterministic market feed** | ✅ **IMPLEMENTED / EVIDENCED** (D9 §3 A-1, baseline `efe33ea`) | — | **118/118 tests PASS**; evidence byte-reproducible; 0 duplicates on replay; 0 dependencies; no network. ⚠ **P05 ACCEPTANCE = NOT_ACCEPTED**; **no `P05_GATE_ACCEPTANCE.md`**; **A3 gate acceptor UNKNOWN** (`docs/p05/P05_01_EVIDENCE.md`) |
+| 24b-3 | **P05-02 — LIVE market adapter: SPECIFICATION / ADAPTER-CONTRACT ONLY** (D9 §3 **A-2**) | ✅ **SPECIFICATION + ADAPTER-CONTRACT COMPLETE** · ⚠ **LIVE EXECUTION NOT AUTHORIZED** | — | Contract `P05-02-LIVE-MARKET-DATA-ADAPTER-CONTRACT` **v1.0**, rules **LA-1…LA-31**, implemented in `p05/src/liveAdapterContract.js`. **192/192 tests PASS** (118 P05-01 + **74 new** contract-validation tests). Evidence `p05/evidence-p05-02/` (13 files, byte-identical across 3 regenerations). ⚠ **CLASSIFICATION = CONTRACT VALIDATION ONLY** — **NOT** provider evidence, **NOT** integration tests, and it does **NOT** establish that *"authenticated ingestion works"*. All three tracker P05-02 columns (**Exit Criteria** / **Test-Validation** / **Evidence**) remain **UNMET** (`BD-P05-02-01…03`). ⚠ **No provider selected, named, contacted or bound** · **no credentials provisioned** · **entitlement matrix still EMPTY** · **0 vendor names** · **0 secret hits over 18 files** · **0 network imports** · **0 dependencies**. Canonical model **NOT forked** (`forked: false` — P05-01 surfaces imported verbatim); the P05-01 feed is explicitly **not** a live adapter and **cannot** satisfy P05-02. ⚠ **OI-P04-04 and OI-P04-03 remain OPEN and were NOT resolved**; **no tenant/region attribute, provider entitlement value or licensing-coverage claim invented**. **C1–C6 unchanged**; OI-08/OI-09/OI-10 unaltered; `docs/p01\|p02\|p04\|d5` and both binary baselines **unmodified**; **P05-04 NOT started**; **P06/P07/P08 untouched**. ⚠ **P05 ACCEPTANCE still NOT_ACCEPTED** (no `P05_GATE_ACCEPTANCE.md`; still **5 of 18**); **CERTIFICATION `NONE_GRANTED`**; **ACTIVATION `NOT_AUTHORIZED`**; **A3 gate acceptor UNKNOWN**. One P05-01 test file's **scan scope** was adjusted and is disclosed in full at `docs/p05/P05_02_OPEN_ITEMS.md` §5 — **no assertion weakened or deleted** (`docs/p05/P05_02_SPECIFICATION.md` · `P05_02_EVIDENCE.md` · `P05_02_OPEN_ITEMS.md`) |
 
 ### ⚠ OI-10 — critical recovery note — ⚠ SUPERSEDED, see the note immediately following
 
@@ -349,6 +441,13 @@ governance baseline in the repository, so a future Arena session can recover ful
 6. **Consult `docs/d4/`** for specification detail; `docs/d5/` for the ADR packages;
    `docs/d7/` for the authority-hold record; `docs/d8/` for the reconciliation that authorized
    execution.
+6a. ⚠ **Then read `docs/d9/D9_P05_ENTRY_AUTHORIZATION.md` and `docs/d9/D9_STATUS.json`** — the
+    **current** P05 entry/authorization state. ⚠ **Steps 2 and 4 above are stale as to current
+    state and are left unedited as the record of their own moment**: `D8_STATUS.json` still reads
+    `formal_gate_status: NONE_ACCEPTED (0 of 18)` and *"executable now: P00 only"* **by design** —
+    it is an immutable historical record. **Current state: 5 of 18 gates accepted (P00–P04), and
+    P05 is ENTRY/AUTHORIZED within the D9 §3 scope.** Corrections are recorded by addition in
+    `docs/d9/`, never by editing D8.
 
 ### Recovery rules
 
@@ -365,6 +464,10 @@ governance baseline in the repository, so a future Arena session can recover ful
 | 8a | ⚠ **SUPERSEDES row 8 as to current state — row 8 is left unedited as the record of its own moment.** The **P04 entry assessment was performed** and returned `P04 ENTRY BLOCKED — CONTENT DECISION`; **OI-08 and OI-09 were then RESOLVED by explicit program authority** (1:N · FIGI/OpenFIGI); the P04 work package was prepared (`6ec3b288c8deeee317a63341297bd33b9a090f4f`) and the **P04 gate is ACCEPTED** (`docs/p04/P04_GATE_ACCEPTANCE.md`) — **5 of 18**. ⚠ **OI-P04-03 remains OPEN and bounds implementation.** Next: **P05 is NOT authorized** — it requires the exact namespace token (**OI-10**, unrecorded). Git-history provenance qualification: `docs/INCIDENT-01_HISTORY_LOSS.md` |
 | 8b | ⚠ **SUPERSEDES rows 8 and 8a as to current state — both are left unedited as the record of their own moment.** **CHECKPOINT-03** (`docs/CHECKPOINT-03.md`) was taken after P04 acceptance (`faf1317eccaf77dbdab2a520899802043c851cca`). **OI-10 is RESOLVED — exact token `MD:`, canonical form `MD:<domain>.<field>`; C1–C6 unchanged.** **P05 entry preconditions are MET** — ⚠ **which is NOT authorization**: P05 remains **NOT_STARTED / NOT_ACCEPTED / NOT_AUTHORIZED** and requires an explicit entry/authorization act. ⚠ **OI-P04-04 (FIGI sourcing/licensing/coverage), provider selection and the empty entitlement matrix are NOT resolved by OI-10.** P06/P07 not promoted; **P08 not started** (AD-17 firewall preserved); P14 unchanged; P15 still BLOCKED on M-1. Certification **NONE_GRANTED**; activation **NOT_AUTHORIZED** |
 
+| 8c | ⚠ **SUPERSEDES rows 8, 8a and 8b as to current state — all three are left unedited as the record of their own moment.** **D9 — P05 ENTRY / EXPLICIT AUTHORIZATION** was recorded **2026-09-09** by **Sai/Ramki** against baseline `efe33eae287d2181cfdd5a838b0d9e5112fcdad3` (`docs/d9/D9_P05_ENTRY_AUTHORIZATION.md`). **All 15 preconditions PASS.** **P05 is now ENTRY/AUTHORIZED** within the exact D9 §3 scope — **P05-01** local deterministic feed (full acquisition work) plus **specification/adapter-contract work only** for **P05-02** and **P05-03**. ⚠ **NOT authorized:** P05-02 live provider execution · P05-03 licensed/deeper historical · **P05-04 build-out** · per-record tenant/region governance. ⚠ **P05 ACCEPTANCE = NOT_ACCEPTED** (no `P05_GATE_ACCEPTANCE.md`; still **5 of 18**); **CERTIFICATION = `NONE_GRANTED`**; **ACTIVATION = `NOT_AUTHORIZED`**. **OI-P04-04 and OI-P04-03 remain OPEN and were NOT resolved**; no provider selected; entitlement matrix EMPTY; no credentials provisioned. New open item **OI-D9-01** (domain-segment label vocabulary) — **no label invented**. **C1–C6 unchanged**; OI-08/OI-09/OI-10 unaltered; accepted P01/P02 `<NS>` records **not** rewritten; **P06/P07 not promoted; P08 not started** (AD-17 firewall preserved); P15 still BLOCKED on M-1; existing-IIPS untouched; **no executable/implementation artifact created**; **not pushed** |
+| 8d | ⚠ **SUPERSEDES rows 8, 8a, 8b and 8c as to current state — all four are left unedited as the record of their own moment.** **P05-02 — LIVE market adapter SPECIFICATION / ADAPTER-CONTRACT** was completed **2026-09-09** under **D9 §3 A-2** (specification and adapter-contract work only) on baseline `bf66c99cec1f7e43ae4dbc3ab5e77c23a27b014d`. Contract **`P05-02-LIVE-MARKET-DATA-ADAPTER-CONTRACT` v1.0** (rules **LA-1…LA-31**) with an executable conformance surface (`p05/src/liveAdapterContract.js`) and an offline **synthetic test double** (`mocklive`). **192/192 tests PASS** (118 P05-01 + **74 new**). Evidence `p05/evidence-p05-02/` — **13 files, byte-identical across 3 regenerations**. ⚠ **CLASSIFICATION = CONTRACT VALIDATION ONLY**: **NOT** provider evidence, **NOT** integration tests, and it does **NOT** establish that *"authenticated ingestion works"* — all three tracker P05-02 columns remain **UNMET**. ⚠ **NOT authorized and NOT performed:** P05-02 live provider execution (**D9 N-1**) · **P05-04** (**N-3**) · per-record tenant/region governance (**N-4**). ⚠ **No provider selected, named, contacted or bound**; **no credentials provisioned**; **entitlement matrix still EMPTY**; **0 vendor names**; **0 secret hits over 18 files**; **0 network imports**; **0 dependencies**; `provider-register.json` **unmodified**. **Canonical model NOT forked** — the P05-01 envelope/namespace/identity/provenance/validation/error surfaces are imported verbatim, and the P05-01 feed is explicitly **not** a live adapter. ⚠ **OI-P04-04 and OI-P04-03 remain OPEN and were NOT resolved**; **no tenant/region attribute, provider entitlement value or licensing-coverage claim invented**. **C1–C6 unchanged**; OI-08/OI-09/OI-10 unaltered; `docs/p01\|p02\|p04\|d5`, `CHECKPOINT-02/03` and both binary baselines **unmodified**; **P06/P07 not promoted; P08 not started**. ⚠ One P05-01 test file's **lexical scan scope** was adjusted so it keeps asserting its original claim about the P05-01 modules while stronger **behavioural** assertions cover the new module — **no assertion weakened or deleted**; disclosed in full at `docs/p05/P05_02_OPEN_ITEMS.md` §5. ⚠ **P05 ACCEPTANCE = NOT_ACCEPTED** (no `P05_GATE_ACCEPTANCE.md`; still **5 of 18**); **CERTIFICATION = `NONE_GRANTED`**; **ACTIVATION = `NOT_AUTHORIZED`**; **A3 gate acceptor still UNKNOWN**. **New bounded dependencies BD-P05-02-01…10 recorded, none resolved** — including **BD-02** (provider selection / entitlement / credentials / **P16** authority), which did **not** previously exist as a repository identifier and is recorded under the tasking label with an explicit mapping to **DEP-P02-07** / **DEP-P02-06** / **INV-10**. **Not pushed** |
+| 8e | ⚠ **INCIDENT-02 — SECOND SANDBOX RE-CLONE / HISTORY LOSS** (recorded `docs/INCIDENT-02_SANDBOX_RECLONE.md`; **supersedes nothing** — rows 8, 8a–8d stand). The workspace was **re-cloned from `origin` between turns**: HEAD reset to `eae2ff6` with **2 tracked files**, and **three commits are permanently unavailable as objects** — `cdc40dc` (P05-02), `bf66c99` (P05-01), `31c2655` (**D9 P05 entry authorization**). None was ever pushed; no dangling copies exist. **Per rule O-4 no substitute hash is invented** — those pins are now **unverifiable** and are pinned **by artifact**. **CONTENT LOSS = ZERO**: the working tree survived intact (102 `docs/` + 53 `p05/` + 2 binaries = **157**, exactly the lost tip's file count), verified by a whole-tree sha256 digest `921f7f46…` taken **identically before and after** every recovery step. The accepted baseline **was recoverable**: `efe33ea` (CHECKPOINT-03) still exists on the remote as `arena/01a0814b-…`, so a **read-only fetch** restored `eae2ff6 → 9a26ac7 → 6ec3b28 → faf1317 → efe33ea`; that branch was **not** pushed to. Restored with `git reset --mixed efe33ea` (moves pointer + index only, never rewrites working-tree files) plus **one RESTORE commit** — deliberately one, because splitting it would still yield different hashes while falsely implying the D9 act and the two work packages were re-performed. **No authority act was re-performed.** Verified after restore: **192/192 tests PASS** (the 4 failures seen immediately after the re-clone were **NOT** content failures — `existing-iips-boundary.test.js` shells out to `git diff efe33ea HEAD`, and the baseline was missing); all accepted artifacts and both binaries **byte-identical to `efe33ea`** (0 differing files); only the 2 governance ledgers differ, additively. ⚠ **INCIDENT-01's recorded mitigation DID NOT HOLD** — `origin/main` contains **only the 2 binaries**, no `docs/` at all, so the accepted state is **not** under remote protection, and the standing *"do not push"* instruction — which INCIDENT-01 L-1 already named as the proximate exposure — **has now fired twice**. **Recommendation to program authority: either authorize pushing this branch, or accept that every authorization act including D9 must be re-recorded after each recreation.** This is an **authority decision, not one made here**. **Program state UNCHANGED**: P05 = AUTHORIZED / NOT_ACCEPTED (**5 of 18**) · no `P05_GATE_ACCEPTANCE.md` · CERTIFICATION `NONE_GRANTED` · ACTIVATION `NOT_AUTHORIZED` · OI-P04-04 / OI-P04-03 **OPEN** · C1–C6 unchanged · P06/P07/P08 untouched · A3 acceptor **UNKNOWN**. **Not pushed** |
+
 ### Known documentation gaps (recorded, not defects)
 
 CD-01 citation drift (`LiveDataRuntime.ts:76` in D4/D5 vs `:78` in the current clone — same
@@ -373,4 +476,7 @@ readiness certificate files (**AD-8 stands: certified**) · `G:\IIPS\BACKUPS` in
 
 ---
 
-**This manifest records no new decision.**
+**This manifest records no new decision.** ⚠ **Clarified by addition (D9, 2026-09-09):** this
+manifest remains a **recovery / index artifact only** — it introduces no decision of its own. The
+**P05 entry/authorization decision it now points to is recorded in `docs/d9/`, not here.** Every
+statement above is a pointer to, or a restatement of, an existing committed artifact.

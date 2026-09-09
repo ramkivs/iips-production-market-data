@@ -1,0 +1,214 @@
+{
+  "artifact": "P05-01 FIXTURE MANIFEST",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "provider": "localfix",
+  "adapter": {
+    "adapterId": "adapter-localfix",
+    "adapterVersion": "1.0"
+  },
+  "providerSchemaVersion": "localfix-wire-1.0",
+  "schemaVersion": "canonical-1.0",
+  "namespaceVersion": "1.0",
+  "namespaceToken": "MD:",
+  "synthetic": true,
+  "liveProvider": false,
+  "credentialsPresent": false,
+  "collections": {
+    "quotes": [
+      {
+        "fixtureId": "Q-0001",
+        "digest": "2c928ebc983246ab58884e4607734b2b66ad2f79814d42e3ab258950448083bc"
+      },
+      {
+        "fixtureId": "Q-0002",
+        "digest": "dc67db9d63c12257799c3ac5c1af760f0c4f0b4d5923dfccf72d530fbe301ce4"
+      }
+    ],
+    "closes": [
+      {
+        "fixtureId": "C-0001",
+        "digest": "716e1bf53b7f168d812f8ab525875bba2b063ecca785d5e7d0b90c43b74a3a2a"
+      },
+      {
+        "fixtureId": "C-0002",
+        "digest": "e93a3e3d47246c55dc1f565fd93f627283bd1ba3c1ef8c9b95708f414ce7eea2"
+      }
+    ],
+    "valuations": [
+      {
+        "fixtureId": "V-0001",
+        "digest": "d1dfc38b96feed4652d6ab173bc5525d16b0b988954f348c3474009b75d3d359"
+      }
+    ],
+    "ohlcv": [
+      {
+        "fixtureId": "H-0001",
+        "digest": "0928d1a751b9260f0e6e61d3bcb1dba96ab891b4787cfbe94003f8a5b091deb9"
+      }
+    ],
+    "malformed": [
+      {
+        "fixtureId": "M-0001",
+        "expectedClass": "E5",
+        "digest": "212240c3ceda4b3375950ecd855f1fa39d525bf8452311a4b9fc9683cb174c2e"
+      },
+      {
+        "fixtureId": "M-0002",
+        "expectedClass": "E8",
+        "digest": "6513a2d95985d9e61a3186ff078df223a671d36695e2bd75140722d549cfdaa5"
+      },
+      {
+        "fixtureId": "M-0003",
+        "expectedClass": "E8",
+        "digest": "162bb3a27c92fee72c156df576db7cc87eadf440de1f44c297243cc79e126c4c"
+      },
+      {
+        "fixtureId": "M-0004",
+        "expectedClass": "E8",
+        "expectedViolatedRules": [
+          "ADP-2",
+          "FC-1",
+          "MC-7"
+        ],
+        "digest": "7dd3e85d040a0e04c3248820e052227b5f00e40ec8942a04e6c6d7b5b0698579"
+      },
+      {
+        "fixtureId": "M-0005",
+        "expectedClass": "E5",
+        "digest": "606728cbfa8f9269883ba0c1a9ff77e3470198c0994e70f790164914bd6e5282"
+      }
+    ],
+    "unsupportedRequests": [
+      {
+        "fixtureId": "U-0001",
+        "expectedClass": "E6",
+        "digest": "aa06f0ed70c066e9b5ffdde37f1a383dc35f33c21534a848628f95d5e9a5ee84"
+      },
+      {
+        "fixtureId": "U-0002",
+        "expectedClass": "E6",
+        "digest": "3f380d81c2b7e6a911ca044b484c4c2784bdacb4377da9451bb56f98aa3771c3"
+      }
+    ],
+    "providerUnavailable": [
+      {
+        "fixtureId": "X-0001",
+        "expectedClass": "E1",
+        "digest": "0d86b043daeb0c50009591381730b819c0b5f8900caeb675ccae367397bdd2a1"
+      }
+    ]
+  },
+  "identityFixtures": {
+    "mappingRegisterVersion": "idmap-localfix-1.0.0",
+    "securities": [
+      {
+        "id": "CS-LOCAL-0001",
+        "issuer": "CI-LOCAL-ALPHA",
+        "lifecycle": "active"
+      },
+      {
+        "id": "CS-LOCAL-0002",
+        "issuer": "CI-LOCAL-ALPHA",
+        "lifecycle": "active"
+      },
+      {
+        "id": "CS-LOCAL-0003",
+        "issuer": "CI-LOCAL-BETA",
+        "lifecycle": "active"
+      },
+      {
+        "id": "CS-LOCAL-0004",
+        "issuer": "CI-LOCAL-GAMMA",
+        "lifecycle": "delisted"
+      },
+      {
+        "id": "CS-LOCAL-0005",
+        "issuer": "CI-LOCAL-DELTA",
+        "lifecycle": "active"
+      },
+      {
+        "id": "CS-LOCAL-UNMAPPED",
+        "issuer": "CI-LOCAL-ZETA",
+        "lifecycle": "active"
+      }
+    ],
+    "mappings": [
+      {
+        "canonical": "CS-LOCAL-0001",
+        "target": "technology-H1",
+        "method": "AUTHORITATIVE_IDENTIFIER_MATCH"
+      },
+      {
+        "canonical": "CS-LOCAL-0002",
+        "target": "technology-H1",
+        "method": "REGISTRY_ASSERTION"
+      },
+      {
+        "canonical": "CS-LOCAL-0003",
+        "target": "chemicals-H1",
+        "method": "AUTHORITATIVE_IDENTIFIER_MATCH"
+      },
+      {
+        "canonical": "CS-LOCAL-0004",
+        "target": "realty-H1",
+        "method": "MANUAL_APPROVAL"
+      },
+      {
+        "canonical": "CS-LOCAL-0099",
+        "target": "technology-H1",
+        "method": "MANUAL_APPROVAL"
+      }
+    ],
+    "negativeFixtures": {
+      "unmappedCanonicalSecurityId": "CS-LOCAL-UNMAPPED",
+      "unresolvedFigi": "BBG00SYNTH99",
+      "companyIdWithNoMapping": "nonexistent-H1"
+    }
+  },
+  "domainSegmentsPermitted": [
+    "alt",
+    "corpaction",
+    "estimates",
+    "fundamentals",
+    "identity",
+    "macro",
+    "news",
+    "ohlcv",
+    "price",
+    "valuation",
+    "venue"
+  ],
+  "domainSegmentsByDomain": {
+    "D01": [
+      "price",
+      "valuation"
+    ],
+    "D02": [
+      "ohlcv"
+    ],
+    "D03": [
+      "fundamentals"
+    ],
+    "D04": [
+      "corpaction"
+    ],
+    "D05": [
+      "identity"
+    ],
+    "D06": [
+      "news"
+    ],
+    "D07": [
+      "estimates"
+    ],
+    "D08": [
+      "macro"
+    ],
+    "D09": [
+      "alt"
+    ],
+    "D10": [
+      "venue"
+    ]
+  }
+}
