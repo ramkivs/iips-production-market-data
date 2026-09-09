@@ -1,0 +1,106 @@
+{
+  "artifact": "P05-03 EVIDENCE INDEX — HISTORICAL OHLCV INGESTION CONTRACT",
+  "generatedBy": "p05/scripts/generate-p05-03-evidence.js",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "authority": {
+    "decision": "D9-AUTH-P05-ENTRY",
+    "scope": "§3 A-3 — specification and adapter-contract work for P05-03 ONLY",
+    "baseline": "efe33eae287d2181cfdd5a838b0d9e5112fcdad3 (CHECKPOINT-03)",
+    "priorWork": "P05-01 IMPLEMENTED/EVIDENCED · P05-02 SPECIFICATION + ADAPTER-CONTRACT COMPLETE",
+    "licensedHistoricalAcquisition": "NOT AUTHORIZED (D9 N-2)"
+  },
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "contract": {
+    "id": "P05-03-HISTORICAL-OHLCV-INGESTION-CONTRACT",
+    "version": "1.0",
+    "ruleCount": 35
+  },
+  "evidenceFiles": [
+    {
+      "file": "p05/evidence-p05-03/01-contract-manifest.json",
+      "sha256": "3a1a1dbc68a864101798a92c2f99e0475ac994bbb05eb4b155d6cd91db825496"
+    },
+    {
+      "file": "p05/evidence-p05-03/02-capability-and-conformance.json",
+      "sha256": "b2e2909f94205c10b8c7b99ce50d21a026a3ab9a7a7f01b4de5637614aa68ace"
+    },
+    {
+      "file": "p05/evidence-p05-03/03-range-semantics.json",
+      "sha256": "0a395ba17526ef6f6b5875997c2018ddfbf74e30ab141e2b36fab65d44087037"
+    },
+    {
+      "file": "p05/evidence-p05-03/04-gaps-and-load-reconciliation.json",
+      "sha256": "c573f9b531d08de64f4ea748a80281da5fc61080ba7887497343cd5bc5ffe89c"
+    },
+    {
+      "file": "p05/evidence-p05-03/05-reproducibility.json",
+      "sha256": "7024a37e06575184eda18082c44cc010a8006d6f20d270c47bec793cebca2f0c"
+    },
+    {
+      "file": "p05/evidence-p05-03/06-corrections-and-revisions.json",
+      "sha256": "43123ffed8999aa2efeb862b915c02f3dafc0c56c31cd9a711d31f8696e5a560"
+    },
+    {
+      "file": "p05/evidence-p05-03/07-adjustment-declarations.json",
+      "sha256": "0643383c1e5d42fd341d6cbec46cc6d228aa5b489486dc8f499f2666f195857c"
+    },
+    {
+      "file": "p05/evidence-p05-03/08-identity-stability.json",
+      "sha256": "cd377a6b1040aa68253fac294b3a9392ebc6c31540ed54d8225265f29f3d2716"
+    },
+    {
+      "file": "p05/evidence-p05-03/09-namespace-and-d02-fields.json",
+      "sha256": "c34e537638fe8d02af7a4e99c05d80fde3091e42fe61aff401be5f3bae91367b"
+    },
+    {
+      "file": "p05/evidence-p05-03/10-determinism-repeatability.json",
+      "sha256": "c476ef67e224a15b50f4b2d29932fad426f7e167126533b426b47011d3c59c7e"
+    },
+    {
+      "file": "p05/evidence-p05-03/11-blocked-and-open-items.json",
+      "sha256": "ae29fda1641b1dd75cd3192346792088eadf68536c77e981d835ceb8a9c4a22e"
+    },
+    {
+      "file": "p05/evidence-p05-03/12-boundary-attestations.json",
+      "sha256": "b3991627e394ca8733ea1c98dacfa4bf9221d9824211c5c6dfbd8a490b273231"
+    }
+  ],
+  "gateStatus": {
+    "p05EntryAuthorization": "AUTHORIZED",
+    "p05Acceptance": "NOT_ACCEPTED",
+    "p05GateAcceptanceArtifactCreated": false,
+    "p05_01": "IMPLEMENTED / EVIDENCED",
+    "p05_02": "SPECIFICATION + ADAPTER-CONTRACT COMPLETE / LIVE EXECUTION NOT AUTHORIZED",
+    "p05_03": "SPECIFICATION + ADAPTER-CONTRACT COMPLETE (P05-03-A) / LICENSED ACQUISITION NOT AUTHORIZED",
+    "p05_04": "NOT AUTHORIZED — not started",
+    "certification": "NONE_GRANTED",
+    "productionActivation": "NOT_AUTHORIZED",
+    "gatesAccepted": "5 of 18 — P00, P01, P02, P03, P04",
+    "p06": "NOT_STARTED_NOT_PROMOTED",
+    "p07": "NOT_STARTED_NOT_PROMOTED",
+    "p08": "NOT_STARTED"
+  },
+  "openItemsUnchanged": {
+    "OI-P04-04": "OPEN — FIGI sourcing/licensing/coverage. Not resolved here.",
+    "OI-P04-03": "OPEN — tenant/region governance attribute set. No attribute invented.",
+    "DEP-P01-04": "UNRESOLVED — historical series structure is a P08 storage decision."
+  }
+}

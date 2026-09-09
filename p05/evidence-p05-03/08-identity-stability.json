@@ -1,0 +1,75 @@
+{
+  "artifact": "P05-03 IDENTITY STABILITY ACROSS A LOAD (LC-2 / LC-3 / LC-6)",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "lifecycleEnumeration": [
+    "active",
+    "suspended",
+    "delisted",
+    "merged",
+    "superseded"
+  ],
+  "lifecycleVocabularyUnchanged": true,
+  "scenarios": [
+    {
+      "fixtureId": "HI-0001",
+      "label": "LC-2 conforming — one anchor across a lifecycle transition",
+      "stable": true,
+      "expected": true,
+      "matchedExpectation": true,
+      "distinctIds": [
+        "CS-LOCAL-0001"
+      ],
+      "violations": [],
+      "note": "LC-2: a transition mid-load changes state, never the immutable anchor."
+    },
+    {
+      "fixtureId": "HI-0002",
+      "label": "LC-2 violation — the anchor changes inside one load",
+      "stable": false,
+      "expected": false,
+      "matchedExpectation": true,
+      "distinctIds": [
+        "CS-LOCAL-0001",
+        "CS-LOCAL-0002"
+      ],
+      "violations": [
+        "LC-2 / CS-5: a single-instrument load must carry ONE canonical security ID, found 2 [CS-LOCAL-0001, CS-LOCAL-0002]"
+      ]
+    },
+    {
+      "fixtureId": "HI-0003",
+      "label": "LC-6 — a vocabulary violation, never inferred from absence",
+      "stable": false,
+      "expected": false,
+      "matchedExpectation": true,
+      "distinctIds": [
+        "CS-LOCAL-0001"
+      ],
+      "violations": [
+        "LC vocabulary: 'delisted_by_absence' is not one of active|suspended|delisted|merged|superseded"
+      ],
+      "note": "LC-6: a state is never inferred from absence of data. Missing bars are NOT a delisting."
+    }
+  ],
+  "rule": "LC-2 — a transition changes state and relationships, never the immutable anchor. LC-3 — a retired identity stays resolvable, which is what a historical load requires. LC-6 — a state is never inferred from absence of data.",
+  "everyScenarioMatched": true
+}

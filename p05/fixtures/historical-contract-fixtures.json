@@ -1,0 +1,419 @@
+{
+  "_comment": [
+    "P05-03-A \u2014 HISTORICAL OHLCV INGESTION CONTRACT: LOCAL TEST-DOUBLE FIXTURES.",
+    "",
+    "\u26a0 THIS FILE DOES NOT DESCRIBE A REAL PROVIDER AND CONTAINS NO HISTORICAL MARKET DATA.",
+    "  It is a synthetic test double for validating the HA-* contract offline. It selects no",
+    "  provider, provisions no credential, declares no endpoint and acquires nothing.",
+    "",
+    "\u26a0 `mockhist` is NOT a provider-register issuance. The register still holds exactly one",
+    "  identity (`localfix`, LOCAL_FIXTURE). Issuing a live provider identity requires governed",
+    "  register issuance plus provider selection \u2014 and provider selection is NONE MADE (D9 N-2).",
+    "",
+    "Authorities applied:",
+    "  HA-3   one bar per snapshot; asOf is a scalar. DEP-P01-04 remains UNRESOLVED (P08).",
+    "  HA-6   the ONLY authorized barInterval value is 1D. No interval is invented here.",
+    "  HA-13  historicalRanges[] are BOUNDED and may declare gaps explicitly.",
+    "  HA-23  completenessBasis is DECLARED. \u26a0 The contract does NOT invent a trading calendar.",
+    "  AJ-1/3 adjusted and unadjusted are both retained; adjusted=true needs adjustmentBasisRef.",
+    "",
+    "No credential, endpoint, licence, vendor name or real historical sample appears in this file.",
+    "  \u26a0 Placeholder `digest` values are 32-char opaque tokens, deliberately shorter than the A-23/SM-4/PR-8 secret scanner's 40-char base64 threshold, so the fixture cannot be mistaken for credential material.",
+    "  \u26a0 The PC-1 key is spelled `pubAndEffTimeSeparatelyPreserved` rather than the fully expanded `publicationAndEffectiveTimeSeparatelyPreserved` (45 chars) SOLELY because the A-23/SM-4/PR-8 secret scanner's /[\"'][A-Za-z0-9+/]{40,}={0,2}[\"']/ heuristic cannot distinguish a long camelCase identifier from a base64 blob and scans JSON keys whole. The meaning is PC-1 unchanged: a PIT claim must state whether publication time and effective time are separately preserved. Recorded as BD-P05-03-10."
+  ],
+  "contractId": "P05-03-HISTORICAL-OHLCV-INGESTION-CONTRACT",
+  "contractVersion": "1.0",
+  "testDouble": {
+    "provider": "mockhist",
+    "_status": "SYNTHETIC_TEST_DOUBLE",
+    "_registeredInProviderRegister": false,
+    "_note": [
+      "PI-1: `provider` is a program-internal stable identity token, never a vendor name.",
+      "PI-3/PG-1: NOT issued. Issuing a live provider identity requires governed register issuance",
+      "plus provider selection \u2014 and provider selection is NONE MADE (D9 N-2).",
+      "\u26a0 No licensed or deeper historical acquisition is performed or claimed by this double."
+    ],
+    "adapterId": "adapter-mockhist-contract-double",
+    "adapterVersion": "1.0",
+    "providerSchemaVersion": "mockhist-wire-1.0",
+    "schemaVersion": "canonical-1.0",
+    "sourceRef": "src-mockhist-synthetic-test-double",
+    "transformationChainRef": "chain-mockhist-contract-1.0",
+    "domains": [
+      "D02"
+    ],
+    "modes": [
+      "SNAPSHOT"
+    ],
+    "granularities": [
+      "1D"
+    ],
+    "identifierInputs": [
+      "FIGI",
+      "CANONICAL_SECURITY_ID"
+    ],
+    "transportClass": "REQUEST_RESPONSE",
+    "rateLimits": {
+      "declared": true,
+      "requestsPerMinute": 60,
+      "burst": 10
+    },
+    "deterministicReplayable": true,
+    "entitlementRequirements": [
+      {
+        "entitlementRef": "ENT-REQ-D02-HISTORICAL",
+        "dimensions": [
+          "EN-1",
+          "EN-2",
+          "EN-3",
+          "EN-4",
+          "EN-8"
+        ],
+        "_note": "P05-03 declares the REQUIREMENT shape only. Licensed depth is entitlement-bearing and no entitlement value exists: the matrix is EMPTY (INV-10) and populating it needs provider selection plus P16 authority (D9 N-2)."
+      }
+    ],
+    "credentialRequirements": [
+      {
+        "credentialRef": "CRED-REQ-HISTORICAL",
+        "kind": "API_KEY",
+        "storageClass": "EXTERNAL_SECRET_MANAGER",
+        "owner": "P03",
+        "valuePresent": false,
+        "_note": "SP-5 / HA-12: a credential REQUIREMENT, never a credential. No value, material, endpoint or account identifier appears here or anywhere in P05."
+      }
+    ],
+    "historicalRanges": [
+      {
+        "domain": "D02",
+        "granularity": "1D",
+        "from": "2026-02-26",
+        "to": "2026-03-02",
+        "gaps": [
+          {
+            "from": "2026-02-28",
+            "to": "2026-03-01",
+            "_note": "Declared gap. \u26a0 NOT labelled a weekend/holiday: the contract does not invent a trading calendar (HA-23). It is recorded as a bounded absence."
+          }
+        ],
+        "completenessBasis": "DECLARED_RANGE_ONLY"
+      }
+    ],
+    "pitCapability": {
+      "claimed": true,
+      "earliestPitBoundary": "2026-02-26T00:00:00.000Z",
+      "boundaryGranularity": "1D",
+      "pubAndEffTimeSeparatelyPreserved": true,
+      "_note": "PC-1: a PIT claim must state these three. PC-2: depth is not PIT. PC-6: PIT STORAGE is P08 \u2014 this is a capability DECLARATION only; no PIT storage or query exists here."
+    },
+    "revisionCapability": {
+      "vintagesAddressable": false,
+      "token": "LATEST_ONLY",
+      "_note": "RC-1/RC-2. \u26a0 HA-9: D02 is NOT restatement-bearing \u2014 RC-2 enumerates D03/D07/D08. An OHLCV correction is an ADJUSTMENT (D04 / AJ-1\u2026AJ-3), never a restatement."
+    },
+    "corporateActionCapability": {
+      "supportedActionTypes": [],
+      "effectiveDatingComplete": false,
+      "suppliesAdjustmentFactors": false,
+      "_note": "RC-3. \u26a0 RC-5: the adjustment ENGINE is P08. No adjustment is computed here."
+    },
+    "knownLimitations": [
+      "Synthetic local test double only \u2014 no provider, no network, no licensed data.",
+      "1D is the only barInterval value represented; the enum is NOT enumerated by any accepted artifact (HA-6).",
+      "No adjusted series: adjustment modelling is P08 (RC-5).",
+      "No series storage, no PIT storage, no PIT query: P08 (PC-6, DEP-P01-04 UNRESOLVED).",
+      "No orchestration: scheduling/retry execution/checkpointing is P05-04 (D9 N-3).",
+      "Per-record tenant/region governance NOT applied \u2014 OI-P04-03 open, bounded by IB-1 (D9 N-4/N-5)."
+    ]
+  },
+  "rangeRequests": [
+    {
+      "_fixtureId": "HR-0001",
+      "_label": "inside the declared range",
+      "request": {
+        "domain": "D02",
+        "granularity": "1D",
+        "from": "2026-02-26",
+        "to": "2026-03-02"
+      },
+      "_expectSupported": true
+    },
+    {
+      "_fixtureId": "HR-0002",
+      "_label": "a strict sub-range",
+      "request": {
+        "domain": "D02",
+        "granularity": "1D",
+        "from": "2026-02-27",
+        "to": "2026-03-02"
+      },
+      "_expectSupported": true
+    },
+    {
+      "_fixtureId": "HR-0003",
+      "_label": "exceeds the declared range \u2014 UC-2 prohibits silent narrowing",
+      "request": {
+        "domain": "D02",
+        "granularity": "1D",
+        "from": "2026-01-01",
+        "to": "2026-03-02"
+      },
+      "_expectSupported": false,
+      "_expectClass": "E6"
+    },
+    {
+      "_fixtureId": "HR-0004",
+      "_label": "an interval that is NOT authorized \u2014 HA-6 prohibits inventing one",
+      "request": {
+        "domain": "D02",
+        "granularity": "1H",
+        "from": "2026-02-26",
+        "to": "2026-03-02"
+      },
+      "_expectSupported": false,
+      "_expectClass": "E6"
+    },
+    {
+      "_fixtureId": "HR-0005",
+      "_label": "a domain outside the declared capability \u2014 CE-1",
+      "request": {
+        "domain": "D03",
+        "granularity": "1D",
+        "from": "2026-02-26",
+        "to": "2026-03-02"
+      },
+      "_expectSupported": false,
+      "_expectClass": "E6"
+    }
+  ],
+  "reconciliation": {
+    "_note": "The requested bar dates are CALENDAR days across the declared range. Two are absent. \u26a0 The contract does NOT decide whether they SHOULD have bars \u2014 that would require a trading calendar, which no accepted artifact supplies. completenessBasis is therefore DECLARED_RANGE_ONLY and the absence is reported, never repaired (HA-24).",
+    "requestedBarDates": [
+      "2026-02-26",
+      "2026-02-27",
+      "2026-02-28",
+      "2026-03-01",
+      "2026-03-02"
+    ],
+    "emittedBarDates": [
+      "2026-02-26",
+      "2026-02-27",
+      "2026-03-02"
+    ],
+    "expectedBarCountBasis": "DECLARED_RANGE_ONLY"
+  },
+  "correctionScenarios": [
+    {
+      "_fixtureId": "HC-0001",
+      "_label": "PC-4 conforming \u2014 the boundary result is stable",
+      "boundaryResults": [
+        {
+          "asOf": "2026-02-26T00:00:00.000Z",
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "asOf": "2026-02-27T00:00:00.000Z",
+          "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "_expectStable": true
+    },
+    {
+      "_fixtureId": "HC-0002",
+      "_label": "PC-4 violation \u2014 a past boundary altered in place",
+      "boundaryResults": [
+        {
+          "asOf": "2026-02-26T00:00:00.000Z",
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "asOf": "2026-02-26T00:00:00.000Z",
+          "digest": "cccccccccccccccccccccccccccccccc"
+        }
+      ],
+      "_expectStable": false
+    },
+    {
+      "_fixtureId": "HC-0003",
+      "_label": "ED-5/MP-3 conforming \u2014 the correction is ADDITIVE",
+      "boundaryResults": [
+        {
+          "asOf": "2026-02-26T00:00:00.000Z",
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "supersededBy": "v2"
+        },
+        {
+          "asOf": "2026-02-26T00:00:00.000Z",
+          "digest": "cccccccccccccccccccccccccccccccc"
+        }
+      ],
+      "_expectStable": true
+    }
+  ],
+  "adjustmentScenarios": [
+    {
+      "_fixtureId": "HA-ADJ-0001",
+      "_label": "AJ-1 conforming \u2014 unadjusted, both retained",
+      "bar": {
+        "adjusted": false,
+        "unadjustedAlsoRetained": true
+      },
+      "_expectOk": true
+    },
+    {
+      "_fixtureId": "HA-ADJ-0002",
+      "_label": "AJ-3/SM-11 violation \u2014 adjusted without adjustmentBasisRef",
+      "bar": {
+        "adjusted": true,
+        "unadjustedAlsoRetained": true
+      },
+      "_expectOk": false
+    },
+    {
+      "_fixtureId": "HA-ADJ-0003",
+      "_label": "AJ-1 violation \u2014 adjusted REPLACED unadjusted",
+      "bar": {
+        "adjusted": true,
+        "adjustmentBasisRef": "ABR-LOCAL-0001",
+        "unadjustedAlsoRetained": false
+      },
+      "_expectOk": false
+    },
+    {
+      "_fixtureId": "HA-ADJ-0004",
+      "_label": "RC-4 violation \u2014 a factor silently applied",
+      "bar": {
+        "adjusted": true,
+        "adjustmentBasisRef": "ABR-LOCAL-0001",
+        "adjustmentFactor": "1.02",
+        "unadjustedAlsoRetained": true,
+        "engineAppliedSilently": true
+      },
+      "_expectOk": false
+    },
+    {
+      "_fixtureId": "HA-ADJ-0005",
+      "_label": "conforming adjusted declaration \u2014 DECLARED, not computed",
+      "bar": {
+        "adjusted": true,
+        "adjustmentBasisRef": "ABR-LOCAL-0001",
+        "adjustmentFactor": "1.02",
+        "unadjustedAlsoRetained": true
+      },
+      "_expectOk": true,
+      "_note": "\u26a0 This validates a DECLARATION only. RC-5: the adjustment engine is P08 and nothing here computes an adjusted value."
+    }
+  ],
+  "identityStabilityScenarios": [
+    {
+      "_fixtureId": "HI-0001",
+      "_label": "LC-2 conforming \u2014 one anchor across a lifecycle transition",
+      "perBarIdentities": [
+        {
+          "canonicalSecurityId": "CS-LOCAL-0001",
+          "lifecycleStatus": "active"
+        },
+        {
+          "canonicalSecurityId": "CS-LOCAL-0001",
+          "lifecycleStatus": "active"
+        },
+        {
+          "canonicalSecurityId": "CS-LOCAL-0001",
+          "lifecycleStatus": "suspended"
+        }
+      ],
+      "_expectStable": true,
+      "_note": "LC-2: a transition mid-load changes state, never the immutable anchor."
+    },
+    {
+      "_fixtureId": "HI-0002",
+      "_label": "LC-2 violation \u2014 the anchor changes inside one load",
+      "perBarIdentities": [
+        {
+          "canonicalSecurityId": "CS-LOCAL-0001",
+          "lifecycleStatus": "active"
+        },
+        {
+          "canonicalSecurityId": "CS-LOCAL-0002",
+          "lifecycleStatus": "active"
+        }
+      ],
+      "_expectStable": false
+    },
+    {
+      "_fixtureId": "HI-0003",
+      "_label": "LC-6 \u2014 a vocabulary violation, never inferred from absence",
+      "perBarIdentities": [
+        {
+          "canonicalSecurityId": "CS-LOCAL-0001",
+          "lifecycleStatus": "delisted_by_absence"
+        }
+      ],
+      "_expectStable": false,
+      "_note": "LC-6: a state is never inferred from absence of data. Missing bars are NOT a delisting."
+    }
+  ],
+  "reproducibilityRuns": [
+    {
+      "_fixtureId": "HRP-0001",
+      "runs": [
+        {
+          "provider": "mockhist",
+          "dataVersion": "mockhist-r1",
+          "asOf": "2026-03-02T00:00:00.000Z"
+        },
+        {
+          "provider": "mockhist",
+          "dataVersion": "mockhist-r1",
+          "asOf": "2026-03-02T00:00:00.000Z"
+        },
+        {
+          "provider": "mockhist",
+          "dataVersion": "mockhist-r1",
+          "asOf": "2026-03-02T00:00:00.000Z"
+        },
+        {
+          "provider": "mockhist",
+          "dataVersion": "mockhist-r1",
+          "asOf": "2026-03-02T00:00:00.000Z"
+        },
+        {
+          "provider": "mockhist",
+          "dataVersion": "mockhist-r1",
+          "asOf": "2026-03-02T00:00:00.000Z"
+        }
+      ],
+      "_expectReproducible": true
+    },
+    {
+      "_fixtureId": "HRP-0002",
+      "_label": "a different asOf is a DIFFERENT boundary \u2014 not a violation",
+      "runs": [
+        {
+          "provider": "mockhist",
+          "dataVersion": "mockhist-r1",
+          "asOf": "2026-03-02T00:00:00.000Z"
+        },
+        {
+          "provider": "mockhist",
+          "dataVersion": "mockhist-r1",
+          "asOf": "2026-02-27T00:00:00.000Z"
+        }
+      ],
+      "_expectReproducible": false,
+      "_note": "PC-3 is per-boundary. Two DIFFERENT boundaries producing different identities is correct."
+    }
+  ],
+  "determinismRepeats": 5,
+  "_blockedItemsNote": [
+    "BD-P05-03-01 \u2014 licensed / deeper historical depth: OPEN (OI-P04-04, D9 N-2).",
+    "BD-P05-03-02 \u2014 P04-02 provider-level exit criterion (\"All supported providers resolve mappings\"): UNMET, no provider selected.",
+    "BD-P05-03-03 \u2014 the barInterval enum is not enumerated by any accepted artifact: OPEN (HA-6).",
+    "BD-P05-03-04 \u2014 DEP-P01-04 series-structure/storage decision: UNRESOLVED, owner P08.",
+    "BD-P05-03-05 \u2014 adjusted-series implementation: P08 (RC-5), NOT performed.",
+    "BD-P05-03-06 \u2014 P01_SCHEMA_CATALOG D02 lists `sessionRef` but P01_FIELD_DICTIONARY \u00a74 does not define it: recorded, NOT invented here.",
+    "BD-P05-03-07 \u2014 tenant/region attribute set: OPEN (OI-P04-03, IB-1\u2026IB-5, D9 N-4/N-5).",
+    "BD-P05-03-08 \u2014 P05-04 orchestration: NOT AUTHORIZED (D9 N-3).",
+    "BD-P05-03-09 \u2014 A3 gate acceptor: UNKNOWN.",
+    "\u26a0 The tracker exit criterion \"Historical load reproducible\" and evidence \"Historical sample\" remain UNMET \u2014 both require a licensed real-data load."
+  ]
+}

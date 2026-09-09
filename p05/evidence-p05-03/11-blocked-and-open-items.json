@@ -1,0 +1,99 @@
+{
+  "artifact": "P05-03 BLOCKED, DEPENDENT AND EXPLICITLY UNRESOLVED ITEMS",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "note": "⚠ NONE of these is resolved by P05-03-A. They are recorded so nothing is silently assumed.",
+  "items": [
+    {
+      "id": "BD-P05-03-01",
+      "item": "Licensed / deeper historical depth",
+      "status": "OPEN",
+      "blocks": "P05-03 tracker exit criteria and any real historical sample",
+      "authority": "OI-P04-04 (FIGI sourcing/licensing/coverage) · D9 N-2"
+    },
+    {
+      "id": "BD-P05-03-02",
+      "item": "P04-02 provider-level exit criterion \"All supported providers resolve mappings\"",
+      "status": "UNMET",
+      "blocks": "Live historical acquisition",
+      "note": "The accepted P04_IDENTITY_ADAPTER_CONTRACT.md supplies the CONTRACT; the provider-level criterion cannot be met while no provider is selected."
+    },
+    {
+      "id": "BD-P05-03-03",
+      "item": "The barInterval enum is not enumerated by any accepted artifact",
+      "status": "OPEN",
+      "blocks": "Any interval other than 1D",
+      "note": "P01_FIELD_DICTIONARY §4 types barInterval as an enum but lists no values. HA-6 treats it as a DECLARED, VERSIONED capability. Adding 1H/5M/15M/1W needs an authority act (D9 N-6)."
+    },
+    {
+      "id": "BD-P05-03-04",
+      "item": "DEP-P01-04 — historical series structure / storage",
+      "status": "UNRESOLVED",
+      "blocks": "Series-level storage and PIT query",
+      "owner": "P08",
+      "note": "P01_SCHEMA_CATALOG D02: the structure choice is a P08 storage decision, not resolved. The P05-01 one-bar-per-snapshot precedent is reused but does NOT pre-empt it."
+    },
+    {
+      "id": "BD-P05-03-05",
+      "item": "Adjusted-series implementation / adjustment engine",
+      "status": "NOT PERFORMED",
+      "blocks": "Adjusted D02 output",
+      "owner": "P08 (RC-5)"
+    },
+    {
+      "id": "BD-P05-03-06",
+      "item": "P01_SCHEMA_CATALOG D02 lists `sessionRef` but P01_FIELD_DICTIONARY §4 does not define it",
+      "status": "OPEN",
+      "blocks": "Emitting MD:ohlcv.sessionRef",
+      "note": "Recorded, NOT invented. No accepted artifact defines the field, so it is not emitted."
+    },
+    {
+      "id": "BD-P05-03-07",
+      "item": "Tenant/region governance attribute set",
+      "status": "OPEN",
+      "blocks": "Per-record tenant/region application",
+      "authority": "OI-P04-03 · IB-1…IB-5 · D9 N-4/N-5",
+      "note": "No attribute invented and no default supplied. Lifting IB-1 requires an explicit A1 act."
+    },
+    {
+      "id": "BD-P05-03-08",
+      "item": "P05-04 orchestration — scheduling, retry execution, checkpointing",
+      "status": "NOT AUTHORIZED",
+      "blocks": "Load orchestration and retry EXECUTION",
+      "authority": "D9 N-3",
+      "note": "HA-27 classifies retryability only; it implements no policy."
+    },
+    {
+      "id": "BD-P05-03-09",
+      "item": "A3 gate acceptor for P05 acceptance",
+      "status": "UNKNOWN",
+      "blocks": "P05 gate acceptance — the only person-level hard blocker",
+      "note": "No person is named in P00_AUTHORITY_REGISTER.md or D9_STATUS.json."
+    },
+    {
+      "id": "BD-P05-03-10",
+      "item": "The A-23/SM-4/PR-8 secret scanner false-positives on long camelCase identifiers",
+      "status": "OPEN",
+      "blocks": "Nothing — cosmetic, but it constrains naming",
+      "note": "scanForSecrets matches [\"'][A-Za-z0-9+/]{40,}={0,2}[\"'] and scans JSON whole, so a 40+ character identifier is indistinguishable from a base64 blob. Two P05-03 keys were therefore shortened: publicationAndEffectiveTimeSeparatelyPreserved → pubAndEffTimeSeparatelyPreserved, and claimsHistoricalLoadReproducibleWithRealData → claimsRealDataLoadReproducible. Meanings are unchanged. ⚠ The P05-01 scanner was NOT modified — P05-01/P05-02 behaviour is unchanged."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "artifact": "P05-03 DETERMINISM AND REPEATABILITY (contract validation)",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "repeats": 5,
+  "digests": [
+    "d14142f370c63d4343cac64af825cfec285e2c287cc80af4cf30784c2dfd1520",
+    "d14142f370c63d4343cac64af825cfec285e2c287cc80af4cf30784c2dfd1520",
+    "d14142f370c63d4343cac64af825cfec285e2c287cc80af4cf30784c2dfd1520",
+    "d14142f370c63d4343cac64af825cfec285e2c287cc80af4cf30784c2dfd1520",
+    "d14142f370c63d4343cac64af825cfec285e2c287cc80af4cf30784c2dfd1520"
+  ],
+  "distinctDigests": 1,
+  "byteIdentical": true,
+  "rules": [
+    "D-3 — no wall-clock, random or ambient input anywhere in the contract module",
+    "D-1 — identical (provider, dataVersion, asOf) ⇒ identical snapshotId",
+    "PC-3 — same boundary ⇒ same result ⇒ same snapshot identity"
+  ],
+  "scopeNote": "Determinism of the CONTRACT over fixed synthetic fixtures. This is NOT a claim about licensed historical data reproducibility, which is unknowable without a provider."
+}

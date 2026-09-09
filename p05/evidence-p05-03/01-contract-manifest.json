@@ -1,0 +1,189 @@
+{
+  "artifact": "P05-03 HISTORICAL OHLCV INGESTION CONTRACT — MANIFEST",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "contract": {
+    "id": "P05-03-HISTORICAL-OHLCV-INGESTION-CONTRACT",
+    "version": "1.0"
+  },
+  "versioning": {
+    "contractId": "P05-03-HISTORICAL-OHLCV-INGESTION-CONTRACT",
+    "contractVersion": "1.0",
+    "minorChangeRule": "AV-3 — shape, phase, gate-order or conformance-rule change",
+    "majorChangeRule": "AV-4 — change to the canonical output a conforming adapter must produce",
+    "immutableOnceReleased": "AV-5 — corrections produce a new contract version, never an edit"
+  },
+  "rulePrefix": "HA-",
+  "ruleCount": 35,
+  "ruleCountVerifiedAgainstSource": {
+    "documented": 35,
+    "declared": 35,
+    "match": true,
+    "contiguous": true
+  },
+  "phases": [
+    {
+      "order": 1,
+      "phase": "declare",
+      "op": "declare",
+      "liveOnly": false,
+      "performsIO": false,
+      "failureClass": null
+    },
+    {
+      "order": 2,
+      "phase": "preflight",
+      "op": "preflight",
+      "liveOnly": false,
+      "performsIO": false,
+      "failureClass": "E6"
+    },
+    {
+      "order": 3,
+      "phase": "entitlement",
+      "op": "checkEntitlement",
+      "liveOnly": true,
+      "performsIO": false,
+      "failureClass": "E3"
+    },
+    {
+      "order": 4,
+      "phase": "authenticate",
+      "op": "authenticate",
+      "liveOnly": true,
+      "performsIO": true,
+      "failureClass": "E2"
+    },
+    {
+      "order": 5,
+      "phase": "fetch",
+      "op": "fetch",
+      "liveOnly": true,
+      "performsIO": true,
+      "failureClass": "E1|E4|E5|E7"
+    },
+    {
+      "order": 6,
+      "phase": "normalize",
+      "op": "normalize",
+      "liveOnly": false,
+      "performsIO": false,
+      "failureClass": "E5"
+    },
+    {
+      "order": 7,
+      "phase": "map",
+      "op": "map",
+      "liveOnly": false,
+      "performsIO": false,
+      "failureClass": "E8"
+    },
+    {
+      "order": 8,
+      "phase": "validate",
+      "op": "validate",
+      "liveOnly": false,
+      "performsIO": false,
+      "failureClass": "RJ"
+    },
+    {
+      "order": 9,
+      "phase": "emit",
+      "op": "emit",
+      "liveOnly": false,
+      "performsIO": false,
+      "failureClass": null
+    }
+  ],
+  "soleIngress": "snapshot(request) — P02 B-4 / AD-2; the phases above are internal, not a second ingress",
+  "liveOnlyOperations": [
+    "checkEntitlement",
+    "authenticate",
+    "fetch"
+  ],
+  "commonOperations": [
+    "declare",
+    "preflight",
+    "normalize",
+    "map",
+    "validate",
+    "emit"
+  ],
+  "gateOrderReproduced": {
+    "value": [
+      "E6",
+      "E3",
+      "E2",
+      "E1"
+    ],
+    "invented": false,
+    "note": "HA-4 — reproduces the existing CLASSIFICATION_GATE_ORDER (E6→E3→E2→E1)"
+  },
+  "errorClasses": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E8"
+  ],
+  "errorClassAdditions": [],
+  "authorizationMatrix": [
+    {
+      "layer": "ADAPTER_SPECIFICATION",
+      "what": "The provider-neutral historical-adapter specification (docs/p05/P05_03_SPECIFICATION.md)",
+      "authorized": true,
+      "authority": "D9 A-3"
+    },
+    {
+      "layer": "ADAPTER_CONTRACT",
+      "what": "The executable contract/conformance surface (this module) + contract validation tests",
+      "authorized": true,
+      "authority": "D9 A-3"
+    },
+    {
+      "layer": "PROVIDER_SPECIFIC_CONFIGURATION",
+      "what": "Real provider identity, endpoint, schema binding, entitlement values, credentials, licensed depth",
+      "authorized": false,
+      "authority": "D9 N-2 — OI-P04-04 OPEN (FIGI/licensing/coverage); provider selection NONE MADE; entitlement matrix EMPTY (INV-10); credentials NONE; P16 authority not held"
+    },
+    {
+      "layer": "LICENSED_HISTORICAL_EXECUTION",
+      "what": "Acquiring licensed or deeper historical data; producing a real historical sample",
+      "authorized": false,
+      "authority": "D9 N-2 — ⚠ No licensed or deeper historical acquisition"
+    },
+    {
+      "layer": "ORCHESTRATION",
+      "what": "Scheduling, retry execution, checkpointing, batch execution infrastructure",
+      "authorized": false,
+      "authority": "D9 N-3 — P05-04 NOT AUTHORIZED"
+    },
+    {
+      "layer": "STORAGE_AND_ADJUSTMENT",
+      "what": "Series storage, PIT storage/query, adjusted-series generation, adjustment engine",
+      "authorized": false,
+      "authority": "P08 — PC-6, RC-5, DEP-P01-04 (UNRESOLVED). P08 is NOT_STARTED"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "artifact": "P05-03 NAMESPACE AND D02 CANONICAL FIELD SET",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "oi10Token": "MD:",
+  "canonicalFieldKeyForm": "MD:<domain>.<field>",
+  "namespaceVersion": "1.0",
+  "d02Fields": {
+    "domain": "D02",
+    "domainSegment": "ohlcv",
+    "required": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "barInterval",
+      "adjusted"
+    ],
+    "conditional": [
+      "adjustedClose",
+      "adjustmentFactor",
+      "adjustmentBasisRef"
+    ],
+    "keys": [
+      "MD:ohlcv.open",
+      "MD:ohlcv.high",
+      "MD:ohlcv.low",
+      "MD:ohlcv.close",
+      "MD:ohlcv.volume",
+      "MD:ohlcv.barInterval",
+      "MD:ohlcv.adjusted",
+      "MD:ohlcv.adjustedClose",
+      "MD:ohlcv.adjustmentFactor",
+      "MD:ohlcv.adjustmentBasisRef"
+    ],
+    "authority": "P01_FIELD_DICTIONARY.md §4 — D02 historical OHLCV",
+    "vocabularyAdded": [],
+    "catalogOnlyNotInDictionary": [
+      "sessionRef"
+    ],
+    "catalogDiscrepancy": "⚠ P01_SCHEMA_CATALOG.md D02 lists `sessionRef` among the canonical field classes but P01_FIELD_DICTIONARY.md §4 does not define it. Recorded as BD-P05-03-06; NOT invented here."
+  },
+  "everyKeyNamespaced": true,
+  "everyKeyCanonicalForm": true,
+  "vocabularyAdded": [],
+  "sessionRefEmitted": false,
+  "canonicalBoundaryForked": false,
+  "canonicalBoundaryOwner": "P05-01 (p05/src/{contract,namespace,identity,validate,errors,serialize}.js)",
+  "p05_01EmissionUnchanged": {
+    "ok": true,
+    "emittedKeys": [
+      "MD:ohlcv.adjusted",
+      "MD:ohlcv.barInterval",
+      "MD:ohlcv.close",
+      "MD:ohlcv.high",
+      "MD:ohlcv.low",
+      "MD:ohlcv.open",
+      "MD:ohlcv.volume"
+    ],
+    "asOfIsScalar": true,
+    "snapshotId": "data-localfix-v1c3bd7d7048e1cc6-2026-03-02T00:00:00.000Z"
+  }
+}

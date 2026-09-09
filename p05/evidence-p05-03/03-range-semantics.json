@@ -1,0 +1,127 @@
+{
+  "artifact": "P05-03 REQUESTED vs SUPPORTED RANGE SEMANTICS",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "declaredRanges": [
+    {
+      "domain": "D02",
+      "granularity": "1D",
+      "from": "2026-02-26",
+      "to": "2026-03-02",
+      "gaps": [
+        {
+          "from": "2026-02-28",
+          "to": "2026-03-01",
+          "_note": "Declared gap. ⚠ NOT labelled a weekend/holiday: the contract does not invent a trading calendar (HA-23). It is recorded as a bounded absence."
+        }
+      ],
+      "completenessBasis": "DECLARED_RANGE_ONLY"
+    }
+  ],
+  "scenarios": [
+    {
+      "fixtureId": "HR-0001",
+      "label": "inside the declared range",
+      "request": {
+        "domain": "D02",
+        "granularity": "1D",
+        "from": "2026-02-26",
+        "to": "2026-03-02"
+      },
+      "supported": true,
+      "expected": true,
+      "matchedExpectation": true,
+      "clipped": false,
+      "violations": []
+    },
+    {
+      "fixtureId": "HR-0002",
+      "label": "a strict sub-range",
+      "request": {
+        "domain": "D02",
+        "granularity": "1D",
+        "from": "2026-02-27",
+        "to": "2026-03-02"
+      },
+      "supported": true,
+      "expected": true,
+      "matchedExpectation": true,
+      "clipped": false,
+      "violations": []
+    },
+    {
+      "fixtureId": "HR-0003",
+      "label": "exceeds the declared range — UC-2 prohibits silent narrowing",
+      "request": {
+        "domain": "D02",
+        "granularity": "1D",
+        "from": "2026-01-01",
+        "to": "2026-03-02"
+      },
+      "supported": false,
+      "expected": false,
+      "matchedExpectation": true,
+      "clipped": false,
+      "violations": [
+        "UC-2: requested range [2026-01-01 .. 2026-03-02] exceeds the declared range(s) [2026-02-26 .. 2026-03-02] — silent narrowing is prohibited"
+      ]
+    },
+    {
+      "fixtureId": "HR-0004",
+      "label": "an interval that is NOT authorized — HA-6 prohibits inventing one",
+      "request": {
+        "domain": "D02",
+        "granularity": "1H",
+        "from": "2026-02-26",
+        "to": "2026-03-02"
+      },
+      "supported": false,
+      "expected": false,
+      "matchedExpectation": true,
+      "clipped": false,
+      "violations": [
+        "CE-4: granularity '1H' is outside the declared [1D]",
+        "HA-6: granularity '1H' is not a currently authorized value (1D)",
+        "HA-13: no declared historicalRange for D02/1H"
+      ]
+    },
+    {
+      "fixtureId": "HR-0005",
+      "label": "a domain outside the declared capability — CE-1",
+      "request": {
+        "domain": "D03",
+        "granularity": "1D",
+        "from": "2026-02-26",
+        "to": "2026-03-02"
+      },
+      "supported": false,
+      "expected": false,
+      "matchedExpectation": true,
+      "clipped": false,
+      "violations": [
+        "HA-13: no declared historicalRange for D03/1D"
+      ]
+    }
+  ],
+  "rule": "HA-16 / UC-2 — a request that exceeds the declared range FAILS E6. It is never silently narrowed, never substituted with a nearer granularity or nearer as-of, and never clipped.",
+  "everyScenarioMatched": true,
+  "anyScenarioClipped": false
+}

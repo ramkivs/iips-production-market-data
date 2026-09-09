@@ -39,7 +39,9 @@ const SOURCE_FILES = walk(join(p05Root, 'src')).filter((f) => f.endsWith('.js'))
  * "every file under src/" and "the P05-01 modules" were the same set. They are kept intact in
  * substance and applied to exactly this set, so no P05-01 assertion is weakened.
  */
-const P05_01_SOURCE_FILES = SOURCE_FILES.filter((f) => !/liveAdapterContract\.js$/.test(f));
+const P05_01_SOURCE_FILES = SOURCE_FILES.filter(
+  (f) => !/liveAdapterContract\.js$/.test(f) && !/historicalAdapterContract\.js$/.test(f),
+);
 
 /**
  * The P05-02 adapter-CONTRACT module, added under D9 §3 **A-2** — "Specification and
@@ -52,6 +54,26 @@ const P05_01_SOURCE_FILES = SOURCE_FILES.filter((f) => !/liveAdapterContract\.js
  * which is a stronger claim than a lexical scan.
  */
 const P05_02_CONTRACT_FILE = SOURCE_FILES.find((f) => /liveAdapterContract\.js$/.test(f));
+
+/**
+ * The P05-03 historical adapter-CONTRACT module, added under D9 §3 **A-3** — "Specification and
+ * adapter-contract only — historical OHLCV ingestion contract, reproducibility and load/reconcile
+ * requirements."
+ *
+ * ⚠ DISCLOSED SCOPE CORRECTION (P05-03-A). `P05_01_SOURCE_FILES` originally excluded only
+ * `liveAdapterContract.js`, because that was the only contract module in existence. A contract
+ * module *classifies* retryability — which D9 A-3 authorizes as error-taxonomy work — so the same
+ * carve-out applies here by the rule already documented above, not by a new exception.
+ *
+ * This is **not** a weakening: the identical behavioural assertions applied to the P05-02 contract
+ * module (no backoff, no retry loop, no attempt counter, no wait primitive) are applied to this
+ * module too, and `historical-adapter-contract.test.js` HA/19 asserts them again independently.
+ * The P05-01 implementation set keeps the strict "never even names retry" rule.
+ */
+const P05_03_CONTRACT_FILE = SOURCE_FILES.find((f) => /historicalAdapterContract\.js$/.test(f));
+
+/** Every adapter-CONTRACT module (classification allowed, policy implementation prohibited). */
+const CONTRACT_FILES = [P05_02_CONTRACT_FILE, P05_03_CONTRACT_FILE].filter((f) => f !== undefined);
 
 test('10. the whole suite runs with no network access and no provider dependency', () => {
   // Prove it behaviourally: acquire every domain twice with global fetch and the http/https
@@ -220,13 +242,14 @@ test('P05-04 — no orchestration (scheduling, retries, checkpointing) is implem
     const code = codeOnly(readFileSync(file, 'utf8'));
     assert.doesNotMatch(code, /\bretr(y|ies|ying)\b/i, `${file} implements no retry policy`);
   }
-  if (P05_02_CONTRACT_FILE !== undefined) {
-    const code = codeOnly(readFileSync(P05_02_CONTRACT_FILE, 'utf8'));
-    // A contract may CLASSIFY retryability; it may not implement a retry policy.
-    assert.doesNotMatch(code, /backoff/i, 'no backoff policy is implemented');
-    assert.doesNotMatch(code, /while\s*\(|for\s*\(\s*let\s+attempt/, 'no retry loop is implemented');
-    assert.doesNotMatch(code, /maxRetries|retryCount\s*[+][+]|attempts\s*[+][+]/, 'no attempt counter is mutated');
-    assert.doesNotMatch(code, /sleep\s*\(|delay\s*\(/, 'no wait primitive is used');
+  // A contract may CLASSIFY retryability; it may not implement a retry policy.
+  for (const file of CONTRACT_FILES) {
+    const code = codeOnly(readFileSync(file, 'utf8'));
+    assert.doesNotMatch(code, /backoff/i, `${file} implements no backoff policy`);
+    assert.doesNotMatch(code, /while\s*\(|for\s*\(\s*let\s+attempt/, `${file} implements no retry loop`);
+    assert.doesNotMatch(code, /maxRetries|retryCount\s*[+][+]|attempts\s*[+][+]/,
+      `${file} mutates no attempt counter`);
+    assert.doesNotMatch(code, /sleep\s*\(|delay\s*\(/, `${file} uses no wait primitive`);
   }
 });
 
