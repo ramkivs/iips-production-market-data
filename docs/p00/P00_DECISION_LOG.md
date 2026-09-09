@@ -114,3 +114,50 @@ Source: `docs/d4/D4_14_AUTHORITY_ADR_REGISTER.md` §P.1 (G-A Integration Baselin
 | `certification_status` | **`NONE_GRANTED`** *(unchanged)* |
 | `production_activation_status` | **`NOT_AUTHORIZED`** *(unchanged)* |
 | Current machine-readable state | **`docs/d9/D9_STATUS.json`** — extends `docs/d8/D8_STATUS.json`, does **not** supersede or edit it |
+
+---
+
+## 7. A3 — P05 gate-acceptor designation (appended 2026-09-10)
+
+> **Append-only entry per rule 1.** It **cites and supersedes as to current state** the §6 D9
+> entry's *Authority* row (*"A3 gate acceptor remains UNKNOWN"*) and
+> `docs/p00/P00_AUTHORITY_REGISTER.md` §4 A3 row (*"Person named? **NO**"*) — **both are left
+> unedited as the record of their own moment.** No entry above is altered, re-litigated or
+> reinterpreted. **No new governance instrument, directory or register was created**: this
+> designation is recorded in the existing authoritative decision log, which is the location its
+> own §5 rules provide for a new decision.
+
+| Field | Content |
+|---|---|
+| **ID** | **A3-P05-GATE-ACCEPTOR-DESIGNATION** |
+| **Decision** | **The A3 phase-gate acceptance authority for the P05 gate is DESIGNATED as Ramakrishnan V. S. (Ramki).** |
+| **Nature of the act** | ⚠ **Designation of the person authorized to *perform* the P05 gate-acceptance decision. It is NOT the acceptance itself.** No acceptance act has occurred and none is recorded here. |
+| **Designated person** | **Ramakrishnan V. S. (Ramki)** — program owner of record (§3 convention: *"consider this as decision approved by Sai/Ramki to move forward"*) |
+| **Role designated** | **A3 — Phase-Gate Acceptance Authority**, scoped by this entry to the **P05 Acquisition gate**. ⚠ This entry does **not** designate **A1**, **A2** or **A4**, and does **not** constitute a standing per-phase assignment for **P06–P17** |
+| **Designation date** | **2026-09-10** |
+| **Recorded against baseline** | **`78839091c7d199a9c69ee583fd9702b151a49158`** — *"P05-01 evidence currency repair: regenerate evidence against current shared fixtures"* (parent `4b37b17`) |
+| **Effect on the A3 blocker** | The **person-level** blocker is **cleared**. `BD-P05-01-09`, `BD-P05-02-10` and `BD-P05-03-09` each recorded the A3 gate acceptor as **UNKNOWN** and named it *"the only person-level hard blocker"*. Those records are **left unedited as the record of their own moment** and are superseded as to current state by this entry |
+| **Source artifacts** | This entry · `docs/PROGRAM_STATE.md` §8 row `8i` |
+| **Cites / supersedes as to current state** | §6 *Authority* row · `docs/p00/P00_AUTHORITY_REGISTER.md` §4 A3 row · `docs/d9/D9_STATUS.json` `authority_of_record.a3_gate_acceptor: "UNKNOWN"` and `a1_a4_person_named: false` · `docs/d9/D9_P05_ENTRY_AUTHORIZATION.md:227-228` · `docs/p05/P05_01_EVIDENCE.md:265` · `docs/p05/P05_01_OPEN_ITEMS.md:112` · `docs/p05/P05_02_EVIDENCE.md:266` · `docs/p05/P05_02_OPEN_ITEMS.md:83` · `docs/p05/P05_02_SPECIFICATION.md:449` · `docs/p05/P05_03_SPECIFICATION.md:231` · `docs/p05/P05_03_OPEN_ITEMS.md:39` |
+| **Does NOT confer** *(rule 4)* | **P05 gate acceptance** — still requires a **separate explicit acceptance act** carrying the `P00_GATE_MODEL` minimum evidence · **certification** — **C1–C12 remain `NONE_GRANTED`** · **production activation** — **`NOT_AUTHORIZED`**, the **A4** control at **P16** only · **P05-04 authorization** — **D9 N-3 stands** |
+| **Does NOT create** | **`P05_GATE_ACCEPTANCE.md`** — deliberately **NOT** created. It does not exist and must not exist until an acceptance act occurs |
+| **Open items NOT resolved** *(rule 5)* | **OI-P04-04** OPEN · **OI-P04-03** OPEN · **DEP-P01-04** UNRESOLVED (a **P08** storage decision) · **BD-P05-03-01…08** and **BD-P05-03-10** OPEN · **M-1/AD-4** · **M-5** · **M-6** · **AD-17/M-2** · **DO-P04-1…5 / DO-1…DO-5** still deferred · **P16** licensing / credentials / entitlement |
+| **Technical scope** | **NONE.** No methodology, contract, rule, canonical field key, lifecycle vocabulary, `snapshotId` composition, OI-08/OI-09/OI-10 decision, ADR-01 **C1–C6** rule or accepted **P00–P04** artifact is altered. **No `p05/src`, `p05/tests`, `p05/fixtures`, `p05/evidence`, `p05/evidence-p05-02` or `p05/evidence-p05-03` file is modified.** No provider selection, credential, network access or licensed-data work |
+| **Recording integrity** | **2** files edited, both **additive**: this decision log (new §7 per rule 1) and `docs/PROGRAM_STATE.md` (new §8 row `8i`). **0** historical or accepted records rewritten |
+
+### 7.1 Resulting authority state (by addition; §4 and §6.1 above left unedited)
+
+| Field | Value |
+|---|---|
+| `program_status` | **`AUTHORIZED_TO_PROCEED`** *(unchanged)* |
+| `p05_entry_authorization_status` | **`AUTHORIZED`** *(unchanged)* |
+| `p05_acceptance_status` | **`NOT_ACCEPTED`** *(unchanged — a designation is not an acceptance)* |
+| `a3_gate_acceptor` | **Ramakrishnan V. S. (Ramki)** *(was `UNKNOWN`)* |
+| `a3_gate_acceptor_scope` | **`P05`** — P06–P17 acceptor assignment **not** made by this entry |
+| `a1_person_named` / `a2_person_named` / `a4_person_named` | **`false`** *(unchanged — no other role designated or inferred)* |
+| `p05_gate_acceptance_artifact_exists` | **`false`** *(unchanged)* |
+| `formal_gate_status` | **5 of 18 accepted — P00, P01, P02, P03, P04**; P05–P17 **NOT ACCEPTED** *(unchanged)* |
+| `certification_status` | **`NONE_GRANTED`** *(unchanged)* |
+| `production_activation_status` | **`NOT_AUTHORIZED`** *(unchanged)* |
+| `p05_04_status` | **`NOT_AUTHORIZED`** *(unchanged — D9 N-3)* |
+| **What this designation now makes possible** | A **P05 acceptance-readiness assessment**, and thereafter an **explicit acceptance act** by the designated A3 acceptor. ⚠ **Neither is performed by this entry.** |
