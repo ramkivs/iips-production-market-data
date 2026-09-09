@@ -30,7 +30,7 @@
 | `program_status` | **`AUTHORIZED_TO_PROCEED`** |
 | `implementation_status` | **`AUTHORIZED_TO_PROCEED`** — currently executable: **P00 only** |
 | `certification_status` | **`NONE_GRANTED`** |
-| `formal_gate_status` | **4 of 18 accepted — P00, P01, P02, P03 ACCEPTED**; P04–P17 NOT ACCEPTED |
+| `formal_gate_status` | **5 of 18 accepted — P00, P01, P02, P03, P04 ACCEPTED**; P05–P17 NOT ACCEPTED |
 | `production_activation_status` | **`NOT_AUTHORIZED`** |
 
 ---
@@ -42,11 +42,12 @@ Status: **COMPLETE — READY FOR P00 GATE**
 
 ## 4. Current gate
 
-**P04 — Identity/master gate** — **NOT STARTED, NOT ACCEPTED** · ⚠ constrained by **OI-08 / OI-09**
+**P05 — Acquisition gate** — **NOT STARTED, NOT ACCEPTED** · ⚠ requires the exact namespace token (**OI-10**, unrecorded)
 Accepted gates: **P00 — Scope/authority baseline** (`docs/p00/P00_GATE_ACCEPTANCE.md`) ·
 **P01 — Canonical contract gate** (`docs/p01/P01_GATE_ACCEPTANCE.md`) ·
 **P02 — Provider abstraction/entitlement gate** (`docs/p02/P02_GATE_ACCEPTANCE.md`) ·
-**P03 — Security gate** (`docs/p03/P03_GATE_ACCEPTANCE.md`)
+**P03 — Security gate** (`docs/p03/P03_GATE_ACCEPTANCE.md`) ·
+**P04 — Identity/master gate** (`docs/p04/P04_GATE_ACCEPTANCE.md`)
 
 ## 5. P00 status
 
@@ -101,6 +102,32 @@ not satisfiable; **C12 remains BLOCKED**; **DO-1…DO-5 remain deferred and NOT 
 OI-08/OI-09/OI-10, AD-17, M-1, M-6 all preserved unresolved. P04 remains the canonical
 security-identity owner.
 
+## 6c. P04 status
+
+# **ACCEPTED**
+
+Explicit **A3** acceptance act recorded in `docs/p04/P04_GATE_ACCEPTANCE.md` against work-package
+commit `6ec3b288c8deeee317a63341297bd33b9a090f4f`. Formal gate review: **61 PASS · 0 FAIL · 2
+non-blocking observations**. Covers **P04 specification only**.
+
+Thirteen artifacts under `docs/p04/` (12 reviewed + the acceptance record). Identity/master
+**design only**: no implementation, no source, no schema, no migration, no configuration, no
+provider selected.
+
+✅ **OI-08 RESOLVED — 1:N** identity cardinality; each security/instrument has its own immutable
+canonical security ID; `companyId` remains the CSIP join key, unchanged.
+✅ **OI-09 RESOLVED — FIGI / OpenFIGI** authoritative external identifier; the canonical security
+ID remains distinct from FIGI; ISIN/CUSIP/SEDOL non-authoritative.
+
+⚠ **OI-P04-03 (tenant/region governance attribute set) remains OPEN** — owner **A1**, not named.
+It does **not** invalidate contract acceptance, but **bounds implementation**: per-record
+governance application must remain bounded until the A1 decision is recorded
+(`P04_GATE_ACCEPTANCE.md` §4.2, IB-1…IB-5). **It is not decided here.**
+
+⚠ OI-P04-01/02/04/05 open; **OI-10, AD-17, M-1, M-5, M-6 preserved unresolved**;
+**DO-P04-1…DO-P04-5 deferred and NOT passed**. **P05 is not authorized** — it additionally
+requires the exact namespace token (OI-10), which is **not recorded**.
+
 ## 7. D4 / D5 / D7 / D8 artifact locations
 
 ### `docs/d4/` — specification baseline (16 files, corrected by D4-B)
@@ -146,6 +173,8 @@ design — it was a read-only run. Its conclusion is carried forward in `docs/d8
 `P03_AUDIT_AND_OBSERVABILITY` · `P03_FAILURE_AND_DEGRADED_MODE` · `P03_LINEAGE_AND_VERSION_IMPACT` ·
 `P03_DEPENDENCY_REGISTER` · `P03_ACCEPTANCE_CRITERIA` · `P03_OPEN_ITEMS` · `P03_EVIDENCE` ·
 `P03_GATE_ACCEPTANCE`
+
+### `docs/p04/` — instrument/security master + gate acceptance (13 files, ACCEPTED)
 
 ### `docs/p02/` — provider abstraction + gate acceptance (11 files, ACCEPTED)
 
@@ -204,7 +233,7 @@ No G2 layer, interface, module or DTO family. Product-plane basis: `EngineApiAda
 | # | Field | Value |
 |---|---|---|
 | 14 | Certification | **`NONE_GRANTED`** |
-| 15 | Formal gates | **4 of 18 accepted (P00, P01, P02, P03)** — P04–P17 NOT ACCEPTED |
+| 15 | Formal gates | **5 of 18 accepted (P00, P01, P02, P03, P04)** — P05–P17 NOT ACCEPTED |
 | 16 | Production activation | **`NOT_AUTHORIZED`** |
 
 ## 17–24. Open items
@@ -214,8 +243,8 @@ No G2 layer, interface, module or DTO family. Product-plane basis: `EngineApiAda
 | 17 | **AD-17 / M-2** ReplayService literal returns | **UNRESOLVED** — not resolved by ADR-02 approval | Existing-IIPS | UI17 replay reporting |
 | 18 | **M-1** | **`OPEN_REVALIDATION_REQUIRED`** — not fixed, not certified, not revoked | Existing-IIPS (AD-10) | P15, P16, P17 |
 | 19 | **E2E-030** | **NOT REVOKED · NOT RENEWED** — AD-4 = revalidation required, not revocation | Existing-IIPS | — |
-| 20 | **OI-08** identity cardinality 1→N | **OPEN** — owner cleared (A1), decision not made | New program | P04, P11 |
-| 21 | **OI-09** external identifier standard | **OPEN** — owner cleared (A1), decision not made | New program | P04 |
+| 20 | **OI-08** identity cardinality 1→N | ✅ **RESOLVED — 1:N** by explicit program authority (`docs/p04/P04_GATE_ACCEPTANCE.md` §3) | New program | ⚠ downstream consequences remain: P11, P12, P13 (OI-P04-02) |
+| 21 | **OI-09** external identifier standard | ✅ **RESOLVED — FIGI / OpenFIGI authoritative** (`docs/p04/P04_GATE_ACCEPTANCE.md` §3) | New program | ⚠ sourcing/licensing remains: P05 (OI-P04-04) |
 | 22 | **OI-10** exact namespace token | **APPROVED-BUT-REQUIRES-EXACT-TOKEN-RECORDING** | Ramki/Sai | P05, P06, P11 |
 | 23 | **M-5** authentication/session | **OPEN** | Existing-IIPS | P03 limitation |
 | 24 | **M-6** retention enforcement | **OPEN** | Existing-IIPS | C10, P17 |
@@ -293,6 +322,7 @@ governance baseline in the repository, so a future Arena session can recover ful
 | 6 | Evidence must follow `docs/p00/P00_EVIDENCE_CONVENTIONS.md` — including **pinned commits** |
 | 7 | Authority approval is never certification, never gate acceptance, never production activation |
 | 8 | **P00, P01, P02 and P03 gates are ACCEPTED.** P03 acceptance is **specification only**: ⚠ **M-5 remains OPEN (existing-IIPS)**, **C12 remains BLOCKED**, **DO-1…DO-5 remain deferred**. The D4/D5/D7 *"P03 BLOCKED — AUTHORITY"* language is **superseded by D8**. **CHECKPOINT-02 is created** (`docs/CHECKPOINT-02.md`, source commit `7b8fa9d`). Next: a **P04 entry assessment** — P04 is **not** authorized, and **OI-08 / OI-09 remain OPEN**. |
+| 8a | ⚠ **SUPERSEDES row 8 as to current state — row 8 is left unedited as the record of its own moment.** The **P04 entry assessment was performed** and returned `P04 ENTRY BLOCKED — CONTENT DECISION`; **OI-08 and OI-09 were then RESOLVED by explicit program authority** (1:N · FIGI/OpenFIGI); the P04 work package was prepared (`6ec3b288c8deeee317a63341297bd33b9a090f4f`) and the **P04 gate is ACCEPTED** (`docs/p04/P04_GATE_ACCEPTANCE.md`) — **5 of 18**. ⚠ **OI-P04-03 remains OPEN and bounds implementation.** Next: **P05 is NOT authorized** — it requires the exact namespace token (**OI-10**, unrecorded). Git-history provenance qualification: `docs/INCIDENT-01_HISTORY_LOSS.md` |
 
 ### Known documentation gaps (recorded, not defects)
 
