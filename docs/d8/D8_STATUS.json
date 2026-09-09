@@ -1,0 +1,428 @@
+{
+  "document": "D8_STATUS",
+  "purpose": "Machine-readable authority and execution state after D8 reconciliation.",
+  "supersedes": "docs/d7/D7_STATUS.json",
+  "program_status": "AUTHORIZED_TO_PROCEED",
+  "authority_of_record": {
+    "decision": "consider this as decision approved by Sai/Ramki to move forward",
+    "interpreted_as": "SAI_RAMKI_APPROVAL_TO_PROCEED",
+    "scope": "Clears pending ADR authority holds and establishes program-authority clearance for A1-A4. Does not grant certification, accept gates, authorize production activation, resolve AD-17, or repair M-1."
+  },
+  "adr_status": {
+    "ADR-01": {
+      "status": "APPROVED",
+      "sub_decisions": {
+        "ADR-01-A1_namespace_token": {
+          "status": "APPROVED_BUT_REQUIRES_EXACT_TOKEN_RECORDING",
+          "exact_token_recorded": false,
+          "standing_recommendation": "MD:<domain>.<field>",
+          "recommendation_auto_adopted": false,
+          "note": "Source artifacts do not establish a final token. Token must be recorded, not inferred."
+        },
+        "ADR-01-A2_collision_guard": {
+          "status": "APPROVED",
+          "mode": "FAIL_CLOSED",
+          "rules": [
+            "C1",
+            "C2",
+            "C3",
+            "C4",
+            "C5",
+            "C6"
+          ],
+          "sole_certified_component_affected": "DataBoundExecutor"
+        }
+      }
+    },
+    "ADR-02": {
+      "status": "APPROVED",
+      "nature": "ADDITIVE",
+      "dual_layer_identity_preserved": true,
+      "market_data_identity_format": "data-${provider}-${dataVersion}-${asOf}",
+      "engine_identity_format": "SNAP_*",
+      "contributing_data_linkage": true,
+      "backward_compatible_when_contributing_data_empty": true,
+      "resolves_AD-17": false
+    }
+  },
+  "authority_status": {
+    "A1": {
+      "role": "Security / Identity Authority",
+      "status": "PROGRAM_AUTHORITY_CLEARANCE_ESTABLISHED",
+      "person_named": false,
+      "open_content_decisions": [
+        "OI-08",
+        "OI-09"
+      ]
+    },
+    "A2": {
+      "role": "Implementation / Certification Authority",
+      "status": "PROGRAM_AUTHORITY_CLEARANCE_ESTABLISHED",
+      "person_named": false,
+      "certification_granted": false
+    },
+    "A3": {
+      "role": "Phase-Gate Acceptance Authority",
+      "status": "PROGRAM_AUTHORITY_CLEARANCE_ESTABLISHED",
+      "person_named": false,
+      "gates_accepted": 0,
+      "gates_total": 18
+    },
+    "A4": {
+      "role": "Production Activation Authority",
+      "status": "PROGRAM_AUTHORITY_CLEARANCE_ESTABLISHED",
+      "person_named": false,
+      "activation_authorized": false
+    }
+  },
+  "open_items": {
+    "OI-08": {
+      "description": "Identity cardinality 1 to N",
+      "status": "OPEN",
+      "owner": "A1_CLEARED",
+      "blocks": [
+        "P04"
+      ]
+    },
+    "OI-09": {
+      "description": "External identifier standard",
+      "status": "OPEN",
+      "owner": "A1_CLEARED",
+      "blocks": [
+        "P04"
+      ]
+    },
+    "OI-10": {
+      "description": "Exact namespace token recording",
+      "status": "AUTHORITY_CLEARED_TOKEN_NOT_RECORDED",
+      "owner": "RAMKI_SAI",
+      "blocks": [
+        "P05",
+        "P06",
+        "P11"
+      ]
+    },
+    "AD-17": {
+      "description": "ReplayService literal-return semantics (M-2)",
+      "status": "UNRESOLVED",
+      "owner": "EXISTING_IIPS",
+      "resolved_by_ADR-02": false
+    },
+    "M1": {
+      "description": "Evidence-chain defect and E2E-030 revalidation",
+      "status": "OPEN_REVALIDATION_REQUIRED",
+      "owner": "EXISTING_IIPS",
+      "ad4_rule": "REQUIRE_REVALIDATION_NOT_REVOCATION",
+      "e2e030_revoked": false,
+      "e2e030_renewed": false,
+      "marked_fixed": false,
+      "blocks": [
+        "P15"
+      ]
+    },
+    "M5": {
+      "description": "Authentication / session not wired",
+      "status": "OPEN",
+      "owner": "EXISTING_IIPS"
+    },
+    "M6": {
+      "description": "Retention stub",
+      "status": "OPEN",
+      "owner": "EXISTING_IIPS"
+    }
+  },
+  "phase_readiness": {
+    "P00": {
+      "title": "Governance",
+      "state": "EXECUTABLE_NOW",
+      "depends_on": []
+    },
+    "P01": {
+      "title": "Data Contract",
+      "state": "AUTHORITY_UNBLOCKED_AWAITING_UPSTREAM",
+      "depends_on": [
+        "P00"
+      ]
+    },
+    "P02": {
+      "title": "Provider Abstraction",
+      "state": "AUTHORITY_UNBLOCKED_AWAITING_UPSTREAM",
+      "depends_on": [
+        "P01"
+      ]
+    },
+    "P03": {
+      "title": "Secrets/Security",
+      "state": "AUTHORITY_UNBLOCKED_AWAITING_UPSTREAM",
+      "depends_on": [
+        "P01"
+      ]
+    },
+    "P04": {
+      "title": "Security Master",
+      "state": "PARTIALLY_UNBLOCKED",
+      "depends_on": [
+        "P02",
+        "P03"
+      ],
+      "outstanding": [
+        "OI-08",
+        "OI-09"
+      ]
+    },
+    "P05": {
+      "title": "Acquisition",
+      "state": "PARTIALLY_UNBLOCKED",
+      "depends_on": [
+        "P02",
+        "P04"
+      ],
+      "outstanding": [
+        "OI-10"
+      ]
+    },
+    "P06": {
+      "title": "Normalization",
+      "state": "PARTIALLY_UNBLOCKED",
+      "depends_on": [
+        "P05"
+      ],
+      "outstanding": [
+        "OI-10"
+      ]
+    },
+    "P07": {
+      "title": "Data Quality",
+      "state": "AUTHORITY_UNBLOCKED_AWAITING_UPSTREAM",
+      "depends_on": [
+        "P05",
+        "P06"
+      ]
+    },
+    "P08": {
+      "title": "Historical/PIT",
+      "state": "AUTHORITY_UNBLOCKED_AWAITING_UPSTREAM",
+      "depends_on": [
+        "P06",
+        "P07"
+      ]
+    },
+    "P09": {
+      "title": "Intelligence",
+      "state": "AUTHORITY_UNBLOCKED_AWAITING_UPSTREAM",
+      "depends_on": [
+        "P07",
+        "P08"
+      ]
+    },
+    "P10": {
+      "title": "Alternative/Event Intelligence",
+      "state": "AUTHORITY_UNBLOCKED_AWAITING_UPSTREAM",
+      "depends_on": [
+        "P09"
+      ],
+      "caveat": "THIN_D4_COVERAGE"
+    },
+    "P11": {
+      "title": "Engine Integration",
+      "state": "PARTIALLY_UNBLOCKED",
+      "depends_on": [
+        "P05",
+        "P06",
+        "P09"
+      ],
+      "outstanding": [
+        "OI-10",
+        "AD-4_REVALIDATION_INHERITED",
+        "OI-08"
+      ]
+    },
+    "P12": {
+      "title": "Certified APIs",
+      "state": "AUTHORITY_UNBLOCKED_AWAITING_UPSTREAM",
+      "depends_on": [
+        "P11"
+      ],
+      "outstanding": [
+        "AD-9_SCREENER_CONTRACT"
+      ]
+    },
+    "P13": {
+      "title": "UI Integration",
+      "state": "AUTHORITY_UNBLOCKED_AWAITING_UPSTREAM",
+      "depends_on": [
+        "P12"
+      ]
+    },
+    "P14": {
+      "title": "UX/Parity",
+      "state": "AUTHORITY_UNBLOCKED_AWAITING_UPSTREAM",
+      "depends_on": [
+        "P13"
+      ]
+    },
+    "P15": {
+      "title": "E2E Certification",
+      "state": "BLOCKED",
+      "blocker": "M1_AD4_REVALIDATION_EXISTING_IIPS"
+    },
+    "P16": {
+      "title": "Production Activation",
+      "state": "BLOCKED",
+      "depends_on": [
+        "P15"
+      ]
+    },
+    "P17": {
+      "title": "Operations",
+      "state": "BLOCKED",
+      "depends_on": [
+        "P16"
+      ]
+    }
+  },
+  "first_executable_work_package": {
+    "id": "P00",
+    "name": "Governance",
+    "authorized": true,
+    "executed_in_D8": false,
+    "rationale": "Only phase with no upstream dependency in the D4 sequence; its two prior blockers (user hold, A3 UNKNOWN) are cleared by the approval of record.",
+    "next_gate": "P00 gate - Scope/authority baseline - explicit acceptance required, no automatic promotion",
+    "work_package_id": "WP-P00-01",
+    "work_package_name": "Governance Baseline Establishment"
+  },
+  "remaining_blockers": [
+    {
+      "id": "OI-10",
+      "description": "Exact namespace token not recorded",
+      "owner": "RAMKI_SAI",
+      "type": "DOCUMENTATION_RECORDING",
+      "blocks": [
+        "P05",
+        "P06",
+        "P11"
+      ]
+    },
+    {
+      "id": "OI-08",
+      "description": "Identity cardinality 1 to N undecided",
+      "owner": "A1_CLEARED",
+      "type": "OPEN_DESIGN_DECISION",
+      "blocks": [
+        "P04",
+        "P11"
+      ]
+    },
+    {
+      "id": "OI-09",
+      "description": "External identifier standard undecided",
+      "owner": "A1_CLEARED",
+      "type": "OPEN_DESIGN_DECISION",
+      "blocks": [
+        "P04"
+      ]
+    },
+    {
+      "id": "M1",
+      "description": "Evidence-chain defect; revalidation not performed",
+      "owner": "EXISTING_IIPS",
+      "type": "EXTERNAL",
+      "blocks": [
+        "P15",
+        "P16",
+        "P17"
+      ]
+    },
+    {
+      "id": "AD-17",
+      "description": "ReplayService literal-return semantics",
+      "owner": "EXISTING_IIPS",
+      "type": "UNRESOLVED_EXISTING_IIPS",
+      "blocks": [
+        "UI17_REPLAY_REPORTING"
+      ]
+    },
+    {
+      "id": "M5",
+      "description": "Authentication/session not wired",
+      "owner": "EXISTING_IIPS",
+      "type": "UNRESOLVED_EXISTING_IIPS",
+      "blocks": [
+        "P03_LIMITATION"
+      ]
+    },
+    {
+      "id": "M6",
+      "description": "Retention stub",
+      "owner": "EXISTING_IIPS",
+      "type": "UNRESOLVED_EXISTING_IIPS",
+      "blocks": [
+        "C10",
+        "P17"
+      ]
+    },
+    {
+      "id": "AD-9",
+      "description": "Screener contract must be certified before UI05",
+      "owner": "A2_CLEARED",
+      "type": "SEQUENCING_CONSTRAINT",
+      "blocks": [
+        "UI05"
+      ]
+    },
+    {
+      "id": "P10_COVERAGE",
+      "description": "Alternative/Event Intelligence has thin D4 specification coverage",
+      "owner": "NEW_PROGRAM",
+      "type": "SPECIFICATION_GAP",
+      "blocks": [
+        "P10"
+      ]
+    }
+  ],
+  "existing_iips_boundary": {
+    "may_depend_on_without_modifying": true,
+    "forbidden_to_this_program": [
+      "M1_repair_revalidation",
+      "AD-17_resolution",
+      "existing_iips_methodology_changes",
+      "existing_iips_certification_changes",
+      "existing_iips_production_runtime_changes"
+    ]
+  },
+  "implementation_status": "AUTHORIZED_TO_PROCEED",
+  "implementation_scope_note": "Authorized in dependency order. Currently executable: P00 only. All other phases await upstream deliverables or outstanding technical prerequisites.",
+  "prior_program_status": "AUTHORITY_REVIEW_HOLD",
+  "certification_status": "NONE_GRANTED",
+  "formal_gate_status": "NONE_ACCEPTED",
+  "production_activation_status": "NOT_AUTHORIZED",
+  "invariants": {
+    "engines_certified_target_scope": 13,
+    "ui_surfaces_in_scope": 19,
+    "sole_ingress_boundary": "MarketDataSource<T> -> DataSnapshot<T>",
+    "identity_model": "ADAPTER_MODEL_AD-1",
+    "g2_status": "RETIRED_AD-12",
+    "tracker_corrections": "SPECIFIED_NOT_APPLIED_AD-14",
+    "ga_decisions_unchanged": 14,
+    "frozen_methodologies_preserved": [
+      "AUTO_OPTION_A",
+      "MATERIALS_G1_G6",
+      "TELECOM_D16"
+    ]
+  },
+  "d8_integrity": {
+    "existing_iips_modified": false,
+    "source_modified": false,
+    "tests_modified": false,
+    "methodology_modified": false,
+    "certification_modified": false,
+    "tracker_modified": false,
+    "spec_modified": false,
+    "d4_modified": false,
+    "d5_modified": false,
+    "d7_modified": false,
+    "implementation_performed": false,
+    "commits": 0,
+    "pushes": 0
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "document": "D7_STATUS",
+  "purpose": "Machine-readable authority-hold status snapshot. Preparation artifact only.",
+  "prepared_not_transmitted": true,
+  "program_status": "AUTHORITY_REVIEW_HOLD",
+  "baseline": {
+    "specification_baseline": "D4 (corrected by D4-B)",
+    "adr_packages": "D5",
+    "last_reconciliation": "D6",
+    "last_reconciliation_result": "NO_AUTHORITY_CHANGE"
+  },
+
+  "adr_status": {
+    "ADR-01": {
+      "title": "Market-Data Field Namespace + Collision Guard",
+      "status": "PENDING_RAMKI_SAI",
+      "approved": false,
+      "sub_decisions": {
+        "ADR-01-A1_namespace_token": {
+          "status": "PENDING_RAMKI_SAI",
+          "recommendation": "MD:<domain>.<field>",
+          "recommendation_approved": false,
+          "open_item": "OI-10"
+        },
+        "ADR-01-A2_collision_guard": {
+          "status": "PENDING_RAMKI_SAI",
+          "approved": false
+        }
+      },
+      "required_authority": "RAMKI_SAI",
+      "certification_authority": "UNKNOWN"
+    },
+    "ADR-02": {
+      "title": "Replay Identity Extension (AD-3 + AD-6)",
+      "status": "PENDING_RAMKI_SAI",
+      "approved": false,
+      "required_authority": "RAMKI_SAI",
+      "certification_authority": "UNKNOWN",
+      "separate_from_AD-17": true,
+      "note": "ADR-02 approval MUST NOT be interpreted as AD-17 approval."
+    }
+  },
+
+  "authority_status": {
+    "A1": {
+      "role": "Security / Identity Authority",
+      "status": "UNKNOWN",
+      "assigned": false
+    },
+    "A2": {
+      "role": "New-Program Certification Authority",
+      "status": "UNKNOWN",
+      "assigned": false
+    },
+    "A3": {
+      "role": "P00-P17 Gate Acceptors",
+      "status": "UNKNOWN",
+      "assigned": false,
+      "phases_total": 18,
+      "phases_with_named_acceptor": 0
+    },
+    "A4": {
+      "role": "P16 Production Activation Authority",
+      "status": "UNKNOWN",
+      "assigned": false,
+      "note": "'P16 Production activation authority gate' is a gate name, not an authority assignment."
+    }
+  },
+
+  "blockers": {
+    "A1": {
+      "status": "UNKNOWN",
+      "owner": "UNKNOWN",
+      "directly_blocks": ["P03", "P04", "P05"],
+      "resolution_authorizes_implementation": false
+    },
+    "A2": {
+      "status": "UNKNOWN",
+      "owner": "UNKNOWN",
+      "directly_blocks": ["P15"],
+      "resolution_authorizes_implementation": false
+    },
+    "A3": {
+      "status": "UNKNOWN",
+      "owner": "UNKNOWN",
+      "directly_blocks": ["FORMAL_GATE_ACCEPTANCE_P00_THROUGH_P17"],
+      "resolution_authorizes_implementation": false
+    },
+    "A4": {
+      "status": "UNKNOWN",
+      "owner": "UNKNOWN",
+      "directly_blocks": ["P16", "P17"],
+      "resolution_authorizes_implementation": false
+    },
+    "OI-08": {
+      "description": "Identity cardinality 1 to N",
+      "status": "UNRESOLVED",
+      "owner": "A1_UNKNOWN",
+      "directly_blocks": ["P04"],
+      "resolution_authorizes_implementation": false
+    },
+    "OI-09": {
+      "description": "External identifier standard",
+      "status": "UNRESOLVED",
+      "owner": "A1_UNKNOWN",
+      "directly_blocks": ["P04"],
+      "resolution_authorizes_implementation": false
+    },
+    "OI-10": {
+      "description": "Namespace token approval",
+      "status": "PENDING",
+      "owner": "RAMKI_SAI",
+      "token_approved": false,
+      "directly_blocks": ["P05", "P06"],
+      "indirectly_blocks": ["P11"],
+      "resolution_authorizes_implementation": false
+    },
+    "AD-17": {
+      "description": "ReplayService literal-return semantics (M-2)",
+      "status": "UNRESOLVED",
+      "owner": "EXISTING_IIPS",
+      "separate_from_ADR-02": true,
+      "resolution_authorizes_implementation": false
+    },
+    "M1": {
+      "description": "Evidence-chain defect and E2E-030 revalidation",
+      "status": "OPEN_REVALIDATION_REQUIRED",
+      "owner": "EXISTING_IIPS",
+      "ad4_rule": "REQUIRE_REVALIDATION_NOT_REVOCATION",
+      "e2e030_revoked": false,
+      "e2e030_renewed": false,
+      "revalidation_performed": false,
+      "directly_blocks": ["P15"],
+      "resolution_authorizes_implementation": false
+    },
+    "M5": {
+      "description": "Authentication / session not wired",
+      "status": "OPEN",
+      "owner": "EXISTING_IIPS",
+      "resolution_authorizes_implementation": false
+    },
+    "M6": {
+      "description": "Retention stub",
+      "status": "OPEN",
+      "owner": "EXISTING_IIPS",
+      "resolution_authorizes_implementation": false
+    }
+  },
+
+  "implementation_status": "NOT_AUTHORIZED",
+  "certification_status": "NONE_GRANTED",
+  "formal_gate_status": "NONE_ACCEPTED",
+
+  "invariants": {
+    "engines_certified_target_scope": 13,
+    "ui_surfaces_in_scope": 19,
+    "sole_ingress_boundary": "MarketDataSource<T> -> DataSnapshot<T>",
+    "identity_model": "ADAPTER_MODEL_AD-1",
+    "g2_status": "RETIRED_AD-12",
+    "tracker_corrections": "SPECIFIED_NOT_APPLIED_AD-14",
+    "ga_decisions_unchanged": 14
+  },
+
+  "next_program_action": "WAIT_FOR_ACTUAL_AUTHORITY_EVIDENCE",
+  "next_action_note": "On explicit Ramki/Sai ADR decisions or A1/A2/A3/A4 assignments, run a fresh read-only authority reconciliation before any implementation."
+}
