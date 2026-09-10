@@ -1,0 +1,71 @@
+{
+  "artifact": "P06-02 SCOPE BOUNDARY — P06-01 PRESERVED, P06-03 NOT IMPLEMENTED",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_BOUNDARY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-02",
+    "p06_03Implemented": false,
+    "trackerP06_02ExitCriteria": "MET — \"Raw data never bypasses validation\": every bypass attempt is EXECUTED at generation time and recorded as REFUSED; the governed path is the only route from raw to canonical storage",
+    "trackerP06_02TestValidation": "MET — \"Architecture + negative tests\" = p06/tests/rawCanonicalBoundary.test.js",
+    "trackerP06_02Evidence": "MET — \"Boundary evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — the boundary is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-02 defect."
+  },
+  "p06_02": {
+    "workItem": "Raw/canonical separation",
+    "requirement": "Keep raw provider payloads separate from governed canonical data.",
+    "deliverable": "Storage boundary",
+    "exitCriteria": "Raw data never bypasses validation",
+    "implemented": true
+  },
+  "p06_01": {
+    "preserved": true,
+    "proof": "every admitted record is byte-identical to the record the P06-01 pipeline produces directly for the same payload (p06/tests/rawCanonicalBoundary.test.js P/3)",
+    "measuredIdentical": [
+      {
+        "caseId": "N-01",
+        "canonicalDigest": "2bebef9be697bb48e41cf22e9fc21a32e052a443eb09a5f81a46dfe75156dc29"
+      },
+      {
+        "caseId": "N-02",
+        "canonicalDigest": "77b1a0647028ddcc7e812303498f1f2b6a1902cd0fc08ccb708a4c1cfa48f5f1"
+      },
+      {
+        "caseId": "N-03",
+        "canonicalDigest": "1eb20606edae13e6bd3087b936491e1d5d980513786969d2ee4f0d2d6f9face2"
+      },
+      {
+        "caseId": "N-04",
+        "canonicalDigest": "336f8536039bcb558388dccff9808040840ce5227c603873c74deb0e2c0c1b9f"
+      },
+      {
+        "caseId": "N-05",
+        "canonicalDigest": "50bf65c9474aa53141e0b8886a40b19965e3988366b2269944fe34b0d7eb691e"
+      }
+    ]
+  },
+  "p06_03": {
+    "workItem": "Deduplication/idempotency",
+    "requirement": "Prevent duplicate records across retries/replays/providers.",
+    "deliverable": "Deduplication rules",
+    "exitCriteria": "Repeated ingestion stable",
+    "implemented": false,
+    "howBounded": "No deduplication rule, duplicate key, cross-provider merge or idempotency key exists in the P06 package. The store's own idempotency is a P05-04 property that is INHERITED, not extended. Asserted in rawCanonicalBoundary.test.js S/1 and by the P05 guard existing-iips-boundary.test.js."
+  },
+  "alsoNotDone": {
+    "schedulingRetriesCheckpointing": "NOT implemented here — that is P05-04, unchanged",
+    "diskPersistence": "NONE — the raw compartment and the canonical store are in-memory; nothing in p06/src calls writeFileSync/mkdirSync/createWriteStream",
+    "p11EngineInputMapping": "NOT performed — engine-input mapping is owned by P11"
+  },
+  "p06Acceptance": "NOT_ACCEPTED — no P06_GATE_ACCEPTANCE.md exists or is created (D10-6)"
+}

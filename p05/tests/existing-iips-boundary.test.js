@@ -145,7 +145,7 @@ test('no new engine metric key is introduced (INV-8 / SPEC ¶132-133)', () => {
  *   · **NEW:** the P06-01 evidence index must classify itself as non-provider, non-P06-02 and
  *     non-P06-03 evidence, so a mislabelled package is a test failure.
  */
-test('P07 / P08 remain untouched; P06 exists ONLY as authorized P06-01 work (D10-2)', () => {
+test('P07 / P08 remain untouched; P06 exists ONLY as authorized P06-01/P06-02 work (D10-2)', () => {
   // ── UNCHANGED: P07 and P08 must have no artifacts and no implementation. ──
   for (const p of ['07', '08']) {
     assert.equal(existsSync(join(repoRoot, 'docs', `p${p}`)), false, `docs/p${p} must not exist`);
@@ -161,8 +161,13 @@ test('P07 / P08 remain untouched; P06 exists ONLY as authorized P06-01 work (D10
   if (existsSync(docsP06)) {
     const artifacts = readdirSync(docsP06);
     for (const f of artifacts) {
-      assert.match(f, /^P06_01_/,
-        `docs/p06 may hold ONLY P06-01 artifacts (D10-2 authorizes entry; P06-02/P06-03 are not implemented) — found '${f}'`);
+      // ⚠ DISCLOSED SCOPE CORRECTION (P06-02-B) — replaced, not weakened. This clause formerly
+      //   required every docs/p06 artifact to match ^P06_01_, which was correct while P06-02 was
+      //   authorized for ENTRY only. D10-2 authorizes P06-02 and it is now implemented, so the
+      //   permitted prefix set widens to the two authorized work items — and P06-03 remains
+      //   barred, which is the part of the original intent that still bites.
+      assert.match(f, /^P06_0[12]_/,
+        `docs/p06 may hold ONLY P06-01 / P06-02 artifacts (D10-2 scope; P06-03 is NOT implemented) — found '${f}'`);
     }
   }
 
@@ -173,18 +178,27 @@ test('P07 / P08 remain untouched; P06 exists ONLY as authorized P06-01 work (D10
     'no P06 gate-acceptance artifact may exist — D10-6: authorization is not acceptance');
   assert.equal(existsSync(join(repoRoot, 'docs', 'p06', 'P06_GATE_ACCEPTANCE.md')), false);
 
-  // ── NEW: no P06-02 or P06-03 artifact or implementation may exist. ──
-  assert.deepEqual(allTracked.filter((f) => /P06[_-]0[23]/.test(f)), [],
-    'no P06-02 / P06-03 artifact may be tracked — those work items are not implemented');
+  // ── no P06-03 artifact or implementation may exist. ──
+  // ⚠ DISCLOSED SCOPE CORRECTION (P06-02-C): this clause formerly barred P06-02 as well, which was
+  //   correct while P06-02 was authorized for ENTRY only. D10-2 authorizes P06-02 and it is now
+  //   implemented, so P06-02 is permitted — and **P06-03 remains barred**, which is the part of the
+  //   original intent that still bites. The P06-03 dedup prohibition below is retained unchanged.
+  assert.deepEqual(allTracked.filter((f) => /P06[_-]03/.test(f)), [],
+    'no P06-03 artifact may be tracked — that work item is NOT implemented');
   const p06Src = join(repoRoot, 'p06', 'src');
   if (existsSync(p06Src)) {
     for (const f of readdirSync(p06Src).filter((x) => x.endsWith('.js'))) {
       const code = readFileSync(join(p06Src, f), 'utf8')
         .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/\s+\/\/[^\n]*$/gm, '');
-      assert.doesNotMatch(code, /class\s+\w*(RawStore|RawPayloadStore|StorageBoundary)/,
-        `${f} must not implement the P06-02 storage boundary`);
+      // ⚠ P06-02 IS now implemented under D10-2, so the storage boundary is permitted. P06-03 is
+      //   NOT: no deduplication rule may exist anywhere in the P06 package. Two clauses below are
+      //   NEW and UNIVERSAL — they bind the P06-02 module too, so this rescope ADDS surface.
       assert.doesNotMatch(code, /dedup|deduplicat|crossProviderMerge|idempotencyKey/i,
         `${f} must not implement P06-03 deduplication rules`);
+      assert.doesNotMatch(code, /writeFileSync|mkdirSync|createWriteStream/,
+        `${f} must not persist anything to disk`);
+      assert.doesNotMatch(code, /bypass(Validation|Detection)/i,
+        `${f} must not implement a raw-bypass surface`);
     }
   }
 

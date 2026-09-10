@@ -1,0 +1,108 @@
+{
+  "artifact": "P06-02 BYPASS INVENTORY — MEASURED STATE BEFORE THIS ACT (at commit b6160cb)",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_BOUNDARY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-02",
+    "p06_03Implemented": false,
+    "trackerP06_02ExitCriteria": "MET — \"Raw data never bypasses validation\": every bypass attempt is EXECUTED at generation time and recorded as REFUSED; the governed path is the only route from raw to canonical storage",
+    "trackerP06_02TestValidation": "MET — \"Architecture + negative tests\" = p06/tests/rawCanonicalBoundary.test.js",
+    "trackerP06_02Evidence": "MET — \"Boundary evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — the boundary is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-02 defect."
+  },
+  "note": "Each row below was EXECUTED, not inferred. The P05-04 CanonicalRecordStore is an accepted component and is deliberately left UNCHANGED by this act; the P06-02 boundary encapsulates it so that no governed path can reach it except through validation.",
+  "paths": [
+    {
+      "id": "BP-1",
+      "path": "raw provider payload → canonical storage",
+      "mechanism": "CanonicalRecordStore.ingest() performs no validation; it ingests any object carrying a snapshotId",
+      "measured": {
+        "outcome": "INSERTED",
+        "recordCount": 1
+      },
+      "proof": {
+        "providerNativeFieldsStillPresent": [
+          "sym",
+          "tradePrice",
+          "ccy",
+          "quoteTs"
+        ],
+        "bareEngineKeyPresent": false,
+        "namespacedFieldCount": 0
+      },
+      "statusBefore": "OPEN",
+      "statusAfter": "BLOCKED — see 02-governed-path.json / 03-bypass-results.json"
+    },
+    {
+      "id": "BP-2",
+      "path": "validation on the ingest path",
+      "mechanism": "ingest() never calls validateSnapshot",
+      "measured": {
+        "ingestCallsValidation": false
+      },
+      "proof": {
+        "theValidatorDoesRejectSuchAnObject": {
+          "name": "SnapshotRejection",
+          "message": "[S1] ST-1: missing REQUIRED envelope slot(s): provider, dataVersion, schemaVersion, namespaceVersion, asOf, receivedAt, mode, completenessPct, domain, lineage"
+        },
+        "butNothingOnTheIngestPathInvokesIt": true
+      },
+      "statusBefore": "OPEN — validation was OPTIONAL",
+      "statusAfter": "BLOCKED — the boundary re-runs S1–S4"
+    },
+    {
+      "id": "BP-3",
+      "path": "raw → engine",
+      "mechanism": "nothing enforced that a value offered to a consumer was canonical, so an engine input could be assembled straight from a raw payload",
+      "measured": {
+        "rawValuationPayloadFixtureId": "V-0001",
+        "engineInputAssembledStraightFromRaw": {
+          "peRatio": "18.40",
+          "evEbitda": "9.15",
+          "fcfYield": "0.0520"
+        },
+        "bareEngineKeysUsed": [
+          "evEbitda",
+          "fcfYield",
+          "peRatio"
+        ],
+        "anyNamespacedKeyUsed": false,
+        "provenanceOrLineageAttached": false
+      },
+      "statusBefore": "OPEN",
+      "statusAfter": "BLOCKED — assertEngineInputIsCanonical (INT-013)"
+    },
+    {
+      "id": "BP-4",
+      "path": "unvalidated record masquerading as canonical",
+      "mechanism": "no canonical-shape assertion existed",
+      "measured": {
+        "storeAcceptsAFakeRecord": "INSERTED"
+      },
+      "statusBefore": "OPEN",
+      "statusAfter": "BLOCKED — assertCanonicalShape"
+    },
+    {
+      "id": "BP-5",
+      "path": "raw and canonical are not separated at all",
+      "mechanism": "no raw compartment existed in the P06 package",
+      "measured": {
+        "anyRawCompartmentInP06_01": false
+      },
+      "statusBefore": "OPEN",
+      "statusAfter": "CLOSED — RawCompartment"
+    }
+  ],
+  "openPathsBefore": 5
+}

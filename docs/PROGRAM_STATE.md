@@ -1,5 +1,39 @@
 # PROGRAM STATE — SESSION RECOVERY MANIFEST
 
+> **▶ CURRENT WORK ACT: P06-02 IMPLEMENTED + EVIDENCED — RAW/CANONICAL STORAGE BOUNDARY COMPLETE
+> WITHIN THE D10-2 BOUNDARY** (`docs/p06/P06_02_EVIDENCE.md`, recorded **2026-09-10** under
+> authority **D10-2**, `docs/p00/P00_DECISION_LOG.md` §8.1). Delivered:
+> `p06/src/rawCanonicalBoundary.js` (`RawCompartment` · `CanonicalStorageBoundary` ·
+> `assertCanonicalShape` · `assertEngineInputIsCanonical` · `buildAttestation` /
+> `verifyAttestation`) · `p06/tests/rawCanonicalBoundary.test.js` (**25 tests**) ·
+> `p06/evidence-p06-02/` (**6 boundary-evidence files**).
+> **Suite: P05 264 + P06 80 = 344 tests, 344 PASS / 0 FAIL.**
+> ⚠ **`p06_02_status` = `IMPLEMENTED + EVIDENCED`.** Authoritative tracker exit criterion
+> ***"Raw data never bypasses validation"*** is **MET** — **31 bypass attempts EXECUTED at
+> evidence-generation time, 31 REFUSED, 0 NOT BLOCKED**; malformed raw reaching canonical storage:
+> **0**. Entry criterion *"Pipeline exists"* MET.
+> ⚠ **5 bypass paths were measured OPEN before this act and are now blocked:** raw → canonical
+> storage (`CanonicalRecordStore.ingest()` validated nothing) · validation optional on the ingest
+> path · raw → engine (bare `peRatio`/`evEbitda`/`fcfYield` from raw `V-0001`) · unvalidated record
+> masquerading as canonical · raw and canonical not separated at all.
+> ⚠ **Scope discipline — `P06-03` is NOT implemented.** Its entry authorization exists, but it
+> remains a separately governed work item. The store's own idempotency is a **P05-04 property that
+> is INHERITED, not extended**.
+> ⚠ **Recorded limitations L-1…L-6**, notably **L-2** (the attestation is a **re-derivable
+> provenance binding, NOT a cryptographic proof** — there is no secret and none may be added) and
+> **L-3** (the accepted **P05-04 `CanonicalRecordStore` is deliberately UNCHANGED**; the boundary
+> **encapsulates** it and **detects** contamination — prevention-by-architecture within the
+> governed path, plus detection).
+> ⚠ **UNCHANGED:** **P05 = `ACCEPTED`, 6 of 18** · **P06-01 = `IMPLEMENTED + EVIDENCED`**,
+> preserved (admitted records **byte-identical** to P06-01's own output) · **P06 = `NOT_ACCEPTED`**,
+> no `P06_GATE_ACCEPTANCE.md` (**D10-6**) · provider execution **`NOT_AUTHORIZED`** (N-1) ·
+> licensed historical acquisition **`NOT_AUTHORIZED`** (N-2) · production activation
+> **`NOT_AUTHORIZED`** (A4 at P16 only) · **Track B → `origin/main` merge `NOT AUTHORIZED`** ·
+> certification **`NONE_GRANTED`** · ADR-01 **C1–C6 fail-closed and unvaried** (reused by import) ·
+> `MD:` **the exact namespace token** · **no scheduling/retries/checkpointing added** (P05-04
+> unchanged) · **no disk persistence** · **no P11 engine-input mapping** · **no historical P00–P05
+> authority record edited** · **no concessions register**.
+>
 > **▶ CURRENT WORK ACT: P06-01 IMPLEMENTED + EVIDENCED — NORMALIZATION PIPELINE COMPLETE WITHIN THE D10-2 BOUNDARY**
 > (`docs/p06/P06_01_EVIDENCE.md`, recorded **2026-09-10** under authority **D10-2**,
 > `docs/p00/P00_DECISION_LOG.md` §8.1 — *"P06 ENTRY is AUTHORIZED … Scope = `P06-01`, `P06-02`,
@@ -132,7 +166,7 @@
 | `p06_entry_authorization_status` | **`AUTHORIZED`** by **D10-2** — scope **P06-01 / P06-02 / P06-03 ONLY** · *(was `NOT_AUTHORIZED`, D9 §5 exclusion 5)* |
 | `p06_acceptance_status` | **`NOT_ACCEPTED`** — ⚠ **authorization is not acceptance**; no `P06_GATE_ACCEPTANCE.md` exists |
 | `p06_01_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_01_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Canonical output deterministic"** **MET** · ⚠ limitations **L-1** (not exercised against a live provider) and **L-2** (only D01 declared) |
-| `p06_02_status` | **`AUTHORIZED` for entry, NOT implemented** — raw/canonical **storage boundary**; no such boundary, raw store or bypass-detection surface exists |
+| `p06_02_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_02_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Raw data never bypasses validation"** **MET** — **31 bypass attempts executed, 31 refused, 0 not blocked** · ⚠ limitations **L-1…L-6** (esp. **L-2** attestation is provenance not authenticity · **L-3** the P05-04 store is unchanged, encapsulated + audited) |
 | `p06_03_status` | **`AUTHORIZED` for entry, NOT implemented** — **deduplication rules**; no dedup rule, duplicate key or cross-provider merge exists |
 | `a3_gate_acceptor_scope` | **`P05, P06`** — Ramakrishnan V. S. (Ramki) · ⚠ **P07–P17 NOT designated** |
 | `adr_01_a2_execution` | **`AUTHORIZED`** — C1–C6 fail-closed guard in the certified `DataBoundExecutor`, **as written in ADR-01 §C.2, no variation** |
@@ -447,6 +481,40 @@ now both satisfied: `P05-04` (implemented + evidenced) and `P06-01` (this act). 
 
 ---
 
+## 6j. P06-02 status — IMPLEMENTED + EVIDENCED within the D10-2 boundary
+
+# **P06-02 COMPLETE WITHIN BOUNDARY · P06-03 NOT IMPLEMENTED · P06 NOT_ACCEPTED**
+
+Implemented under **D10-2**. Evidence record: **`docs/p06/P06_02_EVIDENCE.md`**.
+
+| Field | Value |
+|---|---|
+| **Scope implemented** | Exactly `Work Tracker`!P06-02 *Requirement* — *"Keep raw provider payloads separate from governed canonical data."* Deliverable *"Storage boundary"*. **Nothing wider; no requirement invented** |
+| **Governing contract — REUSED, not invented** | `P02_PROVIDER_MAPPING_RULES.md` §1 **M-1…M-6** (containment) · **INT-013** (`D4_01`:216, `D4_03`:114 — governed IIPS objects, never raw provider records) · `D4_02`:194 (identity via the security master, never a raw symbol) · `P01_VALIDATION_RULES.md` **S1–S4** by reuse · ADR-01 **C1–C6** by reuse |
+| `p06_02_status` | **`IMPLEMENTED + EVIDENCED`** *(was `NOT STARTED`)* |
+| **Entry criterion** — *"Pipeline exists"* | ✅ **MET** — P06-01 complete |
+| **Exit criterion** — *"Raw data never bypasses validation"* | ✅ **MET** — **31 bypass attempts EXECUTED at generation time, 31 REFUSED, 0 NOT BLOCKED**; malformed raw reaching canonical storage **0**; boundary audit `ok: true` |
+| **Test / Validation** — *"Architecture + negative tests"* | ✅ **MET** — `p06/tests/rawCanonicalBoundary.test.js`, **25 tests** (A architecture 5 · P positive 4 · N negative/bypass 10 · D determinism 2 · S scope 4) |
+| **Evidence** — *"Boundary evidence"* | ✅ **MET** — `p06/evidence-p06-02/` (6 files, byte-reproducible) |
+| ⚠ **5 bypass paths measured OPEN before, now BLOCKED** | **BP-1** raw → canonical storage (`CanonicalRecordStore.ingest()` validated nothing; a raw payload with no `MD:` key was `INSERTED`) · **BP-2** validation optional on the ingest path · **BP-3** raw → engine (bare `peRatio`/`evEbitda`/`fcfYield` assembled from raw `V-0001`, no namespace, no provenance) · **BP-4** unvalidated record masquerading as canonical · **BP-5** raw and canonical not separated at all |
+| **Architecture delivered** | raw → `acceptRaw()` → **RawCompartment** (separate, frozen, `isCanonical:false`, append-only) → `admit()` → P06-01 `normalizePayload` → `validateSnapshot` S1–S4 → `assertNoEngineDirectPath` → `assertCanonicalShape` → `buildAttestation` + **`verifyAttestation` (RE-DERIVED, never trusted)** → **private** `CanonicalRecordStore` → consumers via `canonicalRecords()` / `isAttested()` / `auditBoundary()` |
+| ⚠ **The enforcement is architectural** | The boundary exposes **NO method that accepts a pre-built record** (measured surface: `acceptRaw, admit, attestations, auditBoundary, canonicalCount, canonicalRecords, events, isAttested, rawCount`; **0** matching `ingest|put|insert|setRecord|addRecord|^set$|^add$`; `'store' in boundary === false`). Canonical admission **requires** a rawRef plus a declared mapping |
+| **Reuse, not duplication** | `validateSnapshot` ← `p05/src/validate.js` · `CanonicalRecordStore` ← `p05/src/replay.js` (**unchanged, encapsulated**) · normalization + `assertNoEngineDirectPath` ← `./normalizationPipeline.js` (P06-01) · C1–C6 ← `p05/src/namespace.js`. Asserted by test **A/5** |
+| ⚠ **2 defects found by testing and fixed** | (i) `assertCanonicalShape`'s M-3 scan did not strip canonical keys, so `MD:price.venueRef` false-positived on `venue` — now strips + word-boundary matches, as the P06-01 guard does · (ii) `verifyAttestation` threw a `TypeError` on an `undefined` field — a **fail-open-shaped accident**; now null-safe, and the `validationPassed` check moved first so *"validation is never waived"* is reachable |
+| ⚠ **NOT P06-03** | No deduplication rule, duplicate key, cross-provider merge or idempotency key. The store's own idempotency is a **P05-04 property INHERITED, not extended**. Asserted by **S/1** and by the P05 guard |
+| ⚠ **Recorded limitations** | **L-1** not exercised against a live provider · **L-2** the attestation is a **re-derivable provenance binding, NOT a cryptographic proof** (no secret exists, none may be added) · **L-3** the **P05-04 store is deliberately unchanged** — bare, outside the governed architecture, it still accepts anything; the boundary **encapsulates** it and `auditBoundary()` **detects** contamination · **L-4** the raw compartment is **in-memory**, no raw-at-rest surface, no durable raw store claimed · **L-5** only **D01** declared (inherited from P06-01 L-2) · **L-6** P06-02 completion is **NOT** P06 acceptance / certification / provider authorization / activation |
+| ⚠ **Guard disclosure** | **5 assertion statements replaced (5 deleted assertion lines), each equal-or-stronger; none dropped.** (1) `existing-iips-boundary.test.js` — **P07/P08 arms UNCHANGED**; the `docs/p06` prefix widens `^P06_01_` → `^P06_0[12]_` (D10-2 authorizes P06-02) while **P06-03 remains barred**, and **2 NEW universal clauses** added (no disk persistence, no raw-bypass surface). (2) same file — the tracked-artifact ban narrows `/P06[_-]0[23]/` → `/P06[_-]03/`, **P06-03 still barred**. (3) `no-provider-dependency.test.js` D10 guard — its own `docs/p06` prefix clause widens `^P06_01_` → `^P06_0[12]_` identically; its recursive whole-`docs/` acceptance-artifact scan is **UNCHANGED**. (4) P06-01's **B/3** rescoped to the **three enumerated P06-01 modules** and **tightened** (a P06-01 module may not reach `CanonicalRecordStore` at all; the enumeration is self-asserted). Net assertion counts **+1** / **+2**; every other pre-existing file **+0** |
+| **Guard teeth** | Negative-tested: add `docs/p06/P06_03_EVIDENCE.md` → **2 P05 guards fail** · add a **tracked** `p06/evidence-p06-03/` artifact → **1 P05 guard fails** · add `P06_GATE_ACCEPTANCE.md` → **2 P05 guards fail** · smuggle `class SneakyStorageBoundary` into a P06-01 module → **B/3 fails** · add `deduplicateAcrossProviders()` to the boundary → **1 P05 guard + S/1 fail** · control → all pass |
+| **NOT done by this act** | No **P06-03** dedup/idempotency · **no P06 acceptance artifact** · no certification · no production activation · no provider selection/entitlement/credential/configuration · no licensed historical acquisition · **no scheduling/retries/checkpointing** (P05-04 unchanged) · **no disk persistence** · **no Track B → `origin/main` merge** · no edit to any historical P00–P05 authority record · no variation of **C1–C6** · no change to the **`MD:`** token · **no P11 engine-input mapping** · no existing-IIPS modification · **no change to the accepted P05-04 `CanonicalRecordStore`** |
+
+⚠ **P06 remains `NOT_ACCEPTED` — still 6 of 18.**
+
+**Next governance-safe step: `P06-03` — deduplication / idempotency.** Its two Hard dependencies are
+now both satisfied: `P06-01` and `P06-02`. Entry criterion *"Canonical schema stable"*; exit
+criterion *"Repeated ingestion stable."*
+
+---
+
 ## 7. D4 / D5 / D7 / D8 / D9 artifact locations
 
 ### `docs/d4/` — specification baseline (16 files, corrected by D4-B)
@@ -528,6 +596,23 @@ The combined suite is **319 tests, 319 PASS** (P05 264 · P06 55).
 **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
 ⚠ **`localfix` is a SYNTHETIC source — these are LOCAL SYNTHETIC canonical fixtures, NOT provider
 evidence.** ⚠ **P06-02 and P06-03 are NOT implemented**; no `P06_GATE_ACCEPTANCE.md` exists.
+
+### `docs/p06/` — P06 execution records (2 files)  ·  `p06/` — P06-01 pipeline + P06-02 boundary (executable)
+`docs/p06/P06_01_EVIDENCE.md` · **`docs/p06/P06_02_EVIDENCE.md`** ·
+`p06/src/mappingDeclaration.js` · `p06/src/normalizationPipeline.js` ·
+`p06/src/identityResolution.js` · **`p06/src/rawCanonicalBoundary.js`** (`RawCompartment` ·
+`CanonicalStorageBoundary` · `assertCanonicalShape` · `assertEngineInputIsCanonical` ·
+`buildAttestation` / `verifyAttestation`) ·
+`p06/tests/normalization.test.js` (55) · **`p06/tests/rawCanonicalBoundary.test.js` (25)** ·
+`p06/tests/helpers.js` · `p06/fixtures/normalization-fixtures.json` ·
+`p06/evidence-p06-01/` (9 files) · **`p06/evidence-p06-02/` (6 files)** ·
+`p06/scripts/generate-p06-01-evidence.js` · **`generate-p06-02-evidence.js`** ·
+`p06/package.json` (+`evidence:p06-02`).
+The combined suite is **344 tests, 344 PASS** (P05 264 · P06 80).
+⚠ **Still zero dependencies, zero network, zero credentials, zero disk persistence.** The provider
+register is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
+⚠ **`localfix` is a SYNTHETIC source — this is LOCAL SYNTHETIC boundary evidence, NOT provider
+evidence.** ⚠ **P06-03 is NOT implemented**; no `P06_GATE_ACCEPTANCE.md` exists.
 
 *Note: D6 (authority reconciliation, result "NO AUTHORITY CHANGE") produced no artifacts by
 design — it was a read-only run. Its conclusion is carried forward in `docs/d8/`.*

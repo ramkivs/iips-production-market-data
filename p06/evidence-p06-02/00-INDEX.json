@@ -1,0 +1,92 @@
+{
+  "artifact": "P06-02 EVIDENCE INDEX — RAW / CANONICAL STORAGE BOUNDARY",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "generatedBy": "p06/scripts/generate-p06-02-evidence.js",
+  "module": "P06-02-RAW-CANONICAL-STORAGE-BOUNDARY",
+  "boundarySchemaVersion": "1.0",
+  "rawEnvelopeType": "RAW_PROVIDER_PAYLOAD",
+  "namespaceToken": "MD:",
+  "authority": {
+    "decision": "D10-2 (docs/p00/P00_DECISION_LOG.md §8.1)",
+    "decisionCommit": "b41240c406914f34f06c2f7bc3986bdeb436018d",
+    "scope": "Work Tracker!P06-02 — Raw/canonical separation. P06-01 is complete and preserved; P06-03 is authorized for ENTRY but is NOT implemented by this act.",
+    "priorWork": "P05-01 IMPLEMENTED/EVIDENCED · P05-02 SPEC + ADAPTER-CONTRACT · P05-03 SPEC + ADAPTER-CONTRACT · P05-04 IMPLEMENTED + EVIDENCED · P06-01 IMPLEMENTED + EVIDENCED"
+  },
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_BOUNDARY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-02",
+    "p06_03Implemented": false,
+    "trackerP06_02ExitCriteria": "MET — \"Raw data never bypasses validation\": every bypass attempt is EXECUTED at generation time and recorded as REFUSED; the governed path is the only route from raw to canonical storage",
+    "trackerP06_02TestValidation": "MET — \"Architecture + negative tests\" = p06/tests/rawCanonicalBoundary.test.js",
+    "trackerP06_02Evidence": "MET — \"Boundary evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — the boundary is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-02 defect."
+  },
+  "trackerRow": {
+    "workItem": "Raw/canonical separation",
+    "requirement": "Keep raw provider payloads separate from governed canonical data.",
+    "deliverable": "Storage boundary",
+    "dependencies": "P05-04,P06-01 (Hard)",
+    "entryCriteria": "Pipeline exists",
+    "exitCriteria": "Raw data never bypasses validation",
+    "testValidation": "Architecture + negative tests",
+    "evidence": "Boundary evidence"
+  },
+  "exitCriteriaAssessment": {
+    "entryCriteria": "MET — the P06-01 pipeline exists and is complete",
+    "exitCriteria": "MET — every bypass attempt is EXECUTED and REFUSED; the governed path is the only route from raw to canonical storage; malformed raw never reaches storage",
+    "testValidation": "MET — p06/tests/rawCanonicalBoundary.test.js",
+    "evidence": "MET — this package",
+    "bypassPathsClosed": 5,
+    "bypassAttemptsExecuted": 31,
+    "bypassAttemptsRefused": 31,
+    "limitation": "L-1 — the boundary is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-02 defect."
+  },
+  "evidenceFiles": [
+    {
+      "file": "p06/evidence-p06-02/01-bypass-inventory-before.json",
+      "sha256": "23c68beea3fcaa8334f90c43860e662fea26eead9e34ce914c9d51c3429593d9"
+    },
+    {
+      "file": "p06/evidence-p06-02/02-governed-path.json",
+      "sha256": "54fb0f448d5c1dc40f977470836cfc94b5e614712c846408f9c0aa4f95740e49"
+    },
+    {
+      "file": "p06/evidence-p06-02/03-bypass-results.json",
+      "sha256": "86b92b80fecdaae96fc923ad1c204fa2f44d3e248e0f770e64bef7fc98595f50"
+    },
+    {
+      "file": "p06/evidence-p06-02/04-scope-boundary.json",
+      "sha256": "b249286a57d649754a20e1687707845bc03424540f74ffaa321b62417eddb079"
+    },
+    {
+      "file": "p06/evidence-p06-02/05-limitations-and-open-items.json",
+      "sha256": "24ec6c76133131eee5b3dad01927843f382cd147bf306df7e08ef354cc75e909"
+    }
+  ],
+  "gateStatus": {
+    "p05Acceptance": "ACCEPTED — 6 of 18 (unchanged by this act)",
+    "p05_04": "IMPLEMENTED + EVIDENCED within the D10-1 boundary (unchanged)",
+    "p06_01": "IMPLEMENTED + EVIDENCED (preserved; admitted records byte-identical to P06-01 output)",
+    "p06_02": "IMPLEMENTED + EVIDENCED (limitations L-1…L-6 recorded)",
+    "p06_03": "AUTHORIZED for entry, NOT implemented",
+    "p06Acceptance": "NOT_ACCEPTED — no P06_GATE_ACCEPTANCE.md exists (D10-6)",
+    "p06A3GateAcceptor": "Ramakrishnan V. S. (Ramki), designated by D10-3, scoped to P06. Designation ≠ acceptance.",
+    "p07": "NOT_STARTED_NOT_PROMOTED",
+    "p08": "NOT_STARTED",
+    "certification": "NONE_GRANTED",
+    "productionActivation": "NOT_AUTHORIZED",
+    "trackBToMainMerge": "NOT AUTHORIZED",
+    "gatesAccepted": "6 of 18 — P00, P01, P02, P03, P04, P05 (unchanged)"
+  }
+}

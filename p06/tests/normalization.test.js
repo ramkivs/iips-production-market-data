@@ -636,20 +636,47 @@ test('B/2 — no P06-01 module imports a network, process-spawning or ambient-st
   }
 });
 
-test('B/3 — P06-01 is NOT P06-02: no raw/canonical STORAGE BOUNDARY is implemented', () => {
+/**
+ * ⚠ DISCLOSED SCOPE CORRECTION (P06-02-A) — a guard replaced, not weakened.
+ *
+ * B/3 formerly asserted, across **every** file in `p06/src`, that no raw/canonical storage boundary
+ * is implemented. That was correct and load-bearing at the moment P06-01 was recorded: P06-02 was
+ * authorized for ENTRY only, so the boundary's absence was the proof that P06-01 had not silently
+ * absorbed it. **P06-02 is now implemented under the same D10-2 authorization**, in its own module.
+ *
+ * The intent is preserved exactly — **P06-01's own modules still may not implement the boundary** —
+ * and the enumeration is now explicit and self-asserted, so a boundary class appearing anywhere
+ * other than the single authorized P06-02 module still fails. Two clauses are UNCHANGED AND
+ * UNIVERSAL (they apply to the P06-02 module too): nothing in `p06/src` may persist to disk, and
+ * nothing may implement a `bypassValidation`/`bypassDetection` surface.
+ */
+const P06_01_SOURCE_FILES = Object.freeze(['mappingDeclaration.js', 'normalizationPipeline.js', 'identityResolution.js']);
+const P06_02_BOUNDARY_FILE = 'rawCanonicalBoundary.js';
+
+test('B/3 — P06-01 is NOT P06-02: the storage boundary lives ONLY in the authorized P06-02 module', () => {
   const srcDir = join(p06Root, 'src');
-  for (const f of readdirSync(srcDir).filter((x) => x.endsWith('.js'))) {
+  const present = readdirSync(srcDir).filter((x) => x.endsWith('.js')).sort();
+  // The enumeration is itself asserted: a fourth P06-01 module, or a second boundary module, fails.
+  assert.deepEqual(present, [...P06_01_SOURCE_FILES, P06_02_BOUNDARY_FILE].sort(),
+    'p06/src must contain exactly the three P06-01 modules plus the single P06-02 boundary module');
+
+  for (const f of present) {
     const code = codeOnly(readFileSync(join(srcDir, f), 'utf8'));
-    // P06-02's deliverable is a "Storage boundary" with exit criterion "Raw data never bypasses
-    // validation". None of that machinery may exist here.
+    // ── UNCHANGED AND UNIVERSAL: applies to the P06-02 module as well. ──
     assert.doesNotMatch(code, /writeFileSync|mkdirSync|createWriteStream/,
-      `${f} must not persist anything — no raw store is built (P06-02)`);
-    assert.doesNotMatch(code, /class\s+\w*(RawStore|RawPayloadStore|StorageBoundary)/,
-      `${f} must not implement a raw/canonical storage boundary (P06-02)`);
+      `${f} must not persist anything to disk`);
     assert.doesNotMatch(code, /bypass(Validation|Detection)/i,
-      `${f} must not implement raw-bypass detection (P06-02 exit criterion)`);
+      `${f} must not implement a raw-bypass surface`);
+    // ── RESCOPED: the boundary class may exist ONLY in the authorized P06-02 module. ──
+    if (f !== P06_02_BOUNDARY_FILE) {
+      assert.doesNotMatch(code, /class\s+\w*(RawStore|RawPayloadStore|RawCompartment|StorageBoundary)/,
+        `${f} is a P06-01 module and must not implement the P06-02 storage boundary`);
+      assert.doesNotMatch(code, /CanonicalRecordStore/,
+        `${f} is a P06-01 module and must not reach canonical storage directly`);
+    }
   }
-  // The payload is an ARGUMENT and the record is a RETURN VALUE: nothing is stored.
+  // The P06-01 pipeline itself remains a pure function: the payload is an ARGUMENT and the record
+  // is a RETURN VALUE; nothing is stored.
   const out = runCase('N-01');
   assert.ok(out.record !== undefined);
 });

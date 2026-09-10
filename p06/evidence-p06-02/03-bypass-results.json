@@ -1,0 +1,413 @@
+{
+  "artifact": "P06-02 BYPASS ATTEMPTS — EACH ONE EXECUTED AND RECORDED (EXIT CRITERION)",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_BOUNDARY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-02",
+    "p06_03Implemented": false,
+    "trackerP06_02ExitCriteria": "MET — \"Raw data never bypasses validation\": every bypass attempt is EXECUTED at generation time and recorded as REFUSED; the governed path is the only route from raw to canonical storage",
+    "trackerP06_02TestValidation": "MET — \"Architecture + negative tests\" = p06/tests/rawCanonicalBoundary.test.js",
+    "trackerP06_02Evidence": "MET — \"Boundary evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — the boundary is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-02 defect."
+  },
+  "trackerField": "Work Tracker!P06-02 \"Exit Criteria\": Raw data never bypasses validation",
+  "method": "Every attempt below was RUN at generation time. The recorded outcome is the actual thrown error, not a prediction.",
+  "results": [
+    {
+      "label": "BP-1 raw → canonical storage: admit without a declared mapping",
+      "rule": "MR-2",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "MR-2"
+      ],
+      "stage": "admit",
+      "message": "[MR-2] admit: a DECLARED mapping is required — an undeclared or heuristic mapping is prohibited"
+    },
+    {
+      "label": "BP-1 raw-shaped object claimed canonical",
+      "rule": "M-2 / ST-1 / FD-1",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "ST-11",
+        "FD-1"
+      ],
+      "stage": "canonical-shape",
+      "message": "[ST-11, FD-1] canonical-shape: no canonical field map"
+    },
+    {
+      "label": "BP-3 RAW envelope offered to an engine",
+      "rule": "M-1 / INT-013",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-1",
+        "INT-013"
+      ],
+      "stage": "engine-input",
+      "message": "[M-1, INT-013] engine-input: a RAW envelope may never be offered to an engine"
+    },
+    {
+      "label": "BP-3 bare raw payload offered to an engine",
+      "rule": "M-2 / INT-013",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "ST-1",
+        "AD-6"
+      ],
+      "stage": "canonical-shape",
+      "message": "[ST-1, AD-6] canonical-shape: snapshotId 'undefined' is not the frozen 'data-<provider>-<dataVersion>-<asOf>' form"
+    },
+    {
+      "label": "BP-3 provider-shaped engine input built from raw",
+      "rule": "M-2 / INT-013",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "ST-1",
+        "AD-6"
+      ],
+      "stage": "canonical-shape",
+      "message": "[ST-1, AD-6] canonical-shape: snapshotId 'undefined' is not the frozen 'data-<provider>-<dataVersion>-<asOf>' form"
+    },
+    {
+      "label": "BP-4 impostor: no field map",
+      "rule": "ST-11 / FD-1",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "ST-11",
+        "FD-1"
+      ],
+      "stage": "canonical-shape",
+      "message": "[ST-11, FD-1] canonical-shape: no canonical field map"
+    },
+    {
+      "label": "BP-4 impostor: empty fields with quality good",
+      "rule": "ST-9",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "ST-9"
+      ],
+      "stage": "canonical-shape",
+      "message": "[ST-9] canonical-shape: empty field set with a quality other than \"unavailable\""
+    },
+    {
+      "label": "BP-4 impostor: bare (non-namespaced) field keys",
+      "rule": "C1 / FD-1",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "C1",
+        "FD-1"
+      ],
+      "stage": "canonical-shape",
+      "message": "[C1, FD-1] canonical-shape: 1 field key(s) do not carry the namespace 'MD:'"
+    },
+    {
+      "label": "BP-4 impostor: malformed snapshotId",
+      "rule": "ST-1 / AD-6",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "ST-1",
+        "AD-6"
+      ],
+      "stage": "canonical-shape",
+      "message": "[ST-1, AD-6] canonical-shape: snapshotId 'not-a-snapshot-id' is not the frozen 'data-<provider>-<dataVersion>-<asOf>' form"
+    },
+    {
+      "label": "BP-4 impostor: mutable object (not ST-10 immutable)",
+      "rule": "ST-10",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "ST-10"
+      ],
+      "stage": "canonical-shape",
+      "message": "[ST-10] canonical-shape: the candidate is not frozen — a governed canonical record is deeply immutable"
+    },
+    {
+      "label": "BP-4 impostor: free-form 'extras' member (M-4)",
+      "rule": "M-4",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-4"
+      ],
+      "stage": "canonical-shape",
+      "message": "[M-4] canonical-shape: the candidate carries a free-form 'extras' member"
+    },
+    {
+      "label": "BP-4 impostor: free-form 'rawPayload' member (M-4)",
+      "rule": "M-4",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-4"
+      ],
+      "stage": "canonical-shape",
+      "message": "[M-4] canonical-shape: the candidate carries a free-form 'rawPayload' member"
+    },
+    {
+      "label": "BP-4 impostor: free-form 'nativePayload' member (M-4)",
+      "rule": "M-4",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-4"
+      ],
+      "stage": "canonical-shape",
+      "message": "[M-4] canonical-shape: the candidate carries a free-form 'nativePayload' member"
+    },
+    {
+      "label": "BP-4 impostor: free-form 'metadata' member (M-4)",
+      "rule": "M-4",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-4"
+      ],
+      "stage": "canonical-shape",
+      "message": "[M-4] canonical-shape: the candidate carries a free-form 'metadata' member"
+    },
+    {
+      "label": "BP-4 impostor: free-form 'bag' member (M-4)",
+      "rule": "M-4",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-4"
+      ],
+      "stage": "canonical-shape",
+      "message": "[M-4] canonical-shape: the candidate carries a free-form 'bag' member"
+    },
+    {
+      "label": "BP-4 impostor: free-form 'additionalProperties' member (M-4)",
+      "rule": "M-4",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-4"
+      ],
+      "stage": "canonical-shape",
+      "message": "[M-4] canonical-shape: the candidate carries a free-form 'additionalProperties' member"
+    },
+    {
+      "label": "BP-4 impostor: free-form 'raw' member (M-4)",
+      "rule": "M-4",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-4"
+      ],
+      "stage": "canonical-shape",
+      "message": "[M-4] canonical-shape: the candidate carries a free-form 'raw' member"
+    },
+    {
+      "label": "BP-5 raw never accepted into the compartment",
+      "rule": "M-1",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-1"
+      ],
+      "stage": "raw-read",
+      "message": "[M-1] raw-read: no raw payload is held for rawRef 'never-accepted'"
+    },
+    {
+      "label": "BP-5 raw append-only: overwriting a rawRef",
+      "rule": "M-1",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-1"
+      ],
+      "stage": "raw-accept",
+      "message": "[M-1] raw-accept: rawRef 'raw-1' already exists — raw is append-only and never overwritten"
+    },
+    {
+      "label": "attestation: tampered canonicalDigest",
+      "rule": "M-2",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-2",
+        "M-3"
+      ],
+      "stage": "attest-verify",
+      "message": "[M-2, M-3] attest-verify: the attestation does not re-derive from the presented raw + mapping + record (canonicalDigest) — a forged or tampered attestation is rejected, not repaired"
+    },
+    {
+      "label": "attestation: bound to a DIFFERENT raw",
+      "rule": "M-2 / M-3",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-2",
+        "M-3"
+      ],
+      "stage": "attest-verify",
+      "message": "[M-2, M-3] attest-verify: the attestation does not re-derive from the presented raw + mapping + record (rawDigest) — a forged or tampered attestation is rejected, not repaired"
+    },
+    {
+      "label": "attestation: bound to a DIFFERENT mapping",
+      "rule": "M-2 / M-3",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-2",
+        "M-3"
+      ],
+      "stage": "attest-verify",
+      "message": "[M-2, M-3] attest-verify: the attestation does not re-derive from the presented raw + mapping + record (mappingId, mappingDigest) — a forged or tampered attestation is rejected, not repaired"
+    },
+    {
+      "label": "attestation: no validation recorded",
+      "rule": "M-2",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-2"
+      ],
+      "stage": "attest-verify",
+      "message": "[M-2] attest-verify: the attestation does not record a passed validation — validation is never waived"
+    },
+    {
+      "label": "attestation: validationPassed=false — validation is never waived",
+      "rule": "M-2",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-2"
+      ],
+      "stage": "attest-verify",
+      "message": "[M-2] attest-verify: the attestation does not record a passed validation — validation is never waived"
+    },
+    {
+      "label": "attestation: wrong boundary schema version",
+      "rule": "M-2",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "M-2"
+      ],
+      "stage": "attest-verify",
+      "message": "[M-2] attest-verify: attestation schema '9.9' does not match boundary '1.0'"
+    }
+  ],
+  "malformedRawResults": [
+    {
+      "label": "malformed raw {\"ccy\":\"US$\"} on N-01",
+      "rule": "SM-1 / CU-2 / FD-5",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "SM-1",
+        "SM-2",
+        "CU-2",
+        "FD-5",
+        "RJ-5"
+      ],
+      "stage": "admit-validation",
+      "message": "[SM-1, SM-2, CU-2, FD-5, RJ-5] admit-validation: raw 'raw-bad' failed the governed validation/normalization boundary — [SM-1, SM-2, CU-2, FD-5] currency: monetary slot 'price.ask' has no ISO-4217 currency from source 'cc",
+      "reachedCanonicalStorage": 0,
+      "auditStillOk": true
+    },
+    {
+      "label": "malformed raw {\"tradePrice\":\"not-a-number\"} on N-01",
+      "rule": "NP-2",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "NP-2",
+        "RJ-5"
+      ],
+      "stage": "admit-validation",
+      "message": "[NP-2, RJ-5] admit-validation: raw 'raw-bad' failed the governed validation/normalization boundary — value 'not-a-number' is not an exact fixed-point decimal",
+      "reachedCanonicalStorage": 0,
+      "auditStillOk": true
+    },
+    {
+      "label": "malformed raw {\"tradePrice\":\"101.259\"} on N-01",
+      "rule": "NP-3",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "NP-3",
+        "RJ-5"
+      ],
+      "stage": "admit-validation",
+      "message": "[NP-3, RJ-5] admit-validation: raw 'raw-bad' failed the governed validation/normalization boundary — value '101.259' carries 3 decimals but declared precision is 2; silent rounding/truncation is prohibited — declare the ",
+      "reachedCanonicalStorage": 0,
+      "auditStillOk": true
+    },
+    {
+      "label": "malformed raw {\"bidSz\":500.5} on N-01",
+      "rule": "SM-6 / UN-6",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "MD-3",
+        "SM-6",
+        "UN-6",
+        "RJ-5"
+      ],
+      "stage": "admit-validation",
+      "message": "[MD-3, SM-6, UN-6, RJ-5] admit-validation: raw 'raw-bad' failed the governed validation/normalization boundary — [MD-3, SM-6, UN-6] transform: slot 'price.bidSize' is not an integer: 500.5",
+      "reachedCanonicalStorage": 0,
+      "auditStillOk": true
+    },
+    {
+      "label": "malformed raw {\"sessionDate\":\"02/03/2026\"} on N-03",
+      "rule": "TS-1 / TS-4",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "MD-3",
+        "TS-1",
+        "TS-4",
+        "RJ-5"
+      ],
+      "stage": "admit-validation",
+      "message": "[MD-3, TS-1, TS-4, RJ-5] admit-validation: raw 'raw-bad' failed the governed validation/normalization boundary — [MD-3, TS-1, TS-4] transform: slot 'price.close' is not a date-only value: \"02/03/2026\"",
+      "reachedCanonicalStorage": 0,
+      "auditStillOk": true
+    },
+    {
+      "label": "malformed raw {\"pe\":\"18.40.1\"} on N-05",
+      "rule": "NP-2",
+      "outcome": "REFUSED",
+      "errorType": "BoundaryViolation",
+      "rules": [
+        "NP-2",
+        "RJ-5"
+      ],
+      "stage": "admit-validation",
+      "message": "[NP-2, RJ-5] admit-validation: raw 'raw-bad' failed the governed validation/normalization boundary — value '18.40.1' is not an exact fixed-point decimal",
+      "reachedCanonicalStorage": 0,
+      "auditStillOk": true
+    }
+  ],
+  "summary": {
+    "attempts": 31,
+    "refused": 31,
+    "notBlocked": 0,
+    "malformedRawReachingCanonicalStorage": 0
+  },
+  "exitCriterionMet": true
+}
