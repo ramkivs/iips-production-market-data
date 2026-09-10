@@ -1,5 +1,32 @@
 # PROGRAM STATE — SESSION RECOVERY MANIFEST
 
+> **▶ CURRENT WORK ACT: P06-01 IMPLEMENTED + EVIDENCED — NORMALIZATION PIPELINE COMPLETE WITHIN THE D10-2 BOUNDARY**
+> (`docs/p06/P06_01_EVIDENCE.md`, recorded **2026-09-10** under authority **D10-2**,
+> `docs/p00/P00_DECISION_LOG.md` §8.1 — *"P06 ENTRY is AUTHORIZED … Scope = `P06-01`, `P06-02`,
+> `P06-03` ONLY"*). Delivered: `p06/src/mappingDeclaration.js` · `p06/src/normalizationPipeline.js` ·
+> `p06/src/identityResolution.js` · `p06/tests/normalization.test.js` (**55 tests**) ·
+> `p06/fixtures/normalization-fixtures.json` (3 declared mappings, 5 cases, golden block) ·
+> `p06/evidence-p06-01/` (**9 canonical-fixture files**).
+> **Suite: P05 264 + P06 55 = 319 tests, 319 PASS / 0 FAIL.**
+> ⚠ **`p06_01_status` = `IMPLEMENTED + EVIDENCED`.** Authoritative tracker exit criterion
+> ***"Canonical output deterministic"*** is **MET** (byte-identical canonical output across 5
+> repeats per case + committed golden fixtures). Entry criterion *"Input fixtures available"* MET.
+> ⚠ **Scope discipline — `P06-02` and `P06-03` are NOT implemented.** Their entry authorization
+> exists, but each remains a separately governed work item. **P06-01 determinism is a PURITY
+> property and is deliberately NOT presented as P06-03 deduplication.**
+> ⚠ **Recorded limitation L-1:** normalization is demonstrated over **synthetic local** provider
+> payloads; it has **NOT** been exercised against a live provider, because live provider execution
+> remains **`NOT_AUTHORIZED`** (D9 N-1, D10 §8.2). **L-2:** only **3** mappings declared
+> (D01 quote / close / valuation); **D02–D10 are NOT declared** and that work is not claimed.
+> ⚠ **UNCHANGED:** **P05 = `ACCEPTED`, 6 of 18** · **P06 = `NOT_ACCEPTED`**, no
+> `P06_GATE_ACCEPTANCE.md` (**D10-6: authorization is not acceptance**) · provider execution
+> **`NOT_AUTHORIZED`** (N-1) · licensed historical acquisition **`NOT_AUTHORIZED`** (N-2) ·
+> production activation **`NOT_AUTHORIZED`** (A4 at P16 only) · **Track B → `origin/main` merge
+> `NOT AUTHORIZED`** · certification **`NONE_GRANTED`** · ADR-01 **C1–C6 fail-closed and unvaried**
+> (reused by import, never re-implemented) · `MD:` **the exact namespace token** · **no P11
+> engine-input mapping** · **no historical P00–P05 authority record edited** · **no concessions
+> register**.
+>
 > **▶ CURRENT WORK ACT: P05-04 IMPLEMENTED + EVIDENCED — INGESTION ORCHESTRATION COMPLETE WITHIN THE D10-1 BOUNDARY**
 > (`docs/p05/P05_04_EVIDENCE.md`, recorded **2026-09-10** under authority **D10-1**,
 > `docs/p00/P00_DECISION_LOG.md` §8.1 — the *"further explicit act"* D9 **N-3** required).
@@ -104,6 +131,9 @@
 | `p05_04_status` | **`IMPLEMENTED + EVIDENCED`** within the **D10-1** boundary (`docs/p05/P05_04_EVIDENCE.md`) — *(was `AUTHORIZED`, D10-1; before that `NOT_AUTHORIZED`, D9 N-3)* · exit criterion **MET** (X-1…X-6) · ⚠ **limitation L-1: NOT exercised against a live P05-02 adapter** |
 | `p06_entry_authorization_status` | **`AUTHORIZED`** by **D10-2** — scope **P06-01 / P06-02 / P06-03 ONLY** · *(was `NOT_AUTHORIZED`, D9 §5 exclusion 5)* |
 | `p06_acceptance_status` | **`NOT_ACCEPTED`** — ⚠ **authorization is not acceptance**; no `P06_GATE_ACCEPTANCE.md` exists |
+| `p06_01_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_01_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Canonical output deterministic"** **MET** · ⚠ limitations **L-1** (not exercised against a live provider) and **L-2** (only D01 declared) |
+| `p06_02_status` | **`AUTHORIZED` for entry, NOT implemented** — raw/canonical **storage boundary**; no such boundary, raw store or bypass-detection surface exists |
+| `p06_03_status` | **`AUTHORIZED` for entry, NOT implemented** — **deduplication rules**; no dedup rule, duplicate key or cross-provider merge exists |
 | `a3_gate_acceptor_scope` | **`P05, P06`** — Ramakrishnan V. S. (Ramki) · ⚠ **P07–P17 NOT designated** |
 | `adr_01_a2_execution` | **`AUTHORIZED`** — C1–C6 fail-closed guard in the certified `DataBoundExecutor`, **as written in ADR-01 §C.2, no variation** |
 | `track_b_to_main_merge` | **`NOT AUTHORIZED`** — no accepted artifact authorizes it; `origin/main` = `eae2ff6` |
@@ -381,6 +411,42 @@ authorization and **NOT** P06 acceptance.
 
 ---
 
+## 6i. P06-01 status — IMPLEMENTED + EVIDENCED within the D10-2 boundary
+
+# **P06-01 COMPLETE WITHIN BOUNDARY · P06-02 / P06-03 NOT IMPLEMENTED · P06 NOT_ACCEPTED**
+
+Implemented under **D10-2** (`docs/p00/P00_DECISION_LOG.md` §8.1). Evidence record:
+**`docs/p06/P06_01_EVIDENCE.md`**.
+
+| Field | Value |
+|---|---|
+| **Scope implemented** | Exactly `Work Tracker`!P06-01 *Requirement* — *"Convert provider payloads into canonical records."* Deliverable *"Normalization pipeline"*. **Nothing wider; no requirement invented, widened or substituted** |
+| **Why P06-01 owns this** | `P02_PROVIDER_MAPPING_RULES.md` **MR-5** — *"Mapping execution is P06. P02 defines only the rules the execution must obey."* · `P01_FIELD_DICTIONARY.md` **FD-7** — *"This dictionary declares contract slots, not provider mappings. Provider-to-canonical mapping is P06."* · `P04_SCOPE_AND_BOUNDARY.md` **X-4** excludes it from P04 |
+| `p06_01_status` | **`IMPLEMENTED + EVIDENCED`** *(was `NOT STARTED`)* |
+| **Entry criterion** — *"Input fixtures available"* | ✅ **MET** — reuses the accepted **P05-01** local provider vocabulary and the accepted **P04** identity fixtures; **no new provider** |
+| **Exit criterion** — *"Canonical output deterministic"* | ✅ **MET** — byte-identical canonical serialization across **5 repeats per case** (all 5 cases) · independent instances agree · the declared configuration genuinely participates · no wall clock / randomness / ambient input |
+| **Test / Validation** — *"Golden tests"* | ✅ **MET** — `p06/tests/normalization.test.js`, **55 tests** |
+| **Evidence** — *"Canonical fixtures"* | ✅ **MET** — the `golden` block plus `p06/evidence-p06-01/02-canonical-fixtures.json` |
+| **Reuse, not duplication** | `MD:` token + domain vocabulary + **C1–C6** from `p05/src/namespace.js` · `buildField` / `buildSnapshot` / `computeCompletenessPct` from `p05/src/contract.js` · `validateSnapshot` from `p05/src/validate.js` · `MappingRegister` / `buildIdentityRef` from `p05/src/identity.js`. ⚠ **No namespace, collision, fail-closed, canonical-construction or identity logic is re-implemented** — asserted by test **C/1** |
+| ⚠ **Engine boundary** | `Phase Gates`!P06 forbids *"feeding raw provider data directly to engines."* `assertNoEngineDirectPath` fails closed on: a non-`MD:` key (**C1/FD-1/N-2**) · a bare engine input key `peRatio`/`evEbitda`/`evRevenue`/`fcfYield` (**N-5/FD-3** — engine-input mapping is **P11**) · a provider-native name anywhere incl. inside a lineage string (**M-3/LA-18**) · a free-form bag (**M-4**). ⚠ **One M-3 defect was found by this guard and fixed**: provenance now references the **source record**, not the provider field name |
+| ⚠ **NOT P06-02** | No **storage boundary**, no raw store, no file write, no bypass-detection surface. The payload is an **argument**; the record is a **return value**. Asserted by **B/3** |
+| ⚠ **NOT P06-03** | No deduplication rule, duplicate key, cross-provider merge or idempotency key. Asserted by **B/4**. ⚠ **Determinism is a PURITY property and is deliberately NOT presented as deduplication** |
+| ⚠ **Recorded limitations** | **L-1** not exercised against a live provider (standing non-authorization, **not** a defect) · **L-2** only **3** mappings declared (D01 quote/close/valuation); **D02–D10 NOT declared**, not claimed · **L-3** ADR-01 §I and P02 §4 N-3/N-4/N-6 are historical and **left unedited**, superseded by **OI-10 RESOLVED** + **D8** by citation · **L-4** P06-01 completion is **NOT** P06 acceptance / certification / provider authorization / activation |
+| ⚠ **Guard disclosure** | Three pre-existing P05 guards were **REPLACED, NOT WEAKENED** on the terms `P05_GATE_ACCEPTANCE.md` §9 set: (i) `'P06 / P07 / P08 remain untouched'` → **P07/P08 arms UNCHANGED**, P06 arm rescoped to *only P06-01 artifacts* and **broadened** to the whole `docs/` tree for the acceptance-artifact ban; (ii) `'no existing-IIPS executable source'` and (iii) `'no methodology/scoring/calibration source'` → the **existing-IIPS filename check is byte-for-byte unchanged**; only the program-package allow-list was rescoped from `['p05/']` to an **enumerated and self-asserted** `['p05/', 'p06/']`, so a third unauthorized package still fails. **4 assertion statements were textually REPLACED, each equal-or-stronger, and none dropped** (`existing-iips-boundary.test.js` **24 → 36** assertions and 11 → 11 tests; `no-provider-dependency.test.js` **119 → 119** assertions and 15 → 15 tests; every other pre-existing P05 file **+0**) — the four replacements are tabulated in `docs/p06/P06_01_EVIDENCE.md` §4 |
+| **Guard teeth** | Negative-tested: break determinism → **D/1 fails** · tamper a golden fixture → **G/1 fails** · neuter the M-3 leakage scan → **E/2 fails** · add a `P06_02_*` artifact → **2 P05 guards fail** · add a `P06_GATE_ACCEPTANCE.md` → **2 P05 guards fail** · control → all pass |
+| **NOT done by this act** | No **P06-02** storage boundary · no **P06-03** dedup rules · **no P06 acceptance artifact** · no certification · no production activation · no provider selection/entitlement/credential/configuration · no licensed historical acquisition · **no Track B → `origin/main` merge** · no edit to any historical P00–P05 authority record · no variation of **C1–C6** · no change to the **`MD:`** token · **no P11 engine-input mapping** · no existing-IIPS modification |
+
+⚠ **P06 remains `NOT_ACCEPTED` — still 6 of 18.** A future P06 acceptance is a **separate explicit
+act** by the designated A3 acceptor (**Ramakrishnan V. S. (Ramki)**, D10-3) carrying the
+`P00_GATE_MODEL.md`:42 minimum evidence — *"Token recorded; C1–C6 collision guard evidence;
+13-engine oracle byte-identity"* — plus ADR-01 §G evidence.
+
+**Next governance-safe step: `P06-02` — raw/canonical separation.** Its two Hard dependencies are
+now both satisfied: `P05-04` (implemented + evidenced) and `P06-01` (this act). Exit criterion:
+*"Raw data never bypasses validation."*
+
+---
+
 ## 7. D4 / D5 / D7 / D8 / D9 artifact locations
 
 ### `docs/d4/` — specification baseline (16 files, corrected by D4-B)
@@ -446,6 +512,22 @@ adapter declaring live connectivity, `LIVE` provider kind, credentials or entitl
 `provider-register.json` is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
 ⚠ These are **LOCAL SYNTHETIC run logs**, **not** provider execution evidence. **No P06 artifact,
 directory, fixture or evidence file was created.**
+
+### `docs/p06/` — P06-01 execution record (1 file)  ·  `p06/` — P06-01 normalization pipeline (executable, 14 files)
+Created under **D10-2** — **P06-01 only**:
+`docs/p06/P06_01_EVIDENCE.md` ·
+`p06/src/mappingDeclaration.js` (**MD-1…MD-8 declaration**, closed transformation vocabulary) ·
+`p06/src/normalizationPipeline.js` (**mapping execution**, MR-5 / MR-1) ·
+`p06/src/identityResolution.js` (**pure pass-through** onto the P04 register) ·
+`p06/tests/normalization.test.js` (**55 golden tests**) · `p06/tests/helpers.js` ·
+`p06/fixtures/normalization-fixtures.json` (3 declared mappings · 5 cases · 6 negative cases ·
+committed **golden** block) · `p06/evidence-p06-01/` (**9 canonical-fixture files**) ·
+`p06/scripts/generate-p06-01-evidence.js` · `p06/package.json` + `evidence:p06-01`.
+The combined suite is **319 tests, 319 PASS** (P05 264 · P06 55).
+⚠ **Still zero dependencies, zero network, zero credentials.** The provider register is
+**unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
+⚠ **`localfix` is a SYNTHETIC source — these are LOCAL SYNTHETIC canonical fixtures, NOT provider
+evidence.** ⚠ **P06-02 and P06-03 are NOT implemented**; no `P06_GATE_ACCEPTANCE.md` exists.
 
 *Note: D6 (authority reconciliation, result "NO AUTHORITY CHANGE") produced no artifacts by
 design — it was a read-only run. Its conclusion is carried forward in `docs/d8/`.*

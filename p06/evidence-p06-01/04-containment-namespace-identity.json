@@ -1,0 +1,89 @@
+{
+  "artifact": "P06-01 CONTAINMENT (M-1…M-6) · NAMESPACE (N-1/N-2, C1) · IDENTITY (RF-1/RF-3/OI-09)",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_GOLDEN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_02Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-01",
+    "p06_02Implemented": false,
+    "p06_03Implemented": false,
+    "trackerP06_01ExitCriteria": "MET — \"Canonical output deterministic\": identical input yields a byte-identical canonical record, asserted across 5 repeats per case and against committed golden canonical fixtures",
+    "trackerP06_01TestValidation": "MET — \"Golden tests\" = p06/tests/normalization.test.js",
+    "trackerP06_01Evidence": "MET — \"Canonical fixtures\" = the `golden` block of p06/fixtures/normalization-fixtures.json, mirrored into this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — normalization is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-01 defect."
+  },
+  "containment": [
+    {
+      "caseId": "N-01",
+      "droppedUndeclaredElements": [
+        "sym"
+      ],
+      "rule": "M-4 — a provider field with no canonical counterpart is DROPPED inside the adapter and recorded as a known limitation; it is never smuggled through a free-form bag, extras map, metadata blob or provenance string",
+      "notProvidedCount": 0,
+      "notProvidedRule": "M-5 — a canonical slot the provider cannot supply is NOT_PROVIDED, never fabricated"
+    },
+    {
+      "caseId": "N-02",
+      "droppedUndeclaredElements": [
+        "sym"
+      ],
+      "rule": "M-4 — a provider field with no canonical counterpart is DROPPED inside the adapter and recorded as a known limitation; it is never smuggled through a free-form bag, extras map, metadata blob or provenance string",
+      "notProvidedCount": 4,
+      "notProvidedRule": "M-5 — a canonical slot the provider cannot supply is NOT_PROVIDED, never fabricated"
+    },
+    {
+      "caseId": "N-03",
+      "droppedUndeclaredElements": [
+        "sym"
+      ],
+      "rule": "M-4 — a provider field with no canonical counterpart is DROPPED inside the adapter and recorded as a known limitation; it is never smuggled through a free-form bag, extras map, metadata blob or provenance string",
+      "notProvidedCount": 0,
+      "notProvidedRule": "M-5 — a canonical slot the provider cannot supply is NOT_PROVIDED, never fabricated"
+    },
+    {
+      "caseId": "N-04",
+      "droppedUndeclaredElements": [
+        "sym"
+      ],
+      "rule": "M-4 — a provider field with no canonical counterpart is DROPPED inside the adapter and recorded as a known limitation; it is never smuggled through a free-form bag, extras map, metadata blob or provenance string",
+      "notProvidedCount": 2,
+      "notProvidedRule": "M-5 — a canonical slot the provider cannot supply is NOT_PROVIDED, never fabricated"
+    },
+    {
+      "caseId": "N-05",
+      "droppedUndeclaredElements": [
+        "sym"
+      ],
+      "rule": "M-4 — a provider field with no canonical counterpart is DROPPED inside the adapter and recorded as a known limitation; it is never smuggled through a free-form bag, extras map, metadata blob or provenance string",
+      "notProvidedCount": 0,
+      "notProvidedRule": "M-5 — a canonical slot the provider cannot supply is NOT_PROVIDED, never fabricated"
+    }
+  ],
+  "namespace": {
+    "token": "MD:",
+    "tokenExact": true,
+    "namespaceVersion": "1.0",
+    "everyKeyNamespaced": true,
+    "canonicalKeyOrder": true,
+    "collisionLogicReimplementedInP06": false,
+    "collisionLogicSource": "p05/src/namespace.js — assertC1…assertC4 + assertCollisionGuard, imported"
+  },
+  "identity": {
+    "resolvedThrough": "p05/src/identity.js — MappingRegister + buildIdentityRef (P04-shaped), imported",
+    "rf1Enforced": true,
+    "rf3MappedCompanyIdWrittenOnlyByIdentityLayer": true,
+    "authoritativeExternalIdentifier": "FIGI (OI-09)",
+    "unmappedIdentityFailsClosed": "FC-1 — explicit named failure, never a quality state",
+    "identityMutatedByNormalization": false
+  }
+}

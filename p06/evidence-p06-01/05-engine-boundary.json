@@ -1,0 +1,87 @@
+{
+  "artifact": "P06-01 ENGINE BOUNDARY — \"without feeding raw provider data directly to engines\"",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_GOLDEN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_02Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-01",
+    "p06_02Implemented": false,
+    "p06_03Implemented": false,
+    "trackerP06_01ExitCriteria": "MET — \"Canonical output deterministic\": identical input yields a byte-identical canonical record, asserted across 5 repeats per case and against committed golden canonical fixtures",
+    "trackerP06_01TestValidation": "MET — \"Golden tests\" = p06/tests/normalization.test.js",
+    "trackerP06_01Evidence": "MET — \"Canonical fixtures\" = the `golden` block of p06/fixtures/normalization-fixtures.json, mirrored into this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — normalization is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-01 defect."
+  },
+  "gateIntent": "Phase Gates!P06 — \"Normalize provider-specific payloads into governed canonical representations without feeding raw provider data directly to engines.\"",
+  "existingEngineInputKeysThatMustNeverAppearBare": [
+    "peRatio",
+    "evEbitda",
+    "evRevenue",
+    "fcfYield"
+  ],
+  "source": "docs/p01/P01_FIELD_DICTIONARY.md §3 — price-derived valuation slots, collision-critical (D4_07 §I.1); they correspond to existing free-form engine keys shared across 2–6 engines",
+  "attestations": [
+    {
+      "caseId": "N-01",
+      "ok": true,
+      "keysChecked": 6,
+      "namespacedKeys": 6,
+      "bareEngineKeysEmitted": 0,
+      "providerNamesLeaked": 0,
+      "freeFormBags": 0
+    },
+    {
+      "caseId": "N-02",
+      "ok": true,
+      "keysChecked": 6,
+      "namespacedKeys": 6,
+      "bareEngineKeysEmitted": 0,
+      "providerNamesLeaked": 0,
+      "freeFormBags": 0
+    },
+    {
+      "caseId": "N-03",
+      "ok": true,
+      "keysChecked": 6,
+      "namespacedKeys": 6,
+      "bareEngineKeysEmitted": 0,
+      "providerNamesLeaked": 0,
+      "freeFormBags": 0
+    },
+    {
+      "caseId": "N-04",
+      "ok": true,
+      "keysChecked": 6,
+      "namespacedKeys": 6,
+      "bareEngineKeysEmitted": 0,
+      "providerNamesLeaked": 0,
+      "freeFormBags": 0
+    },
+    {
+      "caseId": "N-05",
+      "ok": true,
+      "keysChecked": 3,
+      "namespacedKeys": 3,
+      "bareEngineKeysEmitted": 0,
+      "providerNamesLeaked": 0,
+      "freeFormBags": 0
+    }
+  ],
+  "rules": {
+    "N-5": "a namespaced canonical field is never merged into an engine input by name coincidence; engine-input mapping is an explicit declared transformation owned by P11",
+    "FD-3": "a canonical key never duplicates an existing engine input key as-is — the namespace guarantees this structurally",
+    "M-3": "no provider-specific field name may appear in a canonical snapshot, a lineage record, an engine input, a DTO, a UI surface or an evidence artifact",
+    "M-4": "no free-form bag, extras map or metadata blob carries unmapped native content"
+  },
+  "p11EngineInputMappingPerformedHere": false
+}

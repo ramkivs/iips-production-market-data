@@ -1,0 +1,688 @@
+{
+  "artifact": "P06-01 CANONICAL FIXTURES — THE TRACKER EVIDENCE ARTIFACT",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_GOLDEN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_02Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-01",
+    "p06_02Implemented": false,
+    "p06_03Implemented": false,
+    "trackerP06_01ExitCriteria": "MET — \"Canonical output deterministic\": identical input yields a byte-identical canonical record, asserted across 5 repeats per case and against committed golden canonical fixtures",
+    "trackerP06_01TestValidation": "MET — \"Golden tests\" = p06/tests/normalization.test.js",
+    "trackerP06_01Evidence": "MET — \"Canonical fixtures\" = the `golden` block of p06/fixtures/normalization-fixtures.json, mirrored into this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — normalization is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-01 defect."
+  },
+  "trackerField": "Work Tracker!P06-01 \"Evidence\": Canonical fixtures",
+  "note": "These are the GOVERNED CANONICAL records produced by executing the declared mappings over synthetic local provider payloads. They are mirrored from the `golden` block of p06/fixtures/normalization-fixtures.json, which the golden tests assert byte-identity against.",
+  "namespaceToken": "MD:",
+  "namespaceVersion": "1.0",
+  "fixtures": {
+    "N-01": {
+      "snapshotId": "data-localfix-vf4736b8bbde259a7-2026-03-02T14:30:00.000Z",
+      "canonicalDigest": "2bebef9be697bb48e41cf22e9fc21a32e052a443eb09a5f81a46dfe75156dc29",
+      "emittedKeys": [
+        "MD:price.ask",
+        "MD:price.askSize",
+        "MD:price.bid",
+        "MD:price.bidSize",
+        "MD:price.last",
+        "MD:price.venueRef"
+      ],
+      "quality": "good",
+      "completenessPct": 100,
+      "record": {
+        "snapshotId": "data-localfix-vf4736b8bbde259a7-2026-03-02T14:30:00.000Z",
+        "provider": "localfix",
+        "dataVersion": "vf4736b8bbde259a7",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "asOf": "2026-03-02T14:30:00.000Z",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "mode": "LIVE",
+        "quality": "good",
+        "completenessPct": 100,
+        "domain": "D01",
+        "identity": {
+          "canonicalSecurityId": "CS-LOCAL-0001",
+          "canonicalIssuerId": "CI-LOCAL-ALPHA",
+          "instrumentType": "EQUITY",
+          "lifecycleStatus": "active",
+          "validFrom": "2020-01-01T00:00:00.000Z",
+          "externalIdentifiers": [
+            {
+              "type": "FIGI",
+              "value": "BBG00SYNTH01",
+              "authority": "AUTHORITATIVE"
+            },
+            {
+              "type": "ISIN",
+              "value": "XS00SYNTH010",
+              "authority": "NON_AUTHORITATIVE"
+            }
+          ],
+          "venueRef": "XSYN",
+          "mappedCompanyId": "technology-H1",
+          "adapterCrossing": true,
+          "identityMappingVersion": "idmap-localfix-1.0.0"
+        },
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "lineage": {
+          "sourceRef": "src-localfix-synthetic",
+          "adapterId": "adapter-localfix",
+          "adapterVersion": "1.0",
+          "transformationChainRef": "chain-localfix-1.0",
+          "receivedAt": "2026-03-03T15:00:00.000Z",
+          "namespaceVersion": "1.0",
+          "identityMappingVersion": "idmap-localfix-1.0.0",
+          "normalizationMappingId": "P06-01-D01-QUOTE-NORMALIZATION-MAPPING",
+          "normalizationMappingVersion": "1.0.0",
+          "normalizationMappingDigest": "fea38090487cfbb68e952120fa77f08d57627511e783890bef32fb07fb349ebe",
+          "fieldProvenance": [
+            "lineage:src-localfix-synthetic:Q-0001"
+          ]
+        },
+        "fields": {
+          "MD:price.ask": {
+            "key": "MD:price.ask",
+            "value": "101.30",
+            "dataType": "decimal",
+            "currency": "USD",
+            "precision": 2,
+            "observationTime": "2026-03-02T14:30:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:Q-0001",
+            "pitEligible": false,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          },
+          "MD:price.askSize": {
+            "key": "MD:price.askSize",
+            "value": 400,
+            "dataType": "integer",
+            "observationTime": "2026-03-02T14:30:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:Q-0001",
+            "pitEligible": false,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:price.bid": {
+            "key": "MD:price.bid",
+            "value": "101.20",
+            "dataType": "decimal",
+            "currency": "USD",
+            "precision": 2,
+            "observationTime": "2026-03-02T14:30:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:Q-0001",
+            "pitEligible": false,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          },
+          "MD:price.bidSize": {
+            "key": "MD:price.bidSize",
+            "value": 500,
+            "dataType": "integer",
+            "observationTime": "2026-03-02T14:30:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:Q-0001",
+            "pitEligible": false,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:price.last": {
+            "key": "MD:price.last",
+            "value": "101.25",
+            "dataType": "decimal",
+            "currency": "USD",
+            "precision": 2,
+            "observationTime": "2026-03-02T14:30:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:Q-0001",
+            "pitEligible": false,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          },
+          "MD:price.venueRef": {
+            "key": "MD:price.venueRef",
+            "value": "XSYN",
+            "dataType": "identifier",
+            "effectiveTime": "2026-03-02T14:30:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:Q-0001",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          }
+        }
+      }
+    },
+    "N-02": {
+      "snapshotId": "data-localfix-vcb49824bcbd02f3b-2026-03-02T14:30:00.000Z",
+      "canonicalDigest": "77b1a0647028ddcc7e812303498f1f2b6a1902cd0fc08ccb708a4c1cfa48f5f1",
+      "emittedKeys": [
+        "MD:price.ask",
+        "MD:price.askSize",
+        "MD:price.bid",
+        "MD:price.bidSize",
+        "MD:price.last",
+        "MD:price.venueRef"
+      ],
+      "quality": "partial",
+      "completenessPct": 33.33,
+      "record": {
+        "snapshotId": "data-localfix-vcb49824bcbd02f3b-2026-03-02T14:30:00.000Z",
+        "provider": "localfix",
+        "dataVersion": "vcb49824bcbd02f3b",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "asOf": "2026-03-02T14:30:00.000Z",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "mode": "LIVE",
+        "quality": "partial",
+        "completenessPct": 33.33,
+        "domain": "D01",
+        "identity": {
+          "canonicalSecurityId": "CS-LOCAL-0003",
+          "canonicalIssuerId": "CI-LOCAL-BETA",
+          "instrumentType": "EQUITY",
+          "lifecycleStatus": "active",
+          "validFrom": "2019-06-01T00:00:00.000Z",
+          "externalIdentifiers": [
+            {
+              "type": "FIGI",
+              "value": "BBG00SYNTH03",
+              "authority": "AUTHORITATIVE"
+            },
+            {
+              "type": "CUSIP",
+              "value": "00SYNTH03",
+              "authority": "NON_AUTHORITATIVE"
+            }
+          ],
+          "venueRef": "XSYN",
+          "mappedCompanyId": "chemicals-H1",
+          "adapterCrossing": true,
+          "identityMappingVersion": "idmap-localfix-1.0.0"
+        },
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "lineage": {
+          "sourceRef": "src-localfix-synthetic",
+          "adapterId": "adapter-localfix",
+          "adapterVersion": "1.0",
+          "transformationChainRef": "chain-localfix-1.0",
+          "receivedAt": "2026-03-03T15:00:00.000Z",
+          "namespaceVersion": "1.0",
+          "identityMappingVersion": "idmap-localfix-1.0.0",
+          "normalizationMappingId": "P06-01-D01-QUOTE-NORMALIZATION-MAPPING",
+          "normalizationMappingVersion": "1.0.0",
+          "normalizationMappingDigest": "fea38090487cfbb68e952120fa77f08d57627511e783890bef32fb07fb349ebe",
+          "fieldProvenance": [
+            "lineage:src-localfix-synthetic:Q-0002"
+          ]
+        },
+        "fields": {
+          "MD:price.ask": {
+            "key": "MD:price.ask",
+            "value": null,
+            "dataType": "decimal",
+            "precision": 2,
+            "observationTime": "2026-03-02T14:30:00.000Z",
+            "availability": "NOT_PROVIDED",
+            "provenance": "lineage:src-localfix-synthetic:Q-0002",
+            "pitEligible": false,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          },
+          "MD:price.askSize": {
+            "key": "MD:price.askSize",
+            "value": null,
+            "dataType": "integer",
+            "observationTime": "2026-03-02T14:30:00.000Z",
+            "availability": "NOT_PROVIDED",
+            "provenance": "lineage:src-localfix-synthetic:Q-0002",
+            "pitEligible": false,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:price.bid": {
+            "key": "MD:price.bid",
+            "value": null,
+            "dataType": "decimal",
+            "precision": 2,
+            "observationTime": "2026-03-02T14:30:00.000Z",
+            "availability": "NOT_PROVIDED",
+            "provenance": "lineage:src-localfix-synthetic:Q-0002",
+            "pitEligible": false,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          },
+          "MD:price.bidSize": {
+            "key": "MD:price.bidSize",
+            "value": null,
+            "dataType": "integer",
+            "observationTime": "2026-03-02T14:30:00.000Z",
+            "availability": "NOT_PROVIDED",
+            "provenance": "lineage:src-localfix-synthetic:Q-0002",
+            "pitEligible": false,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:price.last": {
+            "key": "MD:price.last",
+            "value": "47.80",
+            "dataType": "decimal",
+            "currency": "USD",
+            "precision": 2,
+            "observationTime": "2026-03-02T14:30:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:Q-0002",
+            "pitEligible": false,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          },
+          "MD:price.venueRef": {
+            "key": "MD:price.venueRef",
+            "value": "XSYN",
+            "dataType": "identifier",
+            "effectiveTime": "2026-03-02T14:30:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:Q-0002",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          }
+        }
+      }
+    },
+    "N-03": {
+      "snapshotId": "data-localfix-v710f387954c5cf66-2026-03-02T00:00:00.000Z",
+      "canonicalDigest": "1eb20606edae13e6bd3087b936491e1d5d980513786969d2ee4f0d2d6f9face2",
+      "emittedKeys": [
+        "MD:price.close",
+        "MD:price.previousClose",
+        "MD:price.tradeCount",
+        "MD:price.venueRef",
+        "MD:price.volume",
+        "MD:price.vwap"
+      ],
+      "quality": "good",
+      "completenessPct": 100,
+      "record": {
+        "snapshotId": "data-localfix-v710f387954c5cf66-2026-03-02T00:00:00.000Z",
+        "provider": "localfix",
+        "dataVersion": "v710f387954c5cf66",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "asOf": "2026-03-02T00:00:00.000Z",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "mode": "SNAPSHOT",
+        "quality": "good",
+        "completenessPct": 100,
+        "domain": "D01",
+        "identity": {
+          "canonicalSecurityId": "CS-LOCAL-0001",
+          "canonicalIssuerId": "CI-LOCAL-ALPHA",
+          "instrumentType": "EQUITY",
+          "lifecycleStatus": "active",
+          "validFrom": "2020-01-01T00:00:00.000Z",
+          "externalIdentifiers": [
+            {
+              "type": "FIGI",
+              "value": "BBG00SYNTH01",
+              "authority": "AUTHORITATIVE"
+            },
+            {
+              "type": "ISIN",
+              "value": "XS00SYNTH010",
+              "authority": "NON_AUTHORITATIVE"
+            }
+          ],
+          "venueRef": "XSYN",
+          "mappedCompanyId": "technology-H1",
+          "adapterCrossing": true,
+          "identityMappingVersion": "idmap-localfix-1.0.0"
+        },
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "lineage": {
+          "sourceRef": "src-localfix-synthetic",
+          "adapterId": "adapter-localfix",
+          "adapterVersion": "1.0",
+          "transformationChainRef": "chain-localfix-1.0",
+          "receivedAt": "2026-03-03T15:00:00.000Z",
+          "namespaceVersion": "1.0",
+          "identityMappingVersion": "idmap-localfix-1.0.0",
+          "normalizationMappingId": "P06-01-D01-CLOSE-NORMALIZATION-MAPPING",
+          "normalizationMappingVersion": "1.0.0",
+          "normalizationMappingDigest": "57d0aa5d0deda741285fdc9d5444d04ef4a6c185dcfe45488607df17dbaa7388",
+          "fieldProvenance": [
+            "lineage:src-localfix-synthetic:C-0001"
+          ]
+        },
+        "fields": {
+          "MD:price.close": {
+            "key": "MD:price.close",
+            "value": "100.50",
+            "dataType": "decimal",
+            "currency": "USD",
+            "precision": 2,
+            "effectiveTime": "2026-03-02T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:C-0001",
+            "pitEligible": true,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          },
+          "MD:price.previousClose": {
+            "key": "MD:price.previousClose",
+            "value": "99.75",
+            "dataType": "decimal",
+            "currency": "USD",
+            "precision": 2,
+            "effectiveTime": "2026-03-02T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:C-0001",
+            "pitEligible": true,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          },
+          "MD:price.tradeCount": {
+            "key": "MD:price.tradeCount",
+            "value": 8421,
+            "dataType": "integer",
+            "effectiveTime": "2026-03-02T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:C-0001",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:price.venueRef": {
+            "key": "MD:price.venueRef",
+            "value": "XSYN",
+            "dataType": "identifier",
+            "effectiveTime": "2026-03-02T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:C-0001",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:price.volume": {
+            "key": "MD:price.volume",
+            "value": 1250000,
+            "dataType": "integer",
+            "effectiveTime": "2026-03-02T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:C-0001",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:price.vwap": {
+            "key": "MD:price.vwap",
+            "value": "100.12",
+            "dataType": "decimal",
+            "currency": "USD",
+            "precision": 2,
+            "effectiveTime": "2026-03-02T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:C-0001",
+            "pitEligible": true,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          }
+        }
+      }
+    },
+    "N-04": {
+      "snapshotId": "data-localfix-v545ce3716c599cd2-2026-03-03T00:00:00.000Z",
+      "canonicalDigest": "336f8536039bcb558388dccff9808040840ce5227c603873c74deb0e2c0c1b9f",
+      "emittedKeys": [
+        "MD:price.close",
+        "MD:price.previousClose",
+        "MD:price.tradeCount",
+        "MD:price.venueRef",
+        "MD:price.volume",
+        "MD:price.vwap"
+      ],
+      "quality": "partial",
+      "completenessPct": 66.67,
+      "record": {
+        "snapshotId": "data-localfix-v545ce3716c599cd2-2026-03-03T00:00:00.000Z",
+        "provider": "localfix",
+        "dataVersion": "v545ce3716c599cd2",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "asOf": "2026-03-03T00:00:00.000Z",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "mode": "SNAPSHOT",
+        "quality": "partial",
+        "completenessPct": 66.67,
+        "domain": "D01",
+        "identity": {
+          "canonicalSecurityId": "CS-LOCAL-0001",
+          "canonicalIssuerId": "CI-LOCAL-ALPHA",
+          "instrumentType": "EQUITY",
+          "lifecycleStatus": "active",
+          "validFrom": "2020-01-01T00:00:00.000Z",
+          "externalIdentifiers": [
+            {
+              "type": "FIGI",
+              "value": "BBG00SYNTH01",
+              "authority": "AUTHORITATIVE"
+            },
+            {
+              "type": "ISIN",
+              "value": "XS00SYNTH010",
+              "authority": "NON_AUTHORITATIVE"
+            }
+          ],
+          "venueRef": "XSYN",
+          "mappedCompanyId": "technology-H1",
+          "adapterCrossing": true,
+          "identityMappingVersion": "idmap-localfix-1.0.0"
+        },
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "lineage": {
+          "sourceRef": "src-localfix-synthetic",
+          "adapterId": "adapter-localfix",
+          "adapterVersion": "1.0",
+          "transformationChainRef": "chain-localfix-1.0",
+          "receivedAt": "2026-03-03T15:00:00.000Z",
+          "namespaceVersion": "1.0",
+          "identityMappingVersion": "idmap-localfix-1.0.0",
+          "normalizationMappingId": "P06-01-D01-CLOSE-NORMALIZATION-MAPPING",
+          "normalizationMappingVersion": "1.0.0",
+          "normalizationMappingDigest": "57d0aa5d0deda741285fdc9d5444d04ef4a6c185dcfe45488607df17dbaa7388",
+          "fieldProvenance": [
+            "lineage:src-localfix-synthetic:C-0002"
+          ]
+        },
+        "fields": {
+          "MD:price.close": {
+            "key": "MD:price.close",
+            "value": "101.00",
+            "dataType": "decimal",
+            "currency": "USD",
+            "precision": 2,
+            "effectiveTime": "2026-03-03T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:C-0002",
+            "pitEligible": true,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          },
+          "MD:price.previousClose": {
+            "key": "MD:price.previousClose",
+            "value": "100.50",
+            "dataType": "decimal",
+            "currency": "USD",
+            "precision": 2,
+            "effectiveTime": "2026-03-03T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:C-0002",
+            "pitEligible": true,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          },
+          "MD:price.tradeCount": {
+            "key": "MD:price.tradeCount",
+            "value": null,
+            "dataType": "integer",
+            "effectiveTime": "2026-03-03T00:00:00.000Z",
+            "availability": "NOT_PROVIDED",
+            "provenance": "lineage:src-localfix-synthetic:C-0002",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:price.venueRef": {
+            "key": "MD:price.venueRef",
+            "value": "XSYN",
+            "dataType": "identifier",
+            "effectiveTime": "2026-03-03T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:C-0002",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:price.volume": {
+            "key": "MD:price.volume",
+            "value": 980000,
+            "dataType": "integer",
+            "effectiveTime": "2026-03-03T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:C-0002",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:price.vwap": {
+            "key": "MD:price.vwap",
+            "value": null,
+            "dataType": "decimal",
+            "precision": 2,
+            "effectiveTime": "2026-03-03T00:00:00.000Z",
+            "availability": "NOT_PROVIDED",
+            "provenance": "lineage:src-localfix-synthetic:C-0002",
+            "pitEligible": true,
+            "monetary": "yes",
+            "dimension": "dimensionless"
+          }
+        }
+      }
+    },
+    "N-05": {
+      "snapshotId": "data-localfix-v2c3e0e2653f64f71-2026-03-02T00:00:00.000Z",
+      "canonicalDigest": "50bf65c9474aa53141e0b8886a40b19965e3988366b2269944fe34b0d7eb691e",
+      "emittedKeys": [
+        "MD:valuation.evEbitda",
+        "MD:valuation.fcfYield",
+        "MD:valuation.peRatio"
+      ],
+      "quality": "good",
+      "completenessPct": 100,
+      "record": {
+        "snapshotId": "data-localfix-v2c3e0e2653f64f71-2026-03-02T00:00:00.000Z",
+        "provider": "localfix",
+        "dataVersion": "v2c3e0e2653f64f71",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "asOf": "2026-03-02T00:00:00.000Z",
+        "receivedAt": "2026-03-03T15:00:00.000Z",
+        "mode": "SNAPSHOT",
+        "quality": "good",
+        "completenessPct": 100,
+        "domain": "D01",
+        "identity": {
+          "canonicalSecurityId": "CS-LOCAL-0001",
+          "canonicalIssuerId": "CI-LOCAL-ALPHA",
+          "instrumentType": "EQUITY",
+          "lifecycleStatus": "active",
+          "validFrom": "2020-01-01T00:00:00.000Z",
+          "externalIdentifiers": [
+            {
+              "type": "FIGI",
+              "value": "BBG00SYNTH01",
+              "authority": "AUTHORITATIVE"
+            },
+            {
+              "type": "ISIN",
+              "value": "XS00SYNTH010",
+              "authority": "NON_AUTHORITATIVE"
+            }
+          ],
+          "mappedCompanyId": "technology-H1",
+          "adapterCrossing": true,
+          "identityMappingVersion": "idmap-localfix-1.0.0"
+        },
+        "identityMappingVersion": "idmap-localfix-1.0.0",
+        "lineage": {
+          "sourceRef": "src-localfix-synthetic",
+          "adapterId": "adapter-localfix",
+          "adapterVersion": "1.0",
+          "transformationChainRef": "chain-localfix-1.0",
+          "receivedAt": "2026-03-03T15:00:00.000Z",
+          "namespaceVersion": "1.0",
+          "identityMappingVersion": "idmap-localfix-1.0.0",
+          "normalizationMappingId": "P06-01-D01-VALUATION-NORMALIZATION-MAPPING",
+          "normalizationMappingVersion": "1.0.0",
+          "normalizationMappingDigest": "bd98fd4b23bda3758c47f61a3e19bee4f1ede1d873dd5fd41993b121c9f4a047",
+          "fieldProvenance": [
+            "lineage:src-localfix-synthetic:V-0001"
+          ]
+        },
+        "fields": {
+          "MD:valuation.evEbitda": {
+            "key": "MD:valuation.evEbitda",
+            "value": "9.1500",
+            "dataType": "decimal",
+            "precision": 4,
+            "effectiveTime": "2026-03-02T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:V-0001",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:valuation.fcfYield": {
+            "key": "MD:valuation.fcfYield",
+            "value": "0.0520",
+            "dataType": "decimal",
+            "precision": 4,
+            "effectiveTime": "2026-03-02T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:V-0001",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          },
+          "MD:valuation.peRatio": {
+            "key": "MD:valuation.peRatio",
+            "value": "18.4000",
+            "dataType": "decimal",
+            "precision": 4,
+            "effectiveTime": "2026-03-02T00:00:00.000Z",
+            "availability": "PRESENT",
+            "provenance": "lineage:src-localfix-synthetic:V-0001",
+            "pitEligible": true,
+            "monetary": "no",
+            "dimension": "dimensionless"
+          }
+        }
+      }
+    }
+  }
+}

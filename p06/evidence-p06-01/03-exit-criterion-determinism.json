@@ -1,0 +1,83 @@
+{
+  "artifact": "P06-01 EXIT CRITERION — \"CANONICAL OUTPUT DETERMINISTIC\"",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_GOLDEN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_02Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-01",
+    "p06_02Implemented": false,
+    "p06_03Implemented": false,
+    "trackerP06_01ExitCriteria": "MET — \"Canonical output deterministic\": identical input yields a byte-identical canonical record, asserted across 5 repeats per case and against committed golden canonical fixtures",
+    "trackerP06_01TestValidation": "MET — \"Golden tests\" = p06/tests/normalization.test.js",
+    "trackerP06_01Evidence": "MET — \"Canonical fixtures\" = the `golden` block of p06/fixtures/normalization-fixtures.json, mirrored into this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — normalization is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-01 defect."
+  },
+  "trackerField": "Work Tracker!P06-01 \"Exit Criteria\": Canonical output deterministic",
+  "verdict": "MET",
+  "proofs": [
+    {
+      "id": "D-1",
+      "name": "identical input yields byte-identical canonical output, 5 repeats per case",
+      "measured": [
+        {
+          "caseId": "N-01",
+          "repeats": 5,
+          "distinct": 1
+        },
+        {
+          "caseId": "N-02",
+          "repeats": 5,
+          "distinct": 1
+        },
+        {
+          "caseId": "N-03",
+          "repeats": 5,
+          "distinct": 1
+        },
+        {
+          "caseId": "N-04",
+          "repeats": 5,
+          "distinct": 1
+        },
+        {
+          "caseId": "N-05",
+          "repeats": 5,
+          "distinct": 1
+        }
+      ],
+      "expected": "distinctSerializations == 1 for every case",
+      "result": true
+    },
+    {
+      "id": "D-2",
+      "name": "independent pipeline instances agree byte-for-byte",
+      "measured": "asserted in p06/tests/normalization.test.js D/2",
+      "expected": "identical canonicalSerialization, canonicalDigest and snapshotId",
+      "result": true
+    },
+    {
+      "id": "D-3",
+      "name": "the declared configuration genuinely participates (MR-1 purity)",
+      "measured": "changing the declared precision changes the canonical output (test D/4)",
+      "expected": "different digest for a different declared precision",
+      "result": true
+    },
+    {
+      "id": "D-4",
+      "name": "no wall clock, randomness or ambient input in any P06-01 module",
+      "measured": "lexical scan of p06/src for Date.now / new Date / Math.random / randomUUID / ambient env",
+      "expected": "zero matches (test D/5)",
+      "result": true
+    }
+  ]
+}

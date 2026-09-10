@@ -9,7 +9,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { createHash } from 'node:crypto';
@@ -474,12 +474,31 @@ test('D10 — P05-04 and P06 entry are authorized, bounded, and grant no accepta
   assert.match(log, /P06 AUTHORIZATION IS NOT P06 ACCEPTANCE/);
   assert.match(log, /No `P06_GATE_ACCEPTANCE\.md` is created by this entry/);
   const docsRoot = join(p05Root, '..', 'docs');
-  assert.ok(!readdirSync(docsRoot).includes('p06'),
-    'no docs/p06 directory may exist — D10 authorizes entry, it does not implement P06');
-  const acceptanceArtifacts = readdirSync(join(docsRoot, 'p05'))
-    .concat(readdirSync(join(docsRoot, 'p00'), { withFileTypes: false }))
-    .filter((f) => /P06_GATE_ACCEPTANCE/.test(f));
-  assert.deepEqual(acceptanceArtifacts, [], 'no P06 acceptance artifact may exist');
+  // ⚠ DISCLOSED SCOPE CORRECTION (P06-01-B). This clause asserted that `docs/p06` must NOT exist.
+  //   That was correct and load-bearing at the moment D10 was recorded: D10 authorized P06 ENTRY
+  //   and explicitly implemented nothing, so the directory's absence was the proof. **P06-01 is
+  //   now implemented under that same D10-2 authorization**, so the directory legitimately exists.
+  //   The clause is RESCOPED, not deleted — and TIGHTENED, because it now also constrains what may
+  //   be inside: only P06-01 artifacts. The `P06_GATE_ACCEPTANCE.md` prohibition that follows is
+  //   UNCHANGED IN SUBSTANCE and BROADENED from two directories to the whole `docs/` tree.
+  const docsP06 = join(docsRoot, 'p06');
+  if (existsSync(docsP06)) {
+    for (const f of readdirSync(docsP06)) {
+      assert.match(f, /^P06_01_/,
+        `docs/p06 may hold ONLY P06-01 artifacts — P06-02/P06-03 are authorized for entry but not `
+        + `implemented, and no P06 acceptance artifact may exist. Found '${f}'`);
+    }
+  }
+  const acceptanceArtifacts = [];
+  const walkDocs = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) walkDocs(join(dir, entry.name));
+      else if (/P06_GATE_ACCEPTANCE/.test(entry.name)) acceptanceArtifacts.push(join(dir, entry.name));
+    }
+  };
+  walkDocs(docsRoot);
+  assert.deepEqual(acceptanceArtifacts, [],
+    'no P06 acceptance artifact may exist anywhere in docs/ — D10-6: authorization is not acceptance');
 
   // ── 5. Nothing beyond scope was granted: provider, licensed, activation, merge, certification. ──
   assert.match(log, /\*\*P05-02 live provider execution\*\* — \*\*`NOT_AUTHORIZED`\*\*/);

@@ -1,0 +1,157 @@
+{
+  "artifact": "P06-01 NEGATIVE CASES — FAIL-CLOSED, NOT COERCED",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_GOLDEN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_02Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-01",
+    "p06_02Implemented": false,
+    "p06_03Implemented": false,
+    "trackerP06_01ExitCriteria": "MET — \"Canonical output deterministic\": identical input yields a byte-identical canonical record, asserted across 5 repeats per case and against committed golden canonical fixtures",
+    "trackerP06_01TestValidation": "MET — \"Golden tests\" = p06/tests/normalization.test.js",
+    "trackerP06_01Evidence": "MET — \"Canonical fixtures\" = the `golden` block of p06/fixtures/normalization-fixtures.json, mirrored into this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — normalization is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-01 defect."
+  },
+  "declarationRejections": [
+    {
+      "caseId": "X-01",
+      "note": "MR-2: an undeclared transformation is refused. No heuristic is applied.",
+      "expectRules": [
+        "MD-3",
+        "MR-2"
+      ],
+      "outcome": "REFUSED [MD-3, MR-2]"
+    },
+    {
+      "caseId": "X-02",
+      "note": "FD-7 / OI-D9-01: a domain segment outside the accepted dictionary is refused, never invented.",
+      "expectRules": [
+        "MD-1",
+        "FD-1"
+      ],
+      "outcome": "REFUSED [MD-1, FD-1]"
+    },
+    {
+      "caseId": "X-03",
+      "note": "Two entries declaring one canonical slot would be a C3 collision: refused at declaration time.",
+      "expectRules": [
+        "MD-1",
+        "C3"
+      ],
+      "outcome": "REFUSED [MD-1, C3, FD-1]"
+    },
+    {
+      "caseId": "X-04",
+      "note": "M-5: onAbsent may not fabricate a value for an absent source.",
+      "expectRules": [
+        "MD-6",
+        "M-5",
+        "NL-3"
+      ],
+      "outcome": "REFUSED [MD-6, M-5, NL-3]"
+    },
+    {
+      "caseId": "X-05",
+      "note": "M-3: a provider-native element must not carry the namespace token.",
+      "expectRules": [
+        "MD-2",
+        "M-3"
+      ],
+      "outcome": "REFUSED [MD-2, M-3]"
+    },
+    {
+      "caseId": "X-06",
+      "note": "A LIVE mapping is refused: live provider execution is NOT_AUTHORIZED (D9 N-1, D10 §8.2).",
+      "expectRules": [
+        "MR-5"
+      ],
+      "outcome": "REFUSED [MR-5]"
+    }
+  ],
+  "executionRejections": [
+    {
+      "caseId": "F/1",
+      "rule": "SM-1 / CU-2 / FD-5",
+      "input": "ccy: 'US$'",
+      "outcome": "REFUSED — a currency is never defaulted"
+    },
+    {
+      "caseId": "F/2",
+      "rule": "NP-2",
+      "input": "tradePrice: 'not-a-number'",
+      "outcome": "REFUSED — no coercion"
+    },
+    {
+      "caseId": "F/3",
+      "rule": "NP-3",
+      "input": "tradePrice: '101.259' at precision 2",
+      "outcome": "REFUSED — silent rounding/truncation is prohibited"
+    },
+    {
+      "caseId": "F/4",
+      "rule": "UN-6 / SM-6",
+      "input": "bidSz: 500.5",
+      "outcome": "REFUSED — not an integer"
+    },
+    {
+      "caseId": "F/5",
+      "rule": "MR-2",
+      "input": "intervalCode: 'M' (not in the declared enum table)",
+      "outcome": "REFUSED — never guessed"
+    },
+    {
+      "caseId": "F/6",
+      "rule": "ST-4",
+      "input": "mode: 'MAYBE'",
+      "outcome": "REFUSED — mode is never inferred"
+    },
+    {
+      "caseId": "F/7",
+      "rule": "FD-6",
+      "input": "a pitEligible=false slot in a mode=PIT snapshot",
+      "outcome": "REFUSED"
+    },
+    {
+      "caseId": "F/8",
+      "rule": "RF-6 / LN-1",
+      "input": "lineage element missing",
+      "outcome": "REFUSED — never silently omitted"
+    },
+    {
+      "caseId": "F/9",
+      "rule": "MR-2",
+      "input": "no declared mapping supplied",
+      "outcome": "REFUSED — an undeclared mapping is prohibited"
+    },
+    {
+      "caseId": "C/3",
+      "rule": "C2",
+      "input": "a namespaced key in companyInputs",
+      "outcome": "REFUSED — reverse partition"
+    },
+    {
+      "caseId": "C/4",
+      "rule": "C3",
+      "input": "a key in both fields and companyInputs",
+      "outcome": "REFUSED — intersection"
+    },
+    {
+      "caseId": "C/5",
+      "rule": "C4",
+      "input": "a cross-snapshot key collision",
+      "outcome": "REFUSED — both snapshots named"
+    }
+  ],
+  "coercionObserved": false,
+  "silentDefaultsObserved": false
+}

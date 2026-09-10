@@ -1,0 +1,16 @@
+{
+  "name": "iips-p06-01-normalization-pipeline",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "P06-01 governed normalization pipeline — declarative provider-to-canonical mapping execution (P02 MR-5, P01 FD-7). Authorized by D10-2. NO live provider, NO credentials, NO network, NO P06-02/P06-03.",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "evidence:p06-01": "node scripts/generate-p06-01-evidence.js"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20"
+  }
+}
