@@ -601,3 +601,15 @@ test('E/5 — the evidence records the L-1 limitation and does not launder it in
   assert.ok(l4 !== undefined);
   assert.match(l4.statement, /remain HISTORICALLY TRUE and UNEDITED/);
 });
+
+test('E/6 — the test count stated in the committed evidence matches this file (no stale counts)', () => {
+  // The evidence quotes a test count. If tests are added without regenerating, that number goes
+  // stale silently — which is exactly the failure this assertion prevents.
+  const declared = readEvidence('00-INDEX.json').exitCriteriaAssessment.testValidation;
+  const actual = readFileSync(join(p05Root, 'tests', 'orchestration.test.js'), 'utf8')
+    .split('\n').filter((l) => /^test\(/.test(l)).length;
+  assert.match(declared, new RegExp(`\\(${actual} tests`),
+    `the evidence declares ${actual} tests — regenerate with: npm run evidence:p05-04`);
+  assert.match(readEvidence('00-INDEX.json').classification.trackerP05_04TestValidation,
+    new RegExp(`\\(${actual} tests\\)`));
+});

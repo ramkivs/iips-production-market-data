@@ -107,19 +107,19 @@ asserted in `p05/tests/orchestration.test.js` and recorded in
 
 ---
 
-## 4. Test result — 263 / 263 PASS
+## 4. Test result — 264 / 264 PASS
 
 ```
 cd p05 && node --test "tests/**/*.test.js"
-# tests 263
-# pass  263
+# tests 264
+# pass  264
 # fail  0
 ```
 
 | File | Tests |
 |---|---|
 | `tests/adapter-contract.test.js` | 82 |
-| `tests/orchestration.test.js` **(NEW — P05-04 failure/replay tests)** | **34** |
+| `tests/orchestration.test.js` **(NEW — P05-04 failure/replay tests)** | **35** |
 | `tests/historical-adapter-contract.test.js` | 28 |
 | `tests/identity-collision.test.js` | 24 |
 | `tests/negative.test.js` | 21 |
@@ -129,14 +129,14 @@ cd p05 && node --test "tests/**/*.test.js"
 | `tests/determinism.test.js` | 12 |
 | `tests/existing-iips-boundary.test.js` | 11 |
 | `tests/replay-idempotency.test.js` | 8 |
-| **TOTAL** | **263** |
+| **TOTAL** | **264** |
 
-Baseline at D10 was **229**. **+34 new tests; 0 pre-existing tests removed; 0 assertions deleted.**
+Baseline at D10 was **229**. **+35 new tests; 0 pre-existing tests removed; 0 assertions deleted.**
 The 229 pre-existing tests all still pass.
 
 `tests/orchestration.test.js` groups: **S** scheduling (3) · **R** retries (5) · **C** checkpointing
 (3) · **I** the exit criterion (5) · **F** failure handling (3) · **L** run logs (3) · **B**
-boundary (7) · **E** evidence integrity (5).
+boundary (7) · **E** evidence integrity (6).
 
 ---
 
@@ -144,7 +144,7 @@ boundary (7) · **E** evidence integrity (5).
 
 | Kind | Produced here? | Where |
 |---|---|---|
-| **Implementation evidence** | ✅ **YES** | `p05/src/ingestionOrchestrator.js`; 263 passing tests; `p05/evidence-p05-04/` |
+| **Implementation evidence** | ✅ **YES** | `p05/src/ingestionOrchestrator.js`; 264 passing tests; `p05/evidence-p05-04/` |
 | **Synthetic / local test evidence** | ✅ **YES** — and this is exactly what the run logs are | `p05/evidence-p05-04/02`, `03` — local fixture feed, explicit fault table, virtual clock |
 | **Contract / lifecycle evidence** | ⚠ **NO — unchanged** | P05-02 / P05-03 remain specification and adapter-contract work only. **This act adds nothing to them** |
 | **Provider execution evidence** | ❌ **ABSENT — AND MUST REMAIN ABSENT** | No provider was selected, named, contacted or bound. No credential or entitlement was provisioned. No network call was made. P05-02 live provider execution remains **`NOT_AUTHORIZED`** (D9 **N-1**, D10 §8.2) |
@@ -234,7 +234,7 @@ discarded):
 | tamper an evidence file after generation | **1** — **E/1** (the index digest no longer matches the committed bytes) |
 | neuter `assertOrchestrationPermitted` entirely | **3** — **B/1, B/2, B/3** |
 | relabel synthetic evidence as `isProviderEvidence: true` | **2** — **E/4, E/5** |
-| control, restored | **34 / 34 pass** |
+| control, restored | **35 / 35 pass** |
 
 ⚠ **Recorded finding, not an omission.** Disabling store-level deduplication does **not** fail I/3
 (interrupted-run resume) or I/4 (byte-identical replayed corpus). That is not a guard gap — it is
@@ -306,7 +306,7 @@ undischarged) · `DO-P04-1…5` / `DO-1…DO-5`.
 
 **P05-04 is COMPLETE within the boundary D10-1 authorized**: its authoritative exit criterion
 (*"Replay does not duplicate data"*) is demonstrated by six independent proofs, its
-*Test / Validation* artifact exists (*failure/replay tests*, 34 tests), and its *Evidence* artifact
+*Test / Validation* artifact exists (*failure/replay tests*, 35 tests), and its *Evidence* artifact
 exists (*run logs*, 9 files).
 
 ⚠ **That statement is bounded and must be read with limitation L-1.** It means the orchestrator is

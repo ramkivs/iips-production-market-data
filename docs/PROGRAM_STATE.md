@@ -3,9 +3,9 @@
 > **▶ CURRENT WORK ACT: P05-04 IMPLEMENTED + EVIDENCED — INGESTION ORCHESTRATION COMPLETE WITHIN THE D10-1 BOUNDARY**
 > (`docs/p05/P05_04_EVIDENCE.md`, recorded **2026-09-10** under authority **D10-1**,
 > `docs/p00/P00_DECISION_LOG.md` §8.1 — the *"further explicit act"* D9 **N-3** required).
-> Delivered: `p05/src/ingestionOrchestrator.js` · `p05/tests/orchestration.test.js` (**34 tests**) ·
+> Delivered: `p05/src/ingestionOrchestrator.js` · `p05/tests/orchestration.test.js` (**35 tests**) ·
 > `p05/evidence-p05-04/` (**9 run-log files**) · `p05/scripts/generate-p05-04-evidence.js`.
-> **Suite 229 → 263 tests, 263 PASS / 0 FAIL.**
+> **Suite 229 → 264 tests, 264 PASS / 0 FAIL.**
 > ⚠ **`p05_04_status` = `IMPLEMENTED + EVIDENCED` within the D10-1 boundary.** The authoritative
 > tracker exit criterion ***"Replay does not duplicate data"*** is demonstrated by **6 independent
 > proofs (X-1…X-6)** plus an interrupted-run/resume proof. **Recorded limitation L-1:** the path is
@@ -363,7 +363,7 @@ Implemented under **D10-1** (`docs/p00/P00_DECISION_LOG.md` §8.1), the *"furthe
 | **Scope implemented** | Exactly `Work Tracker`!P05-04 *Requirement* — *"Scheduling, retries, idempotency and checkpointing."* Deliverable *"Ingestion orchestrator"*. **Nothing wider was built and no requirement was reinterpreted** |
 | `p05_04_status` | **`IMPLEMENTED + EVIDENCED`** *(prior `AUTHORIZED` by D10-1; before that `NOT_AUTHORIZED`, D9 N-3)* |
 | **Exit criterion** — *"Replay does not duplicate data"* | # ✅ **MET** — six independent proofs **X-1…X-6** (12 ticks → **4** records · full replay `recordsInserted` **0** · ledger digest unchanged · replayed corpus **byte-identical** · **0** `CONFLICT_REJECTED` · **0** adapter invocations on replay) **plus** an interrupted-run/resume proof (2 partial + 2 resumed = **4**, never more) |
-| **Test / Validation** — *"Failure/replay tests"* | ✅ **MET** — `p05/tests/orchestration.test.js`, **34 tests**: S scheduling · R retries · C checkpointing · I exit criterion · F failure · L run logs · B boundary · E evidence integrity |
+| **Test / Validation** — *"Failure/replay tests"* | ✅ **MET** — `p05/tests/orchestration.test.js`, **35 tests**: S scheduling · R retries · C checkpointing · I exit criterion · F failure · L run logs · B boundary · E evidence integrity |
 | **Evidence** — *"Run logs"* | ✅ **MET in form** — `p05/evidence-p05-04/` (**9 files**), byte-reproducible, each file's digest pinned in `00-INDEX.json` and recomputed by test **E/1** |
 | ⚠ **Evidence classification** | **IMPLEMENTATION** ✅ · **SYNTHETIC / LOCAL TEST** ✅ (this is what the run logs are) · **CONTRACT / LIFECYCLE** ⚠ **unchanged** (P05-02/P05-03 remain specification + adapter-contract only; nothing added) · **PROVIDER EXECUTION** ❌ **ABSENT AND MUST REMAIN ABSENT** |
 | ⚠ **Limitation L-1** | # The orchestration path is exercised against the **P05-01 local deterministic feed** with an explicit fault table. It has **NOT** been exercised against a live P05-02 adapter, because none exists and live provider execution is **`NOT_AUTHORIZED`**. **A standing non-authorization — not a P05-04 defect.** Recorded, not papered over |
@@ -437,10 +437,10 @@ provider-register issuance — `provider-register.json` is **unmodified** with e
 ### `p05/` — P05-04 ingestion-orchestration additions (⚠ supersedes the counts above **by addition** — the blocks above are left unedited)
 Added under **D10-1** — **P05-04 implementation and evidence**:
 `src/ingestionOrchestrator.js` (**scheduling · bounded retry execution · idempotent checkpointing**) ·
-`tests/orchestration.test.js` (**34 failure/replay tests**) · `evidence-p05-04/` (**9 run-log files**) ·
+`tests/orchestration.test.js` (**35 failure/replay tests**) · `evidence-p05-04/` (**9 run-log files**) ·
 `scripts/generate-p05-04-evidence.js` · `package.json` + `evidence:p05-04` ·
 `docs/p05/P05_04_EVIDENCE.md`.
-The suite is **263 tests, 263 PASS**.
+The suite is **264 tests, 264 PASS**.
 ⚠ **Still zero dependencies, zero network, zero credentials.** The orchestrator **refuses** any
 adapter declaring live connectivity, `LIVE` provider kind, credentials or entitlement —
 `provider-register.json` is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.

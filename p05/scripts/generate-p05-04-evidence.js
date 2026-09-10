@@ -88,7 +88,7 @@ const CLASSIFICATION = Object.freeze({
   isP06Evidence: false,
   trackerP05_04ExitCriteria: 'MET within the D10-1 boundary — "Replay does not duplicate data" is '
     + 'demonstrated for the orchestrated ingestion path over the P05-01 local deterministic feed',
-  trackerP05_04TestValidation: 'MET — "Failure/replay tests" = p05/tests/orchestration.test.js (29 tests)',
+  trackerP05_04TestValidation: 'MET — "Failure/replay tests" = p05/tests/orchestration.test.js (35 tests)',
   trackerP05_04Evidence: 'MET in form — "Run logs" are produced here, as LOCAL SYNTHETIC run logs',
   providerSelected: false,
   providerContacted: false,
@@ -483,7 +483,7 @@ const index = {
   },
   exitCriteriaAssessment: {
     exitCriteria: 'MET within the D10-1 boundary — see 04-exit-criterion-replay-no-duplication.json',
-    testValidation: 'MET — p05/tests/orchestration.test.js (29 tests, all passing)',
+    testValidation: 'MET — p05/tests/orchestration.test.js (35 tests, all passing)',
     evidence: 'MET in form — this package, as LOCAL SYNTHETIC run logs (see limitation L-1)',
     limitation: CLASSIFICATION.recordedLimitation,
   },

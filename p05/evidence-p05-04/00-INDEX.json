@@ -18,7 +18,7 @@
     "isContractOrLifecycleEvidence": false,
     "isP06Evidence": false,
     "trackerP05_04ExitCriteria": "MET within the D10-1 boundary — \"Replay does not duplicate data\" is demonstrated for the orchestrated ingestion path over the P05-01 local deterministic feed",
-    "trackerP05_04TestValidation": "MET — \"Failure/replay tests\" = p05/tests/orchestration.test.js (29 tests)",
+    "trackerP05_04TestValidation": "MET — \"Failure/replay tests\" = p05/tests/orchestration.test.js (35 tests)",
     "trackerP05_04Evidence": "MET in form — \"Run logs\" are produced here, as LOCAL SYNTHETIC run logs",
     "providerSelected": false,
     "providerContacted": false,
@@ -43,42 +43,42 @@
   },
   "exitCriteriaAssessment": {
     "exitCriteria": "MET within the D10-1 boundary — see 04-exit-criterion-replay-no-duplication.json",
-    "testValidation": "MET — p05/tests/orchestration.test.js (29 tests, all passing)",
+    "testValidation": "MET — p05/tests/orchestration.test.js (35 tests, all passing)",
     "evidence": "MET in form — this package, as LOCAL SYNTHETIC run logs (see limitation L-1)",
     "limitation": "L-1 — the orchestration path is NOT exercised against a live P05-02 adapter, because no live adapter exists and live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). This is a standing non-authorization, not a defect in P05-04."
   },
   "evidenceFiles": [
     {
       "file": "p05/evidence-p05-04/01-run-plan.json",
-      "sha256": "16f2266e45e5cb1eff1276d6bcf246e1fe58e9dc81a1e61be1d2149a7cfba0c0"
+      "sha256": "94517dc9d07dbde4ad6e0cf7cfe10030c805469ef1580eed47556cfa1b1acf7b"
     },
     {
       "file": "p05/evidence-p05-04/02-run-log-baseline.json",
-      "sha256": "69cbb4deca51c0cf1f88662096febae0bc0de8e7c3047bc13051c8623407ee25"
+      "sha256": "51fc0abfda3d7595bd451f6a5f1f991200a8e25ac064ea6ae6f945a14ad8649d"
     },
     {
       "file": "p05/evidence-p05-04/03-run-log-with-failures.json",
-      "sha256": "e160fc8f4a07a98403d20fc26a685b33024ba45be31ef05d2658754cce55b472"
+      "sha256": "a5c0bc967e1aa24dba68d9511147bff8fbb7e1497942995fbf73a0e9026d04b5"
     },
     {
       "file": "p05/evidence-p05-04/04-exit-criterion-replay-no-duplication.json",
-      "sha256": "cc8dc12f9ad9b2c6dc3f2ca4ec05d67faf7e8856fa2a3ebc62461b27876a060e"
+      "sha256": "07847d410fca44e265dfa4a273fe1bb6972a967100460b98f67375b95b94bf4b"
     },
     {
       "file": "p05/evidence-p05-04/05-checkpoint-resume-after-interruption.json",
-      "sha256": "bde1eab1e2898100ffb10da2cb29a6fb13c0375b471d9baf9f655932ae8a8f9a"
+      "sha256": "cb25456a7acce6beb2dd5fcd1abd36ef693e39fda268574c2563f9dbc661cc8c"
     },
     {
       "file": "p05/evidence-p05-04/06-retry-classification.json",
-      "sha256": "98c90b5c291fbd8b06fa4ca37ba2d507604a39540f7d59ec0f82f69a4df1cae4"
+      "sha256": "eea4d4ca9ab64e18e478b49194c235dfc4beb3298a18f1be20a3538c84c7ecca"
     },
     {
       "file": "p05/evidence-p05-04/07-boundary-attestations.json",
-      "sha256": "46b00a5ff1965203c55f7d01eab36b826cce2ff15fc75abb7516f3cf026baccf"
+      "sha256": "a0734d40750675f70af30b1cdb39527b974b050b4b3c665f4cb5bb8c65bf57e0"
     },
     {
       "file": "p05/evidence-p05-04/08-limitations-and-open-items.json",
-      "sha256": "d6e09e74217ffd46309bf2724d88eadbbe905824da160bfd14967fd70137c035"
+      "sha256": "e2a32151679cfe63cd54baf07587b73d94150b4bd94a0e436c83e36ce94b3d27"
     }
   ],
   "gateStatus": {
