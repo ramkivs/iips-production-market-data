@@ -43,7 +43,9 @@ const SOURCE_FILES = walk(join(p05Root, 'src')).filter((f) => f.endsWith('.js'))
  * substance and applied to exactly this set, so no P05-01 assertion is weakened.
  */
 const P05_01_SOURCE_FILES = SOURCE_FILES.filter(
-  (f) => !/liveAdapterContract\.js$/.test(f) && !/historicalAdapterContract\.js$/.test(f),
+  (f) => !/liveAdapterContract\.js$/.test(f)
+    && !/historicalAdapterContract\.js$/.test(f)
+    && !/ingestionOrchestrator\.js$/.test(f),
 );
 
 /**
@@ -77,6 +79,35 @@ const P05_03_CONTRACT_FILE = SOURCE_FILES.find((f) => /historicalAdapterContract
 
 /** Every adapter-CONTRACT module (classification allowed, policy implementation prohibited). */
 const CONTRACT_FILES = [P05_02_CONTRACT_FILE, P05_03_CONTRACT_FILE].filter((f) => f !== undefined);
+
+/**
+ * The P05-04 INGESTION ORCHESTRATOR, added under **D10-1**
+ * (`docs/p00/P00_DECISION_LOG.md` §8.1) — *"P05-04 — ingestion orchestration — is AUTHORIZED …
+ * Scheduling · retry execution · idempotent checkpointing."* D10-1 is the *"further explicit act"*
+ * that D9 §3.1 **N-3** required (`docs/d9/D9_P05_ENTRY_AUTHORIZATION.md`:89).
+ *
+ * ⚠ DISCLOSED SCOPE CORRECTION (P05-04-A), of exactly the same kind as P05-03-A above. The
+ *   lexical assertions below were authored when `src/` contained only the P05-01 modules, so
+ *   "every file under src/" and "the P05-01 modules" were one set. This module is **not** a P05-01
+ *   module: it is the `Work Tracker`!P05-04 deliverable *"Ingestion orchestrator"*, whose tracker
+ *   *Requirement* is literally *"Scheduling, retries, idempotency and checkpointing."* Excluding it
+ *   from a **P05-01-specific** assertion therefore changes no P05-01 assertion at all — the P05-01
+ *   module set is byte-for-byte the same set it was, and keeps the strict "never even names retry"
+ *   rule.
+ *
+ * ⚠ This is **not** a weakening. The three universal lexical rules (no scheduler, no async
+ *   orchestration, no wait primitive) are applied to EVERY module INCLUDING this one and still
+ *   hold, because the orchestrator is fully synchronous and advances a VIRTUAL clock. What the old
+ *   absence-based rule could never assert — that checkpointing is *correct* — is now asserted
+ *   BEHAVIOURALLY in `orchestration.test.js`, which is a stronger claim than a lexical scan:
+ *   idempotent re-record is a no-op, a differing outcome is a conflict and never an overwrite, a
+ *   checkpointed tick performs no adapter work on replay, and an interrupted run resumes without
+ *   duplicating data.
+ */
+const P05_04_ORCHESTRATOR_FILE = SOURCE_FILES.find((f) => /ingestionOrchestrator\.js$/.test(f));
+
+/** Every module that is NOT the D10-authorized P05-04 orchestrator. */
+const NON_ORCHESTRATOR_SOURCE_FILES = SOURCE_FILES.filter((f) => f !== P05_04_ORCHESTRATOR_FILE);
 
 test('10. the whole suite runs with no network access and no provider dependency', () => {
   // Prove it behaviourally: acquire every domain twice with global fetch and the http/https
@@ -228,24 +259,65 @@ function codeOnly(text) {
     .replace(/\s+\/\/[^\n]*$/gm, '');
 }
 
-test('P05-04 — no orchestration (scheduling, retries, checkpointing) is implemented', () => {
+/**
+ * ⚠ SUPERSEDED GUARD — REPLACED, NOT WEAKENED (D10-1).
+ *
+ * This test formerly read *"P05-04 — no orchestration (scheduling, retries, checkpointing) is
+ * implemented"* and asserted, by ABSENCE, that no module under `src/` contained a scheduler, async
+ * orchestration or checkpointing. That was correct and load-bearing while P05-04 was
+ * `NOT_AUTHORIZED` (D9 **N-3**): it made an unauthorized P05-04 build-out impossible to commit
+ * silently. **D10-1 is precisely the explicit act that guard was waiting for**, so the guard is
+ * now replaced — on the same terms the P05 acceptance record set at `docs/p05/P05_GATE_ACCEPTANCE.md`
+ * §9 for the analogous `NOT_ACCEPTED` tripwire: *the protective surface is enlarged, not reduced.*
+ *
+ * Every condition the old guard protected is still asserted below, and two are asserted MORE
+ * strongly than before:
+ *   · "no scheduler / no async orchestration" — STILL UNIVERSAL. It now covers the orchestrator
+ *     too, and the orchestrator satisfies it, because it is fully synchronous and advances a
+ *     VIRTUAL clock. Nothing was carved out here.
+ *   · "no module implements checkpointing" — RESCOPED, because D10-1 authorizes exactly that in
+ *     exactly one module. It is replaced by: no module OTHER THAN the enumerated D10-authorized
+ *     orchestrator implements checkpointing, PLUS the behavioural idempotency proofs in
+ *     `orchestration.test.js` (C/1…C/3, I/1…I/5) that an absence-based rule could never make.
+ *   · "P05-01 modules never name retry" and "a contract classifies retryability but implements no
+ *     policy" — UNCHANGED, applied to byte-for-byte the same module sets as before.
+ *   · NEW: no module anywhere sleeps on the wall clock, and the orchestrator cannot be built
+ *     around a live-connectivity adapter at all.
+ */
+test('P05-04 — orchestration is confined to the single D10-1-authorized module and is fail-closed', () => {
+  assert.ok(P05_04_ORCHESTRATOR_FILE !== undefined,
+    'the P05-04 orchestrator module must exist, since D10-1 authorized it');
+
+  // ── (1) UNIVERSAL, UNCHANGED IN SUBSTANCE AND NOW BROADER: no scheduler, no async. ──
   for (const file of SOURCE_FILES) {
     const code = codeOnly(readFileSync(file, 'utf8'));
-    // These three hold for EVERY module including the P05-02 contract module — it declares no
-    // scheduler, no async orchestration and no checkpointing.
     assert.doesNotMatch(code, /setInterval|setTimeout|cron|schedule\s*\(/, `${file} implements no scheduler`);
     assert.doesNotMatch(code, /async\s+function|\bawait\s+/, `${file} performs no async orchestration`);
+    // NEW: nothing may wait on real time. The orchestrator advances a virtual clock instead.
+    assert.doesNotMatch(code, /sleep\s*\(|delay\s*\(/, `${file} uses no wait primitive`);
+  }
+
+  // ── (2) RESCOPED: checkpointing exists in ONE authorized module and nowhere else. ──
+  for (const file of NON_ORCHESTRATOR_SOURCE_FILES) {
+    const code = codeOnly(readFileSync(file, 'utf8'));
     assert.doesNotMatch(code, /checkpoint\s*\(/i, `${file} implements no checkpointing`);
   }
-  // ES-5: retry orchestration is P05 but is NOT in the P05-01 scope authorized by D9.
-  // Scope: the P05-01 modules. The P05-02 contract module names the retry CLASS table, which D9
-  // A-2 authorizes as "error taxonomy mapping"; it implements no retry policy (no backoff, no
-  // loop, no attempt counter mutation), asserted behaviourally in adapter-contract.test.js.
+  // The authorized module must actually implement it — a guard that could be satisfied by
+  // deleting the feature would be worthless.
+  const orchCode = codeOnly(readFileSync(P05_04_ORCHESTRATOR_FILE, 'utf8'));
+  assert.match(orchCode, /recordCheckpoint\s*\(/, 'the orchestrator implements idempotent checkpointing');
+  assert.match(orchCode, /IDEMPOTENT_NOOP/, 're-recording a completed checkpoint is a no-op');
+  assert.match(orchCode, /CONFLICT_REJECTED/, 'a differing outcome is a conflict, never an overwrite');
+  assert.match(orchCode, /INV-2/, 'checkpoint immutability cites the accepted INV-2 rule');
+
+  // ── (3) UNCHANGED: the P05-01 module set never even names retry. ──
+  assert.equal(P05_01_SOURCE_FILES.length, 8, 'the P05-01 module set is the same eight modules');
   for (const file of P05_01_SOURCE_FILES) {
     const code = codeOnly(readFileSync(file, 'utf8'));
     assert.doesNotMatch(code, /\bretr(y|ies|ying)\b/i, `${file} implements no retry policy`);
   }
-  // A contract may CLASSIFY retryability; it may not implement a retry policy.
+
+  // ── (4) UNCHANGED: a contract may CLASSIFY retryability, never implement a policy. ──
   for (const file of CONTRACT_FILES) {
     const code = codeOnly(readFileSync(file, 'utf8'));
     assert.doesNotMatch(code, /backoff/i, `${file} implements no backoff policy`);
@@ -254,6 +326,28 @@ test('P05-04 — no orchestration (scheduling, retries, checkpointing) is implem
       `${file} mutates no attempt counter`);
     assert.doesNotMatch(code, /sleep\s*\(|delay\s*\(/, `${file} uses no wait primitive`);
   }
+
+  // ── (5) NEW: retry execution is DELEGATED to the accepted taxonomy, never re-decided. ──
+  // D10-1 authorizes "retry execution"; D8:35 authorizes no methodology variation. The module must
+  // therefore read retryability from ./errors.js rather than invent its own table.
+  assert.match(orchCode, /import\s*\{[^}]*RETRY_PROHIBITED[^}]*\}\s*from\s*'\.\/errors\.js'/,
+    'retryability is imported from the accepted P02 taxonomy');
+  assert.match(orchCode, /DISPOSITION\[code\]/, 'retryability defers to DISPOSITION.retryable');
+  assert.doesNotMatch(orchCode, /retryable\s*:\s*(true|false)/,
+    'the orchestrator declares no retryability table of its own');
+
+  // ── (6) NEW: the orchestrator is fail-closed against provider execution (D9 N-1 / D10 §8.2). ──
+  assert.match(orchCode, /assertOrchestrationPermitted/, 'a provider-execution guard exists');
+  assert.match(orchCode, /PERMITTED_PROVIDER_KIND\s*=\s*'LOCAL_FIXTURE'/);
+  assert.match(orchCode, /NOT_AUTHORIZED \(D9 N-1, D10 §8\.2\)/);
+  assert.match(orchCode, /liveConnectivity !== false/, 'live connectivity is refused, not merely avoided');
+
+  // ── (7) NEW: P05-04 is orchestration, not P06. No normalization vocabulary is introduced. ──
+  assert.doesNotMatch(orchCode, /normaliz|rawPayload|canonicalForm|deduplicationKey/i,
+    'the orchestrator implements no P06 normalization concept');
+  // The boundary is declared IN CODE, in the evidence artifact itself — not only in prose.
+  assert.match(orchCode, /phaseScope: 'P05-04'/, 'the run log states its own phase scope');
+  assert.match(orchCode, /p06Implemented: false/, 'the run log declares that P06 is not implemented');
 });
 
 test('OI-P04-04 — no FIGI sourcing, licensing or coverage decision was made', () => {

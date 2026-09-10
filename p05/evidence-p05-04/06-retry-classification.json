@@ -1,0 +1,149 @@
+{
+  "artifact": "P05-04 RETRY EXECUTION — DELEGATED TO THE ACCEPTED P02 TAXONOMY",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_RUN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06Evidence": false,
+    "trackerP05_04ExitCriteria": "MET within the D10-1 boundary — \"Replay does not duplicate data\" is demonstrated for the orchestrated ingestion path over the P05-01 local deterministic feed",
+    "trackerP05_04TestValidation": "MET — \"Failure/replay tests\" = p05/tests/orchestration.test.js (29 tests)",
+    "trackerP05_04Evidence": "MET in form — \"Run logs\" are produced here, as LOCAL SYNTHETIC run logs",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "phaseScope": "P05-04",
+    "p06Implemented": false,
+    "recordedLimitation": "L-1 — the orchestration path is NOT exercised against a live P05-02 adapter, because no live adapter exists and live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). This is a standing non-authorization, not a defect in P05-04."
+  },
+  "authority": {
+    "taxonomy": "docs/p02/P02_ERROR_TAXONOMY.md, implemented in p05/src/errors.js",
+    "ruleES4": "retry must never be applied to a deterministic failure",
+    "variationAuthorized": false,
+    "variationNote": "D8:35 — \"Rules C1–C6 as written … no variation authorized\". P05-04 declares no retryability table of its own; it imports RETRY_PROHIBITED and reads DISPOSITION[code].retryable."
+  },
+  "classes": [
+    {
+      "code": "E1",
+      "label": "PROVIDER_UNAVAILABLE",
+      "kind": "DATA_CONDITION",
+      "producesSnapshot": true,
+      "taxonomyRetryable": false,
+      "retryProhibitedList": false,
+      "p05_04MayRetry": false
+    },
+    {
+      "code": "E2",
+      "label": "AUTHENTICATION_FAILURE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "taxonomyRetryable": false,
+      "retryProhibitedList": true,
+      "p05_04MayRetry": false
+    },
+    {
+      "code": "E3",
+      "label": "ENTITLEMENT_FAILURE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "taxonomyRetryable": false,
+      "retryProhibitedList": true,
+      "p05_04MayRetry": false
+    },
+    {
+      "code": "E4",
+      "label": "TRANSIENT_FAILURE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "taxonomyRetryable": true,
+      "retryProhibitedList": false,
+      "p05_04MayRetry": true
+    },
+    {
+      "code": "E5",
+      "label": "MALFORMED_RESPONSE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "taxonomyRetryable": false,
+      "retryProhibitedList": true,
+      "p05_04MayRetry": false
+    },
+    {
+      "code": "E6",
+      "label": "UNSUPPORTED_CAPABILITY",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "taxonomyRetryable": false,
+      "retryProhibitedList": true,
+      "p05_04MayRetry": false
+    },
+    {
+      "code": "E7",
+      "label": "RATE_LIMIT_FAILURE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "taxonomyRetryable": true,
+      "retryProhibitedList": false,
+      "p05_04MayRetry": true
+    },
+    {
+      "code": "E8",
+      "label": "CONTRACT_MAPPING_FAILURE",
+      "kind": "REJECTION",
+      "producesSnapshot": false,
+      "taxonomyRetryable": false,
+      "retryProhibitedList": true,
+      "p05_04MayRetry": false
+    }
+  ],
+  "retryableSet": [
+    "E4",
+    "E7"
+  ],
+  "retryPolicy": {
+    "maxAttempts": 3,
+    "baseBackoffMs": 250,
+    "backoffGrowth": 2,
+    "maxBackoffMs": 2000
+  },
+  "backoffTableVirtualMs": [
+    {
+      "attemptIndex": 0,
+      "backoffVirtualMs": 0
+    },
+    {
+      "attemptIndex": 1,
+      "backoffVirtualMs": 250
+    },
+    {
+      "attemptIndex": 2,
+      "backoffVirtualMs": 500
+    },
+    {
+      "attemptIndex": 3,
+      "backoffVirtualMs": 1000
+    },
+    {
+      "attemptIndex": 4,
+      "backoffVirtualMs": 2000
+    },
+    {
+      "attemptIndex": 5,
+      "backoffVirtualMs": 2000
+    },
+    {
+      "attemptIndex": 99,
+      "backoffVirtualMs": 2000
+    }
+  ],
+  "guarantees": {
+    "bounded": "attempt count never exceeds maxAttempts; exhaustion is reported as EXHAUSTED",
+    "nothingSleeps": "backoff is COMPUTED and RECORDED in virtual milliseconds — no wait primitive is used",
+    "nonRetryableAbortsImmediately": "a retry-prohibited class is attempted exactly once",
+    "retryabilityNotReimplemented": "no literal retryable:true/false declaration exists in the orchestrator"
+  }
+}

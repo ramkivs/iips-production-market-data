@@ -1,0 +1,55 @@
+{
+  "artifact": "P05-04 CHECKPOINTING — INTERRUPTED RUN RESUMES WITHOUT DUPLICATION",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_RUN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06Evidence": false,
+    "trackerP05_04ExitCriteria": "MET within the D10-1 boundary — \"Replay does not duplicate data\" is demonstrated for the orchestrated ingestion path over the P05-01 local deterministic feed",
+    "trackerP05_04TestValidation": "MET — \"Failure/replay tests\" = p05/tests/orchestration.test.js (29 tests)",
+    "trackerP05_04Evidence": "MET in form — \"Run logs\" are produced here, as LOCAL SYNTHETIC run logs",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "phaseScope": "P05-04",
+    "p06Implemented": false,
+    "recordedLimitation": "L-1 — the orchestration path is NOT exercised against a live P05-02 adapter, because no live adapter exists and live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). This is a standing non-authorization, not a defect in P05-04."
+  },
+  "trackerField": "Work Tracker!P05-04 \"Requirement\": … idempotency and checkpointing",
+  "interruption": {
+    "model": "an explicit interruptPlan entry throws RunAbortedError BEFORE the tick executes and BEFORE its checkpoint is written — the honest model of a crash, in which work in flight is lost and only checkpointed ticks survive",
+    "name": "RunAbortedError",
+    "tickIndex": 2,
+    "taskRef": "H-0001",
+    "message": "run interrupted at tick 2 (H-0001): simulated host failure"
+  },
+  "partialRun": {
+    "canonicalRecords": 2,
+    "checkpoints": 2,
+    "expected": "ticks 0 and 1 completed and checkpointed; tick 2 lost in flight"
+  },
+  "resume": {
+    "skippedCheckpointed": 2,
+    "acquired": 2,
+    "recordsInserted": 2,
+    "recordsIdempotentNoop": 0,
+    "canonicalRecordCount": 4,
+    "checkpointCount": 4,
+    "expected": "only the remaining work is performed; nothing already ingested is ingested twice"
+  },
+  "furtherFullReplay": {
+    "recordsInserted": 0,
+    "canonicalRecordCount": 4,
+    "expected": "zero inserts, count unchanged"
+  },
+  "checkpointIdentity": {
+    "derivesFrom": "(runId, tickIndex, taskRef) — NEVER the attempt counter",
+    "consequence": "a retry of the same tick cannot mint a second checkpoint identity",
+    "conflictSemantics": "a differing outcome for the same tick is CONFLICT_REJECTED, never an overwrite (INV-2 discipline applied to orchestration state)"
+  }
+}

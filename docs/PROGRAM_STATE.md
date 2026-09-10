@@ -1,5 +1,29 @@
 # PROGRAM STATE — SESSION RECOVERY MANIFEST
 
+> **▶ CURRENT WORK ACT: P05-04 IMPLEMENTED + EVIDENCED — INGESTION ORCHESTRATION COMPLETE WITHIN THE D10-1 BOUNDARY**
+> (`docs/p05/P05_04_EVIDENCE.md`, recorded **2026-09-10** under authority **D10-1**,
+> `docs/p00/P00_DECISION_LOG.md` §8.1 — the *"further explicit act"* D9 **N-3** required).
+> Delivered: `p05/src/ingestionOrchestrator.js` · `p05/tests/orchestration.test.js` (**34 tests**) ·
+> `p05/evidence-p05-04/` (**9 run-log files**) · `p05/scripts/generate-p05-04-evidence.js`.
+> **Suite 229 → 263 tests, 263 PASS / 0 FAIL.**
+> ⚠ **`p05_04_status` = `IMPLEMENTED + EVIDENCED` within the D10-1 boundary.** The authoritative
+> tracker exit criterion ***"Replay does not duplicate data"*** is demonstrated by **6 independent
+> proofs (X-1…X-6)** plus an interrupted-run/resume proof. **Recorded limitation L-1:** the path is
+> **NOT** exercised against a live P05-02 adapter, because live provider execution remains
+> **`NOT_AUTHORIZED`** (D9 N-1, D10 §8.2) — a standing non-authorization, **not** a P05-04 defect.
+> ⚠ **The run logs are LOCAL SYNTHETIC run logs. NO provider execution evidence exists or is
+> implied.** No provider was selected, named, contacted or bound; no credential or entitlement was
+> provisioned; no network call was made. `assertOrchestrationPermitted` **fails closed** against a
+> live-connectivity adapter — the orchestrator cannot even be constructed around one.
+> ⚠ **UNCHANGED:** **P05 = `ACCEPTED`, 6 of 18** · **P06 = `NOT_ACCEPTED`**, no
+> `P06_GATE_ACCEPTANCE.md` · **NO P06-01/02/03 implementation** · provider execution
+> **`NOT_AUTHORIZED`** (N-1) · licensed historical acquisition **`NOT_AUTHORIZED`** (N-2) ·
+> production activation **`NOT_AUTHORIZED`** (A4 at P16 only) · **Track B → `origin/main` merge
+> `NOT AUTHORIZED`** · certification **`NONE_GRANTED`** · ADR-01 **C1–C6 fail-closed and unvaried** ·
+> `MD:` **the exact namespace token** · **no historical P00–P05 authority record edited**
+> (`P05_GATE_ACCEPTANCE.md` R-13/R-14 and `P05_ACCEPTANCE_CRITERIA.md` C-4 remain **historically
+> true and unedited**, superseded **by citation only**). **No concessions register exists.**
+>
 > **▶ CURRENT AUTHORITY ACT: D10 — P05-04 AUTHORIZED · P06 ENTRY AUTHORIZED · P06 A3 DESIGNATED · `DataBoundExecutor` C1–C6 EXECUTION AUTHORIZED**
 > (`docs/p00/P00_DECISION_LOG.md` **§8**, appended **2026-09-10** against baseline
 > `19713d8b32abae3292a7b0208cd826fc1464f42b`). Authority: **Ramki**, program owner of record.
@@ -77,7 +101,7 @@
 | `implementation_status` | **`AUTHORIZED_TO_PROCEED`** — currently executable: **P00 only** |
 | `certification_status` | **`NONE_GRANTED`** |
 | `formal_gate_status` | **6 of 18 accepted — P00, P01, P02, P03, P04, P05 ACCEPTED**; P06–P17 NOT ACCEPTED |
-| `p05_04_status` | **`AUTHORIZED`** by **D10-1** (`docs/p00/P00_DECISION_LOG.md` §8) — *(was `NOT_AUTHORIZED`, D9 N-3)* · ⚠ **NO COMPLETION EVIDENCE YET** |
+| `p05_04_status` | **`IMPLEMENTED + EVIDENCED`** within the **D10-1** boundary (`docs/p05/P05_04_EVIDENCE.md`) — *(was `AUTHORIZED`, D10-1; before that `NOT_AUTHORIZED`, D9 N-3)* · exit criterion **MET** (X-1…X-6) · ⚠ **limitation L-1: NOT exercised against a live P05-02 adapter** |
 | `p06_entry_authorization_status` | **`AUTHORIZED`** by **D10-2** — scope **P06-01 / P06-02 / P06-03 ONLY** · *(was `NOT_AUTHORIZED`, D9 §5 exclusion 5)* |
 | `p06_acceptance_status` | **`NOT_ACCEPTED`** — ⚠ **authorization is not acceptance**; no `P06_GATE_ACCEPTANCE.md` exists |
 | `a3_gate_acceptor_scope` | **`P05, P06`** — Ramakrishnan V. S. (Ramki) · ⚠ **P07–P17 NOT designated** |
@@ -327,6 +351,36 @@ acceptance remains a **separate future act** by the designated A3 acceptor carry
 
 ---
 
+## 6h. P05-04 status — IMPLEMENTED + EVIDENCED within the D10-1 boundary
+
+# **COMPLETE WITHIN BOUNDARY · LIMITATION L-1 RECORDED · NOT PROVIDER EVIDENCE**
+
+Implemented under **D10-1** (`docs/p00/P00_DECISION_LOG.md` §8.1), the *"further explicit act"* D9
+§3.1 **N-3** required. Evidence record: **`docs/p05/P05_04_EVIDENCE.md`**.
+
+| Field | Value |
+|---|---|
+| **Scope implemented** | Exactly `Work Tracker`!P05-04 *Requirement* — *"Scheduling, retries, idempotency and checkpointing."* Deliverable *"Ingestion orchestrator"*. **Nothing wider was built and no requirement was reinterpreted** |
+| `p05_04_status` | **`IMPLEMENTED + EVIDENCED`** *(prior `AUTHORIZED` by D10-1; before that `NOT_AUTHORIZED`, D9 N-3)* |
+| **Exit criterion** — *"Replay does not duplicate data"* | # ✅ **MET** — six independent proofs **X-1…X-6** (12 ticks → **4** records · full replay `recordsInserted` **0** · ledger digest unchanged · replayed corpus **byte-identical** · **0** `CONFLICT_REJECTED` · **0** adapter invocations on replay) **plus** an interrupted-run/resume proof (2 partial + 2 resumed = **4**, never more) |
+| **Test / Validation** — *"Failure/replay tests"* | ✅ **MET** — `p05/tests/orchestration.test.js`, **34 tests**: S scheduling · R retries · C checkpointing · I exit criterion · F failure · L run logs · B boundary · E evidence integrity |
+| **Evidence** — *"Run logs"* | ✅ **MET in form** — `p05/evidence-p05-04/` (**9 files**), byte-reproducible, each file's digest pinned in `00-INDEX.json` and recomputed by test **E/1** |
+| ⚠ **Evidence classification** | **IMPLEMENTATION** ✅ · **SYNTHETIC / LOCAL TEST** ✅ (this is what the run logs are) · **CONTRACT / LIFECYCLE** ⚠ **unchanged** (P05-02/P05-03 remain specification + adapter-contract only; nothing added) · **PROVIDER EXECUTION** ❌ **ABSENT AND MUST REMAIN ABSENT** |
+| ⚠ **Limitation L-1** | # The orchestration path is exercised against the **P05-01 local deterministic feed** with an explicit fault table. It has **NOT** been exercised against a live P05-02 adapter, because none exists and live provider execution is **`NOT_AUTHORIZED`**. **A standing non-authorization — not a P05-04 defect.** Recorded, not papered over |
+| **Other limitations** | **L-2** scheduling is a deterministic **virtual** timeline — no wall-clock scheduler/cron/timer (D-3) · **L-3** the checkpoint ledger is **in-process**; no durable store (no storage decision authorized) · **L-4** this act does **not** retroactively create P05-04 evidence inside the P05 acceptance record |
+| **Reuse, not duplication** | Retryability is **imported** from the accepted P02 taxonomy (`RETRY_PROHIBITED`, `DISPOSITION[code].retryable`; retryable set = **E4, E7**) — **no table of its own is declared**. Canonical-record idempotency **reuses** the P05-01 `CanonicalRecordStore`. **No namespace, collision or fail-closed logic added** |
+| **Determinism** | Fully **synchronous**. No wall clock, no randomness, no ambient input (D-3). Backoff is **computed and recorded** in virtual milliseconds — **never slept**. Still **zero** dependencies, **zero** lockfile, **zero** network |
+| ⚠ **Guard disclosure** | The superseded tripwire `'P05-04 — no orchestration … is implemented'` was **REPLACED, NOT WEAKENED**, on the terms `P05_GATE_ACCEPTANCE.md` §9 set for the analogous `NOT_ACCEPTED` tripwire. **No scheduler / no async orchestration remain UNIVERSAL** and the orchestrator satisfies both. Only the *checkpointing* rule was rescoped, to the single enumerated D10-authorized module, **plus** behavioural idempotency proofs an absence-based rule could never make. **P05-01 "never even names retry" UNCHANGED** (asserted: same **8** modules) · contract-module rules **UNCHANGED** · **no assertion deleted** |
+| **Guard teeth** | Negative-tested: disabling store dedup → **4** fail · tampering an evidence file → **1** fail · neutering `assertOrchestrationPermitted` → **3** fail · relabelling synthetic as provider evidence → **2** fail · control → **34/34** |
+| **Effect on P06-02** | `Work Tracker`!P06-02 carries `P05-04` as a **Hard** dependency (`Dependency Matrix` Critical = **YES**). D10 discharged it **at the authorization level**; **this act discharges it at the implementation level.** ⚠ **Authorization was never completion; the two are recorded distinctly** |
+| **NOT done by this act** | No **P06-01/P06-02/P06-03** implementation · no P06 acceptance artifact · no certification · no production activation · no provider selection/entitlement/credential/configuration · no licensed historical acquisition · **no Track B → `origin/main` merge** · **no edit to any historical P00–P05 authority record** · no variation of **C1–C6** · no change to the **`MD:`** token · no existing-IIPS modification |
+
+⚠ **P05-04 completion does NOT re-open or alter the P05 gate acceptance** (P05 was accepted with
+P05-04 inside the gate and `NOT_AUTHORIZED`; that record stands as written), and is **NOT** P06
+authorization and **NOT** P06 acceptance.
+
+---
+
 ## 7. D4 / D5 / D7 / D8 / D9 artifact locations
 
 ### `docs/d4/` — specification baseline (16 files, corrected by D4-B)
@@ -379,6 +433,19 @@ double**, `mocklive`) · `tests/adapter-contract.test.js` (**74 contract-validat
 ⚠ **Still zero dependencies, zero network, zero credentials.** `mocklive` is **NOT** a
 provider-register issuance — `provider-register.json` is **unmodified** with exactly **1** identity.
 ⚠ These tests are **CONTRACT VALIDATION**, **not** provider evidence and **not** integration tests.
+
+### `p05/` — P05-04 ingestion-orchestration additions (⚠ supersedes the counts above **by addition** — the blocks above are left unedited)
+Added under **D10-1** — **P05-04 implementation and evidence**:
+`src/ingestionOrchestrator.js` (**scheduling · bounded retry execution · idempotent checkpointing**) ·
+`tests/orchestration.test.js` (**34 failure/replay tests**) · `evidence-p05-04/` (**9 run-log files**) ·
+`scripts/generate-p05-04-evidence.js` · `package.json` + `evidence:p05-04` ·
+`docs/p05/P05_04_EVIDENCE.md`.
+The suite is **263 tests, 263 PASS**.
+⚠ **Still zero dependencies, zero network, zero credentials.** The orchestrator **refuses** any
+adapter declaring live connectivity, `LIVE` provider kind, credentials or entitlement —
+`provider-register.json` is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
+⚠ These are **LOCAL SYNTHETIC run logs**, **not** provider execution evidence. **No P06 artifact,
+directory, fixture or evidence file was created.**
 
 *Note: D6 (authority reconciliation, result "NO AUTHORITY CHANGE") produced no artifacts by
 design — it was a read-only run. Its conclusion is carried forward in `docs/d8/`.*

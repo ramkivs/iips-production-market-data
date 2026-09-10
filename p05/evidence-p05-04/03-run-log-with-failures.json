@@ -1,0 +1,213 @@
+{
+  "artifact": "P05-04 RUN LOG — FAILURE / REPLAY EXERCISE",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_RUN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06Evidence": false,
+    "trackerP05_04ExitCriteria": "MET within the D10-1 boundary — \"Replay does not duplicate data\" is demonstrated for the orchestrated ingestion path over the P05-01 local deterministic feed",
+    "trackerP05_04TestValidation": "MET — \"Failure/replay tests\" = p05/tests/orchestration.test.js (29 tests)",
+    "trackerP05_04Evidence": "MET in form — \"Run logs\" are produced here, as LOCAL SYNTHETIC run logs",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "phaseScope": "P05-04",
+    "p06Implemented": false,
+    "recordedLimitation": "L-1 — the orchestration path is NOT exercised against a live P05-02 adapter, because no live adapter exists and live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). This is a standing non-authorization, not a defect in P05-04."
+  },
+  "trackerField": "Work Tracker!P05-04 \"Test / Validation\": Failure/replay tests",
+  "faultPlan": {
+    "Q-0001": [
+      "E4",
+      "E4"
+    ],
+    "H-0001": [
+      "E7"
+    ],
+    "C-0001": [
+      "E5"
+    ]
+  },
+  "faultPlanSemantics": "taskRef → error class per attempt (1-based). An EXPLICIT TABLE: no randomness and no hidden failure source.",
+  "runLogDigest": "082d847073d12eb82653b2d981d1f3b8cf1a1fb43f5fec29316a5e41824c57b3",
+  "summary": {
+    "module": "P05-04-INGESTION-ORCHESTRATOR",
+    "moduleVersion": "1.0",
+    "runId": "RUN-FAILURES",
+    "planId": "5ce7cc690cb401b704e655d872acc0897347892295437e7cbad11d606536a8fe",
+    "namespaceVersion": "1.0",
+    "retryPolicy": {
+      "maxAttempts": 3,
+      "baseBackoffMs": 250,
+      "backoffGrowth": 2,
+      "maxBackoffMs": 2000
+    },
+    "virtualClockMs": 5500,
+    "tickCount": 12,
+    "skippedCheckpointed": 0,
+    "acquired": 9,
+    "rejected": 3,
+    "ticksRetried": 9,
+    "recordsInserted": 3,
+    "recordsIdempotentNoop": 6,
+    "recordsConflictRejected": 0,
+    "canonicalRecordCount": 3,
+    "checkpointCount": 12
+  },
+  "perTickOutcome": [
+    {
+      "tickIndex": 0,
+      "taskRef": "Q-0001",
+      "runIndex": 0,
+      "status": "ACQUIRED",
+      "attempts": 3,
+      "retries": 2,
+      "backoffVirtualMs": 750,
+      "errorClass": null,
+      "storeOutcome": "INSERTED",
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 1,
+      "taskRef": "C-0001",
+      "runIndex": 0,
+      "status": "REJECTED",
+      "attempts": 1,
+      "retries": 0,
+      "backoffVirtualMs": 0,
+      "errorClass": "E5",
+      "storeOutcome": null,
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 2,
+      "taskRef": "H-0001",
+      "runIndex": 0,
+      "status": "ACQUIRED",
+      "attempts": 2,
+      "retries": 1,
+      "backoffVirtualMs": 250,
+      "errorClass": null,
+      "storeOutcome": "INSERTED",
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 3,
+      "taskRef": "VEN-XSYN",
+      "runIndex": 0,
+      "status": "ACQUIRED",
+      "attempts": 1,
+      "retries": 0,
+      "backoffVirtualMs": 0,
+      "errorClass": null,
+      "storeOutcome": "INSERTED",
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 4,
+      "taskRef": "Q-0001",
+      "runIndex": 1,
+      "status": "ACQUIRED",
+      "attempts": 3,
+      "retries": 2,
+      "backoffVirtualMs": 750,
+      "errorClass": null,
+      "storeOutcome": "IDEMPOTENT_NOOP",
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 5,
+      "taskRef": "C-0001",
+      "runIndex": 1,
+      "status": "REJECTED",
+      "attempts": 1,
+      "retries": 0,
+      "backoffVirtualMs": 0,
+      "errorClass": "E5",
+      "storeOutcome": null,
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 6,
+      "taskRef": "H-0001",
+      "runIndex": 1,
+      "status": "ACQUIRED",
+      "attempts": 2,
+      "retries": 1,
+      "backoffVirtualMs": 250,
+      "errorClass": null,
+      "storeOutcome": "IDEMPOTENT_NOOP",
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 7,
+      "taskRef": "VEN-XSYN",
+      "runIndex": 1,
+      "status": "ACQUIRED",
+      "attempts": 1,
+      "retries": 0,
+      "backoffVirtualMs": 0,
+      "errorClass": null,
+      "storeOutcome": "IDEMPOTENT_NOOP",
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 8,
+      "taskRef": "Q-0001",
+      "runIndex": 2,
+      "status": "ACQUIRED",
+      "attempts": 3,
+      "retries": 2,
+      "backoffVirtualMs": 750,
+      "errorClass": null,
+      "storeOutcome": "IDEMPOTENT_NOOP",
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 9,
+      "taskRef": "C-0001",
+      "runIndex": 2,
+      "status": "REJECTED",
+      "attempts": 1,
+      "retries": 0,
+      "backoffVirtualMs": 0,
+      "errorClass": "E5",
+      "storeOutcome": null,
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 10,
+      "taskRef": "H-0001",
+      "runIndex": 2,
+      "status": "ACQUIRED",
+      "attempts": 2,
+      "retries": 1,
+      "backoffVirtualMs": 250,
+      "errorClass": null,
+      "storeOutcome": "IDEMPOTENT_NOOP",
+      "checkpoint": "RECORDED"
+    },
+    {
+      "tickIndex": 11,
+      "taskRef": "VEN-XSYN",
+      "runIndex": 2,
+      "status": "ACQUIRED",
+      "attempts": 1,
+      "retries": 0,
+      "backoffVirtualMs": 0,
+      "errorClass": null,
+      "storeOutcome": "IDEMPOTENT_NOOP",
+      "checkpoint": "RECORDED"
+    }
+  ],
+  "observations": {
+    "E4 transient retried then succeeded": 6,
+    "E5 rejected on first attempt (retry-prohibited, ES-4)": true,
+    "no canonical record admitted for a rejection (RJ-2)": true
+  }
+}

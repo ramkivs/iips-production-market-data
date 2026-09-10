@@ -12,7 +12,7 @@
 **P02 is ACCEPTED** — see `../p02/P02_GATE_ACCEPTANCE.md` (package `2dd43cd`).
 **P03 is ACCEPTED** — see `../p03/P03_GATE_ACCEPTANCE.md` (checkpoint `d99c557`).
 **P04 is ACCEPTED** — see `../p04/P04_GATE_ACCEPTANCE.md` (package `6ec3b288c8deeee317a63341297bd33b9a090f4f`).
-**P05 is ACCEPTED** — see `../p05/P05_GATE_ACCEPTANCE.md` (pinned baseline `cdc684435ad41982b49f832e37d1c153866da6e8`). ⚠ **PIT repeatability = MISSING / NOT DEMONSTRATED — recorded and open, not discharged. P05-04 `NOT_AUTHORIZED`.**
+**P05 is ACCEPTED** — see `../p05/P05_GATE_ACCEPTANCE.md` (pinned baseline `cdc684435ad41982b49f832e37d1c153866da6e8`). ⚠ **PIT repeatability = MISSING / NOT DEMONSTRATED — recorded and open, not discharged.** **P05-04 = `IMPLEMENTED + EVIDENCED` within the D10-1 boundary** (`../p05/P05_04_EVIDENCE.md`; exit criterion *"Replay does not duplicate data"* MET — ⚠ limitation L-1: not exercised against a live adapter; provider execution still `NOT_AUTHORIZED`).
 **P06–P17 remain NOT ACCEPTED.**
 
 Gate names and intents derive from the tracker's *Phase Gates* sheet (read-only) and the
@@ -94,7 +94,7 @@ acceptance covers **P04 specification only**; **OI-08 is RESOLVED (1:N)** and **
 plus the P05-02 and P05-03 specification / adapter-contract packages**. ⚠ **PIT repeatability —
 a P05 minimum-evidence item — is MISSING / NOT DEMONSTRATED**; the A3 decision accepts P05 with
 that gap **recorded and open**, and the gap does not become evidence because acceptance
-occurred. ⚠ **P05-04 remains `NOT_AUTHORIZED` with no completion evidence (D9 N-3)**; provider
+occurred. ⚠ **P05-04 — `NOT_AUTHORIZED` at the moment of P05 acceptance (D9 N-3) — is now `IMPLEMENTED + EVIDENCED` within the D10-1 boundary** (`../p05/P05_04_EVIDENCE.md`: scheduling · bounded retry execution · idempotent checkpointing; exit criterion *"Replay does not duplicate data"* demonstrated by X-1…X-6 plus an interrupted-run/resume proof; run logs are **LOCAL SYNTHETIC**, and limitation **L-1** records that the path is not exercised against a live P05-02 adapter). ⚠ **That record is additive: the P05 acceptance record's R-13/R-14 remain historically true and unedited.** Provider
 execution and licensed historical acquisition remain **`NOT_AUTHORIZED` (N-1 / N-2)**;
 **OI-P04-03, OI-P04-04 and DEP-P01-04 remain OPEN**.
 
