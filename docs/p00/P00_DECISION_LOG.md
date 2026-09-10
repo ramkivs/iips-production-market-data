@@ -230,3 +230,98 @@ Source: `docs/d4/D4_14_AUTHORITY_ADR_REGISTER.md` §P.1 (G-A Integration Baselin
 | **What this act now makes possible** | P05-04 implementation and evidence · P06-01/P06-02/P06-03 specification and implementation within the boundaries above · production of the ADR-01 §G evidence (**13-engine oracle byte-identity**, fail-closed negatives, determinism) · and thereafter a **separate explicit P06 acceptance act**. ⚠ **None of these is performed by this entry** |
 | **Technical scope** | **NONE.** No methodology, contract, rule, canonical field key, lifecycle vocabulary, `snapshotId` composition, OI-08/OI-09/OI-10 decision, ADR-01 **C1–C6** rule or accepted **P00–P05** artifact is altered. **No `p05/src`, `p05/tests`, `p05/fixtures` or `p05/evidence*` behaviour is changed. No `docs/p06/` artifact is created. No implementation is performed** |
 | **Recording integrity** | Files edited by this act: this decision log (new §8 per rule 1) · `docs/PROGRAM_STATE.md` (additive current-state) · `docs/p00/P00_GATE_MODEL.md` (**current-state ledger cell only** — the stale P06 *"Impl. permitted now?"* value; gate intent, minimum evidence and the six acceptance requirements untouched) · the governance guard in `p05/tests`. **0** historical or accepted records rewritten |
+
+---
+
+## 9. D11 — Existing-IIPS authority act: ADR-01 C1–C6 guard implementation + M-1 factory/test reconciliation (appended 2026-09-10)
+
+**Append-only entry per §5 rule 1.** No prior entry is edited, renumbered or reinterpreted.
+**No new governance instrument, directory or register was created by this act.**
+**⚠ THIS IS AN AUTHORITY ACT ONLY. NO IMPLEMENTATION WAS PERFORMED BY THIS ENTRY.**
+
+### 9.1 The decision of record — verbatim
+
+> **Ramki/Sai authorize the existing-IIPS workstream to implement the existing ADR-01 C1–C6
+> fail-closed guard at the certified DataBoundExecutor/merge boundary and to perform the
+> minimum M-1 factory/test reconciliation for the three already-authoritative engines
+> (sector.telecom, sector.auto, sector.materials), followed by read-only oracle,
+> byte-identity, collision-census, and negative-test revalidation.**
+>
+> **This authorization does NOT constitute P06 acceptance, certification, production
+> authorization, provider/licensed execution authorization, or Track B → main merge
+> authorization.**
+>
+> **The implementation must preserve the existing ADR-01 C1–C6 rules exactly as approved,
+> including fail-closed behavior and no-partial-merge semantics.**
+
+*(Recorded verbatim as instructed; no markdown code markup added inside the quotation.)*
+
+### 9.2 Authority basis — cited, not inferred (§5 rule 2)
+
+| # | Basis | Source |
+|---|---|---|
+| 1 | **Program-authority convention of record** — the program owner of record acting is recorded as *"decision approved by Sai/Ramki to move forward"* | §3 of this log; applied identically at D9 (§6, §6.1) and D10 (§8) |
+| 2 | **Named authority for `DataBoundExecutor`** — *"NAMED AUTHORITY REQUIRED — **Ramki / Sai** … certified engine-layer contract/component changes require Ramki/Sai sign-off"* (G-A rule) | `docs/d5/ADR-01_NAMESPACE_COLLISION_GUARD.md` §H |
+| 3 | **ADR-01-A2 collision guard — APPROVED**, *"**Fail-closed**, rules C1–C6 as written … **Sole certified component affected: `DataBoundExecutor`**"* | `docs/p00/P00_AUTHORITY_REGISTER.md`:29 |
+| 4 | **Authority hold CLEARED** — *"ADR-01 is approved by Sai/Ramki"*; A2 *"**APPROVED — fail-closed** … Rules C1–C6 as written in ADR-01; **no variation authorized**"* | `docs/d8/D8_AUTHORITY_RECONCILIATION.md`:69, :35 |
+| 5 | **Execution already authorized** — **D10-4**: *"Execution of the C1–C6 fail-closed collision guard in the existing certified `DataBoundExecutor` is AUTHORIZED"* | §8.1 of this log |
+| 6 | **M-1 ownership** — **AD-10**: *"**EXISTING-IIPS PROGRAM** owns M-1 repair (Ramki/Sai)"* | §1 of this log; `docs/d4/D4_14_AUTHORITY_ADR_REGISTER.md` §P.1 |
+| 7 | **Existing-IIPS baseline of record** | `ramkivs/iips-review-recovered` @ `5decdca93e5d3b90ec94ca902ff73af45574a6ac` (AD-15; read-only) |
+
+⚠ **No additional named approver is required.** Item 1 is the recorded §3 convention of this
+program; items 2–4 name Ramki/Sai as the authority and record them as having approved. Nothing
+here infers an approval that is not already of record.
+
+### 9.3 What this act authorizes — and nothing beyond it
+
+| # | Authorized | Boundary |
+|---|---|---|
+| **A** | Implementation of the **already-approved** ADR-01 **C1–C6** fail-closed guard at the certified `DataBoundExecutor` / merge boundary (`iips-platform/src/distributed/LiveDataRuntime.ts:78`) | Rules **exactly as written** in ADR-01 §C.2 + §C.3. **No weakening, no bypass, no variation.** No precedence, no "last wins", no coercion, no silent overwrite, no partial merge |
+| **B** | **Minimum** M-1 factory/test reconciliation to wire the **three already-authoritative** engines `sector.telecom`, `sector.auto`, `sector.materials` into `ENGINE_FACTORY` | **Wiring only.** These 3 engines already exist, are already in `EngineRegistry.CERTIFIED_ENGINES`, and already pass their committed golden fixtures. **No new engine, no new metric, no methodology change** |
+| **C** | **Read-only** revalidation of the 13-engine oracle, byte-identity, collision census and C1–C6 negative tests after A and B | Read-only. No fixture, golden value or expected output may be edited to make a result pass |
+| **D** | Generation of the evidence required by **ADR-01 §G** items 1 and 2 | Evidence must state its own class. A `byteIdentical` value sourced from `ReplayService` is a **prohibited literal** while **AD-17** is unresolved (`P00_EVIDENCE_CONVENTIONS.md`:75, Prohibition 4) |
+
+### 9.4 ⚠ Two boundary tensions this act resolves explicitly, rather than leaving implicit
+
+| # | Tension | Resolution |
+|---|---|---|
+| **1** | **D10 §8.2 item 9** bars *"Existing-IIPS modification **outside** the approved ADR-01 boundary — `ReplayService`, `LiveDataRuntime.ts`, …"*, yet the guard must sit at the merge inside `LiveDataRuntime.ts`. | **Inside the boundary, and already authorized.** ADR-01-A2 names `DataBoundExecutor` the *"sole certified component affected"*, and **D10-4** already authorized C1–C6 execution there. This act confirms that the guard **at the merge** is inside the approved ADR-01 boundary. §8.2 item 9 continues to bar **every other** change to that file — including any change to the `ReplayService` interaction (**AD-17 stays unresolved and untouched**) |
+| **2** | **D10 §8.2 item 10** records **M-1/AD-4** as *not* resolved, and `P00_OPEN_ITEMS_REGISTER.md` states M-1 repair *"must not be implemented by **this program**."* | **Routed to the correct owner, not absorbed.** This act authorizes the **existing-IIPS workstream** — the **AD-10** owner — not this program. Per **§5 rule 5**, *an open item is not resolved by being recorded*: **M-1 remains `OPEN_REVALIDATION_REQUIRED`** until the existing-IIPS program repairs and revalidates it. This act grants permission to the owner; it resolves nothing |
+
+### 9.5 ⚠ Explicitly NOT authorized, NOT granted and NOT resolved by this act
+
+| # | Not authorized / not granted | Preserved authority |
+|---|---|---|
+| **1** | ⚠ **P06 gate acceptance** — **`NOT_ACCEPTED`**; still **6 of 18**. No `P06_GATE_ACCEPTANCE.md` is created by this entry | §5 rule 4; **D10-6** |
+| **2** | ⚠ **P07, P08 or any P09–P17 entry, implementation or promotion** | D9 §5 exclusion 5; **D10 §8.2 item 8** |
+| **3** | ⚠ **Provider / licensed execution** — **`NOT_AUTHORIZED`** | D9 **N-1**, **N-2**; **D10 §8.2 items 1–3** |
+| **4** | ⚠ **Production activation** — **`NOT_AUTHORIZED`** | **A4** control at **P16 only** |
+| **5** | ⚠ **Any certification** — **`NONE_GRANTED`**. **Authority authorization is never certification** | §5 rule 4; **C1–C12** remain future acts |
+| **6** | ⚠ **Track B → `origin/main` merge** — **`NOT AUTHORIZED`** | **D10 §8.2 item 5** |
+| **7** | ⚠ **Any new engine, or any new market-data field** | ADR-01-A2: *"No engine/methodology/scoring/calibration/taxonomy change"* |
+| **8** | ⚠ **Any change to the accepted P00–P05 contracts** | P00–P05 acceptance records are immutable historical records |
+| **9** | ⚠ **Any weakening, bypass or reinterpretation of ADR-01 C1–C6** | ADR-01 §C.2 **C5 fail-closed**; §C.3 *"Prohibited"*; D8:35 *"no variation authorized"* |
+| **10** | ⚠ **Any retroactive alteration of historical acceptance records** | §5 rule 1 (append-only) |
+| **11** | ⚠ **Any claim that the collision census is unchanged unless it is actually reverified.** Measured drift is of record: **52 coded documented vs 60 measured** at `5decdca`. It must be resolved or re-affirmed by the ADR-01/existing-IIPS authority. **Historical census records must not be silently rewritten** | `docs/d5/ADR-01_…md` §B.2 / §G item 1; `P00_EVIDENCE_CONVENTIONS.md` Prohibition 1 |
+| **12** | ⚠ **Resolution of M-1/AD-4, AD-17/M-2, M-5, M-6, OI-P04-03/04, DEP-P01-04, OI-D9-01** | §5 rule 5; **D10 §8.2 item 10** |
+| **13** | ⚠ **Any implementation at all** — this entry records authority only | This is an **authority act only** |
+
+### 9.6 Resulting authority state (by addition; §4, §6.1, §7.1 and §8.3 above left unedited)
+
+| Field | Value |
+|---|---|
+| `program_status` | **`AUTHORIZED_TO_PROCEED`** *(unchanged)* |
+| `existing_iips_workstream` | **`AUTHORIZED`** *(new)* — scope **A/B/C/D of §9.3 only** |
+| `adr_01_c1c6_guard_implementation` | **`AUTHORIZED`** *(new)* — at the certified `DataBoundExecutor`/merge boundary, **as written, no variation**; **NOT YET IMPLEMENTED** |
+| `m1_factory_reconciliation` | **`AUTHORIZED`** *(new)* — minimum wiring of 3 already-authoritative engines, by the **AD-10** owner; **NOT YET PERFORMED** |
+| `m1_status` | **`OPEN_REVALIDATION_REQUIRED`** *(unchanged — §5 rule 5; authorization resolves nothing)* |
+| `ad_17_status` | **`UNRESOLVED`** *(unchanged — not touched, not authorized)* |
+| `collision_census_status` | **`DRIFT_RECORDED — 52 documented / 60 measured`** — re-affirmation owed by the ADR-01 authority; **not silently rewritten** |
+| `p06_acceptance_status` | **`NOT_ACCEPTED`** — **no `P06_GATE_ACCEPTANCE.md` exists or is created** |
+| `formal_gate_status` | **6 of 18 accepted — P00, P01, P02, P03, P04, P05** *(unchanged — this act accepts no gate)* |
+| `certification_status` | **`NONE_GRANTED`** *(unchanged)* |
+| `production_activation_status` | **`NOT_AUTHORIZED`** *(unchanged — A4 at P16 only)* |
+| `track_b_to_main_merge` | **`NOT_AUTHORIZED`** *(unchanged)* |
+| `a3_gate_acceptor` / `a3_gate_acceptor_scope` | **Ramakrishnan V. S. (Ramki)** / **`P05, P06`** *(unchanged — P07–P17 still not designated)* |
+| **Technical scope** | **NONE.** No source file, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
+| **Recording integrity** | Files edited by this act: **this decision log only** (new §9 per rule 1) |
