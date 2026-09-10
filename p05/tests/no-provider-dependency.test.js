@@ -481,15 +481,18 @@ test('D10 — P05-04 and P06 entry are authorized, bounded, and grant no accepta
   //   The clause is RESCOPED, not deleted — and TIGHTENED, because it now also constrains what may
   //   be inside. The `P06_GATE_ACCEPTANCE.md` prohibition that follows is UNCHANGED IN SUBSTANCE
   //   and BROADENED from two directories to the whole `docs/` tree.
-  // ⚠ DISCLOSED SCOPE CORRECTION (P06-02-C): the permitted prefix set was `^P06_01_` while P06-02
-  //   was authorized for ENTRY only. D10-2 authorizes P06-02 and it is now implemented, so the set
-  //   widens to the two authorized work items — and **P06-03 remains barred**.
+  // ⚠ DISCLOSED SCOPE CORRECTION (P06-03-C): the permitted prefix set was `^P06_01_`, then
+  //   `^P06_0[12]_`, while the later work items were authorized for ENTRY only. **All three P06
+  //   work items authorized by D10-2 are now implemented**, so the set is the three of them.
+  //   ⚠ The tracker defines **no fourth P06 work item**, and the P06-acceptance-artifact ban that
+  //   follows is UNCHANGED — so this clause still bites on anything beyond the authorized scope.
   const docsP06 = join(docsRoot, 'p06');
   if (existsSync(docsP06)) {
     for (const f of readdirSync(docsP06)) {
-      assert.match(f, /^P06_0[12]_/,
-        `docs/p06 may hold ONLY P06-01 / P06-02 artifacts — P06-03 is authorized for entry but NOT `
-        + `implemented, and no P06 acceptance artifact may exist. Found '${f}'`);
+      assert.match(f, /^P06_0[123]_/,
+        `docs/p06 may hold ONLY P06-01 / P06-02 / P06-03 artifacts — the complete D10-2 scope; the `
+        + `tracker defines no fourth P06 work item, and no P06 acceptance artifact may exist. `
+        + `Found '${f}'`);
     }
   }
   const acceptanceArtifacts = [];

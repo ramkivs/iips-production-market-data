@@ -1,0 +1,144 @@
+{
+  "artifact": "P06-03 REQUIREMENT — \"Prevent duplicate records across retries/replays/providers\"",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_REPLAY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_02Evidence": false,
+    "phaseScope": "P06-03",
+    "trackerP06_03ExitCriteria": "MET — \"Repeated ingestion stable\": the same canonical corpus ingested repeatedly produces ZERO further inserts, a constant canonical count and a byte-identical canonical set (measured, 5 passes)",
+    "trackerP06_03TestValidation": "MET — \"Replay tests\" = p06/tests/deduplication.test.js",
+    "trackerP06_03Evidence": "MET — \"Replay evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "p06Acceptance": false,
+    "recordedLimitation": "L-1 — deduplication is demonstrated over SYNTHETIC LOCAL canonical records. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-03 defect."
+  },
+  "retries": {
+    "scenario": "the identical payload is acquired again under a NEW rawRef (a retry)",
+    "measured": {
+      "firstPresentation": {
+        "decision": "INSERTED",
+        "ruleId": "DD-1"
+      },
+      "retryPresentation": {
+        "decision": "IDEMPOTENT_NOOP",
+        "ruleId": "DD-2"
+      },
+      "recordCountAfterBoth": 1
+    },
+    "result": true
+  },
+  "replays": {
+    "scenario": "the whole canonical corpus is re-presented three times",
+    "measured": {
+      "pass1": {
+        "offered": 5,
+        "inserted": 5,
+        "idempotentNoop": 0,
+        "conflictRejected": 0,
+        "finalRecordCount": 5,
+        "distinctIdentityKeys": 5
+      },
+      "pass2": {
+        "offered": 5,
+        "inserted": 0,
+        "idempotentNoop": 5,
+        "conflictRejected": 0,
+        "finalRecordCount": 5,
+        "distinctIdentityKeys": 5
+      },
+      "pass3": {
+        "offered": 5,
+        "inserted": 0,
+        "idempotentNoop": 5,
+        "conflictRejected": 0,
+        "finalRecordCount": 5,
+        "distinctIdentityKeys": 5
+      },
+      "finalCanonicalCount": 5,
+      "canonicalSetDigest": "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0"
+    },
+    "result": true
+  },
+  "providers": {
+    "scenario": "records distinguished by provider are NOT collapsed",
+    "method": "The dedup key IS the frozen snapshotId = data-${provider}-${dataVersion}-${asOf} (AD-6; P05_03_SPECIFICATION.md:84 \"no component added\"). The provider is therefore a component of the key: a different provider necessarily yields a different key, and DD-4 keeps the records distinct — which is exactly what PN-5 (\"never a silent merge\") and RI-3 (\"provider identity is never flattened away\") require.",
+    "measuredRecords": [
+      {
+        "caseId": null,
+        "snapshotId": "data-localfix-vf4736b8bbde259a7-2026-03-02T14:30:00.000Z",
+        "provider": "localfix",
+        "dataVersion": "vf4736b8bbde259a7",
+        "asOf": "2026-03-02T14:30:00.000Z",
+        "canonicalSecurityId": "CS-LOCAL-0001",
+        "mappedCompanyId": "technology-H1",
+        "figi": "BBG00SYNTH01",
+        "identityKey": "data-localfix-vf4736b8bbde259a7-2026-03-02T14:30:00.000Z"
+      },
+      {
+        "caseId": null,
+        "snapshotId": "data-localfix-vcb49824bcbd02f3b-2026-03-02T14:30:00.000Z",
+        "provider": "localfix",
+        "dataVersion": "vcb49824bcbd02f3b",
+        "asOf": "2026-03-02T14:30:00.000Z",
+        "canonicalSecurityId": "CS-LOCAL-0003",
+        "mappedCompanyId": "chemicals-H1",
+        "figi": "BBG00SYNTH03",
+        "identityKey": "data-localfix-vcb49824bcbd02f3b-2026-03-02T14:30:00.000Z"
+      },
+      {
+        "caseId": null,
+        "snapshotId": "data-localfix-v710f387954c5cf66-2026-03-02T00:00:00.000Z",
+        "provider": "localfix",
+        "dataVersion": "v710f387954c5cf66",
+        "asOf": "2026-03-02T00:00:00.000Z",
+        "canonicalSecurityId": "CS-LOCAL-0001",
+        "mappedCompanyId": "technology-H1",
+        "figi": "BBG00SYNTH01",
+        "identityKey": "data-localfix-v710f387954c5cf66-2026-03-02T00:00:00.000Z"
+      },
+      {
+        "caseId": null,
+        "snapshotId": "data-localfix-v545ce3716c599cd2-2026-03-03T00:00:00.000Z",
+        "provider": "localfix",
+        "dataVersion": "v545ce3716c599cd2",
+        "asOf": "2026-03-03T00:00:00.000Z",
+        "canonicalSecurityId": "CS-LOCAL-0001",
+        "mappedCompanyId": "technology-H1",
+        "figi": "BBG00SYNTH01",
+        "identityKey": "data-localfix-v545ce3716c599cd2-2026-03-03T00:00:00.000Z"
+      },
+      {
+        "caseId": null,
+        "snapshotId": "data-localfix-v2c3e0e2653f64f71-2026-03-02T00:00:00.000Z",
+        "provider": "localfix",
+        "dataVersion": "v2c3e0e2653f64f71",
+        "asOf": "2026-03-02T00:00:00.000Z",
+        "canonicalSecurityId": "CS-LOCAL-0001",
+        "mappedCompanyId": "technology-H1",
+        "figi": "BBG00SYNTH01",
+        "identityKey": "data-localfix-v2c3e0e2653f64f71-2026-03-02T00:00:00.000Z"
+      }
+    ],
+    "distinctIdentityKeys": 5,
+    "recordCount": 5,
+    "allKeysRetainTheirProviderComponent": true,
+    "vintageAxisDemonstrated": [
+      {
+        "canonicalSecurityId": "CS-LOCAL-0001",
+        "vintages": 4,
+        "distinctSnapshotIds": 4,
+        "notCollapsed": true
+      }
+    ],
+    "result": true
+  }
+}

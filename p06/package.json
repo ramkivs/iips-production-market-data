@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "P06-01 normalization pipeline + P06-02 raw/canonical storage boundary. Declarative provider-to-canonical mapping execution (P02 MR-5, P01 FD-7) and a governed raw/canonical separation boundary. Authorized by D10-2. NO live provider, NO credentials, NO network, NO P06-03.",
+  "description": "P06-01 normalization pipeline + P06-02 raw/canonical storage boundary + P06-03 deduplication/idempotency rules. Authorized by D10-2 (scope P06-01/P06-02/P06-03 only). NO live provider, NO credentials, NO network, NO durable persistence. P06 acceptance remains NOT_ACCEPTED.",
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",
     "evidence:p06-01": "node scripts/generate-p06-01-evidence.js",
-    "evidence:p06-02": "node scripts/generate-p06-02-evidence.js"
+    "evidence:p06-02": "node scripts/generate-p06-02-evidence.js",
+    "evidence:p06-03": "node scripts/generate-p06-03-evidence.js"
   },
   "dependencies": {},
   "devDependencies": {},

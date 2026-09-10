@@ -1,0 +1,117 @@
+{
+  "artifact": "P06-03 SCOPE, LIMITATIONS AND OPEN ITEMS — FIRST-CLASS CONTENT, NOT OMISSIONS",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_REPLAY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_02Evidence": false,
+    "phaseScope": "P06-03",
+    "trackerP06_03ExitCriteria": "MET — \"Repeated ingestion stable\": the same canonical corpus ingested repeatedly produces ZERO further inserts, a constant canonical count and a byte-identical canonical set (measured, 5 passes)",
+    "trackerP06_03TestValidation": "MET — \"Replay tests\" = p06/tests/deduplication.test.js",
+    "trackerP06_03Evidence": "MET — \"Replay evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "p06Acceptance": false,
+    "recordedLimitation": "L-1 — deduplication is demonstrated over SYNTHETIC LOCAL canonical records. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-03 defect."
+  },
+  "p06_03": {
+    "workItem": "Deduplication/idempotency",
+    "requirement": "Prevent duplicate records across retries/replays/providers.",
+    "deliverable": "Deduplication rules",
+    "exitCriteria": "Repeated ingestion stable",
+    "implemented": true
+  },
+  "p06WorkItemsNowComplete": [
+    "P06-01 normalization pipeline",
+    "P06-02 raw/canonical separation",
+    "P06-03 deduplication/idempotency"
+  ],
+  "p06Acceptance": "NOT_ACCEPTED — all three work items are complete but the GATE is not accepted. No P06_GATE_ACCEPTANCE.md exists or is created (D10-6).",
+  "notImplemented": {
+    "p07": "NOT implemented — no freshness/staleness",
+    "p08": "NOT implemented — no PIT storage, no adjusted/unadjusted series, no corporate actions",
+    "schedulingRetriesCheckpointing": "NOT implemented here — P05-04 owns orchestration and is unchanged",
+    "durablePersistence": "NONE — the ledger is in-memory; nothing in p06/src calls node:fs",
+    "providerLifecycle": "NOT implemented"
+  },
+  "limitations": [
+    {
+      "id": "L-1",
+      "severity": "RECORDED LIMITATION",
+      "statement": "Deduplication is demonstrated over SYNTHETIC LOCAL canonical records. It has NOT been exercised against a live provider.",
+      "cause": "standing non-authorization (D9 N-1, D10 §8.2)",
+      "dischargedBy": "a future explicit provider-execution authorization, which does not exist"
+    },
+    {
+      "id": "L-2",
+      "severity": "RECORDED LIMITATION",
+      "statement": "Cross-PROVIDER distinctness is demonstrated STRUCTURALLY, from the frozen AD-6 identity form (the provider is a component of snapshotId), not by executing a second provider. No second provider identity may be issued under the current authority (D10 §8.2), so a two-provider corpus was not run.",
+      "cause": "no provider may be selected or issued",
+      "dischargedBy": "a future explicit provider-execution authorization"
+    },
+    {
+      "id": "L-3",
+      "severity": "RECORDED LIMITATION",
+      "statement": "The P06-02 attestation gate is CONTENT-based (a canonical digest). A party able to construct a byte-identical canonical record by hand would satisfy DD-5. The property enforced is provenance-through-the-boundary, NOT authenticity against an adversary — there is no secret in this system and none may be added (no credentials, D10 §8.2). This is P06-02 limitation L-2, inherited.",
+      "cause": "no key material exists",
+      "dischargedBy": "not applicable within the current authority"
+    },
+    {
+      "id": "L-4",
+      "severity": "RECORDED LIMITATION",
+      "statement": "The ledger is IN-MEMORY. No deduplicated canonical set is persisted, so there is no durable store and no raw-data-at-rest surface. Durable persistence is NOT claimed and is not part of the P06-03 contract.",
+      "cause": "scope discipline; P08 owns storage decisions (DEP-P01-04)",
+      "dischargedBy": "a future explicit authorization"
+    },
+    {
+      "id": "L-5",
+      "severity": "RECORDED LIMITATION",
+      "statement": "Three declared mappings exist (D01 quote/close/valuation), inherited from P06-01. D02–D10 are NOT declared, so deduplication is demonstrated over D01 only.",
+      "cause": "P06-01 limitation L-2, inherited",
+      "dischargedBy": "further P06-01 declarations"
+    },
+    {
+      "id": "L-6",
+      "severity": "RECORDED LIMITATION",
+      "statement": "P06-03 completion is NOT P06 gate acceptance, NOT certification, NOT provider authorization and NOT production activation.",
+      "cause": "D10-6 — \"P06 AUTHORIZATION IS NOT P06 ACCEPTANCE.\"",
+      "dischargedBy": "a separate explicit acceptance act by the designated A3 acceptor (Ramki), carrying the P00_GATE_MODEL.md:42 minimum evidence and ADR-01 §G evidence"
+    }
+  ],
+  "openItemsUnchanged": {
+    "OI-P04-03": "OPEN — tenant/region governance attribute set. No attribute invented.",
+    "OI-P04-04": "OPEN — FIGI sourcing/licensing/coverage.",
+    "DEP-P01-04": "UNRESOLVED — historical series structure is a P08 storage decision.",
+    "OI-D9-01": "OPEN — unchanged.",
+    "M-1 / AD-4": "OPEN — existing-IIPS constraint, unchanged.",
+    "M-5": "OPEN — blocks C12 certification.",
+    "M-6": "OPEN — unchanged.",
+    "AD-17 / M-2": "OPEN — unchanged.",
+    "PIT-1…PIT-7": "MISSING / NOT DEMONSTRATED — travels to P08 undischarged."
+  },
+  "notDoneByThisAct": [
+    "no P07 or P08 implementation",
+    "no P06 acceptance artifact",
+    "no certification granted",
+    "no production activation",
+    "no provider selection, entitlement, credential or provider configuration",
+    "no licensed historical acquisition",
+    "no scheduling, retries or checkpointing (P05-04 unchanged)",
+    "no durable persistence of raw or canonical data",
+    "no Track B → origin/main merge",
+    "no edit to any historical P00–P05 authority record",
+    "no variation of ADR-01 C1–C6 or of the MD: namespace token",
+    "no change to the AD-6 snapshotId form (no component added)",
+    "no P11 engine-input mapping",
+    "no existing-IIPS modification",
+    "no change to the accepted P05-04 CanonicalRecordStore",
+    "no second raw-ingestion path"
+  ]
+}

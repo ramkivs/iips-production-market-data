@@ -1,0 +1,105 @@
+{
+  "artifact": "P06-03 EVIDENCE INDEX — DEDUPLICATION / IDEMPOTENCY",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "generatedBy": "p06/scripts/generate-p06-03-evidence.js",
+  "module": "P06-03-DEDUPLICATION-IDEMPOTENCY-RULES",
+  "dedupRulesSchemaVersion": "1.0",
+  "namespaceToken": "MD:",
+  "authority": {
+    "decision": "D10-2 (docs/p00/P00_DECISION_LOG.md §8.1)",
+    "decisionCommit": "b41240c406914f34f06c2f7bc3986bdeb436018d",
+    "scope": "Work Tracker!P06-03 — Deduplication/idempotency. This is the LAST of the three P06 work items authorized by D10-2. P06-01 and P06-02 are complete and preserved.",
+    "priorWork": "P05-01 IMPLEMENTED/EVIDENCED · P05-02 SPEC + ADAPTER-CONTRACT · P05-03 SPEC + ADAPTER-CONTRACT · P05-04 IMPLEMENTED + EVIDENCED · P06-01 IMPLEMENTED + EVIDENCED · P06-02 IMPLEMENTED + EVIDENCED"
+  },
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_REPLAY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_02Evidence": false,
+    "phaseScope": "P06-03",
+    "trackerP06_03ExitCriteria": "MET — \"Repeated ingestion stable\": the same canonical corpus ingested repeatedly produces ZERO further inserts, a constant canonical count and a byte-identical canonical set (measured, 5 passes)",
+    "trackerP06_03TestValidation": "MET — \"Replay tests\" = p06/tests/deduplication.test.js",
+    "trackerP06_03Evidence": "MET — \"Replay evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "p06Acceptance": false,
+    "recordedLimitation": "L-1 — deduplication is demonstrated over SYNTHETIC LOCAL canonical records. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-03 defect."
+  },
+  "trackerRow": {
+    "workItem": "Deduplication/idempotency",
+    "requirement": "Prevent duplicate records across retries/replays/providers.",
+    "deliverable": "Deduplication rules",
+    "dependencies": "P06-01,P06-02 (Hard)",
+    "entryCriteria": "Canonical schema stable",
+    "exitCriteria": "Repeated ingestion stable",
+    "testValidation": "Replay tests",
+    "evidence": "Replay evidence"
+  },
+  "exitCriteriaAssessment": {
+    "entryCriteria": "MET — the canonical schema is stable (P06-01 complete, P06-02 complete)",
+    "exitCriteria": "MET — 5 passes over the same corpus: first pass 5 inserts, every later pass 0 inserts, final canonical count 5, 20 duplicate no-ops, canonical set byte-identical across all passes",
+    "testValidation": "MET — p06/tests/deduplication.test.js",
+    "evidence": "MET — this package",
+    "dedupIdentity": "snapshotId + canonicalDigest — taken from AD-6 / P01 §3.1 / §6 / DV-1 / RI-6; NO component added, NO alternative key invented",
+    "limitation": "L-1 — deduplication is demonstrated over SYNTHETIC LOCAL canonical records. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-03 defect."
+  },
+  "headlineMeasurements": {
+    "firstIngestionInserts": 5,
+    "secondAndLaterIngestionInserts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "finalCanonicalCount": 5,
+    "duplicateNoOpCount": 20,
+    "canonicalSetByteIdenticalAcrossPasses": true,
+    "bypassAttemptsRefused": 10,
+    "bypassAttemptsNotBlocked": 0,
+    "distinctRecordsRetained": 5,
+    "conflictOutcome": "CONFLICT_REJECTED"
+  },
+  "evidenceFiles": [
+    {
+      "file": "p06/evidence-p06-03/01-deduplication-rules.json",
+      "sha256": "3ab5eff7c92c46a7cfd8c10c6cb653d12ee23ab0cbd1020a77bf7e03c26ae9f8"
+    },
+    {
+      "file": "p06/evidence-p06-03/02-exit-criterion-repeated-ingestion-stable.json",
+      "sha256": "954b17522a304af775dc812b0c3c38013e72bdaf5757aa6c6b90386ce2223577"
+    },
+    {
+      "file": "p06/evidence-p06-03/03-requirement-axes.json",
+      "sha256": "aace1327f3a023a3311708d7829e2373fe500f678f931d5ed67f4be9f99031a1"
+    },
+    {
+      "file": "p06/evidence-p06-03/04-distinctness-conflicts-bypass.json",
+      "sha256": "e0ed5ace06c9b6f689e294f12abe31ff8b081a33b2ebac42fd7d1177268eef53"
+    },
+    {
+      "file": "p06/evidence-p06-03/05-scope-and-limitations.json",
+      "sha256": "013cee4642cb91a96653d10a8b23da0d34617f546992eed5bf46f18c42389bd4"
+    }
+  ],
+  "gateStatus": {
+    "p05Acceptance": "ACCEPTED — 6 of 18 (unchanged by this act)",
+    "p05_04": "IMPLEMENTED + EVIDENCED within the D10-1 boundary (unchanged)",
+    "p06_01": "IMPLEMENTED + EVIDENCED (preserved)",
+    "p06_02": "IMPLEMENTED + EVIDENCED (preserved)",
+    "p06_03": "IMPLEMENTED + EVIDENCED (limitations L-1…L-6 recorded)",
+    "p06Acceptance": "NOT_ACCEPTED — all three P06 work items are complete but the GATE is NOT accepted; no P06_GATE_ACCEPTANCE.md exists (D10-6)",
+    "p06A3GateAcceptor": "Ramakrishnan V. S. (Ramki), designated by D10-3, scoped to P06. Designation ≠ acceptance. Acceptance requires the P00_GATE_MODEL.md:42 minimum evidence (token recorded; C1–C6 collision guard evidence; 13-engine oracle byte-identity) plus ADR-01 §G evidence.",
+    "p07": "NOT_STARTED_NOT_PROMOTED",
+    "p08": "NOT_STARTED",
+    "certification": "NONE_GRANTED",
+    "productionActivation": "NOT_AUTHORIZED",
+    "trackBToMainMerge": "NOT AUTHORIZED",
+    "gatesAccepted": "6 of 18 — P00, P01, P02, P03, P04, P05 (unchanged)"
+  }
+}

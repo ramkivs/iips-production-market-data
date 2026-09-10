@@ -652,13 +652,18 @@ test('B/2 — no P06-01 module imports a network, process-spawning or ambient-st
  */
 const P06_01_SOURCE_FILES = Object.freeze(['mappingDeclaration.js', 'normalizationPipeline.js', 'identityResolution.js']);
 const P06_02_BOUNDARY_FILE = 'rawCanonicalBoundary.js';
+// ⚠ DISCLOSED SCOPE CORRECTION (P06-03-A): D10-2 also authorizes P06-03, which is now implemented
+//   in its own module. The enumeration widens by exactly that one file — and the clauses that keep
+//   P06-01's modules out of P06-02/P06-03 territory are UNCHANGED and still bind every module.
+const P06_03_DEDUP_FILE = 'deduplicationRules.js';
 
 test('B/3 — P06-01 is NOT P06-02: the storage boundary lives ONLY in the authorized P06-02 module', () => {
   const srcDir = join(p06Root, 'src');
   const present = readdirSync(srcDir).filter((x) => x.endsWith('.js')).sort();
   // The enumeration is itself asserted: a fourth P06-01 module, or a second boundary module, fails.
-  assert.deepEqual(present, [...P06_01_SOURCE_FILES, P06_02_BOUNDARY_FILE].sort(),
-    'p06/src must contain exactly the three P06-01 modules plus the single P06-02 boundary module');
+  assert.deepEqual(present, [...P06_01_SOURCE_FILES, P06_02_BOUNDARY_FILE, P06_03_DEDUP_FILE].sort(),
+    'p06/src must contain exactly the three P06-01 modules, the single P06-02 boundary module and '
+    + 'the single P06-03 deduplication module — no fourth work item and no stray module');
 
   for (const f of present) {
     const code = codeOnly(readFileSync(join(srcDir, f), 'utf8'));
@@ -667,12 +672,18 @@ test('B/3 — P06-01 is NOT P06-02: the storage boundary lives ONLY in the autho
       `${f} must not persist anything to disk`);
     assert.doesNotMatch(code, /bypass(Validation|Detection)/i,
       `${f} must not implement a raw-bypass surface`);
-    // ── RESCOPED: the boundary class may exist ONLY in the authorized P06-02 module. ──
-    if (f !== P06_02_BOUNDARY_FILE) {
+    // ── RESCOPED: these bind the P06-01 modules, which is the intent of this test. A P06-03 rule
+    //    legitimately CITES the reused P05-04 store by name, so the clause is scoped to P06-01. ──
+    if (P06_01_SOURCE_FILES.includes(f)) {
       assert.doesNotMatch(code, /class\s+\w*(RawStore|RawPayloadStore|RawCompartment|StorageBoundary)/,
         `${f} is a P06-01 module and must not implement the P06-02 storage boundary`);
       assert.doesNotMatch(code, /CanonicalRecordStore/,
         `${f} is a P06-01 module and must not reach canonical storage directly`);
+    }
+    // ── UNCHANGED AND UNIVERSAL: the boundary class may exist ONLY in the P06-02 module. ──
+    if (f !== P06_02_BOUNDARY_FILE) {
+      assert.doesNotMatch(code, /class\s+\w*(RawCompartment|CanonicalStorageBoundary)/,
+        `${f} must not implement the P06-02 storage boundary — that lives only in ${P06_02_BOUNDARY_FILE}`);
     }
   }
   // The P06-01 pipeline itself remains a pure function: the payload is an ARGUMENT and the record
@@ -681,15 +692,25 @@ test('B/3 — P06-01 is NOT P06-02: the storage boundary lives ONLY in the autho
   assert.ok(out.record !== undefined);
 });
 
-test('B/4 — P06-01 is NOT P06-03: no deduplication rules are implemented', () => {
+test('B/4 — P06-01 is NOT P06-03: deduplication rules live ONLY in the authorized P06-03 module', () => {
   const srcDir = join(p06Root, 'src');
   for (const f of readdirSync(srcDir).filter((x) => x.endsWith('.js'))) {
     // CODE only: a docblock legitimately NAMES the thing it states is not implemented, exactly as
     // the P05-02/P05-03 contract modules do. The P05 guard solves the same problem with codeOnly().
     const code = codeOnly(readFileSync(join(srcDir, f), 'utf8'));
-    assert.doesNotMatch(code, /dedup|deduplicat|duplicateKey|crossProviderMerge|idempotencyKey/i,
-      `${f} must not implement deduplication rules (P06-03)`);
+    // ⚠ DISCLOSED SCOPE CORRECTION (P06-03-A) — replaced, not weakened. This clause formerly
+    //   barred dedup code from EVERY module, which was correct while P06-03 was authorized for
+    //   ENTRY only. D10-2 authorizes P06-03 and it is now implemented, so dedup code is permitted
+    //   in exactly ONE file — and barred from all the others, including P06-02's boundary.
+    if (f !== P06_03_DEDUP_FILE) {
+      assert.doesNotMatch(code, /dedup|deduplicat|duplicateKey|crossProviderMerge|idempotencyKey/i,
+        `${f} is not the P06-03 module and must not implement deduplication rules`);
+    }
   }
+  // And the P06-03 module is the one that does — so the rescope is real, not a deletion.
+  const dedupCode = codeOnly(readFileSync(join(srcDir, P06_03_DEDUP_FILE), 'utf8'));
+  assert.match(dedupCode, /DEDUPLICATION_RULES/);
+  assert.match(dedupCode, /class DeduplicationLedger/);
   // Determinism is a PURITY property, deliberately not presented as deduplication.
   const a = runCase('N-01');
   const b = runCase('N-01');

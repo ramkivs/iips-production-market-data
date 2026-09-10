@@ -1,0 +1,244 @@
+{
+  "artifact": "P06-03 DISTINCTNESS · VINTAGE · CONFLICTS · BYPASS ATTEMPTS (EXECUTED)",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_REPLAY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_02Evidence": false,
+    "phaseScope": "P06-03",
+    "trackerP06_03ExitCriteria": "MET — \"Repeated ingestion stable\": the same canonical corpus ingested repeatedly produces ZERO further inserts, a constant canonical count and a byte-identical canonical set (measured, 5 passes)",
+    "trackerP06_03TestValidation": "MET — \"Replay tests\" = p06/tests/deduplication.test.js",
+    "trackerP06_03Evidence": "MET — \"Replay evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "p06Acceptance": false,
+    "recordedLimitation": "L-1 — deduplication is demonstrated over SYNTHETIC LOCAL canonical records. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-03 defect."
+  },
+  "distinctRecordsNotCollapsed": {
+    "rule": "DD-4 — a different provider vintage is a different record and is never collapsed (PN-5, RI-3, DV-1/DV-3)",
+    "measured": {
+      "offered": 5,
+      "inserted": 5,
+      "idempotentNoop": 0,
+      "conflictRejected": 0,
+      "finalRecordCount": 5,
+      "distinctIdentityKeys": 5
+    },
+    "result": true
+  },
+  "identityAndVintagePreserved": [
+    {
+      "snapshotId": "data-localfix-vf4736b8bbde259a7-2026-03-02T14:30:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "mappedCompanyId": "technology-H1",
+      "dataVersion": "vf4736b8bbde259a7",
+      "asOf": "2026-03-02T14:30:00.000Z",
+      "provider": "localfix",
+      "lineageSourceRef": "src-localfix-synthetic",
+      "authoritativeIdentifier": [
+        "FIGI"
+      ],
+      "allFieldKeysNamespaced": true
+    },
+    {
+      "snapshotId": "data-localfix-vcb49824bcbd02f3b-2026-03-02T14:30:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0003",
+      "canonicalIssuerId": "CI-LOCAL-BETA",
+      "mappedCompanyId": "chemicals-H1",
+      "dataVersion": "vcb49824bcbd02f3b",
+      "asOf": "2026-03-02T14:30:00.000Z",
+      "provider": "localfix",
+      "lineageSourceRef": "src-localfix-synthetic",
+      "authoritativeIdentifier": [
+        "FIGI"
+      ],
+      "allFieldKeysNamespaced": true
+    },
+    {
+      "snapshotId": "data-localfix-v710f387954c5cf66-2026-03-02T00:00:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "mappedCompanyId": "technology-H1",
+      "dataVersion": "v710f387954c5cf66",
+      "asOf": "2026-03-02T00:00:00.000Z",
+      "provider": "localfix",
+      "lineageSourceRef": "src-localfix-synthetic",
+      "authoritativeIdentifier": [
+        "FIGI"
+      ],
+      "allFieldKeysNamespaced": true
+    },
+    {
+      "snapshotId": "data-localfix-v545ce3716c599cd2-2026-03-03T00:00:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "mappedCompanyId": "technology-H1",
+      "dataVersion": "v545ce3716c599cd2",
+      "asOf": "2026-03-03T00:00:00.000Z",
+      "provider": "localfix",
+      "lineageSourceRef": "src-localfix-synthetic",
+      "authoritativeIdentifier": [
+        "FIGI"
+      ],
+      "allFieldKeysNamespaced": true
+    },
+    {
+      "snapshotId": "data-localfix-v2c3e0e2653f64f71-2026-03-02T00:00:00.000Z",
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "mappedCompanyId": "technology-H1",
+      "dataVersion": "v2c3e0e2653f64f71",
+      "asOf": "2026-03-02T00:00:00.000Z",
+      "provider": "localfix",
+      "lineageSourceRef": "src-localfix-synthetic",
+      "authoritativeIdentifier": [
+        "FIGI"
+      ],
+      "allFieldKeysNamespaced": true
+    }
+  ],
+  "conflicts": {
+    "rule": "DD-3 — same snapshotId with different content is CONFLICT_REJECTED, never overwritten (INV-2, RJ-6)",
+    "mechanism": "the accepted P05-04 CanonicalRecordStore, reused unchanged",
+    "sequence": [
+      {
+        "step": "first ingest of the record",
+        "outcome": "INSERTED"
+      },
+      {
+        "step": "same record again",
+        "outcome": "IDEMPOTENT_NOOP"
+      },
+      {
+        "step": "same snapshotId, DIFFERENT content",
+        "outcome": "CONFLICT_REJECTED"
+      }
+    ],
+    "storeSizeAfterConflict": 1,
+    "originalSurvivesUnchanged": true,
+    "classifyDedupDecision": {
+      "noExisting": "INSERTED",
+      "sameDigest": "IDEMPOTENT_NOOP",
+      "differentDigest": "CONFLICT_REJECTED"
+    },
+    "result": true
+  },
+  "bypassAttempts": {
+    "note": "Each attempt was EXECUTED. P06-03 must not become a second raw/canonical admission path.",
+    "results": [
+      {
+        "label": "DD-5 — a canonical record this boundary never attested",
+        "rule": "DD-5",
+        "outcome": "REFUSED",
+        "errorType": "BoundaryViolation",
+        "rules": [
+          "DD-5"
+        ],
+        "message": "[DD-5] dedup-admit: the record was not attested by the P06-02 boundary — P06-03 admits only governed canonical data and cannot become a second raw/canonical admission path"
+      },
+      {
+        "label": "DD-5 — the RAW provider payload N-01",
+        "rule": "DD-5",
+        "outcome": "REFUSED",
+        "errorType": "BoundaryViolation",
+        "rules": [
+          "DD-5"
+        ],
+        "message": "[DD-5] dedup-admit: the record was not attested by the P06-02 boundary — P06-03 admits only governed canonical data and cannot become a second raw/canonical admission path"
+      },
+      {
+        "label": "DD-5 — the RAW provider payload N-02",
+        "rule": "DD-5",
+        "outcome": "REFUSED",
+        "errorType": "BoundaryViolation",
+        "rules": [
+          "DD-5"
+        ],
+        "message": "[DD-5] dedup-admit: the record was not attested by the P06-02 boundary — P06-03 admits only governed canonical data and cannot become a second raw/canonical admission path"
+      },
+      {
+        "label": "DD-5 — the RAW provider payload N-03",
+        "rule": "DD-5",
+        "outcome": "REFUSED",
+        "errorType": "BoundaryViolation",
+        "rules": [
+          "DD-5"
+        ],
+        "message": "[DD-5] dedup-admit: the record was not attested by the P06-02 boundary — P06-03 admits only governed canonical data and cannot become a second raw/canonical admission path"
+      },
+      {
+        "label": "DD-5 — the RAW provider payload N-04",
+        "rule": "DD-5",
+        "outcome": "REFUSED",
+        "errorType": "BoundaryViolation",
+        "rules": [
+          "DD-5"
+        ],
+        "message": "[DD-5] dedup-admit: the record was not attested by the P06-02 boundary — P06-03 admits only governed canonical data and cannot become a second raw/canonical admission path"
+      },
+      {
+        "label": "DD-5 — the RAW provider payload N-05",
+        "rule": "DD-5",
+        "outcome": "REFUSED",
+        "errorType": "BoundaryViolation",
+        "rules": [
+          "DD-5"
+        ],
+        "message": "[DD-5] dedup-admit: the record was not attested by the P06-02 boundary — P06-03 admits only governed canonical data and cannot become a second raw/canonical admission path"
+      },
+      {
+        "label": "DD-5 — a raw payload dressed with a snapshotId",
+        "rule": "DD-5",
+        "outcome": "REFUSED",
+        "errorType": "BoundaryViolation",
+        "rules": [
+          "DD-5"
+        ],
+        "message": "[DD-5] dedup-admit: the record was not attested by the P06-02 boundary — P06-03 admits only governed canonical data and cannot become a second raw/canonical admission path"
+      },
+      {
+        "label": "DD-5 — a ledger constructed with no boundary at all",
+        "rule": "DD-5",
+        "outcome": "REFUSED",
+        "errorType": "BoundaryViolation",
+        "rules": [
+          "DD-5"
+        ],
+        "message": "[DD-5] ledger-init: a P06-02 CanonicalStorageBoundary is required — P06-03 operates only on governed canonical data and must not create a second raw-ingestion path"
+      },
+      {
+        "label": "DD-6 — a non-canonical object",
+        "rule": "DD-6",
+        "outcome": "REFUSED",
+        "errorType": "BoundaryViolation",
+        "rules": [
+          "DD-5"
+        ],
+        "message": "[DD-5] dedup-admit: the record was not attested by the P06-02 boundary — P06-03 admits only governed canonical data and cannot become a second raw/canonical admission path"
+      },
+      {
+        "label": "AD-6 — a malformed snapshotId",
+        "rule": "AD-6",
+        "outcome": "REFUSED",
+        "errorType": "BoundaryViolation",
+        "rules": [
+          "DD-6",
+          "ST-1",
+          "AD-6"
+        ],
+        "message": "[DD-6, ST-1, AD-6] dedup-identity: snapshotId 'not-a-snapshot-id' is not the frozen 'data-<provider>-<dataVersion>-<asOf>' form"
+      }
+    ],
+    "refused": 10,
+    "notBlocked": 0,
+    "ledgerRecordCountUnchanged": 5
+  }
+}

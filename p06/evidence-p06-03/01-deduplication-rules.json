@@ -1,0 +1,102 @@
+{
+  "artifact": "P06-03 DEDUPLICATION RULES — THE TRACKER DELIVERABLE, DECLARED AS DATA",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_REPLAY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_02Evidence": false,
+    "phaseScope": "P06-03",
+    "trackerP06_03ExitCriteria": "MET — \"Repeated ingestion stable\": the same canonical corpus ingested repeatedly produces ZERO further inserts, a constant canonical count and a byte-identical canonical set (measured, 5 passes)",
+    "trackerP06_03TestValidation": "MET — \"Replay tests\" = p06/tests/deduplication.test.js",
+    "trackerP06_03Evidence": "MET — \"Replay evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "p06Acceptance": false,
+    "recordedLimitation": "L-1 — deduplication is demonstrated over SYNTHETIC LOCAL canonical records. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-03 defect."
+  },
+  "trackerField": "Work Tracker!P06-03 \"Deliverable\": Deduplication rules",
+  "requirement": "Prevent duplicate records across retries/replays/providers.",
+  "schemaVersion": "1.0",
+  "identity": {
+    "name": "snapshotId + canonicalDigest",
+    "components": [
+      "snapshotId",
+      "canonicalDigest"
+    ],
+    "snapshotIdForm": "data-${provider}-${dataVersion}-${asOf}",
+    "sources": [
+      "AD-6 — snapshotId format frozen; authoritative for the market-data input layer",
+      "P01_DATA_CONTRACT.md §3.1 row 1 and §6 — the frozen form, carried for ADR-02 linkage",
+      "P05_03_SPECIFICATION.md:84 — \"no component added\"",
+      "DV-1 — dataVersion identifies the vintage of the SOURCE CONTENT, not the schema",
+      "P01_VERSIONING_COMPATIBILITY.md V2 — dataVersion is the provider content vintage",
+      "RI-6 — deterministic serialization gives a stable content digest"
+    ],
+    "notInvented": "This module adds NO component to snapshotId and defines NO alternative key."
+  },
+  "rules": [
+    {
+      "ruleId": "DD-1",
+      "name": "first presentation of a snapshotId inserts exactly one canonical record",
+      "condition": "no existing record carries this snapshotId",
+      "decision": "INSERTED",
+      "authority": "P05-04 CanonicalRecordStore.ingest — reused, not replaced"
+    },
+    {
+      "ruleId": "DD-2",
+      "name": "re-presentation of an IDENTICAL record is a no-op, never a duplicate",
+      "condition": "same snapshotId AND same canonicalDigest",
+      "decision": "IDEMPOTENT_NOOP",
+      "authority": "P05-04 CanonicalRecordStore.ingest — the tracker's retries/replays axis"
+    },
+    {
+      "ruleId": "DD-3",
+      "name": "same snapshotId with DIFFERENT content is a conflict, never an overwrite",
+      "condition": "same snapshotId AND different canonicalDigest",
+      "decision": "CONFLICT_REJECTED",
+      "authority": "INV-2 (immutable and versioned; a correction is a NEW dataVersion) · RJ-6 (silent overwrite, precedence and \"last wins\" prohibited without exception)"
+    },
+    {
+      "ruleId": "DD-4",
+      "name": "a DIFFERENT provider vintage is a DIFFERENT record and is never collapsed",
+      "condition": "different snapshotId (provider, dataVersion or asOf differs)",
+      "decision": "INSERTED",
+      "authority": "PN-5 (never two canonical identities, never a silent merge) · RI-3 (provider identity is never flattened away) · DV-1/DV-3 (a correction is a new vintage)"
+    },
+    {
+      "ruleId": "DD-5",
+      "name": "only a record the P06-02 boundary has ATTESTED may enter the deduplicated set",
+      "condition": "boundary.isAttested(record) !== true",
+      "decision": "REJECTED_NOT_ATTESTED",
+      "authority": "P06-02 exit criterion \"Raw data never bypasses validation\" — P06-03 must not become a second raw/canonical admission path"
+    },
+    {
+      "ruleId": "DD-6",
+      "name": "only a governed canonical record may enter the deduplicated set",
+      "condition": "assertCanonicalShape(record) fails",
+      "decision": "REJECTED_NOT_CANONICAL",
+      "authority": "P02 §1 M-1…M-4 · C1/FD-1 (every key namespaced) · ST-10 (immutable) · M-4 (no free-form bag)"
+    }
+  ],
+  "decisions": [
+    "INSERTED",
+    "IDEMPOTENT_NOOP",
+    "CONFLICT_REJECTED",
+    "REJECTED_NOT_ATTESTED",
+    "REJECTED_NOT_CANONICAL"
+  ],
+  "prohibitions": [
+    "RJ-6 — no silent overwrite, no precedence rule, no \"last wins\", no dropped field, no substituted value",
+    "PN-5 — never a silent merge of two providers into one canonical record",
+    "RI-3 — provider identity is never flattened away",
+    "AD-6 / P05_03:84 — no component is added to snapshotId"
+  ],
+  "reuseStatement": "The decision rule is the one the accepted P05-04 CanonicalRecordStore already implements — (snapshotId, canonicalDigest) → INSERTED | IDEMPOTENT_NOOP | CONFLICT_REJECTED. It is REUSED, not duplicated and not replaced. No new canonical store exists in P06-03."
+}

@@ -1,5 +1,47 @@
 # PROGRAM STATE — SESSION RECOVERY MANIFEST
 
+> **▶ CURRENT WORK ACT: P06-03 IMPLEMENTED + EVIDENCED — DEDUPLICATION / IDEMPOTENCY COMPLETE.
+> ALL THREE D10-2 P06 WORK ITEMS ARE NOW COMPLETE — AND P06 IS STILL `NOT_ACCEPTED`**
+> (`docs/p06/P06_03_EVIDENCE.md`, recorded **2026-09-10** under authority **D10-2**). Delivered:
+> `p06/src/deduplicationRules.js` (`DEDUPLICATION_RULES` DD-1…DD-6 declared as data ·
+> `dedupIdentityFor` · `classifyDedupDecision` · `DeduplicationLedger`) ·
+> `p06/tests/deduplication.test.js` (**33 replay tests**) · `p06/evidence-p06-03/` (**6 files**).
+> **Suite: P05 264 + P06 113 = 377 tests, 377 PASS / 0 FAIL.**
+> ⚠ **`p06_03_status` = `IMPLEMENTED + EVIDENCED`.** Authoritative tracker exit criterion
+> ***"Repeated ingestion stable"*** is **MET**, **measured over 5 passes**: first pass **5** inserts,
+> every later pass **[0, 0, 0, 0]**, final canonical count **5**, **20** duplicate no-ops, canonical
+> set **byte-identical** across all passes. Entry criterion *"Canonical schema stable"* MET.
+> ⚠ **Dedup identity — TAKEN FROM EXISTING CONTRACTS, NOT INVENTED:** `snapshotId`
+> (`data-${provider}-${dataVersion}-${asOf}`, **AD-6**, `P05_03_SPECIFICATION.md`:84 *"no component
+> added"*) **+ `canonicalDigest`** (**RI-6**). The decision rule is the **accepted P05-04
+> `CanonicalRecordStore`** rule — **REUSED, not duplicated, not replaced. No second store.**
+> ⚠ **Cross-provider records are deliberately NOT collapsed** (**PN-5** *"never a silent merge"* ·
+> **RI-3** *"provider identity is never flattened away"*). Retries ✅ · replays ✅ · providers ✅
+> (`CS-LOCAL-0001` holds **4 vintages → 4 distinct `snapshotId`s**, not collapsed).
+> ⚠ **10 bypass attempts executed, 10 REFUSED, 0 not blocked** — P06-03 cannot become a second
+> raw/canonical admission path (**DD-5** requires a P06-02 attestation; the ledger cannot even be
+> constructed without a boundary).
+> ⚠ **Recorded limitations L-1…L-6**, notably **L-2** (cross-provider distinctness is demonstrated
+> **STRUCTURALLY** from the frozen AD-6 form — no second provider identity may be issued, so a
+> two-provider corpus was **not** run) and **L-3** (the P06-02 attestation gate is **content-based**:
+> provenance-through-the-boundary, **not** authenticity against an adversary — inherited P06-02 L-2).
+> ⚠ **UNCHANGED:** **P05 = `ACCEPTED`, 6 of 18** · **P06-01 and P06-02 preserved** · **P06 =
+> `NOT_ACCEPTED`**, no `P06_GATE_ACCEPTANCE.md` (**D10-6**) · provider execution **`NOT_AUTHORIZED`**
+> (N-1) · licensed historical acquisition **`NOT_AUTHORIZED`** (N-2) · production activation
+> **`NOT_AUTHORIZED`** (A4 at P16 only) · **Track B → `origin/main` merge `NOT AUTHORIZED`** ·
+> certification **`NONE_GRANTED`** · ADR-01 **C1–C6 fail-closed and unvaried** (reused by import) ·
+> `MD:` **the exact namespace token** · **the AD-6 `snapshotId` form unchanged (no component
+> added)** · **FIGI/OpenFIGI remains the sole `AUTHORITATIVE` identifier** · **no P07/P08** · **no
+> scheduling/retries/checkpointing** (P05-04 unchanged) · **no durable persistence** · **no P11
+> engine-input mapping** · **no historical P00–P05 authority record edited** · **no concessions
+> register**.
+> ⚠ **NEXT STEP IS AN AUTHORITY ACT, NOT AN IMPLEMENTATION ACT.** The accepted tracker defines
+> exactly **three** P06 work items and all three are complete. **P06 acceptance is a separate
+> explicit decision by Ramakrishnan V. S. (Ramki), D10-3**, carrying the `P00_GATE_MODEL.md`:42
+> minimum evidence — *"Token recorded; C1–C6 collision guard evidence; **13-engine oracle
+> byte-identity**"* — plus ADR-01 §G evidence. **It must NOT be inferred from work-item completion,
+> and was NOT performed by this act.**
+>
 > **▶ CURRENT WORK ACT: P06-02 IMPLEMENTED + EVIDENCED — RAW/CANONICAL STORAGE BOUNDARY COMPLETE
 > WITHIN THE D10-2 BOUNDARY** (`docs/p06/P06_02_EVIDENCE.md`, recorded **2026-09-10** under
 > authority **D10-2**, `docs/p00/P00_DECISION_LOG.md` §8.1). Delivered:
@@ -167,7 +209,8 @@
 | `p06_acceptance_status` | **`NOT_ACCEPTED`** — ⚠ **authorization is not acceptance**; no `P06_GATE_ACCEPTANCE.md` exists |
 | `p06_01_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_01_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Canonical output deterministic"** **MET** · ⚠ limitations **L-1** (not exercised against a live provider) and **L-2** (only D01 declared) |
 | `p06_02_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_02_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Raw data never bypasses validation"** **MET** — **31 bypass attempts executed, 31 refused, 0 not blocked** · ⚠ limitations **L-1…L-6** (esp. **L-2** attestation is provenance not authenticity · **L-3** the P05-04 store is unchanged, encapsulated + audited) |
-| `p06_03_status` | **`AUTHORIZED` for entry, NOT implemented** — **deduplication rules**; no dedup rule, duplicate key or cross-provider merge exists |
+| `p06_03_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_03_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Repeated ingestion stable"** **MET** (5 passes: 5 inserts then **[0,0,0,0]**, final count **5**, **20** no-ops, byte-identical) · dedup identity = `snapshotId` (**AD-6**, no component added) **+ `canonicalDigest`** (**RI-6**), decision rule **REUSED** from the P05-04 store · ⚠ limitations **L-1…L-6** |
+| `p06_work_items_complete` | **ALL THREE** — `P06-01` normalization pipeline · `P06-02` raw/canonical separation · `P06-03` deduplication/idempotency. ⚠ **Work-item completion is NOT gate acceptance** (**D10-6**) — `p06_acceptance_status` remains **`NOT_ACCEPTED`** and the tracker defines **no fourth P06 work item** |
 | `a3_gate_acceptor_scope` | **`P05, P06`** — Ramakrishnan V. S. (Ramki) · ⚠ **P07–P17 NOT designated** |
 | `adr_01_a2_execution` | **`AUTHORIZED`** — C1–C6 fail-closed guard in the certified `DataBoundExecutor`, **as written in ADR-01 §C.2, no variation** |
 | `track_b_to_main_merge` | **`NOT AUTHORIZED`** — no accepted artifact authorizes it; `origin/main` = `eae2ff6` |
@@ -515,6 +558,46 @@ criterion *"Repeated ingestion stable."*
 
 ---
 
+## 6k. P06-03 status — IMPLEMENTED + EVIDENCED; all three P06 work items complete, gate still NOT_ACCEPTED
+
+# **P06-03 COMPLETE WITHIN BOUNDARY · ALL THREE P06 WORK ITEMS COMPLETE · P06 STILL `NOT_ACCEPTED`**
+
+Implemented under **D10-2**. Evidence record: **`docs/p06/P06_03_EVIDENCE.md`**.
+
+| Field | Value |
+|---|---|
+| **Scope implemented** | Exactly `Work Tracker`!P06-03 *Requirement* — *"Prevent duplicate records across retries/replays/providers."* Deliverable *"Deduplication rules"*. **Nothing wider; no requirement invented** |
+| `p06_03_status` | **`IMPLEMENTED + EVIDENCED`** *(was `NOT STARTED`)* |
+| **Entry criterion** — *"Canonical schema stable"* | ✅ **MET** — P06-01 and P06-02 complete |
+| **Exit criterion** — *"Repeated ingestion stable"* | ✅ **MET, MEASURED over 5 passes** — first pass **5** inserts · every later pass **[0, 0, 0, 0]** · final canonical count **5** · **20** duplicate no-ops · **one distinct canonical-set digest across all 5 passes** (byte-identical) |
+| **Test / Validation** — *"Replay tests"* | ✅ **MET** — `p06/tests/deduplication.test.js`, **33 tests** (A rules 2 · I identity 4 · D exit criterion 5 · N distinctness/vintage/FIGI 3 · F conflicts/RJ-6 4 · G cannot bypass P06-02 6 · P P06-01/P06-02/C1–C6 intact 4 · S scope 5) |
+| **Evidence** — *"Replay evidence"* | ✅ **MET** — `p06/evidence-p06-03/` (6 files, byte-reproducible) |
+| ⚠ **Dedup identity — NOT INVENTED** | **`snapshotId`** = `data-${provider}-${dataVersion}-${asOf}` (**AD-6**; `P01_DATA_CONTRACT.md` §3.1 row 1 + §6; **`P05_03_SPECIFICATION.md`:84 *"no component added"***) **+ `canonicalDigest`** (**RI-6** deterministic serialization). `dataVersion` = the **source-content vintage** (**DV-1**, `P01_VERSIONING_COMPATIBILITY.md` **V2**); a correction is a **new `dataVersion`**, never an edit (**INV-2**, **DV-3**) |
+| ⚠ **Existing mechanism REUSED, not duplicated** | An idempotency mechanism **already existed** — the accepted **P05-04 `CanonicalRecordStore`** — and it is authoritative. Measured before this act: 5 `INSERTED` then 5 `IDEMPOTENT_NOOP`, count 5. **P06-03 builds NO second store.** It supplies the tracker's named deliverable — **deduplication *rules*, declared as data** (DD-1…DD-6, each citing its authority) — plus a decision layer that makes the outcome observable and provable |
+| ⚠ **Cross-provider records NOT collapsed** | **PN-5** *"never two canonical identities, never a silent merge"* · **RI-3** *"provider identity is never flattened away"*. Two providers' observations are **distinct, correctly attributed** records. *"across providers"* is satisfied by (a) suppressing a re-presented **same**-provider vintage and (b) **proving** distinct-provider records stay distinct |
+| **The three requirement axes — each EXECUTED** | **Retries** ✅ identical payload under a new `rawRef` → `INSERTED` then `IDEMPOTENT_NOOP`, count **1** · **Replays** ✅ whole corpus 3× → `5`, `0`, `0`, final **5** · **Providers** ✅ **5 distinct identity keys for 5 records**, every key retains its provider component; **vintage axis: `CS-LOCAL-0001` holds 4 vintages → 4 distinct `snapshotId`s, not collapsed** |
+| **DD-3 conflicts governed by existing rules** | Measured at the reused P05-04 store: `INSERTED` → `IDEMPOTENT_NOOP` → **`CONFLICT_REJECTED`**; store size **1**; **the original survives unchanged** — no silent overwrite, no precedence, no "last wins" (**INV-2**, **RJ-6**) |
+| ⚠ **Cannot become a second raw path** | `DeduplicationLedger` **cannot be constructed without a P06-02 boundary**; `record()` refuses anything not attested (**DD-5**) and anything not a governed canonical record (**DD-6**). **10 bypass attempts executed → 10 REFUSED, 0 not blocked** |
+| **Reuse, not duplication** | `canonicalDigest` ← `p05/src/serialize.js` · `NAMESPACE_TOKEN` ← `p05/src/namespace.js` · `assertCanonicalShape` + the attestation gate ← `./rawCanonicalBoundary.js` (P06-02) · the decision rule ← the P05-04 store. **No new canonical store, no re-implemented C-rule** |
+| ⚠ **Recorded limitations** | **L-1** not exercised against a live provider · **L-2** cross-provider distinctness is **STRUCTURAL** (from the frozen AD-6 form) — no second provider identity may be issued, so a two-provider corpus was **not** run · **L-3** the P06-02 attestation gate is **content-based**: provenance-through-the-boundary, **not** authenticity against an adversary (inherited **P06-02 L-2**) · **L-4** the ledger is **in-memory**, no durable store claimed (**DEP-P01-04** → P08) · **L-5** only **D01** declared (inherited **P06-01 L-2**) · **L-6** P06-03 completion is **NOT** P06 acceptance / certification / provider authorization / activation |
+| ⚠ **Guard disclosure** | **6 assertion statements textually replaced (6 deleted assertion lines, measured), each equal-or-stronger** — enumerated in `docs/p06/P06_03_EVIDENCE.md` §6. **P07/P08 restrictions UNCHANGED** · the **existing-IIPS filename check byte-for-byte UNCHANGED** · the **universal** *no disk persistence* and *no raw-bypass surface* clauses **retained and still bind every module** · **newly barred: any `P06[_-]0[4-9]` artifact** (the tracker defines no fourth P06 work item). Net assertion counts: `normalization.test.js` **144 → 147**; **every other pre-existing file +0** |
+| **Guard teeth** | Negative-tested: add `docs/p06/P06_04_EVIDENCE.md` → **2 P05 guards fail** · add `P06_GATE_ACCEPTANCE.md` → **2 P05 guards fail** · smuggle `deduplicateSneaky()` into the **P06-02 boundary** → **1 P05 guard + P06-01 B/4 fail** · add a stray 5th module to `p06/src` → **B/3 + S/5 fail** · add `writeFileSync` to the P06-03 module → **1 P05 guard fails** · control → all pass |
+| **NOT done by this act** | **No P07 or P08 implementation** (no freshness/staleness, no PIT storage, no adjusted/unadjusted series, no corporate actions) · **no P06 acceptance artifact** · no certification · no production activation · no provider selection/entitlement/credential/configuration · no licensed historical acquisition · **no scheduling/retries/checkpointing** (P05-04 unchanged) · **no durable persistence** · **no Track B → `origin/main` merge** · no edit to any historical P00–P05 authority record · no variation of **C1–C6** · no change to the **`MD:`** token · **no change to the AD-6 `snapshotId` form** · **no P11 engine-input mapping** · no existing-IIPS modification · **no change to the accepted P05-04 `CanonicalRecordStore`** · **no second raw-ingestion path** |
+
+⚠ **ALL THREE P06 WORK ITEMS ARE NOW COMPLETE — AND P06 IS STILL `NOT_ACCEPTED`, still 6 of 18.**
+
+**Next governance-safe step: an AUTHORITY act, not an implementation act.** The accepted tracker
+defines exactly **three** P06 work items and all three are complete. The next step is **a separate,
+explicit P06 gate-acceptance decision by the designated A3 acceptor — Ramakrishnan V. S. (Ramki),
+D10-3** — carrying the `P00_GATE_MODEL.md`:42 minimum evidence (*"Token recorded; C1–C6 collision
+guard evidence; **13-engine oracle byte-identity**"*) plus **ADR-01 §G** evidence. ⚠ **It must NOT
+be inferred from work-item completion.** Note that the **13-engine oracle byte-identity** element
+concerns existing-IIPS engines and is **outside** everything implemented in P06. If further
+*implementation* is wanted instead, the next tracker phases are **P07** (data quality/freshness) and
+**P08** (historical/PIT) — **neither is authorized for entry today**, and neither was touched.
+
+---
+
 ## 7. D4 / D5 / D7 / D8 / D9 artifact locations
 
 ### `docs/d4/` — specification baseline (16 files, corrected by D4-B)
@@ -613,6 +696,24 @@ The combined suite is **344 tests, 344 PASS** (P05 264 · P06 80).
 register is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
 ⚠ **`localfix` is a SYNTHETIC source — this is LOCAL SYNTHETIC boundary evidence, NOT provider
 evidence.** ⚠ **P06-03 is NOT implemented**; no `P06_GATE_ACCEPTANCE.md` exists.
+
+### `docs/p06/` — P06 execution records (3 files)  ·  `p06/` — P06-01 pipeline + P06-02 boundary + P06-03 dedup (executable)
+`docs/p06/P06_01_EVIDENCE.md` · `docs/p06/P06_02_EVIDENCE.md` · **`docs/p06/P06_03_EVIDENCE.md`** ·
+`p06/src/mappingDeclaration.js` · `p06/src/normalizationPipeline.js` ·
+`p06/src/identityResolution.js` · `p06/src/rawCanonicalBoundary.js` ·
+**`p06/src/deduplicationRules.js`** (`DEDUPLICATION_RULES` DD-1…DD-6 · `dedupIdentityFor` ·
+`classifyDedupDecision` · `DeduplicationLedger`) ·
+`p06/tests/normalization.test.js` (55) · `p06/tests/rawCanonicalBoundary.test.js` (25) ·
+**`p06/tests/deduplication.test.js` (33)** · `p06/tests/helpers.js` ·
+`p06/fixtures/normalization-fixtures.json` ·
+`p06/evidence-p06-01/` (9) · `p06/evidence-p06-02/` (6) · **`p06/evidence-p06-03/` (6)** ·
+`p06/scripts/generate-p06-0{1,2,3}-evidence.js` · `p06/package.json` (+`evidence:p06-03`).
+The combined suite is **377 tests, 377 PASS** (P05 264 · P06 113).
+⚠ **Still zero dependencies, zero network, zero credentials, zero disk persistence.** The provider
+register is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
+⚠ **`localfix` is a SYNTHETIC source — this is LOCAL SYNTHETIC replay evidence, NOT provider
+evidence.** ⚠ **All three P06 work items are complete and `P06` is still `NOT_ACCEPTED`** — no
+`P06_GATE_ACCEPTANCE.md` exists (**D10-6**). **No P07/P08 artifacts exist.**
 
 *Note: D6 (authority reconciliation, result "NO AUTHORITY CHANGE") produced no artifacts by
 design — it was a read-only run. Its conclusion is carried forward in `docs/d8/`.*
