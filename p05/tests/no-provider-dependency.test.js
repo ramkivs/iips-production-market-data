@@ -12,8 +12,11 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { createHash } from 'node:crypto';
+
 import { makeFeed, RECEIVED_AT, p05Root, readRepo } from './helpers.js';
 import { scanForSecrets } from '../src/errors.js';
+import { NAMESPACE_TOKEN } from '../src/namespace.js';
 
 const RECEIVED = RECEIVED_AT;
 
@@ -339,3 +342,82 @@ test('P05 is ACCEPTED by an explicit A3 act, with every limitation and non-autho
   assert.match(acc, /\*\*C-4 NO EVIDENCE EXISTS\*\*/);
 });
 
+
+/**
+ * D10 — P05-04 AUTHORIZATION + P06 ENTRY AUTHORIZATION + P06 A3 DESIGNATION +
+ * `DataBoundExecutor` C1–C6 EXECUTION AUTHORIZATION (`docs/p00/P00_DECISION_LOG.md` §8).
+ *
+ * This is a NEW guard. It weakens nothing: every pre-existing assertion in this file is intact,
+ * including the P05 acceptance guard above, which continues to require that the P05 acceptance
+ * record still reads P05-04 `NOT_AUTHORIZED` — because that is what was true at the moment of P05
+ * acceptance, and D10 supersedes it as to current state WITHOUT editing it.
+ *
+ * The guard's job is to make the authorization durable and to prevent a contradictory
+ * unauthorized-state claim from being committed later: it pins what D10 grants, what it expressly
+ * does NOT grant, and that no P06 acceptance or implementation was smuggled in with it.
+ */
+test('D10 — P05-04 and P06 entry are authorized, bounded, and grant no acceptance or execution beyond scope', () => {
+  const log = readRepo('docs/p00/P00_DECISION_LOG.md');
+
+  // ── 1. The append-only authority act exists, in the decision log its own rules provide for. ──
+  assert.match(log, /^## 8\. D10 —/m, 'D10 must be recorded as an append-only decision-log entry');
+  assert.match(log, /Append-only entry per §5 rule 1/);
+  assert.match(log, /No new governance instrument, directory or register was created/);
+
+  // ── 2. What D10 grants. ──
+  assert.match(log, /P05-04 — ingestion orchestration — is AUTHORIZED/);
+  assert.match(log, /P06 ENTRY is AUTHORIZED/);
+  assert.match(log, /`P06-01`, `P06-02`, `P06-03` ONLY/);
+  assert.match(log, /A3 phase-gate acceptance authority for the P06 gate is DESIGNATED as Ramakrishnan V\. S\. \(Ramki\)/);
+  assert.match(log, /C1–C6 fail-closed collision guard in the existing certified `DataBoundExecutor` is AUTHORIZED/);
+
+  // ── 3. The authorization is bounded, and the C1–C6 design is not varied. ──
+  assert.match(log, /no variation authorized/i);
+  assert.match(log, /NO METHODOLOGY VARIATION IS AUTHORIZED/);
+  assert.match(log, /P07–P17 acceptor assignment NOT made by this entry/);
+
+  // ── 4. Authorization is NOT acceptance, and no P06 acceptance artifact may exist. ──
+  assert.match(log, /P06 AUTHORIZATION IS NOT P06 ACCEPTANCE/);
+  assert.match(log, /No `P06_GATE_ACCEPTANCE\.md` is created by this entry/);
+  const docsRoot = join(p05Root, '..', 'docs');
+  assert.ok(!readdirSync(docsRoot).includes('p06'),
+    'no docs/p06 directory may exist — D10 authorizes entry, it does not implement P06');
+  const acceptanceArtifacts = readdirSync(join(docsRoot, 'p05'))
+    .concat(readdirSync(join(docsRoot, 'p00'), { withFileTypes: false }))
+    .filter((f) => /P06_GATE_ACCEPTANCE/.test(f));
+  assert.deepEqual(acceptanceArtifacts, [], 'no P06 acceptance artifact may exist');
+
+  // ── 5. Nothing beyond scope was granted: provider, licensed, activation, merge, certification. ──
+  assert.match(log, /\*\*P05-02 live provider execution\*\* — \*\*`NOT_AUTHORIZED`\*\*/);
+  assert.match(log, /\*\*Licensed \/ deeper historical data acquisition\*\* — \*\*`NOT_AUTHORIZED`\*\*/);
+  assert.match(log, /\*\*Production activation\*\* — \*\*`NOT_AUTHORIZED`\*\*/);
+  assert.match(log, /\*\*Track B → `origin\/main` merge\*\* — \*\*`NOT AUTHORIZED`\*\*/);
+  assert.match(log, /\*\*Any certification\*\* — \*\*`NONE_GRANTED`\*\*/);
+  assert.match(log, /Authority authorization is never certification/);
+  assert.match(log, /\*\*P06 gate acceptance\*\* — \*\*NOT ACCEPTED\*\*/);
+  assert.match(log, /\*\*P07, P08 or any P09–P17 entry or promotion\*\*/);
+
+  // ── 6. The historical P05 acceptance record is NOT edited by the authorization. ──
+  // Its blob is pinned: at the moment of P05 acceptance, P05-04 was NOT_AUTHORIZED, and that
+  // statement must survive D10 unchanged. Supersession is by addition, never by edit.
+  const accBytes = readFileSync(join(docsRoot, 'p05', 'P05_GATE_ACCEPTANCE.md'));
+  // Pin the GIT BLOB id, i.e. sha1("blob <len>\0" + content) — the same value `git hash-object`
+  // and `git rev-parse HEAD:…` report, so this assertion is directly comparable to the commit.
+  const gitBlobId = createHash('sha1')
+    .update(Buffer.from(`blob ${accBytes.length}\0`, 'utf8'))
+    .update(accBytes)
+    .digest('hex');
+  assert.equal(gitBlobId, '94f87c614795fc47692d924a8490bc8d41e98d5a',
+    'the P05 acceptance record must remain byte-identical after D10');
+  assert.match(accBytes.toString('utf8'), /P05-04 = `NOT_AUTHORIZED` \/ NO COMPLETION EVIDENCE/);
+
+  // ── 7. The C1–C6 fail-closed protection in the implementation is intact and unvaried. ──
+  const ns = readFileSync(join(p05Root, 'src', 'namespace.js'), 'utf8');
+  for (const fn of ['assertC1', 'assertC2', 'assertC3', 'assertC4']) {
+    assert.match(ns, new RegExp(`export function ${fn}\\(`), `${fn} must still exist`);
+  }
+  assert.match(ns, /ADR-01 C5 — fail-closed/);
+  assert.match(ns, /ADR-01 C6 — deterministic merge order/);
+  assert.match(ns, /ADR-01 C1–C6 — UNCHANGED/);
+  assert.equal(NAMESPACE_TOKEN, 'MD:', 'the exact namespace token is unchanged');
+});
