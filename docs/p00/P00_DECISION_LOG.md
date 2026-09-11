@@ -1045,3 +1045,33 @@ All three remain UNSUPPLIED. The Program Authority has not explicitly supplied a
 - Critical path: Act 5 → D3 → O-1 *(unchanged — Act 6 is parallel)*
 
 **No dependency weakened or reordered. No owner inferred.**
+
+## 25. D3 Program Authority supply act 3 — threshold-set identity/version/effective date (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **D3 Authority Supply Act 3** |
+| **Recorded against baseline** | **`9429070b178ef047fad6ba9e4ace2c1336c3dd16`** — *"Act 6: 5-second backend-to-screen boundary ownership"* |
+| **Governance record** | `docs/PHASE_07_D3_AUTHORITY_SUPPLY_ACT3.md` |
+
+### 25.1 Program Authority values supplied
+
+| Input | Value | Authority source |
+|---|---|---|
+| **Threshold-set identity** | **`D01-FRESHNESS-SET`** | Program Authority explicit decision (2026-09-11) |
+| **Threshold-set version** | **`v1.0`** | Program Authority explicit decision (2026-09-11) |
+| **Effective date/time** | **`2026-09-11T18:30:00Z`** | Program Authority explicit decision (2026-09-11) |
+
+### 25.2 D3 status
+
+**✅ A — ESTABLISHED.** All 12 of 12 required D3 inputs are now explicitly resolved.
+
+### 25.3 O-1 status
+
+**🟡 D3 PREREQUISITE SATISFIED — 4/5 resolved.** O-1's D3 prerequisite is now satisfied. Does NOT constitute P07 implementation authorization.
+
+### 25.4 P07 implementation
+
+**⛔ NOT PERMITTED.** D3 = A removes one prerequisite but does not open the P07 gate. P07 implementation gate authorization, P07 acceptance, A3 P07 gate acceptor designation, and production activation all remain unresolved.
+
+**No dependency weakened or reordered. No value invented.**
