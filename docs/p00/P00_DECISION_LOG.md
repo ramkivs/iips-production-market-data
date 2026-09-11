@@ -1110,3 +1110,28 @@ P07 CERTIFICATION  = NONE GRANTED
 ```
 
 **No implementation performed. No dependency weakened or reordered.**
+
+## 27. A3 P07 gate acceptor designation (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **A3 P07 Designation** |
+| **Recorded against baseline** | **`07d6d15abc5a55e5bc8cd721b8d5fa1d75ef6c6a`** — *"P07-01: quality rule framework implementation"* |
+| **Governance record** | `docs/PHASE_07_A3_P07_DESIGNATION.md` |
+
+### 27.1 Program Authority decision
+
+**✅ DESIGNATED.** A3 P07 gate acceptor = **Sai**. Scope = **full P07 gate** (P07-01 through P07-04).
+
+### 27.2 Designation ≠ Acceptance
+
+- P07-01 acceptance = **NOT ESTABLISHED** (requires separate acceptance act by Sai)
+- P07 acceptance = **NOT ESTABLISHED**
+- P07 certification = **NONE GRANTED**
+- Production activation = **NOT AUTHORIZED**
+
+### 27.3 Scope
+
+Sai is designated for the full P07 gate. This designation is independent of any prior A3 designation for P01 or P06. Not inferred from any prior role.
+
+**Designation performed. Acceptance NOT performed. No dependency weakened or reordered.**
