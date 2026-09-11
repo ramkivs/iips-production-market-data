@@ -1284,3 +1284,40 @@ The **Program Authority** is designated as the A-role authorized to perform the 
 - Tests: 492/492 PASS ✅
 
 **O-3 Act A complete. A-role designated. No provider selected. O-3 remains OPEN pending Act B.**
+
+---
+
+## 32. O-3 Act B — Provider selection: OI-09 finding and deferral (appended 2026-09-12)
+
+| Field | Value |
+|---|---|
+| **ID** | **O-3 Act B — Interim Finding + Deferral** |
+| **Record** | `docs/PHASE_07_O3_ACT_B_DEFERRAL.md` |
+
+### 32.1 OI-09 finding: RESOLVED
+
+**OI-09 is RESOLVED — FIGI / OpenFIGI authoritative** (P04 gate acceptance §3). The P02-03 rubric SR-4 prerequisite is **satisfied**. OI-09 is NOT a blocker for provider selection. This corrects the earlier assertion in the O-3 Act A record and the read-only reconciliation.
+
+### 32.2 Provider selection: DEFERRED
+
+The Program Authority indicated it will supply the provider identity in a subsequent act. No provider was named, evaluated, or selected. O-3 Act B is deferred — not completed.
+
+### 32.3 Gate distinction
+
+- O-3 A-role = **DESIGNATED — Program Authority** *(Act A, `8db3537`)*
+- O-3 provider selection = **OPEN — DEFERRED** *(this act)*
+- OI-09 = **RESOLVED — FIGI / OpenFIGI** *(P04 gate acceptance)*
+- O-2 resolution policy = **OPEN** *(independent Act C)*
+- P07-03 = **NOT IMPLEMENTED**
+- P07 overall acceptance = **NOT ESTABLISHED**
+- P07 certification = **NONE GRANTED**
+- Production activation = **NOT AUTHORIZED**
+- Act 6 = **OPEN — NO OWNER ASSIGNED** *(unchanged)*
+
+### 32.4 Preserved
+
+- P01 GATE: `cf23f0eda0ee917626d90270e883073c5d52d62c` ✅
+- P07-01/02/04 acceptance: unchanged ✅
+- Tests: 492/492 PASS ✅
+
+**O-3 Act B deferred. OI-09 resolved. Awaiting provider identity from Program Authority.**
