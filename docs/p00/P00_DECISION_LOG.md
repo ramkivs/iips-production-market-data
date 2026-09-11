@@ -1075,3 +1075,38 @@ All three remain UNSUPPLIED. The Program Authority has not explicitly supplied a
 **⛔ NOT PERMITTED.** D3 = A removes one prerequisite but does not open the P07 gate. P07 implementation gate authorization, P07 acceptance, A3 P07 gate acceptor designation, and production activation all remain unresolved.
 
 **No dependency weakened or reordered. No value invented.**
+
+## 26. P07 Program Authority implementation authorization (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **P07 Implementation Authorization** |
+| **Recorded against baseline** | **`e2171843978416a062fb35152704ff6b2a10bb4b`** — *"D3 supply act 3"* |
+| **Governance record** | `docs/PHASE_07_P07_IMPLEMENTATION_AUTHORIZATION.md` |
+
+### 26.1 Program Authority decision
+
+**✅ A — AUTHORIZE P07 IMPLEMENTATION.** The Program Authority explicitly authorizes P07 implementation. Scope = P07 implementation only.
+
+### 26.2 What this act does NOT do
+
+- Does NOT constitute P07 acceptance (NOT ESTABLISHED)
+- Does NOT constitute certification (NONE GRANTED)
+- Does NOT authorize production activation (NOT AUTHORIZED)
+- Does NOT designate A3 P07 acceptor (NOT DESIGNATED)
+- Does NOT establish P07 acceptance criteria (ABSENT)
+- Does NOT resolve O-2 (OPEN) or O-3 (OPEN)
+- Does NOT resolve Act 6 5-second boundary (OPEN, no owner)
+- Does NOT authorize P08+ phases
+- Does NOT weaken any Hard dependency
+
+### 26.3 Gate state
+
+```
+P07 ENTRY          = AUTHORIZED
+P07 IMPLEMENTATION = AUTHORIZED  ← CHANGED
+P07 ACCEPTANCE     = NOT ESTABLISHED
+P07 CERTIFICATION  = NONE GRANTED
+```
+
+**No implementation performed. No dependency weakened or reordered.**
