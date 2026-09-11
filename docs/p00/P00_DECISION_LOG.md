@@ -877,3 +877,44 @@ Acts 1, 2, and 3 are now ALL ESTABLISHED. Act 5 (D3 value-adoption) is **unblock
 | `p07_implementation_status` | **`NOT YET PERMITTED`** *(unchanged)* |
 | **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
 | **Recording integrity** | Files edited by this act: **this decision log only** (new §19 per rule 1) + **one new governance record** (`PHASE_07_ACT3_ACCEPTANCE.md`) |
+
+## 20. Act 5 — D3 value-adoption authority act (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **Act 5 — D3 Value Adoption** |
+| **Authority** | **Program Authority** |
+| **Recorded against baseline** | **`057fae5185b1a7edd026782a2a8f29d1ffac4dd0`** — *"Act 3 acceptance"* |
+| **Governance record** | `docs/PHASE_07_ACT5_VALUE_ADOPTION.md` |
+
+### 20.1 Items resolved
+
+| # | Item | Value | Evidence |
+|---|---|---|---|
+| 1 | Threshold value | **15 minutes** | Contract resolution §6, blocker adjudication §5 |
+| 2 | Comparison | **strict >** | Contract resolution §6 |
+| 3 | D4 negative-age | **N1 — reject/invalid** | Contract resolution §6 |
+| 4 | D5 certification | **Ramki** (confirmed) | Blocker adjudication §5, contract resolution §6 |
+| 5 | Normal conditions | **OS-0 NORMAL** | Act 3 established |
+| 6 | Evaluation semantics | **evaluationTime − asOf** | Act 1 established |
+| 7 | 5-second boundary | **Outside this act** | Contract resolution §6 |
+| 8 | P01 contract | **Not modified** | Verified |
+
+### 20.2 Items UNSUPPLIED — Program Authority must explicitly supply
+
+| # | Item | Status |
+|---|---|---|
+| 1 | Threshold-set identity | 🔴 OPEN |
+| 2 | Threshold-set version | 🔴 OPEN |
+| 3 | Effective date/time | 🔴 OPEN |
+| 4 | D2 scoping model (A/B/C/D) | 🔴 OPEN |
+
+### 20.3 D3 / O-1 status (unchanged)
+
+| Item | Status |
+|---|---|
+| D3 | 🟡 B — PARTIALLY READY (4 items UNSUPPLIED) |
+| O-1 | 🔴 OPEN — 4/5 resolved |
+| P07 implementation | ⛔ NOT YET PERMITTED |
+
+**No authority decision invented. No value manufactured. No dependency weakened or reordered.**
