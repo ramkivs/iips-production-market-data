@@ -692,3 +692,56 @@ Designated by: **Program Authority** — the owner of the P01 contract.
 | `o1_status` | **`OPEN — 4/5 resolved`** *(unchanged)* |
 | **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
 | **Recording integrity** | Files edited by this act: **this decision log only** (new §15 per rule 1) + **one new governance record** (`PHASE_07_ACT2_AMENDMENT_AUTHORIZATION.md`) |
+
+## 16. C2 — P01 duration-unit enumeration re-acceptance act (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **C2 — P01 Duration-Unit Re-Acceptance** |
+| **A3 acceptor** | **Ramakrishnan V. S. (Ramki)** — designated by A0-2, scoped to P01 Act 2 duration-unit amendment |
+| **Recorded against baseline** | **`794c07c083f43a390d4991c30bd813ea0d9e5e9b`** — *"B2: P01 duration-unit amendment executed"* |
+| **Prior state** | **Act 2 = B — DECIDED, NOT ESTABLISHED** · **P01 = amended (schema 1.2) but NOT ACCEPTED** |
+| **Governance record** | `docs/PHASE_07_ACT2_REACCEPTANCE.md` |
+
+### 16.1 Acceptance decision
+
+**ACCEPTED.** Ramakrishnan V. S. (Ramki), as A3 gate acceptor for the P01 Act 2 duration-unit amendment, explicitly accepts the amended P01 contract (schema `1.2`) as established by B2 at `794c07c`. The duration-unit enumeration (`minutes`, `seconds`, UN-8) is now ACCEPTED.
+
+Ten acceptance criteria verified against actual amended state (§1.1–§1.10 of the governance record): schema 1.2 ✅ · UN-8 enumeration ✅ · freshness fields ✅ · unit obligation ✅ · SM-4 validation ✅ · T6 preservation ✅ · invariants ✅ · scope ✅ · historical evidence ✅ · authority ✅.
+
+### 16.2 Path position
+
+A0-2 ✅ → A2 ✅ → B2 ✅ → **C2 ✅** → D2.
+
+D2 (establishment recording) is NOT performed by this act.
+
+### 16.3 ⚠ Explicitly NOT closed, NOT granted and NOT resolved
+
+| # | Not closed / not granted | Preserved |
+|---|---|---|
+| **1** | ⚠ **D3 = B — PARTIALLY READY** *(unchanged)* | Operational-state, threshold-set identity/version, effective date all open |
+| **2** | ⚠ **O-1 = OPEN — 4/5 resolved** *(unchanged)* | RP-4 stands; P07-02 exit unevidenceable |
+| **3** | ⚠ **Act 2 = B** — NOT ESTABLISHED (D2 required) | Act 2 unchanged |
+| **4** | ⚠ **15-minute threshold** — NOT adopted | D3 unchanged |
+| **5** | ⚠ **Operational-state contract** — NOT accepted | Act 3 unchanged |
+| **6** | ⚠ **5-second display boundary** — NOT resolved | Act 6 unchanged |
+| **7** | ⚠ **P07 implementation** — NOT YET PERMITTED | P07 unchanged |
+| **8** | ⚠ **P07 certification** — NOT granted | Certification = NONE |
+| **9** | ⚠ **Production activation** — NOT authorized | Production = NOT AUTHORIZED |
+| **10** | ⚠ **`P01_GATE_ACCEPTANCE.md` NOT rewritten** — historical blob `cf23f0e…` preserved | Historical record preserved |
+
+### 16.4 Resulting state (by addition; §4, §6.1, §7.1, §8.3, §9.6, §10.7, §11.3, §12.4, §13.4, §14.4 and §15.3 above left unedited)
+
+| Field | Value |
+|---|---|
+| `c2_status` | **`ACCEPTED`** — explicit A3 acceptance act |
+| `act_2_status` | **`B — DECIDED, NOT ESTABLISHED`** *(unchanged — D2 required)* |
+| `p01_contract_status` | **`ACCEPTED — schema 1.2, 6 times, T6 binding, UN-8 binding`** |
+| `p01_gate_acceptance_historical` | **`cf23f0e…` PRESERVED** |
+| `d3_status` | **`B — PARTIALLY READY`** *(unchanged)* |
+| `o1_status` | **`OPEN — 4/5 resolved`** *(unchanged)* |
+| `p07_implementation_status` | **`NOT YET PERMITTED`** *(unchanged)* |
+| `certification_status` | **`NONE_GRANTED`** *(unchanged)* |
+| `production_activation_status` | **`NOT_AUTHORIZED`** *(unchanged)* |
+| **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
+| **Recording integrity** | Files edited by this act: **this decision log only** (new §16 per rule 1) + **one new governance record** (`PHASE_07_ACT2_REACCEPTANCE.md`) |
