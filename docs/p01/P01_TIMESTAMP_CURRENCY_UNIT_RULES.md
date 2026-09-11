@@ -5,9 +5,9 @@
 
 ---
 
-## 1. The five distinct times
+## 1. The six distinct times
 
-The contract recognises **five** distinct times. **They are never collapsed, never inferred
+The contract recognises **six** distinct times. **They are never collapsed, never inferred
 from one another, and never substituted for one another.**
 
 | # | Time | Meaning | Where carried |
@@ -17,18 +17,19 @@ from one another, and never substituted for one another.**
 | T3 | **`observationTime`** | Event time — when the datum was observed/traded | Field, conditional |
 | T4 | **`effectiveTime`** | When the datum becomes economically effective (fiscal period end, ex-date, validFrom) | Field, conditional |
 | T5 | **`publicationTime`** | When the source published/released it | Field, conditional |
+| T6 | **`evaluationTime`** | Evaluation / scoring / threshold-assessment instant — when the evaluation was performed | Field, conditional |
 
 ### 1.1 Obligations by data class
 
 | Data class | Required times |
 |---|---|
-| Live quote (D01) | T1, T2, T3 |
+| Live quote (D01) | T1, T2, T3 (+ T6 where threshold evaluation contributes) |
 | Session mark / OHLCV bar (D01, D02) | T1, T2, T4 |
-| Fundamentals (D03) | T1, T2, T4, T5 |
+| Fundamentals (D03) | T1, T2, T4, T5 (+ T6 where scoring contributes) |
 | Corporate action (D04) | T1, T2, T4 (+ ex/record/pay as distinct contract fields) |
 | Identity attribute (D05) | T1, T2, T4 (`validFrom`/`validTo`) |
 | News / event (D06) | T1, T2, T5 (+ T3 where occurrence differs) |
-| Estimates (D07) | T1, T2, T4, T5 |
+| Estimates (D07) | T1, T2, T4, T5 (+ T6 where evaluation contributes) |
 | Macro (D08) | T1, T2, T4, T5 (+ vintage) |
 | Venue / calendar (D10) | T1, T2, T4 |
 
@@ -42,6 +43,7 @@ from one another, and never substituted for one another.**
 | TS-4 | Date-only concepts (ex-date, fiscal period end) are represented as an explicit date type at a declared UTC convention — **not** as an ambiguous midnight-local instant |
 | TS-5 | Serialization is deterministic — required for snapshot and replay identity byte-stability |
 | TS-6 | Clock source for `receivedAt` is the ingest boundary, recorded once; it is **never back-filled or recomputed** |
+| TS-7 | Clock source for `evaluationTime` is the evaluation/scoring engine's evaluation boundary, recorded once; it is **never back-filled or recomputed**. `evaluationTime` is always an **explicit input** — an implementation that reads a system clock in place of an explicit input **violates this rule** |
 
 ## 3. Mode semantics (LIVE / SNAPSHOT / PIT)
 
@@ -108,3 +110,11 @@ from one another, and never substituted for one another.**
 | SE-2 | Calendars must be **historically accurate**; a current calendar may not be applied to a historical PIT evaluation |
 | SE-3 | Session context supplies the baseline for staleness — the contract supplies the inputs; **P07** computes freshness and thresholds |
 | SE-4 | A session/venue reference is REQUIRED on venue-scoped price data (`<NS>price.venueRef`) |
+
+## 9. Schema version (T6 amendment)
+
+The addition of T6 / `evaluationTime` (Act A, `PHASE_07_P01_T6_AMENDMENT_AUTHORIZATION.md`)
+increments the canonical schema version from **`1.0`** to **`1.1`** (MINOR per SV-2 — strictly
+additive and backward-compatible). T6 is conditional; consumers at `1.0` encounter no T6;
+consumers at `1.1` reading `1.0` data treat absent T6 as `NOT_PROVIDED` (BC-2). Historical
+snapshots retain `schemaVersion: "1.0"` (BC-5).

@@ -118,6 +118,7 @@ hard error, never a silent no-op (`D4_04` §F.3).
 | 11 | `quality` | **OPTIONAL** | Field-level override; absent ⇒ inherits snapshot quality |
 | 12 | `provenance` | **REQUIRED** | Reference into the snapshot lineage block; sufficient to attribute the field to a source |
 | 13 | `pitEligible` | **REQUIRED** | Whether the field may be used in PIT queries (see `P01_SCHEMA_CATALOG.md`) |
+| 14 | `evaluationTime` | **CONDITIONAL** | T6 — the evaluation / scoring / threshold-assessment instant. ISO-8601 UTC with explicit `Z`, precision per TS-2. Present when an evaluation, scoring or threshold assessment contributed to the datum. Clock source: evaluation engine evaluation boundary, recorded once, never back-filled or recomputed (TS-7). **Never** implicit wall-clock "now"; **never** repurposes T1–T5. Absent when no evaluation contributes (BC-3/BC-4). Added by Act A / Act B — schema `1.0` → `1.1` (MINOR, SV-2) |
 
 ---
 
