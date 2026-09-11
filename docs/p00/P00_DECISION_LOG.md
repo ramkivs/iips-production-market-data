@@ -325,3 +325,113 @@ here infers an approval that is not already of record.
 | `a3_gate_acceptor` / `a3_gate_acceptor_scope` | **Ramakrishnan V. S. (Ramki)** / **`P05, P06`** *(unchanged — P07–P17 still not designated)* |
 | **Technical scope** | **NONE.** No source file, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
 | **Recording integrity** | Files edited by this act: **this decision log only** (new §9 per rule 1) |
+
+---
+
+## 10. D12 — ADR-01 §B.2 / D4 Part I collision-census authority reconciliation (appended 2026-09-10)
+
+**Append-only entry per §5 rule 1.** No prior entry, and no historical authority record, is
+edited, renumbered, deleted or reinterpreted by this act. **ADR-01 §B.2 itself is NOT
+rewritten** — this entry is the controlling *current disposition*, recorded by addition.
+
+### 10.1 Authority
+
+| Field | Value |
+|---|---|
+| **Decision** | The **Ramki/Sai** ADR-01 authority moves forward with, and resolves, the collision-census reconciliation identified by the P06 acceptance pre-flight |
+| **Authority basis** | `docs/d5/ADR-01_NAMESPACE_COLLISION_GUARD.md` §H — *"**NAMED AUTHORITY REQUIRED — Ramki / Sai**"*; ADR-01 is **APPROVED** by Sai/Ramki (`docs/d8/D8_AUTHORITY_RECONCILIATION.md`:69 *"Authority hold: CLEARED"*); §3 convention of this log — *"consider this as decision approved by Sai/Ramki to move forward"*, applied identically at D9, D10 and D11 |
+| **Scope of authority exercised** | The **census determination only**. No certification, no gate acceptance, no production or provider authorization, no resolution of AD-17 |
+| **Why this program could not settle it alone** | ADR-01 §H: *"This program's authority — **None over this decision.** It may only prepare the package"* |
+
+### 10.2 The determination — four figures, kept explicitly distinct
+
+| # | Figure | Value | Epistemic class (`P00_EVIDENCE_CONVENTIONS.md` §3) | Disposition |
+|---|---|---|---|---|
+| **1** | **Historical / documented coded keys** | **52** | **PRIMARY SOURCE** — `docs/d4/D4_07_FIELD_NAMESPACE.md` (D4 Part I), carried into `docs/d5/ADR-01_…md` §B.2:57 and restated at §D:140, `D4_07`:129, `D5_HANDOFF.md`:100 | **PRESERVED, unchanged, historically accurate as of its own measurement.** Not erased, not annotated in place |
+| **2** | **Current measured coded keys** | **60** | **DERIVED ANALYSIS** — computed from the authoritative existing-IIPS tree `ramkivs/iips-review-recovered` @ `5decdca93e5d3b90ec94ca902ff73af45574a6ac`, from the 13 `*Input` interfaces in `iips-platform/src/sector-engines/*/metrics/` | **ADOPTED as the controlling reconciled census for present acceptance evidence** |
+| **3** | **Historical / documented free-form keys** | **54** | **PRIMARY SOURCE** — ADR-01 §B.2:58 | **UNREPRODUCED.** Retained as a documented historical figure **whose derivation is not established by the current evidence.** Not erased; not adopted; not replaced by a substitute number |
+| **4** | **Measured drift** | **+8** | DERIVED ANALYSIS | Recorded as the reconciled delta |
+
+⚠ **Derived analysis versus primary authority.** Figure 2 is a *derived* measurement, and under
+`P00_EVIDENCE_CONVENTIONS.md`:61 a derived analysis is certifiable *"only with its inputs"* — it
+does **not** silently supersede a primary record. It becomes controlling **only because the
+named ADR-01 authority adopts it here**, with its inputs cited. Without this entry, measured 60
+would have no authority to displace documented 52.
+
+### 10.3 The measured delta, exactly
+
+| Engine | Documented | Measured | Δ | Measured keys |
+|---|---|---|---|---|
+| banking | 8 | 8 | — | `BM-001…006`, `BM-014`, `BM-015` |
+| insurance | 8 | 8 | — | `IM-001…008` |
+| **capital-markets** | **7** | **8** | **+1** | `CM-001…CM-008` (`CM-007` present in the interface) |
+| **healthcare** | **5** | **12** | **+7** | `HC-001…HC-012` |
+| telecom | 8 | 8 | — | `TL-001…008` |
+| auto | 8 | 8 | — | `AU-001…008` |
+| materials | 8 | 8 | — | `MM-001…008` |
+| **TOTAL** | **52** | **60** | **+8** | |
+
+All five remaining engines are **unchanged**. The drift is confined to **healthcare (+7)** and
+**capital-markets (+1)**.
+
+### 10.4 The unreproduced historical 54
+
+The documented free-form figure **54** was tested against every available population at
+`5decdca` and **is not reproduced by any of them**:
+
+| Population tested | Measured | = 54? |
+|---|---|---|
+| all free-form keys, all 13 engines | **90** | no |
+| free-form keys, the 6 free-form engines | **78** | no |
+| 6 free-form engines, excluding boolean flags | **56** | no |
+| 6 free-form engines, numeric-typed only | **47** | no |
+
+**Determination:** **54 is recorded as an unreproduced historical/documented figure.** Its
+derivation is **not established** by the current evidence, and **no substitute figure is
+adopted in its place** — inventing one would breach `P00_EVIDENCE_CONVENTIONS.md` Prohibition 1
+(*"Inventing evidence…"*) and Prohibition 5 (*"Converting an UNKNOWN or DEFERRED item into an
+assumption"*). The ADR-01 §B.3 shared-key table is **partially corroborated**: **6 of 8** rows
+reproduce exactly (`ebitdaMargin` 6, `debtEbitda` 6, `revenueGrowth` 5, `fcfYield` 4,
+`evEbitda` 2, `peRatio` 2); **`id`** (documented 6, measured 0 among metric inputs) and
+**`evRevenue`** (documented 2, measured 1) do **not**.
+
+### 10.5 Controlling current disposition
+
+> ### **The reconciled collision census of record, for present P06 acceptance evidence, is 60 coded keys.**
+>
+> Documented **52** and documented **54** remain preserved in ADR-01 §B.2 and D4 Part I
+> **exactly as written**, as historical records. **ADR-01 §B.2 is NOT amended by this entry**;
+> should the ADR-01 authority later require the specification text itself to be corrected, that
+> is a **separate authorized amendment** to `docs/d5/ADR-01_NAMESPACE_COLLISION_GUARD.md`, not
+> an act of this program.
+
+### 10.6 ⚠ Explicitly NOT done, NOT granted and NOT resolved by this act
+
+| # | Not done / not granted | Preserved |
+|---|---|---|
+| **1** | ⚠ **P06 gate acceptance** — **`NOT_ACCEPTED`**, still **6 of 18**. No `P06_GATE_ACCEPTANCE.md` is created by this entry | §5 rule 4; **D10-6**; A3 act remains separate |
+| **2** | ⚠ **ADR-01 §B.2 / D4 Part I text NOT rewritten, amended or annotated in place** | §5 rule 1; ADR-01 remains the historical record |
+| **3** | ⚠ **The historical 54 is NOT erased, and no substitute free-form figure is adopted** | Prohibitions 1 and 5 |
+| **4** | ⚠ **AD-17 is NOT resolved** — remains **`UNRESOLVED`**; `ReplayService` still returns `reproduced: true` / `byteIdentical: true` as literals and was not modified | `P00_OPEN_ITEMS_REGISTER.md` AD-17/M-2 |
+| **5** | ⚠ **The historical digest triples `44ba/ea22/c8ed`, `5813…`, `3cfb/92be` are NOT reproduced and no canonicalization is invented for them** | Prohibition 1 |
+| **6** | ⚠ **No certification** — **`NONE_GRANTED`** | §5 rule 4 |
+| **7** | ⚠ **No production activation, no provider/licensed execution, no Track B → `origin/main` merge** | **A4** at P16; D9 **N-1**/**N-2**; **D10 §8.2 item 5** |
+| **8** | ⚠ **No P07/P08 entry or promotion** | D9 §5 exclusion 5; **D10 §8.2 item 8** |
+| **9** | ⚠ **The 40 pre-existing existing-IIPS suite failures are neither fixed nor waived here** — they sit outside the P06 acceptance criteria and in files this act does not touch | §5 rule 5 |
+| **10** | ⚠ **No concession or waiver is created**; no concessions register exists | `P00_GATE_MODEL.md`:28 |
+
+### 10.7 Resulting state (by addition; §4, §6.1, §7.1, §8.3 and §9.6 above left unedited)
+
+| Field | Value |
+|---|---|
+| `collision_census_status` | **`RECONCILED — 60 coded controlling`** *(was `DRIFTED / AUTHORITY RE-AFFIRMATION REQUIRED`)* |
+| `collision_census_documented_historical` | **52 coded / 54 free-form — PRESERVED, unedited** |
+| `collision_census_freeform_54` | **`UNREPRODUCED — derivation not established; no substitute adopted`** |
+| `adr_01_section_b2_text` | **`UNMODIFIED`** — any correction is a separate authorized amendment |
+| `adr_01_section_g_item_1` | **`SATISFIED — census re-verified against the implementation tree and authoritatively dispositioned`** |
+| `ad_17_status` | **`UNRESOLVED`** *(unchanged)* |
+| `p06_acceptance_status` | **`NOT_ACCEPTED`** — **no `P06_GATE_ACCEPTANCE.md` exists or is created** |
+| `formal_gate_status` | **6 of 18 accepted — P00, P01, P02, P03, P04, P05** *(unchanged — this act accepts no gate)* |
+| `certification_status` / `production_activation_status` / `track_b_to_main_merge` | **`NONE_GRANTED`** / **`NOT_AUTHORIZED`** / **`NOT_AUTHORIZED`** *(all unchanged)* |
+| **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
+| **Recording integrity** | Files edited by this act: **this decision log only** (new §10 per rule 1) |
