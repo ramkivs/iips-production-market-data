@@ -593,3 +593,50 @@ Ten acceptance criteria verified against actual amended state (§1.1–§1.10 of
 | `p07_implementation_status` | **`NOT YET PERMITTED`** *(unchanged)* |
 | **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
 | **Recording integrity** | Files edited by this act: **this decision log only** (new §13 per rule 1) + **one new governance record** (`PHASE_07_ACT2_DURATION_UNIT_AUTHORITY_PATH.md`) |
+
+## 14. A0-2 — A3 designation for Act 2 duration-unit enumeration (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **A0-2 — A3 Designation** |
+| **Recorded against baseline** | **`baf4198a9428bf438f8ed8a2b917b6f01ab8240c`** — *"Act 2 authority-path adjudication"* |
+| **Prior state** | **Act 2 = B — DECIDED, NOT ESTABLISHED** · **A0-2 not performed** |
+| **Governance record** | `docs/PHASE_07_ACT2_A3_DESIGNATION.md` |
+
+### 14.1 Designation
+
+**Ramakrishnan V. S. (Ramki)** is designated as A3 gate acceptor, scoped **exclusively** to the P01 additive amendment establishing the declared, versioned duration-unit enumeration required by UN-2.
+
+Designated by: **Program Authority** — the owner of the P01 contract.
+
+### 14.2 Explicit exclusions
+
+- Does NOT extend prior A0 designation (T6/evaluationTime — consumed by Act C)
+- Does NOT extend D10-3 designation (P06 — consumed)
+- Does NOT cover P02–P05, P07–P17, or unrelated P01 changes
+- Does NOT authorize any P01 edit
+- Does NOT perform acceptance
+- Does NOT determine SV classification, enumeration members, schema details, effective date, or threshold values
+
+### 14.3 ⚠ Explicitly NOT authorized or resolved
+
+| # | Not authorized / not resolved | Preserved |
+|---|---|---|
+| **1** | ⛔ **P01 modification** — NOT authorized by this act | Append-only constraint in full force |
+| **2** | ⛔ **A2 authorization** — NOT performed | Requires separate Program Authority act |
+| **3** | ⛔ **Acceptance** — NOT performed | Requires C2 after B2 |
+| **4** | ⛔ **Duration-unit enumeration** — NOT created | UN-2 unsatisfied |
+| **5** | ⛔ **P07 implementation** — NOT permitted | NOT YET PERMITTED |
+| **6** | ⛔ **Production activation** — NOT authorized | NOT AUTHORIZED |
+
+### 14.4 Resulting state (by addition; §4, §6.1, §7.1, §8.3, §9.6, §10.7, §11.3, §12.4 and §13.4 above left unedited)
+
+| Field | Value |
+|---|---|
+| `a0_2_status` | **`RESOLVED`** — Ramki designated for Act 2 |
+| `act_2_path_position` | **`A0-2 ✅ → A2 → B2 → C2 → D2`** |
+| `act_2_status` | **`B — DECIDED, NOT ESTABLISHED`** *(unchanged)* |
+| `d3_status` | **`B — PARTIALLY READY`** *(unchanged)* |
+| `o1_status` | **`OPEN — 4/5 resolved`** *(unchanged)* |
+| **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
+| **Recording integrity** | Files edited by this act: **this decision log only** (new §14 per rule 1) + **one new governance record** (`PHASE_07_ACT2_A3_DESIGNATION.md`) |
