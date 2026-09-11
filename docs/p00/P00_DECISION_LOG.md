@@ -833,3 +833,47 @@ UN-8 / the duration-unit enumeration (`minutes`, `seconds`) and the `freshnessDu
 | Act 6 | 🔴 OPEN |
 
 **No authority decision made. No resolution invented. No dependency weakened or reordered.**
+
+## 19. Act 3 acceptance — operational-state contract (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **Act 3 Acceptance** |
+| **Acceptance authority** | **Program Authority** |
+| **Recorded against baseline** | **`dca1dd13740fb2a71a4b74411c37be9f58fe3abe`** — *"D3/O-1 reconciliation"* |
+| **Prior state** | **Act 3 = B — DRAFTED, NOT ACCEPTED** |
+| **Governance record** | `docs/PHASE_07_ACT3_ACCEPTANCE.md` |
+
+### 19.1 Acceptance decision
+
+**ACCEPTED.** The Program Authority explicitly accepts the drafted standalone operational-state contract (`PHASE_07_OPERATIONAL_STATE_CONTRACT.md`, blob `47dea5c…`).
+
+**ACT 3 = A — ESTABLISHED.**
+
+Ten acceptance criteria verified: standalone ✅ · "normal operating conditions" defined ✅ · no fifth quality state ✅ · Q-5/INV-7 preserved ✅ · P01 unmodified ✅ · P03 DM-1/DM-2 preserved ✅ · definition not transferred to P17 ✅ · P17 operationalization preserved ✅ · Act 5 dependency preserved ✅ · Act 6 not resolved ✅.
+
+### 19.2 Critical path update
+
+Acts 1, 2, and 3 are now ALL ESTABLISHED. Act 5 (D3 value-adoption) is **unblocked** and may proceed.
+
+### 19.3 ⚠ Explicitly NOT resolved or granted
+
+| # | Not resolved / not granted | Preserved |
+|---|---|---|
+| **1** | ⚠ **D3 = B** — Act 5 still required | D3 unchanged |
+| **2** | ⚠ **O-1 = OPEN** — D3 not resolved | O-1 unchanged |
+| **3** | ⚠ **Threshold values** — NOT adopted | Act 5 unchanged |
+| **4** | ⚠ **P07 implementation** — NOT PERMITTED | P07 unchanged |
+| **5** | ⚠ **Act 4** — NOT executed | Act 4 unchanged |
+| **6** | ⚠ **Act 6** — OPEN | Act 6 unchanged |
+
+### 19.4 Resulting state (by addition; all prior sections left unedited)
+
+| Field | Value |
+|---|---|
+| `act_3_status` | **`A — ESTABLISHED`** *(was B — DRAFTED, NOT ACCEPTED)* |
+| `d3_status` | **`B — PARTIALLY READY`** *(unchanged — Act 5 still required)* |
+| `o1_status` | **`OPEN — 4/5 resolved`** *(unchanged)* |
+| `p07_implementation_status` | **`NOT YET PERMITTED`** *(unchanged)* |
+| **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
+| **Recording integrity** | Files edited by this act: **this decision log only** (new §19 per rule 1) + **one new governance record** (`PHASE_07_ACT3_ACCEPTANCE.md`) |
