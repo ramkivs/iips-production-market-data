@@ -1198,3 +1198,52 @@ Sai is designated for the full P07 gate. This designation is independent of any 
 - Tests: 450/450 PASS ✅
 
 **P07-02 accepted. Implementation unchanged. No dependency weakened or reordered.**
+
+---
+
+## 30. P07-04 formal A3 acceptance by Sai (appended 2026-09-12)
+
+| Field | Value |
+|---|---|
+| **ID** | **P07-04 A3 Acceptance** |
+| **Recorded against baseline** | **`988a74cdc18b70e856723cb51f2993cf26e918f6`** — *"P07-04: degraded-state contract / data-quality behavior implementation"* |
+| **Governance record** | `docs/PHASE_07_P07_04_ACCEPTANCE.md` |
+
+### 30.1 Acceptance decision
+
+**✅ A — ACCEPT P07-04.** Sai, as designated A3 P07 gate acceptor, formally accepts P07-04 (degraded-state contract / data-quality behavior) at commit `988a74c`. All 24 acceptance criteria verified against actual implementation. 24/24 PASS.
+
+### 30.2 Authoritative behavior accepted
+
+| Condition | quality | fields | Source |
+|---|---|---|---|
+| missing | unavailable | empty | D15 §4.1, P03 §2 |
+| stale | stale | populated | D15 §4.1, §2 |
+| partial | partial | populated, < 100% | D15 §4.1, Q-2 |
+| failed (E1 data cond.) | unavailable | empty | D15 §4.1, O-4 resolved |
+
+Error disposition: E1 = data condition (quality-bearing); E2/E3/E5/E6/E8 = rejection (no quality state); E4/E7 = may degrade to E1 under policy (D15 §4.1).
+
+### 30.3 Boundaries preserved
+
+Q-5, CV-4, DM-1/DM-2, RJ-6, INV-7, Q-1 — all verified against implementation. P07-03 reconciliation explicitly delegated and unimplemented.
+
+### 30.4 Gate distinction
+
+- P07-04 acceptance = **ESTABLISHED** (this act)
+- P07 overall acceptance = **NOT ESTABLISHED** (P07-03 not implemented)
+- P07 certification = **NONE GRANTED**
+- Production activation = **NOT AUTHORIZED**
+- O-2 = **OPEN** *(unchanged)*
+- O-3 = **OPEN** *(unchanged)*
+- Act 6 = **OPEN — NO OWNER ASSIGNED** *(unchanged)*
+
+### 30.5 Preserved
+
+- P01 GATE: `cf23f0eda0ee917626d90270e883073c5d52d62c` ✅
+- P05/P06 source: unchanged ✅
+- P07-01 acceptance: unchanged (commit `17f6bc25`) ✅
+- P07-02 acceptance: unchanged (commit `2dc14c1c`) ✅
+- Tests: 492/492 PASS ✅
+
+**P07-04 accepted. Implementation unchanged. No dependency weakened or reordered.**
