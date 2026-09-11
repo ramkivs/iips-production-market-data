@@ -1247,3 +1247,40 @@ Q-5, CV-4, DM-1/DM-2, RJ-6, INV-7, Q-1 — all verified against implementation. 
 - Tests: 492/492 PASS ✅
 
 **P07-04 accepted. Implementation unchanged. No dependency weakened or reordered.**
+
+---
+
+## 31. O-3 Act A — Provider-selection A-role designation (appended 2026-09-12)
+
+| Field | Value |
+|---|---|
+| **ID** | **O-3 Act A — A-role Designation** |
+| **Designated A-role** | **Program Authority** |
+| **Scope** | Authority to make the P07-03 provider-selection decision (O-3 Act B) |
+| **Governance record** | `docs/PHASE_07_O3_ACT_A_DESIGNATION.md` |
+
+### 31.1 Designation
+
+The **Program Authority** is designated as the A-role authorized to perform the provider-selection decision for O-3. This satisfies **DEP-P02-07** (*"no A-role is assigned"* — now assigned).
+
+### 31.2 Gate distinction
+
+- O-3 A-role = **DESIGNATED — Program Authority** *(this act)*
+- O-3 provider selection = **OPEN** *(pending Act B)*
+- O-2 resolution policy = **OPEN** *(independent Act C)*
+- OI-09 identifier standard = **OPEN** *(independent prerequisite)*
+- P07-03 = **NOT IMPLEMENTED**
+- P07 overall acceptance = **NOT ESTABLISHED**
+- P07 certification = **NONE GRANTED**
+- Production activation = **NOT AUTHORIZED**
+- Act 6 = **OPEN — NO OWNER ASSIGNED** *(unchanged)*
+
+### 31.3 Preserved
+
+- P01 GATE: `cf23f0eda0ee917626d90270e883073c5d52d62c` ✅
+- P07-01 acceptance: unchanged ✅
+- P07-02 acceptance: unchanged ✅
+- P07-04 acceptance: unchanged ✅
+- Tests: 492/492 PASS ✅
+
+**O-3 Act A complete. A-role designated. No provider selected. O-3 remains OPEN pending Act B.**
