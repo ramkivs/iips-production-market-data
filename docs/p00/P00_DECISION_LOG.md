@@ -973,3 +973,36 @@ All three remain UNSUPPLIED. The Program Authority has not explicitly supplied a
 | P07 implementation | ⛔ NOT YET PERMITTED |
 
 **No value invented. No identity manufactured. No date assumed.**
+
+## 23. Act 4 — P17 operationalization / tracker decomposition reconciliation (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **Act 4 Reconciliation** |
+| **Recorded against baseline** | **`b17df8475ce03d0997771a9f20523f0c0e8e3d3a`** — *"D3 authority supply act 2"* |
+| **Governance record** | `docs/PHASE_07_ACT4_RECONCILIATION.md` |
+
+### 23.1 Reconciliation results
+
+| Item | Status |
+|---|---|
+| P17 operationalization role | ✅ Confirmed (operational-state contract §5) |
+| P17 work items in tracker | 🔴 NONE EXIST (P00–P13 only) |
+| P17-01…P17-04 proposed decomposition | ✅ Confirmed from threshold contract resolution §4.2 |
+| P17-01…P17-04 created in tracker | 🔴 NOT CREATED (separate authority act required) |
+| P15 | 🔴 BLOCKED on M-1/AD-4 |
+| P16 | 🔴 NOT REACHED |
+| P17 | 🔴 UNREACHABLE |
+| Ownership | ✅ Definition = Program Authority; operationalization = P17 |
+
+### 23.2 Act 4 status
+
+**🟡 B — RECONCILED.** The proposed P17 decomposition is confirmed. The actual tracker change is a separate authority act. P17 is structurally unreachable (P15/P16 blocked).
+
+### 23.3 D3 / O-1 / P07 impact
+
+- D3 = B — PARTIALLY READY *(unchanged — Act 4 is parallel, not on critical path)*
+- O-1 = OPEN *(unchanged)*
+- P07 = NOT YET PERMITTED *(unchanged — Act 4 does NOT authorize P07)*
+
+**No dependency weakened or reordered. No work item invented.**
