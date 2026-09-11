@@ -918,3 +918,30 @@ Acts 1, 2, and 3 are now ALL ESTABLISHED. Act 5 (D3 value-adoption) is **unblock
 | P07 implementation | ⛔ NOT YET PERMITTED |
 
 **No authority decision invented. No value manufactured. No dependency weakened or reordered.**
+
+## 21. D3 remaining authority inputs — Program Authority supply act (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **D3 Authority Inputs** |
+| **Recorded against baseline** | **`09592518aeb9a75d55d162495da33fd6898d1443`** — *"Act 5 value adoption"* |
+| **Governance record** | `docs/PHASE_07_D3_AUTHORITY_INPUTS.md` |
+
+### 21.1 Authority-input results
+
+| # | Item | Value | Status |
+|---|---|---|---|
+| 1 | Threshold-set identity | — | 🔴 OPEN |
+| 2 | Threshold-set version | — | 🔴 OPEN |
+| 3 | Effective date/time | — | 🔴 OPEN |
+| 4 | D2 scoping model | **B — domain/instrument** | ✅ RESOLVED (from governing evidence) |
+
+### 21.2 D3 / O-1 status
+
+| Item | Status |
+|---|---|
+| D3 | 🟡 B — PARTIALLY READY (9/12 resolved, 3 UNSUPPLIED) |
+| O-1 | 🔴 OPEN — 4/5 resolved |
+| P07 implementation | ⛔ NOT YET PERMITTED |
+
+**No value invented. No identity manufactured. No date assumed.**
