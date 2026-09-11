@@ -1135,3 +1135,35 @@ P07 CERTIFICATION  = NONE GRANTED
 Sai is designated for the full P07 gate. This designation is independent of any prior A3 designation for P01 or P06. Not inferred from any prior role.
 
 **Designation performed. Acceptance NOT performed. No dependency weakened or reordered.**
+
+## 28. P07-01 formal A3 acceptance by Sai (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **P07-01 A3 Acceptance** |
+| **Recorded against baseline** | **`a55e29f75aedb21599890344c1bb70fc627ba01d`** — *"A3 P07 gate acceptor designation"* |
+| **Accepted implementation** | `07d6d15abc5a55e5bc8cd721b8d5fa1d75ef6c6a` — *"P07-01: quality rule framework implementation"* |
+| **Governance record** | `docs/PHASE_07_P07_01_ACCEPTANCE.md` |
+
+### 28.1 Acceptance decision
+
+**✅ A — ACCEPT P07-01.** Sai, as designated A3 P07 gate acceptor, formally accepts P07-01 (quality rule framework) at commit `07d6d15`. All 15 acceptance criteria verified against actual implementation. 15/15 PASS.
+
+### 28.2 Gate distinction
+
+- P07-01 acceptance = **ESTABLISHED** (this act)
+- P07 overall acceptance = **NOT ESTABLISHED** (P07-02/03/04 not implemented)
+- P07 certification = **NONE GRANTED**
+- Production activation = **NOT AUTHORIZED**
+- O-2 = **OPEN** *(unchanged)*
+- O-3 = **OPEN** *(unchanged)*
+- Act 6 = **OPEN — NO OWNER ASSIGNED** *(unchanged)*
+
+### 28.3 Preserved
+
+- P01 GATE: `cf23f0eda0ee917626d90270e883073c5d52d62c` ✅
+- P05/P06 source: unchanged ✅
+- Tests: 415/415 PASS ✅
+- All prior authority records: byte-identical ✅
+
+**P07-01 accepted. Implementation unchanged. No dependency weakened or reordered.**
