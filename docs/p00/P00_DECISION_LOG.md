@@ -540,3 +540,56 @@ Ten acceptance criteria verified against actual amended state (§1.1–§1.10 of
 | `formal_gate_status` | **7 of 18 accepted** *(unchanged — P01 re-acceptance is an amendment acceptance, not a new gate)* |
 | **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
 | **Recording integrity** | Files edited by this act: **this decision log only** (new §12 per rule 1) + **one new governance record** (`PHASE_07_P01_T6_REACCEPTANCE.md`) |
+
+## 13. Act 2 authority-path adjudication — duration-unit enumeration (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **Act 2 Authority-Path Adjudication** |
+| **Recorded against baseline** | **`a44ee95997798d083a4324ab5d1a4698262af619`** — *"Act C: P01 T6 re-accepted"* |
+| **Prior state** | **Act 2 = B — DECIDED, NOT ESTABLISHED** · **UN-2 unsatisfied** |
+| **Governance record** | `docs/PHASE_07_ACT2_DURATION_UNIT_AUTHORITY_PATH.md` |
+
+### 13.1 Authority-path determination
+
+**Path: A0-2 → A2 → B2 → C2 → D2**
+
+| Step | Act | Status |
+|---|---|---|
+| A0-2 | Designate named A3 acceptor scoped to P01 for Act 2 | 🔴 NOT PERFORMED |
+| A2 | Program Authority amendment-authorization for duration-unit enumeration | 🔴 NOT PERFORMED |
+| B2 | Additive P01 amendment (duration-unit enumeration) | 🔴 NOT PERFORMED |
+| C2 | Explicit P01 re-acceptance by A3 | 🔴 NOT PERFORMED |
+| D2 | Act 2 = A — ESTABLISHED | 🔴 NOT PERFORMED |
+
+### 13.2 Key findings
+
+1. **Act A does NOT cover Act 2** — scope is T6/evaluationTime only (§1.1), exception consumed by Act B (§1.2)
+2. **Standing append-only constraint is in full force** — requires new authorization for any P01 modification
+3. **New A3 designation required** — existing Ramki P01 designation scoped to T6 only; cannot be extended by inference
+4. **Fresh P01 re-acceptance required** — Act C boundary explicitly excludes duration units
+5. **Same procedure as Act 1** — A0→A→B→C→D pattern is established precedent
+
+### 13.3 ⚠ Explicitly NOT performed
+
+| # | Not performed | Preserved |
+|---|---|---|
+| **1** | ⚠ **P01 modification** — NOT performed | P01 remains 6 times, schema 1.1 |
+| **2** | ⚠ **Duration-unit enumeration** — NOT created | UN-2 unsatisfied |
+| **3** | ⚠ **A3 designation** — NOT performed | Requires Program Authority act |
+| **4** | ⚠ **Acceptance** — NOT performed | Requires C2 after B2 |
+| **5** | ⚠ **P07 implementation** — NOT permitted | NOT YET PERMITTED |
+| **6** | ⚠ **Production activation** — NOT authorized | NOT AUTHORIZED |
+
+### 13.4 Resulting state (by addition; §4, §6.1, §7.1, §8.3, §9.6, §10.7, §11.3 and §12.4 above left unedited)
+
+| Field | Value |
+|---|---|
+| `act_2_status` | **`B — DECIDED, NOT ESTABLISHED`** *(unchanged)* |
+| `act_2_path` | **`A0-2 → A2 → B2 → C2 → D2`** |
+| `d3_status` | **`B — PARTIALLY READY`** *(unchanged)* |
+| `o1_status` | **`OPEN — 4/5 resolved`** *(unchanged)* |
+| `p01_contract_status` | **`ACCEPTED — 6 times, schema 1.1, T6 binding, UN-2 unsatisfied`** *(unchanged)* |
+| `p07_implementation_status` | **`NOT YET PERMITTED`** *(unchanged)* |
+| **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
+| **Recording integrity** | Files edited by this act: **this decision log only** (new §13 per rule 1) + **one new governance record** (`PHASE_07_ACT2_DURATION_UNIT_AUTHORITY_PATH.md`) |
