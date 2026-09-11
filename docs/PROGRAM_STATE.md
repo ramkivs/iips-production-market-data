@@ -1,5 +1,40 @@
 # PROGRAM STATE — SESSION RECOVERY MANIFEST
 
+> **▶ CURRENT GOVERNANCE ACT: P06 — CANONICAL PIPELINE GATE — IS `ACCEPTED` BY AN EXPLICIT A3 ACT.
+> 7 OF 18 GATES ARE NOW ACCEPTED.**
+> (`docs/p06/P06_GATE_ACCEPTANCE.md`, recorded **2026-09-10**, **256 lines**).
+> **A3 acceptor: Ramakrishnan V. S. (Ramki)** — the P06-scoped designation made by **D10-3**
+> (`docs/p00/P00_DECISION_LOG.md` §8.1). ⚠ **Designation was not acceptance; this act is.**
+> Accepted: **`P06-01`** normalization pipeline (**55 tests**) · **`P06-02`** raw/canonical storage
+> boundary (**25 tests**) · **`P06-03`** deduplication/idempotency (**33 tests**) — all three D10-2
+> work items, and the tracker defines no fourth.
+> **Suite: P05 264 + P06 113 = 377 tests, 377 PASS / 0 FAIL.**
+> ⚠ **`p06_acceptance_status` = `ACCEPTED`** *(was `NOT_ACCEPTED`)* · **`formal_gate_status` =
+> 7 of 18** *(was 6 of 18)*.
+> ⚠ **Authority disposition relied on: D12** (`docs/p00/P00_DECISION_LOG.md` §10, commit
+> `3f79e612e06afcd87f09c199665b12354b233e42`) — `collision_census_status` =
+> **`RECONCILED — 60 coded controlling`**, so **ADR-01 §G item 1 = `SATISFIED`**. Historical **52**
+> coded / **54** free-form **PRESERVED, unedited**; **`ADR-01 §B.2` NOT rewritten**; the historical
+> **54 remains `UNREPRODUCED`** with no substitute adopted.
+> ⚠ **ADR-01 §G evidence:** **13/13 engines · 97/97 golden cases · 97/97 value-match · 97/97
+> independently byte-identical** · C1–C6 guard **11/11**, mutation-verified (**4 fail** with the
+> guard removed) · `tsc --noEmit` clean.
+> ⚠ **UNCHANGED / NOT GRANTED:** **`AD-17` = `UNRESOLVED`** (not resolved by inference) · the named
+> historical **digest triples `44ba/ea22/c8ed`, `5813…`, `3cfb/92be` = `NOT REPRODUCED`** (no
+> canonicalization invented) · certification **`NONE_GRANTED`** (⚠ **P06 acceptance grants none**) ·
+> production activation **`NOT_AUTHORIZED`** (A4 at P16) · provider execution + licensed acquisition
+> **`NOT_AUTHORIZED`** (N-1/N-2) · **Track B → `origin/main` = `NOT AUTHORIZED`** ·
+> **P07–P17 = NOT ACCEPTED / NOT AUTHORIZED** · **P07–P17 A3 acceptors NOT designated** ·
+> PIT repeatability **`MISSING / NOT DEMONSTRATED`** (inherited from P05, **not discharged**) ·
+> no concessions register · M-1 / M-5 / M-6 unchanged · existing-IIPS **untouched by this act**
+> (`64797d6` / `4292fff` remain local, **unpushed**, no branch created).
+> ⚠ **Two P05 governance guards were SUPERSEDED, NOT WEAKENED** — `existing-iips-boundary.test.js`
+> and `no-provider-dependency.test.js` each formerly asserted *"no `P06_GATE_ACCEPTANCE.md` may
+> exist anywhere"*. `PROGRAM_STATE.md`:584 predicted exactly this trip. Both are **replaced by
+> strictly stronger content assertions**, disclosed in full at `P06_GATE_ACCEPTANCE.md` §9 and
+> mutation-verified (**9 mutations, all detected**).
+> ⚠ **Next authorized action: NONE.** No P07 entry, no provider integration, no certification.
+
 > **▶ CURRENT WORK ACT: P06-03 IMPLEMENTED + EVIDENCED — DEDUPLICATION / IDEMPOTENCY COMPLETE.
 > ALL THREE D10-2 P06 WORK ITEMS ARE NOW COMPLETE — AND P06 IS STILL `NOT_ACCEPTED`**
 > (`docs/p06/P06_03_EVIDENCE.md`, recorded **2026-09-10** under authority **D10-2**). Delivered:
@@ -203,10 +238,10 @@
 | `program_status` | **`AUTHORIZED_TO_PROCEED`** |
 | `implementation_status` | **`AUTHORIZED_TO_PROCEED`** — currently executable: **P00 only** |
 | `certification_status` | **`NONE_GRANTED`** |
-| `formal_gate_status` | **6 of 18 accepted — P00, P01, P02, P03, P04, P05 ACCEPTED**; P06–P17 NOT ACCEPTED |
+| `formal_gate_status` | **7 of 18 accepted — P00, P01, P02, P03, P04, P05, P06 ACCEPTED**; P07–P17 NOT ACCEPTED *(was 6 of 18)* |
 | `p05_04_status` | **`IMPLEMENTED + EVIDENCED`** within the **D10-1** boundary (`docs/p05/P05_04_EVIDENCE.md`) — *(was `AUTHORIZED`, D10-1; before that `NOT_AUTHORIZED`, D9 N-3)* · exit criterion **MET** (X-1…X-6) · ⚠ **limitation L-1: NOT exercised against a live P05-02 adapter** |
 | `p06_entry_authorization_status` | **`AUTHORIZED`** by **D10-2** — scope **P06-01 / P06-02 / P06-03 ONLY** · *(was `NOT_AUTHORIZED`, D9 §5 exclusion 5)* |
-| `p06_acceptance_status` | **`NOT_ACCEPTED`** — ⚠ **authorization is not acceptance**; no `P06_GATE_ACCEPTANCE.md` exists |
+| `p06_acceptance_status` | **`ACCEPTED`** by an **explicit A3 act** — `docs/p06/P06_GATE_ACCEPTANCE.md`, acceptor **Ramakrishnan V. S. (Ramki)**, **D10-3** · *(was `NOT_ACCEPTED`)* · ⚠ **authorization was never acceptance; this act is the acceptance** |
 | `p06_01_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_01_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Canonical output deterministic"** **MET** · ⚠ limitations **L-1** (not exercised against a live provider) and **L-2** (only D01 declared) |
 | `p06_02_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_02_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Raw data never bypasses validation"** **MET** — **31 bypass attempts executed, 31 refused, 0 not blocked** · ⚠ limitations **L-1…L-6** (esp. **L-2** attestation is provenance not authenticity · **L-3** the P05-04 store is unchanged, encapsulated + audited) |
 | `p06_03_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_03_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Repeated ingestion stable"** **MET** (5 passes: 5 inserts then **[0,0,0,0]**, final count **5**, **20** no-ops, byte-identical) · dedup identity = `snapshotId` (**AD-6**, no component added) **+ `canonicalDigest`** (**RI-6**), decision rule **REUSED** from the P05-04 store · ⚠ limitations **L-1…L-6** |
@@ -598,6 +633,42 @@ concerns existing-IIPS engines and is **outside** everything implemented in P06.
 
 ---
 
+## 6l. P06 status — **ACCEPTED** by an explicit A3 act (Ramakrishnan V. S. (Ramki))
+
+# **P06 — CANONICAL PIPELINE GATE — ACCEPTED · 7 OF 18 GATES ACCEPTED**
+
+Acceptance record: **`docs/p06/P06_GATE_ACCEPTANCE.md`** (256 lines).
+
+| Field | Value |
+|---|---|
+| `p06_acceptance_status` | **`ACCEPTED`** *(prior state `NOT_ACCEPTED`, D10-6)* |
+| `formal_gate_status` | **7 of 18 accepted — P00, P01, P02, P03, P04, P05, P06** *(was 6 of 18)* |
+| **A3 acceptor** | **Ramakrishnan V. S. (Ramki)** — the **P06-scoped** designation made by **D10-3**. ⚠ **Designation ≠ acceptance**; D10 §8.2 listed *"P06 gate acceptance — NOT ACCEPTED"* among its 12 non-authorizations, and that historical record is **left unedited**. |
+| **Acceptance type** | **Explicit A3 acceptance act** — not automatic promotion, not inferred from the fact that all three work items were complete. |
+| **Accepted scope** | **`P06-01`** normalization pipeline (55 tests) · **`P06-02`** raw/canonical storage boundary (25 tests) · **`P06-03`** deduplication/idempotency (33 tests). ⚠ **The tracker defines exactly three P06 work items and there is no fourth.** |
+| **Minimum evidence boundary** | `P00_GATE_MODEL.md`:42 — *"Token recorded; C1–C6 collision guard evidence; 13-engine oracle byte-identity"* **plus ADR-01 §G evidence**. |
+| **Pinned baseline** | **`3f79e612e06afcd87f09c199665b12354b233e42`** (D12) · parent `73f44a3` (D11) |
+| **Test evidence** | **377 / 377 PASS** — P05 **264** + P06 **113**, `node --test "tests/**/*.test.js"` |
+| ⚠ **Authority disposition for ADR-01 §G item 1** | **D12** (`P00_DECISION_LOG.md` §10) — `collision_census_status` = **`RECONCILED — 60 coded controlling`**, so **§G item 1 = `SATISFIED`**. Historical **52 coded / 54 free-form PRESERVED, unedited**. **`ADR-01 §B.2` NOT rewritten** — any correction is a separate authorized amendment. The historical **54 is `UNREPRODUCED`** (derivation not established) and **no substitute figure was adopted**. |
+| ⚠ **ADR-01 §G evidence delivered** | **13/13 engines · 97/97 golden cases · 97/97 value-match · 97/97 independently byte-identical** (sha256 over canonical key-sorted JSON; **`ReplayService` never consulted**) · **C1–C6 guard 11/11**, mutation-verified (**4 fail** with the guard removed) · `tsc --noEmit` clean · existing-IIPS suite **12 FIXED / 0 BROKEN** |
+| ⚠ **`AD-17`** | **`UNRESOLVED`** — `ReplayService.ts`:20-21 literals untouched, guard module references `ReplayService` **0** times. **Not resolved by inference.** |
+| ⚠ **Named historical digest triples** | **`NOT REPRODUCED`** — `44ba/ea22/c8ed`, `5813…`, `3cfb/92be`; **0 of 15** candidate artifacts match. They digest engine output under an **undocumented canonicalization**, and **none was invented**. |
+| **NOT granted by this acceptance** | Certification **`NONE_GRANTED`** (⚠ P06 acceptance grants none; P06's row records *"Cert before progression = No"*) · production activation **`NOT_AUTHORIZED`** (A4 at P16) · provider execution + licensed acquisition **`NOT_AUTHORIZED`** (N-1/N-2) · **Track B → `origin/main` `NOT AUTHORIZED`** · **P07–P17 NOT ACCEPTED / NOT AUTHORIZED** · **P07–P17 A3 acceptors NOT designated** |
+| **Inherited, not discharged** | P05's **PIT repeatability = `MISSING / NOT DEMONSTRATED`** · the **40 pre-existing existing-IIPS suite failures** (neither repaired nor excused) |
+| ⚠ **Guard disclosure** | **2 P05 governance guards SUPERSEDED, NOT WEAKENED** — one in each of `existing-iips-boundary.test.js` and `no-provider-dependency.test.js`. Both formerly asserted *"no `P06_GATE_ACCEPTANCE.md` may exist anywhere"*, a tripwire this file predicted at :584. They are **replaced by strictly stronger content assertions** (exactly one artifact, at the canonical path, whose own bytes must carry D12 / the census disposition / `ADR-01 §B.2` unmodified / AD-17 `UNRESOLVED` / digest triples `NOT REPRODUCED` / `NONE_GRANTED` / `NOT_AUTHORIZED` / P07–P17 not accepted / no concessions register / no waiver vocabulary), **plus** the requirement that **D10 still reads "P06 AUTHORIZATION IS NOT P06 ACCEPTANCE"** and that `p06/evidence-p06-01/00-INDEX.json` still reads `NOT_ACCEPTED` — proving the acceptance was **added by a separate act, never retro-written into D10 or into the historical evidence index**. **No assertion was deleted.** |
+| **Guard teeth** | Negative-tested: remove the record → **2 fail** · redact the acceptor name → **2 fail** · remove `UNRESOLVED` → **2 fail** · remove the D12 citation → **2 fail** · remove `NOT REPRODUCED` → **2 fail** · add `P06_04_EVIDENCE.md` → **2 fail** · add `docs/p08/` → **1 fail** · retro-edit D10 to claim acceptance → **2 fail** · retro-edit the P06-01 evidence index → **1 fail**. **9 mutations, all detected.** |
+| **Historical records rewritten** | **NONE.** All six `P0X_GATE_ACCEPTANCE.md` byte-identical (P05 blob `94f87c614795fc47692d924a8490bc8d41e98d5a`) · `P00_DECISION_LOG.md` §1–§10 · D4 · D8 · D9 · D11 · D12 · ADR-01 (§B.2 and §I both unmodified) · the three `P06_0X_EVIDENCE.md` records · `p06/src`, `p06/tests`, `p06/fixtures`, `p06/evidence*` all **UNMODIFIED** |
+| **`P00_DECISION_LOG.md`** | **NOT appended** — §5 rule 4 *"Authority approval is never recorded as certification or gate acceptance"*; both the P04 (`faf1317`) and P05 (`19713d8b`) precedents added no decision-log entry. Acceptance is recorded in the acceptance record itself. |
+| **Concessions register** | **NOT CREATED** — none exists, none was required, no concessions authority was invented. |
+| **Existing-IIPS** | **UNCHANGED by this act.** `64797d6` → `4292fff` remain **local, unpushed, no branch created**; their disposition is a separate decision. |
+| **Implementation performed by this act** | **NONE** · provider work **NONE** |
+
+⚠ **P06 acceptance is the ONLY gate executed. No P07 entry, no provider integration, no
+certification, no production activation follows from it. The next authorized action is NONE
+without a separate explicit act.**
+
+---
+
 ## 7. D4 / D5 / D7 / D8 / D9 artifact locations
 
 ### `docs/d4/` — specification baseline (16 files, corrected by D4-B)
@@ -715,6 +786,22 @@ register is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
 evidence.** ⚠ **All three P06 work items are complete and `P06` is still `NOT_ACCEPTED`** — no
 `P06_GATE_ACCEPTANCE.md` exists (**D10-6**). **No P07/P08 artifacts exist.**
 
+### `docs/p06/` — P06 records (4 files) · `p06/` — P06-01 pipeline + P06-02 boundary + P06-03 dedup (executable, **UNMODIFIED by the acceptance act**)
+`docs/p06/P06_01_EVIDENCE.md` · `docs/p06/P06_02_EVIDENCE.md` · `docs/p06/P06_03_EVIDENCE.md` ·
+**`docs/p06/P06_GATE_ACCEPTANCE.md`** (**256 lines — the explicit A3 acceptance record, NEW**) ·
+`p06/src/` **5 modules, all unchanged** · `p06/tests/` 4 files, unchanged ·
+`p06/fixtures/normalization-fixtures.json` unchanged ·
+`p06/evidence-p06-01/` (9) · `p06/evidence-p06-02/` (6) · `p06/evidence-p06-03/` (6), all unchanged.
+The combined suite is **377 tests, 377 PASS** (P05 264 · P06 113).
+⚠ **Still zero dependencies, zero network, zero credentials, zero disk persistence.** The provider
+register is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
+⚠ **The acceptance act created exactly ONE new artifact** — the acceptance record itself. It
+performed **no implementation**. `p06/evidence-p06-01/00-INDEX.json` still reads
+`p06Acceptance: "NOT_ACCEPTED — no P06_GATE_ACCEPTANCE.md exists (D10-6)"`, and the superseded P05
+guards now **require** that historical value to remain unedited.
+⚠ **`localfix` is a SYNTHETIC source — this is LOCAL SYNTHETIC evidence, NOT provider evidence.**
+**P06 is `ACCEPTED` — 7 of 18.** **No P07/P08 artifacts exist.** **No provider execution occurred.**
+
 *Note: D6 (authority reconciliation, result "NO AUTHORITY CHANGE") produced no artifacts by
 design — it was a read-only run. Its conclusion is carried forward in `docs/d8/`.*
 
@@ -797,7 +884,7 @@ No G2 layer, interface, module or DTO family. Product-plane basis: `EngineApiAda
 | # | Field | Value |
 |---|---|---|
 | 14 | Certification | **`NONE_GRANTED`** |
-| 15 | Formal gates | **6 of 18 accepted (P00, P01, P02, P03, P04, P05)** — P06–P17 NOT ACCEPTED |
+| 15 | Formal gates | **7 of 18 accepted (P00, P01, P02, P03, P04, P05, P06)** — P07–P17 NOT ACCEPTED |
 | 16 | Production activation | **`NOT_AUTHORIZED`** |
 
 ## 17–24. Open items
@@ -917,6 +1004,7 @@ governance baseline in the repository, so a future Arena session can recover ful
 | 8i | ⚠ **SUPERSEDES rows 8 and 8a–8h ONLY as to the A3 gate-acceptor field — all eight are left unedited as the record of their own moment. No phase status, gate, certification or activation state moves.** **A3 P05 GATE-ACCEPTOR DESIGNATION** was recorded **2026-09-10** against baseline `78839091c7d199a9c69ee583fd9702b151a49158` in **`docs/p00/P00_DECISION_LOG.md` §7** (append-only, per that log's own rule 1 — no new governance instrument, directory or register was created). **A3 phase-gate acceptance authority for the P05 gate = Ramakrishnan V. S. (Ramki)**, program owner of record. ⚠ **This is a DESIGNATION of the person authorized to *perform* the P05 gate-acceptance decision — it is NOT the acceptance.** No acceptance act has occurred; **`P05_GATE_ACCEPTANCE.md` deliberately does NOT exist**; **P05 remains `AUTHORIZED / NOT_ACCEPTED`**, still **5 of 18** gates accepted; **certification `NONE_GRANTED`**; **production activation `NOT_AUTHORIZED`**; **P05-04 `NOT_AUTHORIZED`** (D9 N-3). Superseded as to current state — **all left unedited as the record of their own moment**: the *"A3 gate acceptor UNKNOWN"* statement in the §4 D9 block above · `docs/p00/P00_AUTHORITY_REGISTER.md` §4 (`Person named? NO`) · `docs/d9/D9_STATUS.json` (`a3_gate_acceptor: "UNKNOWN"`) · **BD-P05-01-09 · BD-P05-02-10 · BD-P05-03-09**. ⚠ **No other role is designated or inferred — A1, A2 and A4 remain `person_named: false`, and no P06–P17 acceptor is assigned.** **Zero technical change**: no methodology, contract, rule, canonical field key, lifecycle vocabulary, `snapshotId` composition, OI-08/OI-09/OI-10 decision, ADR-01 **C1–C6** rule or accepted **P00–P04** artifact altered; **no `p05/src`, `p05/tests`, `p05/fixtures` or `p05/evidence*` file modified**; no provider, credential, network or licensed-data work. **Remaining P05 acceptance blockers stand** — **OI-P04-04** · **OI-P04-03** · **DEP-P01-04** (P08) · **P05-04** authorization · **P16** licensing / credentials / entitlement · tracker **P05-02** *"Authenticated ingestion works"* and **P05-03** *"Historical load reproducible"* exit criteria · **BD-P05-03-01…08, 10**. **Next act: P05 acceptance-readiness assessment — NOT performed here.** |
 | 8j | ⚠ **SUPERSEDES rows 8 and 8a–8i as to P05 acceptance state and formal gate count — all nine are left unedited as the record of their own moment. No other phase status, no D9 authorization boundary, no certification and no activation state moves.** **P05 — ACQUISITION GATE — ACCEPTED** by **explicit A3 acceptance act** recorded **2026-09-10** against pinned baseline `cdc684435ad41982b49f832e37d1c153866da6e8` (`docs/p05/P05_GATE_ACCEPTANCE.md`). **A3 acceptor = Ramakrishnan V. S. (Ramki)** (`A3-P05-GATE-ACCEPTOR-DESIGNATION`, `docs/p00/P00_DECISION_LOG.md` §7/§7.1) — the designation made acceptance possible; **this act performs it**. Acceptance boundary = the committed `docs/p05/P05_ACCEPTANCE_CRITERIA.md` (blob `480a4c9630152606a7b5f182dce1bbb3f7477f7d`, **122 criteria**). **Formal gate status 5 of 18 → 6 of 18.** **Scope accepted:** P05-01 implemented deterministic/local feed (evidence reviewed; **228/228** tests; replay 3 passes → **0 duplicates**; idempotency 5× NOOP) · P05-02 **specification + adapter-contract only** (**LA-1…LA-31**) · P05-03 **specification + adapter-contract only** (**HA-1…HA-35**). **P05 is ONE gate spanning P05-01…P05-04** (criteria **A-1/A-2**) — no work item severed. ⚠ **PIT REPEATABILITY = `MISSING / NOT DEMONSTRATED`** — a declared P00 minimum-evidence item (`P00_GATE_MODEL.md`:40, criteria **B-2**). The A3 authority decision is that **P05 is accepted with that evidence gap remaining recorded and open**; the gap **does not become evidence because acceptance occurred**, and the obligation travels to **P08 undischarged**. Run determinism (5 runs / 1 digest) is **not** offered as a substitute — **B-2** expressly forbids it. ⚠ **P05-04 = `NOT_AUTHORIZED` / NO COMPLETION EVIDENCE** (D9 **N-3**) — inside the accepted gate, but **acceptance does NOT authorize its execution**; no such effect exists in the accepted corpus and none was inferred. ⚠ **Tracker exit criteria unchanged:** **C-2 UNMET** · **C-3 UNMET** · **C-4 NO EVIDENCE EXISTS**. **A3 decision on C-5:** they are program-management exit criteria, **not** binding minimum conditions of gate acceptance; the historical tracker XLSX and every work-item status are **unmodified**. ⚠ **UNCHANGED:** provider execution **`NOT_AUTHORIZED`** (**N-1**) · licensed historical acquisition **`NOT_AUTHORIZED`** (**N-2**) · per-record tenant/region governance **`NOT_AUTHORIZED`** (**N-4/N-5**, **IB-1…IB-5**) · **certification `NONE_GRANTED`** (C12 BLOCKED on M-5) · **production activation `NOT_AUTHORIZED`** (**A4** at **P16 only**) · **P16 NOT REACHED** · **P06–P17 NOT ACCEPTED**. ⚠ **Open, NOT resolved by this act:** **OI-P04-03** · **OI-P04-04** · **DEP-P01-04** (P08) · **OI-D9-01** · **28 of 30 BD items** · **M-1/AD-4 · M-5 · M-6 · AD-17/M-2** · **DO-P04-1…5 / DO-1…DO-5** deferred. ⚠ **No concession mechanism invoked · no concessions register created · no concessions authority invented** — the PIT limitation is recorded by the acceptance record itself (criteria **NG-14**). ⚠ **Historical A3-`UNKNOWN` records left unedited** (`D9_STATUS.json`, **BD-P05-01-09 / -02-10 / -03-09**, both evidence JSONs, the fixture and both generators) — **stale as to current state**; the controlling record is `P00_DECISION_LOG.md` §7/§7.1 plus the acceptance record. **5 files touched by this act**: the acceptance record (new) · this manifest · `docs/p00/P00_GATE_MODEL.md` current-state ledger lines · **2 superseded `p05/tests` governance guards**. **Zero historical record rewritten.** `p05/src`, `p05/fixtures` and `p05/evidence*` **UNMODIFIED**. ⚠ **The 2 test guards are REPLACED, NOT WEAKENED** — they formerly asserted *"P05 remains NOT_ACCEPTED and no acceptance artifact exists"*, correct while P05 was unaccepted; the new guards are **stronger**, requiring this acceptance record to carry every limitation the old ones protected by absence (D9 record unedited · P05-04 `NOT_AUTHORIZED` · N-1/N-2/N-3 · PIT `MISSING / NOT DEMONSTRATED` · C-2/C-3/C-4 not relabelled · no concessions register · no waiver language). **No assertion deleted; `existing-iips-boundary.test.js` untouched.** No provider, credential, network or licensed-data work. **No implementation performed.** |
 | 8k | ⚠ **SUPERSEDES rows 8 and 8a–8j as to P05-04 authorization, P06 entry state and the A3 acceptor scope — all ten are left unedited as the record of their own moment. No phase acceptance status, no certification and no activation state moves; the gate count stays 6 of 18.** **D10 — P05-04 AUTHORIZATION + P06 ENTRY AUTHORIZATION + P06 A3 DESIGNATION + `DataBoundExecutor` C1–C6 EXECUTION AUTHORIZATION** was recorded **2026-09-10** against baseline `19713d8b32abae3292a7b0208cd826fc1464f42b` in **`docs/p00/P00_DECISION_LOG.md` §8** (append-only per that log's own rule 1 — **no new governance instrument, directory or register was created**). Authority: **Ramki**, program owner of record. **D10-1: P05-04 = `AUTHORIZED`** — the *"further explicit act"* D9 **N-3** required; ⚠ **no completion evidence yet**, and `P05_GATE_ACCEPTANCE.md` **R-13/R-14** plus **C-4 `NO EVIDENCE EXISTS`** remain historically true and unedited. **D10-2: P06 ENTRY = `AUTHORIZED`** — scope **P06-01 / P06-02 / P06-03 ONLY**. **D10-3: A3 P06 gate acceptor = Ramakrishnan V. S. (Ramki)**, scoped to **P06** only; ⚠ **P07–P17 NOT designated**; ⚠ **designation ≠ acceptance**; no prior explicit P06 designation was discovered and no different person was invented. **D10-4: `DataBoundExecutor` C1–C6 execution = `AUTHORIZED`** within the existing certified ADR-01/D8 boundary — basis `D8_AUTHORITY_RECONCILIATION.md`:35 (**ADR-01-A2 APPROVED — fail-closed**, *"no variation authorized"*) + §B:69 (*"Authority hold: CLEARED"*) + `P00_AUTHORITY_REGISTER.md`:27 + ADR-01 §H (*"NAMED AUTHORITY REQUIRED — Ramki / Sai"*). ⚠ **C1–C6 preserved EXACTLY as written in ADR-01 §C.2 with §C.3 error semantics — NO METHODOLOGY VARIATION.** **D10-5:** ADR-01 §I's stale `PENDING RAMKI/SAI ADR` / *"Blocks: … P06 Normalization"* is a historical record and is **LEFT UNEDITED**; the controlling current authority is **D8**, relied on by citation. ⚠ **D10-6: P06 AUTHORIZATION IS NOT P06 ACCEPTANCE.** **P06 = `NOT_ACCEPTED`**, still **6 of 18**; **no `P06_GATE_ACCEPTANCE.md` exists or was created.** ⚠ **UNCHANGED:** provider execution **`NOT_AUTHORIZED`** (**N-1**) · licensed historical acquisition **`NOT_AUTHORIZED`** (**N-2**) · production activation **`NOT_AUTHORIZED`** (**A4** at **P16 only**) · **Track B → `origin/main` merge `NOT AUTHORIZED`** (`INCIDENT-02` L-1 mitigation did not hold; L-4 is a recommendation, not an authorization) · certification **`NONE_GRANTED`** (**A2** not person-named) · **P07–P17 NOT ACCEPTED / NOT AUTHORIZED**. ⚠ **Not resolved:** OI-P04-03 · OI-P04-04 · DEP-P01-04 · OI-D9-01 · M-1/AD-4 · M-5 · M-6 · AD-17/M-2 · DO-P04-1…5 / DO-1…DO-5. **Technical scope NONE:** no `docs/p06/` directory or artifact created, **no P06 implementation, fixture or evidence file**, no `p05/src` / `p05/fixtures` / `p05/evidence*` change, no methodology, contract, canonical field key, `snapshotId` composition, OI-08/OI-09/OI-10 decision or ADR-01 C1–C6 rule altered. **Zero historical or accepted record rewritten.** |
+| 8l | ⚠ **SUPERSEDES rows 8 and 8a–8k as to P06 acceptance state and the formal gate count — all eleven are left unedited as the record of their own moment. No other phase status, no D10 authorization, no D11/D12 authority record, no ADR-01 text and no historical evidence index was altered.** **P06 — CANONICAL PIPELINE GATE — IS `ACCEPTED` BY AN EXPLICIT A3 ACT** (`docs/p06/P06_GATE_ACCEPTANCE.md`, **2026-09-10**, acceptor **Ramakrishnan V. S. (Ramki)** under the **D10-3** P06-scoped designation). `p06_acceptance_status` **`ACCEPTED`** *(was `NOT_ACCEPTED`)* · `formal_gate_status` **7 of 18** *(was 6 of 18)* · all three D10-2 work items accepted (`P06-01` 55 / `P06-02` 25 / `P06-03` 33 tests) · suite **377/377 PASS** · authority disposition for **ADR-01 §G item 1 = D12** (`collision_census_status` = **`RECONCILED — 60 coded controlling`**; historical 52/54 **preserved**; **`ADR-01 §B.2` NOT rewritten**; historical **54 `UNREPRODUCED`**, no substitute adopted) · **ADR-01 §G**: 13/13 engines, 97/97 golden cases, 97/97 value-match, 97/97 independently byte-identical, C1–C6 guard 11/11 mutation-verified · ⚠ **`AD-17` `UNRESOLVED`** · ⚠ **named digest triples `NOT REPRODUCED`** · certification **`NONE_GRANTED`** · production activation **`NOT_AUTHORIZED`** · provider/licensed execution **`NOT_AUTHORIZED`** · **Track B → `origin/main` `NOT AUTHORIZED`** · **P07–P17 NOT ACCEPTED / NOT AUTHORIZED**, A3 acceptors **NOT designated** · no concessions register · existing-IIPS **untouched** (`64797d6`/`4292fff` local, unpushed) · **2 P05 guards superseded-not-weakened, 9 mutations all detected** · **next authorized action: NONE** |
 
 ### Known documentation gaps (recorded, not defects)
 

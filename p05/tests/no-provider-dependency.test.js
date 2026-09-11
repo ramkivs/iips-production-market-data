@@ -486,25 +486,61 @@ test('D10 — P05-04 and P06 entry are authorized, bounded, and grant no accepta
   //   work items authorized by D10-2 are now implemented**, so the set is the three of them.
   //   ⚠ The tracker defines **no fourth P06 work item**, and the P06-acceptance-artifact ban that
   //   follows is UNCHANGED — so this clause still bites on anything beyond the authorized scope.
-  const docsP06 = join(docsRoot, 'p06');
-  if (existsSync(docsP06)) {
-    for (const f of readdirSync(docsP06)) {
-      assert.match(f, /^P06_0[123]_/,
-        `docs/p06 may hold ONLY P06-01 / P06-02 / P06-03 artifacts — the complete D10-2 scope; the `
-        + `tracker defines no fourth P06 work item, and no P06 acceptance artifact may exist. `
-        + `Found '${f}'`);
+    const docsP06 = join(docsRoot, 'p06');
+    if (existsSync(docsP06)) {
+      for (const f of readdirSync(docsP06)) {
+        // ⚠ DISCLOSED SCOPE CORRECTION (P06-ACCEPT) — replaced, not weakened. This clause formerly
+        //   required every `docs/p06` entry to match `^P06_0[123]_`, which additionally barred a
+        //   `P06_GATE_ACCEPTANCE.md`. That bar was correct and load-bearing while P06 was
+        //   unaccepted, because D10-6 records "P06 AUTHORIZATION IS NOT P06 ACCEPTANCE" — so the
+        //   artifact's absence was the mechanical proof that authorization had not silently become
+        //   acceptance. **The designated A3 acceptor — Ramakrishnan V. S. (Ramki), D10-3 — has now
+        //   performed an EXPLICIT acceptance act** at `docs/p06/P06_GATE_ACCEPTANCE.md`, which is
+        //   exactly the non-silent event the bar existed to compel. The clause is RESCOPED to admit
+        //   that one artifact and TIGHTENED by the content assertions that follow.
+        //   ⚠ The tracker still defines **no fourth P06 work item**, so this clause still bites on
+        //   anything beyond the three authorized work items plus the single acceptance record.
+        assert.ok(/^P06_0[123]_/.test(f) || f === 'P06_GATE_ACCEPTANCE.md',
+          `docs/p06 may hold ONLY P06-01 / P06-02 / P06-03 artifacts — the complete D10-2 scope; the `
+          + `tracker defines no fourth P06 work item — plus the single explicit A3 acceptance record. `
+          + `Found '${f}'`);
+      }
     }
-  }
-  const acceptanceArtifacts = [];
-  const walkDocs = (dir) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) walkDocs(join(dir, entry.name));
-      else if (/P06_GATE_ACCEPTANCE/.test(entry.name)) acceptanceArtifacts.push(join(dir, entry.name));
-    }
-  };
-  walkDocs(docsRoot);
-  assert.deepEqual(acceptanceArtifacts, [],
-    'no P06 acceptance artifact may exist anywhere in docs/ — D10-6: authorization is not acceptance');
+    // ⚠ DISCLOSED SCOPE CORRECTION (P06-ACCEPT) — replaced, not weakened. The walk below formerly
+    //   required that NO `P06_GATE_ACCEPTANCE` artifact exist anywhere in `docs/`. `PROGRAM_STATE.md`
+    //   :584 predicted this exact trip: "add `P06_GATE_ACCEPTANCE.md` → **2 P05 guards fail**".
+    //   The invariant is PRESERVED and STRENGTHENED, not dropped: acceptance may now exist, but ONLY
+    //   as (i) exactly one artifact, (ii) at the one canonical path, (iii) whose own bytes carry
+    //   every non-authorization the old absence check protected — and D10 must remain unedited, so
+    //   the two D10 assertions immediately above (§4) are still the proof that this acceptance was
+    //   ADDED BY A SEPARATE ACT and never retro-written into the authorization record.
+    const acceptanceArtifacts = [];
+    const walkDocs = (dir) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory()) walkDocs(join(dir, entry.name));
+        else if (/P06_GATE_ACCEPTANCE/.test(entry.name)) acceptanceArtifacts.push(join(dir, entry.name));
+      }
+    };
+    walkDocs(docsRoot);
+    assert.deepEqual(acceptanceArtifacts, [join(docsRoot, 'p06', 'P06_GATE_ACCEPTANCE.md')],
+      'exactly ONE P06 acceptance artifact may exist in docs/, at the canonical path, created by the '
+      + 'explicit A3 act — D10 authorization alone must never manufacture one');
+    const p06Acc = readFileSync(join(docsRoot, 'p06', 'P06_GATE_ACCEPTANCE.md'), 'utf8');
+    assert.match(p06Acc, /^# \*\*P06 — Canonical pipeline gate — is ACCEPTED\.\*\*$/m);
+    assert.match(p06Acc, /\*\*Ramakrishnan V\. S\. \(Ramki\)\*\*/, 'the A3 acceptor must be named (D10-3)');
+    // Every non-authorization the old absence check protected must now be carried in the record.
+    assert.match(p06Acc, /D12/, 'D12 must be cited as the authority disposition of ADR-01 §G item 1');
+    assert.match(p06Acc, /RECONCILED — 60 coded controlling/);
+    assert.match(p06Acc, /UNREPRODUCED/, 'the historical 54 free-form figure is preserved, not erased');
+    assert.match(p06Acc, /AD-17 remains `UNRESOLVED`/);
+    assert.match(p06Acc, /NOT REPRODUCED/, 'the historical digest triples remain not reproduced');
+    assert.match(p06Acc, /`NONE_GRANTED`/, 'P06 acceptance grants no certification');
+    assert.match(p06Acc, /production activation/i);
+    assert.match(p06Acc, /`NOT_AUTHORIZED`/);
+    assert.match(p06Acc, /P07–P17 remain NOT ACCEPTED/);
+    assert.match(p06Acc, /377 \/ 377 PASS|377\/377/, 'the 377/377 suite evidence must be cited');
+    assert.match(p06Acc, /13\/13 engines, 97\/97 golden cases/, 'the 13-engine oracle evidence must be cited');
+    assert.doesNotMatch(p06Acc, /waiv/i, 'the acceptance record must contain no waiver vocabulary');
 
   // ── 5. Nothing beyond scope was granted: provider, licensed, activation, merge, certification. ──
   assert.match(log, /\*\*P05-02 live provider execution\*\* — \*\*`NOT_AUTHORIZED`\*\*/);
