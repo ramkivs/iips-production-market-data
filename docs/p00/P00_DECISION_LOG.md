@@ -1006,3 +1006,42 @@ All three remain UNSUPPLIED. The Program Authority has not explicitly supplied a
 - P07 = NOT YET PERMITTED *(unchanged — Act 4 does NOT authorize P07)*
 
 **No dependency weakened or reordered. No work item invented.**
+
+## 24. Act 6 — 5-second backend-to-screen boundary ownership adjudication (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **Act 6 Ownership Adjudication** |
+| **Recorded against baseline** | **`a18af3c6d2972ec05604579723d965f5729f4044`** — *"Act 4: P17 operationalization / tracker decomposition reconciliation"* |
+| **Governance record** | `docs/PHASE_07_ACT6_5S_OWNERSHIP.md` |
+
+### 24.1 Program Authority decision
+
+**🔴 NO OWNER ASSIGNED.** The Program Authority explicitly decides: **Leave OPEN — no owner assigned.**
+
+- No owner designated for the `backendReceivedAt → screenDisplayedAt` 5-second boundary.
+- No inference to P07, P17, frontend, backend, or any other entity.
+- Existing OPEN state preserved.
+- A separate future owning contract is required before the 5-second requirement can become operationally binding.
+
+### 24.2 Act 6 status
+
+**🔴 OPEN — NO OWNER ASSIGNED.** Act 6 is resolved (OPEN). No further Act 6 action is required.
+
+### 24.3 Separation confirmed
+
+- 5-second boundary is **NOT** FD-2 (which remains `receivedAt − asOf`).
+- 5-second boundary is **NOT** a freshness threshold.
+- 5-second boundary is **NOT** D3.
+- `screenDisplayedAt` is **NOT** created.
+- Clock governance is **NOT** decided.
+
+### 24.4 Impact
+
+- D3 = B — PARTIALLY READY *(unchanged — 5-second is separate from D3)*
+- O-1 = OPEN *(unchanged)*
+- P07 = NOT YET PERMITTED *(unchanged)*
+- P07-02 = indirectly blocked (one of several blockers)
+- Critical path: Act 5 → D3 → O-1 *(unchanged — Act 6 is parallel)*
+
+**No dependency weakened or reordered. No owner inferred.**
