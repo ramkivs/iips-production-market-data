@@ -1321,3 +1321,43 @@ The Program Authority indicated it will supply the provider identity in a subseq
 - Tests: 492/492 PASS ✅
 
 **O-3 Act B deferred. OI-09 resolved. Awaiting provider identity from Program Authority.**
+
+---
+
+## 33. O-2 Act C — Reconciliation resolution policy established (appended 2026-09-12)
+
+| Field | Value |
+|---|---|
+| **ID** | **O-2 Act C — Resolution Policy** |
+| **Policy identity** | `P07-03-RECONCILIATION-RESOLUTION-POLICY` v1.0 |
+| **Resolves** | DC-7, R-4, DEP-P02-12 (reconciliation policy component) |
+| **Governance record** | `docs/PHASE_07_O2_ACT_C_RESOLUTION_POLICY.md` |
+
+### 33.1 Policy summary
+
+**Classify and present, never collapse.** Every discrepancy is classified by dimension (CD-1…CD-5), annotated, and presented alongside both provider records. No value is silently resolved, coerced, overwritten, or preferred. Quality propagates unchanged. Fail-closed = unresolved + visible.
+
+Disposition types (closed set): `CLASSIFIED_PRESENTED`, `UNRESOLVED_PRESENTED`.
+Tolerance: exact-match baseline (no numeric tolerance invented).
+Tie-breaking: none — all records presented.
+Precedence: reporting order only (CD-1→CD-5); NOT value-collapse.
+Silent overwrite: prohibited without exception (RJ-6, C5, DC-5).
+
+### 33.2 Gate distinction
+
+- O-2 resolution policy = ✅ **RESOLVED** *(this act)*
+- O-3 provider selection = 🔴 **OPEN — DEFERRED** *(independent)*
+- OI-09 = ✅ **RESOLVED — FIGI/OpenFIGI** *(P04 gate acceptance)*
+- P07-03 = ⛔ **NOT IMPLEMENTED** *(still blocked on O-3)*
+- P07 overall acceptance = ⛔ **NOT ESTABLISHED**
+- P07 certification = ⛔ **NONE GRANTED**
+- Production activation = ⛔ **NOT AUTHORIZED**
+- Act 6 = 🔴 **OPEN — NO OWNER ASSIGNED** *(unchanged)*
+
+### 33.3 Preserved
+
+- P01 GATE: `cf23f0eda0ee917626d90270e883073c5d52d62c` ✅
+- P07-01/02/04 acceptance: unchanged ✅
+- Tests: 492/492 PASS ✅
+
+**O-2 resolved. P07-03 remains blocked on O-3 (provider selection).**
