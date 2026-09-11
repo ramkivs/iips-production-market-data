@@ -1445,3 +1445,42 @@ Silent overwrite: prohibited without exception (RJ-6, C5, DC-5).
 - Tests: 536/536 PASS ✅
 
 **P07-03 accepted. All four P07 work items implemented and accepted. P07 overall acceptance NOT established.**
+
+---
+
+## 36. P07 overall phase acceptance by Sai (appended 2026-09-12)
+
+| Field | Value |
+|---|---|
+| **ID** | **P07 Overall Phase Acceptance** |
+| **Recorded against baseline** | **`28d862bc25bba572bb56a38884f9fc767829298e`** |
+| **Governance record** | `docs/PHASE_07_OVERALL_ACCEPTANCE.md` |
+
+### 36.1 Acceptance decision
+
+**✅ A — ACCEPT P07 OVERALL.** Sai, as designated A3 P07 gate acceptor, formally accepts the P07 phase as a unified gate. All four work items implemented and individually accepted. All 15 overall acceptance criteria verified. 15/15 PASS. Total individual criteria: 79/79 PASS.
+
+### 36.2 Work items
+
+| Work item | Acceptance | Criteria |
+|---|---|---|
+| P07-01 Quality rule framework | `17f6bc25` | 15/15 PASS |
+| P07-02 Freshness evaluation | `2dc14c1c` | 22/22 PASS |
+| P07-03 Provider reconciliation | `28d862b` | 18/18 PASS |
+| P07-04 Degraded-state contract | `cb53d8d` | 24/24 PASS |
+
+### 36.3 Gate distinction
+
+- P07 overall acceptance = **ESTABLISHED** *(this act)*
+- P07 certification = **NONE GRANTED** *(O-6 OPEN)*
+- Production activation = **NOT AUTHORIZED**
+- Act 6 = **OPEN — NO OWNER ASSIGNED** *(unchanged)*
+- P08+ = **NOT AUTHORIZED** *(P07 scope only)*
+
+### 36.4 Preserved
+
+- P01 GATE: `cf23f0eda0ee917626d90270e883073c5d52d62c` ✅
+- P05/P06 source: unchanged ✅
+- Tests: 536/536 PASS ✅
+
+**P07 phase accepted. All four work items implemented and accepted. Certification and activation NOT granted.**
