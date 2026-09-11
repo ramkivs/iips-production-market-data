@@ -148,13 +148,13 @@ test('no new engine metric key is introduced (INV-8 / SPEC ¶132-133)', () => {
  *
  *   · The **P08 arm is UNCHANGED**, asserted byte-for-byte as before.
  *   · The **P06 arm is RESCOPED** (D10-2), tightened beyond the old absence check.
- *   · The **P07 arm is RESCOPED** (P07-01-A + P07-02-A): `p07/` source is now authorized
- *     for P07-01 and P07-02. `docs/p07` still must not exist (P07 governance records use
- *     `PHASE_07_` prefix per D13 §8 G-3). No `P07_GATE_ACCEPTANCE.md` may exist (P07-01
- *     acceptance is a sub-gate, not overall P07 acceptance). No P07-03/04 implementation
- *     may exist. The protective surface is enlarged, not reduced.
+ *   · The **P07 arm is RESCOPED** (P07-01-A + P07-02-A + P07-03-A + P07-04-A): `p07/`
+ *     source is now authorized for P07-01, P07-02, P07-03, and P07-04. `docs/p07` still
+ *     must not exist (P07 governance records use `PHASE_07_` prefix per D13 §8 G-3).
+ *     No `P07_GATE_ACCEPTANCE.md` may exist (P07 overall acceptance is NOT ESTABLISHED).
+ *     The protective surface is enlarged, not reduced.
  */
-test('P08 remains untouched; P07 exists ONLY as authorized P07-01/P07-02 work (c91690b); P06 as authorized (D10-2)', () => {
+test('P08 remains untouched; P07 exists ONLY as authorized P07-01/02/03/04 work (c91690b); P06 as authorized (D10-2)', () => {
   // ── UNCHANGED: P08 must have no artifacts and no implementation. ──
   assert.equal(existsSync(join(repoRoot, 'docs', 'p08')), false, 'docs/p08 must not exist');
   const p08Named = git('ls-files').split('\n').filter((f) => /P08[_-]/.test(f));
@@ -181,10 +181,8 @@ test('P08 remains untouched; P07 exists ONLY as authorized P07-01/P07-02 work (c
       // Strip comments before checking — boundary disclaimers in JSDoc are expected and correct.
       const code = readFileSync(join(p07Src, f), 'utf8')
         .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/\s+\/\/[^\n]*$/gm, '');
-      assert.doesNotMatch(code, /governThreshold|thresholdSetVersion/,
-        `${f} must not implement P07-03 threshold governance — only P07-01/P07-02 are authorized`);
-      assert.doesNotMatch(code, /degradedStateBehavior|degradedQualityRule/,
-        `${f} must not implement P07-04 degraded-state behavior — only P07-01/P07-02 are authorized`);
+      // P07-01/02/03/04 are all authorized. No specific function-name bars remain.
+      // The P07 gate acceptance bar (below) protects against unauthorized overall acceptance.
       assert.doesNotMatch(code, /writeFileSync|mkdirSync|createWriteStream/,
         `${f} must not persist anything to disk`);
     }
