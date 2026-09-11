@@ -640,3 +640,55 @@ Designated by: **Program Authority** — the owner of the P01 contract.
 | `o1_status` | **`OPEN — 4/5 resolved`** *(unchanged)* |
 | **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
 | **Recording integrity** | Files edited by this act: **this decision log only** (new §14 per rule 1) + **one new governance record** (`PHASE_07_ACT2_A3_DESIGNATION.md`) |
+
+## 15. A2 — Program Authority amendment-authorization for Act 2 duration-unit enumeration (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **A2 — Amendment Authorization** |
+| **Recorded against baseline** | **`ff000f76ab07ee245c466b3fa9292e1fb1bff48a`** — *"A0-2: A3 designation"* |
+| **Prior state** | **Act 2 = B — DECIDED, NOT ESTABLISHED** · **A0-2 RESOLVED** · **UN-2 unsatisfied** |
+| **Governance record** | `docs/PHASE_07_ACT2_AMENDMENT_AUTHORIZATION.md` |
+
+### 15.1 Authorization decisions
+
+| # | Decision | Resolved |
+|---|---|---|
+| 1 | **Authorization** — one-time append-only exception for duration-unit enumeration amendment | ✅ RESOLVED |
+| 2 | **SV classification** — MINOR (SV-2), schema `1.1` → `1.2` — determined from SV-3 evidence | ✅ RESOLVED |
+| 3 | **Enumeration members** — `minutes`, `seconds` (closed at two members) | ✅ RESOLVED |
+| 4 | **Enumeration identity/version** — extends `unit` enum field, versioned by schema version (SV-4) | ✅ RESOLVED |
+| 5 | **Schema location** — §5 of TIMESTAMP_CURRENCY_UNIT_RULES, Field Dictionary, Data Contract §11, Validation Rules SM-4 | ✅ RESOLVED |
+| 6 | **`unit` semantics** — CONDITIONAL obligation unchanged; new members additive; UN-1/UN-2/FD-5 preserved | ✅ RESOLVED |
+| 7 | **Domain applicability** — universal within P01 (wherever freshness is dimensioned) | ✅ RESOLVED |
+| 8 | **Preserved invariants** — TS-2, SV-4, BC-3, BC-4, BC-5, UN-1, UN-2, FD-4, FD-5 all preserved | ✅ RESOLVED |
+| 9 | **A3 confirmation** — Ramakrishnan V. S. (Ramki), designated by A0-2 | ✅ CONFIRMED |
+| 10 | **Acceptance boundary** — A2 is authorization only; B2/C2/D2 required | ✅ STATED |
+
+### 15.2 ⚠ Explicitly NOT authorized or resolved
+
+| # | Not authorized / not resolved | Preserved |
+|---|---|---|
+| **1** | ⛔ **P01 modification** — NOT performed | P01 remains 6 times, schema 1.1 |
+| **2** | ⛔ **Enumeration creation** — NOT created | UN-2 unsatisfied until B2 |
+| **3** | ⛔ **15-minute threshold** — NOT adopted | D3 unchanged |
+| **4** | ⛔ **Operational-state contract** — NOT accepted | Act 3 unchanged |
+| **5** | ⛔ **5-second boundary** — NOT resolved | Act 6 unchanged |
+| **6** | ⛔ **P07 implementation** — NOT permitted | NOT YET PERMITTED |
+| **7** | ⛔ **Production activation** — NOT authorized | NOT AUTHORIZED |
+| **8** | ⛔ **Additional enumeration members** — NOT authorized | Closed at minutes, seconds |
+
+### 15.3 Resulting state (by addition; §4, §6.1, §7.1, §8.3, §9.6, §10.7, §11.3, §12.4, §13.4 and §14.4 above left unedited)
+
+| Field | Value |
+|---|---|
+| `a0_2_status` | **`RESOLVED`** *(unchanged from §14)* |
+| `a2_status` | **`COMPLETED`** — authorization act done |
+| `act_2_path_position` | **`A0-2 ✅ → A2 ✅ → B2 → C2 → D2`** |
+| `act_2_status` | **`B — DECIDED, NOT ESTABLISHED`** *(unchanged)* |
+| `act_2_sv_classification` | **`MINOR (SV-2)`** — schema `1.1` → `1.2` |
+| `act_2_enumeration_members` | **`minutes`, `seconds`** — closed at two |
+| `d3_status` | **`B — PARTIALLY READY`** *(unchanged)* |
+| `o1_status` | **`OPEN — 4/5 resolved`** *(unchanged)* |
+| **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
+| **Recording integrity** | Files edited by this act: **this decision log only** (new §15 per rule 1) + **one new governance record** (`PHASE_07_ACT2_AMENDMENT_AUTHORIZATION.md`) |
