@@ -22,9 +22,16 @@ import { p05Root, readRepo } from './helpers.js';
 
 /**
  * The executable packages this program has authored. ENUMERATED, and the enumeration is itself
- * asserted, so a third unauthorized package fails rather than being silently absorbed.
+ * asserted, so an unauthorized package fails rather than being silently absorbed.
+ *
+ * ⚠ DISCLOSED SCOPE CORRECTION (P07-01-A) — replaced, not weakened. This list was `['p05/',
+ *   'p06/']` while P07 was NOT_AUTHORIZED for implementation. The Program Authority
+ *   implementation authorization act (commit `c91690b`) explicitly authorizes P07
+ *   implementation scoped to P07-01 through P07-04. The list widens to include `p07/` —
+ *   and the enumeration assertion itself is tightened so a fourth unauthorized package
+ *   (`p08/`, …) still fails this test.
  */
-const PROGRAM_SOURCE_PACKAGES = Object.freeze(['p05/', 'p06/']);
+const PROGRAM_SOURCE_PACKAGES = Object.freeze(['p05/', 'p06/', 'p07/']);
 
 const repoRoot = join(p05Root, '..');
 
@@ -49,13 +56,15 @@ test('RECORDED FACT — this repository contains no existing-IIPS executable sou
   // unchanged**. What is rescoped is only *which program packages may hold source*, and the list
   // is ENUMERATED and itself asserted, so a third unauthorized package (`p07/`, `p08/`, …) still
   // fails this test.
-  assert.deepEqual([...PROGRAM_SOURCE_PACKAGES], ['p05/', 'p06/'],
-    'only the P05 and the D10-2-authorized P06 package may hold program source');
+  // ⚠ DISCLOSED SCOPE CORRECTION (P07-01-A) — replaced, not weakened. The P07 implementation
+  // authorization act (c91690b) adds p07/ as a third authorized program package.
+  assert.deepEqual([...PROGRAM_SOURCE_PACKAGES], ['p05/', 'p06/', 'p07/'],
+    'only the P05, the D10-2-authorized P06, and the c91690b-authorized P07 package may hold program source');
   const executables = tracked.filter((f) =>
     /\.(py|ts|tsx|js|jsx|java|cs|go|rs|sh|sql|yaml|yml)$/.test(f)
     && !PROGRAM_SOURCE_PACKAGES.some((pkg) => f.startsWith(pkg)));
   assert.deepEqual(executables, [],
-    'all executable source in the repository belongs to an authorized program package (p05/, p06/)');
+    'all executable source in the repository belongs to an authorized program package (p05/, p06/, p07/)');
 });
 
 test('RECORDED FACT — no methodology, scoring or calibration SOURCE exists', () => {
@@ -69,7 +78,7 @@ test('RECORDED FACT — no methodology, scoring or calibration SOURCE exists', (
   // methodology/scoring/calibration assertion above is UNCHANGED and applies to every source
   // file including the P06-01 package.
   assert.deepEqual(sources.filter((f) => !PROGRAM_SOURCE_PACKAGES.some((pkg) => f.startsWith(pkg))), [],
-    'no executable source exists outside the authorized program packages');
+    'no executable source exists outside the authorized program packages (p05/, p06/, p07/)');
 });
 
 test('the AD-17 replay firewall is preserved — ReplayService and friends are untouched', () => {
@@ -126,35 +135,67 @@ test('no new engine metric key is introduced (INV-8 / SPEC ¶132-133)', () => {
 });
 
 /**
- * ⚠ SUPERSEDED GUARD — REPLACED, NOT WEAKENED (D10-2).
+ * ⚠ SUPERSEDED GUARD — REPLACED, NOT WEAKENED (D10-2 + P07-01-A).
  *
  * This test formerly read *"P06 / P07 / P08 remain untouched — no artifacts, no implementation"*
  * and asserted, for all three phases, that `docs/pNN` did not exist and that no tracked file
- * matched `PNN[_-]`. That was **correct and load-bearing** while P06 was `NOT_AUTHORIZED`: it made
- * an unauthorized P06 build-out impossible to commit silently. **D10-2 is precisely the explicit
- * act that guard was waiting for** (*"P06 ENTRY is AUTHORIZED … Scope = `P06-01`, `P06-02`,
- * `P06-03` ONLY"*), so the P06 arm is replaced — on the same terms `P05_GATE_ACCEPTANCE.md` §9 and
- * `P05_04_EVIDENCE.md` §7 set for the analogous tripwires: *the protective surface is enlarged,
- * not reduced.*
+ * matched `PNN[_-]`. That was **correct and load-bearing** while those phases were
+ * `NOT_AUTHORIZED`: it made an unauthorized build-out impossible to commit silently.
  *
- *   · The **P07 and P08 arms are UNCHANGED**, asserted byte-for-byte as before.
- *   · The **P06 arm is RESCOPED**, because D10-2 authorizes exactly that directory — and then
- *     tightened beyond the old absence check: `docs/p06` may exist but may hold **only P06-01**
- *     artifacts; **no `P06_GATE_ACCEPTANCE.md` may exist anywhere**; and **no P06-02 / P06-03
- *     artifact or implementation may exist**, which the old test could not even express.
- *   · **NEW:** the P06-01 evidence index must classify itself as non-provider, non-P06-02 and
- *     non-P06-03 evidence, so a mislabelled package is a test failure.
+ * **D10-2** is precisely the explicit act the P06 arm was waiting for — rescoped accordingly.
+ * **The P07 implementation authorization act (c91690b)** is precisely the explicit act the P07
+ * arm was waiting for — rescoped accordingly (P07-01-A).
+ *
+ *   · The **P08 arm is UNCHANGED**, asserted byte-for-byte as before.
+ *   · The **P06 arm is RESCOPED** (D10-2), tightened beyond the old absence check.
+ *   · The **P07 arm is RESCOPED** (P07-01-A): `p07/` source is now authorized for P07-01
+ *     only. `docs/p07` still must not exist (P07 governance records use `PHASE_07_` prefix
+ *     per D13 §8 G-3). No `P07_GATE_ACCEPTANCE.md` may exist. No P07-02/03/04 implementation
+ *     may exist. The protective surface is enlarged, not reduced.
  */
-test('P07 / P08 remain untouched; P06 exists ONLY as authorized P06-01/P06-02/P06-03 work (D10-2)', () => {
-  // ── UNCHANGED: P07 and P08 must have no artifacts and no implementation. ──
-  for (const p of ['07', '08']) {
-    assert.equal(existsSync(join(repoRoot, 'docs', `p${p}`)), false, `docs/p${p} must not exist`);
-    const named = git('ls-files').split('\n').filter((f) => new RegExp(`P${p}[_-]`).test(f));
-    assert.deepEqual(named, [], `no P${p} artifact may be tracked`);
-  }
+test('P08 remains untouched; P07 exists ONLY as authorized P07-01 work (c91690b); P06 as authorized (D10-2)', () => {
+  // ── UNCHANGED: P08 must have no artifacts and no implementation. ──
+  assert.equal(existsSync(join(repoRoot, 'docs', 'p08')), false, 'docs/p08 must not exist');
+  const p08Named = git('ls-files').split('\n').filter((f) => /P08[_-]/.test(f));
+  assert.deepEqual(p08Named, [], 'no P08 artifact may be tracked');
   const text = ['src/localFeed.js', 'src/replay.js']
     .map((f) => readFileSync(join(p05Root, f), 'utf8')).join('\n');
   assert.match(text, /PIT storage is P08/, 'P08 ownership is declared, not implemented');
+
+  // ── RESCOPED (P07-01-A): P07 implementation is authorized for P07-01 only. ──
+  // docs/p07 still must not exist — P07 governance records use PHASE_07_ prefix (D13 §8 G-3).
+  assert.equal(existsSync(join(repoRoot, 'docs', 'p07')), false,
+    'docs/p07 must not exist — P07 governance records use PHASE_07_ prefix, not docs/p07/');
+  // No P07 acceptance artifact may exist — P07 acceptance = NOT ESTABLISHED.
+  const p07Acceptance = git('ls-files').split('\n').filter((f) => /P07_GATE_ACCEPTANCE/.test(f));
+  assert.deepEqual(p07Acceptance, [],
+    'no P07 gate acceptance artifact may exist — P07 acceptance is NOT ESTABLISHED');
+  // P07 source directory may exist (authorized by c91690b) but only for P07-01.
+  const p07Src = join(repoRoot, 'p07', 'src');
+  if (existsSync(p07Src)) {
+    for (const f of readdirSync(p07Src).filter((x) => x.endsWith('.js'))) {
+      // Strip comments before checking — boundary disclaimers in JSDoc are expected and correct.
+      const code = readFileSync(join(p07Src, f), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/\s+\/\/[^\n]*$/gm, '');
+      assert.doesNotMatch(code, /evaluateFreshness|deriveStaleness|freshnessThreshold|thresholdComparison/,
+        `${f} must not implement P07-02 freshness/staleness derivation — only P07-01 is authorized`);
+      assert.doesNotMatch(code, /governThreshold|thresholdSetVersion|effectiveDate/,
+        `${f} must not implement P07-03 threshold governance — only P07-01 is authorized`);
+      assert.doesNotMatch(code, /degradedStateBehavior|degradedQualityRule/,
+        `${f} must not implement P07-04 degraded-state behavior — only P07-01 is authorized`);
+      assert.doesNotMatch(code, /writeFileSync|mkdirSync|createWriteStream/,
+        `${f} must not persist anything to disk`);
+    }
+  }
+  // P07 implementation must not claim acceptance or certification.
+  const p07ImplAuth = join(repoRoot, 'docs', 'PHASE_07_P07_IMPLEMENTATION_AUTHORIZATION.md');
+  if (existsSync(p07ImplAuth)) {
+    const authText = readFileSync(p07ImplAuth, 'utf8');
+    assert.match(authText, /NOT ESTABLISHED/,
+      'the authorization record must state P07 acceptance is NOT ESTABLISHED');
+    assert.match(authText, /NONE GRANTED/,
+      'the authorization record must state P07 certification is NONE GRANTED');
+  }
 
     // ── RESCOPED: P06 is authorized for entry, so it may exist — but only as P06-01. ──
     const docsP06 = join(repoRoot, 'docs', 'p06');
