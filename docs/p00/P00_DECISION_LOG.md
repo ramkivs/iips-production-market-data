@@ -745,3 +745,46 @@ D2 (establishment recording) is NOT performed by this act.
 | `production_activation_status` | **`NOT_AUTHORIZED`** *(unchanged)* |
 | **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
 | **Recording integrity** | Files edited by this act: **this decision log only** (new §16 per rule 1) + **one new governance record** (`PHASE_07_ACT2_REACCEPTANCE.md`) |
+
+## 17. D2 — Act 2 establishment recording act (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **D2 — Act 2 Establishment** |
+| **Recorded against baseline** | **`b193784e23dfb29410eca037724c156c4234e831`** — *"C2: P01 duration-unit re-accepted"* |
+| **Prior state** | **Act 2 = B — DECIDED, NOT ESTABLISHED** · **C2 ACCEPTED** |
+| **Governance record** | `docs/PHASE_07_ACT2_ESTABLISHMENT.md` |
+
+### 17.1 Establishment decision
+
+**ACT 2 = A — ESTABLISHED.** The duration-unit enumeration authority decision is now established in the accepted P01 contract at schema version `1.2`.
+
+Path complete: A0-2 ✅ → A2 ✅ → B2 ✅ → C2 ✅ → **D2 ✅**.
+
+UN-8 / the duration-unit enumeration (`minutes`, `seconds`) and the `freshnessDuration` / `freshnessUnit` fields are binding elements of the P01 contract.
+
+### 17.2 ⚠ Explicitly NOT resolved or granted
+
+| # | Not resolved / not granted | Preserved |
+|---|---|---|
+| **1** | ⚠ **D3 = B — PARTIALLY READY** *(unchanged)* | Operational-state, threshold-set identity, effective date open |
+| **2** | ⚠ **O-1 = OPEN — 4/5 resolved** *(unchanged)* | RP-4 stands |
+| **3** | ⚠ **15-minute threshold** — NOT adopted | D3 / Act 5 unchanged |
+| **4** | ⚠ **Operational-state contract** — NOT accepted | Act 3 unchanged |
+| **5** | ⚠ **5-second boundary** — NOT resolved | Act 6 unchanged |
+| **6** | ⚠ **P07 implementation** — NOT YET PERMITTED | P07 unchanged |
+| **7** | ⚠ **Certification** — NOT granted | NONE GRANTED |
+| **8** | ⚠ **Production activation** — NOT authorized | NOT AUTHORIZED |
+
+### 17.3 Resulting state (by addition; all prior sections left unedited)
+
+| Field | Value |
+|---|---|
+| `d2_status` | **`ESTABLISHED`** |
+| `act_2_status` | **`A — ESTABLISHED`** *(was B — DECIDED, NOT ESTABLISHED)* |
+| `p01_contract_status` | **`ACCEPTED — schema 1.2, 6 times, T6 binding, UN-8 binding`** *(unchanged from C2)* |
+| `d3_status` | **`B — PARTIALLY READY`** *(unchanged)* |
+| `o1_status` | **`OPEN — 4/5 resolved`** *(unchanged)* |
+| `p07_implementation_status` | **`NOT YET PERMITTED`** *(unchanged)* |
+| **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
+| **Recording integrity** | Files edited by this act: **this decision log only** (new §17 per rule 1) + **one new governance record** (`PHASE_07_ACT2_ESTABLISHMENT.md`) |
