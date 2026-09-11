@@ -435,3 +435,56 @@ reproduce exactly (`ebitdaMargin` 6, `debtEbitda` 6, `revenueGrowth` 5, `fcfYiel
 | `certification_status` / `production_activation_status` / `track_b_to_main_merge` | **`NONE_GRANTED`** / **`NOT_AUTHORIZED`** / **`NOT_AUTHORIZED`** *(all unchanged)* |
 | **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
 | **Recording integrity** | Files edited by this act: **this decision log only** (new §10 per rule 1) |
+
+## 11. Act A — P01 T6 amendment-authorization act (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **Act A — P01 T6 Amendment-Authorization** |
+| **Authority** | **Ramki** — Program Authority, program owner of record (§3 convention). ⚠ No individual beyond the established authority of record is named or inferred |
+| **Recorded against baseline** | **`5229f09b10d3083faef4ce338c0dcf3cbd029143`** — *"docs: adjudicate the authority path for an additive P01 amendment"* |
+| **Prior state** | **A0 = OPEN** (no named A3 acceptor for P01) · **Act 1 = B — DECIDED, NOT ESTABLISHED** · **P01 = ACCEPTED (5 times, no T6)** · **P07 implementation NOT YET PERMITTED** |
+| **Prerequisite** | **A0 RESOLVED** — Ramakrishnan V. S. (Ramki) designated as A3 gate acceptor scoped to P01 (separate from D10-3 P06 designation) |
+| **Governance record** | `docs/PHASE_07_P01_T6_AMENDMENT_AUTHORIZATION.md` |
+
+### 11.1 Decisions taken by this act
+
+| # | Decision | Scope and limit |
+|---|---|---|
+| **A-1** | **A0 = RESOLVED.** Ramakrishnan V. S. (Ramki) is designated as A3 gate acceptor scoped to the P01 additive amendment establishing T6 / `evaluationTime`. | ⚠ **Scoped to P01 only.** Separate from D10-3 (P06 only). Does not designate A1/A2/A4. Not a standing per-phase assignment for P02–P05 or P07–P17 |
+| **A-2** | **One-time append-only exception authorized** for the P01 additive amendment establishing T6. | ⚠ Scope = `P01_TIMESTAMP_CURRENCY_UNIT_RULES.md` §1 table (add T6 row) and §2 domain-obligation table (add T6 to applicable rows) **only**. Standing append-only constraint NOT weakened or removed |
+| **A-3** | **T6 / `evaluationTime` authorized** as a new distinct timestamp. | ⚠ Explicit input, never implicit "now", never repurposing T1–T5. Field name `evaluationTime` established as binding |
+| **A-4** | **SV classification: MINOR (SV-2)** — explicitly determined. | Schema version `1.0` → `1.1`. SV-3 table has no row for "add a new distinct time"; determined by analogy to "add an optional field slot = MINOR" |
+| **A-5** | **N-1 resolved:** clock source = evaluation engine's evaluation boundary, recorded once, never back-filled (analogy to TS-6). **N-2 resolved:** field name = `evaluationTime`. **N-3 resolved:** carriage = field (not envelope). **N-4 resolved:** conditional, applicable to D01/D03/D07 and domains where evaluation contributes. | All four deferred items now fixed for the amendment |
+| **A-6** | **BC-1/BC-3/BC-4/BC-5 satisfied** by the authorized amendment design. | Backward-compatible; inert for existing executions; historical snapshots never rewritten |
+| **A-7** | **Authorization ≠ execution ≠ acceptance.** The amendment is NOT binding until explicit A3 acceptance by Ramki. | No consumer may rely on T6 until acceptance |
+
+### 11.2 ⚠ Explicitly NOT authorized, NOT granted and NOT resolved by this act
+
+| # | Not authorized / not granted | Preserved |
+|---|---|---|
+| **1** | ⛔ **P01 modification** — NOT performed by this act | P01 remains 5 times, no T6 |
+| **2** | ⛔ **`evaluationTime` creation** — NOT created by this act | No field exists |
+| **3** | ⛔ **Duration units** — NOT established (Act 2, UN-2 unsatisfied) | Act 2 unchanged |
+| **4** | ⛔ **15-minute threshold** — NOT adopted (Act 5 / D3) | D3 unchanged |
+| **5** | ⛔ **Operational-state contract** — NOT created (Act 3) | Act 3 unchanged |
+| **6** | ⛔ **5-second display boundary** — NOT resolved (Act 6) | Act 6 unchanged |
+| **7** | ⛔ **P07 implementation permission** — NOT granted | P07 = NOT YET PERMITTED |
+| **8** | ⛔ **P07 certification** — NOT granted | Certification = NONE |
+| **9** | ⛔ **Production activation** — NOT authorized (P16 only) | Production = NOT AUTHORIZED |
+| **10** | ⛔ **Append-only constraint weakening** — general constraint NOT weakened | Standing constraint preserved |
+
+### 11.3 Resulting state (by addition; §4, §6.1, §7.1, §8.3, §9.6 and §10.7 above left unedited)
+
+| Field | Value |
+|---|---|
+| `a0_status` | **`RESOLVED`** — Ramakrishnan V. S. (Ramki) designated as A3 acceptor for P01 |
+| `act_a_status` | **`COMPLETED`** — authorization granted |
+| `act_1_status` | **`B — DECIDED, NOT ESTABLISHED`** *(unchanged — path at step A complete; B next)* |
+| `p01_status` | **`ACCEPTED — 5 times, no T6`** *(unchanged — amendment authorized but NOT executed)* |
+| `p07_implementation_status` | **`NOT YET PERMITTED`** *(unchanged)* |
+| `formal_gate_status` | **7 of 18 accepted** *(unchanged — this act accepts no gate)* |
+| `certification_status` | **`NONE_GRANTED`** *(unchanged)* |
+| `production_activation_status` | **`NOT_AUTHORIZED`** *(unchanged)* |
+| **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
+| **Recording integrity** | Files edited by this act: **this decision log only** (new §11 per rule 1) + **one new governance record** (`PHASE_07_P01_T6_AMENDMENT_AUTHORIZATION.md`) |
