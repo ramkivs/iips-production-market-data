@@ -51,6 +51,8 @@ is **not adopted**. Recording the token is a mechanical substitution over this d
 | `provenance` | R | ref | Reference into the snapshot lineage block |
 | `pitEligible` | R | bool | Per this dictionary |
 | `evaluationTime` | C | ts | T6 — evaluation/scoring/threshold-assessment instant. ISO-8601 UTC, fixed precision (TS-1/TS-2). Clock source per TS-7. Present when evaluation contributes; absent otherwise (BC-3/BC-4). Schema `1.1` (Act A / Act B) |
+| `freshnessDuration` | C | dec | Duration value for freshness assessment. REQUIRED when a freshness duration is declared; absent otherwise (BC-3/BC-4). Precision declared per NP-1. Schema `1.2` (Act 2 / A2 / B2) |
+| `freshnessUnit` | C | enum | Duration unit for freshness assessment. REQUIRED iff `freshnessDuration` is present. Members: `minutes` \| `seconds` (UN-8). PROHIBITED when `freshnessDuration` is absent. Schema `1.2` (Act 2 / A2 / B2) |
 
 ---
 

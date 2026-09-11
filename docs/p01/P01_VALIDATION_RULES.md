@@ -84,7 +84,7 @@ an empty string, and never silently omitted.**
 | SM-1 | Monetary value without `currency` | REJECT |
 | SM-2 | `currency` not ISO-4217 | REJECT |
 | SM-3 | Dimensioned value without `unit`; dimensionless value **with** one | REJECT |
-| SM-4 | `unit` not in the declared versioned enumeration | REJECT |
+| SM-4 | `unit` not in the declared versioned enumeration (including duration-unit members `minutes`, `seconds` at schema `1.2`, UN-8) | REJECT |
 | SM-5 | `decimal` without declared `precision` | REJECT |
 | SM-6 | Value violates its declared `dataType` | REJECT |
 | SM-7 | `mode = PIT` containing a `pitEligible = false` field | REJECT |

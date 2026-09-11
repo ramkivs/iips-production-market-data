@@ -80,6 +80,7 @@ from one another, and never substituted for one another.**
 | UN-5 | Unit conversion is an explicit declared transformation recorded in lineage, producing a new field |
 | UN-6 | Share/volume counts are integers with no unit |
 | UN-7 | Per-share values declare both `currency` and the per-share basis |
+| UN-8 | **Duration-unit enumeration** (schema `1.2`, Act 2 / A2): `minutes`, `seconds`. These are the **only** admitted duration units. Free-text duration units are **invalid** (UN-2). The enumeration is versioned with the schema version (SV-4). Adding members requires a new authorization act |
 
 ## 6. Numeric precision
 
@@ -111,10 +112,18 @@ from one another, and never substituted for one another.**
 | SE-3 | Session context supplies the baseline for staleness — the contract supplies the inputs; **P07** computes freshness and thresholds |
 | SE-4 | A session/venue reference is REQUIRED on venue-scoped price data (`<NS>price.venueRef`) |
 
-## 9. Schema version (T6 amendment)
+## 9. Schema version
 
 The addition of T6 / `evaluationTime` (Act A, `PHASE_07_P01_T6_AMENDMENT_AUTHORIZATION.md`)
 increments the canonical schema version from **`1.0`** to **`1.1`** (MINOR per SV-2 — strictly
 additive and backward-compatible). T6 is conditional; consumers at `1.0` encounter no T6;
 consumers at `1.1` reading `1.0` data treat absent T6 as `NOT_PROVIDED` (BC-2). Historical
 snapshots retain `schemaVersion: "1.0"` (BC-5).
+
+The addition of the duration-unit enumeration (Act 2 / A2,
+`PHASE_07_ACT2_AMENDMENT_AUTHORIZATION.md`) increments the canonical schema version from
+**`1.1`** to **`1.2`** (MINOR per SV-2 — strictly additive and backward-compatible). The
+duration-unit enumeration (`minutes`, `seconds`, UN-8) is conditional; consumers at `1.1`
+encounter no duration-unit fields; consumers at `1.2` reading `1.1` data treat absent
+duration-unit fields as `NOT_PROVIDED` (BC-2). Historical snapshots retain their existing
+`schemaVersion` (BC-5).

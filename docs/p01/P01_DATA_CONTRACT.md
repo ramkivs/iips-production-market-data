@@ -119,6 +119,8 @@ hard error, never a silent no-op (`D4_04` §F.3).
 | 12 | `provenance` | **REQUIRED** | Reference into the snapshot lineage block; sufficient to attribute the field to a source |
 | 13 | `pitEligible` | **REQUIRED** | Whether the field may be used in PIT queries (see `P01_SCHEMA_CATALOG.md`) |
 | 14 | `evaluationTime` | **CONDITIONAL** | T6 — the evaluation / scoring / threshold-assessment instant. ISO-8601 UTC with explicit `Z`, precision per TS-2. Present when an evaluation, scoring or threshold assessment contributed to the datum. Clock source: evaluation engine evaluation boundary, recorded once, never back-filled or recomputed (TS-7). **Never** implicit wall-clock "now"; **never** repurposes T1–T5. Absent when no evaluation contributes (BC-3/BC-4). Added by Act A / Act B — schema `1.0` → `1.1` (MINOR, SV-2) |
+| 15 | `freshnessDuration` | **CONDITIONAL** | Duration value for freshness assessment. REQUIRED when a freshness duration is declared; absent otherwise (BC-3/BC-4). Precision declared per NP-1. Added by Act 2 / A2 / B2 — schema `1.1` → `1.2` (MINOR, SV-2) |
+| 16 | `freshnessUnit` | **CONDITIONAL** | Duration unit for freshness assessment. REQUIRED iff `freshnessDuration` is present. Members from declared, versioned enumeration (UN-8): `minutes` \| `seconds`. PROHIBITED when `freshnessDuration` is absent. Added by Act 2 / A2 / B2 — schema `1.1` → `1.2` (MINOR, SV-2) |
 
 ---
 
@@ -256,6 +258,7 @@ existing certified baselines byte-identically (`D4_06` §H.4).
 | Q-4 | Freshness is **derived**, from `receivedAt`, `asOf` and the applicable session/calendar baseline (D10) — the contract requires the inputs; P07 computes and thresholds |
 | Q-5 | A **contract violation is not a quality state.** A namespace collision or structural invalidity is a rejection, not `quality: 'partial'` (ADR-01 §5) |
 | Q-6 | Field-level `quality` may only be **equal to or worse than** the snapshot-level value |
+| Q-7 | `freshnessDuration` and `freshnessUnit` declare the freshness duration when assessed. `freshnessUnit` is from the declared, versioned duration-unit enumeration (UN-8: `minutes` \| `seconds`). Both are CONDITIONAL — present when a freshness duration is declared, absent otherwise (BC-3/BC-4). Schema `1.2` (Act 2 / A2 / B2) |
 
 ---
 
