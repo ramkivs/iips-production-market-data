@@ -488,3 +488,55 @@ reproduce exactly (`ebitdaMargin` 6, `debtEbitda` 6, `revenueGrowth` 5, `fcfYiel
 | `production_activation_status` | **`NOT_AUTHORIZED`** *(unchanged)* |
 | **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
 | **Recording integrity** | Files edited by this act: **this decision log only** (new §11 per rule 1) + **one new governance record** (`PHASE_07_P01_T6_AMENDMENT_AUTHORIZATION.md`) |
+
+## 12. Act C — P01 T6 / evaluationTime re-acceptance act (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **Act C — P01 T6 Re-Acceptance** |
+| **A3 acceptor** | **Ramakrishnan V. S. (Ramki)** — designated by Act A §1.7 / A0, scoped to P01 T6 amendment |
+| **Recorded against baseline** | **`1ef691157140cc0c2c7a5ae3556f880c00c0d267`** — *"Act B: P01 additive T6/evaluationTime amendment executed"* |
+| **Prior state** | **Act 1 = B — DECIDED, NOT ESTABLISHED** · **P01 = amended (6 times, schema 1.1) but NOT ACCEPTED** |
+| **Governance record** | `docs/PHASE_07_P01_T6_REACCEPTANCE.md` |
+
+### 12.1 Acceptance decision
+
+**ACCEPTED.** Ramakrishnan V. S. (Ramki), as A3 gate acceptor for the P01 T6 amendment, explicitly accepts the amended P01 six-time contract (schema `1.1`) as established by Act B at `1ef691157`. T6 / `evaluationTime` is now ESTABLISHED and BINDING.
+
+Ten acceptance criteria verified against actual amended state (§1.1–§1.10 of the governance record): six distinct times ✅ · T6 properties ✅ · ISO-8601/TS-1/TS-2/schema 1.1 ✅ · field carriage ✅ · conditionality ✅ · BC-1/BC-3/BC-4/BC-5 ✅ · historical evidence preserved ✅ · fresh evidence created ✅ · authority verified ✅ · binding chain complete ✅.
+
+### 12.2 Act 1 consequence
+
+**Act 1 = A — ESTABLISHED.** Path complete: A0 ✅ → A ✅ → B ✅ → C ✅ → D ✅.
+
+### 12.3 ⚠ Explicitly NOT closed, NOT granted and NOT resolved
+
+| # | Not closed / not granted | Preserved |
+|---|---|---|
+| **1** | ⚠ **D3 = B — PARTIALLY READY** *(unchanged)* | UN-2, operational-state, threshold-set identity/version, effective date all open |
+| **2** | ⚠ **O-1 = OPEN — 4/5 resolved** *(unchanged)* | RP-4 stands; P07-02 exit unevidenceable |
+| **3** | ⚠ **Duration units** — NOT established (Act 2) | Act 2 unchanged |
+| **4** | ⚠ **15-minute threshold** — NOT adopted (Act 5) | D3 unchanged |
+| **5** | ⚠ **Operational-state contract** — NOT accepted (Act 3) | Act 3 unchanged |
+| **6** | ⚠ **5-second display boundary** — NOT resolved (Act 6) | Act 6 unchanged |
+| **7** | ⚠ **P07 implementation** — NOT YET PERMITTED | P07 unchanged |
+| **8** | ⚠ **P07 certification** — NOT granted | Certification = NONE |
+| **9** | ⚠ **Production activation** — NOT authorized (P16 only) | Production = NOT AUTHORIZED |
+| **10** | ⚠ **`P01_GATE_ACCEPTANCE.md` NOT rewritten** — historical blob `cf23f0e…` preserved; criterion 4 "five distinct times" stands as the record of the historical acceptance | Historical record preserved |
+
+### 12.4 Resulting state (by addition; §4, §6.1, §7.1, §8.3, §9.6, §10.7 and §11.3 above left unedited)
+
+| Field | Value |
+|---|---|
+| `act_c_status` | **`ACCEPTED`** — explicit A3 acceptance act |
+| `act_1_status` | **`A — ESTABLISHED`** *(was B — DECIDED, NOT ESTABLISHED)* |
+| `p01_contract_status` | **`ACCEPTED — 6 times, schema 1.1, T6 binding`** |
+| `p01_gate_acceptance_historical` | **`cf23f0e…` PRESERVED — "five distinct times" criterion 4 stands as historical record** |
+| `d3_status` | **`B — PARTIALLY READY`** *(unchanged)* |
+| `o1_status` | **`OPEN — 4/5 resolved`** *(unchanged)* |
+| `p07_implementation_status` | **`NOT YET PERMITTED`** *(unchanged)* |
+| `certification_status` | **`NONE_GRANTED`** *(unchanged)* |
+| `production_activation_status` | **`NOT_AUTHORIZED`** *(unchanged)* |
+| `formal_gate_status` | **7 of 18 accepted** *(unchanged — P01 re-acceptance is an amendment acceptance, not a new gate)* |
+| **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
+| **Recording integrity** | Files edited by this act: **this decision log only** (new §12 per rule 1) + **one new governance record** (`PHASE_07_P01_T6_REACCEPTANCE.md`) |
