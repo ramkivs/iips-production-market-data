@@ -1361,3 +1361,43 @@ Silent overwrite: prohibited without exception (RJ-6, C5, DC-5).
 - Tests: 492/492 PASS ✅
 
 **O-2 resolved. P07-03 remains blocked on O-3 (provider selection).**
+
+---
+
+## 34. O-3 Act B — Provider selection: NSE (appended 2026-09-12)
+
+| Field | Value |
+|---|---|
+| **ID** | **O-3 Act B — Provider Selection** |
+| **Provider** | **National Stock Exchange of India (NSE)** |
+| **Scope** | All IIPS domains D01–D10 (7 of 10 covered; D07/D08/D09 not covered) |
+| **Selecting authority** | Program Authority (designated A-role, Act A `8db3537`) |
+| **Governance record** | `docs/PHASE_07_O3_ACT_B_SELECTION.md` |
+
+### 34.1 Selection decision
+
+**NSE selected.** Program Authority explicitly selects National Stock Exchange of India as the data provider for P07-03 provider reconciliation. Evaluated against P02-03 rubric (13 dimensions): 4 COVERED, 3 PARTIAL, 6 UNKNOWN (including cost per DEP-P02-06). SR-2 compliance: UNKNOWN dimensions not scored as satisfactory.
+
+### 34.2 P07-03 entry criterion satisfied
+
+*"Providers selected"* — **SATISFIED**. Combined with O-2 (resolved, Act C), all P07-03 blockers are cleared.
+
+### 34.3 Gate distinction
+
+- O-3 provider selection = ✅ **RESOLVED — NSE** *(this act)*
+- O-2 resolution policy = ✅ **RESOLVED** *(Act C, `2006814`)*
+- OI-09 = ✅ **RESOLVED — FIGI/OpenFIGI**
+- P07-03 entry criterion = ✅ **SATISFIED**
+- P07-03 implementation = ⛔ **NOT IMPLEMENTED**
+- P07 overall acceptance = ⛔ **NOT ESTABLISHED**
+- P07 certification = ⛔ **NONE GRANTED**
+- Production activation = ⛔ **NOT AUTHORIZED**
+- Act 6 = 🔴 **OPEN — NO OWNER ASSIGNED** *(unchanged)*
+
+### 34.4 Preserved
+
+- P01 GATE: `cf23f0eda0ee917626d90270e883073c5d52d62c` ✅
+- P07-01/02/04 acceptance: unchanged ✅
+- Tests: 492/492 PASS ✅
+
+**NSE selected. O-3 resolved. P07-03 entry criterion satisfied. Implementation not authorized by this act.**
