@@ -1167,3 +1167,34 @@ Sai is designated for the full P07 gate. This designation is independent of any 
 - All prior authority records: byte-identical ✅
 
 **P07-01 accepted. Implementation unchanged. No dependency weakened or reordered.**
+
+## 29. P07-02 formal A3 acceptance by Sai (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **P07-02 A3 Acceptance** |
+| **Recorded against baseline** | **`c8decf2d35a5b5cd5d8633a8354b4f0b560c9cbc`** — *"P07-02: freshness/staleness evaluation implementation"* |
+| **Governance record** | `docs/PHASE_07_P07_02_ACCEPTANCE.md` |
+
+### 29.1 Acceptance decision
+
+**✅ A — ACCEPT P07-02.** Sai, as designated A3 P07 gate acceptor, formally accepts P07-02 (freshness/staleness evaluation) at commit `c8decf2`. All 22 acceptance criteria verified against actual implementation. 22/22 PASS.
+
+### 29.2 Gate distinction
+
+- P07-02 acceptance = **ESTABLISHED** (this act)
+- P07 overall acceptance = **NOT ESTABLISHED** (P07-03/04 not implemented)
+- P07 certification = **NONE GRANTED**
+- Production activation = **NOT AUTHORIZED**
+- O-2 = **OPEN** *(unchanged)*
+- O-3 = **OPEN** *(unchanged)*
+- Act 6 = **OPEN — NO OWNER ASSIGNED** *(unchanged)*
+
+### 29.3 Preserved
+
+- P01 GATE: `cf23f0eda0ee917626d90270e883073c5d52d62c` ✅
+- P05/P06 source: unchanged ✅
+- P07-01 acceptance: unchanged ✅
+- Tests: 450/450 PASS ✅
+
+**P07-02 accepted. Implementation unchanged. No dependency weakened or reordered.**
