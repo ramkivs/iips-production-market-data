@@ -148,12 +148,13 @@ test('no new engine metric key is introduced (INV-8 / SPEC ¶132-133)', () => {
  *
  *   · The **P08 arm is UNCHANGED**, asserted byte-for-byte as before.
  *   · The **P06 arm is RESCOPED** (D10-2), tightened beyond the old absence check.
- *   · The **P07 arm is RESCOPED** (P07-01-A): `p07/` source is now authorized for P07-01
- *     only. `docs/p07` still must not exist (P07 governance records use `PHASE_07_` prefix
- *     per D13 §8 G-3). No `P07_GATE_ACCEPTANCE.md` may exist. No P07-02/03/04 implementation
+ *   · The **P07 arm is RESCOPED** (P07-01-A + P07-02-A): `p07/` source is now authorized
+ *     for P07-01 and P07-02. `docs/p07` still must not exist (P07 governance records use
+ *     `PHASE_07_` prefix per D13 §8 G-3). No `P07_GATE_ACCEPTANCE.md` may exist (P07-01
+ *     acceptance is a sub-gate, not overall P07 acceptance). No P07-03/04 implementation
  *     may exist. The protective surface is enlarged, not reduced.
  */
-test('P08 remains untouched; P07 exists ONLY as authorized P07-01 work (c91690b); P06 as authorized (D10-2)', () => {
+test('P08 remains untouched; P07 exists ONLY as authorized P07-01/P07-02 work (c91690b); P06 as authorized (D10-2)', () => {
   // ── UNCHANGED: P08 must have no artifacts and no implementation. ──
   assert.equal(existsSync(join(repoRoot, 'docs', 'p08')), false, 'docs/p08 must not exist');
   const p08Named = git('ls-files').split('\n').filter((f) => /P08[_-]/.test(f));
@@ -170,19 +171,20 @@ test('P08 remains untouched; P07 exists ONLY as authorized P07-01 work (c91690b)
   const p07Acceptance = git('ls-files').split('\n').filter((f) => /P07_GATE_ACCEPTANCE/.test(f));
   assert.deepEqual(p07Acceptance, [],
     'no P07 gate acceptance artifact may exist — P07 acceptance is NOT ESTABLISHED');
-  // P07 source directory may exist (authorized by c91690b) but only for P07-01.
+  // P07 source directory may exist (authorized by c91690b) for P07-01 and P07-02 only.
+  // ⚠ DISCLOSED SCOPE CORRECTION (P07-02-A) — replaced, not weakened. This clause formerly
+  //   barred all P07-02 freshness code. P07-02 implementation is now authorized (P07-01
+  //   accepted, P07-02 entry criteria met). P07-03 and P07-04 remain barred.
   const p07Src = join(repoRoot, 'p07', 'src');
   if (existsSync(p07Src)) {
     for (const f of readdirSync(p07Src).filter((x) => x.endsWith('.js'))) {
       // Strip comments before checking — boundary disclaimers in JSDoc are expected and correct.
       const code = readFileSync(join(p07Src, f), 'utf8')
         .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/\s+\/\/[^\n]*$/gm, '');
-      assert.doesNotMatch(code, /evaluateFreshness|deriveStaleness|freshnessThreshold|thresholdComparison/,
-        `${f} must not implement P07-02 freshness/staleness derivation — only P07-01 is authorized`);
-      assert.doesNotMatch(code, /governThreshold|thresholdSetVersion|effectiveDate/,
-        `${f} must not implement P07-03 threshold governance — only P07-01 is authorized`);
+      assert.doesNotMatch(code, /governThreshold|thresholdSetVersion/,
+        `${f} must not implement P07-03 threshold governance — only P07-01/P07-02 are authorized`);
       assert.doesNotMatch(code, /degradedStateBehavior|degradedQualityRule/,
-        `${f} must not implement P07-04 degraded-state behavior — only P07-01 is authorized`);
+        `${f} must not implement P07-04 degraded-state behavior — only P07-01/P07-02 are authorized`);
       assert.doesNotMatch(code, /writeFileSync|mkdirSync|createWriteStream/,
         `${f} must not persist anything to disk`);
     }
