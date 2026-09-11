@@ -788,3 +788,48 @@ UN-8 / the duration-unit enumeration (`minutes`, `seconds`) and the `freshnessDu
 | `p07_implementation_status` | **`NOT YET PERMITTED`** *(unchanged)* |
 | **Technical scope** | **NONE.** No source, fixture, contract, methodology, scoring, calibration, taxonomy or engine was created or modified by this act |
 | **Recording integrity** | Files edited by this act: **this decision log only** (new §17 per rule 1) + **one new governance record** (`PHASE_07_ACT2_ESTABLISHMENT.md`) |
+
+## 18. D3/O-1 read-only authority/contract reconciliation (appended 2026-09-11)
+
+| Field | Value |
+|---|---|
+| **ID** | **D3/O-1 Reconciliation** |
+| **Recorded against baseline** | **`b7ae8c8d64666da516012ed8710d15d746b2f5d2`** — *"D2: Act 2 ESTABLISHED"* |
+| **Nature** | **Read-only assessment** — no authority decision is made |
+| **Governance record** | `docs/PHASE_07_D3_O1_RECONCILIATION.md` |
+
+### 18.1 Blockers closed since last assessment
+
+| Blocker | Closed by |
+|---|---|
+| D3-4 — Evaluation instant (T6) | ✅ Act 1 = A — ESTABLISHED |
+| D3-5 — Duration units (UN-2/UN-8) | ✅ Act 2 = A — ESTABLISHED |
+
+### 18.2 Remaining blockers
+
+| # | Blocker | Category | Blocks |
+|---|---|---|---|
+| 1 | Act 3 operational-state acceptance | Authority-required | Act 5, D3, P07-01/04 |
+| 2 | Act 4 P17 tracker decomposition | Authority-required | P17 operationalization |
+| 3 | Act 5 D3 value-adoption | Authority-required (blocked on Act 3) | D3, O-1, P07-01/02/03 |
+| 4 | Act 6 5-second ownership | Authority-required | P07-02 (indirectly) |
+| 5 | P07 implementation permission | Separate gate | P07-01/02/03/04 |
+
+### 18.3 Critical path
+
+**Act 3 acceptance → Act 5 (value-adoption) → D3 = A → O-1 RESOLVED.**
+
+### 18.4 Status (unchanged)
+
+| Item | Status |
+|---|---|
+| D3 | 🟡 B — PARTIALLY READY |
+| O-1 | 🔴 OPEN — 4/5 resolved |
+| P07 implementation | ⛔ NOT YET PERMITTED |
+| Act 1 | ✅ A — ESTABLISHED |
+| Act 2 | ✅ A — ESTABLISHED |
+| Act 3 | 🟡 B — DRAFTED, NOT ACCEPTED |
+| Act 5 | 🔴 BLOCKED on Act 3 |
+| Act 6 | 🔴 OPEN |
+
+**No authority decision made. No resolution invented. No dependency weakened or reordered.**
