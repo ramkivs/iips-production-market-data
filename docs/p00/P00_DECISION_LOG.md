@@ -1522,3 +1522,43 @@ Silent overwrite: prohibited without exception (RJ-6, C5, DC-5).
 - Tests: 536/536 PASS ✅
 
 **A2 designated. P07 certification not granted. C7/C8 certification acts remaining.**
+
+---
+
+## 38. P07 certification — A2 decision: WITHHOLD (appended 2026-09-12)
+
+| Field | Value |
+|---|---|
+| **ID** | **P07 Certification Decision — WITHHOLD** |
+| **A2 authority** | **Sai** (designated `2d28e42`) |
+| **Decision** | **B — WITHHOLD CERTIFICATION** |
+| **Governance record** | `docs/PHASE_07_CERTIFICATION_DECISION.md` |
+
+### 38.1 C8: CERTIFIED within P07 scope
+
+Provenance/quality/freshness derivation certified. INV-7 no-coercion proof verified. NFR-04/NFR-09 compliance verified. All sub-requirements satisfied by P07-01/02/03/04.
+
+### 38.2 C7: NOT ESTABLISHED
+
+Object-resolution/search contract (UI13/UI14) is outside P07 scope. Requires P12/P13 implementation which does not exist.
+
+### 38.3 Decision rationale
+
+P00_GATE_MODEL requires both C7 and C8 for P07 progression. C7 cannot be certified at P07 scope. Withholding preserves certification framework integrity.
+
+### 38.4 Gate distinction
+
+- P07 certification = **NONE GRANTED** *(withheld — C7 not established)*
+- C8 certification = ✅ **CERTIFIED within P07 scope**
+- P07 overall acceptance = **ESTABLISHED** *(preserved)*
+- Production activation = **NOT AUTHORIZED**
+- Act 6 = **OPEN — NO OWNER ASSIGNED** *(unchanged)*
+
+### 38.5 Preserved
+
+- P01 GATE: `cf23f0eda0ee917626d90270e883073c5d52d62c` ✅
+- P07-01/02/03/04 acceptance: unchanged ✅
+- P07 overall acceptance: unchanged ✅
+- Tests: 536/536 PASS ✅
+
+**P07 certification withheld. C8 certified. C7 requires P12/P13. P07 acceptance preserved.**
