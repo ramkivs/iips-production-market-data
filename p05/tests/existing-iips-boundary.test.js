@@ -146,7 +146,7 @@ test('no new engine metric key is introduced (INV-8 / SPEC ¶132-133)', () => {
  * **The P07 implementation authorization act (c91690b)** is precisely the explicit act the P07
  * arm was waiting for — rescoped accordingly (P07-01-A).
  *
- *   · The **P08 arm is UNCHANGED**, asserted byte-for-byte as before.
+ *   · The **P08 arm is RESCOPED** (F-6 / D22) — see the disclosed correction in the body.
  *   · The **P06 arm is RESCOPED** (D10-2), tightened beyond the old absence check.
  *   · The **P07 arm is RESCOPED** (P07-01-A + P07-02-A + P07-03-A + P07-04-A): `p07/`
  *     source is now authorized for P07-01, P07-02, P07-03, and P07-04. `docs/p07` still
@@ -155,10 +155,60 @@ test('no new engine metric key is introduced (INV-8 / SPEC ¶132-133)', () => {
  *     The protective surface is enlarged, not reduced.
  */
 test('P08 remains untouched; P07 exists ONLY as authorized P07-01/02/03/04 work (c91690b); P06 as authorized (D10-2)', () => {
-  // ── UNCHANGED: P08 must have no artifacts and no implementation. ──
-  assert.equal(existsSync(join(repoRoot, 'docs', 'p08')), false, 'docs/p08 must not exist');
-  const p08Named = git('ls-files').split('\n').filter((f) => /P08[_-]/.test(f));
-  assert.deepEqual(p08Named, [], 'no P08 artifact may be tracked');
+  // ── RESCOPED (F-6 / D22): P08 IMPLEMENTATION is authorized. ──
+  // ⚠ DISCLOSED SCOPE CORRECTION (F-6) — REPLACED, NOT WEAKENED.
+  //   This arm formerly asserted `docs/p08` does not exist and that NO tracked file matches
+  //   /P08[_-]/. That was correct and load-bearing while P08 implementation was NOT_AUTHORIZED:
+  //   the ABSENCE of any P08 artifact was the proof that no unauthorized build-out had occurred.
+  //   The explicit acts the arm was waiting for have now happened — F-1/D20 (BL-3 resolved for
+  //   P08 progression), F-3/D21 (P08 ENTRY = AUTHORIZED) and F-6/D22 (P08 IMPLEMENTATION
+  //   AUTHORIZED + this rescope). The bar is therefore rescoped to the authorized surface only,
+  //   and TIGHTENED: content assertions now bind where an absence check could say nothing.
+  //   ⚠ NOTHING IS DELETED FROM THE PROTECTIVE SURFACE.
+  //
+  // (a) docs/p08 must STILL NOT exist — P08 governance records use the `PHASE_08_`/`D..` prefix
+  //     (D13 §8 G-3 precedent, as applied by D17/D18/D21). Unchanged bar.
+  assert.equal(existsSync(join(repoRoot, 'docs', 'p08')), false,
+    'docs/p08 must not exist — P08 governance records use the PHASE_08_ prefix, not docs/p08/');
+  // (b) NO P08 gate-acceptance artifact may exist — P08 acceptance = NOT_ACCEPTED and no A3
+  //     acceptor is designated. This is the P06 `D10-6` tripwire, applied to P08: it makes a
+  //     silent or unauthorized P08 acceptance impossible to commit.
+  const p08Acceptance = git('ls-files').split('\n').filter((f) => /P08_GATE_ACCEPTANCE/.test(f));
+  assert.deepEqual(p08Acceptance, [],
+    'no P08 gate acceptance artifact may exist — P08 acceptance is NOT_ACCEPTED and A3 is NOT DESIGNATED');
+  // (c) P08 source may exist ONLY under `p08/` (authorized by F-6/D22), and — exactly as the P07
+  //     arm requires — it must not persist anything to disk. PIT *storage* remains a designed
+  //     capability, not an authorized side effect, until its own separate act.
+  const p08Src = join(repoRoot, 'p08', 'src');
+  if (existsSync(p08Src)) {
+    for (const f of readdirSync(p08Src).filter((x) => x.endsWith('.js'))) {
+      const code = readFileSync(join(p08Src, f), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '').replace(/\s+\/\/[^\n]*$/gm, '');
+      assert.doesNotMatch(code, /writeFileSync|mkdirSync|createWriteStream/,
+        `${f} must not persist anything to disk`);
+      // No live acquisition, no provider credentials — neither is authorized by F-6.
+      assert.doesNotMatch(code, /\bfetch\s*\(|axios|https?:\/\/|process\.env\./,
+        `${f} must not perform network acquisition or read credentials — NOT AUTHORIZED by F-6`);
+    }
+  }
+  // (d) The P08 implementation authorization record must itself carry the firewall.
+  const p08ImplAuth = join(repoRoot, 'docs', 'D22_F6_PHASE_08_IMPLEMENTATION_AUTHORIZATION.md');
+  if (existsSync(p08ImplAuth)) {
+    const authText = readFileSync(p08ImplAuth, 'utf8');
+    assert.match(authText, /NOT_ACCEPTED/,
+      'the authorization record must state P08 acceptance is NOT_ACCEPTED');
+    assert.match(authText, /NONE_GRANTED/,
+      'the authorization record must state certification is NONE_GRANTED');
+    assert.match(authText, /NOT CERTIFIED/,
+      'the authorization record must state C7 is NOT CERTIFIED');
+  }
+  // (e) ⚠ NEW BAR — P09..P17 remain unauthorized. No such assertion existed before this act;
+  //     the protective surface is ENLARGED so that authorizing P08 cannot leak downstream.
+  const downstream = git('ls-files').split('\n')
+    .filter((f) => /^p(09|1[0-7])\//.test(f) || /P(09|1[0-7])_GATE_ACCEPTANCE/.test(f));
+  assert.deepEqual(downstream, [],
+    'no P09–P17 source or acceptance artifact may exist — those phases are NOT AUTHORIZED');
+  // (f) UNCHANGED: P05 still declares P08 ownership rather than implementing it.
   const text = ['src/localFeed.js', 'src/replay.js']
     .map((f) => readFileSync(join(p05Root, f), 'utf8')).join('\n');
   assert.match(text, /PIT storage is P08/, 'P08 ownership is declared, not implemented');
