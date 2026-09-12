@@ -228,13 +228,29 @@ test('P08-01 defers P08-02 and P08-03 rather than implementing them early', () =
     .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   assert.doesNotMatch(pitCode, /dividend|split|bonus|adjustmentFactor/i,
     'the P08-01 PIT module must not implement corporate actions (P08-02)');
-  for (const f of readdirSync(join(p08Root, 'src')).filter((x) => x.endsWith('.js'))) {
+  // ⚠ SECOND DISCLOSED SCOPE CORRECTION (P08-03) — RESCOPED, NOT DELETED OR WEAKENED.
+  //   This loop formerly asserted P08-03 adjustment vocabulary was absent from the WHOLE p08
+  //   package, which was correct while P08-03 was unauthorized. D24 (`085bf7a`) authorizes
+  //   P08-03, so the ban is narrowed to the PRE-P08-03 modules, which must still not have grown
+  //   adjustment behaviour. ⚠ Note the old assertion passed only by accident once P08-03 landed
+  //   (its identifiers differ from the banned tokens); it is corrected rather than relied upon.
+  const PRE_P08_03 = ['pitStorageModel.js', 'corporateActionIngestion.js'];
+  for (const f of PRE_P08_03) {
     const code = readFileSync(join(p08Root, 'src', f), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
       .replace(/'(?:[^'\\]|\\.)*'/g, "''").replace(/`(?:[^`\\]|\\.)*`/g, '``');
     assert.doesNotMatch(code, /adjustedClose|applyAdjust|computeAdjust/i,
-      `${f} must not implement adjustment (P08-03)`);
+      `${f} must not implement adjustment (P08-03 owns it)`);
+    // ⚠ `adjustedSeriesResolved` is NOT banned: it is P08-01's legitimate DEFERRAL marker
+    //   recording that P08-03 owns adjusted series — a declaration, not an implementation.
   }
+  // The replacement is strictly stronger where it still applies: P08-03 adjustment logic must
+  // live in exactly ONE module, and that module must not derive a factor.
+  const p08_03 = readFileSync(join(p08Root, 'src', 'adjustedSeriesProjection.js'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+    .replace(/'(?:[^'\\]|\\.)*'/g, "''").replace(/`(?:[^`\\]|\\.)*`/g, '``');
+  assert.doesNotMatch(p08_03, /computeAdjust|deriveFactor|calculateFactor/i,
+    'P08-03 must consume a declared factor, never compute one (AG-2 OPEN)');
 });
 
 test('P08-01 does not rely on P05-04 and does not modify P05 source', () => {
