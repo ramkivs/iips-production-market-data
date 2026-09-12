@@ -1484,3 +1484,41 @@ Silent overwrite: prohibited without exception (RJ-6, C5, DC-5).
 - Tests: 536/536 PASS ✅
 
 **P07 phase accepted. All four work items implemented and accepted. Certification and activation NOT granted.**
+
+---
+
+## 37. O-6 authority reconciliation — A2 designation (appended 2026-09-12)
+
+| Field | Value |
+|---|---|
+| **ID** | **O-6 Authority Reconciliation + A2 Designation** |
+| **Named A2** | **Sai** |
+| **Scope** | C1–C12 certification requirements, scoped to P07 certification |
+| **Governance record** | `docs/PHASE_07_O6_AUTHORITY_RECONCILIATION.md` |
+
+### 37.1 A2 designation
+
+**Sai** is designated as A2 (Implementation / Certification Authority) for certification requirements C1–C12, scoped to P07 certification. This is an explicit Program Authority decision.
+
+### 37.2 O-6 status
+
+- A2 person-named = ✅ **RESOLVED — Sai** *(this act)*
+- C7 certification = 🔴 **OPEN** *(no certification act)*
+- C8 certification = 🔴 **OPEN** *(no certification act)*
+- O-6 overall = ⚠ **PARTIALLY RESOLVED**
+
+### 37.3 Gate distinction
+
+- A2 designation ≠ certification *(no certification granted)*
+- P07 certification = **NONE GRANTED** *(C7/C8 certification acts remaining)*
+- Production activation = **NOT AUTHORIZED**
+- Act 6 = **OPEN — NO OWNER ASSIGNED** *(unchanged)*
+
+### 37.4 Preserved
+
+- P01 GATE: `cf23f0eda0ee917626d90270e883073c5d52d62c` ✅
+- P07-01/02/03/04 acceptance: unchanged ✅
+- P07 overall acceptance: unchanged ✅
+- Tests: 536/536 PASS ✅
+
+**A2 designated. P07 certification not granted. C7/C8 certification acts remaining.**
