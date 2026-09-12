@@ -219,11 +219,21 @@ test('P08-01 defers P08-02 and P08-03 rather than implementing them early', () =
   assert.deepEqual([...PIT_EVIDENCE.deferred], [
     'P08-02 corporate actions', 'P08-03 adjusted/unadjusted series',
   ]);
+  // ⚠ DISCLOSED SCOPE CORRECTION (P08-02) — replaced, not weakened. This loop formerly scanned
+  //   EVERY file in p08/src for corporate-action vocabulary, which was correct while P08-02 was
+  //   unauthorized. D23 (`9e14124`) authorizes P08-02, so the scan is narrowed to THIS work
+  //   item's own module — and TIGHTENED, because it now also proves the PIT module did not grow
+  //   CA behaviour, and that P08-03 adjustment vocabulary is absent from the WHOLE package.
+  const pitCode = readFileSync(join(p08Root, 'src', 'pitStorageModel.js'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  assert.doesNotMatch(pitCode, /dividend|split|bonus|adjustmentFactor/i,
+    'the P08-01 PIT module must not implement corporate actions (P08-02)');
   for (const f of readdirSync(join(p08Root, 'src')).filter((x) => x.endsWith('.js'))) {
     const code = readFileSync(join(p08Root, 'src', f), 'utf8')
-      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-    assert.doesNotMatch(code, /dividend|split|bonus|adjustedClose|adjustmentFactor/i,
-      `${f} must not implement corporate actions (P08-02) or adjustment (P08-03)`);
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+      .replace(/'(?:[^'\\]|\\.)*'/g, "''").replace(/`(?:[^`\\]|\\.)*`/g, '``');
+    assert.doesNotMatch(code, /adjustedClose|applyAdjust|computeAdjust/i,
+      `${f} must not implement adjustment (P08-03)`);
   }
 });
 
