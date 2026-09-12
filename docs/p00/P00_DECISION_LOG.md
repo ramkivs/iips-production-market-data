@@ -1598,3 +1598,46 @@ and is **superseded by addition as to current state only**. ⚠ **BD-11 / NB-1**
 **DISCHARGED**; all other BD items are preserved.
 
 **Designation performed. Acceptance NOT performed. AG-1 and AG-2 remain OPEN. No dependency weakened or reordered.**
+
+## 40. P08 formal gate acceptance by Sai (appended 2026-09-12)
+
+| Field | Value |
+|---|---|
+| **ID** | **P08 Gate Acceptance** |
+| **Recorded against baseline** | **`4836c82288b2985a0db1f110c6ef9ef5114ee9f0`** — *"D25: B-P08-1 adjudication"* |
+| **Governance record** | `docs/PHASE_08_GATE_ACCEPTANCE.md` |
+
+### 40.1 Acceptance decision
+
+**✅ ACCEPT — P08 (Historical/PIT gate) IS ACCEPTED** as a unified gate by **Sai**, the designated
+A3 P08 gate acceptor (§39). Scope = **P08-01 / P08-02 / P08-03**, the complete tracker scope; the
+tracker defines **no fourth P08 work item**. Suite **626/626**.
+
+### 40.2 Minimum evidence
+
+**`P00_GATE_MODEL.md`:45** — ADR-02 evidence + vintage ambiguity detection. Per **D25**, the
+P08-local obligations are **ADR-02 §I.2/§I.3/§I.4**, each independently evidenced; vintage
+ambiguity detection is **fail-closed at admission** (`PS-E9`). Point-in-time repeatability
+(P05 **PIT-6**) is **demonstrated in semantics** — a prior as-of answer is unchanged after later
+bars and a corporate action arrive.
+
+### 40.3 Acceptance ≠ certification
+
+- P08 certification = **NONE GRANTED** · **C7 = NOT CERTIFIED** · C3/C4/C11 = **NOT CERTIFIED**
+- Production activation = **NOT AUTHORIZED** · **P09–P17 = NOT AUTHORIZED**
+- ⚠ Follows the **P07 precedent** (§36 acceptance, §38 certification withheld). **A2 ≠ A3.**
+
+### 40.4 Expressly NOT resolved
+
+⚠ **ADR-02 §I.1 remains an UNSATISFIED existing-IIPS obligation** (D25) · ⚠ **AD-17 / M-2 remains
+UNRESOLVED** · **AG-1** and **AG-2** remain **OPEN** (bounded / non-blocking) · **PIT durable
+persistence** remains **OPEN** and travels forward · **F-2**, **F-5** and the branch-ref
+discrepancy are **untouched**.
+
+### 40.5 No concession invoked
+
+⚠ **No concessions register exists, none was created, and none was required** — no open item is
+*blocking*. This follows **P05 PIT-7 / NG-14** (P05 accepted with PIT `MISSING / NOT DEMONSTRATED`
+and no concession) and **P06**:119. The rule 4 corpus defect is **recorded, not cured**.
+
+**Acceptance performed. No certification. No activation. No dependency weakened or reordered.**

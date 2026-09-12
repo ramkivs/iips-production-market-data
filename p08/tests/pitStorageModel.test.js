@@ -259,8 +259,17 @@ test('P08-01 does not rely on P05-04 and does not modify P05 source', () => {
   // The P05 refusal is still present and untouched.
   const localFeed = readFileSync(join(repoRoot, 'p05', 'src', 'localFeed.js'), 'utf8');
   assert.match(localFeed, /PIT storage is P08/);
+  // ⚠ DISCLOSED SCOPE CORRECTION (P08-ACCEPT) — RESCOPED, NOT WEAKENED. This working-tree check is
+  //   a PROXY for "this work item must not modify P05/P06/P07". It still bars every such change
+  //   with ONE narrowly-anchored exemption: `p05/tests/existing-iips-boundary.test.js`, the P05
+  //   governance guard whose P08 arm was rescoped by the SEPARATE A3 acceptance act
+  //   (`docs/PHASE_08_GATE_ACCEPTANCE.md` §10) — exactly as the P05/P06 acceptance acts rescoped
+  //   their own tripwires. ⚠ The exemption applies ONLY while that acceptance record exists, and
+  //   ⛔ p05/src, p06/** and p07/** remain entirely barred.
+  const P08_ACCEPT_EXEMPT = existsSync(join(repoRoot, 'docs', 'PHASE_08_GATE_ACCEPTANCE.md'))
+    ? ['p05/tests/existing-iips-boundary.test.js'] : [];
   const changed = git('status --porcelain').split('\n').filter(Boolean)
-    .map((l) => l.slice(3)).filter((f) => /^p0[567]\//.test(f));
+    .map((l) => l.slice(3)).filter((f) => /^p0[567]\//.test(f) && !P08_ACCEPT_EXEMPT.includes(f));
   assert.deepEqual(changed, [], 'P08-01 must not modify P05/P06/P07 source');
 });
 

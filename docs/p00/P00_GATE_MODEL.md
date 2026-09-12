@@ -153,3 +153,29 @@ existing-IIPS. ⚠ **BD-11 / NB-1** (*"no P08 A3"*) is **DISCHARGED**; all other
 ⚠ The prior **F4-B** finding (`docs/F4_PHASE_08_A3_ACCEPTOR_DESIGNATION.md`, `46537f7`) is
 **preserved byte-for-byte and left unedited** as the record of its own moment, and is **superseded
 by addition as to current state only**.
+
+---
+
+## P08 GATE ACCEPTANCE — appended 2026-09-12
+
+> ### ✅ **P08 — Historical/PIT gate — is ACCEPTED** by explicit **A3** act (acceptor **Sai**, P08 gate only).
+
+`docs/PHASE_08_GATE_ACCEPTANCE.md`, pinned baseline `4836c82` (**D25**); `P00_DECISION_LOG.md` **§40**.
+Scope: **P08-01** PIT storage · **P08-02** corporate actions · **P08-03** adjusted/unadjusted series
+(**90 P08 tests**; suite **626/626**). Minimum evidence at `:45` met **as scoped by D25** —
+**ADR-02 §I.2/§I.3/§I.4** evidenced; **vintage ambiguity detection fail-closed at admission**.
+
+⚠ **ACCEPTANCE IS NOT CERTIFICATION** (rule 5 governs *progression*, not acceptance — the **P07**
+precedent: accepted §36, certification withheld §38). **C7 `NOT_CERTIFIED`** · **C3/C4/C11
+`NOT_CERTIFIED`** · certification **`NONE_GRANTED`** · production activation **`NOT_AUTHORIZED`**
+(A4 at P16) · **P09–P17 `NOT_AUTHORIZED`**.
+
+⚠ **NOT resolved by this acceptance:** **ADR-02 §I.1** remains an **UNSATISFIED existing-IIPS**
+obligation (D25) · **AD-17/M-2 UNRESOLVED** · **AG-1** / **AG-2** **OPEN** (bounded, non-blocking) ·
+**PIT durable persistence OPEN**, travelling forward · F-2 · F-5 · branch-ref discrepancy.
+⚠ **No concession was invoked and no concessions register was created** (P05 **PIT-7/NG-14**, P06:119).
+
+⚠ **Lines :17 and :121 above — *"P07–P17 remain NOT ACCEPTED"* — are STALE** as to **P07** (accepted,
+§36) and now as to **P08**. They are **left unedited** as the record of their own moment and are
+**superseded by addition** by this block. **Formal gate status: P00, P01, P02, P03, P04, P05, P06,
+P07, P08 accepted.**

@@ -175,12 +175,47 @@ test('P08 remains untouched; P07 exists ONLY as authorized P07-01/02/03/04 work 
   //     (D13 §8 G-3 precedent, as applied by D17/D18/D21). Unchanged bar.
   assert.equal(existsSync(join(repoRoot, 'docs', 'p08')), false,
     'docs/p08 must not exist — P08 governance records use the PHASE_08_ prefix, not docs/p08/');
-  // (b) NO P08 gate-acceptance artifact may exist — P08 acceptance = NOT_ACCEPTED and no A3
-  //     acceptor is designated. This is the P06 `D10-6` tripwire, applied to P08: it makes a
-  //     silent or unauthorized P08 acceptance impossible to commit.
-  const p08Acceptance = git('ls-files').split('\n').filter((f) => /P08_GATE_ACCEPTANCE/.test(f));
-  assert.deepEqual(p08Acceptance, [],
-    'no P08 gate acceptance artifact may exist — P08 acceptance is NOT_ACCEPTED and A3 is NOT DESIGNATED');
+  // (b) ⚠ DISCLOSED SCOPE CORRECTION (P08-ACCEPT) — RESCOPED + TIGHTENED, NOT WEAKENED.
+  //     This clause formerly barred ANY P08 gate-acceptance artifact, "because P08 acceptance is
+  //     NOT_ACCEPTED and A3 is NOT DESIGNATED". That bar was correct and load-bearing while both
+  //     premises held: the artifact's ABSENCE was the proof that no silent acceptance had occurred.
+  //     Both premises have since changed by EXPLICIT authority acts — A3 was designated (`7e3f61b`,
+  //     P00_DECISION_LOG §39, Sai, P08 gate only) and the designated A3 then performed an explicit
+  //     acceptance act (`docs/PHASE_08_GATE_ACCEPTANCE.md`), which is precisely the NON-SILENT event
+  //     this tripwire existed to force. Rescoped exactly as the P06 arm below was.
+  //     ⚠ NOTHING IS DELETED FROM THE PROTECTIVE SURFACE. Exactly ONE artifact, at ONE canonical
+  //     path, and the record must itself carry every limitation the old clause protected by absence.
+  //     ⚠ NOTE: the old regex /P08_GATE_ACCEPTANCE/ would NOT have matched a `PHASE_08_`-prefixed
+  //     filename at all. That evasion is rejected: the check below is anchored to the exact path.
+  const allTrackedP08 = git('ls-files').split('\n').filter(Boolean);
+  // ⚠ Anchored to the EXACT acceptance path: `PHASE_08_GATE_ACCEPTANCE_REVIEW.md` is a DIFFERENT
+  //   artifact (the review that found P08 NOT ACCEPTED) and must not be conflated with it.
+  const p08Acceptance = allTrackedP08.filter((f) => /P08_GATE_ACCEPTANCE\.md$|PHASE_08_GATE_ACCEPTANCE\.md$/.test(f));
+  assert.deepEqual(p08Acceptance, ['docs/PHASE_08_GATE_ACCEPTANCE.md'],
+    'exactly ONE P08 gate-acceptance artifact may exist, at the canonical path, created by the '
+    + 'explicit A3 act — not by D22/D24 authorization and not anywhere else in the tree');
+  // The acceptance record must carry the limitations the absence check formerly protected.
+  const p08Acc = readFileSync(join(repoRoot, 'docs', 'PHASE_08_GATE_ACCEPTANCE.md'), 'utf8');
+  assert.match(p08Acc, /^# \*\*P08 — Historical\/PIT gate — is ACCEPTED\.\*\*$/m,
+    'the acceptance statement must be explicit and unconditional as to P08 only');
+  assert.match(p08Acc, /\*\*Sai\*\*/,
+    'the A3 acceptor must be named — P00_DECISION_LOG §39 designates Sai, scoped to P08');
+  for (const [re, what] of [
+    // ⚠ Anchored to the FINAL-STATE block so a sibling mention elsewhere cannot satisfy it.
+    [/^P08 CERTIFICATION\s*=\s*NONE_GRANTED/m, 'P08 certification NONE_GRANTED'],
+    [/^CERTIFICATION\s*=\s*NONE_GRANTED/m, 'overall certification NONE_GRANTED'],
+    [/C7\s*=\s*NOT_CERTIFIED/, 'C7 NOT_CERTIFIED'],
+    [/PRODUCTION\s*=\s*NOT_AUTHORIZED/, 'production NOT_AUTHORIZED'],
+    [/P09–P17\s*=\s*NOT_AUTHORIZED/, 'P09-P17 NOT_AUTHORIZED'],
+    [/ADR-02 §I\.1\s*=\s*UNSATISFIED/, 'ADR-02 §I.1 unsatisfied (existing-IIPS)'],
+    [/AD-17 \/ M-2\s*=\s*UNRESOLVED/, 'AD-17/M-2 unresolved'],
+  ]) {
+    assert.match(p08Acc, re, `the P08 acceptance record must still state ${what}`);
+  }
+  // ⚠ Acceptance must NOT have been manufactured by editing the authorization records.
+  const d22 = readFileSync(join(repoRoot, 'docs', 'D22_F6_PHASE_08_IMPLEMENTATION_AUTHORIZATION.md'), 'utf8');
+  assert.match(d22, /F-4.*outstanding|outstanding.*acceptance/s,
+    'D22 must remain the unedited record that authorization was never acceptance');
   // (c) P08 source may exist ONLY under `p08/` (authorized by F-6/D22), and — exactly as the P07
   //     arm requires — it must not persist anything to disk. PIT *storage* remains a designed
   //     capability, not an authorized side effect, until its own separate act.
