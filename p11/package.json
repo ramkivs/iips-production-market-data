@@ -1,0 +1,11 @@
+{
+  "name": "iips-p11-engine-integration",
+  "version": "1.0.0",
+  "description": "P11 — Engine Integration. Integrates 13 certified engines with the new market-data ingress path (MarketDataSource → DataSnapshot → DataBoundRequest → DataBoundExecutor). Namespace + collision guard (MD:<domain>.<field>, C1–C6). Evidence/snapshot/replay adaptation (INT-003 ADAPT).",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
