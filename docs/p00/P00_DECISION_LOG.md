@@ -1562,3 +1562,39 @@ P00_GATE_MODEL requires both C7 and C8 for P07 progression. C7 cannot be certifi
 - Tests: 536/536 PASS ✅
 
 **P07 certification withheld. C8 certified. C7 requires P12/P13. P07 acceptance preserved.**
+
+## 39. A3 P08 gate acceptor designation (appended 2026-09-12)
+
+| Field | Value |
+|---|---|
+| **ID** | **A3 P08 Designation** — act **F-4** |
+| **Recorded against baseline** | **`46537f754004724ea61cdad767effad4f91248a0`** — *"F-4: P08 A3 gate-acceptor designation — F4-B NO VALID A3 DESIGNABLE"* |
+| **Governance record** | `docs/F4A_PHASE_08_A3_DESIGNATION_RECORDING.md` |
+
+### 39.1 Program Authority decision
+
+**✅ DESIGNATED.** A3 P08 gate acceptor = **Sai**. Scope = **the P08 gate only**.
+
+### 39.2 Designation ≠ Acceptance
+
+- P08 acceptance = **NOT ESTABLISHED** (requires a separate acceptance act by Sai)
+- P08-01 / P08-02 / P08-03 acceptance = **NOT ESTABLISHED**
+- P08 certification = **NONE GRANTED** · C7 = **NOT CERTIFIED**
+- Production activation = **NOT AUTHORIZED**
+
+### 39.3 Scope
+
+Sai is designated for the **P08 gate only**. ⚠ This entry does **not** designate **A1**, **A2** or
+**A4**; does **not** extend the §7 (P05) or **D10-3** (P06) designations or **§27 / O-5** (P07);
+does **not** extend or reuse the **A2** certification designation (`2d28e42`, scoped to P07) —
+**A2 ≠ A3**; and does **not** constitute a standing per-phase assignment for **P09–P17**.
+⚠ Not inferred from any prior role — the name was supplied by the Program Authority act.
+
+### 39.4 Relationship to the prior F-4 record
+
+`docs/F4_PHASE_08_A3_ACCEPTOR_DESIGNATION.md` (`46537f7`) selected **F4-B** because no naming act
+then existed. It is **preserved byte-for-byte and left unedited** as the record of its own moment,
+and is **superseded by addition as to current state only**. ⚠ **BD-11 / NB-1** (*"no P08 A3"*) is
+**DISCHARGED**; all other BD items are preserved.
+
+**Designation performed. Acceptance NOT performed. AG-1 and AG-2 remain OPEN. No dependency weakened or reordered.**

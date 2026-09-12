@@ -120,3 +120,36 @@ P07–P17 acceptor.**
 
 **All other gates (P07–P17) remain NOT ACCEPTED.** No further gate is accepted by this
 document, and none is promoted automatically.
+
+---
+
+## P08 A3 GATE-ACCEPTOR DESIGNATION — appended 2026-09-12 (act **F-4**)
+
+> ### ✅ **A3 P08 gate acceptor = SAI. Scope = the P08 gate ONLY.**
+
+Recorded by explicit **Program Authority** act against baseline `46537f7`
+(`docs/F4A_PHASE_08_A3_DESIGNATION_RECORDING.md`; `P00_DECISION_LOG.md` **§39**).
+
+⚠ **This changes exactly ONE field: the P08 A3 acceptor, `NOT_DESIGNATED` → `DESIGNATED (Sai)`.**
+**No gate status, no acceptance, no certification and no activation state moves. The formal gate
+count is UNCHANGED.**
+
+⚠ **DESIGNATION IS NOT ACCEPTANCE** (rule 6: *"A3 clearance permits the acceptance process; it
+does not pre-accept any gate"*). **P08 remains `NOT_ACCEPTED`** — a separate acceptance act by Sai
+is required, and it must independently establish the P08 minimum evidence at `:45` (**ADR-02
+byte-identical golden replay**; **vintage ambiguity detection**).
+
+⚠ Scoped to **P08 only**. It does **not** designate **A1**, **A2** or **A4**; does **not** extend
+the **§7** (P05) or **D10-3** (P06) designations, or **§27 / O-5** (P07); does **not** extend or
+reuse the **A2** certification designation (`2d28e42`, scoped to P07) — **A2 ≠ A3** (rule 5:
+*"authority clearance is not certification"*); and does **not** constitute a standing per-phase
+assignment for **P09–P17**.
+
+⚠ **UNCHANGED:** **C7 `NOT_CERTIFIED`** · certification **`NONE_GRANTED`** · production activation
+**`NOT_AUTHORIZED`** (A4 at P16) · **P09–P17 NOT AUTHORIZED** · **AG-1 OPEN** · **AG-2 OPEN /
+NON-BLOCKING** · P08-01/P08-02/P08-03 source, tests and methodology · every P01–P07 artifact ·
+existing-IIPS. ⚠ **BD-11 / NB-1** (*"no P08 A3"*) is **DISCHARGED**; all other BD items preserved.
+
+⚠ The prior **F4-B** finding (`docs/F4_PHASE_08_A3_ACCEPTOR_DESIGNATION.md`, `46537f7`) is
+**preserved byte-for-byte and left unedited** as the record of its own moment, and is **superseded
+by addition as to current state only**.
