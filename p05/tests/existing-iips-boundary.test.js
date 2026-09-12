@@ -31,7 +31,11 @@ import { p05Root, readRepo } from './helpers.js';
  *   and the enumeration assertion itself is tightened so a fourth unauthorized package
  *   (`p08/`, …) still fails this test.
  */
-const PROGRAM_SOURCE_PACKAGES = Object.freeze(['p05/', 'p06/', 'p07/']);
+// ⚠ DISCLOSED SCOPE CORRECTION (P08-01) — replaced, not weakened. **F-6 / D22**
+//   (`docs/D22_F6_PHASE_08_IMPLEMENTATION_AUTHORIZATION.md`) authorizes P08 implementation, which
+//   adds `p08/` as a fourth authorized program package. The list stays ENUMERATED and is itself
+//   asserted below, so a fifth unauthorized package (`p09/`, …) still fails these tests.
+const PROGRAM_SOURCE_PACKAGES = Object.freeze(['p05/', 'p06/', 'p07/', 'p08/']);
 
 const repoRoot = join(p05Root, '..');
 
@@ -58,13 +62,14 @@ test('RECORDED FACT — this repository contains no existing-IIPS executable sou
   // fails this test.
   // ⚠ DISCLOSED SCOPE CORRECTION (P07-01-A) — replaced, not weakened. The P07 implementation
   // authorization act (c91690b) adds p07/ as a third authorized program package.
-  assert.deepEqual([...PROGRAM_SOURCE_PACKAGES], ['p05/', 'p06/', 'p07/'],
-    'only the P05, the D10-2-authorized P06, and the c91690b-authorized P07 package may hold program source');
+  assert.deepEqual([...PROGRAM_SOURCE_PACKAGES], ['p05/', 'p06/', 'p07/', 'p08/'],
+    'only the P05, the D10-2-authorized P06, the c91690b-authorized P07 and the F-6/D22-authorized '
+    + 'P08 package may hold program source');
   const executables = tracked.filter((f) =>
     /\.(py|ts|tsx|js|jsx|java|cs|go|rs|sh|sql|yaml|yml)$/.test(f)
     && !PROGRAM_SOURCE_PACKAGES.some((pkg) => f.startsWith(pkg)));
   assert.deepEqual(executables, [],
-    'all executable source in the repository belongs to an authorized program package (p05/, p06/, p07/)');
+    'all executable source in the repository belongs to an authorized program package (p05/, p06/, p07/, p08/)');
 });
 
 test('RECORDED FACT — no methodology, scoring or calibration SOURCE exists', () => {
@@ -78,7 +83,7 @@ test('RECORDED FACT — no methodology, scoring or calibration SOURCE exists', (
   // methodology/scoring/calibration assertion above is UNCHANGED and applies to every source
   // file including the P06-01 package.
   assert.deepEqual(sources.filter((f) => !PROGRAM_SOURCE_PACKAGES.some((pkg) => f.startsWith(pkg))), [],
-    'no executable source exists outside the authorized program packages (p05/, p06/, p07/)');
+    'no executable source exists outside the authorized program packages (p05/, p06/, p07/, p08/)');
 });
 
 test('the AD-17 replay firewall is preserved — ReplayService and friends are untouched', () => {
