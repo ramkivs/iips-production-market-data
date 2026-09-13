@@ -1,0 +1,38 @@
+{
+  "_comment": [
+    "P05-01 — GOVERNED PROVIDER IDENTITY REGISTER.",
+    "Authority: docs/p02/P02_PROVIDER_IDENTITY_VERSIONING.md PG-1..PG-5.",
+    "PG-5 states: 'The register is not created in P02 - it is a P05 operational artifact (DEP-P02-04).'",
+    "This file is that artifact, scoped to the single local deterministic feed.",
+    "",
+    "PI-1: 'provider' is a program-internal stable identity token. It is NOT a vendor name,",
+    "      brand, hostname, account or product SKU.",
+    "PI-3: immutable once issued. A different source is a DIFFERENT provider identity.",
+    "PI-6: never exposed in product DTOs or UI (NFR-06).",
+    "A-23 / SM-4: no credential, token, key, secret or endpoint URL may appear here.",
+    "",
+    "DETERMINISM: every value below is a fixed literal. There is no wall-clock, random or",
+    "environmental input anywhere in this register."
+  ],
+  "registerVersion": "1.0",
+  "issued": [
+    {
+      "provider": "localfix",
+      "description": "Local deterministic fixture feed for development and certification. Synthetic data only.",
+      "kind": "LOCAL_FIXTURE",
+      "issuedAt": "2026-09-09T00:00:00.000Z",
+      "domains": ["D01", "D02", "D10"],
+      "status": "ACTIVE",
+      "liveConnectivity": false,
+      "credentialsRequired": false,
+      "entitlementRequired": false,
+      "notes": "PI-2: stable across adapter swaps. PI-4: participates in snapshotId, never renamed."
+    }
+  ],
+  "retired": [],
+  "prohibitedHere": [
+    "A-23: no credential, token, key, secret or endpoint URL",
+    "SM-4: no endpoint, hostname, account identifier, key or credential in source metadata",
+    "PR-8 / FR-2: no secret material in any evidence record"
+  ]
+}

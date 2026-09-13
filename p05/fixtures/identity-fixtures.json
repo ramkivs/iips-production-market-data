@@ -1,0 +1,447 @@
+{
+  "_comment": [
+    "P05-01 \u2014 LOCAL SYNTHETIC SECURITY MASTER + GOVERNED MAPPING REGISTER (fixture).",
+    "",
+    "\u26a0 P04 is a SPECIFICATION, not an implementation. Nothing here builds the security master.",
+    "  These are synthetic fixture records shaped to the ACCEPTED P04 contract so that P05-01 can",
+    "  exercise identity handling without inventing identity rules.",
+    "",
+    "Authorities applied:",
+    "  CS-1  canonical security ID: required, immutable, unique, program-internal",
+    "  XI-1  FIGI/OpenFIGI authoritative; ISIN/CUSIP/SEDOL non-authoritative (OI-09)",
+    "  MC-1  cardinality 1:N \u2014 one canonical issuer to N securities/listings (OI-08)",
+    "  MC-2  canonical -> companyId is an N:1 projection, expected not an error",
+    "  MC-6  '${sector}-H1' synthetic values are mapping TARGETS only, never modelled as entities",
+    "  MP-1  every mapping traceable to source, method, version and approval",
+    "  MP-2  mappingMethod enumerated; 'inferred from symbol' PROHIBITED (ADP-1)",
+    "  ADP-7 mappings are effective-dated",
+    "",
+    "The FIGI values below are SYNTHETIC and deliberately non-real. No provider is implied.",
+    "No credential, endpoint or entitlement appears anywhere in this file.",
+    "",
+    "P05-02-B additions (BD-P05-02-07 \u2014 lifecycle-state coverage completion):",
+    "  LC-1  lifecycle state is effective-dated; it is always as of a date",
+    "  LC-2  a transition NEVER mutates the canonical security ID (CS-5)",
+    "  LC-3  identity records are never deleted; a retired identity stays resolvable for PIT queries",
+    "  LC-4  'merged' and 'superseded' REQUIRE a successor reference, itself effective-dated.",
+    "        Carried here as `successorRef: {canonicalSecurityId, effective:{from,to}}`. No new link-type",
+    "        vocabulary is invented \u2014 the relationship is already named by `lifecycleStatus`.",
+    "  LC-6  a state is NEVER inferred from absence of data. Missing provider data is not a delisting.",
+    "  The lifecycle vocabulary itself is UNCHANGED: active|suspended|delisted|merged|superseded."
+  ],
+  "mappingRegisterVersion": "idmap-localfix-1.0.0",
+  "securities": [
+    {
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "active",
+      "validFrom": "2020-01-01T00:00:00.000Z",
+      "validTo": null,
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH01",
+          "authority": "AUTHORITATIVE"
+        },
+        {
+          "type": "ISIN",
+          "value": "XS00SYNTH010",
+          "authority": "NON_AUTHORITATIVE"
+        }
+      ]
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0002",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "active",
+      "validFrom": "2020-01-01T00:00:00.000Z",
+      "validTo": null,
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH02",
+          "authority": "AUTHORITATIVE"
+        }
+      ],
+      "_note": "MC-1: same canonicalIssuerId as CS-LOCAL-0001 \u2014 one issuer, two securities."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0003",
+      "canonicalIssuerId": "CI-LOCAL-BETA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "active",
+      "validFrom": "2019-06-01T00:00:00.000Z",
+      "validTo": null,
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH03",
+          "authority": "AUTHORITATIVE"
+        },
+        {
+          "type": "CUSIP",
+          "value": "00SYNTH03",
+          "authority": "NON_AUTHORITATIVE"
+        }
+      ]
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0004",
+      "canonicalIssuerId": "CI-LOCAL-GAMMA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "delisted",
+      "validFrom": "2015-01-01T00:00:00.000Z",
+      "validTo": "2023-12-29T00:00:00.000Z",
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH04",
+          "authority": "AUTHORITATIVE"
+        }
+      ],
+      "_note": "LC-2: delisting changed state and relationships, never the immutable canonical ID."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0005",
+      "canonicalIssuerId": "CI-LOCAL-DELTA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "active",
+      "validFrom": "2021-03-15T00:00:00.000Z",
+      "validTo": null,
+      "externalIdentifiers": [],
+      "_note": "FC-2 NEGATIVE FIXTURE: has NO FIGI. An unresolved FIGI is an explicit unresolved state \u2014 never a fallback."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-UNMAPPED",
+      "canonicalIssuerId": "CI-LOCAL-ZETA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "active",
+      "validFrom": "2024-01-01T00:00:00.000Z",
+      "validTo": null,
+      "externalIdentifiers": [],
+      "_note": "FC-1 NEGATIVE FIXTURE: a real canonical security with NO mapping record. Resolution must FAIL EXPLICITLY - no coercion, no placeholder, no synthesised companyId, no null join key (ADP-2)."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0006",
+      "canonicalIssuerId": "CI-LOCAL-KAPPA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "suspended",
+      "validFrom": "2022-05-02T00:00:00.000Z",
+      "validTo": null,
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH06",
+          "authority": "AUTHORITATIVE"
+        }
+      ],
+      "_note": "P05-02-B / LC-1, LC-2: temporarily halted \u2014 the identity is INTACT and remains resolvable. A halt changes STATE, never the immutable canonical ID, and is never inferred from absent market data (LC-6). Given its own canonical issuer so the existing MC-1 fixture shape (one issuer, two securities) is left untouched."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0007",
+      "canonicalIssuerId": "CI-LOCAL-THETA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "merged",
+      "validFrom": "2018-02-01T00:00:00.000Z",
+      "validTo": "2025-11-28T00:00:00.000Z",
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH07",
+          "authority": "AUTHORITATIVE"
+        }
+      ],
+      "successorRef": {
+        "canonicalSecurityId": "CS-LOCAL-0009",
+        "effective": {
+          "from": "2025-11-28T00:00:00.000Z",
+          "to": null
+        }
+      },
+      "_note": "P05-02-B / LC-4: 'merged' REQUIRES a successor reference and the predecessor\u2192successor link is itself effective-dated. LC-3: the predecessor is never deleted and stays resolvable for historical/PIT queries."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0008",
+      "canonicalIssuerId": "CI-LOCAL-IOTA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "superseded",
+      "validFrom": "2020-07-01T00:00:00.000Z",
+      "validTo": "2026-01-15T00:00:00.000Z",
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH08",
+          "authority": "AUTHORITATIVE"
+        }
+      ],
+      "successorRef": {
+        "canonicalSecurityId": "CS-LOCAL-0010",
+        "effective": {
+          "from": "2026-01-15T00:00:00.000Z",
+          "to": null
+        }
+      },
+      "_note": "P05-02-B / LC-4: 'superseded' REQUIRES a successor reference; the link is effective-dated. LC-2: supersession changes state and relationships, never the immutable anchor."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0009",
+      "canonicalIssuerId": "CI-LOCAL-THETA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "active",
+      "validFrom": "2025-11-28T00:00:00.000Z",
+      "validTo": null,
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH09",
+          "authority": "AUTHORITATIVE"
+        }
+      ],
+      "_note": "P05-02-B: the SUCCESSOR of CS-LOCAL-0007 (the absorbing instrument in the corporate event). MC-2: it projects onto the SAME companyId as its predecessor \u2014 an expected N:1 projection, not an error. MC-4: the two remain DISTINCT securities."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0010",
+      "canonicalIssuerId": "CI-LOCAL-IOTA",
+      "instrumentType": "EQUITY",
+      "lifecycleStatus": "active",
+      "validFrom": "2026-01-15T00:00:00.000Z",
+      "validTo": null,
+      "externalIdentifiers": [
+        {
+          "type": "FIGI",
+          "value": "BBG00SYNTH10",
+          "authority": "AUTHORITATIVE"
+        }
+      ],
+      "_note": "P05-02-B: the SUCCESSOR of CS-LOCAL-0008. A successor is a NEW canonical identity; it never reuses or mutates the predecessor's immutable ID (CS-1, LC-2)."
+    }
+  ],
+  "mappings": [
+    {
+      "canonicalSecurityId": "CS-LOCAL-0001",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "targetCompanyId": "technology-H1",
+      "effective": {
+        "from": "2020-01-01T00:00:00.000Z",
+        "to": null
+      },
+      "mappingMethod": "AUTHORITATIVE_IDENTIFIER_MATCH",
+      "source": "localfix",
+      "confidence": 1.0,
+      "approvalRef": "APPR-LOCAL-0001",
+      "auditRef": "AUD-LOCAL-0001",
+      "externalIdentifier": {
+        "type": "FIGI",
+        "value": "BBG00SYNTH01",
+        "authority": "AUTHORITATIVE"
+      },
+      "_note": "MC-6: 'technology-H1' is a synthetic mapping TARGET only, never modelled as an entity."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0002",
+      "canonicalIssuerId": "CI-LOCAL-ALPHA",
+      "targetCompanyId": "technology-H1",
+      "effective": {
+        "from": "2020-01-01T00:00:00.000Z",
+        "to": null
+      },
+      "mappingMethod": "REGISTRY_ASSERTION",
+      "source": "localfix",
+      "confidence": 0.95,
+      "approvalRef": "APPR-LOCAL-0002",
+      "auditRef": "AUD-LOCAL-0002",
+      "externalIdentifier": {
+        "type": "FIGI",
+        "value": "BBG00SYNTH02",
+        "authority": "AUTHORITATIVE"
+      },
+      "_note": "MC-2: two distinct canonical security IDs project onto ONE companyId \u2014 expected N:1, not an error. MC-4: they remain two distinct securities."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0003",
+      "canonicalIssuerId": "CI-LOCAL-BETA",
+      "targetCompanyId": "chemicals-H1",
+      "effective": {
+        "from": "2019-06-01T00:00:00.000Z",
+        "to": null
+      },
+      "mappingMethod": "AUTHORITATIVE_IDENTIFIER_MATCH",
+      "source": "localfix",
+      "confidence": 1.0,
+      "approvalRef": "APPR-LOCAL-0003",
+      "auditRef": "AUD-LOCAL-0003",
+      "externalIdentifier": {
+        "type": "FIGI",
+        "value": "BBG00SYNTH03",
+        "authority": "AUTHORITATIVE"
+      }
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0004",
+      "canonicalIssuerId": "CI-LOCAL-GAMMA",
+      "targetCompanyId": "realty-H1",
+      "effective": {
+        "from": "2015-01-01T00:00:00.000Z",
+        "to": "2023-12-29T00:00:00.000Z"
+      },
+      "mappingMethod": "MANUAL_APPROVAL",
+      "source": "localfix",
+      "confidence": 0.9,
+      "approvalRef": "APPR-LOCAL-0004",
+      "auditRef": "AUD-LOCAL-0004",
+      "externalIdentifier": {
+        "type": "FIGI",
+        "value": "BBG00SYNTH04",
+        "authority": "AUTHORITATIVE"
+      },
+      "_note": "ADP-7: effective-dated. A query as of 2024-01-01 must NOT resolve this \u2014 deterministic fail-closed."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0099",
+      "canonicalIssuerId": "CI-LOCAL-EPSILON",
+      "targetCompanyId": "technology-H1",
+      "effective": {
+        "from": "2022-01-01T00:00:00.000Z",
+        "to": null
+      },
+      "mappingMethod": "MANUAL_APPROVAL",
+      "source": "localfix",
+      "confidence": 0.4,
+      "approvalRef": null,
+      "auditRef": "AUD-LOCAL-0099",
+      "_note": "MP-5 NEGATIVE FIXTURE: low confidence and NO approval. Confidence never substitutes for approval \u2014 this mapping is unresolved until approved."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0006",
+      "canonicalIssuerId": "CI-LOCAL-KAPPA",
+      "targetCompanyId": "financials-H1",
+      "effective": {
+        "from": "2022-05-02T00:00:00.000Z",
+        "to": null
+      },
+      "mappingMethod": "MANUAL_APPROVAL",
+      "source": "localfix",
+      "confidence": 0.9,
+      "approvalRef": "APPR-LOCAL-0006",
+      "auditRef": "AUD-LOCAL-0006",
+      "externalIdentifier": {
+        "type": "FIGI",
+        "value": "BBG00SYNTH06",
+        "authority": "AUTHORITATIVE"
+      },
+      "_note": "P05-02-B: a suspension does NOT close the mapping window. LC-3 \u2014 the identity remains resolvable; LC-6 \u2014 absent market data is never read as a lifecycle change."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0007",
+      "canonicalIssuerId": "CI-LOCAL-THETA",
+      "targetCompanyId": "industrials-H1",
+      "effective": {
+        "from": "2018-02-01T00:00:00.000Z",
+        "to": null
+      },
+      "mappingMethod": "AUTHORITATIVE_IDENTIFIER_MATCH",
+      "source": "localfix",
+      "confidence": 1.0,
+      "approvalRef": "APPR-LOCAL-0007",
+      "auditRef": "AUD-LOCAL-0007",
+      "externalIdentifier": {
+        "type": "FIGI",
+        "value": "BBG00SYNTH07",
+        "authority": "AUTHORITATIVE"
+      },
+      "_note": "P05-02-B / LC-3: the merged predecessor's mapping stays OPEN so a PIT query as of the observation instant still resolves. ED-5: closing it would rewrite history rather than add to it."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0009",
+      "canonicalIssuerId": "CI-LOCAL-THETA",
+      "targetCompanyId": "industrials-H1",
+      "effective": {
+        "from": "2025-11-28T00:00:00.000Z",
+        "to": null
+      },
+      "mappingMethod": "AUTHORITATIVE_IDENTIFIER_MATCH",
+      "source": "localfix",
+      "confidence": 1.0,
+      "approvalRef": "APPR-LOCAL-0009",
+      "auditRef": "AUD-LOCAL-0009",
+      "externalIdentifier": {
+        "type": "FIGI",
+        "value": "BBG00SYNTH09",
+        "authority": "AUTHORITATIVE"
+      },
+      "_note": "P05-02-B / MC-2: successor and predecessor project onto ONE companyId \u2014 an expected N:1 projection. MC-4: they remain two DISTINCT securities."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0008",
+      "canonicalIssuerId": "CI-LOCAL-IOTA",
+      "targetCompanyId": "utilities-H1",
+      "effective": {
+        "from": "2020-07-01T00:00:00.000Z",
+        "to": null
+      },
+      "mappingMethod": "REGISTRY_ASSERTION",
+      "source": "localfix",
+      "confidence": 0.95,
+      "approvalRef": "APPR-LOCAL-0008",
+      "auditRef": "AUD-LOCAL-0008",
+      "externalIdentifier": {
+        "type": "FIGI",
+        "value": "BBG00SYNTH08",
+        "authority": "AUTHORITATIVE"
+      },
+      "_note": "P05-02-B / LC-3: the superseded predecessor remains resolvable; the supersession is carried by lifecycleStatus plus successorRef, not by deleting the mapping."
+    },
+    {
+      "canonicalSecurityId": "CS-LOCAL-0010",
+      "canonicalIssuerId": "CI-LOCAL-IOTA",
+      "targetCompanyId": "utilities-H1",
+      "effective": {
+        "from": "2026-01-15T00:00:00.000Z",
+        "to": null
+      },
+      "mappingMethod": "REGISTRY_ASSERTION",
+      "source": "localfix",
+      "confidence": 0.95,
+      "approvalRef": "APPR-LOCAL-0010",
+      "auditRef": "AUD-LOCAL-0010",
+      "externalIdentifier": {
+        "type": "FIGI",
+        "value": "BBG00SYNTH10",
+        "authority": "AUTHORITATIVE"
+      },
+      "_note": "P05-02-B / MC-2: the successor projects onto the same companyId as CS-LOCAL-0008."
+    }
+  ],
+  "negativeFixtures": {
+    "unmappedCanonicalSecurityId": "CS-LOCAL-UNMAPPED",
+    "unresolvedFigi": "BBG00SYNTH99",
+    "companyIdWithNoMapping": "nonexistent-H1",
+    "_note": "FC-1 / FC-2 / MC-7: each must produce an EXPLICIT, deterministic, named failure. CS-LOCAL-UNMAPPED exists as a security but has no mapping record, so it exercises FC-1 rather than an unknown-security path. FC-5: none is reported as a quality state. FC-6: E1-E8 is unchanged; identity failure is not E1 and adds no class."
+  },
+  "venues": [
+    {
+      "micCode": "XSYN",
+      "micKind": "OPERATING_MIC",
+      "name": "Synthetic Operating Exchange",
+      "timezone": "UTC",
+      "quotationCurrency": "USD",
+      "settlementCycle": "T+1",
+      "validFrom": "2018-01-01T00:00:00.000Z",
+      "validTo": null,
+      "_note": "VN-1: venue identity is MIC-based. VN-3: operating MIC and segment MIC are never interchangeable."
+    },
+    {
+      "micCode": "XSYNSG1",
+      "micKind": "SEGMENT_MIC",
+      "operatingMic": "XSYN",
+      "name": "Synthetic Exchange - Segment 1",
+      "timezone": "UTC",
+      "quotationCurrency": "USD",
+      "settlementCycle": "T+1",
+      "validFrom": "2018-01-01T00:00:00.000Z",
+      "validTo": null
+    }
+  ]
+}

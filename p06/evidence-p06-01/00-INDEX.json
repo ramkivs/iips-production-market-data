@@ -1,0 +1,167 @@
+{
+  "artifact": "P06-01 EVIDENCE INDEX — NORMALIZATION PIPELINE",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "generatedBy": "p06/scripts/generate-p06-01-evidence.js",
+  "module": "P06-01-NORMALIZATION-PIPELINE",
+  "authority": {
+    "decision": "D10-2 (docs/p00/P00_DECISION_LOG.md §8.1)",
+    "decisionCommit": "b41240c406914f34f06c2f7bc3986bdeb436018d",
+    "scope": "Work Tracker!P06-01 — Normalization pipeline. P06-02 and P06-03 are authorized for ENTRY but are NOT implemented by this act.",
+    "priorWork": "P05-01 IMPLEMENTED/EVIDENCED · P05-02 SPEC + ADAPTER-CONTRACT · P05-03 SPEC + ADAPTER-CONTRACT · P05-04 IMPLEMENTED + EVIDENCED",
+    "gateStatusAtBaseline": "P05 ACCEPTED — 6 of 18"
+  },
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_GOLDEN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_02Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-01",
+    "p06_02Implemented": false,
+    "p06_03Implemented": false,
+    "trackerP06_01ExitCriteria": "MET — \"Canonical output deterministic\": identical input yields a byte-identical canonical record, asserted across 5 repeats per case and against committed golden canonical fixtures",
+    "trackerP06_01TestValidation": "MET — \"Golden tests\" = p06/tests/normalization.test.js",
+    "trackerP06_01Evidence": "MET — \"Canonical fixtures\" = the `golden` block of p06/fixtures/normalization-fixtures.json, mirrored into this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — normalization is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-01 defect."
+  },
+  "trackerRow": {
+    "workItem": "Normalization pipeline",
+    "requirement": "Convert provider payloads into canonical records.",
+    "deliverable": "Normalization pipeline",
+    "dependencies": "P01,P04,P05 (Hard)",
+    "entryCriteria": "Input fixtures available",
+    "exitCriteria": "Canonical output deterministic",
+    "testValidation": "Golden tests",
+    "evidence": "Canonical fixtures"
+  },
+  "exitCriteriaAssessment": {
+    "entryCriteria": "MET — input fixtures available (p06/fixtures/normalization-fixtures.json, reusing the accepted P05-01 local provider vocabulary and the accepted P04 identity fixtures)",
+    "exitCriteria": "MET — \"Canonical output deterministic\": byte-identical canonical output across 5 repeats per case and against committed golden fixtures",
+    "testValidation": "MET — p06/tests/normalization.test.js (golden tests)",
+    "evidence": "MET — canonical fixtures, in the `golden` block and mirrored at 02-canonical-fixtures.json",
+    "limitation": "L-1 — normalization is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-01 defect."
+  },
+  "cases": [
+    {
+      "caseId": "N-01",
+      "mappingRef": "D01_QUOTE",
+      "mode": "LIVE",
+      "snapshotId": "data-localfix-vf4736b8bbde259a7-2026-03-02T14:30:00.000Z",
+      "canonicalDigest": "2bebef9be697bb48e41cf22e9fc21a32e052a443eb09a5f81a46dfe75156dc29",
+      "emittedKeyCount": 6,
+      "quality": "good",
+      "completenessPct": 100,
+      "droppedUndeclaredElements": [
+        "sym"
+      ]
+    },
+    {
+      "caseId": "N-02",
+      "mappingRef": "D01_QUOTE",
+      "mode": "LIVE",
+      "snapshotId": "data-localfix-vcb49824bcbd02f3b-2026-03-02T14:30:00.000Z",
+      "canonicalDigest": "77b1a0647028ddcc7e812303498f1f2b6a1902cd0fc08ccb708a4c1cfa48f5f1",
+      "emittedKeyCount": 6,
+      "quality": "partial",
+      "completenessPct": 33.33,
+      "droppedUndeclaredElements": [
+        "sym"
+      ]
+    },
+    {
+      "caseId": "N-03",
+      "mappingRef": "D01_CLOSE",
+      "mode": "SNAPSHOT",
+      "snapshotId": "data-localfix-v710f387954c5cf66-2026-03-02T00:00:00.000Z",
+      "canonicalDigest": "1eb20606edae13e6bd3087b936491e1d5d980513786969d2ee4f0d2d6f9face2",
+      "emittedKeyCount": 6,
+      "quality": "good",
+      "completenessPct": 100,
+      "droppedUndeclaredElements": [
+        "sym"
+      ]
+    },
+    {
+      "caseId": "N-04",
+      "mappingRef": "D01_CLOSE",
+      "mode": "SNAPSHOT",
+      "snapshotId": "data-localfix-v545ce3716c599cd2-2026-03-03T00:00:00.000Z",
+      "canonicalDigest": "336f8536039bcb558388dccff9808040840ce5227c603873c74deb0e2c0c1b9f",
+      "emittedKeyCount": 6,
+      "quality": "partial",
+      "completenessPct": 66.67,
+      "droppedUndeclaredElements": [
+        "sym"
+      ]
+    },
+    {
+      "caseId": "N-05",
+      "mappingRef": "D01_VALUATION",
+      "mode": "SNAPSHOT",
+      "snapshotId": "data-localfix-v2c3e0e2653f64f71-2026-03-02T00:00:00.000Z",
+      "canonicalDigest": "50bf65c9474aa53141e0b8886a40b19965e3988366b2269944fe34b0d7eb691e",
+      "emittedKeyCount": 3,
+      "quality": "good",
+      "completenessPct": 100,
+      "droppedUndeclaredElements": [
+        "sym"
+      ]
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "file": "p06/evidence-p06-01/01-declared-mappings.json",
+      "sha256": "b79c127069baef847ca20de82ab90203f8643334bdc7159edf3bf301f06d4602"
+    },
+    {
+      "file": "p06/evidence-p06-01/02-canonical-fixtures.json",
+      "sha256": "d6fdaa640301e5b1764ffed19658c3dcbb978b71ed9e43f1a57a229387b78ca6"
+    },
+    {
+      "file": "p06/evidence-p06-01/03-exit-criterion-determinism.json",
+      "sha256": "ddca8b619c070f0fd43bc2cab43ef58ca6e2e23466f2fa120ec6b9a20092cf26"
+    },
+    {
+      "file": "p06/evidence-p06-01/04-containment-namespace-identity.json",
+      "sha256": "8a30f76773f234b3e6c8d0394f6ce4334bc3082d11f2a9c292ca218ee465cac0"
+    },
+    {
+      "file": "p06/evidence-p06-01/05-engine-boundary.json",
+      "sha256": "6767c1a659a1e29ddf42a1f80f472015f6562bafb417c7fc85308e004db70d3e"
+    },
+    {
+      "file": "p06/evidence-p06-01/06-negative-fail-closed.json",
+      "sha256": "ac0cc61c869806a86141283147691c6688c803d8304ba125e7310e3a950c88d0"
+    },
+    {
+      "file": "p06/evidence-p06-01/07-scope-boundary.json",
+      "sha256": "fc291e11898fe84bd9d6a8ca16b32a8115ffd4cc058baae17bd43a39a02b3ffc"
+    },
+    {
+      "file": "p06/evidence-p06-01/08-limitations-and-open-items.json",
+      "sha256": "8c988e5942c1d4e585210babe03ad256177421c0e25f488dbcee68c03a6d17a6"
+    }
+  ],
+  "gateStatus": {
+    "p05Acceptance": "ACCEPTED — 6 of 18 (unchanged by this act)",
+    "p05_04": "IMPLEMENTED + EVIDENCED within the D10-1 boundary",
+    "p06_01": "IMPLEMENTED + EVIDENCED (limitations L-1…L-4 recorded)",
+    "p06_02": "AUTHORIZED for entry, NOT implemented",
+    "p06_03": "AUTHORIZED for entry, NOT implemented",
+    "p06Acceptance": "NOT_ACCEPTED — no P06_GATE_ACCEPTANCE.md exists (D10-6)",
+    "p06A3GateAcceptor": "Ramakrishnan V. S. (Ramki), designated by D10-3, scoped to P06. Designation ≠ acceptance.",
+    "p07": "NOT_STARTED_NOT_PROMOTED",
+    "p08": "NOT_STARTED",
+    "certification": "NONE_GRANTED",
+    "productionActivation": "NOT_AUTHORIZED",
+    "trackBToMainMerge": "NOT AUTHORIZED",
+    "gatesAccepted": "6 of 18 — P00, P01, P02, P03, P04, P05 (unchanged)"
+  }
+}

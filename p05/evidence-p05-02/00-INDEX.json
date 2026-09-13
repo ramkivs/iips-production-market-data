@@ -1,0 +1,100 @@
+{
+  "artifact": "P05-02 EVIDENCE INDEX — ADAPTER SPECIFICATION / CONTRACT PACKAGE",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "generatedBy": "p05/scripts/generate-p05-02-evidence.js",
+  "authorization": {
+    "basis": "docs/d9/D9_P05_ENTRY_AUTHORIZATION.md §3 A-2",
+    "authorizationCommit": "31c26553554f021928a4f9e4f41b6ee90cdfa453",
+    "p05_01Commit": "bf66c99cec1f7e43ae4dbc3ab5e77c23a27b014d",
+    "scope": "Specification and adapter-contract ONLY",
+    "liveProviderExecution": "NOT AUTHORIZED (D9 N-1)"
+  },
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "contract": {
+    "id": "P05-02-LIVE-MARKET-DATA-ADAPTER-CONTRACT",
+    "version": "1.0"
+  },
+  "evidenceFiles": [
+    {
+      "file": "p05/evidence-p05-02/01-contract-manifest.json",
+      "sha256": "cc12b1fd5f5f4c90bb2d2fa938de7dcfd002543e7b3f4de196f5e28a74fc1299"
+    },
+    {
+      "file": "p05/evidence-p05-02/02-canonical-envelope.json",
+      "sha256": "40ad733f4ae76f13a8982b882bb8b09ef91bc2c350273d1f741babd9ebc5371e"
+    },
+    {
+      "file": "p05/evidence-p05-02/03-field-mapping-boundary.json",
+      "sha256": "152763c091bdd5a7dd5d060dc491fad976626d2b3c8fdae9b5c4a1c6274a278d"
+    },
+    {
+      "file": "p05/evidence-p05-02/04-error-mapping.json",
+      "sha256": "72c566272ea16df9a55744ca3c4db786582275ea3a7c5f8886b79e79bd18a360"
+    },
+    {
+      "file": "p05/evidence-p05-02/05-provenance-asof-version.json",
+      "sha256": "b8b6ba76095c392b2ed0a5515e5fe495d1ff68bd1aa27c1225fded7b31f3651a"
+    },
+    {
+      "file": "p05/evidence-p05-02/06-identity-mapping-venue-lifecycle.json",
+      "sha256": "14a60f68b4108df25788c48a6dae6388dd875fa5b70da1f2ef1b1ed24ef081b3"
+    },
+    {
+      "file": "p05/evidence-p05-02/07-namespace.json",
+      "sha256": "d5d42fa61ee69771eabcedbcc0777537d6088a912ab057f92bd7e3c271c9a14e"
+    },
+    {
+      "file": "p05/evidence-p05-02/08-entitlement-credential-abstraction.json",
+      "sha256": "9645c14e0258d5a24fcf8083bafb77a9daebb14f6b2295367268f645321ec9df"
+    },
+    {
+      "file": "p05/evidence-p05-02/09-capability-and-conformance.json",
+      "sha256": "c6ba5ba062d3d858bfab794b52aa1829c68ab064ddada724fac0ff77cbe1b890"
+    },
+    {
+      "file": "p05/evidence-p05-02/10-determinism-repeatability.json",
+      "sha256": "739b60855b4ee8e38cf54230ab4a78136e6c8f1849ef30eea08008989f429570"
+    },
+    {
+      "file": "p05/evidence-p05-02/11-blocked-provider-dependent-items.json",
+      "sha256": "80c4ebd49b55dea4e3c5fc4d1a831518add99ba9878a7a8ffc411dc66942c9ef"
+    },
+    {
+      "file": "p05/evidence-p05-02/12-boundary-attestations.json",
+      "sha256": "6c5048ba449242cb6ee65be26a07337824d6f32e72adf5462391c1ba8a390db0"
+    }
+  ],
+  "gateStatus": {
+    "p05EntryAuthorization": "AUTHORIZED",
+    "p05Acceptance": "NOT_ACCEPTED",
+    "p05GateAcceptanceArtifactCreated": false,
+    "p05_01": "IMPLEMENTED / EVIDENCED",
+    "p05_02": "SPECIFICATION + ADAPTER-CONTRACT COMPLETE / LIVE EXECUTION NOT AUTHORIZED",
+    "p05_03": "SPECIFICATION ONLY AUTHORIZED — not started",
+    "p05_04": "NOT AUTHORIZED — not started",
+    "certification": "NONE_GRANTED",
+    "productionActivation": "NOT_AUTHORIZED",
+    "p06": "NOT_STARTED_NOT_PROMOTED",
+    "p07": "NOT_STARTED_NOT_PROMOTED",
+    "p08": "NOT_STARTED"
+  },
+  "openItemsUnchanged": {
+    "OI-P04-04": "OPEN — FIGI sourcing/licensing/coverage. Not resolved here.",
+    "OI-P04-03": "OPEN — tenant/region governance attribute set. No attribute invented.",
+    "BD-02 / P16": "OPEN — provider selection, entitlement and credentials authority."
+  }
+}

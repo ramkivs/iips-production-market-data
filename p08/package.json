@@ -1,0 +1,15 @@
+{
+  "name": "iips-p08-01-pit-storage-model",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "P08-01 PIT storage model. Stores canonical snapshots so prior as-of states are reproducible, and RESOLVES DEP-P01-04 (series structure) as the P08-owned decision. Authorized by F-6 (docs/D22_F6_PHASE_08_IMPLEMENTATION_AUTHORIZATION.md). In-memory only: NO disk persistence, NO network, NO credentials. NO P08-02 corporate actions. NO P08-03 adjusted/unadjusted series. NO acceptance. NO certification. NO production activation.",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\""
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20"
+  }
+}

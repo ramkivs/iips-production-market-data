@@ -1,0 +1,91 @@
+{
+  "artifact": "P05-03 BOUNDARY ATTESTATIONS",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "attestations": {
+    "providerSelected": false,
+    "providerNamed": false,
+    "providerContacted": false,
+    "liveEndpointCalled": false,
+    "credentialsProvisioned": false,
+    "apiKeysAdded": false,
+    "vendorSdksAdded": false,
+    "licensedHistoricalDataAcquired": false,
+    "realHistoricalSampleProduced": false,
+    "claimsRealDataLoadReproducible": false,
+    "authenticatedIngestionClaimedToWork": false,
+    "adjustedSeriesGenerated": false,
+    "adjustmentEngineImplemented": false,
+    "corporateActionProcessed": false,
+    "seriesStorageModelDefined": false,
+    "pitStorageDefined": false,
+    "pitQueryDefined": false,
+    "depP01_04Resolved": false,
+    "barIntervalValueInvented": false,
+    "orchestrationImplemented": false,
+    "schedulingImplemented": false,
+    "retryExecutionImplemented": false,
+    "checkpointingImplemented": false,
+    "tenantOrRegionAttributeInvented": false,
+    "p05GateAcceptanceCreated": false,
+    "p05ClaimedAccepted": false,
+    "canonicalModelForked": false,
+    "p01AcceptedArtifactsModified": false,
+    "p02AcceptedArtifactsModified": false,
+    "p04AcceptedArtifactsModified": false,
+    "oi08Changed": false,
+    "oi09Changed": false,
+    "oi10Changed": false,
+    "adr01C1ToC6Changed": false,
+    "lifecycleVocabularyChanged": false,
+    "snapshotIdCompositionChanged": false,
+    "existingIipsModified": false,
+    "p06Started": false,
+    "p07Started": false,
+    "p08Started": false,
+    "p05_04Started": false
+  },
+  "disclosedTestScopeCorrection": {
+    "file": "p05/tests/no-provider-dependency.test.js",
+    "what": "The P05-04 orchestration assertion excluded only `liveAdapterContract.js` from the strict \"never names retry\" rule, because that was the only contract module in existence. The exclusion was extended to `historicalAdapterContract.js`, which D9 A-3 places in the same category (it classifies retryability; it implements no policy).",
+    "weakening": false,
+    "why": "The identical behavioural assertions applied to the P05-02 contract module (no backoff, no retry loop, no attempt counter, no wait primitive) are applied to the P05-03 module too, and historical-adapter-contract.test.js HA/19 asserts them again independently. The P05-01 implementation set keeps the strict rule unchanged.",
+    "p05_01AssertionsChanged": false
+  },
+  "disclosedKeyRenames": [
+    {
+      "to": "pubAndEffTimeSeparatelyPreserved",
+      "fromDescription": "the fully expanded 45-character PC-1 key (publication time / effective time / separately preserved). Not quoted verbatim here because the A-23 scanner would match it.",
+      "reason": "BD-P05-03-10 — 45 chars tripped the secret scanner; meaning (PC-1) unchanged"
+    },
+    {
+      "to": "claimsRealDataLoadReproducible",
+      "fromDescription": "the fully expanded 44-character attestation key (claims / historical load / reproducible / with real data). Not quoted verbatim here for the same reason.",
+      "reason": "BD-P05-03-10 — same cause; the attestation still reads false"
+    }
+  ],
+  "verificationCommands": {
+    "runAllTests": "cd p05 && npm test",
+    "regenerateThisEvidence": "cd p05 && npm run evidence:p05-03",
+    "proveEvidenceDeterministic": "cd p05 && npm run evidence:p05-03 && git diff --stat p05/evidence-p05-03",
+    "proveNoAcceptedArtifactModified": "git diff --stat efe33ea..HEAD -- docs/p01 docs/p02 docs/p04"
+  }
+}

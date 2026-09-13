@@ -1,0 +1,181 @@
+{
+  "artifact": "P05-02 CAPABILITY DECLARATION AND INTERFACE CONFORMANCE",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "declaration": {
+    "A-1": {
+      "provider": "mocklive",
+      "providerKind": "LIVE"
+    },
+    "A-2": {
+      "adapterId": "adapter-mocklive-contract-double",
+      "adapterVersion": "1.0"
+    },
+    "A-3": "mocklive-wire-1.0",
+    "A-4": [
+      "canonical-1.0"
+    ],
+    "A-5": "1.0",
+    "A-6": {
+      "domains": [
+        "D01"
+      ],
+      "modes": [
+        "LIVE",
+        "SNAPSHOT"
+      ],
+      "granularities": [
+        "1D"
+      ],
+      "identifierInputs": [
+        "CANONICAL_SECURITY_ID",
+        "FIGI"
+      ],
+      "liveConnectivity": true
+    },
+    "A-7": {
+      "entitlementRequired": true,
+      "credentialsRequired": true,
+      "entitlementRequirements": [
+        {
+          "entitlementRef": "ENT-REQ-D01-QUOTE",
+          "dimensions": [
+            "EN-1",
+            "EN-2",
+            "EN-3",
+            "EN-4",
+            "EN-8"
+          ],
+          "_note": "P05-02 declares the REQUIREMENT shape only. No entitlement value exists: the entitlement matrix is EMPTY (EM-2) and populating it needs provider selection + P16 authority (EM-3)."
+        }
+      ],
+      "credentialRequirements": [
+        {
+          "credentialRef": "CRED-REQ-LIVE-QUOTE",
+          "kind": "API_KEY",
+          "storageClass": "EXTERNAL_SECRET_MANAGER",
+          "scopes": [
+            "quotes:read"
+          ],
+          "rotationPolicy": "UNKNOWN",
+          "_note": "SP-5: a credential REQUIREMENT, never a credential. The value is never present in this program. Secrets are P03 (P02 E-1); nothing is provisioned here (D9 N-1)."
+        }
+      ]
+    },
+    "A-8": [
+      "SYNTHETIC TEST DOUBLE — there is no real source behind it and no acquisition occurs.",
+      "PIT mode not declared: PIT storage is P08, which is NOT_STARTED.",
+      "D02–D10 not served by this double.",
+      "No adjusted series: adjustment modelling is P08.",
+      "Per-record tenant/region governance NOT applied — OI-P04-03 OPEN, bounded by IB-1.",
+      "FIGI values are synthetic and carry no licensing or coverage claim — OI-P04-04 OPEN.",
+      "Passing conformance against this double is CONTRACT VALIDATION, not live-provider evidence."
+    ],
+    "LA-EXT": {
+      "contractId": "P05-02-LIVE-MARKET-DATA-ADAPTER-CONTRACT",
+      "contractVersion": "1.0",
+      "rateLimits": {
+        "declared": true,
+        "requestsPerMinute": 60,
+        "burst": 10
+      },
+      "deterministicReplayable": true,
+      "transport": {
+        "class": "REQUEST_RESPONSE",
+        "endpointDeclared": false,
+        "credentialValuePresent": false
+      },
+      "freshness": {
+        "reportsInputs": true,
+        "setsThresholds": false,
+        "thresholdOwner": "P07",
+        "requiredInputs": [
+          "asOf",
+          "receivedAt",
+          "venueSessionRef",
+          "completenessBasis"
+        ]
+      },
+      "internalFailoverImplemented": false,
+      "substitutionOwner": "PROGRAM_GOVERNANCE",
+      "failoverOwner": "P07/P17"
+    }
+  },
+  "conformance": {
+    "ok": true,
+    "violations": [],
+    "checked": [
+      "C-1",
+      "C-1/PI-1",
+      "C-2",
+      "C-3",
+      "C-4",
+      "C-5",
+      "C-6",
+      "C-10",
+      "C-8",
+      "C-14",
+      "C-15",
+      "C-16",
+      "C-17",
+      "C-18",
+      "CD-1",
+      "CD-6",
+      "LA-10",
+      "LA-14",
+      "CD-5/D01"
+    ]
+  },
+  "surfaceCheck": {
+    "ok": true,
+    "providerKind": "LIVE",
+    "requirePhases": true,
+    "present": [
+      "authenticate",
+      "checkEntitlement",
+      "declare",
+      "emit",
+      "fetch",
+      "map",
+      "normalize",
+      "preflight",
+      "validate"
+    ],
+    "missing": [],
+    "notCallable": [],
+    "ingressOk": true,
+    "factoring": "SEPARATE_METHODS"
+  },
+  "surfaceCheckLocalFeed": {
+    "providerKind": "LOCAL_FIXTURE",
+    "factoring": "INLINE — the P05-01 feed implements the phases inside snapshot(), which LA-3 permits",
+    "liveOnlyOperationsImplemented": [],
+    "commonOperationsExposedAsMethods": [],
+    "canSatisfyP05_02": false
+  },
+  "declaredIsNotEntitled": "CD-6 — capability and entitlement are independent gates; both must pass.",
+  "unknownIsAcceptable": "CD-3 — any element may be UNKNOWN; UNKNOWN is preferable to guessing and is never treated as supported.",
+  "knownLimitations": [
+    "SYNTHETIC TEST DOUBLE — there is no real source behind it and no acquisition occurs.",
+    "PIT mode not declared: PIT storage is P08, which is NOT_STARTED.",
+    "D02–D10 not served by this double.",
+    "No adjusted series: adjustment modelling is P08.",
+    "Per-record tenant/region governance NOT applied — OI-P04-03 OPEN, bounded by IB-1.",
+    "FIGI values are synthetic and carry no licensing or coverage claim — OI-P04-04 OPEN.",
+    "Passing conformance against this double is CONTRACT VALIDATION, not live-provider evidence."
+  ]
+}

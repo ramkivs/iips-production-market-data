@@ -1,0 +1,95 @@
+{
+  "artifact": "P05-03 GAPS, COMPLETENESS AND LOAD RECONCILIATION",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "gaps": {
+    "gaps": [
+      "2026-02-28",
+      "2026-03-01"
+    ],
+    "gapCount": 2,
+    "representation": "NOT_PROVIDED at the bar level; a declared gap bound at the range level",
+    "prohibitedRepresentations": [
+      "zero",
+      "empty string",
+      "carried-forward value",
+      "omission of the bar entirely",
+      "a lower quality value"
+    ]
+  },
+  "loadIdentity": {
+    "loadDigest": "003b57860032a48d321397a36ca8e22529506cebe2efc991c5d0165c58c3adbf",
+    "barCount": 3,
+    "addsIdentityLayer": false,
+    "derivedFrom": "per-bar snapshotId (data-${provider}-${dataVersion}-${asOf}) — INV-2 / SN-1 / ST-2",
+    "inputsToSnapshotId": [
+      "provider",
+      "dataVersion",
+      "asOf"
+    ]
+  },
+  "reconciliation": {
+    "requestedRange": {
+      "from": "2026-02-26",
+      "to": "2026-03-02"
+    },
+    "supportedRange": {
+      "from": "2026-02-26",
+      "to": "2026-03-02"
+    },
+    "expectedBarCount": 5,
+    "expectedBarCountBasis": "DECLARED_RANGE_ONLY",
+    "barsEmitted": 3,
+    "gaps": {
+      "gaps": [
+        "2026-02-28",
+        "2026-03-01"
+      ],
+      "gapCount": 2,
+      "representation": "NOT_PROVIDED at the bar level; a declared gap bound at the range level",
+      "prohibitedRepresentations": [
+        "zero",
+        "empty string",
+        "carried-forward value",
+        "omission of the bar entirely",
+        "a lower quality value"
+      ]
+    },
+    "reconciled": true,
+    "reconciliationPolicy": "REPORT_ONLY — no auto-fill, no interpolation, no carry-forward",
+    "repairedAnything": false,
+    "loadDigest": "003b57860032a48d321397a36ca8e22529506cebe2efc991c5d0165c58c3adbf",
+    "completenessPct": 60
+  },
+  "loadIdentityAddsNoIdentityLayer": true,
+  "snapshotIdInputsUnchanged": [
+    "provider",
+    "dataVersion",
+    "asOf"
+  ],
+  "tradingCalendarInvented": false,
+  "tradingCalendarNote": "⚠ HA-23 — the contract does NOT invent a trading calendar. Two requested calendar dates carry no bar. Whether they SHOULD is unknowable from any accepted artifact, so completenessBasis is DECLARED_RANGE_ONLY and the absence is reported, never repaired.",
+  "reconciliationPolicy": "REPORT_ONLY — no auto-fill, no interpolation, no carry-forward",
+  "repairedAnything": false,
+  "missingBasisIsRejected": true,
+  "barDataSource": "p05/fixtures/feed-fixtures.json ohlcv[0] (H-0001) — SYNTHETIC, 3 bars",
+  "isRealHistoricalSample": false
+}

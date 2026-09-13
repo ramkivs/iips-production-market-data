@@ -1,0 +1,93 @@
+{
+  "artifact": "P05-03 ADJUSTMENT DECLARATION CONFORMANCE (AJ-1 / AJ-3 / SM-11 / L-11 / RC-4 / RC-5)",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "adjustmentContract": {
+    "bothRetained": "AJ-1 — adjusted and unadjusted are BOTH retained; adjusted never replaces unadjusted",
+    "invalidWithoutBasis": "AJ-3 / SM-11 — adjusted = true without adjustmentBasisRef is INVALID (REJECT)",
+    "basisRefRequiredForAdjusted": "L-11 — adjustmentBasisRef is REQUIRED for adjusted series (D02/D04)",
+    "evidenceBearing": "RC-4 — adjustment factors are evidence-bearing, never silently applied",
+    "engineOwner": "P08 (RC-5)",
+    "engineImplementedHere": false,
+    "adjustedSeriesGeneratedHere": false,
+    "corporateActionProcessedHere": false
+  },
+  "scenarios": [
+    {
+      "fixtureId": "HA-ADJ-0001",
+      "label": "AJ-1 conforming — unadjusted, both retained",
+      "ok": true,
+      "disposition": "ACCEPT",
+      "expected": true,
+      "matchedExpectation": true,
+      "violations": []
+    },
+    {
+      "fixtureId": "HA-ADJ-0002",
+      "label": "AJ-3/SM-11 violation — adjusted without adjustmentBasisRef",
+      "ok": false,
+      "disposition": "REJECT",
+      "expected": false,
+      "matchedExpectation": true,
+      "violations": [
+        "AJ-3 / SM-11 / L-11: adjusted = true without adjustmentBasisRef is INVALID"
+      ]
+    },
+    {
+      "fixtureId": "HA-ADJ-0003",
+      "label": "AJ-1 violation — adjusted REPLACED unadjusted",
+      "ok": false,
+      "disposition": "REJECT",
+      "expected": false,
+      "matchedExpectation": true,
+      "violations": [
+        "AJ-1: adjusted must never REPLACE unadjusted — both are retained"
+      ]
+    },
+    {
+      "fixtureId": "HA-ADJ-0004",
+      "label": "RC-4 violation — a factor silently applied",
+      "ok": false,
+      "disposition": "REJECT",
+      "expected": false,
+      "matchedExpectation": true,
+      "violations": [
+        "RC-4: an adjustment factor is evidence-bearing and must never be silently applied"
+      ]
+    },
+    {
+      "fixtureId": "HA-ADJ-0005",
+      "label": "conforming adjusted declaration — DECLARED, not computed",
+      "ok": true,
+      "disposition": "ACCEPT",
+      "expected": true,
+      "matchedExpectation": true,
+      "violations": [],
+      "note": "⚠ This validates a DECLARATION only. RC-5: the adjustment engine is P08 and nothing here computes an adjusted value."
+    }
+  ],
+  "engineOwner": "P08 (RC-5)",
+  "engineImplementedHere": false,
+  "adjustedSeriesGenerated": false,
+  "adjustedValuesComputed": false,
+  "note": "⚠ Every scenario validates a DECLARATION only. No adjusted value is computed anywhere in P05-03. HA-ADJ-0005 is \"conforming\" as a declaration, not as a produced adjusted series.",
+  "everyScenarioMatched": true
+}

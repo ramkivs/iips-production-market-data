@@ -1,0 +1,206 @@
+{
+  "artifact": "P05-02 IDENTITY, MAPPING, VENUE AND LIFECYCLE REPRESENTATION",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "identityRef": {
+    "canonicalSecurityId": "CS-LOCAL-0001",
+    "canonicalIssuerId": "CI-LOCAL-ALPHA",
+    "instrumentType": "EQUITY",
+    "lifecycleStatus": "active",
+    "validFrom": "2020-01-01T00:00:00.000Z",
+    "externalIdentifiers": [
+      {
+        "type": "FIGI",
+        "value": "BBG00SYNTH01",
+        "authority": "AUTHORITATIVE"
+      },
+      {
+        "type": "ISIN",
+        "value": "XS00SYNTH010",
+        "authority": "NON_AUTHORITATIVE"
+      }
+    ],
+    "venueRef": "XSYN",
+    "mappedCompanyId": "technology-H1",
+    "adapterCrossing": true,
+    "identityMappingVersion": "idmap-localfix-1.0.0"
+  },
+  "mappingRegisterVersion": "idmap-localfix-1.0.0",
+  "identityMappingVersionPassedThrough": true,
+  "cardinality": "OI-08 = 1:N (RESOLVED). canonical → companyId is an N:1 projection (MC-2), expected not an error.",
+  "authoritativeExternalIdentifier": "OI-09 = FIGI / OpenFIGI (RESOLVED)",
+  "figiValueIsSynthetic": true,
+  "figiSourcingDecided": false,
+  "figiSourcingStatus": "OI-P04-04 OPEN — source, licensing, coverage and refresh cadence are UNSPECIFIED",
+  "failClosed": {
+    "scenario": "CS-LOCAL-UNMAPPED (a security with no mapping record)",
+    "rejected": true,
+    "errorClass": "E8",
+    "violatedRules": [
+      "FC-1",
+      "ADP-2",
+      "MC-7"
+    ],
+    "isQualityState": false,
+    "rule": "FC-1…FC-7 — an unmapped identity FAILS EXPLICITLY: no coercion, no placeholder, no synthesised companyId, and NOT reported as data quality (FC-5). Identity failure is not E1 (FC-6)."
+  },
+  "venue": {
+    "venueRefEmitted": "XSYN",
+    "identitySource": "MIC-based (VN-1). A venue is REFERENCE DATA, not an instrument (VN-2).",
+    "providerCodeIsNeverVenueIdentity": "VN-5 / PN-2 — the provider market code is at most a non-authoritative alias; venueRef is taken from the P04 venue reference, never from the payload.",
+    "operatingVsSegmentMicDistinguished": "VN-3 — XSYN (OPERATING_MIC) and XSYNSG1 (SEGMENT_MIC) are never interchangeable.",
+    "micKindValuesInIdentityFixtures": [
+      {
+        "micCode": "XSYN",
+        "micKind": "OPERATING_MIC"
+      },
+      {
+        "micCode": "XSYNSG1",
+        "micKind": "SEGMENT_MIC"
+      }
+    ]
+  },
+  "lifecycle": {
+    "enumeration": [
+      "active",
+      "suspended",
+      "delisted",
+      "merged",
+      "superseded"
+    ],
+    "source": "P04_LIFECYCLE_AND_EFFECTIVE_DATING §2 — five values, fixed by D4_05 §G.2 and P01_FIELD_DICTIONARY §7. None added.",
+    "emittedForThisRun": "active",
+    "lifecycleStatesExercisedByFixtures": [
+      "active",
+      "delisted",
+      "merged",
+      "superseded",
+      "suspended"
+    ],
+    "lifecycleStatesNotExercised": [],
+    "rule": "LC-1…LC-6 — effective-dated; a transition never mutates the canonical security ID (LC-2); state is never inferred from absence of data (LC-6).",
+    "coverageUnit": "P05-02-B — lifecycle-state coverage completion (BD-P05-02-07)",
+    "bdP05_02_07Status": "RESOLVED — all five authoritative states are exercised by the fixtures and by the adapter-contract test group Q/1…Q/8. Fixture and test coverage only.",
+    "perState": [
+      {
+        "state": "active",
+        "fixtureSecurities": 7,
+        "fixtureIds": [
+          "CS-LOCAL-0001",
+          "CS-LOCAL-0002",
+          "CS-LOCAL-0003",
+          "CS-LOCAL-0005",
+          "CS-LOCAL-UNMAPPED",
+          "CS-LOCAL-0009",
+          "CS-LOCAL-0010"
+        ],
+        "emittedAtObservationInstant": [
+          "CS-LOCAL-0001",
+          "CS-LOCAL-0002",
+          "CS-LOCAL-0003",
+          "CS-LOCAL-0009",
+          "CS-LOCAL-0010"
+        ],
+        "failClosedAtObservationInstant": [
+          "CS-LOCAL-0005 (E8)",
+          "CS-LOCAL-UNMAPPED (E8)"
+        ],
+        "successorRefRequired": false,
+        "successorRefsPresent": 0,
+        "covered": true
+      },
+      {
+        "state": "suspended",
+        "fixtureSecurities": 1,
+        "fixtureIds": [
+          "CS-LOCAL-0006"
+        ],
+        "emittedAtObservationInstant": [
+          "CS-LOCAL-0006"
+        ],
+        "failClosedAtObservationInstant": [],
+        "successorRefRequired": false,
+        "successorRefsPresent": 0,
+        "covered": true
+      },
+      {
+        "state": "delisted",
+        "fixtureSecurities": 1,
+        "fixtureIds": [
+          "CS-LOCAL-0004"
+        ],
+        "emittedAtObservationInstant": [],
+        "failClosedAtObservationInstant": [
+          "CS-LOCAL-0004 (E8)"
+        ],
+        "successorRefRequired": false,
+        "successorRefsPresent": 0,
+        "covered": true
+      },
+      {
+        "state": "merged",
+        "fixtureSecurities": 1,
+        "fixtureIds": [
+          "CS-LOCAL-0007"
+        ],
+        "emittedAtObservationInstant": [
+          "CS-LOCAL-0007"
+        ],
+        "failClosedAtObservationInstant": [],
+        "successorRefRequired": true,
+        "successorRefsPresent": 1,
+        "covered": true
+      },
+      {
+        "state": "superseded",
+        "fixtureSecurities": 1,
+        "fixtureIds": [
+          "CS-LOCAL-0008"
+        ],
+        "emittedAtObservationInstant": [
+          "CS-LOCAL-0008"
+        ],
+        "failClosedAtObservationInstant": [],
+        "successorRefRequired": true,
+        "successorRefsPresent": 1,
+        "covered": true
+      }
+    ],
+    "coverageDefinition": "A state counts as covered when at least one fixture security carries it AND adapter-contract test group Q/1…Q/8 exercises it. ⚠ A fail-closed outcome at the observation instant is CORRECT behaviour, not a coverage gap: CS-LOCAL-0004 (delisted) has an effective window that closed 2023-12-29, so ADP-7 requires resolution to fail rather than to fall back (FC-1/ADP-2/MC-7). Q/5 additionally proves it resolves INSIDE its window.",
+    "successorLinks": [
+      {
+        "predecessor": "CS-LOCAL-0007",
+        "predecessorState": "merged",
+        "successor": "CS-LOCAL-0009",
+        "linkEffectiveFrom": "2025-11-28T00:00:00.000Z",
+        "linkEffectiveTo": null,
+        "rule": "LC-4 — merged/superseded require a successor reference, itself effective-dated."
+      },
+      {
+        "predecessor": "CS-LOCAL-0008",
+        "predecessorState": "superseded",
+        "successor": "CS-LOCAL-0010",
+        "linkEffectiveFrom": "2026-01-15T00:00:00.000Z",
+        "linkEffectiveTo": null,
+        "rule": "LC-4 — merged/superseded require a successor reference, itself effective-dated."
+      }
+    ],
+    "snapshotIdDependsOnLifecycle": false,
+    "snapshotIdInputs": "provider, dataVersion, asOf (ST-2). LC-2: a transition changes state and relationships, never the snapshot or identity anchor.",
+    "note": "⚠ P05-02-B widened FIXTURE and TEST coverage only. It closes BD-P05-02-07 and nothing else. It selects no provider, provisions no credential, opens no connection, and does NOT close the provider-dependent tracker exit criteria: BD-P05-02-01 (provider selection / entitlement / credentials), BD-P05-02-02 (\"authenticated ingestion works\") and BD-P05-02-03 (\"provider evidence\") all remain UNMET and require live execution, which D9 N-1 does not authorize."
+  }
+}

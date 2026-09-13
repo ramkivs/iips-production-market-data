@@ -1,0 +1,44 @@
+{
+  "manifestVersion": "1.0.0",
+  "module": "P14-02-VISUAL-PARITY-BASELINE",
+  "date": "2026-09-13T00:00:00.000Z",
+  "int017Reference": {
+    "source": "SPEC_INTEGRATION_ALIGNED.docx",
+    "path": "word/media/image1.png",
+    "sizeBytes": 1851396,
+    "disposition": "REUSE (reference only)",
+    "authority": "D4_01_INTEGRATION_REUSE_BASELINE.md INT-017",
+    "constraint": "Screenshot defines target product surface coverage; it does not authorize a visual-only rebuild.",
+    "parityRule": "Functional parity governs over pixel similarity.",
+    "isNewlyCaptured": false
+  },
+  "totalSurfaces": 19,
+  "surfaces": [
+    { "surfaceId": "UI01", "name": "Dashboard", "disposition": "REUSE", "module": "dataSurfaces.js", "builder": "buildDashboardView", "expectedPropertyCount": 5, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": true, "boundedCondition": null },
+    { "surfaceId": "UI02", "name": "Company Workspace", "disposition": "REUSE_ADAPT", "module": "dataSurfaces.js", "builder": "buildCompanyWorkspaceView", "expectedPropertyCount": 5, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": true, "boundedCondition": null },
+    { "surfaceId": "UI03", "name": "Portfolio", "disposition": "REUSE", "module": "dataSurfaces.js", "builder": "buildPortfolioView", "expectedPropertyCount": 5, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": true, "boundedCondition": null },
+    { "surfaceId": "UI04", "name": "Research", "disposition": "ADAPT", "module": "dataSurfaces.js", "builder": "buildResearchView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": true, "boundedCondition": null },
+    { "surfaceId": "UI05", "name": "Screener", "disposition": "NEW", "module": "screenerSurface.js", "builder": "buildScreenerView", "expectedPropertyCount": 6, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": true, "boundedCondition": null },
+    { "surfaceId": "UI06", "name": "Decision Center", "disposition": "EXTEND", "module": "dataSurfaces.js", "builder": "buildDecisionCenterView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": true, "boundedCondition": null },
+    { "surfaceId": "UI07", "name": "Watchlists", "disposition": "NEW", "module": "newSurfaces.js", "builder": "buildWatchlistView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": true, "boundedCondition": null },
+    { "surfaceId": "UI08", "name": "Reports", "disposition": "EXTEND", "module": "extendSurfaces.js", "builder": "buildReportView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": false, "boundedCondition": null },
+    { "surfaceId": "UI09", "name": "Alerts", "disposition": "NEW", "module": "newSurfaces.js", "builder": "buildAlertsView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": true, "boundedCondition": null },
+    { "surfaceId": "UI10", "name": "Collaboration", "disposition": "NEW", "module": "newSurfaces.js", "builder": "buildCollaborationView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": false, "boundedCondition": null },
+    { "surfaceId": "UI11", "name": "Administration", "disposition": "EXTEND", "module": "extendSurfaces.js", "builder": "buildAdminView", "expectedPropertyCount": 3, "hasProvenanceBadge": true, "hasAsOfDisplay": false, "hasDegradationIndicator": false, "boundedCondition": null },
+    { "surfaceId": "UI12", "name": "Settings", "disposition": "ADAPT", "module": "dataSurfaces.js", "builder": "buildSettingsView", "expectedPropertyCount": 2, "hasProvenanceBadge": true, "hasAsOfDisplay": false, "hasDegradationIndicator": false, "boundedCondition": null },
+    { "surfaceId": "UI13", "name": "Global Search", "disposition": "NEW", "module": "resolverSurface.js", "builder": "buildSearchView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": false, "boundedCondition": null },
+    { "surfaceId": "UI14", "name": "Command Palette", "disposition": "NEW", "module": "resolverSurface.js", "builder": "resolveAndBuildView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": false, "boundedCondition": null },
+    { "surfaceId": "UI15", "name": "CrossSectorIntelligence", "disposition": "REUSE", "module": "dataSurfaces.js", "builder": "buildCrossSectorView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": true, "boundedCondition": null },
+    { "surfaceId": "UI16", "name": "EvidenceExplorer", "disposition": "EXTEND", "module": "extendSurfaces.js", "builder": "buildEvidenceExplorerView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": false, "boundedCondition": null },
+    { "surfaceId": "UI17", "name": "ReplayExplorer", "disposition": "EXTEND", "module": "boundedSurfaces.js", "builder": "buildReplayExplorerView", "expectedPropertyCount": 3, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": false, "boundedCondition": "AD-17/M-2 — MUST NOT assert verified replay" },
+    { "surfaceId": "UI18", "name": "EngineRegistry", "disposition": "REUSE", "module": "boundedSurfaces.js", "builder": "buildEngineRegistryView", "expectedPropertyCount": 3, "hasProvenanceBadge": true, "hasAsOfDisplay": false, "hasDegradationIndicator": false, "boundedCondition": "AD-4 — MUST NOT imply revalidation" },
+    { "surfaceId": "UI19", "name": "AiAdvisory", "disposition": "ADAPT", "module": "boundedSurfaces.js", "builder": "buildAiAdvisoryView", "expectedPropertyCount": 4, "hasProvenanceBadge": true, "hasAsOfDisplay": true, "hasDegradationIndicator": false, "boundedCondition": "SYNTHESIZED — output must be labelled" }
+  ],
+  "parityRules": {
+    "functionalParityOverPixelSimilarity": true,
+    "referenceScreenshotIsNotOracle": true,
+    "viewModelStructureIsBaseline": true,
+    "degradationMarkersRequired": true,
+    "provenanceBadgesRequired": true
+  }
+}

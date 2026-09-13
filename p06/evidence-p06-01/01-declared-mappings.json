@@ -1,0 +1,148 @@
+{
+  "artifact": "P06-01 DECLARED NORMALIZATION MAPPINGS — MANIFEST",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_GOLDEN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_02Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-01",
+    "p06_02Implemented": false,
+    "p06_03Implemented": false,
+    "trackerP06_01ExitCriteria": "MET — \"Canonical output deterministic\": identical input yields a byte-identical canonical record, asserted across 5 repeats per case and against committed golden canonical fixtures",
+    "trackerP06_01TestValidation": "MET — \"Golden tests\" = p06/tests/normalization.test.js",
+    "trackerP06_01Evidence": "MET — \"Canonical fixtures\" = the `golden` block of p06/fixtures/normalization-fixtures.json, mirrored into this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — normalization is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-01 defect."
+  },
+  "authority": {
+    "requirement": "docs/p02/P02_PROVIDER_MAPPING_RULES.md MR-5 — \"Mapping execution is P06.\"",
+    "dictionary": "docs/p01/P01_FIELD_DICTIONARY.md FD-7 — \"This dictionary declares contract slots, not provider mappings. Provider-to-canonical mapping is P06.\"",
+    "declarationElements": "docs/p02/P02_PROVIDER_MAPPING_RULES.md §5 — MD-1…MD-8",
+    "exclusion": "docs/p04/P04_SCOPE_AND_BOUNDARY.md X-4 — normalization pipeline is P06, not P04"
+  },
+  "declarationSchemaVersion": "1.0",
+  "mandatedElements": [
+    "MD-1",
+    "MD-2",
+    "MD-3",
+    "MD-4",
+    "MD-5",
+    "MD-6",
+    "MD-7",
+    "MD-8"
+  ],
+  "closedTransformationVocabulary": [
+    "identity",
+    "string",
+    "decimal",
+    "integer",
+    "boolean",
+    "dateToIsoUtc",
+    "enum"
+  ],
+  "mappings": [
+    {
+      "ref": "D01_QUOTE",
+      "mappingId": "P06-01-D01-QUOTE-NORMALIZATION-MAPPING",
+      "mappingVersion": "1.0.0",
+      "domain": "D01",
+      "providerKind": "LOCAL_FIXTURE",
+      "entryCount": 6,
+      "contractedFieldCount": 6,
+      "mappingDigest": "fea38090487cfbb68e952120fa77f08d57627511e783890bef32fb07fb349ebe",
+      "declaredCanonicalSlots": [
+        "price.ask",
+        "price.askSize",
+        "price.bid",
+        "price.bidSize",
+        "price.last",
+        "price.venueRef"
+      ],
+      "consumedProviderElements": [
+        "askPx",
+        "askSz",
+        "bidPx",
+        "bidSz",
+        "canonicalSecurityId",
+        "ccy",
+        "quoteTs",
+        "tradePrice",
+        "venue"
+      ],
+      "knownLimitations": [
+        "Provider element 'sym' has no canonical counterpart and is DROPPED (M-4), recorded as a known limitation, never smuggled through.",
+        "LIVE-only price slots are pitEligible=false per P01_FIELD_DICTIONARY.md §3."
+      ],
+      "jsonRoundTripStable": true
+    },
+    {
+      "ref": "D01_CLOSE",
+      "mappingId": "P06-01-D01-CLOSE-NORMALIZATION-MAPPING",
+      "mappingVersion": "1.0.0",
+      "domain": "D01",
+      "providerKind": "LOCAL_FIXTURE",
+      "entryCount": 6,
+      "contractedFieldCount": 6,
+      "mappingDigest": "57d0aa5d0deda741285fdc9d5444d04ef4a6c185dcfe45488607df17dbaa7388",
+      "declaredCanonicalSlots": [
+        "price.close",
+        "price.previousClose",
+        "price.tradeCount",
+        "price.venueRef",
+        "price.volume",
+        "price.vwap"
+      ],
+      "consumedProviderElements": [
+        "canonicalSecurityId",
+        "ccy",
+        "officialClose",
+        "prevClose",
+        "sessionDate",
+        "trades",
+        "venue",
+        "vol",
+        "vwap"
+      ],
+      "knownLimitations": [
+        "TS-4: a date-only session boundary is represented at an EXPLICIT UTC convention, DECLARED in MD-3 rather than assumed.",
+        "Provider element 'sym' has no canonical counterpart and is DROPPED (M-4)."
+      ],
+      "jsonRoundTripStable": true
+    },
+    {
+      "ref": "D01_VALUATION",
+      "mappingId": "P06-01-D01-VALUATION-NORMALIZATION-MAPPING",
+      "mappingVersion": "1.0.0",
+      "domain": "D01",
+      "providerKind": "LOCAL_FIXTURE",
+      "entryCount": 3,
+      "contractedFieldCount": 3,
+      "mappingDigest": "bd98fd4b23bda3758c47f61a3e19bee4f1ede1d873dd5fd41993b121c9f4a047",
+      "declaredCanonicalSlots": [
+        "valuation.evEbitda",
+        "valuation.fcfYield",
+        "valuation.peRatio"
+      ],
+      "consumedProviderElements": [
+        "asOfTs",
+        "canonicalSecurityId",
+        "evEbitda",
+        "fcfYield",
+        "pe"
+      ],
+      "knownLimitations": [
+        "COLLISION-CRITICAL (P01_FIELD_DICTIONARY.md §3, D4_07 §I.1): these slots correspond to existing free-form engine keys shared across 2-6 engines.",
+        "N-5 / FD-3: they are emitted ONLY namespaced as MD:valuation.* and may reach an engine ONLY through an explicit declared mapping owned by P11 — never by name coincidence."
+      ],
+      "jsonRoundTripStable": true
+    }
+  ]
+}

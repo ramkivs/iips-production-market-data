@@ -1,0 +1,19 @@
+{
+  "name": "iips-p05-01-local-deterministic-market-feed",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "P05-01..P05-04 acquisition implementation and evidence surface. P05-04 orchestration authorized by D10-1. NO live provider, NO credentials, NO network.",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "evidence": "node scripts/generate-evidence.js",
+    "evidence:p05-02": "node scripts/generate-p05-02-evidence.js",
+    "evidence:p05-03": "node scripts/generate-p05-03-evidence.js",
+    "evidence:p05-04": "node scripts/generate-p05-04-evidence.js"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20"
+  }
+}

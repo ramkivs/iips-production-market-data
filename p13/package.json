@@ -1,0 +1,11 @@
+{
+  "name": "iips-p13-ui-integration",
+  "version": "1.0.0",
+  "description": "P13 — UI Integration Gate. Integrate governed P05–P12 data plane with 19 authorized frontend UI surfaces. Cross-surface rules U1–U10. Per-surface provenance classification, degradation visibility, PIT/as-of semantics, canonical identity, resolver authority.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

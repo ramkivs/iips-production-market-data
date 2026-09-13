@@ -1,0 +1,69 @@
+{
+  "artifact": "P05-03 CORRECTION AND REVISION SEMANTICS (PC-4 / ED-5 / RC-1…RC-5)",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "scenarios": [
+    {
+      "fixtureId": "HC-0001",
+      "label": "PC-4 conforming — the boundary result is stable",
+      "stable": true,
+      "expected": true,
+      "matchedExpectation": true,
+      "violations": []
+    },
+    {
+      "fixtureId": "HC-0002",
+      "label": "PC-4 violation — a past boundary altered in place",
+      "stable": false,
+      "expected": false,
+      "matchedExpectation": true,
+      "violations": [
+        "PC-4: boundary 2026-02-26T00:00:00.000Z was altered in place (aaaaaaaaaaaa… → cccccccccccc…) without an additive supersession"
+      ]
+    },
+    {
+      "fixtureId": "HC-0003",
+      "label": "ED-5/MP-3 conforming — the correction is ADDITIVE",
+      "stable": true,
+      "expected": true,
+      "matchedExpectation": true,
+      "violations": []
+    }
+  ],
+  "revisionContract": {
+    "claimMustState": [
+      "vintagesAddressable"
+    ],
+    "latestOnlyToken": "LATEST_ONLY",
+    "rule": "RC-2 — restatement-bearing domains (D03, D07, D08) without vintage addressability declare revisionCapability: LATEST_ONLY — a LIMITATION, not a PIT capability.",
+    "restatementBearingDomains": [
+      "D03",
+      "D07",
+      "D08"
+    ],
+    "d02IsRestatementBearing": false,
+    "d02CorrectionIsAn": "ADJUSTMENT (D04 / AJ-1…AJ-3), never a restatement"
+  },
+  "d02IsRestatementBearing": false,
+  "d02CorrectionKind": "ADJUSTMENT (D04 / AJ-1…AJ-3), never a restatement",
+  "rule": "PC-4 + ED-5/MP-3 — corrections are additive; history is never rewritten. HA-9 — for D02 a correction is an ADJUSTMENT (D04), not a restatement; RC-2 enumerates D03/D07/D08 only.",
+  "everyScenarioMatched": true
+}

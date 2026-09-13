@@ -1,0 +1,11 @@
+{
+  "name": "iips-p14-ux-validation",
+  "version": "1.0.0",
+  "description": "P14 — UX/Visual/Browser Gate. Provenance integrity validation, visual parity qualification, accessibility conformance, browser compatibility, and non-regression oracle gate for P13 UI surfaces.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

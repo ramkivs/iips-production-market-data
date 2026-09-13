@@ -1,0 +1,95 @@
+{
+  "artifact": "P06-02 LIMITATIONS AND OPEN ITEMS — FIRST-CLASS CONTENT, NOT OMISSIONS",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_BOUNDARY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-02",
+    "p06_03Implemented": false,
+    "trackerP06_02ExitCriteria": "MET — \"Raw data never bypasses validation\": every bypass attempt is EXECUTED at generation time and recorded as REFUSED; the governed path is the only route from raw to canonical storage",
+    "trackerP06_02TestValidation": "MET — \"Architecture + negative tests\" = p06/tests/rawCanonicalBoundary.test.js",
+    "trackerP06_02Evidence": "MET — \"Boundary evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — the boundary is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-02 defect."
+  },
+  "limitations": [
+    {
+      "id": "L-1",
+      "severity": "RECORDED LIMITATION",
+      "statement": "The boundary is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider.",
+      "cause": "standing non-authorization (D9 N-1, D10 §8.2)",
+      "dischargedBy": "a future explicit provider-execution authorization, which does not exist"
+    },
+    {
+      "id": "L-2",
+      "severity": "RECORDED LIMITATION",
+      "statement": "The attestation is a RE-DERIVABLE binding, NOT a cryptographic proof. There is no secret in this system. verifyAttestation re-executes the governed path from the raw payload and the declared mapping and requires byte-identity, so admission requires a raw payload and a mapping that genuinely produce the record — but a party able to run the pipeline could compute a valid attestation for a record it did produce. The property enforced is provenance-through-the-boundary, not authenticity against an adversary.",
+      "cause": "no key material exists and none may be added (no credentials, D10 §8.2)",
+      "dischargedBy": "not applicable within the current authority"
+    },
+    {
+      "id": "L-3",
+      "severity": "RECORDED LIMITATION",
+      "statement": "The accepted P05-04 CanonicalRecordStore is deliberately UNCHANGED. Instantiated BARE, outside the governed architecture, it still ingests any object carrying a snapshotId (BP-1). The P06-02 boundary ENCAPSULATES it in a private field and exposes no bare-record door, and auditBoundary() detects contamination. So the property delivered is prevention-by-architecture within the governed path, plus detection — not a change to the P05-04 component, which this act is not authorized to alter.",
+      "cause": "P05-04 is an accepted, completed work item; its evidence must remain valid",
+      "dischargedBy": "a future authority act over the P05-04 store, if one is ever taken"
+    },
+    {
+      "id": "L-4",
+      "severity": "RECORDED LIMITATION",
+      "statement": "The raw compartment is IN-MEMORY. No raw payload is persisted, so there is no raw-data-at-rest surface. A durable raw store is not claimed and would raise separate governance questions.",
+      "cause": "scope discipline",
+      "dischargedBy": "a future explicit authorization"
+    },
+    {
+      "id": "L-5",
+      "severity": "RECORDED LIMITATION",
+      "statement": "Three declared mappings exist (D01 quote/close/valuation), inherited from P06-01. D02–D10 are NOT declared, so the boundary is demonstrated over D01 only.",
+      "cause": "P06-01 limitation L-2, inherited",
+      "dischargedBy": "further P06-01 declarations"
+    },
+    {
+      "id": "L-6",
+      "severity": "RECORDED LIMITATION",
+      "statement": "P06-02 completion is NOT P06 gate acceptance, NOT certification, NOT provider authorization and NOT production activation.",
+      "cause": "D10-6 — \"P06 AUTHORIZATION IS NOT P06 ACCEPTANCE.\"",
+      "dischargedBy": "a separate explicit acceptance act by the designated A3 acceptor (Ramki)"
+    }
+  ],
+  "openItemsUnchanged": {
+    "OI-P04-03": "OPEN — tenant/region governance attribute set. No attribute invented.",
+    "OI-P04-04": "OPEN — FIGI sourcing/licensing/coverage.",
+    "DEP-P01-04": "UNRESOLVED — historical series structure is a P08 storage decision.",
+    "OI-D9-01": "OPEN — unchanged.",
+    "M-1 / AD-4": "OPEN — existing-IIPS constraint, unchanged.",
+    "M-5": "OPEN — blocks C12 certification.",
+    "M-6": "OPEN — unchanged.",
+    "AD-17 / M-2": "OPEN — unchanged.",
+    "PIT-1…PIT-7": "MISSING / NOT DEMONSTRATED — travels to P08 undischarged."
+  },
+  "notDoneByThisAct": [
+    "no P06-03 deduplication or idempotency rules",
+    "no P06 acceptance artifact",
+    "no certification granted",
+    "no production activation",
+    "no provider selection, entitlement, credential or provider configuration",
+    "no licensed historical acquisition",
+    "no scheduling, retries or checkpointing (that is P05-04, unchanged)",
+    "no disk persistence of raw or canonical data",
+    "no Track B → origin/main merge",
+    "no edit to any historical P00–P05 authority record",
+    "no variation of ADR-01 C1–C6 or of the MD: namespace token",
+    "no P11 engine-input mapping",
+    "no existing-IIPS modification",
+    "no change to the accepted P05-04 CanonicalRecordStore"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "artifact": "P06-01 SCOPE BOUNDARY — P06-02 AND P06-03 ARE NOT IMPLEMENTED",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_GOLDEN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_02Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-01",
+    "p06_02Implemented": false,
+    "p06_03Implemented": false,
+    "trackerP06_01ExitCriteria": "MET — \"Canonical output deterministic\": identical input yields a byte-identical canonical record, asserted across 5 repeats per case and against committed golden canonical fixtures",
+    "trackerP06_01TestValidation": "MET — \"Golden tests\" = p06/tests/normalization.test.js",
+    "trackerP06_01Evidence": "MET — \"Canonical fixtures\" = the `golden` block of p06/fixtures/normalization-fixtures.json, mirrored into this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — normalization is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-01 defect."
+  },
+  "p06_01": {
+    "workItem": "Normalization pipeline",
+    "requirement": "Convert provider payloads into canonical records.",
+    "implemented": true
+  },
+  "p06_02": {
+    "workItem": "Raw/canonical separation",
+    "requirement": "Keep raw provider payloads separate from governed canonical data.",
+    "deliverable": "Storage boundary",
+    "exitCriteria": "Raw data never bypasses validation",
+    "implemented": false,
+    "howBounded": "The provider payload is an ARGUMENT and the canonical record is a RETURN VALUE. No file is written, no raw store exists, and no raw-bypass detection surface is built. Asserted lexically and behaviourally in p06/tests/normalization.test.js B/3."
+  },
+  "p06_03": {
+    "workItem": "Deduplication/idempotency",
+    "requirement": "Prevent duplicate records across retries/replays/providers.",
+    "deliverable": "Deduplication rules",
+    "exitCriteria": "Repeated ingestion stable",
+    "implemented": false,
+    "howBounded": "No deduplication rule, duplicate key or cross-provider merge exists. Determinism (this work item's exit criterion) is a PURITY property and is deliberately NOT presented as deduplication. Asserted in p06/tests/normalization.test.js B/4."
+  },
+  "p06Acceptance": "NOT_ACCEPTED — no P06_GATE_ACCEPTANCE.md exists or is created (D10-6)"
+}

@@ -1,0 +1,207 @@
+{
+  "artifact": "P06-02 GOVERNED PATH — raw → validation/normalization → canonical → storage (EXECUTED)",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_BOUNDARY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-02",
+    "p06_03Implemented": false,
+    "trackerP06_02ExitCriteria": "MET — \"Raw data never bypasses validation\": every bypass attempt is EXECUTED at generation time and recorded as REFUSED; the governed path is the only route from raw to canonical storage",
+    "trackerP06_02TestValidation": "MET — \"Architecture + negative tests\" = p06/tests/rawCanonicalBoundary.test.js",
+    "trackerP06_02Evidence": "MET — \"Boundary evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — the boundary is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-02 defect."
+  },
+  "architecture": [
+    "raw input",
+    "  ↓ acceptRaw()            → RawCompartment: separate, deep-frozen, marked isCanonical:false",
+    "  ↓ admit()                → P06-01 normalizePayload      (normalization, by reuse)",
+    "  ↓                        → validateSnapshot S1–S4       (validation, by reuse)",
+    "  ↓                        → assertNoEngineDirectPath     (P06-01 engine guard, by reuse)",
+    "  ↓                        → assertCanonicalShape         (M-1…M-4)",
+    "  ↓                        → buildAttestation + verifyAttestation (RE-DERIVED, never trusted)",
+    "canonical governed record",
+    "  ↓ private CanonicalRecordStore (P05-04, UNCHANGED, ENCAPSULATED)",
+    "downstream consumers  ← only via canonicalRecords() / isAttested()"
+  ],
+  "noBareRecordDoor": {
+    "boundaryMethods": [
+      "acceptRaw",
+      "admit",
+      "attestations",
+      "auditBoundary",
+      "canonicalCount",
+      "canonicalRecords",
+      "events",
+      "isAttested",
+      "rawCount"
+    ],
+    "bareRecordAdmissionMethods": [],
+    "storeReachableAsProperty": false,
+    "note": "The absence of a bare-record door IS the architectural enforcement of \"Raw data never bypasses validation\": canonical admission REQUIRES a rawRef plus a declared mapping."
+  },
+  "admissions": [
+    {
+      "caseId": "N-01",
+      "rawAccepted": {
+        "rawRef": "raw-N-01",
+        "isCanonical": false,
+        "rawDigest": "20a2665b12883277b4878944"
+      },
+      "storageOutcome": "INSERTED",
+      "snapshotId": "data-localfix-vf4736b8bbde259a7-2026-03-02T14:30:00.000Z",
+      "canonicalDigest": "2bebef9be697bb48e41cf22e9fc21a32e052a443eb09a5f81a46dfe75156dc29",
+      "traversedBoundary": true,
+      "emittedKeys": [
+        "MD:price.ask",
+        "MD:price.askSize",
+        "MD:price.bid",
+        "MD:price.bidSize",
+        "MD:price.last",
+        "MD:price.venueRef"
+      ],
+      "quality": "good",
+      "completenessPct": 100,
+      "attestation": {
+        "mappingId": "P06-01-D01-QUOTE-NORMALIZATION-MAPPING",
+        "validationPassed": true,
+        "boundarySchemaVersion": "1.0",
+        "phaseScope": "P06-02"
+      }
+    },
+    {
+      "caseId": "N-02",
+      "rawAccepted": {
+        "rawRef": "raw-N-02",
+        "isCanonical": false,
+        "rawDigest": "602d4ee1e337524b9c1b8106"
+      },
+      "storageOutcome": "INSERTED",
+      "snapshotId": "data-localfix-vcb49824bcbd02f3b-2026-03-02T14:30:00.000Z",
+      "canonicalDigest": "77b1a0647028ddcc7e812303498f1f2b6a1902cd0fc08ccb708a4c1cfa48f5f1",
+      "traversedBoundary": true,
+      "emittedKeys": [
+        "MD:price.ask",
+        "MD:price.askSize",
+        "MD:price.bid",
+        "MD:price.bidSize",
+        "MD:price.last",
+        "MD:price.venueRef"
+      ],
+      "quality": "partial",
+      "completenessPct": 33.33,
+      "attestation": {
+        "mappingId": "P06-01-D01-QUOTE-NORMALIZATION-MAPPING",
+        "validationPassed": true,
+        "boundarySchemaVersion": "1.0",
+        "phaseScope": "P06-02"
+      }
+    },
+    {
+      "caseId": "N-03",
+      "rawAccepted": {
+        "rawRef": "raw-N-03",
+        "isCanonical": false,
+        "rawDigest": "d3f647e1518eb6c583e31c9c"
+      },
+      "storageOutcome": "INSERTED",
+      "snapshotId": "data-localfix-v710f387954c5cf66-2026-03-02T00:00:00.000Z",
+      "canonicalDigest": "1eb20606edae13e6bd3087b936491e1d5d980513786969d2ee4f0d2d6f9face2",
+      "traversedBoundary": true,
+      "emittedKeys": [
+        "MD:price.close",
+        "MD:price.previousClose",
+        "MD:price.tradeCount",
+        "MD:price.venueRef",
+        "MD:price.volume",
+        "MD:price.vwap"
+      ],
+      "quality": "good",
+      "completenessPct": 100,
+      "attestation": {
+        "mappingId": "P06-01-D01-CLOSE-NORMALIZATION-MAPPING",
+        "validationPassed": true,
+        "boundarySchemaVersion": "1.0",
+        "phaseScope": "P06-02"
+      }
+    },
+    {
+      "caseId": "N-04",
+      "rawAccepted": {
+        "rawRef": "raw-N-04",
+        "isCanonical": false,
+        "rawDigest": "9fcc002496bf4e4b9bcfecd1"
+      },
+      "storageOutcome": "INSERTED",
+      "snapshotId": "data-localfix-v545ce3716c599cd2-2026-03-03T00:00:00.000Z",
+      "canonicalDigest": "336f8536039bcb558388dccff9808040840ce5227c603873c74deb0e2c0c1b9f",
+      "traversedBoundary": true,
+      "emittedKeys": [
+        "MD:price.close",
+        "MD:price.previousClose",
+        "MD:price.tradeCount",
+        "MD:price.venueRef",
+        "MD:price.volume",
+        "MD:price.vwap"
+      ],
+      "quality": "partial",
+      "completenessPct": 66.67,
+      "attestation": {
+        "mappingId": "P06-01-D01-CLOSE-NORMALIZATION-MAPPING",
+        "validationPassed": true,
+        "boundarySchemaVersion": "1.0",
+        "phaseScope": "P06-02"
+      }
+    },
+    {
+      "caseId": "N-05",
+      "rawAccepted": {
+        "rawRef": "raw-N-05",
+        "isCanonical": false,
+        "rawDigest": "f27d604ab31e63475de59da4"
+      },
+      "storageOutcome": "INSERTED",
+      "snapshotId": "data-localfix-v2c3e0e2653f64f71-2026-03-02T00:00:00.000Z",
+      "canonicalDigest": "50bf65c9474aa53141e0b8886a40b19965e3988366b2269944fe34b0d7eb691e",
+      "traversedBoundary": true,
+      "emittedKeys": [
+        "MD:valuation.evEbitda",
+        "MD:valuation.fcfYield",
+        "MD:valuation.peRatio"
+      ],
+      "quality": "good",
+      "completenessPct": 100,
+      "attestation": {
+        "mappingId": "P06-01-D01-VALUATION-NORMALIZATION-MAPPING",
+        "validationPassed": true,
+        "boundarySchemaVersion": "1.0",
+        "phaseScope": "P06-02"
+      }
+    }
+  ],
+  "rawAndCanonicalSeparation": {
+    "rawCount": 5,
+    "canonicalCount": 5,
+    "everyRawEnvelopeMarkedNotCanonical": true,
+    "rawCompartmentExposesNoCanonicalRoute": true
+  },
+  "auditAfterGovernedPath": {
+    "ok": true,
+    "recordCount": 5,
+    "rawCount": 5,
+    "attestedCount": 5,
+    "unattested": [],
+    "nonCanonical": []
+  },
+  "allAdmittedRecordsAttested": true,
+  "exitCriterionMet": true
+}

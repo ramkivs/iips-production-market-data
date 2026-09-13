@@ -1,0 +1,291 @@
+{
+  "artifact": "P05-03 HISTORICAL CAPABILITY DECLARATION AND CONFORMANCE",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "declaration": {
+    "A-1": {
+      "provider": "mockhist",
+      "providerKind": "LIVE"
+    },
+    "A-2": {
+      "adapterId": "adapter-mockhist-contract-double",
+      "adapterVersion": "1.0"
+    },
+    "A-3": "mockhist-wire-1.0",
+    "A-4": [
+      "canonical-1.0"
+    ],
+    "A-5": "1.0",
+    "A-6": {
+      "domains": [
+        "D02"
+      ],
+      "modes": [
+        "SNAPSHOT"
+      ],
+      "granularities": [
+        "1D"
+      ],
+      "identifierInputs": [
+        "CANONICAL_SECURITY_ID",
+        "FIGI"
+      ],
+      "liveConnectivity": true
+    },
+    "A-7": {
+      "entitlementRequired": true,
+      "credentialsRequired": true,
+      "entitlementRequirements": [
+        {
+          "entitlementRef": "ENT-REQ-D02-HISTORICAL",
+          "dimensions": [
+            "EN-1",
+            "EN-2",
+            "EN-3",
+            "EN-4",
+            "EN-8"
+          ],
+          "_note": "P05-03 declares the REQUIREMENT shape only. Licensed depth is entitlement-bearing and no entitlement value exists: the matrix is EMPTY (INV-10) and populating it needs provider selection plus P16 authority (D9 N-2)."
+        }
+      ],
+      "credentialRequirements": [
+        {
+          "credentialRef": "CRED-REQ-HISTORICAL",
+          "kind": "API_KEY",
+          "storageClass": "EXTERNAL_SECRET_MANAGER",
+          "owner": "P03",
+          "valuePresent": false,
+          "_note": "SP-5 / HA-12: a credential REQUIREMENT, never a credential. No value, material, endpoint or account identifier appears here or anywhere in P05."
+        }
+      ]
+    },
+    "A-8": [
+      "Synthetic local test double only — no provider, no network, no licensed data.",
+      "1D is the only barInterval value represented; the enum is NOT enumerated by any accepted artifact (HA-6).",
+      "No adjusted series: adjustment modelling is P08 (RC-5).",
+      "No series storage, no PIT storage, no PIT query: P08 (PC-6, DEP-P01-04 UNRESOLVED).",
+      "No orchestration: scheduling/retry execution/checkpointing is P05-04 (D9 N-3).",
+      "Per-record tenant/region governance NOT applied — OI-P04-03 open, bounded by IB-1 (D9 N-4/N-5)."
+    ],
+    "HA-EXT": {
+      "contractId": "P05-03-HISTORICAL-OHLCV-INGESTION-CONTRACT",
+      "contractVersion": "1.0",
+      "seriesStructure": {
+        "representation": "ORDERED_SEQUENCE_OF_PER_BAR_SNAPSHOTS",
+        "barsPerSnapshot": 1,
+        "asOfIsScalar": true,
+        "precedent": "P05-01 localFeed.js mapOhlcv() — one bar per snapshot",
+        "resolvesDepP01_04": false,
+        "depP01_04Owner": "P08",
+        "depP01_04Status": "UNRESOLVED — P01_SCHEMA_CATALOG.md D02 contract note",
+        "seriesStorageModelDefined": false,
+        "pitStorageDefined": false,
+        "pitQueryDefined": false,
+        "pitStorageOwner": "P08 (PC-6)"
+      },
+      "historicalRanges": [
+        {
+          "domain": "D02",
+          "granularity": "1D",
+          "from": "2026-02-26",
+          "to": "2026-03-02",
+          "gaps": [
+            {
+              "from": "2026-02-28",
+              "to": "2026-03-01",
+              "_note": "Declared gap. ⚠ NOT labelled a weekend/holiday: the contract does not invent a trading calendar (HA-23). It is recorded as a bounded absence."
+            }
+          ],
+          "completenessBasis": "DECLARED_RANGE_ONLY"
+        }
+      ],
+      "granularityVocabulary": {
+        "declaredNotInvented": true,
+        "currentlyAuthorizedValues": [
+          "1D"
+        ],
+        "source": "P05-01 feed-fixtures.json interval=\"1D\" — the only concretely represented value",
+        "enumeratedByAcceptedArtifact": false,
+        "gapDisposition": "OPEN — recorded as BD-P05-03-03. Adding an interval requires an authority act.",
+        "prohibitedHere": [
+          "1H",
+          "5M",
+          "15M",
+          "1W",
+          "1M",
+          "3M",
+          "1Y"
+        ],
+        "rule": "A declared-but-unenumerated enum is a DECLARED, VERSIONED capability — never a shape test and never an invitation to invent values."
+      },
+      "pitCapability": {
+        "claimed": true,
+        "earliestPitBoundary": "2026-02-26T00:00:00.000Z",
+        "boundaryGranularity": "1D",
+        "pubAndEffTimeSeparatelyPreserved": true,
+        "_note": "PC-1: a PIT claim must state these three. PC-2: depth is not PIT. PC-6: PIT STORAGE is P08 — this is a capability DECLARATION only; no PIT storage or query exists here."
+      },
+      "revisionCapability": {
+        "vintagesAddressable": false,
+        "token": "LATEST_ONLY",
+        "_note": "RC-1/RC-2. ⚠ HA-9: D02 is NOT restatement-bearing — RC-2 enumerates D03/D07/D08. An OHLCV correction is an ADJUSTMENT (D04 / AJ-1…AJ-3), never a restatement."
+      },
+      "corporateActionCapability": {
+        "supportedActionTypes": [],
+        "effectiveDatingComplete": false,
+        "suppliesAdjustmentFactors": false,
+        "_note": "RC-3. ⚠ RC-5: the adjustment ENGINE is P08. No adjustment is computed here."
+      },
+      "adjustment": {
+        "bothRetained": "AJ-1 — adjusted and unadjusted are BOTH retained; adjusted never replaces unadjusted",
+        "invalidWithoutBasis": "AJ-3 / SM-11 — adjusted = true without adjustmentBasisRef is INVALID (REJECT)",
+        "basisRefRequiredForAdjusted": "L-11 — adjustmentBasisRef is REQUIRED for adjusted series (D02/D04)",
+        "evidenceBearing": "RC-4 — adjustment factors are evidence-bearing, never silently applied",
+        "engineOwner": "P08 (RC-5)",
+        "engineImplementedHere": false,
+        "adjustedSeriesGeneratedHere": false,
+        "corporateActionProcessedHere": false
+      },
+      "deterministicReplayable": true,
+      "rateLimits": {
+        "declared": true,
+        "requestsPerMinute": 60,
+        "burst": 10
+      },
+      "transport": {
+        "class": "REQUEST_RESPONSE",
+        "endpointDeclared": false,
+        "credentialValuePresent": false
+      },
+      "internalFailoverImplemented": false,
+      "substitutionOwner": "PROGRAM_GOVERNANCE",
+      "failoverOwner": "P07/P17",
+      "orchestrationOwner": "P05-04 (D9 N-3 — NOT AUTHORIZED)",
+      "orchestrationImplemented": false,
+      "tenantOrRegionAttributePresent": false
+    }
+  },
+  "conformance": {
+    "ok": true,
+    "violations": [],
+    "checked": [
+      "C-1",
+      "HA-2",
+      "C-2",
+      "C-5",
+      "C-6",
+      "HA-15",
+      "HA-6",
+      "HA-13",
+      "HA-13[0].bounded",
+      "HA-13[0].domain",
+      "HA-13[0].granularity",
+      "HA-13[0].basis",
+      "PC-1.earliestPitBoundary",
+      "PC-1.boundaryGranularity",
+      "PC-1.pubAndEffTimeSeparatelyPreserved",
+      "PC-6",
+      "RC-1",
+      "HA-9",
+      "RC-5",
+      "DEP-P01-04",
+      "HA-3",
+      "HA-34",
+      "HA-33",
+      "SP-2"
+    ]
+  },
+  "negativeChecks": {
+    "inventedGranularityRejected": {
+      "ok": false,
+      "violations": [
+        "HA-6: granularities[] may only contain currently AUTHORIZED values (1D) — HA-6 prohibits inventing intervals"
+      ],
+      "citesHA6": true
+    },
+    "unboundedRangeRejected": {
+      "ok": false,
+      "citesBounded": true
+    },
+    "missingRangesRejected": true,
+    "incompletePitClaimRejected": {
+      "ok": false,
+      "citesPC1": true
+    }
+  },
+  "granularity": {
+    "declaredNotInvented": true,
+    "currentlyAuthorizedValues": [
+      "1D"
+    ],
+    "source": "P05-01 feed-fixtures.json interval=\"1D\" — the only concretely represented value",
+    "enumeratedByAcceptedArtifact": false,
+    "gapDisposition": "OPEN — recorded as BD-P05-03-03. Adding an interval requires an authority act.",
+    "prohibitedHere": [
+      "1H",
+      "5M",
+      "15M",
+      "1W",
+      "1M",
+      "3M",
+      "1Y"
+    ],
+    "rule": "A declared-but-unenumerated enum is a DECLARED, VERSIONED capability — never a shape test and never an invitation to invent values."
+  },
+  "pit": {
+    "claimMustState": [
+      "earliestPitBoundary",
+      "boundaryGranularity",
+      "pubAndEffTimeSeparatelyPreserved"
+    ],
+    "depthIsNotPit": "PC-2 — a provider returning only latest-known values has NO PIT capability, however deep its history",
+    "repeatabilityRequired": "PC-3 — same boundary ⇒ same result ⇒ same snapshot identity",
+    "noRetroactiveAlteration": "PC-4 — a later correction must not retroactively alter a past boundary result",
+    "pitEligibleFieldsOnly": "PC-5 — only pitEligible canonical fields may be claimed under PIT",
+    "storageOwner": "P08 (PC-6)",
+    "storageDefinedHere": false,
+    "queryDefinedHere": false
+  },
+  "revision": {
+    "claimMustState": [
+      "vintagesAddressable"
+    ],
+    "latestOnlyToken": "LATEST_ONLY",
+    "rule": "RC-2 — restatement-bearing domains (D03, D07, D08) without vintage addressability declare revisionCapability: LATEST_ONLY — a LIMITATION, not a PIT capability.",
+    "restatementBearingDomains": [
+      "D03",
+      "D07",
+      "D08"
+    ],
+    "d02IsRestatementBearing": false,
+    "d02CorrectionIsAn": "ADJUSTMENT (D04 / AJ-1…AJ-3), never a restatement"
+  },
+  "adjustment": {
+    "bothRetained": "AJ-1 — adjusted and unadjusted are BOTH retained; adjusted never replaces unadjusted",
+    "invalidWithoutBasis": "AJ-3 / SM-11 — adjusted = true without adjustmentBasisRef is INVALID (REJECT)",
+    "basisRefRequiredForAdjusted": "L-11 — adjustmentBasisRef is REQUIRED for adjusted series (D02/D04)",
+    "evidenceBearing": "RC-4 — adjustment factors are evidence-bearing, never silently applied",
+    "engineOwner": "P08 (RC-5)",
+    "engineImplementedHere": false,
+    "adjustedSeriesGeneratedHere": false,
+    "corporateActionProcessedHere": false
+  }
+}

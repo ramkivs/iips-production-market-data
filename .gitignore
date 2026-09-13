@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+coverage/
+.next/
+.nuxt/
+.output/
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.*
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Temporary
+*.tmp
+*.temp
+temp/
+tmp/
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace

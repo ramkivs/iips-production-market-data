@@ -1,0 +1,116 @@
+{
+  "artifact": "P06-03 EXIT CRITERION — \"REPEATED INGESTION STABLE\" (EXECUTED)",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_REPLAY",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_01Evidence": false,
+    "isP06_02Evidence": false,
+    "phaseScope": "P06-03",
+    "trackerP06_03ExitCriteria": "MET — \"Repeated ingestion stable\": the same canonical corpus ingested repeatedly produces ZERO further inserts, a constant canonical count and a byte-identical canonical set (measured, 5 passes)",
+    "trackerP06_03TestValidation": "MET — \"Replay tests\" = p06/tests/deduplication.test.js",
+    "trackerP06_03Evidence": "MET — \"Replay evidence\" = this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "p06Acceptance": false,
+    "recordedLimitation": "L-1 — deduplication is demonstrated over SYNTHETIC LOCAL canonical records. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-03 defect."
+  },
+  "trackerField": "Work Tracker!P06-03 \"Exit Criteria\": Repeated ingestion stable",
+  "method": "The SAME canonical corpus was ingested 5 times through the full governed path. Every count below was measured during this run.",
+  "governedPath": "raw → P06-02 raw/canonical boundary → P06-01 normalization → canonical governed record → P06-03 deduplication rules → stable canonical result",
+  "measured": {
+    "corpusSize": 5,
+    "repetitions": 5,
+    "firstIngestionInserts": 5,
+    "secondAndLaterIngestionInserts": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "finalCanonicalCount": 5,
+    "duplicateNoOpCount": 20,
+    "canonicalSetDigestPerPass": [
+      "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0",
+      "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0",
+      "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0",
+      "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0",
+      "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0"
+    ],
+    "distinctCanonicalSetDigests": 1
+  },
+  "passes": [
+    {
+      "pass": 1,
+      "offered": 5,
+      "inserted": 5,
+      "idempotentNoop": 0,
+      "conflictRejected": 0,
+      "finalRecordCount": 5,
+      "distinctIdentityKeys": 5,
+      "canonicalSetDigest": "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0",
+      "identicalToFirstPass": true
+    },
+    {
+      "pass": 2,
+      "offered": 5,
+      "inserted": 0,
+      "idempotentNoop": 5,
+      "conflictRejected": 0,
+      "finalRecordCount": 5,
+      "distinctIdentityKeys": 5,
+      "canonicalSetDigest": "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0",
+      "identicalToFirstPass": true
+    },
+    {
+      "pass": 3,
+      "offered": 5,
+      "inserted": 0,
+      "idempotentNoop": 5,
+      "conflictRejected": 0,
+      "finalRecordCount": 5,
+      "distinctIdentityKeys": 5,
+      "canonicalSetDigest": "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0",
+      "identicalToFirstPass": true
+    },
+    {
+      "pass": 4,
+      "offered": 5,
+      "inserted": 0,
+      "idempotentNoop": 5,
+      "conflictRejected": 0,
+      "finalRecordCount": 5,
+      "distinctIdentityKeys": 5,
+      "canonicalSetDigest": "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0",
+      "identicalToFirstPass": true
+    },
+    {
+      "pass": 5,
+      "offered": 5,
+      "inserted": 0,
+      "idempotentNoop": 5,
+      "conflictRejected": 0,
+      "finalRecordCount": 5,
+      "distinctIdentityKeys": 5,
+      "canonicalSetDigest": "91046df7490035839e5cc164b90c484bec01ee169a4edd951172a1be5acd49f0",
+      "identicalToFirstPass": true
+    }
+  ],
+  "exitCriterionMet": true,
+  "selfAudit": {
+    "ok": true,
+    "recordCount": 5,
+    "distinctIdentityKeys": 5,
+    "duplicateIdentityKeys": [],
+    "notCanonical": [],
+    "notAttested": [],
+    "boundaryModule": "P06-02-RAW-CANONICAL-STORAGE-BOUNDARY",
+    "phaseScope": "P06-03"
+  }
+}

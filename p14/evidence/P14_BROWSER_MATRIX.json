@@ -1,0 +1,67 @@
+{
+  "module": "P14-05-BROWSER-COMPATIBILITY",
+  "date": "2026-09-13T00:00:00.000Z",
+  "browserMatrix": [
+    {
+      "browser": "Chrome",
+      "versions": ["latest", "latest-1"],
+      "platforms": ["Windows", "macOS", "Linux"],
+      "priority": "primary",
+      "tested": false,
+      "testableAtViewModelLevel": true,
+      "notes": "Primary target — Chromium-based rendering"
+    },
+    {
+      "browser": "Firefox",
+      "versions": ["latest", "latest-1"],
+      "platforms": ["Windows", "macOS", "Linux"],
+      "priority": "primary",
+      "tested": false,
+      "testableAtViewModelLevel": true,
+      "notes": "Primary target — Gecko-based rendering"
+    },
+    {
+      "browser": "Safari",
+      "versions": ["latest", "latest-1"],
+      "platforms": ["macOS", "iOS"],
+      "priority": "primary",
+      "tested": false,
+      "testableAtViewModelLevel": true,
+      "notes": "Primary target — WebKit-based rendering"
+    },
+    {
+      "browser": "Edge",
+      "versions": ["latest", "latest-1"],
+      "platforms": ["Windows"],
+      "priority": "secondary",
+      "tested": false,
+      "testableAtViewModelLevel": true,
+      "notes": "Secondary target — Chromium-based (same engine as Chrome)"
+    }
+  ],
+  "responsiveBreakpoints": [
+    { "name": "mobile", "minWidth": 320, "maxWidth": 767, "tested": false },
+    { "name": "tablet", "minWidth": 768, "maxWidth": 1023, "tested": false },
+    { "name": "desktop", "minWidth": 1024, "maxWidth": 1439, "tested": false },
+    { "name": "wide", "minWidth": 1440, "maxWidth": null, "tested": false }
+  ],
+  "viewModelLevelValidation": {
+    "status": "COMPLETE",
+    "result": "ALL 19 SURFACES PASS",
+    "checks": [
+      "JSON-serializable (no functions, no circular refs, no Symbols)",
+      "No DOM dependencies",
+      "No browser-specific APIs"
+    ]
+  },
+  "runtimeTesting": {
+    "status": "NOT PERFORMED",
+    "reason": "Runtime browser testing requires browser environment (not available in current validation context)",
+    "note": "View model layer validated as browser-agnostic. Runtime testing deferred to environment with browser capabilities."
+  },
+  "claims": {
+    "viewModelAgnostic": true,
+    "runtimeBrowserTested": false,
+    "responsiveTested": false
+  }
+}

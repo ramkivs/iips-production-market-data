@@ -1,0 +1,37 @@
+{
+  "artifact": "P05-02 DETERMINISM AND REPEATABILITY (contract validation)",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "repeats": 5,
+  "digests": [
+    "bf00aa1a0805e3e20560e00e6ee60f3817e25d5ab1a43888ec01a3fc101dfb86",
+    "bf00aa1a0805e3e20560e00e6ee60f3817e25d5ab1a43888ec01a3fc101dfb86",
+    "bf00aa1a0805e3e20560e00e6ee60f3817e25d5ab1a43888ec01a3fc101dfb86",
+    "bf00aa1a0805e3e20560e00e6ee60f3817e25d5ab1a43888ec01a3fc101dfb86",
+    "bf00aa1a0805e3e20560e00e6ee60f3817e25d5ab1a43888ec01a3fc101dfb86"
+  ],
+  "distinctDigests": 1,
+  "distinctSnapshotIds": 1,
+  "byteIdentical": true,
+  "rules": [
+    "D-1 — identical (provider, dataVersion, asOf) ⇒ identical snapshotId",
+    "D-2 — identical payload + adapter version + schemaVersion ⇒ byte-identical canonical snapshot",
+    "D-3 — mapping is a pure function; no wall-clock, random or ambient input",
+    "D-5 — field and lineage ordering is canonical, never implementation-incidental"
+  ],
+  "scopeNote": "Determinism of the CONTRACT PIPELINE against fixed fixtures. This is NOT a claim about live provider determinism, which is unknowable without a provider."
+}

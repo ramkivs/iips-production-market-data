@@ -1,0 +1,11 @@
+{
+  "name": "iips-p12-api-dto-gate",
+  "version": "1.0.0",
+  "description": "P12 — API/DTO Gate. Expose governed market data through stable APIs/contracts. Data provenance DTO (P12-01), quality propagation (P12-02), screener contract (P12-03, C6 target), object-resolution contract (P12-04, C7 target), evidence/replay linkage (P12-05), security/tenant boundaries (P12-06), additive endpoint delta (P12-07).",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

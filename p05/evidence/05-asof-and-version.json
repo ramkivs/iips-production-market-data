@@ -1,0 +1,171 @@
+{
+  "artifact": "P05-01 asOf AND SIX-AXIS VERSION EVIDENCE (SN-2, TS-6, VX-1…VX-4, VA-1)",
+  "evidence": [
+    {
+      "snapshotId": "data-localfix-v10220dc2c33df0e4-2026-03-02T14:30:00.000Z",
+      "asOf_marketDataTime": "2026-03-02T14:30:00.000Z",
+      "receivedAt_ingestTime": "2026-03-03T15:00:00.000Z",
+      "asOfDiffersFromIngest": true,
+      "receivedAtNotBeforeAsOf": true,
+      "sixAxes": {
+        "dataVersion": "v10220dc2c33df0e4",
+        "adapterVersion": "1.0",
+        "providerSchemaVersion": "localfix-wire-1.0",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0"
+      },
+      "identityMappingVersionInSnapshotId": false,
+      "lineageVersionAxes": [
+        "adapterVersion",
+        "identityMappingVersion",
+        "namespaceVersion"
+      ]
+    },
+    {
+      "snapshotId": "data-localfix-v7ff01f9f702518bd-2026-03-02T14:30:00.000Z",
+      "asOf_marketDataTime": "2026-03-02T14:30:00.000Z",
+      "receivedAt_ingestTime": "2026-03-03T15:00:00.000Z",
+      "asOfDiffersFromIngest": true,
+      "receivedAtNotBeforeAsOf": true,
+      "sixAxes": {
+        "dataVersion": "v7ff01f9f702518bd",
+        "adapterVersion": "1.0",
+        "providerSchemaVersion": "localfix-wire-1.0",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0"
+      },
+      "identityMappingVersionInSnapshotId": false,
+      "lineageVersionAxes": [
+        "adapterVersion",
+        "identityMappingVersion",
+        "namespaceVersion"
+      ]
+    },
+    {
+      "snapshotId": "data-localfix-vd4521c1ece53346f-2026-03-02T00:00:00.000Z",
+      "asOf_marketDataTime": "2026-03-02T00:00:00.000Z",
+      "receivedAt_ingestTime": "2026-03-03T15:00:00.000Z",
+      "asOfDiffersFromIngest": true,
+      "receivedAtNotBeforeAsOf": true,
+      "sixAxes": {
+        "dataVersion": "vd4521c1ece53346f",
+        "adapterVersion": "1.0",
+        "providerSchemaVersion": "localfix-wire-1.0",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0"
+      },
+      "identityMappingVersionInSnapshotId": false,
+      "lineageVersionAxes": [
+        "adapterVersion",
+        "identityMappingVersion",
+        "namespaceVersion"
+      ]
+    },
+    {
+      "snapshotId": "data-localfix-v499ed6f25513a959-2026-03-03T00:00:00.000Z",
+      "asOf_marketDataTime": "2026-03-03T00:00:00.000Z",
+      "receivedAt_ingestTime": "2026-03-03T15:00:00.000Z",
+      "asOfDiffersFromIngest": true,
+      "receivedAtNotBeforeAsOf": true,
+      "sixAxes": {
+        "dataVersion": "v499ed6f25513a959",
+        "adapterVersion": "1.0",
+        "providerSchemaVersion": "localfix-wire-1.0",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0"
+      },
+      "identityMappingVersionInSnapshotId": false,
+      "lineageVersionAxes": [
+        "adapterVersion",
+        "identityMappingVersion",
+        "namespaceVersion"
+      ]
+    },
+    {
+      "snapshotId": "data-localfix-v2823e367943de8ce-2026-03-02T00:00:00.000Z",
+      "asOf_marketDataTime": "2026-03-02T00:00:00.000Z",
+      "receivedAt_ingestTime": "2026-03-03T15:00:00.000Z",
+      "asOfDiffersFromIngest": true,
+      "receivedAtNotBeforeAsOf": true,
+      "sixAxes": {
+        "dataVersion": "v2823e367943de8ce",
+        "adapterVersion": "1.0",
+        "providerSchemaVersion": "localfix-wire-1.0",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0"
+      },
+      "identityMappingVersionInSnapshotId": false,
+      "lineageVersionAxes": [
+        "adapterVersion",
+        "identityMappingVersion",
+        "namespaceVersion"
+      ]
+    },
+    {
+      "snapshotId": "data-localfix-v1c3bd7d7048e1cc6-2026-03-02T00:00:00.000Z",
+      "asOf_marketDataTime": "2026-03-02T00:00:00.000Z",
+      "receivedAt_ingestTime": "2026-03-03T15:00:00.000Z",
+      "asOfDiffersFromIngest": true,
+      "receivedAtNotBeforeAsOf": true,
+      "sixAxes": {
+        "dataVersion": "v1c3bd7d7048e1cc6",
+        "adapterVersion": "1.0",
+        "providerSchemaVersion": "localfix-wire-1.0",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": "idmap-localfix-1.0.0"
+      },
+      "identityMappingVersionInSnapshotId": false,
+      "lineageVersionAxes": [
+        "adapterVersion",
+        "identityMappingVersion",
+        "namespaceVersion"
+      ]
+    },
+    {
+      "snapshotId": "data-localfix-v083dd54992e57ce9-2018-01-01T00:00:00.000Z",
+      "asOf_marketDataTime": "2018-01-01T00:00:00.000Z",
+      "receivedAt_ingestTime": "2026-03-03T15:00:00.000Z",
+      "asOfDiffersFromIngest": true,
+      "receivedAtNotBeforeAsOf": true,
+      "sixAxes": {
+        "dataVersion": "v083dd54992e57ce9",
+        "adapterVersion": "1.0",
+        "providerSchemaVersion": "localfix-wire-1.0",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": null
+      },
+      "identityMappingVersionInSnapshotId": false,
+      "lineageVersionAxes": [
+        "adapterVersion",
+        "namespaceVersion"
+      ]
+    },
+    {
+      "snapshotId": "data-localfix-vc010b8366e3fcd20-2018-01-01T00:00:00.000Z",
+      "asOf_marketDataTime": "2018-01-01T00:00:00.000Z",
+      "receivedAt_ingestTime": "2026-03-03T15:00:00.000Z",
+      "asOfDiffersFromIngest": true,
+      "receivedAtNotBeforeAsOf": true,
+      "sixAxes": {
+        "dataVersion": "vc010b8366e3fcd20",
+        "adapterVersion": "1.0",
+        "providerSchemaVersion": "localfix-wire-1.0",
+        "schemaVersion": "canonical-1.0",
+        "namespaceVersion": "1.0",
+        "identityMappingVersion": null
+      },
+      "identityMappingVersionInSnapshotId": false,
+      "lineageVersionAxes": [
+        "adapterVersion",
+        "namespaceVersion"
+      ]
+    }
+  ]
+}

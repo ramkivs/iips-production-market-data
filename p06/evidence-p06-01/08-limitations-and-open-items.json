@@ -1,0 +1,81 @@
+{
+  "artifact": "P06-01 LIMITATIONS AND OPEN ITEMS — FIRST-CLASS CONTENT, NOT OMISSIONS",
+  "runStamp": "2026-09-10T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "IMPLEMENTATION_AND_LOCAL_SYNTHETIC_GOLDEN",
+    "isProviderEvidence": false,
+    "isContractOrLifecycleEvidence": false,
+    "isP06_02Evidence": false,
+    "isP06_03Evidence": false,
+    "phaseScope": "P06-01",
+    "p06_02Implemented": false,
+    "p06_03Implemented": false,
+    "trackerP06_01ExitCriteria": "MET — \"Canonical output deterministic\": identical input yields a byte-identical canonical record, asserted across 5 repeats per case and against committed golden canonical fixtures",
+    "trackerP06_01TestValidation": "MET — \"Golden tests\" = p06/tests/normalization.test.js",
+    "trackerP06_01Evidence": "MET — \"Canonical fixtures\" = the `golden` block of p06/fixtures/normalization-fixtures.json, mirrored into this package",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "productionActivated": false,
+    "certificationClaim": false,
+    "recordedLimitation": "L-1 — normalization is demonstrated over SYNTHETIC LOCAL provider payloads. It has NOT been exercised against a live provider, because live provider execution remains NOT_AUTHORIZED (D9 N-1, D10 §8.2). A standing non-authorization, not a P06-01 defect."
+  },
+  "limitations": [
+    {
+      "id": "L-1",
+      "severity": "RECORDED LIMITATION",
+      "statement": "Normalization is demonstrated over SYNTHETIC LOCAL provider payloads (the P05-01 local fixture vocabulary). It has NOT been exercised against a live provider.",
+      "cause": "standing non-authorization (D9 N-1, D10 §8.2)",
+      "dischargedBy": "a future explicit provider-execution authorization, which does not exist"
+    },
+    {
+      "id": "L-2",
+      "severity": "RECORDED LIMITATION",
+      "statement": "Three declared mappings are provided (D01 quote, D01 close, D01 valuation). The remaining dictionary domains D02–D10 are NOT declared here. Declaring them is further P06-01 work and is not claimed as done.",
+      "cause": "scope discipline — only what is implemented is claimed",
+      "dischargedBy": "further P06-01 declarations"
+    },
+    {
+      "id": "L-3",
+      "severity": "RECORDED LIMITATION",
+      "statement": "This act does NOT retroactively alter any historical record. ADR-01 §I still reads \"Blocks: … P06 Normalization\" and P02 §4 N-3/N-4/N-6 still read \"<NS> placeholder / MD: NOT adopted / BLOCKED on DEP-P02-01\". Both are historical statements of their own moment, superseded as to current state by OI-10 RESOLVED (docs/CHECKPOINT-03.md §3) and by D8 — cited, never edited.",
+      "cause": "append-only governance rule (P00_DECISION_LOG §5 rule 1)",
+      "dischargedBy": "not applicable — historical records must not be rewritten"
+    },
+    {
+      "id": "L-4",
+      "severity": "RECORDED LIMITATION",
+      "statement": "P06-01 completion is NOT P06 gate acceptance, NOT certification, NOT provider authorization and NOT production activation.",
+      "cause": "D10-6 — \"P06 AUTHORIZATION IS NOT P06 ACCEPTANCE\"",
+      "dischargedBy": "a separate explicit acceptance act by the designated A3 acceptor (Ramki) carrying the P00_GATE_MODEL.md:42 minimum evidence"
+    }
+  ],
+  "openItemsUnchanged": {
+    "OI-P04-03": "OPEN — tenant/region governance attribute set. No attribute invented.",
+    "OI-P04-04": "OPEN — FIGI sourcing/licensing/coverage.",
+    "DEP-P01-04": "UNRESOLVED — historical series structure is a P08 storage decision.",
+    "DEP-P02-01": "SUPERSEDED as to current state — OI-10 RESOLVED released P05/P06/P11 from the OI-10 blocker (docs/CHECKPOINT-03.md §3). The P02 text is left unedited.",
+    "OI-D9-01": "OPEN — unchanged.",
+    "M-1 / AD-4": "OPEN — existing-IIPS constraint, unchanged.",
+    "M-5": "OPEN — blocks C12 certification.",
+    "M-6": "OPEN — unchanged.",
+    "AD-17 / M-2": "OPEN — unchanged.",
+    "PIT-1…PIT-7": "MISSING / NOT DEMONSTRATED — travels to P08 undischarged."
+  },
+  "notDoneByThisAct": [
+    "no P06-02 raw/canonical storage boundary",
+    "no P06-03 deduplication rules",
+    "no P06 acceptance artifact",
+    "no certification granted",
+    "no production activation",
+    "no provider selection, entitlement, credential or provider configuration",
+    "no licensed historical acquisition",
+    "no Track B → origin/main merge",
+    "no edit to any historical P00–P05 authority record",
+    "no variation of ADR-01 C1–C6 or of the MD: namespace token",
+    "no P11 engine-input mapping",
+    "no existing-IIPS modification"
+  ]
+}

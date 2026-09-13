@@ -1,0 +1,68 @@
+{
+  "oracleId": "P14-NRO-01",
+  "version": "1.0.0",
+  "authority": "Part 11 M.4 (Non-regression oracle gate)",
+  "date": "2026-09-13T00:00:00.000Z",
+  "checks": [
+    {
+      "id": "NRO-C1",
+      "name": "P13 determinism",
+      "description": "All P13 UI surfaces produce deterministic output for given inputs",
+      "method": "Execute each P13 builder twice with identical inputs; compare JSON output",
+      "passCriteria": "Byte-identical output for all surfaces"
+    },
+    {
+      "id": "NRO-C2",
+      "name": "Provenance integrity (U1)",
+      "description": "No P13 surface fabricates provenance",
+      "method": "Run P14-01 provenance integrity validation on all surfaces",
+      "passCriteria": "Zero U1 violations"
+    },
+    {
+      "id": "NRO-C3",
+      "name": "Degradation visibility (U2)",
+      "description": "All degraded data is visibly marked in P13 view models",
+      "method": "Run P14-01 degradation visibility validation on all surfaces",
+      "passCriteria": "Zero U2 violations"
+    },
+    {
+      "id": "NRO-C4",
+      "name": "Classification labelling (U5)",
+      "description": "All P13 surfaces label provenance classification correctly",
+      "method": "Run P14-01 classification labelling validation on all surfaces",
+      "passCriteria": "Zero U5 violations"
+    },
+    {
+      "id": "NRO-C5",
+      "name": "P12 C6/C7 contract integrity",
+      "description": "P12 screener (C6) and resolver (C7) contracts remain intact through P13",
+      "method": "Execute P13 screener/resolver surfaces; verify C6/C7 contract shapes",
+      "passCriteria": "C6/C7 contract shapes preserved"
+    },
+    {
+      "id": "NRO-C6",
+      "name": "P13 test suite",
+      "description": "All P13 tests pass",
+      "method": "Run p13 test suite (node --test)",
+      "passCriteria": "85/85 pass, 0 fail"
+    },
+    {
+      "id": "NRO-C7",
+      "name": "Full regression — no new failures",
+      "description": "Full regression suite has no NEW failures beyond pre-existing baseline",
+      "method": "Run all test suites; compare against pre-existing failure baseline",
+      "passCriteria": "No new failures beyond PRE_EXISTING_FAILURES"
+    }
+  ],
+  "exclusions": {
+    "replayReproducibility": "NOT CLAIMED (AD-17/M-2 UNRESOLVED)",
+    "ad4Revalidation": "DEFERRED to P15",
+    "productionActivation": "NOT AUTHORIZED"
+  },
+  "preExistingFailures": {
+    "count": 13,
+    "suites": ["p05", "p08"],
+    "classification": "STALE_BOUNDARY",
+    "reason": "Guards written before P09 acceptance; fire against legitimately accepted p09/src and accepted P05/P08 work"
+  }
+}

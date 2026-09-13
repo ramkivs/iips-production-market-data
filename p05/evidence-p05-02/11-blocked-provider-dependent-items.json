@@ -1,0 +1,103 @@
+{
+  "artifact": "P05-02 KNOWN BLOCKED / PROVIDER-DEPENDENT ITEMS — RECORDED, NOT RESOLVED",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isIntegrationTestEvidence": false,
+    "establishesAuthenticatedIngestionWorks": false,
+    "trackerP05_02ExitCriteria": "UNMET — \"Authenticated ingestion works\" requires live execution (D9 N-1)",
+    "trackerP05_02TestValidation": "UNMET — \"Integration tests\" require a provider",
+    "trackerP05_02Evidence": "UNMET — \"Provider evidence\" requires a provider",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "testDoubleProviderToken": "mocklive",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "items": [
+    {
+      "id": "BD-P05-02-01",
+      "item": "Provider selection, entitlement grant, credentials, connectivity",
+      "status": "OPEN",
+      "blocks": "P05-02 live execution and the tracker exit criteria",
+      "authority": "D9 N-1 · P16 / provider-entitlement authority · INV-10 (entitlement matrix EMPTY)",
+      "note": "Provider selection is NONE MADE. No provider is named anywhere in this package."
+    },
+    {
+      "id": "BD-P05-02-02",
+      "item": "Authenticated ingestion actually working",
+      "status": "UNVERIFIED",
+      "blocks": "Tracker Work Tracker!P05-02 Exit Criteria",
+      "note": "Requires live execution. NOT AUTHORIZED. This package does not claim it."
+    },
+    {
+      "id": "BD-P05-02-03",
+      "item": "Provider integration tests and provider evidence",
+      "status": "UNVERIFIED",
+      "blocks": "Tracker Work Tracker!P05-02 Test/Validation and Evidence",
+      "note": "The tests in this package are CONTRACT VALIDATION against a synthetic double. They are not integration tests and are not provider evidence."
+    },
+    {
+      "id": "BD-P05-02-04",
+      "item": "OI-P04-04 — FIGI sourcing, licensing, coverage",
+      "status": "OPEN",
+      "blocks": "P05 acceptance; P05-03 licensed depth",
+      "note": "Synthetic FIGI values are used. No sourcing, licensing or coverage claim is made."
+    },
+    {
+      "id": "BD-P05-02-05",
+      "item": "ISO-4217 currency vocabulary is provider-specific configuration",
+      "status": "OPEN",
+      "blocks": "Full currency-membership validation",
+      "note": "OPEN — BD-P05-02-05. The ISO-4217 vocabulary is provider-specific configuration; D9 A-2 authorizes specification and adapter-contract work only."
+    },
+    {
+      "id": "BD-P05-02-06",
+      "item": "P05-01 regex secret scanner does not detect the serialized-JSON credential form",
+      "status": "OPEN",
+      "blocks": "Nothing in P05-02 — LA-20 covers it structurally",
+      "note": "Recorded because it is a real gap in an accepted artifact. Repairing it is out of P05-02 scope."
+    },
+    {
+      "id": "BD-P05-02-07",
+      "item": "Lifecycle fixture coverage exercises 2 of 5 states",
+      "status": "RESOLVED",
+      "blocks": "Nothing — non-blocking test-coverage improvement",
+      "resolvedBy": "P05-02-B — lifecycle-state coverage completion (2026-09-09)",
+      "note": "suspended / merged / superseded were unexercised. P05-02-B added fixture identities for all three (plus the two successor identities LC-4 requires for merged/superseded) and adapter-contract tests Q/1…Q/8. Coverage is now 5 of 5. ⚠ This closed a fixture/test gap ONLY — it did not select a provider, provision a credential, open a connection, or close any provider-dependent tracker exit criterion."
+    },
+    {
+      "id": "BD-P05-02-08",
+      "item": "OI-P04-03 — tenant/region governance attribute set",
+      "status": "OPEN",
+      "blocks": "Per-record tenant/region governance application",
+      "note": "D9 N-4/N-5, IB-1…IB-5. NO tenant or region attribute was invented here."
+    },
+    {
+      "id": "BD-P05-02-09",
+      "item": "P05-04 orchestration: scheduling, retries, idempotent checkpointing",
+      "status": "NOT AUTHORIZED",
+      "blocks": "Retry EXECUTION (LA-28 classifies retryability only)",
+      "authority": "D9 N-3"
+    },
+    {
+      "id": "BD-P05-02-10",
+      "item": "A3 gate acceptor for P05 acceptance",
+      "status": "UNKNOWN",
+      "blocks": "P05 gate acceptance — the only person-level hard blocker",
+      "note": "No person is named in P00_AUTHORITY_REGISTER.md or D9_STATUS.json."
+    }
+  ],
+  "resolvedByThisPackage": [],
+  "explicitlyNotResolved": [
+    "OI-P04-03",
+    "OI-P04-04",
+    "BD-02 / P16",
+    "AD-17",
+    "M-1",
+    "M-5",
+    "M-6"
+  ]
+}

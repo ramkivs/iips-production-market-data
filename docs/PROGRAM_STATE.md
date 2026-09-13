@@ -1,0 +1,1020 @@
+# PROGRAM STATE — SESSION RECOVERY MANIFEST
+
+> **▶ CURRENT GOVERNANCE ACT: P06 — CANONICAL PIPELINE GATE — IS `ACCEPTED` BY AN EXPLICIT A3 ACT.
+> 7 OF 18 GATES ARE NOW ACCEPTED.**
+> (`docs/p06/P06_GATE_ACCEPTANCE.md`, recorded **2026-09-10**, **256 lines**).
+> **A3 acceptor: Ramakrishnan V. S. (Ramki)** — the P06-scoped designation made by **D10-3**
+> (`docs/p00/P00_DECISION_LOG.md` §8.1). ⚠ **Designation was not acceptance; this act is.**
+> Accepted: **`P06-01`** normalization pipeline (**55 tests**) · **`P06-02`** raw/canonical storage
+> boundary (**25 tests**) · **`P06-03`** deduplication/idempotency (**33 tests**) — all three D10-2
+> work items, and the tracker defines no fourth.
+> **Suite: P05 264 + P06 113 = 377 tests, 377 PASS / 0 FAIL.**
+> ⚠ **`p06_acceptance_status` = `ACCEPTED`** *(was `NOT_ACCEPTED`)* · **`formal_gate_status` =
+> 7 of 18** *(was 6 of 18)*.
+> ⚠ **Authority disposition relied on: D12** (`docs/p00/P00_DECISION_LOG.md` §10, commit
+> `3f79e612e06afcd87f09c199665b12354b233e42`) — `collision_census_status` =
+> **`RECONCILED — 60 coded controlling`**, so **ADR-01 §G item 1 = `SATISFIED`**. Historical **52**
+> coded / **54** free-form **PRESERVED, unedited**; **`ADR-01 §B.2` NOT rewritten**; the historical
+> **54 remains `UNREPRODUCED`** with no substitute adopted.
+> ⚠ **ADR-01 §G evidence:** **13/13 engines · 97/97 golden cases · 97/97 value-match · 97/97
+> independently byte-identical** · C1–C6 guard **11/11**, mutation-verified (**4 fail** with the
+> guard removed) · `tsc --noEmit` clean.
+> ⚠ **UNCHANGED / NOT GRANTED:** **`AD-17` = `UNRESOLVED`** (not resolved by inference) · the named
+> historical **digest triples `44ba/ea22/c8ed`, `5813…`, `3cfb/92be` = `NOT REPRODUCED`** (no
+> canonicalization invented) · certification **`NONE_GRANTED`** (⚠ **P06 acceptance grants none**) ·
+> production activation **`NOT_AUTHORIZED`** (A4 at P16) · provider execution + licensed acquisition
+> **`NOT_AUTHORIZED`** (N-1/N-2) · **Track B → `origin/main` = `NOT AUTHORIZED`** ·
+> **P07–P17 = NOT ACCEPTED / NOT AUTHORIZED** · **P07–P17 A3 acceptors NOT designated** ·
+> PIT repeatability **`MISSING / NOT DEMONSTRATED`** (inherited from P05, **not discharged**) ·
+> no concessions register · M-1 / M-5 / M-6 unchanged · existing-IIPS **untouched by this act**
+> (`64797d6` / `4292fff` remain local, **unpushed**, no branch created).
+> ⚠ **Two P05 governance guards were SUPERSEDED, NOT WEAKENED** — `existing-iips-boundary.test.js`
+> and `no-provider-dependency.test.js` each formerly asserted *"no `P06_GATE_ACCEPTANCE.md` may
+> exist anywhere"*. `PROGRAM_STATE.md`:584 predicted exactly this trip. Both are **replaced by
+> strictly stronger content assertions**, disclosed in full at `P06_GATE_ACCEPTANCE.md` §9 and
+> mutation-verified (**9 mutations, all detected**).
+> ⚠ **Next authorized action: NONE.** No P07 entry, no provider integration, no certification.
+
+> **▶ CURRENT WORK ACT: P06-03 IMPLEMENTED + EVIDENCED — DEDUPLICATION / IDEMPOTENCY COMPLETE.
+> ALL THREE D10-2 P06 WORK ITEMS ARE NOW COMPLETE — AND P06 IS STILL `NOT_ACCEPTED`**
+> (`docs/p06/P06_03_EVIDENCE.md`, recorded **2026-09-10** under authority **D10-2**). Delivered:
+> `p06/src/deduplicationRules.js` (`DEDUPLICATION_RULES` DD-1…DD-6 declared as data ·
+> `dedupIdentityFor` · `classifyDedupDecision` · `DeduplicationLedger`) ·
+> `p06/tests/deduplication.test.js` (**33 replay tests**) · `p06/evidence-p06-03/` (**6 files**).
+> **Suite: P05 264 + P06 113 = 377 tests, 377 PASS / 0 FAIL.**
+> ⚠ **`p06_03_status` = `IMPLEMENTED + EVIDENCED`.** Authoritative tracker exit criterion
+> ***"Repeated ingestion stable"*** is **MET**, **measured over 5 passes**: first pass **5** inserts,
+> every later pass **[0, 0, 0, 0]**, final canonical count **5**, **20** duplicate no-ops, canonical
+> set **byte-identical** across all passes. Entry criterion *"Canonical schema stable"* MET.
+> ⚠ **Dedup identity — TAKEN FROM EXISTING CONTRACTS, NOT INVENTED:** `snapshotId`
+> (`data-${provider}-${dataVersion}-${asOf}`, **AD-6**, `P05_03_SPECIFICATION.md`:84 *"no component
+> added"*) **+ `canonicalDigest`** (**RI-6**). The decision rule is the **accepted P05-04
+> `CanonicalRecordStore`** rule — **REUSED, not duplicated, not replaced. No second store.**
+> ⚠ **Cross-provider records are deliberately NOT collapsed** (**PN-5** *"never a silent merge"* ·
+> **RI-3** *"provider identity is never flattened away"*). Retries ✅ · replays ✅ · providers ✅
+> (`CS-LOCAL-0001` holds **4 vintages → 4 distinct `snapshotId`s**, not collapsed).
+> ⚠ **10 bypass attempts executed, 10 REFUSED, 0 not blocked** — P06-03 cannot become a second
+> raw/canonical admission path (**DD-5** requires a P06-02 attestation; the ledger cannot even be
+> constructed without a boundary).
+> ⚠ **Recorded limitations L-1…L-6**, notably **L-2** (cross-provider distinctness is demonstrated
+> **STRUCTURALLY** from the frozen AD-6 form — no second provider identity may be issued, so a
+> two-provider corpus was **not** run) and **L-3** (the P06-02 attestation gate is **content-based**:
+> provenance-through-the-boundary, **not** authenticity against an adversary — inherited P06-02 L-2).
+> ⚠ **UNCHANGED:** **P05 = `ACCEPTED`, 6 of 18** · **P06-01 and P06-02 preserved** · **P06 =
+> `NOT_ACCEPTED`**, no `P06_GATE_ACCEPTANCE.md` (**D10-6**) · provider execution **`NOT_AUTHORIZED`**
+> (N-1) · licensed historical acquisition **`NOT_AUTHORIZED`** (N-2) · production activation
+> **`NOT_AUTHORIZED`** (A4 at P16 only) · **Track B → `origin/main` merge `NOT AUTHORIZED`** ·
+> certification **`NONE_GRANTED`** · ADR-01 **C1–C6 fail-closed and unvaried** (reused by import) ·
+> `MD:` **the exact namespace token** · **the AD-6 `snapshotId` form unchanged (no component
+> added)** · **FIGI/OpenFIGI remains the sole `AUTHORITATIVE` identifier** · **no P07/P08** · **no
+> scheduling/retries/checkpointing** (P05-04 unchanged) · **no durable persistence** · **no P11
+> engine-input mapping** · **no historical P00–P05 authority record edited** · **no concessions
+> register**.
+> ⚠ **NEXT STEP IS AN AUTHORITY ACT, NOT AN IMPLEMENTATION ACT.** The accepted tracker defines
+> exactly **three** P06 work items and all three are complete. **P06 acceptance is a separate
+> explicit decision by Ramakrishnan V. S. (Ramki), D10-3**, carrying the `P00_GATE_MODEL.md`:42
+> minimum evidence — *"Token recorded; C1–C6 collision guard evidence; **13-engine oracle
+> byte-identity**"* — plus ADR-01 §G evidence. **It must NOT be inferred from work-item completion,
+> and was NOT performed by this act.**
+>
+> **▶ CURRENT WORK ACT: P06-02 IMPLEMENTED + EVIDENCED — RAW/CANONICAL STORAGE BOUNDARY COMPLETE
+> WITHIN THE D10-2 BOUNDARY** (`docs/p06/P06_02_EVIDENCE.md`, recorded **2026-09-10** under
+> authority **D10-2**, `docs/p00/P00_DECISION_LOG.md` §8.1). Delivered:
+> `p06/src/rawCanonicalBoundary.js` (`RawCompartment` · `CanonicalStorageBoundary` ·
+> `assertCanonicalShape` · `assertEngineInputIsCanonical` · `buildAttestation` /
+> `verifyAttestation`) · `p06/tests/rawCanonicalBoundary.test.js` (**25 tests**) ·
+> `p06/evidence-p06-02/` (**6 boundary-evidence files**).
+> **Suite: P05 264 + P06 80 = 344 tests, 344 PASS / 0 FAIL.**
+> ⚠ **`p06_02_status` = `IMPLEMENTED + EVIDENCED`.** Authoritative tracker exit criterion
+> ***"Raw data never bypasses validation"*** is **MET** — **31 bypass attempts EXECUTED at
+> evidence-generation time, 31 REFUSED, 0 NOT BLOCKED**; malformed raw reaching canonical storage:
+> **0**. Entry criterion *"Pipeline exists"* MET.
+> ⚠ **5 bypass paths were measured OPEN before this act and are now blocked:** raw → canonical
+> storage (`CanonicalRecordStore.ingest()` validated nothing) · validation optional on the ingest
+> path · raw → engine (bare `peRatio`/`evEbitda`/`fcfYield` from raw `V-0001`) · unvalidated record
+> masquerading as canonical · raw and canonical not separated at all.
+> ⚠ **Scope discipline — `P06-03` is NOT implemented.** Its entry authorization exists, but it
+> remains a separately governed work item. The store's own idempotency is a **P05-04 property that
+> is INHERITED, not extended**.
+> ⚠ **Recorded limitations L-1…L-6**, notably **L-2** (the attestation is a **re-derivable
+> provenance binding, NOT a cryptographic proof** — there is no secret and none may be added) and
+> **L-3** (the accepted **P05-04 `CanonicalRecordStore` is deliberately UNCHANGED**; the boundary
+> **encapsulates** it and **detects** contamination — prevention-by-architecture within the
+> governed path, plus detection).
+> ⚠ **UNCHANGED:** **P05 = `ACCEPTED`, 6 of 18** · **P06-01 = `IMPLEMENTED + EVIDENCED`**,
+> preserved (admitted records **byte-identical** to P06-01's own output) · **P06 = `NOT_ACCEPTED`**,
+> no `P06_GATE_ACCEPTANCE.md` (**D10-6**) · provider execution **`NOT_AUTHORIZED`** (N-1) ·
+> licensed historical acquisition **`NOT_AUTHORIZED`** (N-2) · production activation
+> **`NOT_AUTHORIZED`** (A4 at P16 only) · **Track B → `origin/main` merge `NOT AUTHORIZED`** ·
+> certification **`NONE_GRANTED`** · ADR-01 **C1–C6 fail-closed and unvaried** (reused by import) ·
+> `MD:` **the exact namespace token** · **no scheduling/retries/checkpointing added** (P05-04
+> unchanged) · **no disk persistence** · **no P11 engine-input mapping** · **no historical P00–P05
+> authority record edited** · **no concessions register**.
+>
+> **▶ CURRENT WORK ACT: P06-01 IMPLEMENTED + EVIDENCED — NORMALIZATION PIPELINE COMPLETE WITHIN THE D10-2 BOUNDARY**
+> (`docs/p06/P06_01_EVIDENCE.md`, recorded **2026-09-10** under authority **D10-2**,
+> `docs/p00/P00_DECISION_LOG.md` §8.1 — *"P06 ENTRY is AUTHORIZED … Scope = `P06-01`, `P06-02`,
+> `P06-03` ONLY"*). Delivered: `p06/src/mappingDeclaration.js` · `p06/src/normalizationPipeline.js` ·
+> `p06/src/identityResolution.js` · `p06/tests/normalization.test.js` (**55 tests**) ·
+> `p06/fixtures/normalization-fixtures.json` (3 declared mappings, 5 cases, golden block) ·
+> `p06/evidence-p06-01/` (**9 canonical-fixture files**).
+> **Suite: P05 264 + P06 55 = 319 tests, 319 PASS / 0 FAIL.**
+> ⚠ **`p06_01_status` = `IMPLEMENTED + EVIDENCED`.** Authoritative tracker exit criterion
+> ***"Canonical output deterministic"*** is **MET** (byte-identical canonical output across 5
+> repeats per case + committed golden fixtures). Entry criterion *"Input fixtures available"* MET.
+> ⚠ **Scope discipline — `P06-02` and `P06-03` are NOT implemented.** Their entry authorization
+> exists, but each remains a separately governed work item. **P06-01 determinism is a PURITY
+> property and is deliberately NOT presented as P06-03 deduplication.**
+> ⚠ **Recorded limitation L-1:** normalization is demonstrated over **synthetic local** provider
+> payloads; it has **NOT** been exercised against a live provider, because live provider execution
+> remains **`NOT_AUTHORIZED`** (D9 N-1, D10 §8.2). **L-2:** only **3** mappings declared
+> (D01 quote / close / valuation); **D02–D10 are NOT declared** and that work is not claimed.
+> ⚠ **UNCHANGED:** **P05 = `ACCEPTED`, 6 of 18** · **P06 = `NOT_ACCEPTED`**, no
+> `P06_GATE_ACCEPTANCE.md` (**D10-6: authorization is not acceptance**) · provider execution
+> **`NOT_AUTHORIZED`** (N-1) · licensed historical acquisition **`NOT_AUTHORIZED`** (N-2) ·
+> production activation **`NOT_AUTHORIZED`** (A4 at P16 only) · **Track B → `origin/main` merge
+> `NOT AUTHORIZED`** · certification **`NONE_GRANTED`** · ADR-01 **C1–C6 fail-closed and unvaried**
+> (reused by import, never re-implemented) · `MD:` **the exact namespace token** · **no P11
+> engine-input mapping** · **no historical P00–P05 authority record edited** · **no concessions
+> register**.
+>
+> **▶ CURRENT WORK ACT: P05-04 IMPLEMENTED + EVIDENCED — INGESTION ORCHESTRATION COMPLETE WITHIN THE D10-1 BOUNDARY**
+> (`docs/p05/P05_04_EVIDENCE.md`, recorded **2026-09-10** under authority **D10-1**,
+> `docs/p00/P00_DECISION_LOG.md` §8.1 — the *"further explicit act"* D9 **N-3** required).
+> Delivered: `p05/src/ingestionOrchestrator.js` · `p05/tests/orchestration.test.js` (**35 tests**) ·
+> `p05/evidence-p05-04/` (**9 run-log files**) · `p05/scripts/generate-p05-04-evidence.js`.
+> **Suite 229 → 264 tests, 264 PASS / 0 FAIL.**
+> ⚠ **`p05_04_status` = `IMPLEMENTED + EVIDENCED` within the D10-1 boundary.** The authoritative
+> tracker exit criterion ***"Replay does not duplicate data"*** is demonstrated by **6 independent
+> proofs (X-1…X-6)** plus an interrupted-run/resume proof. **Recorded limitation L-1:** the path is
+> **NOT** exercised against a live P05-02 adapter, because live provider execution remains
+> **`NOT_AUTHORIZED`** (D9 N-1, D10 §8.2) — a standing non-authorization, **not** a P05-04 defect.
+> ⚠ **The run logs are LOCAL SYNTHETIC run logs. NO provider execution evidence exists or is
+> implied.** No provider was selected, named, contacted or bound; no credential or entitlement was
+> provisioned; no network call was made. `assertOrchestrationPermitted` **fails closed** against a
+> live-connectivity adapter — the orchestrator cannot even be constructed around one.
+> ⚠ **UNCHANGED:** **P05 = `ACCEPTED`, 6 of 18** · **P06 = `NOT_ACCEPTED`**, no
+> `P06_GATE_ACCEPTANCE.md` · **NO P06-01/02/03 implementation** · provider execution
+> **`NOT_AUTHORIZED`** (N-1) · licensed historical acquisition **`NOT_AUTHORIZED`** (N-2) ·
+> production activation **`NOT_AUTHORIZED`** (A4 at P16 only) · **Track B → `origin/main` merge
+> `NOT AUTHORIZED`** · certification **`NONE_GRANTED`** · ADR-01 **C1–C6 fail-closed and unvaried** ·
+> `MD:` **the exact namespace token** · **no historical P00–P05 authority record edited**
+> (`P05_GATE_ACCEPTANCE.md` R-13/R-14 and `P05_ACCEPTANCE_CRITERIA.md` C-4 remain **historically
+> true and unedited**, superseded **by citation only**). **No concessions register exists.**
+>
+> **▶ CURRENT AUTHORITY ACT: D10 — P05-04 AUTHORIZED · P06 ENTRY AUTHORIZED · P06 A3 DESIGNATED · `DataBoundExecutor` C1–C6 EXECUTION AUTHORIZED**
+> (`docs/p00/P00_DECISION_LOG.md` **§8**, appended **2026-09-10** against baseline
+> `19713d8b32abae3292a7b0208cd826fc1464f42b`). Authority: **Ramki**, program owner of record.
+> Supersedes D9 **N-3** and §7.1 `a3_gate_acceptor_scope` **as to current state only** — both are
+> left unedited as the record of their own moment.
+> ⚠ **P05-04 = `AUTHORIZED`** (no completion evidence yet) · **P06 ENTRY = `AUTHORIZED`** for
+> **P06-01 / P06-02 / P06-03 ONLY** · **P06 A3 acceptor = Ramakrishnan V. S. (Ramki)**, scoped to
+> **P06** (P07–P17 **not** designated) · **C1–C6 in `DataBoundExecutor` = `AUTHORIZED` as written,
+> NO VARIATION** (basis: `D8_AUTHORITY_RECONCILIATION.md`:35 / §B:69).
+> ⚠ **THIS IS AN AUTHORIZATION/ENTRY ACT — NOT P06 ACCEPTANCE.** **P06 = `NOT_ACCEPTED`**, still
+> **6 of 18**; **no `P06_GATE_ACCEPTANCE.md` exists or is created.**
+> ⚠ **UNCHANGED:** provider execution **`NOT_AUTHORIZED`** (N-1) · licensed historical acquisition
+> **`NOT_AUTHORIZED`** (N-2) · production activation **`NOT_AUTHORIZED`** (A4 at P16 only) ·
+> **Track B → `origin/main` merge `NOT AUTHORIZED`** · certification **`NONE_GRANTED`** (A2 not
+> person-named) · P07–P17 **NOT ACCEPTED / NOT AUTHORIZED**. **No P06 implementation artifact,
+> fixture or evidence file was created by this act.**
+>
+> **▶ CURRENT AUTHORITY ACT: P05 GATE ACCEPTED — EXPLICIT A3 ACCEPTANCE ACT**
+> (`docs/p05/P05_GATE_ACCEPTANCE.md`, recorded **2026-09-10** against pinned baseline
+> `cdc684435ad41982b49f832e37d1c153866da6e8`). **A3 acceptor = Ramakrishnan V. S. (Ramki)**
+> (`A3-P05-GATE-ACCEPTOR-DESIGNATION`, `docs/p00/P00_DECISION_LOG.md` §7/§7.1). Authority
+> decision selected: **ACCEPT P05**. Boundary applied: the committed
+> `docs/p05/P05_ACCEPTANCE_CRITERIA.md` (122 criteria). **Formal gate status 5 of 18 → 6 of 18.**
+> Supersedes the D9 block below **as to P05 acceptance state only**; D9 remains authoritative and
+> unedited for entry/authorization scope and for every boundary **N-1…N-7**.
+> ⚠ **PIT REPEATABILITY = MISSING / NOT DEMONSTRATED — recorded and open, NOT discharged by this
+> acceptance.** ⚠ **P05-04 = `NOT_AUTHORIZED` / NO COMPLETION EVIDENCE (D9 N-3)** · **provider
+> execution = `NOT_AUTHORIZED` (N-1)** · **licensed historical acquisition = `NOT_AUTHORIZED`
+> (N-2)** · **CERTIFICATION = `NONE_GRANTED`** · **PRODUCTION ACTIVATION = `NOT_AUTHORIZED`** ·
+> **P16 not reached**. Acceptance is **not** authorization: this act confers no execution
+> authority of any kind.
+>
+> **▶ CURRENT AUTHORITY ACT: D9 — P05 ENTRY / EXPLICIT AUTHORIZATION**
+> (`docs/d9/D9_P05_ENTRY_AUTHORIZATION.md`, recorded **2026-09-09** against baseline
+> `efe33eae287d2181cfdd5a838b0d9e5112fcdad3`). **P05 — Market Data Acquisition & Ingestion is
+> ENTERED / AUTHORIZED**, within the exact scope of D9 §3. Supersedes CHECKPOINT-03 **as to P05
+> entry/authorization state only**; CHECKPOINT-03 remains authoritative and unedited for
+> everything else. ⚠ **P05 ACCEPTANCE = NOT_ACCEPTED · CERTIFICATION = `NONE_GRANTED` ·
+> PRODUCTION ACTIVATION = `NOT_AUTHORIZED`** — none of these is conferred by D9.
+>
+> **CURRENT CHECKPOINT: CHECKPOINT-03 — Post-P04 / OI-10 Resolved / Pre-P05 Boundary**
+> (`docs/CHECKPOINT-03.md`, source acceptance commit
+> `faf1317eccaf77dbdab2a520899802043c851cca`). Supersedes CHECKPOINT-02 as to current state;
+> CHECKPOINT-02 remains an immutable historical record.
+>
+> **CHECKPOINT-02 — P03 Accepted Program-State Preservation** (`docs/CHECKPOINT-02.md`,
+> source acceptance commit `7b8fa9d` — ⚠ **pin not independently establishable**, see
+> `docs/INCIDENT-01_HISTORY_LOSS.md`). Supersedes **CHECKPOINT-01 — Pre-P01 Program Continuity
+> Baseline** (`d29ad2f`), which remains an immutable historical record.
+>
+> This is a **recovery / index artifact only**. It introduces **no new decision, no new
+> methodology, and no new authority**. Every statement below is a pointer to, or a restatement
+> of, an existing committed artifact.
+
+---
+
+## 1. Program identity
+
+| Field | Value |
+|---|---|
+| **Program** | IIPS Production Market Data Intelligence Program v1.0 |
+| **Repository** | `iips-production-market-data` (new program) |
+| **Existing-IIPS evidence repository** | `iips-review-recovered` — **read-only dependency**, authoritative per AD-15 |
+| **Nature** | Production market-data plane feeding the existing certified IIPS intelligence platform |
+
+---
+
+## 2. Current state
+
+# **D8 COMPLETE — EXECUTION AUTHORIZED**
+
+| Field | Value |
+|---|---|
+| `program_status` | **`AUTHORIZED_TO_PROCEED`** |
+| `implementation_status` | **`AUTHORIZED_TO_PROCEED`** — currently executable: **P00 only** |
+| `certification_status` | **`NONE_GRANTED`** |
+| `formal_gate_status` | **7 of 18 accepted — P00, P01, P02, P03, P04, P05, P06 ACCEPTED**; P07–P17 NOT ACCEPTED *(was 6 of 18)* |
+| `p05_04_status` | **`IMPLEMENTED + EVIDENCED`** within the **D10-1** boundary (`docs/p05/P05_04_EVIDENCE.md`) — *(was `AUTHORIZED`, D10-1; before that `NOT_AUTHORIZED`, D9 N-3)* · exit criterion **MET** (X-1…X-6) · ⚠ **limitation L-1: NOT exercised against a live P05-02 adapter** |
+| `p06_entry_authorization_status` | **`AUTHORIZED`** by **D10-2** — scope **P06-01 / P06-02 / P06-03 ONLY** · *(was `NOT_AUTHORIZED`, D9 §5 exclusion 5)* |
+| `p06_acceptance_status` | **`ACCEPTED`** by an **explicit A3 act** — `docs/p06/P06_GATE_ACCEPTANCE.md`, acceptor **Ramakrishnan V. S. (Ramki)**, **D10-3** · *(was `NOT_ACCEPTED`)* · ⚠ **authorization was never acceptance; this act is the acceptance** |
+| `p06_01_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_01_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Canonical output deterministic"** **MET** · ⚠ limitations **L-1** (not exercised against a live provider) and **L-2** (only D01 declared) |
+| `p06_02_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_02_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Raw data never bypasses validation"** **MET** — **31 bypass attempts executed, 31 refused, 0 not blocked** · ⚠ limitations **L-1…L-6** (esp. **L-2** attestation is provenance not authenticity · **L-3** the P05-04 store is unchanged, encapsulated + audited) |
+| `p06_03_status` | **`IMPLEMENTED + EVIDENCED`** (`docs/p06/P06_03_EVIDENCE.md`) — *(was `NOT STARTED`)* · exit criterion **"Repeated ingestion stable"** **MET** (5 passes: 5 inserts then **[0,0,0,0]**, final count **5**, **20** no-ops, byte-identical) · dedup identity = `snapshotId` (**AD-6**, no component added) **+ `canonicalDigest`** (**RI-6**), decision rule **REUSED** from the P05-04 store · ⚠ limitations **L-1…L-6** |
+| `p06_work_items_complete` | **ALL THREE** — `P06-01` normalization pipeline · `P06-02` raw/canonical separation · `P06-03` deduplication/idempotency. ⚠ **Work-item completion is NOT gate acceptance** (**D10-6**) — `p06_acceptance_status` remains **`NOT_ACCEPTED`** and the tracker defines **no fourth P06 work item** |
+| `a3_gate_acceptor_scope` | **`P05, P06`** — Ramakrishnan V. S. (Ramki) · ⚠ **P07–P17 NOT designated** |
+| `adr_01_a2_execution` | **`AUTHORIZED`** — C1–C6 fail-closed guard in the certified `DataBoundExecutor`, **as written in ADR-01 §C.2, no variation** |
+| `track_b_to_main_merge` | **`NOT AUTHORIZED`** — no accepted artifact authorizes it; `origin/main` = `eae2ff6` |
+| `production_activation_status` | **`NOT_AUTHORIZED`** |
+
+---
+
+## 3. Latest completed work package
+
+**WP-P00-01 — Governance Baseline Establishment** (Phase P00 — Governance)
+Status: **COMPLETE — READY FOR P00 GATE**
+
+## 4. Current gate
+
+**P05 — Acquisition gate** — **NOT_STARTED · NOT_ACCEPTED · NOT_AUTHORIZED**
+✅ **Entry preconditions MET** (P02 accepted · P04 accepted · OI-10 token `MD:` recorded — `docs/CHECKPOINT-03.md` §5.1).
+⚠ **Preconditions MET is NOT authorization.** An explicit **P05 entry/authorization act** is still required.
+⚠ Independent of OI-10 and still open: **OI-P04-04** FIGI sourcing/licensing/coverage · no provider selected · entitlement matrix EMPTY.
+Accepted gates: **P00 — Scope/authority baseline** (`docs/p00/P00_GATE_ACCEPTANCE.md`) ·
+**P01 — Canonical contract gate** (`docs/p01/P01_GATE_ACCEPTANCE.md`) ·
+**P02 — Provider abstraction/entitlement gate** (`docs/p02/P02_GATE_ACCEPTANCE.md`) ·
+**P03 — Security gate** (`docs/p03/P03_GATE_ACCEPTANCE.md`) ·
+**P04 — Identity/master gate** (`docs/p04/P04_GATE_ACCEPTANCE.md`)
+
+> ### ⚠ SUPERSEDED AS TO CURRENT STATE by **D9** — the three lines above are **left unedited as
+> ### the record of their own moment** and were correct when written.
+>
+> **P05 — Acquisition gate** — **ENTRY/AUTHORIZATION = AUTHORIZED · ACCEPTANCE = NOT_ACCEPTED**
+> The explicit **P05 entry/authorization act has now been performed** and is recorded at
+> `docs/d9/D9_P05_ENTRY_AUTHORIZATION.md` (**2026-09-09**, authority **Sai/Ramki**, baseline
+> `efe33ea`). **All 15 preconditions PASS** (`docs/d9/D9_EVIDENCE_NOTES.md`).
+>
+> **Authorized scope (exact, not expanded by implication):** **P05-01** local deterministic feed —
+> full acquisition work (specification · adapter conformance · fixture · provenance/`asOf`/version ·
+> deterministic replay/idempotency · negative/error contract) · **P05-02** and **P05-03**
+> **specification and adapter-contract work only**.
+> **NOT authorized:** P05-02 live provider execution (provider selection · entitlement ·
+> credentials · connectivity · P16 authority) · P05-03 licensed/deeper historical (**OI-P04-04**) ·
+> P05-04 build-out · per-record tenant/region governance (**OI-P04-03**, **IB-1…IB-5**).
+> ⚠ Still open and **not** resolved by D9: **OI-P04-04** FIGI sourcing/licensing/coverage · no
+> provider selected · entitlement matrix EMPTY · **OI-P04-03** governance attribute set ·
+> **OI-D9-01** domain-segment label vocabulary.
+
+## 5. P00 status
+
+# **ACCEPTED**
+
+Explicit acceptance act recorded against checkpoint `d29ad2fa4dac37180a1437eb2d29832372a6f205`.
+20 of 20 acceptance criteria passed. Covers **P00 only**.
+
+## 6. P01 status
+
+# **ACCEPTED**
+
+Explicit acceptance act recorded against package commit `547de1bf411aeab19b186be43f7a4dcee0857ff5`.
+24 of 24 acceptance criteria passed. Covers **P01 only**.
+
+Nine artifacts under `docs/p01/`. Contract-definition only: no provider, acquisition,
+normalization, quality, security-master, PIT-storage, replay, engine, API or UI implementation;
+no executable source. OI-08/OI-09/OI-10, AD-17, M-1, M-5, M-6 all preserved unresolved.
+
+**Next step:** **P04 entry assessment** — CHECKPOINT-02 created (`docs/CHECKPOINT-02.md`).
+P04 is **not** authorized.
+
+## 6a. P02 status
+
+# **ACCEPTED**
+
+Explicit acceptance act recorded against package commit `2dd43cd0585cce056de69c9878ae138146fb23f5`.
+34 of 34 acceptance criteria passed. Covers **P02 only**.
+
+Ten artifacts under `docs/p02/`. Abstraction-boundary definition only: no provider named,
+selected or implemented; no credentials or secrets; no acquisition, normalization, DQ,
+security-master, PIT, replay, engine, API or UI work; no executable source. OI-10 blocks literal
+canonical key emission (DEP-P02-01). All inherited open items preserved unresolved.
+
+---
+
+
+## 6b. P03 status
+
+# **ACCEPTED**
+
+Explicit acceptance act recorded in `docs/p03/P03_GATE_ACCEPTANCE.md` against authoritative
+checkpoint `d99c557fe2af158a02474b37cc2c02809dc058bc`. Final re-review: **19 PASS · 0 FAIL · 0
+blockers**. Covers **P03 specification only**.
+
+Fourteen artifacts under `docs/p03/` (13 reviewed + the acceptance record). Security/authorization
+**design only**: no implementation, no source, no configuration, no policy, no test, no secret,
+no credential, no vendor selected.
+
+⚠ **M-5 remains OPEN (existing-IIPS) and is not repaired** — authentication is specifiable but
+not satisfiable; **C12 remains BLOCKED**; **DO-1…DO-5 remain deferred and NOT passed**.
+OI-08/OI-09/OI-10, AD-17, M-1, M-6 all preserved unresolved. P04 remains the canonical
+security-identity owner.
+
+## 6c. P04 status
+
+# **ACCEPTED**
+
+Explicit **A3** acceptance act recorded in `docs/p04/P04_GATE_ACCEPTANCE.md` against work-package
+commit `6ec3b288c8deeee317a63341297bd33b9a090f4f`. Formal gate review: **61 PASS · 0 FAIL · 2
+non-blocking observations**. Covers **P04 specification only**.
+
+Thirteen artifacts under `docs/p04/` (12 reviewed + the acceptance record). Identity/master
+**design only**: no implementation, no source, no schema, no migration, no configuration, no
+provider selected.
+
+✅ **OI-08 RESOLVED — 1:N** identity cardinality; each security/instrument has its own immutable
+canonical security ID; `companyId` remains the CSIP join key, unchanged.
+✅ **OI-09 RESOLVED — FIGI / OpenFIGI** authoritative external identifier; the canonical security
+ID remains distinct from FIGI; ISIN/CUSIP/SEDOL non-authoritative.
+
+⚠ **OI-P04-03 (tenant/region governance attribute set) remains OPEN** — owner **A1**, not named.
+It does **not** invalidate contract acceptance, but **bounds implementation**: per-record
+governance application must remain bounded until the A1 decision is recorded
+(`P04_GATE_ACCEPTANCE.md` §4.2, IB-1…IB-5). **It is not decided here.**
+
+⚠ OI-P04-01/02/04/05 open; **AD-17, M-1, M-5, M-6 preserved unresolved**;
+**DO-P04-1…DO-P04-5 deferred and NOT passed**. **P05 is not authorized.**
+⚠ **Superseded as to OI-10:** the token was subsequently **RESOLVED = `MD:`** — see §6d and
+`docs/CHECKPOINT-03.md` §3. P05's entry preconditions are now **MET**, which is **not**
+authorization.
+
+## 6d. OI-10 status — RESOLVED
+
+# **RESOLVED**
+
+| Field | Value |
+|---|---|
+| **Exact namespace token** | **`MD:`** |
+| **Canonical field-key form** | **`MD:<domain>.<field>`** |
+| **Prior status** | `APPROVED-BUT-REQUIRES-EXACT-TOKEN-RECORDING` |
+| **Recording artifact** | `docs/CHECKPOINT-03.md` §3 |
+| **Design basis** | `docs/d4/D4_07_FIELD_NAMESPACE.md` §I.2 — adopts the existing recommendation; **no new token, no design change** |
+| **Competing token** | **NONE** — none was ever proposed or recorded |
+| **Collision rules C1–C6** | **UNCHANGED** (`docs/d5/ADR-01_NAMESPACE_COLLISION_GUARD.md` §C.2) |
+| **Blocked phases released** | P05, P06, P11 — **from the OI-10 blocker only** |
+
+⚠ **Does NOT mean:** P05/P06/P11 authorized · collision guard implemented (`DataBoundExecutor`
+**untouched**) · `namespaceVersion` first value set · accepted P01/P02 `<NS>` keys rewritten
+(**they are NOT edited**) · certification C1/C2 satisfied · OI-P04-04 or provider/entitlement
+affected.
+
+> ⚠ **As to P05 only, the first clause above is now superseded by §6e below** — P05 **entry** is
+> authorized. **P06 and P11 remain unauthorized**, and every other clause above stands unchanged.
+
+---
+
+## 6e. P05 status — ENTRY / AUTHORIZATION = AUTHORIZED (D9)
+
+# **ENTRY AUTHORIZED · ACCEPTANCE NOT_ACCEPTED**
+
+| Field | Value |
+|---|---|
+| **Authority act** | **D9 — P05 Entry / Explicit Authorization** (`docs/d9/D9_P05_ENTRY_AUTHORIZATION.md`) |
+| **Authority of record** | **Sai/Ramki** — program owner of record. ⚠ A1–A4 remain cleared, not person-assigned (`person_named:false`); **A3 gate acceptor UNKNOWN** |
+| **Decision date** | **2026-09-09** · recorded `2026-09-09T12:29:00Z` (IST `17:59:00+0530`) |
+| **Baseline** | `efe33eae287d2181cfdd5a838b0d9e5112fcdad3` — *CHECKPOINT-03* (tree `a11ea864…`) |
+| **Preconditions** | **15 of 15 PASS** — `docs/d9/D9_EVIDENCE_NOTES.md` |
+| `p05_entry_authorization` | **`AUTHORIZED`** (prior state `NOT_AUTHORIZED`) |
+| `p05_acceptance` | **`NOT_ACCEPTED`** — no `P05_GATE_ACCEPTANCE.md` exists; **5 of 18** gates accepted |
+| `p05_implementation` | **`AUTHORIZED_WITHIN_SCOPE_ONLY`** — D9 §3 |
+| **Authorized** | **A-1** P05-01 local deterministic feed (full acquisition work) · **A-2** P05-02 spec/adapter-contract only · **A-3** P05-03 spec/adapter-contract only |
+| **NOT authorized** | P05-02 live provider execution · P05-03 licensed/deeper historical · **P05-04 build-out** · per-record tenant/region governance · inventing the governance attribute set · inventing domain-segment labels · `<NS>`→`MD:` rewriting of accepted P01/P02 records |
+| `certification_status` | **`NONE_GRANTED`** — unchanged |
+| `production_activation_status` | **`NOT_AUTHORIZED`** — unchanged |
+| **Open, NOT resolved by D9** | **OI-P04-04** (FIGI sourcing/licensing/coverage) · **OI-P04-03** (governance attribute set, IB-1…IB-5) · **OI-D9-01** (domain-segment label vocabulary) · provider selection NONE MADE · entitlement matrix EMPTY |
+| **Carried forward unchanged** | Token `MD:` · form `MD:<domain>.<field>` · **C1–C6 UNCHANGED** · OI-08 1:N · OI-09 FIGI/OpenFIGI · `snapshotId` `data-${provider}-${dataVersion}-${asOf}` · `identityMappingVersion` in lineage · `SNAP_*` distinct · six lineage axes · MIC venue identity · effective-dated lifecycle · sole ingress `MarketDataSource<T>`→`DataSnapshot<T>` · E1–E8 · **AD-17 firewall** · existing-IIPS read-only · **DO-P04-1…5 / DO-1…5 still DEFERRED — NOT PASSED** |
+
+⚠ **These states are distinct and are not collapsed.** Entering P05 is not passing it. P05
+acceptance remains a **separate future gate** requiring the D9 §8 evidence package and **an
+explicit acceptance act by a named A3 gate acceptor** — *no automatic promotion*.
+
+---
+
+## 6f. P05 status — ACCEPTED (explicit A3 act)
+
+# **ACCEPTED**
+
+> ⚠ **SUPERSEDES §6e as to P05 acceptance state only — §6e is left unedited as the record of its
+> own moment.** D9 remains authoritative and unedited for entry/authorization scope and for
+> boundaries **N-1…N-7**.
+
+Explicit **A3** acceptance act recorded in `docs/p05/P05_GATE_ACCEPTANCE.md` against pinned
+baseline `cdc684435ad41982b49f832e37d1c153866da6e8`. **A3 acceptor = Ramakrishnan V. S. (Ramki)**.
+Authority decision selected: **ACCEPT P05**. Acceptance boundary = the committed
+`docs/p05/P05_ACCEPTANCE_CRITERIA.md` (blob `480a4c9630152606a7b5f182dce1bbb3f7477f7d`,
+**122 criteria**).
+
+| Field | Value |
+|---|---|
+| `p05_acceptance` | **`ACCEPTED`** *(prior state `NOT_ACCEPTED`)* |
+| `formal_gate_status` | **6 of 18 accepted** — P00, P01, P02, P03, P04, P05 |
+| **Scope accepted** | **P05-01** implemented deterministic/local feed (evidence reviewed) · **P05-02** specification + adapter-contract **LA-1…LA-31** · **P05-03** specification + adapter-contract **HA-1…HA-35** |
+| **P05 is ONE gate** | Spanning **P05-01…P05-04** together (criteria **A-1/A-2**); no work item severed |
+| **PIT repeatability** | ⚠ # **`MISSING / NOT DEMONSTRATED`** — a P00 minimum-evidence item (`P00_GATE_MODEL.md`:40, criteria **B-2**). **Recorded and open. NOT discharged by this acceptance; the gap does not become evidence because acceptance occurred** (`P05_GATE_ACCEPTANCE.md` §4.5 **PIT-1…PIT-7**). Obligation travels to **P08** undischarged |
+| **Namespace token** | ✅ Evidenced — `MD:`, `MD:<domain>.<field>`, version `1.0` (**B-1**) |
+| **Degraded-state classification** | ✅ Evidenced — `classifyQuality` (`p05/src/validate.js`:286) (**B-3**) |
+| **P05-04** | ⚠ # **`NOT_AUTHORIZED` / NO COMPLETION EVIDENCE** (D9 **N-3**). Inside the accepted gate, but **acceptance does NOT authorize its execution**; no such effect exists in the accepted corpus and none was inferred |
+| **Tracker exit criteria** | **C-2 UNMET** · **C-3 UNMET** · **C-4 NO EVIDENCE EXISTS** — ⚠ **recorded statuses unchanged**. **A3 decision on C-5**: tracker exit criteria are program-management exit criteria, **not** binding minimum conditions of gate acceptance; the historical tracker XLSX and all work-item statuses are **unmodified** |
+| **Provider execution** | ⚠ **`NOT_AUTHORIZED`** (D9 **N-1**) · no provider selected, named, contacted or bound |
+| **Licensed historical acquisition** | ⚠ **`NOT_AUTHORIZED`** (D9 **N-2**) · `licensedDataAcquired: false` |
+| **Per-record tenant/region governance** | ⚠ **`NOT_AUTHORIZED`** (D9 **N-4/N-5**), bounded by **IB-1…IB-5** |
+| `certification_status` | **`NONE_GRANTED`** — unchanged; **C12 BLOCKED** on M-5 |
+| `production_activation_status` | **`NOT_AUTHORIZED`** — unchanged; **A4** exercised at **P16 only** |
+| **P16** | **NOT REACHED** — downstream licensing / credentials / connectivity / entitlement gate; upstream **P15** still **BLOCKED** on **M-1/AD-4** |
+| **Open, NOT resolved by this act** | **OI-P04-03** (governance attribute set, A1) · **OI-P04-04** (FIGI sourcing/licensing/coverage) · **DEP-P01-04** (P08 storage) · **OI-D9-01** · **28 of 30 BD items** · **M-1/AD-4 · M-5 · M-6 · AD-17/M-2** · **DO-P04-1…5 / DO-1…DO-5** deferred |
+| **Concessions** | **No concession mechanism invoked · no concessions register created · no concessions authority invented.** The PIT limitation is recorded by the acceptance record itself (**PIT-7**, criteria **NG-14**) |
+| **Carried forward unchanged** | Token `MD:` · **C1–C6 UNCHANGED** · OI-08 1:N · OI-09 FIGI/OpenFIGI · `snapshotId` `data-${provider}-${dataVersion}-${asOf}` · existing-IIPS untouched |
+| **Implementation performed by this act** | **NONE** · provider work **NONE** · `p05/src`, `p05/fixtures`, `p05/evidence*` **UNMODIFIED** |
+| ⚠ **Test-suite change (disclosed)** | **5 files touched in total.** **2 superseded governance guards** — one each in `p05/tests/no-provider-dependency.test.js` and `p05/tests/adapter-contract.test.js` — formerly asserted *"P05 remains NOT_ACCEPTED and no acceptance artifact exists"*. That tripwire was correct while P05 was unaccepted; the explicit A3 act is the event it guarded against happening **silently**. ⚠ **The guards are REPLACED, NOT WEAKENED — the protective surface is enlarged.** They now additionally require this acceptance record to carry every limitation they previously protected by absence: `D9_STATUS.json` still `NOT_ACCEPTED` / `gate_acceptance_artifact_exists: false` / `a3_gate_acceptor: "UNKNOWN"` (proving acceptance was **added by a separate act, never retro-edited into D9**) · **P05-04 `NOT_AUTHORIZED`** · **N-1/N-2/N-3** preserved · **PIT `MISSING / NOT DEMONSTRATED`** · **C-2/C-3/C-4 not relabelled** · **no concessions register in `docs/`** · **no `waiv` string in the record**. **No assertion deleted; `existing-iips-boundary.test.js` (which guards `P0[0-4]_GATE_ACCEPTANCE.md`) untouched.** Suite **228 / 228 PASS** |
+| **Test suite at pinned baseline** | **228 / 228 PASS** |
+
+⚠ **Acceptance ≠ authorization.** `P00_GATE_MODEL.md`:62 — silence, completion or clearance is
+never acceptance; equally, **acceptance is never authorization**. Every D9 boundary stands after
+this act exactly as before.
+
+---
+
+## 6g. P06 status — ENTRY / AUTHORIZATION = AUTHORIZED (D10)
+
+# **ENTRY AUTHORIZED · ACCEPTANCE NOT_ACCEPTED**
+
+Explicit **D10** authorization act recorded in `docs/p00/P00_DECISION_LOG.md` **§8** against
+baseline `19713d8b32abae3292a7b0208cd826fc1464f42b`. Authority: **Ramki**, program owner of record.
+
+| Field | Value |
+|---|---|
+| `p06_entry_authorization` | **`AUTHORIZED`** *(prior state `NOT_AUTHORIZED` — D9 §5 exclusion 5)* |
+| `p06_acceptance` | **`NOT_ACCEPTED`** — ⚠ **authorization is not acceptance**; still **6 of 18** |
+| **Authorized scope** | **P06-01** normalization pipeline · **P06-02** raw/canonical separation · **P06-03** deduplication/idempotency — ⚠ **ONLY these three; no other P06 work item exists in the accepted tracker and none is invented** |
+| **P05-04** | ⚠ # **`AUTHORIZED`** by **D10-1** *(was `NOT_AUTHORIZED`, D9 N-3)* — this discharges the **Hard, Critical=YES** `P05-04` dependency on `Work Tracker`!P06-02 **at the authorization level**. ⚠ **NO COMPLETION EVIDENCE YET** — `P05_GATE_ACCEPTANCE.md` **R-13/R-14** and **C-4 `NO EVIDENCE EXISTS`** remain historically true and unedited |
+| **P06 A3 gate acceptor** | **Ramakrishnan V. S. (Ramki)** — designated by **D10-3**, **scoped to P06**. ⚠ **Designation ≠ acceptance.** ⚠ Does not extend to **P07–P17**; **A1/A2/A4 not designated** |
+| **`DataBoundExecutor` C1–C6** | ⚠ # **`AUTHORIZED`** by **D10-4**, **within the existing certified ADR-01/D8 boundary**. Basis: `D8_AUTHORITY_RECONCILIATION.md`:35 **ADR-01-A2 APPROVED — fail-closed**, *"Rules C1–C6 as written in ADR-01; **no variation authorized**"* · §B:69 *"Authority hold: CLEARED"* · `P00_AUTHORITY_REGISTER.md`:27 · ADR-01 §H *"NAMED AUTHORITY REQUIRED — Ramki / Sai"*. ⚠ **C1–C6 and the §C.3 error semantics are preserved EXACTLY — no methodology variation** |
+| ⚠ **ADR-01 §I stale record** | `docs/d5/ADR-01_NAMESPACE_COLLISION_GUARD.md`:4/:16/:200/:207 still read **`PENDING RAMKI/SAI ADR`** and *"Blocks: … **P06 Normalization**."* ⚠ **Historical — LEFT UNEDITED.** The **controlling current authority is D8**, cited by this act, not an edit |
+| **Minimum evidence for a future P06 acceptance** | `P00_GATE_MODEL.md`:42 — ***"Token recorded; C1–C6 collision guard evidence; 13-engine oracle byte-identity"*** + ADR-01 §G evidence (oracle byte-identity · fail-closed negatives · determinism) |
+| **NOT authorized by this act** | Provider execution (N-1) · licensed historical acquisition (N-2) · provider selection/entitlement/credentials · production activation (A4, P16 only) · **Track B → `origin/main` merge** · any certification (**`NONE_GRANTED`**) · P07/P08/P09–P17 entry · existing-IIPS modification outside the ADR-01 boundary (`ReplayService`, `LiveDataRuntime.ts`, methodology, scoring, calibration, taxonomy, CSIP) |
+| **Open, NOT resolved by this act** | **OI-P04-03** · **OI-P04-04** · **DEP-P01-04** (P08) · **OI-D9-01** · **M-1/AD-4 · M-5 · M-6 · AD-17/M-2** · **DO-P04-1…5 / DO-1…DO-5** deferred |
+| **Implementation performed by this act** | **NONE** · **no `docs/p06/` directory, artifact, fixture or evidence file created** · `p05/src`, `p05/tests` behaviour, `p05/fixtures`, `p05/evidence*` **UNCHANGED** |
+
+⚠ **Authorization ≠ acceptance.** *"Explicit gate acceptance; no automatic promotion."* P06
+acceptance remains a **separate future act** by the designated A3 acceptor carrying the
+`P00_GATE_MODEL.md`:42 minimum evidence.
+
+---
+
+## 6h. P05-04 status — IMPLEMENTED + EVIDENCED within the D10-1 boundary
+
+# **COMPLETE WITHIN BOUNDARY · LIMITATION L-1 RECORDED · NOT PROVIDER EVIDENCE**
+
+Implemented under **D10-1** (`docs/p00/P00_DECISION_LOG.md` §8.1), the *"further explicit act"* D9
+§3.1 **N-3** required. Evidence record: **`docs/p05/P05_04_EVIDENCE.md`**.
+
+| Field | Value |
+|---|---|
+| **Scope implemented** | Exactly `Work Tracker`!P05-04 *Requirement* — *"Scheduling, retries, idempotency and checkpointing."* Deliverable *"Ingestion orchestrator"*. **Nothing wider was built and no requirement was reinterpreted** |
+| `p05_04_status` | **`IMPLEMENTED + EVIDENCED`** *(prior `AUTHORIZED` by D10-1; before that `NOT_AUTHORIZED`, D9 N-3)* |
+| **Exit criterion** — *"Replay does not duplicate data"* | # ✅ **MET** — six independent proofs **X-1…X-6** (12 ticks → **4** records · full replay `recordsInserted` **0** · ledger digest unchanged · replayed corpus **byte-identical** · **0** `CONFLICT_REJECTED` · **0** adapter invocations on replay) **plus** an interrupted-run/resume proof (2 partial + 2 resumed = **4**, never more) |
+| **Test / Validation** — *"Failure/replay tests"* | ✅ **MET** — `p05/tests/orchestration.test.js`, **35 tests**: S scheduling · R retries · C checkpointing · I exit criterion · F failure · L run logs · B boundary · E evidence integrity |
+| **Evidence** — *"Run logs"* | ✅ **MET in form** — `p05/evidence-p05-04/` (**9 files**), byte-reproducible, each file's digest pinned in `00-INDEX.json` and recomputed by test **E/1** |
+| ⚠ **Evidence classification** | **IMPLEMENTATION** ✅ · **SYNTHETIC / LOCAL TEST** ✅ (this is what the run logs are) · **CONTRACT / LIFECYCLE** ⚠ **unchanged** (P05-02/P05-03 remain specification + adapter-contract only; nothing added) · **PROVIDER EXECUTION** ❌ **ABSENT AND MUST REMAIN ABSENT** |
+| ⚠ **Limitation L-1** | # The orchestration path is exercised against the **P05-01 local deterministic feed** with an explicit fault table. It has **NOT** been exercised against a live P05-02 adapter, because none exists and live provider execution is **`NOT_AUTHORIZED`**. **A standing non-authorization — not a P05-04 defect.** Recorded, not papered over |
+| **Other limitations** | **L-2** scheduling is a deterministic **virtual** timeline — no wall-clock scheduler/cron/timer (D-3) · **L-3** the checkpoint ledger is **in-process**; no durable store (no storage decision authorized) · **L-4** this act does **not** retroactively create P05-04 evidence inside the P05 acceptance record |
+| **Reuse, not duplication** | Retryability is **imported** from the accepted P02 taxonomy (`RETRY_PROHIBITED`, `DISPOSITION[code].retryable`; retryable set = **E4, E7**) — **no table of its own is declared**. Canonical-record idempotency **reuses** the P05-01 `CanonicalRecordStore`. **No namespace, collision or fail-closed logic added** |
+| **Determinism** | Fully **synchronous**. No wall clock, no randomness, no ambient input (D-3). Backoff is **computed and recorded** in virtual milliseconds — **never slept**. Still **zero** dependencies, **zero** lockfile, **zero** network |
+| ⚠ **Guard disclosure** | The superseded tripwire `'P05-04 — no orchestration … is implemented'` was **REPLACED, NOT WEAKENED**, on the terms `P05_GATE_ACCEPTANCE.md` §9 set for the analogous `NOT_ACCEPTED` tripwire. **No scheduler / no async orchestration remain UNIVERSAL** and the orchestrator satisfies both. Only the *checkpointing* rule was rescoped, to the single enumerated D10-authorized module, **plus** behavioural idempotency proofs an absence-based rule could never make. **P05-01 "never even names retry" UNCHANGED** (asserted: same **8** modules) · contract-module rules **UNCHANGED** · **no assertion deleted** |
+| **Guard teeth** | Negative-tested: disabling store dedup → **4** fail · tampering an evidence file → **1** fail · neutering `assertOrchestrationPermitted` → **3** fail · relabelling synthetic as provider evidence → **2** fail · control → **34/34** |
+| **Effect on P06-02** | `Work Tracker`!P06-02 carries `P05-04` as a **Hard** dependency (`Dependency Matrix` Critical = **YES**). D10 discharged it **at the authorization level**; **this act discharges it at the implementation level.** ⚠ **Authorization was never completion; the two are recorded distinctly** |
+| **NOT done by this act** | No **P06-01/P06-02/P06-03** implementation · no P06 acceptance artifact · no certification · no production activation · no provider selection/entitlement/credential/configuration · no licensed historical acquisition · **no Track B → `origin/main` merge** · **no edit to any historical P00–P05 authority record** · no variation of **C1–C6** · no change to the **`MD:`** token · no existing-IIPS modification |
+
+⚠ **P05-04 completion does NOT re-open or alter the P05 gate acceptance** (P05 was accepted with
+P05-04 inside the gate and `NOT_AUTHORIZED`; that record stands as written), and is **NOT** P06
+authorization and **NOT** P06 acceptance.
+
+---
+
+## 6i. P06-01 status — IMPLEMENTED + EVIDENCED within the D10-2 boundary
+
+# **P06-01 COMPLETE WITHIN BOUNDARY · P06-02 / P06-03 NOT IMPLEMENTED · P06 NOT_ACCEPTED**
+
+Implemented under **D10-2** (`docs/p00/P00_DECISION_LOG.md` §8.1). Evidence record:
+**`docs/p06/P06_01_EVIDENCE.md`**.
+
+| Field | Value |
+|---|---|
+| **Scope implemented** | Exactly `Work Tracker`!P06-01 *Requirement* — *"Convert provider payloads into canonical records."* Deliverable *"Normalization pipeline"*. **Nothing wider; no requirement invented, widened or substituted** |
+| **Why P06-01 owns this** | `P02_PROVIDER_MAPPING_RULES.md` **MR-5** — *"Mapping execution is P06. P02 defines only the rules the execution must obey."* · `P01_FIELD_DICTIONARY.md` **FD-7** — *"This dictionary declares contract slots, not provider mappings. Provider-to-canonical mapping is P06."* · `P04_SCOPE_AND_BOUNDARY.md` **X-4** excludes it from P04 |
+| `p06_01_status` | **`IMPLEMENTED + EVIDENCED`** *(was `NOT STARTED`)* |
+| **Entry criterion** — *"Input fixtures available"* | ✅ **MET** — reuses the accepted **P05-01** local provider vocabulary and the accepted **P04** identity fixtures; **no new provider** |
+| **Exit criterion** — *"Canonical output deterministic"* | ✅ **MET** — byte-identical canonical serialization across **5 repeats per case** (all 5 cases) · independent instances agree · the declared configuration genuinely participates · no wall clock / randomness / ambient input |
+| **Test / Validation** — *"Golden tests"* | ✅ **MET** — `p06/tests/normalization.test.js`, **55 tests** |
+| **Evidence** — *"Canonical fixtures"* | ✅ **MET** — the `golden` block plus `p06/evidence-p06-01/02-canonical-fixtures.json` |
+| **Reuse, not duplication** | `MD:` token + domain vocabulary + **C1–C6** from `p05/src/namespace.js` · `buildField` / `buildSnapshot` / `computeCompletenessPct` from `p05/src/contract.js` · `validateSnapshot` from `p05/src/validate.js` · `MappingRegister` / `buildIdentityRef` from `p05/src/identity.js`. ⚠ **No namespace, collision, fail-closed, canonical-construction or identity logic is re-implemented** — asserted by test **C/1** |
+| ⚠ **Engine boundary** | `Phase Gates`!P06 forbids *"feeding raw provider data directly to engines."* `assertNoEngineDirectPath` fails closed on: a non-`MD:` key (**C1/FD-1/N-2**) · a bare engine input key `peRatio`/`evEbitda`/`evRevenue`/`fcfYield` (**N-5/FD-3** — engine-input mapping is **P11**) · a provider-native name anywhere incl. inside a lineage string (**M-3/LA-18**) · a free-form bag (**M-4**). ⚠ **One M-3 defect was found by this guard and fixed**: provenance now references the **source record**, not the provider field name |
+| ⚠ **NOT P06-02** | No **storage boundary**, no raw store, no file write, no bypass-detection surface. The payload is an **argument**; the record is a **return value**. Asserted by **B/3** |
+| ⚠ **NOT P06-03** | No deduplication rule, duplicate key, cross-provider merge or idempotency key. Asserted by **B/4**. ⚠ **Determinism is a PURITY property and is deliberately NOT presented as deduplication** |
+| ⚠ **Recorded limitations** | **L-1** not exercised against a live provider (standing non-authorization, **not** a defect) · **L-2** only **3** mappings declared (D01 quote/close/valuation); **D02–D10 NOT declared**, not claimed · **L-3** ADR-01 §I and P02 §4 N-3/N-4/N-6 are historical and **left unedited**, superseded by **OI-10 RESOLVED** + **D8** by citation · **L-4** P06-01 completion is **NOT** P06 acceptance / certification / provider authorization / activation |
+| ⚠ **Guard disclosure** | Three pre-existing P05 guards were **REPLACED, NOT WEAKENED** on the terms `P05_GATE_ACCEPTANCE.md` §9 set: (i) `'P06 / P07 / P08 remain untouched'` → **P07/P08 arms UNCHANGED**, P06 arm rescoped to *only P06-01 artifacts* and **broadened** to the whole `docs/` tree for the acceptance-artifact ban; (ii) `'no existing-IIPS executable source'` and (iii) `'no methodology/scoring/calibration source'` → the **existing-IIPS filename check is byte-for-byte unchanged**; only the program-package allow-list was rescoped from `['p05/']` to an **enumerated and self-asserted** `['p05/', 'p06/']`, so a third unauthorized package still fails. **4 assertion statements were textually REPLACED, each equal-or-stronger, and none dropped** (`existing-iips-boundary.test.js` **24 → 36** assertions and 11 → 11 tests; `no-provider-dependency.test.js` **119 → 119** assertions and 15 → 15 tests; every other pre-existing P05 file **+0**) — the four replacements are tabulated in `docs/p06/P06_01_EVIDENCE.md` §4 |
+| **Guard teeth** | Negative-tested: break determinism → **D/1 fails** · tamper a golden fixture → **G/1 fails** · neuter the M-3 leakage scan → **E/2 fails** · add a `P06_02_*` artifact → **2 P05 guards fail** · add a `P06_GATE_ACCEPTANCE.md` → **2 P05 guards fail** · control → all pass |
+| **NOT done by this act** | No **P06-02** storage boundary · no **P06-03** dedup rules · **no P06 acceptance artifact** · no certification · no production activation · no provider selection/entitlement/credential/configuration · no licensed historical acquisition · **no Track B → `origin/main` merge** · no edit to any historical P00–P05 authority record · no variation of **C1–C6** · no change to the **`MD:`** token · **no P11 engine-input mapping** · no existing-IIPS modification |
+
+⚠ **P06 remains `NOT_ACCEPTED` — still 6 of 18.** A future P06 acceptance is a **separate explicit
+act** by the designated A3 acceptor (**Ramakrishnan V. S. (Ramki)**, D10-3) carrying the
+`P00_GATE_MODEL.md`:42 minimum evidence — *"Token recorded; C1–C6 collision guard evidence;
+13-engine oracle byte-identity"* — plus ADR-01 §G evidence.
+
+**Next governance-safe step: `P06-02` — raw/canonical separation.** Its two Hard dependencies are
+now both satisfied: `P05-04` (implemented + evidenced) and `P06-01` (this act). Exit criterion:
+*"Raw data never bypasses validation."*
+
+---
+
+## 6j. P06-02 status — IMPLEMENTED + EVIDENCED within the D10-2 boundary
+
+# **P06-02 COMPLETE WITHIN BOUNDARY · P06-03 NOT IMPLEMENTED · P06 NOT_ACCEPTED**
+
+Implemented under **D10-2**. Evidence record: **`docs/p06/P06_02_EVIDENCE.md`**.
+
+| Field | Value |
+|---|---|
+| **Scope implemented** | Exactly `Work Tracker`!P06-02 *Requirement* — *"Keep raw provider payloads separate from governed canonical data."* Deliverable *"Storage boundary"*. **Nothing wider; no requirement invented** |
+| **Governing contract — REUSED, not invented** | `P02_PROVIDER_MAPPING_RULES.md` §1 **M-1…M-6** (containment) · **INT-013** (`D4_01`:216, `D4_03`:114 — governed IIPS objects, never raw provider records) · `D4_02`:194 (identity via the security master, never a raw symbol) · `P01_VALIDATION_RULES.md` **S1–S4** by reuse · ADR-01 **C1–C6** by reuse |
+| `p06_02_status` | **`IMPLEMENTED + EVIDENCED`** *(was `NOT STARTED`)* |
+| **Entry criterion** — *"Pipeline exists"* | ✅ **MET** — P06-01 complete |
+| **Exit criterion** — *"Raw data never bypasses validation"* | ✅ **MET** — **31 bypass attempts EXECUTED at generation time, 31 REFUSED, 0 NOT BLOCKED**; malformed raw reaching canonical storage **0**; boundary audit `ok: true` |
+| **Test / Validation** — *"Architecture + negative tests"* | ✅ **MET** — `p06/tests/rawCanonicalBoundary.test.js`, **25 tests** (A architecture 5 · P positive 4 · N negative/bypass 10 · D determinism 2 · S scope 4) |
+| **Evidence** — *"Boundary evidence"* | ✅ **MET** — `p06/evidence-p06-02/` (6 files, byte-reproducible) |
+| ⚠ **5 bypass paths measured OPEN before, now BLOCKED** | **BP-1** raw → canonical storage (`CanonicalRecordStore.ingest()` validated nothing; a raw payload with no `MD:` key was `INSERTED`) · **BP-2** validation optional on the ingest path · **BP-3** raw → engine (bare `peRatio`/`evEbitda`/`fcfYield` assembled from raw `V-0001`, no namespace, no provenance) · **BP-4** unvalidated record masquerading as canonical · **BP-5** raw and canonical not separated at all |
+| **Architecture delivered** | raw → `acceptRaw()` → **RawCompartment** (separate, frozen, `isCanonical:false`, append-only) → `admit()` → P06-01 `normalizePayload` → `validateSnapshot` S1–S4 → `assertNoEngineDirectPath` → `assertCanonicalShape` → `buildAttestation` + **`verifyAttestation` (RE-DERIVED, never trusted)** → **private** `CanonicalRecordStore` → consumers via `canonicalRecords()` / `isAttested()` / `auditBoundary()` |
+| ⚠ **The enforcement is architectural** | The boundary exposes **NO method that accepts a pre-built record** (measured surface: `acceptRaw, admit, attestations, auditBoundary, canonicalCount, canonicalRecords, events, isAttested, rawCount`; **0** matching `ingest|put|insert|setRecord|addRecord|^set$|^add$`; `'store' in boundary === false`). Canonical admission **requires** a rawRef plus a declared mapping |
+| **Reuse, not duplication** | `validateSnapshot` ← `p05/src/validate.js` · `CanonicalRecordStore` ← `p05/src/replay.js` (**unchanged, encapsulated**) · normalization + `assertNoEngineDirectPath` ← `./normalizationPipeline.js` (P06-01) · C1–C6 ← `p05/src/namespace.js`. Asserted by test **A/5** |
+| ⚠ **2 defects found by testing and fixed** | (i) `assertCanonicalShape`'s M-3 scan did not strip canonical keys, so `MD:price.venueRef` false-positived on `venue` — now strips + word-boundary matches, as the P06-01 guard does · (ii) `verifyAttestation` threw a `TypeError` on an `undefined` field — a **fail-open-shaped accident**; now null-safe, and the `validationPassed` check moved first so *"validation is never waived"* is reachable |
+| ⚠ **NOT P06-03** | No deduplication rule, duplicate key, cross-provider merge or idempotency key. The store's own idempotency is a **P05-04 property INHERITED, not extended**. Asserted by **S/1** and by the P05 guard |
+| ⚠ **Recorded limitations** | **L-1** not exercised against a live provider · **L-2** the attestation is a **re-derivable provenance binding, NOT a cryptographic proof** (no secret exists, none may be added) · **L-3** the **P05-04 store is deliberately unchanged** — bare, outside the governed architecture, it still accepts anything; the boundary **encapsulates** it and `auditBoundary()` **detects** contamination · **L-4** the raw compartment is **in-memory**, no raw-at-rest surface, no durable raw store claimed · **L-5** only **D01** declared (inherited from P06-01 L-2) · **L-6** P06-02 completion is **NOT** P06 acceptance / certification / provider authorization / activation |
+| ⚠ **Guard disclosure** | **5 assertion statements replaced (5 deleted assertion lines), each equal-or-stronger; none dropped.** (1) `existing-iips-boundary.test.js` — **P07/P08 arms UNCHANGED**; the `docs/p06` prefix widens `^P06_01_` → `^P06_0[12]_` (D10-2 authorizes P06-02) while **P06-03 remains barred**, and **2 NEW universal clauses** added (no disk persistence, no raw-bypass surface). (2) same file — the tracked-artifact ban narrows `/P06[_-]0[23]/` → `/P06[_-]03/`, **P06-03 still barred**. (3) `no-provider-dependency.test.js` D10 guard — its own `docs/p06` prefix clause widens `^P06_01_` → `^P06_0[12]_` identically; its recursive whole-`docs/` acceptance-artifact scan is **UNCHANGED**. (4) P06-01's **B/3** rescoped to the **three enumerated P06-01 modules** and **tightened** (a P06-01 module may not reach `CanonicalRecordStore` at all; the enumeration is self-asserted). Net assertion counts **+1** / **+2**; every other pre-existing file **+0** |
+| **Guard teeth** | Negative-tested: add `docs/p06/P06_03_EVIDENCE.md` → **2 P05 guards fail** · add a **tracked** `p06/evidence-p06-03/` artifact → **1 P05 guard fails** · add `P06_GATE_ACCEPTANCE.md` → **2 P05 guards fail** · smuggle `class SneakyStorageBoundary` into a P06-01 module → **B/3 fails** · add `deduplicateAcrossProviders()` to the boundary → **1 P05 guard + S/1 fail** · control → all pass |
+| **NOT done by this act** | No **P06-03** dedup/idempotency · **no P06 acceptance artifact** · no certification · no production activation · no provider selection/entitlement/credential/configuration · no licensed historical acquisition · **no scheduling/retries/checkpointing** (P05-04 unchanged) · **no disk persistence** · **no Track B → `origin/main` merge** · no edit to any historical P00–P05 authority record · no variation of **C1–C6** · no change to the **`MD:`** token · **no P11 engine-input mapping** · no existing-IIPS modification · **no change to the accepted P05-04 `CanonicalRecordStore`** |
+
+⚠ **P06 remains `NOT_ACCEPTED` — still 6 of 18.**
+
+**Next governance-safe step: `P06-03` — deduplication / idempotency.** Its two Hard dependencies are
+now both satisfied: `P06-01` and `P06-02`. Entry criterion *"Canonical schema stable"*; exit
+criterion *"Repeated ingestion stable."*
+
+---
+
+## 6k. P06-03 status — IMPLEMENTED + EVIDENCED; all three P06 work items complete, gate still NOT_ACCEPTED
+
+# **P06-03 COMPLETE WITHIN BOUNDARY · ALL THREE P06 WORK ITEMS COMPLETE · P06 STILL `NOT_ACCEPTED`**
+
+Implemented under **D10-2**. Evidence record: **`docs/p06/P06_03_EVIDENCE.md`**.
+
+| Field | Value |
+|---|---|
+| **Scope implemented** | Exactly `Work Tracker`!P06-03 *Requirement* — *"Prevent duplicate records across retries/replays/providers."* Deliverable *"Deduplication rules"*. **Nothing wider; no requirement invented** |
+| `p06_03_status` | **`IMPLEMENTED + EVIDENCED`** *(was `NOT STARTED`)* |
+| **Entry criterion** — *"Canonical schema stable"* | ✅ **MET** — P06-01 and P06-02 complete |
+| **Exit criterion** — *"Repeated ingestion stable"* | ✅ **MET, MEASURED over 5 passes** — first pass **5** inserts · every later pass **[0, 0, 0, 0]** · final canonical count **5** · **20** duplicate no-ops · **one distinct canonical-set digest across all 5 passes** (byte-identical) |
+| **Test / Validation** — *"Replay tests"* | ✅ **MET** — `p06/tests/deduplication.test.js`, **33 tests** (A rules 2 · I identity 4 · D exit criterion 5 · N distinctness/vintage/FIGI 3 · F conflicts/RJ-6 4 · G cannot bypass P06-02 6 · P P06-01/P06-02/C1–C6 intact 4 · S scope 5) |
+| **Evidence** — *"Replay evidence"* | ✅ **MET** — `p06/evidence-p06-03/` (6 files, byte-reproducible) |
+| ⚠ **Dedup identity — NOT INVENTED** | **`snapshotId`** = `data-${provider}-${dataVersion}-${asOf}` (**AD-6**; `P01_DATA_CONTRACT.md` §3.1 row 1 + §6; **`P05_03_SPECIFICATION.md`:84 *"no component added"***) **+ `canonicalDigest`** (**RI-6** deterministic serialization). `dataVersion` = the **source-content vintage** (**DV-1**, `P01_VERSIONING_COMPATIBILITY.md` **V2**); a correction is a **new `dataVersion`**, never an edit (**INV-2**, **DV-3**) |
+| ⚠ **Existing mechanism REUSED, not duplicated** | An idempotency mechanism **already existed** — the accepted **P05-04 `CanonicalRecordStore`** — and it is authoritative. Measured before this act: 5 `INSERTED` then 5 `IDEMPOTENT_NOOP`, count 5. **P06-03 builds NO second store.** It supplies the tracker's named deliverable — **deduplication *rules*, declared as data** (DD-1…DD-6, each citing its authority) — plus a decision layer that makes the outcome observable and provable |
+| ⚠ **Cross-provider records NOT collapsed** | **PN-5** *"never two canonical identities, never a silent merge"* · **RI-3** *"provider identity is never flattened away"*. Two providers' observations are **distinct, correctly attributed** records. *"across providers"* is satisfied by (a) suppressing a re-presented **same**-provider vintage and (b) **proving** distinct-provider records stay distinct |
+| **The three requirement axes — each EXECUTED** | **Retries** ✅ identical payload under a new `rawRef` → `INSERTED` then `IDEMPOTENT_NOOP`, count **1** · **Replays** ✅ whole corpus 3× → `5`, `0`, `0`, final **5** · **Providers** ✅ **5 distinct identity keys for 5 records**, every key retains its provider component; **vintage axis: `CS-LOCAL-0001` holds 4 vintages → 4 distinct `snapshotId`s, not collapsed** |
+| **DD-3 conflicts governed by existing rules** | Measured at the reused P05-04 store: `INSERTED` → `IDEMPOTENT_NOOP` → **`CONFLICT_REJECTED`**; store size **1**; **the original survives unchanged** — no silent overwrite, no precedence, no "last wins" (**INV-2**, **RJ-6**) |
+| ⚠ **Cannot become a second raw path** | `DeduplicationLedger` **cannot be constructed without a P06-02 boundary**; `record()` refuses anything not attested (**DD-5**) and anything not a governed canonical record (**DD-6**). **10 bypass attempts executed → 10 REFUSED, 0 not blocked** |
+| **Reuse, not duplication** | `canonicalDigest` ← `p05/src/serialize.js` · `NAMESPACE_TOKEN` ← `p05/src/namespace.js` · `assertCanonicalShape` + the attestation gate ← `./rawCanonicalBoundary.js` (P06-02) · the decision rule ← the P05-04 store. **No new canonical store, no re-implemented C-rule** |
+| ⚠ **Recorded limitations** | **L-1** not exercised against a live provider · **L-2** cross-provider distinctness is **STRUCTURAL** (from the frozen AD-6 form) — no second provider identity may be issued, so a two-provider corpus was **not** run · **L-3** the P06-02 attestation gate is **content-based**: provenance-through-the-boundary, **not** authenticity against an adversary (inherited **P06-02 L-2**) · **L-4** the ledger is **in-memory**, no durable store claimed (**DEP-P01-04** → P08) · **L-5** only **D01** declared (inherited **P06-01 L-2**) · **L-6** P06-03 completion is **NOT** P06 acceptance / certification / provider authorization / activation |
+| ⚠ **Guard disclosure** | **6 assertion statements textually replaced (6 deleted assertion lines, measured), each equal-or-stronger** — enumerated in `docs/p06/P06_03_EVIDENCE.md` §6. **P07/P08 restrictions UNCHANGED** · the **existing-IIPS filename check byte-for-byte UNCHANGED** · the **universal** *no disk persistence* and *no raw-bypass surface* clauses **retained and still bind every module** · **newly barred: any `P06[_-]0[4-9]` artifact** (the tracker defines no fourth P06 work item). Net assertion counts: `normalization.test.js` **144 → 147**; **every other pre-existing file +0** |
+| **Guard teeth** | Negative-tested: add `docs/p06/P06_04_EVIDENCE.md` → **2 P05 guards fail** · add `P06_GATE_ACCEPTANCE.md` → **2 P05 guards fail** · smuggle `deduplicateSneaky()` into the **P06-02 boundary** → **1 P05 guard + P06-01 B/4 fail** · add a stray 5th module to `p06/src` → **B/3 + S/5 fail** · add `writeFileSync` to the P06-03 module → **1 P05 guard fails** · control → all pass |
+| **NOT done by this act** | **No P07 or P08 implementation** (no freshness/staleness, no PIT storage, no adjusted/unadjusted series, no corporate actions) · **no P06 acceptance artifact** · no certification · no production activation · no provider selection/entitlement/credential/configuration · no licensed historical acquisition · **no scheduling/retries/checkpointing** (P05-04 unchanged) · **no durable persistence** · **no Track B → `origin/main` merge** · no edit to any historical P00–P05 authority record · no variation of **C1–C6** · no change to the **`MD:`** token · **no change to the AD-6 `snapshotId` form** · **no P11 engine-input mapping** · no existing-IIPS modification · **no change to the accepted P05-04 `CanonicalRecordStore`** · **no second raw-ingestion path** |
+
+⚠ **ALL THREE P06 WORK ITEMS ARE NOW COMPLETE — AND P06 IS STILL `NOT_ACCEPTED`, still 6 of 18.**
+
+**Next governance-safe step: an AUTHORITY act, not an implementation act.** The accepted tracker
+defines exactly **three** P06 work items and all three are complete. The next step is **a separate,
+explicit P06 gate-acceptance decision by the designated A3 acceptor — Ramakrishnan V. S. (Ramki),
+D10-3** — carrying the `P00_GATE_MODEL.md`:42 minimum evidence (*"Token recorded; C1–C6 collision
+guard evidence; **13-engine oracle byte-identity**"*) plus **ADR-01 §G** evidence. ⚠ **It must NOT
+be inferred from work-item completion.** Note that the **13-engine oracle byte-identity** element
+concerns existing-IIPS engines and is **outside** everything implemented in P06. If further
+*implementation* is wanted instead, the next tracker phases are **P07** (data quality/freshness) and
+**P08** (historical/PIT) — **neither is authorized for entry today**, and neither was touched.
+
+---
+
+## 6l. P06 status — **ACCEPTED** by an explicit A3 act (Ramakrishnan V. S. (Ramki))
+
+# **P06 — CANONICAL PIPELINE GATE — ACCEPTED · 7 OF 18 GATES ACCEPTED**
+
+Acceptance record: **`docs/p06/P06_GATE_ACCEPTANCE.md`** (256 lines).
+
+| Field | Value |
+|---|---|
+| `p06_acceptance_status` | **`ACCEPTED`** *(prior state `NOT_ACCEPTED`, D10-6)* |
+| `formal_gate_status` | **7 of 18 accepted — P00, P01, P02, P03, P04, P05, P06** *(was 6 of 18)* |
+| **A3 acceptor** | **Ramakrishnan V. S. (Ramki)** — the **P06-scoped** designation made by **D10-3**. ⚠ **Designation ≠ acceptance**; D10 §8.2 listed *"P06 gate acceptance — NOT ACCEPTED"* among its 12 non-authorizations, and that historical record is **left unedited**. |
+| **Acceptance type** | **Explicit A3 acceptance act** — not automatic promotion, not inferred from the fact that all three work items were complete. |
+| **Accepted scope** | **`P06-01`** normalization pipeline (55 tests) · **`P06-02`** raw/canonical storage boundary (25 tests) · **`P06-03`** deduplication/idempotency (33 tests). ⚠ **The tracker defines exactly three P06 work items and there is no fourth.** |
+| **Minimum evidence boundary** | `P00_GATE_MODEL.md`:42 — *"Token recorded; C1–C6 collision guard evidence; 13-engine oracle byte-identity"* **plus ADR-01 §G evidence**. |
+| **Pinned baseline** | **`3f79e612e06afcd87f09c199665b12354b233e42`** (D12) · parent `73f44a3` (D11) |
+| **Test evidence** | **377 / 377 PASS** — P05 **264** + P06 **113**, `node --test "tests/**/*.test.js"` |
+| ⚠ **Authority disposition for ADR-01 §G item 1** | **D12** (`P00_DECISION_LOG.md` §10) — `collision_census_status` = **`RECONCILED — 60 coded controlling`**, so **§G item 1 = `SATISFIED`**. Historical **52 coded / 54 free-form PRESERVED, unedited**. **`ADR-01 §B.2` NOT rewritten** — any correction is a separate authorized amendment. The historical **54 is `UNREPRODUCED`** (derivation not established) and **no substitute figure was adopted**. |
+| ⚠ **ADR-01 §G evidence delivered** | **13/13 engines · 97/97 golden cases · 97/97 value-match · 97/97 independently byte-identical** (sha256 over canonical key-sorted JSON; **`ReplayService` never consulted**) · **C1–C6 guard 11/11**, mutation-verified (**4 fail** with the guard removed) · `tsc --noEmit` clean · existing-IIPS suite **12 FIXED / 0 BROKEN** |
+| ⚠ **`AD-17`** | **`UNRESOLVED`** — `ReplayService.ts`:20-21 literals untouched, guard module references `ReplayService` **0** times. **Not resolved by inference.** |
+| ⚠ **Named historical digest triples** | **`NOT REPRODUCED`** — `44ba/ea22/c8ed`, `5813…`, `3cfb/92be`; **0 of 15** candidate artifacts match. They digest engine output under an **undocumented canonicalization**, and **none was invented**. |
+| **NOT granted by this acceptance** | Certification **`NONE_GRANTED`** (⚠ P06 acceptance grants none; P06's row records *"Cert before progression = No"*) · production activation **`NOT_AUTHORIZED`** (A4 at P16) · provider execution + licensed acquisition **`NOT_AUTHORIZED`** (N-1/N-2) · **Track B → `origin/main` `NOT AUTHORIZED`** · **P07–P17 NOT ACCEPTED / NOT AUTHORIZED** · **P07–P17 A3 acceptors NOT designated** |
+| **Inherited, not discharged** | P05's **PIT repeatability = `MISSING / NOT DEMONSTRATED`** · the **40 pre-existing existing-IIPS suite failures** (neither repaired nor excused) |
+| ⚠ **Guard disclosure** | **2 P05 governance guards SUPERSEDED, NOT WEAKENED** — one in each of `existing-iips-boundary.test.js` and `no-provider-dependency.test.js`. Both formerly asserted *"no `P06_GATE_ACCEPTANCE.md` may exist anywhere"*, a tripwire this file predicted at :584. They are **replaced by strictly stronger content assertions** (exactly one artifact, at the canonical path, whose own bytes must carry D12 / the census disposition / `ADR-01 §B.2` unmodified / AD-17 `UNRESOLVED` / digest triples `NOT REPRODUCED` / `NONE_GRANTED` / `NOT_AUTHORIZED` / P07–P17 not accepted / no concessions register / no waiver vocabulary), **plus** the requirement that **D10 still reads "P06 AUTHORIZATION IS NOT P06 ACCEPTANCE"** and that `p06/evidence-p06-01/00-INDEX.json` still reads `NOT_ACCEPTED` — proving the acceptance was **added by a separate act, never retro-written into D10 or into the historical evidence index**. **No assertion was deleted.** |
+| **Guard teeth** | Negative-tested: remove the record → **2 fail** · redact the acceptor name → **2 fail** · remove `UNRESOLVED` → **2 fail** · remove the D12 citation → **2 fail** · remove `NOT REPRODUCED` → **2 fail** · add `P06_04_EVIDENCE.md` → **2 fail** · add `docs/p08/` → **1 fail** · retro-edit D10 to claim acceptance → **2 fail** · retro-edit the P06-01 evidence index → **1 fail**. **9 mutations, all detected.** |
+| **Historical records rewritten** | **NONE.** All six `P0X_GATE_ACCEPTANCE.md` byte-identical (P05 blob `94f87c614795fc47692d924a8490bc8d41e98d5a`) · `P00_DECISION_LOG.md` §1–§10 · D4 · D8 · D9 · D11 · D12 · ADR-01 (§B.2 and §I both unmodified) · the three `P06_0X_EVIDENCE.md` records · `p06/src`, `p06/tests`, `p06/fixtures`, `p06/evidence*` all **UNMODIFIED** |
+| **`P00_DECISION_LOG.md`** | **NOT appended** — §5 rule 4 *"Authority approval is never recorded as certification or gate acceptance"*; both the P04 (`faf1317`) and P05 (`19713d8b`) precedents added no decision-log entry. Acceptance is recorded in the acceptance record itself. |
+| **Concessions register** | **NOT CREATED** — none exists, none was required, no concessions authority was invented. |
+| **Existing-IIPS** | **UNCHANGED by this act.** `64797d6` → `4292fff` remain **local, unpushed, no branch created**; their disposition is a separate decision. |
+| **Implementation performed by this act** | **NONE** · provider work **NONE** |
+
+⚠ **P06 acceptance is the ONLY gate executed. No P07 entry, no provider integration, no
+certification, no production activation follows from it. The next authorized action is NONE
+without a separate explicit act.**
+
+---
+
+## 7. D4 / D5 / D7 / D8 / D9 artifact locations
+
+### `docs/d4/` — specification baseline (16 files, corrected by D4-B)
+`D4_00_EXECUTIVE_SUMMARY` · `D4_01_INTEGRATION_REUSE_BASELINE` · `D4_02_DATA_DOMAINS` ·
+`D4_03_UI_BASELINE` · `D4_04_INGRESS_CONTRACT_DELTA` · `D4_05_SECURITY_MASTER_ADAPTER` ·
+`D4_06_SNAPSHOT_REPLAY_IDENTITY` · `D4_07_FIELD_NAMESPACE` · `D4_08_ENGINE_INTEGRATION` ·
+`D4_09_P12_CONTRACT_DELTA` · `D4_10_P13_UI_DELTA` · `D4_11_CERTIFICATION_MATRIX` ·
+`D4_12_PHASE_SEQUENCE` · `D4_13_TRACKER_CORRECTIONS` · `D4_14_AUTHORITY_ADR_REGISTER` ·
+`D4_15_ACCEPTANCE_READINESS`
+
+### `docs/d5/` — ADR packages and authority escalations (7 files)
+`ADR-01_NAMESPACE_COLLISION_GUARD` · `ADR-02_REPLAY_IDENTITY_EXTENSION` ·
+`E-01_SECURITY_IDENTITY_AUTHORITY` · `E-02_GATE_ACCEPTOR_AUTHORITY` · `D5_REGISTER` ·
+`D5_DEPENDENCY_MAP` · `D5_HANDOFF`
+
+### `docs/d7/` — authority-hold handoff (6 files)
+`D7_AUTHORITY_DECISION_SHEET` · `D7_AUTHORITY_ROLE_ASSIGNMENT` · `D7_BLOCKER_MATRIX` ·
+`D7_EXTERNAL_HANDOFF` · `D7_STATUS.json` · `D7_EVIDENCE_NOTES`
+
+### `docs/d8/` — authority reconciliation and execution authorization (5 files)
+`D8_AUTHORITY_RECONCILIATION` · `D8_EXECUTION_AUTHORIZATION` · `D8_STATUS.json` ·
+`D8_FIRST_WORK_PACKAGE` · `D8_EVIDENCE_NOTES`
+
+### `docs/d9/` — P05 entry / explicit authorization (3 files)
+`D9_P05_ENTRY_AUTHORIZATION` · `D9_STATUS.json` · `D9_EVIDENCE_NOTES`
+
+### `docs/p05/` — P05-01 execution record (3 files)
+`P05_01_SPECIFICATION` · `P05_01_EVIDENCE` · `P05_01_OPEN_ITEMS`
+⚠ **There is no `P05_GATE_ACCEPTANCE.md`** — P05 is entered, **not** accepted.
+
+### `docs/p05/` — P05-02 execution record (3 more files; ⚠ supersedes the count above **by addition** — the block above is left unedited)
+`P05_02_SPECIFICATION` · `P05_02_EVIDENCE` · `P05_02_OPEN_ITEMS` — created under D9 §3 **A-2**
+(specification / adapter-contract only). `docs/p05/` now holds **6 files**.
+⚠ **There is still no `P05_GATE_ACCEPTANCE.md`.**
+
+### `p05/` — P05-01 implementation and evidence (executable, 35 files)
+The program's **first executable surface**, created under D9 §3 **A-1** only.
+`src/` (8 modules) · `tests/` (8 suites, **118 tests**) · `fixtures/` (3) · `evidence/` (13) ·
+`scripts/generate-evidence.js` · `package.json` (**zero dependencies**).
+⚠ Local deterministic feed only — **no live provider, no credentials, no network.**
+⚠ `p05/src/replay.js` is **not** the existing-IIPS `ReplayService`; **AD-17 remains UNRESOLVED**.
+
+### `p05/` — P05-02 adapter-contract additions (⚠ supersedes the counts above **by addition** — the block above is left unedited)
+Added under D9 §3 **A-2** — **specification / adapter-contract only**:
+`src/liveAdapterContract.js` (**LA-1…LA-31**) · `tests/mockLiveAdapter.js` (offline **synthetic test
+double**, `mocklive`) · `tests/adapter-contract.test.js` (**74 contract-validation tests**) ·
+`fixtures/adapter-contract-fixtures.json` · `evidence-p05-02/` (**13 files**) ·
+`scripts/generate-p05-02-evidence.js` · `package.json` + `evidence:p05-02`.
+`p05/` now holds **41 tracked files**; the suite is **192 tests**.
+⚠ **Still zero dependencies, zero network, zero credentials.** `mocklive` is **NOT** a
+provider-register issuance — `provider-register.json` is **unmodified** with exactly **1** identity.
+⚠ These tests are **CONTRACT VALIDATION**, **not** provider evidence and **not** integration tests.
+
+### `p05/` — P05-04 ingestion-orchestration additions (⚠ supersedes the counts above **by addition** — the blocks above are left unedited)
+Added under **D10-1** — **P05-04 implementation and evidence**:
+`src/ingestionOrchestrator.js` (**scheduling · bounded retry execution · idempotent checkpointing**) ·
+`tests/orchestration.test.js` (**35 failure/replay tests**) · `evidence-p05-04/` (**9 run-log files**) ·
+`scripts/generate-p05-04-evidence.js` · `package.json` + `evidence:p05-04` ·
+`docs/p05/P05_04_EVIDENCE.md`.
+The suite is **264 tests, 264 PASS**.
+⚠ **Still zero dependencies, zero network, zero credentials.** The orchestrator **refuses** any
+adapter declaring live connectivity, `LIVE` provider kind, credentials or entitlement —
+`provider-register.json` is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
+⚠ These are **LOCAL SYNTHETIC run logs**, **not** provider execution evidence. **No P06 artifact,
+directory, fixture or evidence file was created.**
+
+### `docs/p06/` — P06-01 execution record (1 file)  ·  `p06/` — P06-01 normalization pipeline (executable, 14 files)
+Created under **D10-2** — **P06-01 only**:
+`docs/p06/P06_01_EVIDENCE.md` ·
+`p06/src/mappingDeclaration.js` (**MD-1…MD-8 declaration**, closed transformation vocabulary) ·
+`p06/src/normalizationPipeline.js` (**mapping execution**, MR-5 / MR-1) ·
+`p06/src/identityResolution.js` (**pure pass-through** onto the P04 register) ·
+`p06/tests/normalization.test.js` (**55 golden tests**) · `p06/tests/helpers.js` ·
+`p06/fixtures/normalization-fixtures.json` (3 declared mappings · 5 cases · 6 negative cases ·
+committed **golden** block) · `p06/evidence-p06-01/` (**9 canonical-fixture files**) ·
+`p06/scripts/generate-p06-01-evidence.js` · `p06/package.json` + `evidence:p06-01`.
+The combined suite is **319 tests, 319 PASS** (P05 264 · P06 55).
+⚠ **Still zero dependencies, zero network, zero credentials.** The provider register is
+**unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
+⚠ **`localfix` is a SYNTHETIC source — these are LOCAL SYNTHETIC canonical fixtures, NOT provider
+evidence.** ⚠ **P06-02 and P06-03 are NOT implemented**; no `P06_GATE_ACCEPTANCE.md` exists.
+
+### `docs/p06/` — P06 execution records (2 files)  ·  `p06/` — P06-01 pipeline + P06-02 boundary (executable)
+`docs/p06/P06_01_EVIDENCE.md` · **`docs/p06/P06_02_EVIDENCE.md`** ·
+`p06/src/mappingDeclaration.js` · `p06/src/normalizationPipeline.js` ·
+`p06/src/identityResolution.js` · **`p06/src/rawCanonicalBoundary.js`** (`RawCompartment` ·
+`CanonicalStorageBoundary` · `assertCanonicalShape` · `assertEngineInputIsCanonical` ·
+`buildAttestation` / `verifyAttestation`) ·
+`p06/tests/normalization.test.js` (55) · **`p06/tests/rawCanonicalBoundary.test.js` (25)** ·
+`p06/tests/helpers.js` · `p06/fixtures/normalization-fixtures.json` ·
+`p06/evidence-p06-01/` (9 files) · **`p06/evidence-p06-02/` (6 files)** ·
+`p06/scripts/generate-p06-01-evidence.js` · **`generate-p06-02-evidence.js`** ·
+`p06/package.json` (+`evidence:p06-02`).
+The combined suite is **344 tests, 344 PASS** (P05 264 · P06 80).
+⚠ **Still zero dependencies, zero network, zero credentials, zero disk persistence.** The provider
+register is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
+⚠ **`localfix` is a SYNTHETIC source — this is LOCAL SYNTHETIC boundary evidence, NOT provider
+evidence.** ⚠ **P06-03 is NOT implemented**; no `P06_GATE_ACCEPTANCE.md` exists.
+
+### `docs/p06/` — P06 execution records (3 files)  ·  `p06/` — P06-01 pipeline + P06-02 boundary + P06-03 dedup (executable)
+`docs/p06/P06_01_EVIDENCE.md` · `docs/p06/P06_02_EVIDENCE.md` · **`docs/p06/P06_03_EVIDENCE.md`** ·
+`p06/src/mappingDeclaration.js` · `p06/src/normalizationPipeline.js` ·
+`p06/src/identityResolution.js` · `p06/src/rawCanonicalBoundary.js` ·
+**`p06/src/deduplicationRules.js`** (`DEDUPLICATION_RULES` DD-1…DD-6 · `dedupIdentityFor` ·
+`classifyDedupDecision` · `DeduplicationLedger`) ·
+`p06/tests/normalization.test.js` (55) · `p06/tests/rawCanonicalBoundary.test.js` (25) ·
+**`p06/tests/deduplication.test.js` (33)** · `p06/tests/helpers.js` ·
+`p06/fixtures/normalization-fixtures.json` ·
+`p06/evidence-p06-01/` (9) · `p06/evidence-p06-02/` (6) · **`p06/evidence-p06-03/` (6)** ·
+`p06/scripts/generate-p06-0{1,2,3}-evidence.js` · `p06/package.json` (+`evidence:p06-03`).
+The combined suite is **377 tests, 377 PASS** (P05 264 · P06 113).
+⚠ **Still zero dependencies, zero network, zero credentials, zero disk persistence.** The provider
+register is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
+⚠ **`localfix` is a SYNTHETIC source — this is LOCAL SYNTHETIC replay evidence, NOT provider
+evidence.** ⚠ **All three P06 work items are complete and `P06` is still `NOT_ACCEPTED`** — no
+`P06_GATE_ACCEPTANCE.md` exists (**D10-6**). **No P07/P08 artifacts exist.**
+
+### `docs/p06/` — P06 records (4 files) · `p06/` — P06-01 pipeline + P06-02 boundary + P06-03 dedup (executable, **UNMODIFIED by the acceptance act**)
+`docs/p06/P06_01_EVIDENCE.md` · `docs/p06/P06_02_EVIDENCE.md` · `docs/p06/P06_03_EVIDENCE.md` ·
+**`docs/p06/P06_GATE_ACCEPTANCE.md`** (**256 lines — the explicit A3 acceptance record, NEW**) ·
+`p06/src/` **5 modules, all unchanged** · `p06/tests/` 4 files, unchanged ·
+`p06/fixtures/normalization-fixtures.json` unchanged ·
+`p06/evidence-p06-01/` (9) · `p06/evidence-p06-02/` (6) · `p06/evidence-p06-03/` (6), all unchanged.
+The combined suite is **377 tests, 377 PASS** (P05 264 · P06 113).
+⚠ **Still zero dependencies, zero network, zero credentials, zero disk persistence.** The provider
+register is **unmodified** with exactly **1** `LOCAL_FIXTURE` identity.
+⚠ **The acceptance act created exactly ONE new artifact** — the acceptance record itself. It
+performed **no implementation**. `p06/evidence-p06-01/00-INDEX.json` still reads
+`p06Acceptance: "NOT_ACCEPTED — no P06_GATE_ACCEPTANCE.md exists (D10-6)"`, and the superseded P05
+guards now **require** that historical value to remain unedited.
+⚠ **`localfix` is a SYNTHETIC source — this is LOCAL SYNTHETIC evidence, NOT provider evidence.**
+**P06 is `ACCEPTED` — 7 of 18.** **No P07/P08 artifacts exist.** **No provider execution occurred.**
+
+*Note: D6 (authority reconciliation, result "NO AUTHORITY CHANGE") produced no artifacts by
+design — it was a read-only run. Its conclusion is carried forward in `docs/d8/`.*
+
+## 8. P00 artifact locations
+
+### `docs/p00/` — governance baseline + gate acceptance (7 files)
+`P00_PROGRAM_CHARTER` · `P00_AUTHORITY_REGISTER` · `P00_DECISION_LOG` · `P00_GATE_MODEL` ·
+`P00_EVIDENCE_CONVENTIONS` · `P00_OPEN_ITEMS_REGISTER` · `P00_GATE_ACCEPTANCE`
+
+### `docs/p01/` — data contract + gate acceptance (10 files)
+
+`P01_DATA_CONTRACT` · `P01_SCHEMA_CATALOG` · `P01_FIELD_DICTIONARY` · `P01_IDENTITY_AND_LINEAGE` ·
+`P01_TIMESTAMP_CURRENCY_UNIT_RULES` · `P01_VERSIONING_COMPATIBILITY` · `P01_VALIDATION_RULES` ·
+`P01_DEPENDENCY_REGISTER` · `P01_EVIDENCE` · `P01_GATE_ACCEPTANCE`
+
+### `docs/p03/` — secrets/security specification + gate acceptance (14 files, ACCEPTED)
+
+`P03_SCOPE_AND_BOUNDARY` · `P03_SECURITY_AUTH_CONTRACT` · `P03_AUTHENTICATION_MODEL` ·
+`P03_TENANT_ISOLATION` · `P03_SECRET_CONFIGURATION_REQUIREMENTS` · `P03_PROVIDER_ACCESS_SECURITY` ·
+`P03_AUDIT_AND_OBSERVABILITY` · `P03_FAILURE_AND_DEGRADED_MODE` · `P03_LINEAGE_AND_VERSION_IMPACT` ·
+`P03_DEPENDENCY_REGISTER` · `P03_ACCEPTANCE_CRITERIA` · `P03_OPEN_ITEMS` · `P03_EVIDENCE` ·
+`P03_GATE_ACCEPTANCE`
+
+### `docs/p04/` — instrument/security master + gate acceptance (13 files, ACCEPTED)
+
+### `docs/p02/` — provider abstraction + gate acceptance (11 files, ACCEPTED)
+
+`P02_PROVIDER_ABSTRACTION_CONTRACT` · `P02_PROVIDER_CAPABILITY_MODEL` ·
+`P02_PROVIDER_IDENTITY_VERSIONING` · `P02_ENTITLEMENT_MODEL` · `P02_ERROR_TAXONOMY` ·
+`P02_PROVIDER_MAPPING_RULES` · `P02_COMPATIBILITY_AND_SUBSTITUTION` ·
+`P02_OBSERVABILITY_REQUIREMENTS` · `P02_DEPENDENCY_REGISTER` · `P02_EVIDENCE` · `P02_GATE_ACCEPTANCE`
+
+---
+
+## 9. Invariant — 13 certified engines (AD-8)
+
+IES-006 Banking · IES-007 Insurance · IES-008 Capital Markets · IES-009 Healthcare ·
+IES-010 Hospitality · IES-011 Energy · IES-012 Utilities · IES-013 Consumer ·
+IES-014 Industrials · IES-015 Technology · **IES-016 Telecom** · **IES-017 Automobile** ·
+**IES-020 Materials & Metals**
+
+Frozen methodologies preserved verbatim: **Telecom D16 M1–M15** · **Auto Option-A**
+left-to-right accumulation (no `sum()`, triple `44ba/ea22/c8ed`) · **Materials G1–G6** (`5813…`).
+No engine may be treated as uncertified because a readiness-certificate file is not locatable.
+
+## 10. Invariant — 19 UI surfaces (AD-13)
+
+UI01 Dashboard · UI02 Company Workspace · UI03 Portfolio · UI04 Research · UI05 Screener ·
+UI06 Decision Center · UI07 Watchlists · UI08 Reports · UI09 Alerts · UI10 Collaboration ·
+UI11 Administration · UI12 Settings · UI13 Global Search · UI14 Command Palette ·
+UI15 CrossSectorIntelligence · UI16 EvidenceExplorer · UI17 ReplayExplorer ·
+UI18 EngineRegistry · UI19 AiAdvisory
+
+## 11. Invariant — sole production market-data ingress (AD-2)
+
+```
+MarketDataSource<T> → DataSnapshot<T> → DataBoundRequest
+                    → DataBoundExecutor → ExecutionRequest.inputs → 13 certified engines
+```
+`DataSnapshot<T>` immutable · `DataBoundExecutor` the sole engine-binding path ·
+provider adapters behind `MarketDataSource<T>` · **no second ingress contract.**
+
+## 12. Invariant — P04 adapter identity model (AD-1)
+
+```
+canonical security master → governed identity mapping (explicit · versioned · auditable · evidenced)
+                          → existing companyId → certified CSIP (NormalizedHolding — UNTOUCHED)
+```
+P04 is **not** a product-wide identity authority. Unmapped identities fail explicitly.
+
+## 13. Invariant — G2 retired (AD-12)
+
+No G2 layer, interface, module or DTO family. Product-plane basis: `EngineApiAdapter`,
+`EngineApiRequest`/`EngineApiResponse`, existing product transports, typed frontend API clients.
+
+---
+
+## 14–16. Status invariants
+
+| # | Field | Value |
+|---|---|---|
+| 14 | Certification | **`NONE_GRANTED`** |
+| 15 | Formal gates | **7 of 18 accepted (P00, P01, P02, P03, P04, P05, P06)** — P07–P17 NOT ACCEPTED |
+| 16 | Production activation | **`NOT_AUTHORIZED`** |
+
+## 17–24. Open items
+
+| # | Item | Status | Owner | Blocks |
+|---|---|---|---|---|
+| 17 | **AD-17 / M-2** ReplayService literal returns | **UNRESOLVED** — not resolved by ADR-02 approval | Existing-IIPS | UI17 replay reporting |
+| 18 | **M-1** | **`OPEN_REVALIDATION_REQUIRED`** — not fixed, not certified, not revoked | Existing-IIPS (AD-10) | P15, P16, P17 |
+| 19 | **E2E-030** | **NOT REVOKED · NOT RENEWED** — AD-4 = revalidation required, not revocation | Existing-IIPS | — |
+| 20 | **OI-08** identity cardinality 1→N | ✅ **RESOLVED — 1:N** by explicit program authority (`docs/p04/P04_GATE_ACCEPTANCE.md` §3) | New program | ⚠ downstream consequences remain: P11, P12, P13 (OI-P04-02) |
+| 21 | **OI-09** external identifier standard | ✅ **RESOLVED — FIGI / OpenFIGI authoritative** (`docs/p04/P04_GATE_ACCEPTANCE.md` §3) | New program | ⚠ sourcing/licensing remains: P05 (OI-P04-04) |
+| 22 | **OI-10** exact namespace token | ✅ **RESOLVED — token `MD:` · form `MD:<domain>.<field>`** (`docs/CHECKPOINT-03.md` §3) | ADR-01 authority (`person_named:false`) | ⚠ blocker released for P05/P06/P11; **implementation still unauthorized**; literal-key rewrite is P05/P06 work |
+| 23 | **M-5** authentication/session | **OPEN** | Existing-IIPS | P03 limitation |
+| 24 | **M-6** retention enforcement | **OPEN** | Existing-IIPS | C10, P17 |
+| 24a | **OI-D9-01** `MD:<domain>.<field>` domain-segment label vocabulary | **OPEN — newly recorded by D9** (no prior authoritative item bore this ID). Five labels exemplified (`price`, `ohlcv`, `valuation`, `fundamentals`, `estimates`) against the ten-domain baseline; **D04, D05, D06, D08, D09, D10 have none**. ⚠ **No label invented, inferred or defaulted.** Token and form are settled — **OI-10 is NOT reopened**; this is a vocabulary decision | Ramki/Sai | ⚠ Does **not** block P05 entry or **P05-01**; blocks only work that must mint a new domain-segment label (`docs/d9/D9_P05_ENTRY_AUTHORIZATION.md` §6) |
+| 24b | **P05 entry/authorization** | ✅ **AUTHORIZED by D9** (2026-09-09, Sai/Ramki, baseline `efe33ea`) — within D9 §3 scope only | Program authority | ⚠ **P05 acceptance is a separate future gate**; **A3 gate acceptor UNKNOWN**; no automatic promotion |
+| 24b-1 | ⚠ **CORRECTS row 24a by addition — row 24a is left UNEDITED as the record of its own moment.** **OI-D9-01 = RESOLVED BY EVIDENCE — no gap exists.** The P05-01 execution parsed the **accepted** `docs/p01/P01_FIELD_DICTIONARY.md` §3–§12 (`P01_GATE_ACCEPTANCE.md`:16 `**ACCEPTED**`) directly and found a domain segment for **all ten** domains: D01 `price`+`valuation` · D02 `ohlcv` · D03 `fundamentals` · D04 `corpaction` · D05 `identity` · D06 `news` · D07 `estimates` · D08 `macro` · D09 `alt` · D10 `venue` — **11 distinct segments**. ⚠ Row 24a's premise was wrong because it counted **literal `MD:` strings**; the dictionary predates the OI-10 recording and uses the **`<NS>` placeholder**, which `CHECKPOINT-03` §3.3(5)/rule 14 binds to `MD:` for new work (*"a substitution, not a redesign"*, §10). **No vocabulary invented or altered. OI-10 NOT reopened — token `MD:` and form `MD:<domain>.<field>` preserved exactly.** Mechanically enforced by `p05/tests/namespace.test.js`. ⚠ Closes **OI-D9-01 only** — **OI-P04-04 and OI-P04-03 remain OPEN** (`docs/p05/P05_01_OPEN_ITEMS.md` §2) |
+| 24b-2 | **P05-01 — local deterministic market feed** | ✅ **IMPLEMENTED / EVIDENCED** (D9 §3 A-1, baseline `efe33ea`) | — | **118/118 tests PASS**; evidence byte-reproducible; 0 duplicates on replay; 0 dependencies; no network. ⚠ **P05 ACCEPTANCE = NOT_ACCEPTED**; **no `P05_GATE_ACCEPTANCE.md`**; **A3 gate acceptor UNKNOWN** (`docs/p05/P05_01_EVIDENCE.md`) |
+| 24b-3 | **P05-02 — LIVE market adapter: SPECIFICATION / ADAPTER-CONTRACT ONLY** (D9 §3 **A-2**) | ✅ **SPECIFICATION + ADAPTER-CONTRACT COMPLETE** · ⚠ **LIVE EXECUTION NOT AUTHORIZED** | — | Contract `P05-02-LIVE-MARKET-DATA-ADAPTER-CONTRACT` **v1.0**, rules **LA-1…LA-31**, implemented in `p05/src/liveAdapterContract.js`. **192/192 tests PASS** (118 P05-01 + **74 new** contract-validation tests). Evidence `p05/evidence-p05-02/` (13 files, byte-identical across 3 regenerations). ⚠ **CLASSIFICATION = CONTRACT VALIDATION ONLY** — **NOT** provider evidence, **NOT** integration tests, and it does **NOT** establish that *"authenticated ingestion works"*. All three tracker P05-02 columns (**Exit Criteria** / **Test-Validation** / **Evidence**) remain **UNMET** (`BD-P05-02-01…03`). ⚠ **No provider selected, named, contacted or bound** · **no credentials provisioned** · **entitlement matrix still EMPTY** · **0 vendor names** · **0 secret hits over 18 files** · **0 network imports** · **0 dependencies**. Canonical model **NOT forked** (`forked: false` — P05-01 surfaces imported verbatim); the P05-01 feed is explicitly **not** a live adapter and **cannot** satisfy P05-02. ⚠ **OI-P04-04 and OI-P04-03 remain OPEN and were NOT resolved**; **no tenant/region attribute, provider entitlement value or licensing-coverage claim invented**. **C1–C6 unchanged**; OI-08/OI-09/OI-10 unaltered; `docs/p01\|p02\|p04\|d5` and both binary baselines **unmodified**; **P05-04 NOT started**; **P06/P07/P08 untouched**. ⚠ **P05 ACCEPTANCE still NOT_ACCEPTED** (no `P05_GATE_ACCEPTANCE.md`; still **5 of 18**); **CERTIFICATION `NONE_GRANTED`**; **ACTIVATION `NOT_AUTHORIZED`**; **A3 gate acceptor UNKNOWN**. One P05-01 test file's **scan scope** was adjusted and is disclosed in full at `docs/p05/P05_02_OPEN_ITEMS.md` §5 — **no assertion weakened or deleted** (`docs/p05/P05_02_SPECIFICATION.md` · `P05_02_EVIDENCE.md` · `P05_02_OPEN_ITEMS.md`) |
+
+### ⚠ OI-10 — critical recovery note — ⚠ SUPERSEDED, see the note immediately following
+
+> ⚠ **SUPERSEDED AS TO CURRENT STATE by `docs/CHECKPOINT-03.md` §3 and §6d above.** The
+> paragraph below is **left unedited as the record of its own moment** and was correct when
+> written. **OI-10 is now RESOLVED; the exact token `MD:` has been RECORDED by explicit
+> program authority — it was recorded, NOT invented, and it adopts the pre-existing D4_07
+> recommendation.** The prohibition below on *inventing* a token remains in force for all
+> other tokens and all future work; what is now closed is the recording action itself.
+
+**Do NOT convert `MD:<domain>.<field>` into a final approved token.** It remains an
+**illustrative recommendation only** (`docs/d5/ADR-01_NAMESPACE_COLLISION_GUARD.md` lines
+89, 98, 99, 203). The Sai/Ramki approval cleared the *authority hold*; it did not state a token
+string. Recording the exact token is a **documentation/recording action — not permission to
+invent one.**
+
+---
+
+## 25. Existing-IIPS boundary
+
+`iips-review-recovered` is a **read-only dependency** (AD-15 authoritative). The new program
+**may depend on** existing-IIPS artifacts **without modifying them**.
+
+**Must NOT be modified:** `iips-review-recovered` (any file) · existing-IIPS source and tests ·
+any of the 13 engines · scoring / calibration / taxonomy · Auto Option-A · Materials G1–G6 ·
+Telecom D16 · `LiveDataRuntime.ts` · `DataBoundExecutor` · `ReplayService` · E2E-030
+certification artifacts · `PROGRAM_v1.1_REPLAY_BASELINE.json` · any existing-IIPS
+methodology/certification artifact.
+
+**Existing-IIPS responsibilities (not this program's):** M-1 repair/revalidation ·
+AD-17 resolution · M-5 · M-6 · existing-IIPS methodology and certification changes.
+
+## 26. Explicit rule — methodology and certification
+
+> **No existing-IIPS methodology or certification artifact is to be modified by this program.**
+
+ADR-01 (touching `DataBoundExecutor`) and ADR-02 (replay identity) are approved **in
+principle** but are **P05/P06/P11** and **P08** work respectively, each subject to its own
+evidence and gate. They are not licence to modify existing-IIPS ahead of those phases.
+
+## 27. Explicit rule — gate promotion
+
+> ### **"Explicit gate acceptance; no automatic promotion."**
+
+No phase is promoted by technical completion, authority clearance, or elapsed time. Every gate
+requires an explicit acceptance act with its minimum evidence. **A3 clearance permits the
+acceptance process; it pre-accepts nothing.**
+
+---
+
+## 28. Checkpoint purpose and recovery instructions
+
+**Purpose.** Preserve the complete D4–D8 authority/execution history plus the WP-P00-01
+governance baseline in the repository, so a future Arena session can recover full program state
+**without** the current session or conversation history.
+
+### Recovery procedure
+
+1. **Read this file first** — it is the index.
+2. **Read `docs/d8/D8_STATUS.json`** — the machine-readable authoritative state (program status,
+   ADR status, authority roles, open items, per-phase readiness, remaining blockers, invariants).
+3. **Read `docs/p00/P00_AUTHORITY_REGISTER.md`** — the four authority dimensions and the OI-10
+   constraint.
+4. **Read `docs/p00/P00_GATE_MODEL.md`** — all 18 gates; confirm none is accepted.
+5. **Read `docs/p00/P00_OPEN_ITEMS_REGISTER.md`** — what is open and what it blocks.
+6. **Consult `docs/d4/`** for specification detail; `docs/d5/` for the ADR packages;
+   `docs/d7/` for the authority-hold record; `docs/d8/` for the reconciliation that authorized
+   execution.
+6a. ⚠ **Then read `docs/d9/D9_P05_ENTRY_AUTHORIZATION.md` and `docs/d9/D9_STATUS.json`** — the
+    **current** P05 entry/authorization state. ⚠ **Steps 2 and 4 above are stale as to current
+    state and are left unedited as the record of their own moment**: `D8_STATUS.json` still reads
+    `formal_gate_status: NONE_ACCEPTED (0 of 18)` and *"executable now: P00 only"* **by design** —
+    it is an immutable historical record. **Current state: 5 of 18 gates accepted (P00–P04), and
+    P05 is ENTRY/AUTHORIZED within the D9 §3 scope.** Corrections are recorded by addition in
+    `docs/d9/`, never by editing D8.
+
+### Recovery rules
+
+| # | Rule |
+|---|---|
+| 1 | **D4, D5 and D7 are immutable historical records.** Corrections go in new artifacts that cite the original — never by editing history |
+| 2 | Do not re-litigate the 14 G-A decisions or alter any D4 disposition |
+| 3 | Do not apply the AD-14 tracker corrections — specified in `docs/d4/D4_13_TRACKER_CORRECTIONS.md`, **not authorized to apply** |
+| 4 | Do not modify the tracker XLSX or SPEC DOCX |
+| 5 | Do not invent authority, evidence, dates or the namespace token |
+| 6 | Evidence must follow `docs/p00/P00_EVIDENCE_CONVENTIONS.md` — including **pinned commits** |
+| 7 | Authority approval is never certification, never gate acceptance, never production activation |
+| 8 | **P00, P01, P02 and P03 gates are ACCEPTED.** P03 acceptance is **specification only**: ⚠ **M-5 remains OPEN (existing-IIPS)**, **C12 remains BLOCKED**, **DO-1…DO-5 remain deferred**. The D4/D5/D7 *"P03 BLOCKED — AUTHORITY"* language is **superseded by D8**. **CHECKPOINT-02 is created** (`docs/CHECKPOINT-02.md`, source commit `7b8fa9d`). Next: a **P04 entry assessment** — P04 is **not** authorized, and **OI-08 / OI-09 remain OPEN**. |
+| 8a | ⚠ **SUPERSEDES row 8 as to current state — row 8 is left unedited as the record of its own moment.** The **P04 entry assessment was performed** and returned `P04 ENTRY BLOCKED — CONTENT DECISION`; **OI-08 and OI-09 were then RESOLVED by explicit program authority** (1:N · FIGI/OpenFIGI); the P04 work package was prepared (`6ec3b288c8deeee317a63341297bd33b9a090f4f`) and the **P04 gate is ACCEPTED** (`docs/p04/P04_GATE_ACCEPTANCE.md`) — **5 of 18**. ⚠ **OI-P04-03 remains OPEN and bounds implementation.** Next: **P05 is NOT authorized** — it requires the exact namespace token (**OI-10**, unrecorded). Git-history provenance qualification: `docs/INCIDENT-01_HISTORY_LOSS.md` |
+| 8b | ⚠ **SUPERSEDES rows 8 and 8a as to current state — both are left unedited as the record of their own moment.** **CHECKPOINT-03** (`docs/CHECKPOINT-03.md`) was taken after P04 acceptance (`faf1317eccaf77dbdab2a520899802043c851cca`). **OI-10 is RESOLVED — exact token `MD:`, canonical form `MD:<domain>.<field>`; C1–C6 unchanged.** **P05 entry preconditions are MET** — ⚠ **which is NOT authorization**: P05 remains **NOT_STARTED / NOT_ACCEPTED / NOT_AUTHORIZED** and requires an explicit entry/authorization act. ⚠ **OI-P04-04 (FIGI sourcing/licensing/coverage), provider selection and the empty entitlement matrix are NOT resolved by OI-10.** P06/P07 not promoted; **P08 not started** (AD-17 firewall preserved); P14 unchanged; P15 still BLOCKED on M-1. Certification **NONE_GRANTED**; activation **NOT_AUTHORIZED** |
+
+| 8c | ⚠ **SUPERSEDES rows 8, 8a and 8b as to current state — all three are left unedited as the record of their own moment.** **D9 — P05 ENTRY / EXPLICIT AUTHORIZATION** was recorded **2026-09-09** by **Sai/Ramki** against baseline `efe33eae287d2181cfdd5a838b0d9e5112fcdad3` (`docs/d9/D9_P05_ENTRY_AUTHORIZATION.md`). **All 15 preconditions PASS.** **P05 is now ENTRY/AUTHORIZED** within the exact D9 §3 scope — **P05-01** local deterministic feed (full acquisition work) plus **specification/adapter-contract work only** for **P05-02** and **P05-03**. ⚠ **NOT authorized:** P05-02 live provider execution · P05-03 licensed/deeper historical · **P05-04 build-out** · per-record tenant/region governance. ⚠ **P05 ACCEPTANCE = NOT_ACCEPTED** (no `P05_GATE_ACCEPTANCE.md`; still **5 of 18**); **CERTIFICATION = `NONE_GRANTED`**; **ACTIVATION = `NOT_AUTHORIZED`**. **OI-P04-04 and OI-P04-03 remain OPEN and were NOT resolved**; no provider selected; entitlement matrix EMPTY; no credentials provisioned. New open item **OI-D9-01** (domain-segment label vocabulary) — **no label invented**. **C1–C6 unchanged**; OI-08/OI-09/OI-10 unaltered; accepted P01/P02 `<NS>` records **not** rewritten; **P06/P07 not promoted; P08 not started** (AD-17 firewall preserved); P15 still BLOCKED on M-1; existing-IIPS untouched; **no executable/implementation artifact created**; **not pushed** |
+| 8d | ⚠ **SUPERSEDES rows 8, 8a, 8b and 8c as to current state — all four are left unedited as the record of their own moment.** **P05-02 — LIVE market adapter SPECIFICATION / ADAPTER-CONTRACT** was completed **2026-09-09** under **D9 §3 A-2** (specification and adapter-contract work only) on baseline `bf66c99cec1f7e43ae4dbc3ab5e77c23a27b014d`. Contract **`P05-02-LIVE-MARKET-DATA-ADAPTER-CONTRACT` v1.0** (rules **LA-1…LA-31**) with an executable conformance surface (`p05/src/liveAdapterContract.js`) and an offline **synthetic test double** (`mocklive`). **192/192 tests PASS** (118 P05-01 + **74 new**). Evidence `p05/evidence-p05-02/` — **13 files, byte-identical across 3 regenerations**. ⚠ **CLASSIFICATION = CONTRACT VALIDATION ONLY**: **NOT** provider evidence, **NOT** integration tests, and it does **NOT** establish that *"authenticated ingestion works"* — all three tracker P05-02 columns remain **UNMET**. ⚠ **NOT authorized and NOT performed:** P05-02 live provider execution (**D9 N-1**) · **P05-04** (**N-3**) · per-record tenant/region governance (**N-4**). ⚠ **No provider selected, named, contacted or bound**; **no credentials provisioned**; **entitlement matrix still EMPTY**; **0 vendor names**; **0 secret hits over 18 files**; **0 network imports**; **0 dependencies**; `provider-register.json` **unmodified**. **Canonical model NOT forked** — the P05-01 envelope/namespace/identity/provenance/validation/error surfaces are imported verbatim, and the P05-01 feed is explicitly **not** a live adapter. ⚠ **OI-P04-04 and OI-P04-03 remain OPEN and were NOT resolved**; **no tenant/region attribute, provider entitlement value or licensing-coverage claim invented**. **C1–C6 unchanged**; OI-08/OI-09/OI-10 unaltered; `docs/p01\|p02\|p04\|d5`, `CHECKPOINT-02/03` and both binary baselines **unmodified**; **P06/P07 not promoted; P08 not started**. ⚠ One P05-01 test file's **lexical scan scope** was adjusted so it keeps asserting its original claim about the P05-01 modules while stronger **behavioural** assertions cover the new module — **no assertion weakened or deleted**; disclosed in full at `docs/p05/P05_02_OPEN_ITEMS.md` §5. ⚠ **P05 ACCEPTANCE = NOT_ACCEPTED** (no `P05_GATE_ACCEPTANCE.md`; still **5 of 18**); **CERTIFICATION = `NONE_GRANTED`**; **ACTIVATION = `NOT_AUTHORIZED`**; **A3 gate acceptor still UNKNOWN**. **New bounded dependencies BD-P05-02-01…10 recorded, none resolved** — including **BD-02** (provider selection / entitlement / credentials / **P16** authority), which did **not** previously exist as a repository identifier and is recorded under the tasking label with an explicit mapping to **DEP-P02-07** / **DEP-P02-06** / **INV-10**. **Not pushed** |
+| 8e | ⚠ **INCIDENT-02 — SECOND SANDBOX RE-CLONE / HISTORY LOSS** (recorded `docs/INCIDENT-02_SANDBOX_RECLONE.md`; **supersedes nothing** — rows 8, 8a–8d stand). The workspace was **re-cloned from `origin` between turns**: HEAD reset to `eae2ff6` with **2 tracked files**, and **three commits are permanently unavailable as objects** — `cdc40dc` (P05-02), `bf66c99` (P05-01), `31c2655` (**D9 P05 entry authorization**). None was ever pushed; no dangling copies exist. **Per rule O-4 no substitute hash is invented** — those pins are now **unverifiable** and are pinned **by artifact**. **CONTENT LOSS = ZERO**: the working tree survived intact (102 `docs/` + 53 `p05/` + 2 binaries = **157**, exactly the lost tip's file count), verified by a whole-tree sha256 digest `921f7f46…` taken **identically before and after** every recovery step. The accepted baseline **was recoverable**: `efe33ea` (CHECKPOINT-03) still exists on the remote as `arena/01a0814b-…`, so a **read-only fetch** restored `eae2ff6 → 9a26ac7 → 6ec3b28 → faf1317 → efe33ea`; that branch was **not** pushed to. Restored with `git reset --mixed efe33ea` (moves pointer + index only, never rewrites working-tree files) plus **one RESTORE commit** — deliberately one, because splitting it would still yield different hashes while falsely implying the D9 act and the two work packages were re-performed. **No authority act was re-performed.** Verified after restore: **192/192 tests PASS** (the 4 failures seen immediately after the re-clone were **NOT** content failures — `existing-iips-boundary.test.js` shells out to `git diff efe33ea HEAD`, and the baseline was missing); all accepted artifacts and both binaries **byte-identical to `efe33ea`** (0 differing files); only the 2 governance ledgers differ, additively. ⚠ **INCIDENT-01's recorded mitigation DID NOT HOLD** — `origin/main` contains **only the 2 binaries**, no `docs/` at all, so the accepted state is **not** under remote protection, and the standing *"do not push"* instruction — which INCIDENT-01 L-1 already named as the proximate exposure — **has now fired twice**. **Recommendation to program authority: either authorize pushing this branch, or accept that every authorization act including D9 must be re-recorded after each recreation.** This is an **authority decision, not one made here**. **Program state UNCHANGED**: P05 = AUTHORIZED / NOT_ACCEPTED (**5 of 18**) · no `P05_GATE_ACCEPTANCE.md` · CERTIFICATION `NONE_GRANTED` · ACTIVATION `NOT_AUTHORIZED` · OI-P04-04 / OI-P04-03 **OPEN** · C1–C6 unchanged · P06/P07/P08 untouched · A3 acceptor **UNKNOWN**. **Not pushed** |
+| 8f | ⚠ **SUPERSEDES rows 8 and 8a–8e as to current state — all five are left unedited as the record of their own moment.** **P05-02-B — LIFECYCLE-STATE COVERAGE COMPLETION** was executed **2026-09-09** under **D9 §3 A-2** (specification / adapter-contract scope only). It closes **BD-P05-02-07** and **nothing else**: lifecycle fixture coverage went **2 of 5 → 5 of 5** by adding `suspended` (→ `CS-LOCAL-0006`), `merged` (→ `CS-LOCAL-0007`) and `superseded` (→ `CS-LOCAL-0008`) plus the two **successor** identities **LC-4** requires (`CS-LOCAL-0009`, `CS-LOCAL-0010`), and adapter-contract test group **Q/1…Q/8** exercising **LC-1…LC-6**, **ADP-7**, **MC-2/MC-4** and **D-1/ST-2/ST-3**. Suite **192 → 200**, all passing; evidence byte-identical across regenerations. **No `p05/src/` file was modified** and **no existing test was modified** — the `MC-1` issuer-count assertion was respected by giving the new fixture its own issuer `CI-LOCAL-KAPPA`. `LIFECYCLE_STATES` is **UNCHANGED**. Accepted P04 artifacts: **0 differing** from `efe33ea`. **OI-08/OI-09/OI-10 unchanged · ADR-01 C1–C6 unchanged · `MD:` token unchanged · no provider selected · 0 credentials · 0 network surface · existing-IIPS untouched.** ⚠ **This closed a fixture/test gap ONLY** — the provider-dependent tracker exit criteria remain **UNMET** (**BD-P05-02-01/02/03**), and **BD-P05-02-05** remains **OPEN**. ⚠ **P05 ACCEPTANCE = `NOT_ACCEPTED` · CERTIFICATION = `NONE_GRANTED` · PRODUCTION ACTIVATION = `NOT_AUTHORIZED` · P05-04 `NOT AUTHORIZED` · P06/P07/P08 `NOT STARTED` · still 5 of 18 gates · no `P05_GATE_ACCEPTANCE.md`.** Evidence: `docs/p05/P05_02_EVIDENCE.md` §15 · `docs/p05/P05_02_OPEN_ITEMS.md` §6.1 | Program owner (Sai/Ramki) via D9 §3 A-2 | 2026-09-09 |
+| 8g | ⚠ **SUPERSEDES rows 8 and 8a–8f as to current state — all six are left unedited as the record of their own moment.** **P05-03-A — HISTORICAL OHLCV INGESTION CONTRACT** was executed **2026-09-09** under **D9 §3 A-3** (*“Specification and adapter-contract only — historical OHLCV ingestion contract, reproducibility and load/reconcile requirements”*). It adds contract **`P05-03-HISTORICAL-OHLCV-INGESTION-CONTRACT` v1.0** with **35 rules `HA-1…HA-35`** (`p05/src/historicalAdapterContract.js`), **28** contract tests, **13** evidence artifacts and the `P05_03_{SPECIFICATION,EVIDENCE,OPEN_ITEMS}.md` trio. Suite **200 → 228**, all passing; evidence byte-identical across regenerations. **No canonical surface was forked** (`forked: false`), **no error class added** (E1–E8 reused), **`snapshotId` composition unchanged**, **lifecycle vocabulary unchanged**. ⚠ **`DEP-P01-04` remains UNRESOLVED** — the P05-01 one-bar-per-snapshot precedent is **reused** but does **not** pre-empt the P08 series-structure decision; no series storage, PIT storage or PIT query was built. ⚠ **`1D` remains the only `barInterval` value** — the enum is not enumerated by any accepted artifact, so no interval was invented (**D9 N-6**). ⚠ **No adjusted series and no adjustment engine** (**RC-5**, P08). **Accepted P01/P02/P04 artifacts: 0 differing from `efe33ea` · OI-08/09/10 unchanged · ADR-01 C1–C6 unchanged · `MD:` unchanged · no provider selected · 0 credentials · 0 network surface · existing-IIPS untouched.** ⚠ **This unit closed NOTHING provider-dependent** — the tracker exit criterion *“Historical load reproducible”* and evidence *“Historical sample”* both remain **UNMET** (**D9 N-2** / **OI-P04-04**); evidence class is **`CONTRACT_VALIDATION`**, never provider evidence. Ten items recorded open as **BD-P05-03-01…10**, including **DEP-P01-04**, the unenumerated `barInterval`, the `sessionRef` catalog/dictionary discrepancy, and a newly observed **A-23 secret-scanner blind spot**. ⚠ **Two disclosures:** one existing boundary test was **scoped, not weakened** (the contract-module retry carve-out extended to the P05-03 module, with the identical behavioural assertions applied and re-asserted in HA/19; **no P05-01 assertion altered**), and two long keys were shortened to satisfy that scanner (**the P05-01 scanner was NOT modified**). ⚠ **P05 ACCEPTANCE = `NOT_ACCEPTED` · CERTIFICATION = `NONE_GRANTED` · PRODUCTION ACTIVATION = `NOT_AUTHORIZED` · P05-04 `NOT AUTHORIZED` · P06/P07/P08 `NOT STARTED` · still 5 of 18 gates · no `P05_GATE_ACCEPTANCE.md`.** Evidence: `docs/p05/P05_03_EVIDENCE.md` · `docs/p05/P05_03_OPEN_ITEMS.md` | Program owner (Sai/Ramki) via D9 §3 A-3 | 2026-09-09 |
+| 8h | ⚠ **SUPERSEDES NOTHING as to program state — rows 8 and 8a–8g all stand unchanged. Evidence-maintenance correction only: no phase status, gate, authority decision or open item moves.** **P05-01 EVIDENCE CURRENCY REPAIR** was executed **2026-09-09** as the narrowly scoped corrective action identified by the **PRE-A3 / PRE-P05-ACCEPTANCE CHECKPOINT** (checkpoint §12-A, taken at `4b37b17`). That checkpoint found that `p05/evidence/` no longer matched a fresh `npm run evidence`: **P05-02-B had legitimately expanded the *shared* `p05/fixtures/identity-fixtures.json` from 6 → 11 securities and 5 → 10 mappings**, but the P05-01 evidence set was never regenerated, so `01-fixture-manifest.json` still manifested the P05-01-era corpus and row `24b-2`'s present-tense *"evidence byte-reproducible"* was momentarily inaccurate. **Resolution — the P05-01 evidence was REGENERATED against the current authoritative fixtures; the generator itself was NOT modified** (it was already deterministic by construction: fixed run stamp, no `Date.now` / `Math.random` / `process.env`). Exactly **3 of 13** files changed and **purely additively** — `00-INDEX.json` (2 digests) · `01-fixture-manifest.json` (+5 securities, +5 mappings) · `09-namespace-identity.json` (+2 issuer groups, +2 company groups); **0 entries removed or altered**; the other **10 files byte-identical**; all 12 index digests self-consistent. Determinism re-proved: **3 isolated generations → identical digest `1af92f6a2a78a59ffd4705da186332000ad25049b478043d16da9ad9e381cb22`**, and the regenerated repository evidence matches it byte-for-byte. **No P05-01 implementation semantic changed** — no rule, canonical field key, error class, `snapshotId` composition, lifecycle vocabulary or `MD:` token moved; **OI-08 / MC-1 1:N is now evidenced by 3 issuer groups and 3 company groups instead of 2 and 1** (strengthened, not altered). No P05-01 document asserts a fixture count, so **no historical P05-01 claim was edited**; row `24b-2` is accurate again as written. Suite **228/228**; accepted P01–P04 and CHECKPOINT artifacts **byte-identical to `efe33ea`**; **P05-02-B and P05-03-A untouched**. **P05 remains AUTHORIZED / NOT_ACCEPTED · A3 gate acceptor still UNKNOWN · certification `NONE_GRANTED` · production activation `NOT_AUTHORIZED` · P05-04 NOT AUTHORIZED.** |
+| 8i | ⚠ **SUPERSEDES rows 8 and 8a–8h ONLY as to the A3 gate-acceptor field — all eight are left unedited as the record of their own moment. No phase status, gate, certification or activation state moves.** **A3 P05 GATE-ACCEPTOR DESIGNATION** was recorded **2026-09-10** against baseline `78839091c7d199a9c69ee583fd9702b151a49158` in **`docs/p00/P00_DECISION_LOG.md` §7** (append-only, per that log's own rule 1 — no new governance instrument, directory or register was created). **A3 phase-gate acceptance authority for the P05 gate = Ramakrishnan V. S. (Ramki)**, program owner of record. ⚠ **This is a DESIGNATION of the person authorized to *perform* the P05 gate-acceptance decision — it is NOT the acceptance.** No acceptance act has occurred; **`P05_GATE_ACCEPTANCE.md` deliberately does NOT exist**; **P05 remains `AUTHORIZED / NOT_ACCEPTED`**, still **5 of 18** gates accepted; **certification `NONE_GRANTED`**; **production activation `NOT_AUTHORIZED`**; **P05-04 `NOT_AUTHORIZED`** (D9 N-3). Superseded as to current state — **all left unedited as the record of their own moment**: the *"A3 gate acceptor UNKNOWN"* statement in the §4 D9 block above · `docs/p00/P00_AUTHORITY_REGISTER.md` §4 (`Person named? NO`) · `docs/d9/D9_STATUS.json` (`a3_gate_acceptor: "UNKNOWN"`) · **BD-P05-01-09 · BD-P05-02-10 · BD-P05-03-09**. ⚠ **No other role is designated or inferred — A1, A2 and A4 remain `person_named: false`, and no P06–P17 acceptor is assigned.** **Zero technical change**: no methodology, contract, rule, canonical field key, lifecycle vocabulary, `snapshotId` composition, OI-08/OI-09/OI-10 decision, ADR-01 **C1–C6** rule or accepted **P00–P04** artifact altered; **no `p05/src`, `p05/tests`, `p05/fixtures` or `p05/evidence*` file modified**; no provider, credential, network or licensed-data work. **Remaining P05 acceptance blockers stand** — **OI-P04-04** · **OI-P04-03** · **DEP-P01-04** (P08) · **P05-04** authorization · **P16** licensing / credentials / entitlement · tracker **P05-02** *"Authenticated ingestion works"* and **P05-03** *"Historical load reproducible"* exit criteria · **BD-P05-03-01…08, 10**. **Next act: P05 acceptance-readiness assessment — NOT performed here.** |
+| 8j | ⚠ **SUPERSEDES rows 8 and 8a–8i as to P05 acceptance state and formal gate count — all nine are left unedited as the record of their own moment. No other phase status, no D9 authorization boundary, no certification and no activation state moves.** **P05 — ACQUISITION GATE — ACCEPTED** by **explicit A3 acceptance act** recorded **2026-09-10** against pinned baseline `cdc684435ad41982b49f832e37d1c153866da6e8` (`docs/p05/P05_GATE_ACCEPTANCE.md`). **A3 acceptor = Ramakrishnan V. S. (Ramki)** (`A3-P05-GATE-ACCEPTOR-DESIGNATION`, `docs/p00/P00_DECISION_LOG.md` §7/§7.1) — the designation made acceptance possible; **this act performs it**. Acceptance boundary = the committed `docs/p05/P05_ACCEPTANCE_CRITERIA.md` (blob `480a4c9630152606a7b5f182dce1bbb3f7477f7d`, **122 criteria**). **Formal gate status 5 of 18 → 6 of 18.** **Scope accepted:** P05-01 implemented deterministic/local feed (evidence reviewed; **228/228** tests; replay 3 passes → **0 duplicates**; idempotency 5× NOOP) · P05-02 **specification + adapter-contract only** (**LA-1…LA-31**) · P05-03 **specification + adapter-contract only** (**HA-1…HA-35**). **P05 is ONE gate spanning P05-01…P05-04** (criteria **A-1/A-2**) — no work item severed. ⚠ **PIT REPEATABILITY = `MISSING / NOT DEMONSTRATED`** — a declared P00 minimum-evidence item (`P00_GATE_MODEL.md`:40, criteria **B-2**). The A3 authority decision is that **P05 is accepted with that evidence gap remaining recorded and open**; the gap **does not become evidence because acceptance occurred**, and the obligation travels to **P08 undischarged**. Run determinism (5 runs / 1 digest) is **not** offered as a substitute — **B-2** expressly forbids it. ⚠ **P05-04 = `NOT_AUTHORIZED` / NO COMPLETION EVIDENCE** (D9 **N-3**) — inside the accepted gate, but **acceptance does NOT authorize its execution**; no such effect exists in the accepted corpus and none was inferred. ⚠ **Tracker exit criteria unchanged:** **C-2 UNMET** · **C-3 UNMET** · **C-4 NO EVIDENCE EXISTS**. **A3 decision on C-5:** they are program-management exit criteria, **not** binding minimum conditions of gate acceptance; the historical tracker XLSX and every work-item status are **unmodified**. ⚠ **UNCHANGED:** provider execution **`NOT_AUTHORIZED`** (**N-1**) · licensed historical acquisition **`NOT_AUTHORIZED`** (**N-2**) · per-record tenant/region governance **`NOT_AUTHORIZED`** (**N-4/N-5**, **IB-1…IB-5**) · **certification `NONE_GRANTED`** (C12 BLOCKED on M-5) · **production activation `NOT_AUTHORIZED`** (**A4** at **P16 only**) · **P16 NOT REACHED** · **P06–P17 NOT ACCEPTED**. ⚠ **Open, NOT resolved by this act:** **OI-P04-03** · **OI-P04-04** · **DEP-P01-04** (P08) · **OI-D9-01** · **28 of 30 BD items** · **M-1/AD-4 · M-5 · M-6 · AD-17/M-2** · **DO-P04-1…5 / DO-1…DO-5** deferred. ⚠ **No concession mechanism invoked · no concessions register created · no concessions authority invented** — the PIT limitation is recorded by the acceptance record itself (criteria **NG-14**). ⚠ **Historical A3-`UNKNOWN` records left unedited** (`D9_STATUS.json`, **BD-P05-01-09 / -02-10 / -03-09**, both evidence JSONs, the fixture and both generators) — **stale as to current state**; the controlling record is `P00_DECISION_LOG.md` §7/§7.1 plus the acceptance record. **5 files touched by this act**: the acceptance record (new) · this manifest · `docs/p00/P00_GATE_MODEL.md` current-state ledger lines · **2 superseded `p05/tests` governance guards**. **Zero historical record rewritten.** `p05/src`, `p05/fixtures` and `p05/evidence*` **UNMODIFIED**. ⚠ **The 2 test guards are REPLACED, NOT WEAKENED** — they formerly asserted *"P05 remains NOT_ACCEPTED and no acceptance artifact exists"*, correct while P05 was unaccepted; the new guards are **stronger**, requiring this acceptance record to carry every limitation the old ones protected by absence (D9 record unedited · P05-04 `NOT_AUTHORIZED` · N-1/N-2/N-3 · PIT `MISSING / NOT DEMONSTRATED` · C-2/C-3/C-4 not relabelled · no concessions register · no waiver language). **No assertion deleted; `existing-iips-boundary.test.js` untouched.** No provider, credential, network or licensed-data work. **No implementation performed.** |
+| 8k | ⚠ **SUPERSEDES rows 8 and 8a–8j as to P05-04 authorization, P06 entry state and the A3 acceptor scope — all ten are left unedited as the record of their own moment. No phase acceptance status, no certification and no activation state moves; the gate count stays 6 of 18.** **D10 — P05-04 AUTHORIZATION + P06 ENTRY AUTHORIZATION + P06 A3 DESIGNATION + `DataBoundExecutor` C1–C6 EXECUTION AUTHORIZATION** was recorded **2026-09-10** against baseline `19713d8b32abae3292a7b0208cd826fc1464f42b` in **`docs/p00/P00_DECISION_LOG.md` §8** (append-only per that log's own rule 1 — **no new governance instrument, directory or register was created**). Authority: **Ramki**, program owner of record. **D10-1: P05-04 = `AUTHORIZED`** — the *"further explicit act"* D9 **N-3** required; ⚠ **no completion evidence yet**, and `P05_GATE_ACCEPTANCE.md` **R-13/R-14** plus **C-4 `NO EVIDENCE EXISTS`** remain historically true and unedited. **D10-2: P06 ENTRY = `AUTHORIZED`** — scope **P06-01 / P06-02 / P06-03 ONLY**. **D10-3: A3 P06 gate acceptor = Ramakrishnan V. S. (Ramki)**, scoped to **P06** only; ⚠ **P07–P17 NOT designated**; ⚠ **designation ≠ acceptance**; no prior explicit P06 designation was discovered and no different person was invented. **D10-4: `DataBoundExecutor` C1–C6 execution = `AUTHORIZED`** within the existing certified ADR-01/D8 boundary — basis `D8_AUTHORITY_RECONCILIATION.md`:35 (**ADR-01-A2 APPROVED — fail-closed**, *"no variation authorized"*) + §B:69 (*"Authority hold: CLEARED"*) + `P00_AUTHORITY_REGISTER.md`:27 + ADR-01 §H (*"NAMED AUTHORITY REQUIRED — Ramki / Sai"*). ⚠ **C1–C6 preserved EXACTLY as written in ADR-01 §C.2 with §C.3 error semantics — NO METHODOLOGY VARIATION.** **D10-5:** ADR-01 §I's stale `PENDING RAMKI/SAI ADR` / *"Blocks: … P06 Normalization"* is a historical record and is **LEFT UNEDITED**; the controlling current authority is **D8**, relied on by citation. ⚠ **D10-6: P06 AUTHORIZATION IS NOT P06 ACCEPTANCE.** **P06 = `NOT_ACCEPTED`**, still **6 of 18**; **no `P06_GATE_ACCEPTANCE.md` exists or was created.** ⚠ **UNCHANGED:** provider execution **`NOT_AUTHORIZED`** (**N-1**) · licensed historical acquisition **`NOT_AUTHORIZED`** (**N-2**) · production activation **`NOT_AUTHORIZED`** (**A4** at **P16 only**) · **Track B → `origin/main` merge `NOT AUTHORIZED`** (`INCIDENT-02` L-1 mitigation did not hold; L-4 is a recommendation, not an authorization) · certification **`NONE_GRANTED`** (**A2** not person-named) · **P07–P17 NOT ACCEPTED / NOT AUTHORIZED**. ⚠ **Not resolved:** OI-P04-03 · OI-P04-04 · DEP-P01-04 · OI-D9-01 · M-1/AD-4 · M-5 · M-6 · AD-17/M-2 · DO-P04-1…5 / DO-1…DO-5. **Technical scope NONE:** no `docs/p06/` directory or artifact created, **no P06 implementation, fixture or evidence file**, no `p05/src` / `p05/fixtures` / `p05/evidence*` change, no methodology, contract, canonical field key, `snapshotId` composition, OI-08/OI-09/OI-10 decision or ADR-01 C1–C6 rule altered. **Zero historical or accepted record rewritten.** |
+| 8l | ⚠ **SUPERSEDES rows 8 and 8a–8k as to P06 acceptance state and the formal gate count — all eleven are left unedited as the record of their own moment. No other phase status, no D10 authorization, no D11/D12 authority record, no ADR-01 text and no historical evidence index was altered.** **P06 — CANONICAL PIPELINE GATE — IS `ACCEPTED` BY AN EXPLICIT A3 ACT** (`docs/p06/P06_GATE_ACCEPTANCE.md`, **2026-09-10**, acceptor **Ramakrishnan V. S. (Ramki)** under the **D10-3** P06-scoped designation). `p06_acceptance_status` **`ACCEPTED`** *(was `NOT_ACCEPTED`)* · `formal_gate_status` **7 of 18** *(was 6 of 18)* · all three D10-2 work items accepted (`P06-01` 55 / `P06-02` 25 / `P06-03` 33 tests) · suite **377/377 PASS** · authority disposition for **ADR-01 §G item 1 = D12** (`collision_census_status` = **`RECONCILED — 60 coded controlling`**; historical 52/54 **preserved**; **`ADR-01 §B.2` NOT rewritten**; historical **54 `UNREPRODUCED`**, no substitute adopted) · **ADR-01 §G**: 13/13 engines, 97/97 golden cases, 97/97 value-match, 97/97 independently byte-identical, C1–C6 guard 11/11 mutation-verified · ⚠ **`AD-17` `UNRESOLVED`** · ⚠ **named digest triples `NOT REPRODUCED`** · certification **`NONE_GRANTED`** · production activation **`NOT_AUTHORIZED`** · provider/licensed execution **`NOT_AUTHORIZED`** · **Track B → `origin/main` `NOT AUTHORIZED`** · **P07–P17 NOT ACCEPTED / NOT AUTHORIZED**, A3 acceptors **NOT designated** · no concessions register · existing-IIPS **untouched** (`64797d6`/`4292fff` local, unpushed) · **2 P05 guards superseded-not-weakened, 9 mutations all detected** · **next authorized action: NONE** |
+
+### Known documentation gaps (recorded, not defects)
+
+CD-01 citation drift (`LiveDataRuntime.ts:76` in D4/D5 vs `:78` in the current clone — same
+commit `5decdca`, same code, line offset only) · P10 thin D4 coverage · missing IES-016/017/020
+readiness certificate files (**AD-8 stands: certified**) · `G:\IIPS\BACKUPS` inaccessible.
+
+---
+
+**This manifest records no new decision.** ⚠ **Clarified by addition (D9, 2026-09-09):** this
+manifest remains a **recovery / index artifact only** — it introduces no decision of its own. The
+**P05 entry/authorization decision it now points to is recorded in `docs/d9/`, not here.** Every
+statement above is a pointer to, or a restatement of, an existing committed artifact.

@@ -1,0 +1,54 @@
+{
+  "artifact": "P05-03 REPRODUCIBILITY (PC-3) — SYNTHETIC CONTRACT BEHAVIOUR ONLY",
+  "runStamp": "2026-09-09T00:00:00.000Z",
+  "classification": {
+    "evidenceClass": "CONTRACT_VALIDATION",
+    "isProviderEvidence": false,
+    "isRealHistoricalSample": false,
+    "isLoadReconcileTestAgainstRealData": false,
+    "establishesReproducibleLicensedLoad": false,
+    "trackerP05_03ExitCriteria": "UNMET — \"Historical load reproducible\" requires a licensed real-data load (D9 N-2 / OI-P04-04 OPEN)",
+    "trackerP05_03TestValidation": "UNMET — \"Load/reconcile tests\" here exercise synthetic fixtures only",
+    "trackerP05_03Evidence": "UNMET — \"Historical sample\" would require licensed acquisition",
+    "providerSelected": false,
+    "providerContacted": false,
+    "credentialsProvisioned": false,
+    "networkUsed": false,
+    "licensedDataAcquired": false,
+    "adjustedSeriesGenerated": false,
+    "orchestrationImplemented": false,
+    "testDoubleProviderToken": "mockhist",
+    "testDoubleIsRegisterIssuance": false
+  },
+  "scenarios": [
+    {
+      "fixtureId": "HRP-0001",
+      "label": "identical boundary repeated",
+      "reproducible": true,
+      "expected": true,
+      "matchedExpectation": true,
+      "distinctSnapshotIds": [
+        "data-mockhist-mockhist-r1-2026-03-02T00:00:00.000Z"
+      ]
+    },
+    {
+      "fixtureId": "HRP-0002",
+      "label": "a different asOf is a DIFFERENT boundary — not a violation",
+      "reproducible": false,
+      "expected": false,
+      "matchedExpectation": true,
+      "distinctSnapshotIds": [
+        "data-mockhist-mockhist-r1-2026-03-02T00:00:00.000Z",
+        "data-mockhist-mockhist-r1-2026-02-27T00:00:00.000Z"
+      ],
+      "note": "PC-3 is per-boundary. Two DIFFERENT boundaries producing different identities is correct."
+    }
+  ],
+  "rule": "PC-3 — same boundary ⇒ same result ⇒ same snapshot identity; D-1 supplies the mechanism",
+  "mechanism": "D-1 — identical (provider, dataVersion, asOf) ⇒ identical snapshotId; PC-3 supplies the boundary requirement",
+  "repeats": 5,
+  "evidenceClass": "CONTRACT_VALIDATION",
+  "isProviderEvidence": false,
+  "satisfiesTrackerExitCriterion": false,
+  "trackerExitCriteriaNote": "⚠ \"Historical load reproducible\" is NOT claimed here. It requires a licensed real-data load — D9 N-2 / OI-P04-04 OPEN. What is demonstrated is that the contract is deterministic over synthetic fixtures."
+}
