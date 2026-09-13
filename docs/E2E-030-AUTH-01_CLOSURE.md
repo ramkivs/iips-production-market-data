@@ -193,13 +193,16 @@ The Existing-IIPS Program Authority has reviewed the E2E-030-R1 evidence and ind
 
 ## 6. Durable Commit SHA
 
-**Commit:** To be recorded upon commit
+**Commit:** `541963b84861f4705af95e550d73de0f6d39272e`
 
 ---
 
 ## 7. Remote Publication Verification
 
-**Remote:** To be verified upon push
+**Remote:** `ramkivs/iips-production-market-data`  
+**Branch:** `arena/01a0853d-iips-production-market-data`  
+**Remote tip:** `541963b84861f4705af95e550d73de0f6d39272e`  
+**Verified:** ✅ `git ls-remote` confirms commit is on authoritative remote
 
 ---
 
