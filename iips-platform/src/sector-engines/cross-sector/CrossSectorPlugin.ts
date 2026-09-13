@@ -67,6 +67,9 @@ export class CrossSectorPlugin implements SectorPlugin {
       { holdings: result.intelligence.holdings },
       result.intelligence.sectorExposure,
       'PORTFOLIO_SUMMARY',
+      undefined,  // requestId (optional)
+      undefined,  // inputs (optional)
+      request.marketDataLineage  // P15: propagate market-data lineage
     );
 
     // Build portfolio evidence through the shared Evidence Pipeline.

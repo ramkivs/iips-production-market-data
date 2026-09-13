@@ -55,18 +55,9 @@ export class RuntimeCoordinator {
     }
     if (result.state === 'COMPLETED') {
       this.state = 'COMPLETED';
-      // P15: Pass marketDataLineage to recordSnapshot if present
-      if (request.marketDataLineage) {
-        this.recordSnapshot(
-          engineId,
-          result.metadata.metrics as Record<string, number>,
-          result.metadata.scores as Record<string, number>,
-          result.metadata.verdict as string | undefined,
-          request.requestId,
-          request.inputs as Record<string, unknown>,
-          request.marketDataLineage
-        );
-      }
+      // P15: marketDataLineage is passed through ExecutionRequest to plugins,
+      // which pass it to recordSnapshot when creating the governed snapshot.
+      // RuntimeCoordinator does NOT create a duplicate snapshot here.
       return { result, snapshotId: result.snapshotRef };
     }
     this.state = result.state === 'CANCELLED' ? 'CANCELLED' : 'FAILED';

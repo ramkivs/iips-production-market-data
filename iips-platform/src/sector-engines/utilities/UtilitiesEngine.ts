@@ -87,6 +87,9 @@ export class UtilitiesEngine implements SectorPlugin {
       { rateBaseGrowth: input.rateBaseGrowth },
       score.pillars as unknown as Record<string, number>,
       decision.verdict,
+      undefined,  // requestId (optional)
+      undefined,  // inputs (optional)
+      request.marketDataLineage  // P15: propagate market-data lineage
     );
     const evidence = this.evidence.build({
       segment: input.segment,

@@ -67,6 +67,9 @@ export class CapitalMarketsEngine implements SectorPlugin {
       metrics,
       score.pillars as unknown as Record<string, number>,
       decision.verdict,
+      undefined,  // requestId (optional)
+      undefined,  // inputs (optional)
+      request.marketDataLineage  // P15: propagate market-data lineage
     );
     const evidence = this.evidence.build({
       engineId: CAPITAL_MARKETS_ENGINE_ID,

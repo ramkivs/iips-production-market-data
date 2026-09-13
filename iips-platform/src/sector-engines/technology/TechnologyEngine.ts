@@ -93,6 +93,9 @@ export class TechnologyEngine implements SectorPlugin {
       { revenueGrowth: input.revenueGrowth ?? 0 },
       score.pillars as unknown as Record<string, number>,
       decision.verdict,
+      undefined,  // requestId (optional)
+      undefined,  // inputs (optional)
+      request.marketDataLineage  // P15: propagate market-data lineage
     );
     const evidence = this.evidence.build({
       subsegment: resolution.subsegment,
