@@ -1,4 +1,10 @@
-/** Snapshot Service — immutable snapshot creation (IES-005 P4 §11, IES-006.2A). */
+/**
+ * Snapshot Service — immutable snapshot creation (IES-005 P4 §11, IES-006.2A).
+ *
+ * M-2 REPAIR (D41 Workstream C):
+ *   Snapshots now store execution context in provenance for replay recomputation.
+ *   The provenance map includes engineId, requestId, and input parameters.
+ */
 import type { Clock } from '../infrastructure/Clock';
 import type { IdProvider } from '../infrastructure/IdProvider';
 import { deepFreeze } from '../infrastructure/deepFreeze';
@@ -10,6 +16,12 @@ export interface SnapshotInput {
   readonly verdict?: string;
   readonly evidenceRefs?: readonly string[];
   readonly provenance?: Readonly<Record<string, string>>;
+  readonly executionContext?: {
+    readonly requestId: string;
+    readonly inputs: Readonly<Record<string, unknown>>;
+    readonly contractVersion?: string;
+    readonly calibrationVersion?: string;
+  };
 }
 
 export interface Snapshot {
@@ -32,6 +44,25 @@ export class SnapshotService {
   ) {}
 
   create(input: SnapshotInput): Readonly<Snapshot> {
+    // Build provenance map with execution context for replay
+    const provenance: Record<string, string> = { ...(input.provenance ?? {}) };
+    
+    // M-2 REPAIR: Store execution context in provenance for replay recomputation
+    if (input.executionContext) {
+      provenance.engineId = input.engineId;
+      provenance.requestId = input.executionContext.requestId;
+      if (input.executionContext.contractVersion) {
+        provenance.contractVersion = input.executionContext.contractVersion;
+      }
+      if (input.executionContext.calibrationVersion) {
+        provenance.calibrationVersion = input.executionContext.calibrationVersion;
+      }
+      // Store inputs with 'input.' prefix for reconstruction during replay
+      for (const [key, value] of Object.entries(input.executionContext.inputs)) {
+        provenance[`input.${key}`] = JSON.stringify(value);
+      }
+    }
+
     const snapshot: Snapshot = {
       snapshotId: this.idProvider.generate('SNAP', `${input.engineId}|${this.clock.now()}`),
       engineId: input.engineId,
@@ -41,7 +72,7 @@ export class SnapshotService {
       scores: Object.freeze({ ...input.scores }),
       verdict: input.verdict,
       evidenceRefs: Object.freeze([...(input.evidenceRefs ?? [])]),
-      provenance: Object.freeze({ ...(input.provenance ?? {}) }),
+      provenance: Object.freeze(provenance),
     };
     return deepFreeze(snapshot);
   }
