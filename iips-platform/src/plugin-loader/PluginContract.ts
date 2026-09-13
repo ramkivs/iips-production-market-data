@@ -27,6 +27,7 @@ export interface PluginManifest {
 export interface ExecutionRequest {
   readonly requestId: string;
   readonly inputs: Readonly<Record<string, unknown>>;
+  readonly marketDataLineage?: string; // P15: optional market-data snapshot ID for lineage propagation
 }
 
 export interface ExecutionResult {

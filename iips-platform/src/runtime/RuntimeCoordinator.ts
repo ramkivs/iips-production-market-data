@@ -55,6 +55,18 @@ export class RuntimeCoordinator {
     }
     if (result.state === 'COMPLETED') {
       this.state = 'COMPLETED';
+      // P15: Pass marketDataLineage to recordSnapshot if present
+      if (request.marketDataLineage) {
+        this.recordSnapshot(
+          engineId,
+          result.metadata.metrics as Record<string, number>,
+          result.metadata.scores as Record<string, number>,
+          result.metadata.verdict as string | undefined,
+          request.requestId,
+          request.inputs as Record<string, unknown>,
+          request.marketDataLineage
+        );
+      }
       return { result, snapshotId: result.snapshotRef };
     }
     this.state = result.state === 'CANCELLED' ? 'CANCELLED' : 'FAILED';
@@ -68,7 +80,8 @@ export class RuntimeCoordinator {
     scores: Record<string, number>,
     verdict?: string,
     requestId?: string,
-    inputs?: Record<string, unknown>
+    inputs?: Record<string, unknown>,
+    marketDataLineage?: string // P15: optional market-data snapshot ID for lineage propagation
   ) {
     const snapshot = this.snapshotService.create({
       engineId,
@@ -79,6 +92,7 @@ export class RuntimeCoordinator {
         requestId,
         inputs: inputs ?? {},
       } : undefined,
+      marketDataLineage, // P15: pass lineage to SnapshotService
     });
     this.snapshotStore.append(snapshot);
     return snapshot;

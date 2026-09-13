@@ -13,6 +13,7 @@ export interface EvidenceProvenance {
   readonly engineVersion: string;
   readonly methodologyVersion: string;
   readonly snapshotId: string;
+  readonly marketDataLineage?: string; // P15: optional market-data snapshot ID for lineage propagation
 }
 
 export interface EvidencePackage {

@@ -22,6 +22,7 @@ export interface SnapshotInput {
     readonly contractVersion?: string;
     readonly calibrationVersion?: string;
   };
+  readonly marketDataLineage?: string; // P15: optional market-data snapshot ID for lineage propagation
 }
 
 export interface Snapshot {
@@ -61,6 +62,11 @@ export class SnapshotService {
       for (const [key, value] of Object.entries(input.executionContext.inputs)) {
         provenance[`input.${key}`] = JSON.stringify(value);
       }
+    }
+    
+    // P15: Store market-data lineage in provenance for immutable lineage tracking
+    if (input.marketDataLineage) {
+      provenance.marketDataLineage = input.marketDataLineage;
     }
 
     const snapshot: Snapshot = {

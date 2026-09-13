@@ -72,6 +72,7 @@ export interface DataBoundRequest {
   readonly data: DataSnapshot<Record<string, unknown>>; // immutable snapshot
   readonly companyInputs: Record<string, unknown>;      // the company's fundamental inputs (frozen baseline fields)
   readonly contributingIds?: readonly string[];         // contributing snapshot IDs for C5 uniqueness check
+  readonly marketDataLineage?: string;                  // P15: explicit market-data snapshot ID for lineage propagation
 }
 
 /**
@@ -92,9 +93,14 @@ export class DataBoundExecutor {
       bound.companyInputs,
       bound.contributingIds ?? []
     );
+    
+    // P15: Extract market-data lineage from DataSnapshot (use explicit lineage if provided, else snapshotId)
+    const marketDataLineage = bound.marketDataLineage ?? bound.data.snapshotId;
+    
     const result = this.exec(bound.engineId, {
       requestId: bound.requestId,
       inputs: inputs as unknown as Record<string, unknown>,
+      marketDataLineage, // P15: propagate lineage to governed execution
     });
     return { result, snapshotIdentity: bound.data.snapshotId };
   }
