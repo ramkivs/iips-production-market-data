@@ -32,6 +32,7 @@ import { TelecommunicationsEngine } from '../../src/sector-engines/telecommunica
 import { AutomobileEngine } from '../../src/sector-engines/automobile/AutomobileEngine';
 import { MaterialsMetalsEngine } from '../../src/sector-engines/materials-metals/MaterialsMetalsEngine';
 import type { SectorPlugin } from '../../src/plugin-loader/PluginContract';
+import { namespaceFields } from '../../src/governance/namespaceHelper';
 
 const BASELINE = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, '../../../program-v1.1-certification/PROGRAM_v1.1_REPLAY_BASELINE.json'), 'utf8'),
@@ -79,7 +80,7 @@ test('L-CERT-04: no live-data mutation inside an executing engine — input snap
   const { node } = buildExec();
   const src = new MarketDataSource<Record<string, unknown>>('data1');
   const te = BASELINE.sectors.find((s) => s.engineId === TECHNOLOGY_ENGINE_ID)!;
-  const fields = Object.fromEntries(Object.entries(te.input));
+  const fields = namespaceFields(Object.fromEntries(Object.entries(te.input)));
   const snap = src.snapshot('v1', 't1', 'good', 100, fields);
   const exe = new DataBoundExecutor((engineId, req) => node.runtime.execute(engineId, req).result);
   const bound = { engineId: TECHNOLOGY_ENGINE_ID, requestId: 'ld-1', data: snap, companyInputs: {} };
@@ -92,7 +93,7 @@ test('L-CERT-04: no live-data mutation inside an executing engine — input snap
 test('L-CERT-05: same data snapshot -> identical engine result', () => {
   const src = new MarketDataSource<Record<string, unknown>>('data1');
   const ind = BASELINE.sectors.find((s) => s.engineId === INDUSTRIALS_ENGINE_ID)!;
-  const snap = src.snapshot('v1', 't1', 'good', 100, Object.fromEntries(Object.entries(ind.input)));
+  const snap = src.snapshot('v1', 't1', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(ind.input))));
   // Execute the SAME snapshot on two independent (same-context) nodes -> identical result.
   const exeA = new DataBoundExecutor((engineId, req) => buildExec().node.runtime.execute(engineId, req).result);
   const exeB = new DataBoundExecutor((engineId, req) => buildExec().node.runtime.execute(engineId, req).result);
@@ -111,7 +112,7 @@ test('L-CERT-06: different data snapshot -> explicitly different input lineage, 
 test('L-CERT-07: replay uses the ORIGINAL data snapshot, not today-market data', () => {
   const src = new MarketDataSource<Record<string, unknown>>('data1');
   const ind = BASELINE.sectors.find((s) => s.engineId === INDUSTRIALS_ENGINE_ID)!;
-  const original = src.snapshot('v1', '2026-08-01T00:00:00Z', 'good', 100, Object.fromEntries(Object.entries(ind.input)));
+  const original = src.snapshot('v1', '2026-08-01T00:00:00Z', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(ind.input))));
   // Execute on node A, then "replay" on a fresh same-context node B bound to the ORIGINAL snapshot.
   const exeA = new DataBoundExecutor((engineId, req) => buildExec().node.runtime.execute(engineId, req).result);
   const exeB = new DataBoundExecutor((engineId, req) => buildExec().node.runtime.execute(engineId, req).result);
@@ -153,7 +154,7 @@ test('L-CERT-11: WP-0 reproduction — same snapshot feeding the frozen baseline
   const exe = new DataBoundExecutor((engineId, req) => node.runtime.execute(engineId, req).result);
   // Feed each baseline sector's inputs as a versioned snapshot -> reproduce frozen composite.
   for (const s of BASELINE.sectors) {
-    const snap = src.snapshot('v1', 't1', 'good', 100, Object.fromEntries(Object.entries(s.input)));
+    const snap = src.snapshot('v1', 't1', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(s.input))));
     const r = exe.execute({ engineId: s.engineId, requestId: `ld-wp0-${s.engineId}`, data: snap, companyInputs: {} }).result;
     assert.equal(r.metadata.composite, s.expectedOutput.composite, `${s.sector} WP-0 preserved through live-data boundary`);
   }
@@ -162,7 +163,7 @@ test('L-CERT-11: WP-0 reproduction — same snapshot feeding the frozen baseline
 test('L-CERT-12: DR preserves and replays the data lineage', () => {
   const src = new MarketDataSource<Record<string, unknown>>('data1');
   const ind = BASELINE.sectors.find((s) => s.engineId === INDUSTRIALS_ENGINE_ID)!;
-  const snap = src.snapshot('v1', 't1', 'good', 100, Object.fromEntries(Object.entries(ind.input)));
+  const snap = src.snapshot('v1', 't1', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(ind.input))));
   const exe = new DataBoundExecutor((engineId, req) => buildExec().node.runtime.execute(engineId, req).result);
   const r = exe.execute({ engineId: INDUSTRIALS_ENGINE_ID, requestId: 'ld-dr', data: snap, companyInputs: {} });
   // The data snapshot is replayable across a DR recovery (same deterministic context).

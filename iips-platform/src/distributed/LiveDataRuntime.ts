@@ -12,8 +12,15 @@
  * data snapshots. Same data snapshot -> identical engine result; different data snapshot ->
  * explicitly different input lineage (never silent drift). Replay always uses the ORIGINAL
  * data snapshot, not today's market data. Cloud/provider is substrate only.
+ *
+ * M-1 REPAIR (D41 Workstream A, R-A5):
+ *   DataBoundExecutor now uses guardedMerge() from NamespaceCollisionGuard.
+ *   The unguarded spread `{ ...bound.data.fields, ...bound.companyInputs }` has been
+ *   replaced with a C1–C6 guarded merge that fails closed on any namespace violation
+ *   or collision between market-data fields and company inputs.
  */
 import type { SectorPlugin, ExecutionRequest, ExecutionResult } from '../plugin-loader/PluginContract';
+import { guardedMerge } from '../governance/NamespaceCollisionGuard';
 
 /** Provider identity + quality status of a market-data source. */
 export interface DataSourceMeta {
@@ -64,18 +71,27 @@ export interface DataBoundRequest {
   readonly requestId: string;
   readonly data: DataSnapshot<Record<string, unknown>>; // immutable snapshot
   readonly companyInputs: Record<string, unknown>;      // the company's fundamental inputs (frozen baseline fields)
+  readonly contributingIds?: readonly string[];         // contributing snapshot IDs for C5 uniqueness check
 }
 
 /**
  * Executes a frozen engine against a data snapshot. The engine consumes ONLY the immutable
  * snapshot + company inputs; it never reads mutable live state. Replay uses the snapshot's
  * dataVersion/asOf identity.
+ *
+ * M-1 REPAIR: Uses guardedMerge() to enforce ADR-01 C1–C6 before merging.
+ * Fail-closed: any namespace violation or collision aborts the execution.
  */
 export class DataBoundExecutor {
   constructor(private readonly exec: (engineId: string, request: ExecutionRequest) => ExecutionResult) {}
 
   execute(bound: DataBoundRequest): { result: ExecutionResult; snapshotIdentity: string } {
-    const inputs = { ...bound.data.fields, ...bound.companyInputs };
+    // M-1 REPAIR: guarded merge with C1–C6 assertion (replaces unguarded spread)
+    const inputs = guardedMerge(
+      bound.data.fields as Record<string, unknown>,
+      bound.companyInputs,
+      bound.contributingIds ?? []
+    );
     const result = this.exec(bound.engineId, {
       requestId: bound.requestId,
       inputs: inputs as unknown as Record<string, unknown>,

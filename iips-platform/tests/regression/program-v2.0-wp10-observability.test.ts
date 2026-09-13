@@ -28,6 +28,7 @@ import { TelecommunicationsEngine } from '../../src/sector-engines/telecommunica
 import { AutomobileEngine } from '../../src/sector-engines/automobile/AutomobileEngine';
 import { MaterialsMetalsEngine } from '../../src/sector-engines/materials-metals/MaterialsMetalsEngine';
 import type { SectorPlugin } from '../../src/plugin-loader/PluginContract';
+import { namespaceFields } from '../../src/governance/namespaceHelper';
 
 const BASELINE = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, '../../../program-v1.1-certification/PROGRAM_v1.1_REPLAY_BASELINE.json'), 'utf8'),
@@ -61,7 +62,7 @@ function runTraced(engineId: string, data: ReturnType<MarketDataSource<Record<st
 test('O2-CERT-01: every execution has a correlation/trace identity', () => {
   const src = new MarketDataSource<Record<string, unknown>>('data1');
   const ind = BASELINE.sectors.find((s) => s.engineId === INDUSTRIALS_ENGINE_ID)!;
-  const snap = src.snapshot('v1', 't1', 'good', 100, Object.fromEntries(Object.entries(ind.input)));
+  const snap = src.snapshot('v1', 't1', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(ind.input))));
   const t = runTraced(INDUSTRIALS_ENGINE_ID, snap, 'req-1');
   const recs = obs.byTrace(t);
   assert.ok(recs.length >= 4, 'multiple correlated events in one trace');
@@ -72,7 +73,7 @@ test('O2-CERT-02: dataVersion, provider, asOf, quality, completeness are traceab
   obs.clear();
   const src = new MarketDataSource<Record<string, unknown>>('bloomberg');
   const ind = BASELINE.sectors.find((s) => s.engineId === INDUSTRIALS_ENGINE_ID)!;
-  const snap = src.snapshot('v7', '2026-08-09T12:00:00Z', 'good', 100, Object.fromEntries(Object.entries(ind.input)));
+  const snap = src.snapshot('v7', '2026-08-09T12:00:00Z', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(ind.input))));
   const t = runTraced(INDUSTRIALS_ENGINE_ID, snap, 'req-2');
   const acquired = obs.byTrace(t).find((r) => r.event === 'live-data.acquired')!;
   assert.equal(acquired.dataVersion, 'v7');
@@ -86,7 +87,7 @@ test('O2-CERT-03: snapshot -> execution -> evidence -> replay lineage reconstruc
   obs.clear();
   const src = new MarketDataSource<Record<string, unknown>>('data1');
   const te = BASELINE.sectors.find((s) => s.engineId === TECHNOLOGY_ENGINE_ID)!;
-  const snap = src.snapshot('v1', 't1', 'good', 100, Object.fromEntries(Object.entries(te.input)));
+  const snap = src.snapshot('v1', 't1', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(te.input))));
   const t = runTraced(TECHNOLOGY_ENGINE_ID, snap, 'req-3');
   const events = obs.byTrace(t).map((r) => r.event);
   assert.ok(events.includes('snapshot.created'), 'snapshot event');
@@ -120,7 +121,7 @@ test('O2-CERT-06: provider failure observable without mutating engine semantics'
   obs.clear();
   const src = new MarketDataSource<Record<string, unknown>>('down');
   const ind = BASELINE.sectors.find((s) => s.engineId === INDUSTRIALS_ENGINE_ID)!;
-  const snap = src.snapshot('v0', 't0', 'unavailable', 0, Object.fromEntries(Object.entries(ind.input)));
+  const snap = src.snapshot('v0', 't0', 'unavailable', 0, namespaceFields(Object.fromEntries(Object.entries(ind.input))));
   obs.recordProviderFailure(LINEAGE, 'req-prov', 'down');
   obs.recordLiveDataAcquired(LINEAGE, 'req-prov', { dataVersion: snap.dataVersion, asOf: snap.asOf, provider: snap.provider, quality: snap.quality, completenessPct: snap.completenessPct });
   const pf = obs.list().find((r) => r.event === 'provider.failure')!;
@@ -133,7 +134,7 @@ test('O2-CERT-07: replay telemetry identifies the ORIGINAL data snapshot, not cu
   obs.clear();
   const src = new MarketDataSource<Record<string, unknown>>('data1');
   const ind = BASELINE.sectors.find((s) => s.engineId === INDUSTRIALS_ENGINE_ID)!;
-  const original = src.snapshot('v-old', '2026-07-01T00:00:00Z', 'good', 100, Object.fromEntries(Object.entries(ind.input)));
+  const original = src.snapshot('v-old', '2026-07-01T00:00:00Z', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(ind.input))));
   const t = runTraced(INDUSTRIALS_ENGINE_ID, original, 'req-replay');
   const replay = obs.byTrace(t).find((r) => r.event === 'replay.completed')!;
   assert.equal(replay.snapshotId, original.snapshotId, 'replay bound to original snapshot');
@@ -145,7 +146,7 @@ test('O2-CERT-08: sector identity remains isolated across the traced chain', () 
   const src = new MarketDataSource<Record<string, unknown>>('data1');
   const ids = new Set<string>();
   for (const s of BASELINE.sectors) {
-    const snap = src.snapshot('v1', 't1', 'good', 100, Object.fromEntries(Object.entries(s.input)));
+    const snap = src.snapshot('v1', 't1', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(s.input))));
     const t = runTraced(s.engineId, snap, `req-iso-${s.engineId}`);
     const exec = obs.byTrace(t).find((r) => r.event === 'execution.completed')!;
     ids.add(JSON.stringify([exec.engineId, exec.snapshotId]));
@@ -157,7 +158,7 @@ test('O2-CERT-09: observability itself cannot modify deterministic outputs', () 
   // Same snapshot, executed with and without telemetry -> identical deterministic output.
   const src = new MarketDataSource<Record<string, unknown>>('data1');
   const te = BASELINE.sectors.find((s) => s.engineId === TECHNOLOGY_ENGINE_ID)!;
-  const snap = src.snapshot('v1', 't1', 'good', 100, Object.fromEntries(Object.entries(te.input)));
+  const snap = src.snapshot('v1', 't1', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(te.input))));
   // Without telemetry:
   const DRa = new DistributedRuntime();
   const na = DRa.provisionNode('a', DistributedRuntime.defaultContext('obs-B'), ALL_ENGINES);
@@ -190,7 +191,7 @@ test('O2-CERT-11: no sensitive data/secrets leak into telemetry', () => {
   // Simulate a run; assert no secret-like fields in trace records.
   const src = new MarketDataSource<Record<string, unknown>>('data1');
   const ind = BASELINE.sectors.find((s) => s.engineId === INDUSTRIALS_ENGINE_ID)!;
-  const snap = src.snapshot('v1', 't1', 'good', 100, Object.fromEntries(Object.entries(ind.input)));
+  const snap = src.snapshot('v1', 't1', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(ind.input))));
   runTraced(INDUSTRIALS_ENGINE_ID, snap, 'req-sec');
   for (const r of obs.list()) {
     const json = JSON.stringify(r);
@@ -206,7 +207,7 @@ test('O2-CERT-12: observability overhead measured against existing baseline (not
     obs.clear();
     const src = new MarketDataSource<Record<string, unknown>>('data1');
     const te = BASELINE.sectors.find((s) => s.engineId === TECHNOLOGY_ENGINE_ID)!;
-    const snap = src.snapshot('v1', 't1', 'good', 100, Object.fromEntries(Object.entries(te.input)));
+    const snap = src.snapshot('v1', 't1', 'good', 100, namespaceFields(Object.fromEntries(Object.entries(te.input))));
     runTraced(TECHNOLOGY_ENGINE_ID, snap, `req-${i}`);
   }
   const ms = (performance.now() - t0) / N;
