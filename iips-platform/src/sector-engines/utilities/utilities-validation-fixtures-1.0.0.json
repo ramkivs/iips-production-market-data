@@ -1,0 +1,20 @@
+{
+  "fixtures": "utilities-validation-fixtures-1.0.0",
+  "standard": "IES-012",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "note": "Expected behavior per scenario — every segment, regulatory posture, calibration and override path exercised. Deterministic.",
+  "scenarios": [
+    { "id": "UTIL-01", "provider": "UT-001", "scenario": "Constructive rate case", "segment": "regulated-electric", "expectedVerdict": "Buy", "composite": 74.1 },
+    { "id": "UTIL-02", "provider": "UT-002", "scenario": "Neutral rate case", "segment": "gas-distribution", "expectedVerdict": "Buy", "composite": 70.5 },
+    { "id": "UTIL-03", "provider": "UT-003", "scenario": "Water utility", "segment": "water-utilities", "expectedVerdict": "Accumulate", "composite": 69.3 },
+    { "id": "UTIL-04", "provider": "UT-004", "scenario": "Transition investment approval", "segment": "multi-utility", "expectedVerdict": "Buy", "composite": 71.8 },
+    { "id": "UTIL-05", "provider": "UT-005", "scenario": "Merchant IPP", "segment": "ipp-merchant", "expectedVerdict": "Accumulate", "composite": 66.4 },
+    { "id": "UTIL-06", "provider": "UT-006", "scenario": "Reliability penalty", "segment": "regulated-electric", "expectedVerdict": "Accumulate", "composite": 69.6 },
+    { "id": "UTIL-07", "provider": "UT-007", "scenario": "Adverse rate case", "segment": "regulated-electric", "expectedVerdict": "Watch", "composite": 61.5, "override": ["adverse-rate-case"] },
+    { "id": "UTIL-08", "provider": "UT-008", "scenario": "Regulatory lag", "segment": "gas-distribution", "expectedVerdict": "Watch", "composite": 57.6, "override": ["regulatory-lag"] },
+    { "id": "UTIL-09", "provider": "UT-009", "scenario": "Capex disallowance", "segment": "regulated-electric", "expectedVerdict": "Watch", "composite": 70.4, "override": ["capex-overrun"] },
+    { "id": "UTIL-10", "provider": "UT-010", "scenario": "Merchant price stress", "segment": "ipp-merchant", "expectedVerdict": "Watch", "composite": 47.5, "override": ["leverage-alert"] },
+    { "id": "UTIL-11", "provider": "UT-011", "scenario": "Transition investment rejection", "segment": "regulated-electric", "expectedVerdict": "Watch", "composite": 66.3, "override": ["stranded-asset"] }
+  ]
+}

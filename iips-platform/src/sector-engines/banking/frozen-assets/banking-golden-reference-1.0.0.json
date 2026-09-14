@@ -1,0 +1,84 @@
+{
+  "dataset": "banking-golden-reference",
+  "version": "1.0.0",
+  "methodologyVersion": "IES-006 v1.0-draft",
+  "calibrationProfile": "banking-calibration-1.0.0",
+  "purpose": "Authoritative regression benchmark for the Banking Sector Engine (IES-006 D11 §4). Covers PSU, private, small finance, high-growth, and distressed banks.",
+  "banks": [
+    {
+      "id": "BK-001",
+      "name": "PSU-Bank-Alpha",
+      "category": "PSU Bank",
+      "inputs": {
+        "BM-001": 0.55,
+        "BM-002": 9.5,
+        "BM-003": 2.6,
+        "BM-004": 40.0,
+        "BM-005": 6.5,
+        "BM-006": 3.0,
+        "BM-014": 11.0,
+        "BM-015": 13.0
+      }
+    },
+    {
+      "id": "BK-002",
+      "name": "Private-Bank-Beta",
+      "category": "Private Bank",
+      "inputs": {
+        "BM-001": 1.6,
+        "BM-002": 15.0,
+        "BM-003": 3.9,
+        "BM-004": 46.0,
+        "BM-005": 1.4,
+        "BM-006": 0.5,
+        "BM-014": 14.0,
+        "BM-015": 17.0
+      }
+    },
+    {
+      "id": "BK-003",
+      "name": "SmallFinance-Gamma",
+      "category": "Small Finance Bank",
+      "inputs": {
+        "BM-001": 1.1,
+        "BM-002": 12.0,
+        "BM-003": 5.2,
+        "BM-004": 30.0,
+        "BM-005": 3.2,
+        "BM-006": 1.5,
+        "BM-014": 16.0,
+        "BM-015": 18.0
+      }
+    },
+    {
+      "id": "BK-004",
+      "name": "HighGrowth-Delta",
+      "category": "High-growth Bank",
+      "inputs": {
+        "BM-001": 1.9,
+        "BM-002": 18.0,
+        "BM-003": 4.1,
+        "BM-004": 44.0,
+        "BM-005": 1.0,
+        "BM-006": 0.4,
+        "BM-014": 13.5,
+        "BM-015": 16.0
+      }
+    },
+    {
+      "id": "BK-005",
+      "name": "Distressed-Epsilon",
+      "category": "Distressed Bank",
+      "inputs": {
+        "BM-001": -0.4,
+        "BM-002": -8.0,
+        "BM-003": 1.2,
+        "BM-004": 22.0,
+        "BM-005": 8.5,
+        "BM-006": 4.5,
+        "BM-014": 8.0,
+        "BM-015": 9.5
+      }
+    }
+  ]
+}

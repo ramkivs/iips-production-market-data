@@ -1,0 +1,177 @@
+{
+  "basis": "Frozen industrials expected outputs derived from IES-014 Normative Calculation Appendix D15 v1.2 + industrials-calibration-1.0.0.",
+  "standard": "IES-014",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "contractVersion": "IES-014 v1.2",
+  "expected": [
+    {
+      "providerId": "IN-001",
+      "subsegment": "capital-goods",
+      "archetype": "oem",
+      "composite": 77.2,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 75.0,
+        "risk": 75.0,
+        "profitability": 75.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 60.0
+      },
+      "overrides": []
+    },
+    {
+      "providerId": "IN-002",
+      "subsegment": "aero-defense",
+      "archetype": "oem",
+      "composite": 75.1,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 70.88,
+        "growth": 81.0,
+        "risk": 61.0,
+        "profitability": 81.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 60.0
+      },
+      "overrides": []
+    },
+    {
+      "providerId": "IN-003",
+      "subsegment": "transportation",
+      "archetype": "aftermarket",
+      "composite": 69.1,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 81.0,
+        "growth": 69.0,
+        "risk": 61.0,
+        "profitability": 75.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": []
+    },
+    {
+      "providerId": "IN-004",
+      "subsegment": "eandc",
+      "archetype": "epc",
+      "composite": 62.0,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 52.0,
+        "growth": 66.0,
+        "risk": 50.5,
+        "profitability": 60.0,
+        "capitalEfficiency": 60.0,
+        "valuation": 75.0
+      },
+      "overrides": []
+    },
+    {
+      "providerId": "IN-005",
+      "subsegment": "electrical-equipment",
+      "archetype": "distributor",
+      "composite": 75.3,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 80.25,
+        "risk": 75.0,
+        "profitability": 75.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 60.0
+      },
+      "overrides": []
+    },
+    {
+      "providerId": "IN-006",
+      "subsegment": "diversified",
+      "archetype": "diversified",
+      "composite": 72.0,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 69.0,
+        "risk": 61.0,
+        "profitability": 75.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": []
+    },
+    {
+      "providerId": "IN-007",
+      "subsegment": "capital-goods",
+      "archetype": "oem",
+      "composite": 49.6,
+      "verdict": "Watch",
+      "pillars": {
+        "quality": 50.5,
+        "growth": 40.0,
+        "risk": 43.5,
+        "profitability": 52.0,
+        "capitalEfficiency": 50.0,
+        "valuation": 75.0
+      },
+      "overrides": [
+        "order-cancellation"
+      ]
+    },
+    {
+      "providerId": "IN-008",
+      "subsegment": "aero-defense",
+      "archetype": "oem",
+      "composite": 68.7,
+      "verdict": "Watch",
+      "pillars": {
+        "quality": 69.0,
+        "growth": 72.0,
+        "risk": 56.5,
+        "profitability": 72.0,
+        "capitalEfficiency": 60.0,
+        "valuation": 60.0
+      },
+      "overrides": [
+        "defense-program"
+      ]
+    },
+    {
+      "providerId": "IN-009",
+      "subsegment": "eandc",
+      "archetype": "epc",
+      "composite": 60.8,
+      "verdict": "Watch",
+      "pillars": {
+        "quality": 52.0,
+        "growth": 60.0,
+        "risk": 50.5,
+        "profitability": 60.0,
+        "capitalEfficiency": 60.0,
+        "valuation": 75.0
+      },
+      "overrides": [
+        "epc-overrun"
+      ]
+    },
+    {
+      "providerId": "IN-010",
+      "subsegment": "capital-goods",
+      "archetype": "oem",
+      "composite": 54.6,
+      "verdict": "Watch",
+      "pillars": {
+        "quality": 50.5,
+        "growth": 60.0,
+        "risk": 43.5,
+        "profitability": 52.0,
+        "capitalEfficiency": 50.0,
+        "valuation": 75.0
+      },
+      "overrides": [
+        "margin-compression"
+      ]
+    }
+  ]
+}

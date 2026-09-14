@@ -1,0 +1,10 @@
+{
+  "releaseCandidate": "healthcare-engine-rc-1.0.0",
+  "version": "1.0.0",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "IES-009 v1.0 (frozen)",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "testCount": 74,
+  "reusesPlatform": "iips-platform unchanged"
+}

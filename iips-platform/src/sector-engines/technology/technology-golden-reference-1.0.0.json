@@ -1,0 +1,131 @@
+{
+  "dataset": "technology-golden-reference-1.0.0",
+  "standard": "IES-015",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "contractVersion": "IES-015 v1.3 (D15 normative)",
+  "purpose": "Frozen golden reference inputs for the Technology Sector Engine. Every provider is a distinct contract scenario covering all 9 subsegments, all 9 archetypes, hybrid/multi-subsegment resolution, TM-009 3-band cardinality, calibrated band tables + fallback, calibrated boundaries+scores together, simultaneous overrides, missing primitive metrics, and composite rounding. Expected outputs are generated from the D15 v1.3 contract (see generate_expected_outputs.py).",
+  "providers": [
+    {
+      "id": "TE-001",
+      "name": "SaaS Platform Leader",
+      "subsegment": "software-saas",
+      "archetype": "subscription",
+      "ebitdaMargin": 24, "revenueGrowth": 22, "debtEbitda": 1.5, "evRevenue": 14,
+      "fcfYield": 6, "recurringRevenuePct": 80, "nrr": 118, "grossMargin": 75,
+      "rdIntensity": 12, "customerConcentration": 20, "capexIntensity": 8, "usageGrowth": 25
+    },
+    {
+      "id": "TE-002",
+      "name": "IT Services Integrator",
+      "subsegment": "it-services",
+      "archetype": "services-project",
+      "ebitdaMargin": 18, "revenueGrowth": 10, "debtEbitda": 1.8, "evRevenue": 10,
+      "fcfYield": 5, "recurringRevenuePct": 45, "nrr": 100, "grossMargin": 32,
+      "rdIntensity": 4, "capexIntensity": 4, "usageGrowth": 12
+    },
+    {
+      "id": "TE-003",
+      "name": "Semiconductor Foundry",
+      "subsegment": "semiconductors",
+      "archetype": "foundry-manufacturing",
+      "ebitdaMargin": 28, "revenueGrowth": 18, "debtEbitda": 2.2, "evRevenue": 6,
+      "fcfYield": 3, "recurringRevenuePct": 55, "nrr": 108, "grossMargin": 40,
+      "rdIntensity": 12, "customerConcentration": 15, "capexIntensity": 40, "usageGrowth": 20
+    },
+    {
+      "id": "TE-004",
+      "name": "Electronics Hardware OEM",
+      "subsegment": "electronics-hardware",
+      "archetype": "hardware",
+      "ebitdaMargin": 21, "revenueGrowth": 12, "debtEbitda": 2.4, "evRevenue": 9,
+      "fcfYield": 5, "recurringRevenuePct": 30, "nrr": 100, "grossMargin": 40,
+      "rdIntensity": 9, "customerConcentration": 20, "capexIntensity": 20, "usageGrowth": 10
+    },
+    {
+      "id": "TE-005",
+      "name": "Digital Marketplace Platform",
+      "subsegment": "digital-platforms",
+      "archetype": "transaction-platform",
+      "ebitdaMargin": 30, "revenueGrowth": 30, "debtEbitda": 1.2, "evRevenue": 10,
+      "fcfYield": 8, "recurringRevenuePct": 78, "nrr": 112, "grossMargin": 72,
+      "rdIntensity": 8, "customerConcentration": 15, "capexIntensity": 6, "usageGrowth": 35
+    },
+    {
+      "id": "TE-006",
+      "name": "Consumer Internet App",
+      "subsegment": "internet-consumer-tech",
+      "archetype": "usage-based",
+      "ebitdaMargin": 26, "revenueGrowth": 20, "debtEbitda": 3.5, "evRevenue": 13,
+      "fcfYield": 1, "recurringRevenuePct": 40, "nrr": 102, "grossMargin": 55,
+      "rdIntensity": 15, "customerConcentration": 10, "capexIntensity": 12, "usageGrowth": 18,
+      "marginCompression": true
+    },
+    {
+      "id": "TE-007",
+      "name": "Cybersecurity Vendor",
+      "subsegment": "cybersecurity",
+      "archetype": "license",
+      "ebitdaMargin": 32, "revenueGrowth": 18, "debtEbitda": 1.0, "evRevenue": 9,
+      "fcfYield": 7, "recurringRevenuePct": 82, "nrr": 120, "grossMargin": 78,
+      "rdIntensity": 10, "customerConcentration": 15, "capexIntensity": 8, "usageGrowth": 16
+    },
+    {
+      "id": "TE-008",
+      "name": "Data Infrastructure Provider",
+      "subsegment": "data-infrastructure",
+      "archetype": "managed-services",
+      "ebitdaMargin": 20, "revenueGrowth": 14, "debtEbitda": 2.0, "evRevenue": 15,
+      "fcfYield": 4, "recurringRevenuePct": 70, "nrr": 108,
+      "rdIntensity": 8, "customerConcentration": 20, "usageGrowth": 12
+    },
+    {
+      "id": "TE-009",
+      "name": "Tech-enabled Services Hybrid",
+      "subsegment": "tech-enabled-services",
+      "archetype": "hybrid",
+      "hybridDominant": "managed-services",
+      "ebitdaMargin": 16, "revenueGrowth": 8, "debtEbitda": 2.4, "evRevenue": 11,
+      "fcfYield": 5, "recurringRevenuePct": 50, "nrr": 104, "grossMargin": 40,
+      "rdIntensity": 6, "customerConcentration": 25, "capexIntensity": 10, "usageGrowth": 15
+    },
+    {
+      "id": "TE-010",
+      "name": "Platform + SaaS Multi-Subsegment",
+      "subsegments": ["software-saas", "digital-platforms"],
+      "subsegmentDominant": "digital-platforms",
+      "archetype": "subscription",
+      "ebitdaMargin": 26, "revenueGrowth": 24, "debtEbitda": 1.3, "evRevenue": 9,
+      "fcfYield": 6, "recurringRevenuePct": 85, "nrr": 116, "grossMargin": 74,
+      "rdIntensity": 11, "customerConcentration": 12, "capexIntensity": 6, "usageGrowth": 28
+    },
+    {
+      "id": "TE-011",
+      "name": "Multi-Subsegment No Dominant",
+      "subsegments": ["software-saas", "digital-platforms", "tech-enabled-services"],
+      "archetype": "usage-based",
+      "ebitdaMargin": 22, "revenueGrowth": 16, "debtEbitda": 2.0, "evRevenue": 12,
+      "fcfYield": 5, "recurringRevenuePct": 60, "nrr": 110, "grossMargin": 65,
+      "rdIntensity": 8, "customerConcentration": 20, "capexIntensity": 10, "usageGrowth": 20
+    },
+    {
+      "id": "TE-012",
+      "name": "Rounding Half-Even Boundary",
+      "subsegment": "it-services",
+      "archetype": "license",
+      "ebitdaMargin": 8, "revenueGrowth": 4, "debtEbitda": 1.5, "evRevenue": 18,
+      "fcfYield": 1, "recurringRevenuePct": 25, "nrr": 90, "grossMargin": 25,
+      "rdIntensity": 7, "customerConcentration": 20, "capexIntensity": 8, "usageGrowth": 4
+    },
+    {
+      "id": "TE-013",
+      "name": "Governance-Risk Startup",
+      "subsegment": "software-saas",
+      "archetype": "subscription",
+      "ebitdaMargin": 8, "revenueGrowth": 4, "debtEbitda": 3.5, "evRevenue": 20,
+      "fcfYield": 1, "recurringRevenuePct": 25, "nrr": 90, "grossMargin": 25,
+      "rdIntensity": 4, "customerConcentration": 60, "capexIntensity": 35, "usageGrowth": 4,
+      "governance": true
+    }
+  ]
+}

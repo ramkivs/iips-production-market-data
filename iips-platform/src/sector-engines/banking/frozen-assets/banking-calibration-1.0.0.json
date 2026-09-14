@@ -1,0 +1,80 @@
+{
+  "$schema": "https://iips-engineering-standards/calibration-profile.schema.json#1.0.0",
+  "profileId": "banking-calibration",
+  "version": "1.0.0",
+  "engineId": "sector.banking",
+  "sectorFamily": "Banking",
+  "immutable": true,
+  "publishedAt": "2026-08-06T00:00:00.000Z",
+  "metricThresholds": [
+    {
+      "metricId": "BM-001",
+      "name": "Return on Assets",
+      "unit": "%",
+      "bands": [
+        { "label": "Elite", "min": 1.8, "max": null },
+        { "label": "Excellent", "min": 1.5, "max": 1.8 },
+        { "label": "Strong", "min": 1.2, "max": 1.5 },
+        { "label": "Average", "min": 0.9, "max": 1.2 },
+        { "label": "Weak", "min": null, "max": 0.7 }
+      ]
+    },
+    {
+      "metricId": "BM-005",
+      "name": "Gross NPA",
+      "unit": "%",
+      "bands": [
+        { "label": "Excellent", "min": null, "max": 1.0 },
+        { "label": "Strong", "min": 1.0, "max": 2.0 },
+        { "label": "Acceptable", "min": 2.0, "max": 3.0 },
+        { "label": "Weak", "min": 3.0, "max": 5.0 },
+        { "label": "Critical", "min": 5.0, "max": null }
+      ]
+    },
+    {
+      "metricId": "BM-004",
+      "name": "CASA Ratio",
+      "unit": "%",
+      "bands": [
+        { "label": "Exceptional", "min": 45.0, "max": null },
+        { "label": "Strong", "min": 35.0, "max": 45.0 },
+        { "label": "Adequate", "min": 25.0, "max": 35.0 },
+        { "label": "Weak", "min": null, "max": 25.0 }
+      ]
+    }
+  ],
+  "scoreWeights": [
+    { "scoreId": "asset-quality", "weight": 0.25 },
+    { "scoreId": "profitability", "weight": 0.2 },
+    { "scoreId": "funding-quality", "weight": 0.15 },
+    { "scoreId": "capital-strength", "weight": 0.15 },
+    { "scoreId": "growth", "weight": 0.1 },
+    { "scoreId": "operating-efficiency", "weight": 0.1 },
+    { "scoreId": "valuation", "weight": 0.05 }
+  ],
+  "penaltyRules": [
+    { "rule": "critical-gnpa", "description": "GNPA > 5% caps composite at 60", "weight": 0.1 },
+    { "rule": "capital-breach", "description": "CAR below regulatory minimum blocks Strong Buy", "weight": 0.2 }
+  ],
+  "verdictMapping": [
+    { "minScore": 80, "maxScore": 100, "verdict": "Strong Buy" },
+    { "minScore": 70, "maxScore": 80, "verdict": "Buy" },
+    { "minScore": 60, "maxScore": 70, "verdict": "Accumulate" },
+    { "minScore": 50, "maxScore": 60, "verdict": "Hold" },
+    { "minScore": 40, "maxScore": 50, "verdict": "Watch" },
+    { "minScore": 0, "maxScore": 40, "verdict": "Avoid" }
+  ],
+  "confidenceRules": {
+    "dataCompleteness": 0.9,
+    "dataQuality": 0.9,
+    "metricConsistency": 0.8,
+    "calibrationStability": 1.0,
+    "governanceChecks": 1.0
+  },
+  "overrideRules": [
+    { "rule": "severe-asset-quality", "description": "Rapid GNPA deterioration caps recommendation at Watch" },
+    { "rule": "capital-adequacy-breach", "description": "CAR breach caps recommendation at Watch" },
+    { "rule": "governance-failure", "description": "Severe governance failure caps recommendation at Avoid" },
+    { "rule": "data-quality-exception", "description": "Incomplete data reduces confidence only" }
+  ]
+}

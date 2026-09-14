@@ -1,0 +1,71 @@
+{
+  "report": "Healthcare Golden Dataset Regression",
+  "version": "1.0.0",
+  "total": 7,
+  "match": true,
+  "rows": [
+    {
+      "providerId": "HC-001",
+      "category": "Hospitals",
+      "expectedComposite": 75.5,
+      "actualComposite": 75.5,
+      "expectedVerdict": "Buy",
+      "actualVerdict": "Buy",
+      "match": true
+    },
+    {
+      "providerId": "HC-002",
+      "category": "Diagnostics",
+      "expectedComposite": 68.8,
+      "actualComposite": 68.8,
+      "expectedVerdict": "Accumulate",
+      "actualVerdict": "Accumulate",
+      "match": true
+    },
+    {
+      "providerId": "HC-003",
+      "category": "Pharmaceuticals",
+      "expectedComposite": 74.8,
+      "actualComposite": 74.8,
+      "expectedVerdict": "Buy",
+      "actualVerdict": "Buy",
+      "match": true
+    },
+    {
+      "providerId": "HC-004",
+      "category": "Medical Devices",
+      "expectedComposite": 67.8,
+      "actualComposite": 67.8,
+      "expectedVerdict": "Accumulate",
+      "actualVerdict": "Accumulate",
+      "match": true
+    },
+    {
+      "providerId": "HC-005",
+      "category": "CRO/CDMO",
+      "expectedComposite": 74.8,
+      "actualComposite": 74.8,
+      "expectedVerdict": "Buy",
+      "actualVerdict": "Buy",
+      "match": true
+    },
+    {
+      "providerId": "HC-006",
+      "category": "Health-tech",
+      "expectedComposite": 81.8,
+      "actualComposite": 81.8,
+      "expectedVerdict": "Strong Buy",
+      "actualVerdict": "Strong Buy",
+      "match": true
+    },
+    {
+      "providerId": "HC-007",
+      "category": "Distressed/Quality-failure",
+      "expectedComposite": 53,
+      "actualComposite": 53,
+      "expectedVerdict": "Avoid",
+      "actualVerdict": "Avoid",
+      "match": true
+    }
+  ]
+}

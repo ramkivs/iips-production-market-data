@@ -1,0 +1,18 @@
+{
+  "basis": "Frozen consumer expected outputs derived from IES-013 Normative Calculation Appendix D15 + consumer-calibration-1.0.0.",
+  "standard": "IES-013",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "expected": [
+    { "providerId": "CS-001", "segment": "luxury", "composite": 79.5, "verdict": "Buy", "pillars": { "quality": 90.0, "growth": 75.0, "risk": 75.0, "profitability": 90.0, "capitalEfficiency": 60.0, "valuation": 30 } },
+    { "providerId": "CS-002", "segment": "staples", "composite": 74.6, "verdict": "Buy", "pillars": { "quality": 84.0, "growth": 60.0, "risk": 75.0, "profitability": 79.5, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "CS-003", "segment": "discretionary", "composite": 48.2, "verdict": "Watch", "overrides": ["category-disruption", "leverage-alert"], "pillars": { "quality": 60.0, "growth": 40.0, "risk": 30.0, "profitability": 64.5, "capitalEfficiency": 60.0, "valuation": 30 } },
+    { "providerId": "CS-004", "segment": "staples", "composite": 81.0, "verdict": "Strong Buy", "pillars": { "quality": 90.0, "growth": 75.0, "risk": 75.0, "profitability": 90.0, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "CS-005", "segment": "discretionary", "composite": 53.2, "verdict": "Avoid", "overrides": ["brand-erosion"], "pillars": { "quality": 60.0, "growth": 40.0, "risk": 55.0, "profitability": 64.5, "capitalEfficiency": 60.0, "valuation": 30 } },
+    { "providerId": "CS-006", "segment": "discretionary", "composite": 60.4, "verdict": "Watch", "overrides": ["channel-loss"], "pillars": { "quality": 69.0, "growth": 60.0, "risk": 55.0, "profitability": 64.5, "capitalEfficiency": 60.0, "valuation": 30 } },
+    { "providerId": "CS-007", "segment": "staples", "composite": 68.3, "verdict": "Watch", "overrides": ["input-cost-squeeze"], "pillars": { "quality": 70.5, "growth": 60.0, "risk": 75.0, "profitability": 79.5, "capitalEfficiency": 60.0, "valuation": 30 } },
+    { "providerId": "CS-008", "segment": "staples", "composite": 64.6, "verdict": "Watch", "overrides": ["input-cost-squeeze"], "pillars": { "quality": 70.5, "growth": 75.0, "risk": 55.0, "profitability": 64.5, "capitalEfficiency": 60.0, "valuation": 30 } },
+    { "providerId": "CS-009", "segment": "discretionary", "composite": 77.2, "verdict": "Buy", "pillars": { "quality": 75.0, "growth": 90.0, "risk": 75.0, "profitability": 90.0, "capitalEfficiency": 60.0, "valuation": 30 } },
+    { "providerId": "CS-010", "segment": "luxury", "composite": 60.8, "verdict": "Avoid", "overrides": ["brand-erosion", "leverage-alert"], "pillars": { "quality": 60.0, "growth": 60.0, "risk": 55.0, "profitability": 75.0, "capitalEfficiency": 60.0, "valuation": 30 } }
+  ]
+}

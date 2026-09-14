@@ -1,0 +1,62 @@
+{
+  "report": "Capital Markets Golden Dataset Regression",
+  "version": "1.0.0",
+  "total": 6,
+  "match": true,
+  "rows": [
+    {
+      "firmId": "CM-001",
+      "category": "Asset Management",
+      "expectedComposite": 84.6,
+      "actualComposite": 84.6,
+      "expectedVerdict": "Strong Buy",
+      "actualVerdict": "Strong Buy",
+      "match": true
+    },
+    {
+      "firmId": "CM-002",
+      "category": "Brokerage",
+      "expectedComposite": 64.5,
+      "actualComposite": 64.5,
+      "expectedVerdict": "Accumulate",
+      "actualVerdict": "Accumulate",
+      "match": true
+    },
+    {
+      "firmId": "CM-003",
+      "category": "Investment Banking",
+      "expectedComposite": 63,
+      "actualComposite": 63,
+      "expectedVerdict": "Accumulate",
+      "actualVerdict": "Accumulate",
+      "match": true
+    },
+    {
+      "firmId": "CM-004",
+      "category": "Infrastructure",
+      "expectedComposite": 79.6,
+      "actualComposite": 79.6,
+      "expectedVerdict": "Buy",
+      "actualVerdict": "Buy",
+      "match": true
+    },
+    {
+      "firmId": "CM-005",
+      "category": "Distribution/Wealth",
+      "expectedComposite": 81.6,
+      "actualComposite": 81.6,
+      "expectedVerdict": "Strong Buy",
+      "actualVerdict": "Strong Buy",
+      "match": true
+    },
+    {
+      "firmId": "CM-006",
+      "category": "Distressed",
+      "expectedComposite": 42.2,
+      "actualComposite": 42.2,
+      "expectedVerdict": "Watch",
+      "actualVerdict": "Watch",
+      "match": true
+    }
+  ]
+}

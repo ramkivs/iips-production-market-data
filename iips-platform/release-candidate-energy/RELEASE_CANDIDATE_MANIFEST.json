@@ -1,0 +1,14 @@
+{
+  "releaseCandidate": "energy-engine-rc-1.0.0",
+  "standard": "IES-011",
+  "version": "1.0.0",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "IES-011 v1.0 (frozen)",
+  "calibrationProfile": "energy-calibration-1.0.0",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "validationFixtures": 9,
+  "testCount": 152,
+  "reusesPlatform": "iips-platform unchanged",
+  "consumedCapabilities": ["CSIP (ontology registration, zero change)"]
+}

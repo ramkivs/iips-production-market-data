@@ -1,0 +1,49 @@
+{
+  "report": "Healthcare Replay Validation",
+  "version": "1.0.0",
+  "deterministic": true,
+  "rows": [
+    {
+      "providerId": "HC-001",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "providerId": "HC-002",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "providerId": "HC-003",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "providerId": "HC-004",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "providerId": "HC-005",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "providerId": "HC-006",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "providerId": "HC-007",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    }
+  ]
+}

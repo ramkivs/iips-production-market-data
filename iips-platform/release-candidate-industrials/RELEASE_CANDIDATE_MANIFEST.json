@@ -1,0 +1,15 @@
+{
+  "releaseCandidate": "industrials-engine-rc-1.0.0",
+  "standard": "IES-014",
+  "version": "1.0.0",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "IES-014 v1.0 (D15 v1.2 frozen)",
+  "calibrationProfile": "industrials-calibration-1.0.0",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "validationFixtures": 10,
+  "contractMatrixPass": true,
+  "testCount": 236,
+  "reusesPlatform": "iips-platform unchanged",
+  "consumedCapabilities": ["CSIP (ontology registration, zero change)"]
+}

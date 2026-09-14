@@ -1,0 +1,16 @@
+{
+  "releaseCandidate": "technology-engine-rc-1.0.0",
+  "standard": "IES-015",
+  "version": "1.0.0",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "IES-015 v1.0 (D15 v1.3 frozen)",
+  "calibrationProfile": "technology-calibration-1.0.0",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "validationFixtures": 21,
+  "providerFixtures": 13,
+  "contractMatrixPass": true,
+  "testCount": 270,
+  "reusesPlatform": "iips-platform unchanged",
+  "consumedCapabilities": ["CSIP (ontology registration, zero change)"]
+}

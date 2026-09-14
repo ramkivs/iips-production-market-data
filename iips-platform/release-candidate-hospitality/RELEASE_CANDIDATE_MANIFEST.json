@@ -1,0 +1,14 @@
+{
+  "releaseCandidate": "hospitality-engine-rc-1.0.0",
+  "standard": "IES-010",
+  "version": "1.0.0",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "IES-010 v1.0 (frozen)",
+  "calibrationProfile": "hospitality-calibration-1.0.0",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "validationFixtures": 9,
+  "testCount": 123,
+  "reusesPlatform": "iips-platform unchanged",
+  "consumedCapabilities": ["CSIP (ontology registration, zero change)"]
+}

@@ -1,0 +1,111 @@
+{
+  "fixtures": "banking-validation-fixtures",
+  "version": "1.0.0",
+  "source": "IES-006 D11 \u00a76 (edge-case validation)",
+  "note": "Six mandatory edge-case scenarios. Each fixture defines an input set that must produce a deterministic output; expected outcome documented. These are reference fixtures (specification assets), not an implementation. Added FIX-07 governance-failure fixture (architecture review recommendation 2).",
+  "scenarios": [
+    {
+      "id": "FIX-01",
+      "name": "Negative Earnings",
+      "requirement": "IES-006 D11 \u00a76 \u2014 negative earnings",
+      "inputs": {
+        "BM-001": -0.6,
+        "BM-002": -10.0,
+        "BM-003": 1.0,
+        "BM-004": 30.0,
+        "BM-005": 4.0,
+        "BM-006": 2.0
+      },
+      "expectedOutcome": "Deterministic output; profitability pillar low; recommendation must not exceed Watch"
+    },
+    {
+      "id": "FIX-02",
+      "name": "Rapid GNPA Deterioration",
+      "requirement": "IES-006 D11 \u00a76 \u2014 rapid GNPA deterioration",
+      "inputs": {
+        "BM-001": 1.3,
+        "BM-002": 12.0,
+        "BM-003": 3.0,
+        "BM-004": 40.0,
+        "BM-005": 4.5,
+        "BM-006": 2.5
+      },
+      "expectedOutcome": "Override rule severe-asset-quality caps recommendation at Watch despite otherwise sound metrics"
+    },
+    {
+      "id": "FIX-03",
+      "name": "Capital Adequacy Breach",
+      "requirement": "IES-006 D11 \u00a76 \u2014 capital adequacy breach",
+      "inputs": {
+        "BM-001": 1.4,
+        "BM-002": 13.0,
+        "BM-003": 3.2,
+        "BM-004": 42.0,
+        "BM-005": 1.5,
+        "BM-006": 0.6,
+        "BM-014": 7.5,
+        "BM-015": 9.0
+      },
+      "expectedOutcome": "CAR below regulatory minimum triggers capital-breach penalty; Strong Buy blocked; recommendation capped at Watch"
+    },
+    {
+      "id": "FIX-04",
+      "name": "Missing Data",
+      "requirement": "IES-006 D11 \u00a76 \u2014 missing data",
+      "inputs": {
+        "BM-001": 1.5,
+        "BM-002": 14.0,
+        "BM-003": null,
+        "BM-004": null,
+        "BM-005": 1.2,
+        "BM-006": 0.5
+      },
+      "expectedOutcome": "Deterministic output with reduced confidence; missing inputs flagged in evidence; confidence adjusted down, raw metrics unchanged"
+    },
+    {
+      "id": "FIX-05",
+      "name": "Conflicting Indicators",
+      "requirement": "IES-006 D11 \u00a76 \u2014 conflicting indicators",
+      "inputs": {
+        "BM-001": 1.7,
+        "BM-002": 16.0,
+        "BM-003": 4.0,
+        "BM-004": 40.0,
+        "BM-005": 4.8,
+        "BM-006": 2.8
+      },
+      "expectedOutcome": "Strong profitability vs weak asset quality; metric consistency reduced; confidence adjusted; recommendation moderated"
+    },
+    {
+      "id": "FIX-06",
+      "name": "Exceptional Treasury Gains",
+      "requirement": "IES-006 D11 \u00a76 \u2014 exceptional treasury gains",
+      "inputs": {
+        "BM-001": 1.9,
+        "BM-002": 20.0,
+        "BM-003": 2.0,
+        "BM-004": 38.0,
+        "BM-005": 1.0,
+        "BM-006": 0.4
+      },
+      "expectedOutcome": "Treasury gains flagged; earnings quality assessed; recommendation tempered to account for non-recurring income"
+    },
+    {
+      "id": "FIX-07",
+      "name": "Governance Failure",
+      "requirement": "IES-006 D08 \u00a76 / D09 \u00a76 \u2014 severe governance failure override",
+      "inputs": {
+        "BM-001": 1.7,
+        "BM-002": 16.0,
+        "BM-003": 3.8,
+        "BM-004": 45.0,
+        "BM-005": 1.0,
+        "BM-006": 0.4,
+        "BM-014": 15.0,
+        "BM-015": 18.0,
+        "governanceFlag": "SEVERE_GOVERNANCE_FAILURE"
+      },
+      "expectedOutcome": "Override rule governance-failure caps recommendation at Avoid despite otherwise strong metrics"
+    }
+  ]
+}

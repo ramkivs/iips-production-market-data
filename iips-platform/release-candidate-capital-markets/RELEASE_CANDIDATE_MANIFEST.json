@@ -1,0 +1,10 @@
+{
+  "releaseCandidate": "capital-markets-engine-rc-1.0.0",
+  "version": "1.0.0",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "IES-008 v1.0 (frozen)",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "testCount": 61,
+  "reusesPlatform": "iips-platform unchanged"
+}

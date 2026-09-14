@@ -1,0 +1,14 @@
+{
+  "releaseCandidate": "consumer-engine-rc-1.0.0",
+  "standard": "IES-013",
+  "version": "1.0.0",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "IES-013 v1.0 (frozen)",
+  "calibrationProfile": "consumer-calibration-1.0.0",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "validationFixtures": 10,
+  "testCount": 208,
+  "reusesPlatform": "iips-platform unchanged",
+  "consumedCapabilities": ["CSIP (ontology registration, zero change)"]
+}

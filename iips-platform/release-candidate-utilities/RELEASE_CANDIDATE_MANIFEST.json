@@ -1,0 +1,14 @@
+{
+  "releaseCandidate": "utilities-engine-rc-1.0.0",
+  "standard": "IES-012",
+  "version": "1.0.0",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "IES-012 v1.0 (frozen)",
+  "calibrationProfile": "utilities-calibration-1.0.0",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "validationFixtures": 11,
+  "testCount": 180,
+  "reusesPlatform": "iips-platform unchanged",
+  "consumedCapabilities": ["CSIP (ontology registration, zero change)"]
+}

@@ -1,0 +1,59 @@
+{
+  "report": "Golden Dataset Regression",
+  "version": "1.0.0",
+  "basis": "banking-expected-outputs-1.0.0.json",
+  "total": 5,
+  "match": true,
+  "rows": [
+    {
+      "bankId": "BK-001",
+      "name": "PSU-Bank-Alpha",
+      "category": "PSU Bank",
+      "expectedComposite": 47.1,
+      "actualComposite": 47.1,
+      "expectedVerdict": "Watch",
+      "actualVerdict": "Watch",
+      "match": true
+    },
+    {
+      "bankId": "BK-002",
+      "name": "Private-Bank-Beta",
+      "category": "Private Bank",
+      "expectedComposite": 72.2,
+      "actualComposite": 72.2,
+      "expectedVerdict": "Buy",
+      "actualVerdict": "Buy",
+      "match": true
+    },
+    {
+      "bankId": "BK-003",
+      "name": "SmallFinance-Gamma",
+      "category": "Small Finance Bank",
+      "expectedComposite": 58.6,
+      "actualComposite": 58.6,
+      "expectedVerdict": "Hold",
+      "actualVerdict": "Hold",
+      "match": true
+    },
+    {
+      "bankId": "BK-004",
+      "name": "HighGrowth-Delta",
+      "category": "High-growth Bank",
+      "expectedComposite": 74.8,
+      "actualComposite": 74.8,
+      "expectedVerdict": "Buy",
+      "actualVerdict": "Buy",
+      "match": true
+    },
+    {
+      "bankId": "BK-005",
+      "name": "Distressed-Epsilon",
+      "category": "Distressed Bank",
+      "expectedComposite": 33.8,
+      "actualComposite": 33.8,
+      "expectedVerdict": "Avoid",
+      "actualVerdict": "Avoid",
+      "match": true
+    }
+  ]
+}

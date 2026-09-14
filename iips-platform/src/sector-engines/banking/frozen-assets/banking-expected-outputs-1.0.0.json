@@ -1,0 +1,86 @@
+{
+  "basis": "Frozen expected outputs derived from banking-calibration-1.0.0 band mapping. Composite = weighted pillar sum. Neutral 50 for growth/efficiency/valuation (no v1 inputs).",
+  "version": "1.0.0",
+  "expected": [
+    {
+      "bankId": "BK-001",
+      "category": "PSU Bank",
+      "pillars": {
+        "asset-quality": 15.0,
+        "profitability": 45.5,
+        "funding-quality": 75,
+        "capital-strength": 70.0,
+        "growth": 50.0,
+        "operating-efficiency": 50.0,
+        "valuation": 50.0
+      },
+      "compositeScore": 47.1,
+      "verdict": "Watch",
+      "confidence": 0.8
+    },
+    {
+      "bankId": "BK-002",
+      "category": "Private Bank",
+      "pillars": {
+        "asset-quality": 75.0,
+        "profitability": 73.5,
+        "funding-quality": 90,
+        "capital-strength": 85.0,
+        "growth": 50.0,
+        "operating-efficiency": 50.0,
+        "valuation": 50.0
+      },
+      "compositeScore": 72.2,
+      "verdict": "Buy",
+      "confidence": 0.8
+    },
+    {
+      "bankId": "BK-003",
+      "category": "Small Finance Bank",
+      "pillars": {
+        "asset-quality": 45.0,
+        "profitability": 65.5,
+        "funding-quality": 60,
+        "capital-strength": 85.0,
+        "growth": 50.0,
+        "operating-efficiency": 50.0,
+        "valuation": 50.0
+      },
+      "compositeScore": 58.6,
+      "verdict": "Hold",
+      "confidence": 0.8
+    },
+    {
+      "bankId": "BK-004",
+      "category": "High-growth Bank",
+      "pillars": {
+        "asset-quality": 82.5,
+        "profitability": 88.5,
+        "funding-quality": 75,
+        "capital-strength": 85.0,
+        "growth": 50.0,
+        "operating-efficiency": 50.0,
+        "valuation": 50.0
+      },
+      "compositeScore": 74.8,
+      "verdict": "Buy",
+      "confidence": 0.8
+    },
+    {
+      "bankId": "BK-005",
+      "category": "Distressed Bank",
+      "pillars": {
+        "asset-quality": 15.0,
+        "profitability": 35.0,
+        "funding-quality": 40,
+        "capital-strength": 30.0,
+        "growth": 50.0,
+        "operating-efficiency": 50.0,
+        "valuation": 50.0
+      },
+      "compositeScore": 33.8,
+      "verdict": "Avoid",
+      "confidence": 0.8
+    }
+  ]
+}

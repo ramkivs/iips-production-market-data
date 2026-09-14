@@ -1,0 +1,33 @@
+{
+  "dataset": "automobile-validation-fixtures-1.0.0",
+  "standard": "IES-017",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-017 v1.0 (D17 normative) — PROPOSED, NOT AUTHORITY",
+  "purpose": "PROPOSED contract-test fixtures: the 13 proposed golden-reference providers plus two edge-case providers (AB-014 missing-primitive renormalization; AB-015 calibrated-band-boundary semantics). Deterministic reference providers, NOT claims about real companies, NOT authoritative until the D17 methodology is approved.",
+  "edgeCases": [
+    {
+      "id": "AB-014", "name": "Missing Primitive (fcfYield null)",
+      "subsegment": "mass-market-oem", "archetype": "full-line",
+      "ebitdaMargin": 12, "revenueGrowth": 8, "debtEbitda": 1.8, "vehicleMargin": 9,
+      "capacityUtilization": 85, "evMix": 30, "roic": 12,
+      "capexIntensity": 12, "inventoryDays": 45, "evEbitda": 5.5, "aftersalesMix": 18,
+      "expected": {
+        "composite": 63.8, "verdict": "Accumulate", "overrides": [],
+        "note": "fcfYield omitted -> capitalEfficiency pillar renormalizes over zero available metrics -> 0.0 (never fabricated); composite falls 71.3 -> 63.8."
+      }
+    },
+    {
+      "id": "AB-015", "name": "Calibrated Band Boundary",
+      "subsegment": "ev-native", "archetype": "ev-pure-play",
+      "ebitdaMargin": 10, "revenueGrowth": 18, "debtEbitda": 2.8, "vehicleMargin": 8,
+      "capacityUtilization": 75, "evMix": 60, "fcfYield": 3, "roic": 9,
+      "capexIntensity": 22, "inventoryDays": 40, "evEbitda": 8.0, "aftersalesMix": 15,
+      "expected": {
+        "composite": 73.1, "verdict": "Buy", "overrides": [],
+        "note": "vehicleMargin 8.0 hits the ev-native CALIBRATED band lower bound [8,13) -> 75, whereas the baseline table [5,10) -> 60 would apply for other subsegments. Demonstrates effective band-table resolution (calibrated ?? baseline, boundaries+scores together)."
+      }
+    }
+  ],
+  "providers": null
+}

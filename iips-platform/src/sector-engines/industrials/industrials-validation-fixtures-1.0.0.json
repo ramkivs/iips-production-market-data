@@ -1,0 +1,20 @@
+{
+  "fixtures": "industrials-validation-fixtures-1.0.0",
+  "standard": "IES-014",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "contractVersion": "IES-014 v1.2 (D15 normative)",
+  "note": "Expected behavior per scenario — every subsegment, archetype, calibration and override path exercised. Deterministic.",
+  "scenarios": [
+    { "id": "IND-01", "provider": "IN-001", "scenario": "Capital goods OEM leader", "subsegment": "capital-goods", "expectedVerdict": "Buy", "composite": 77.2 },
+    { "id": "IND-02", "provider": "IN-002", "scenario": "Aero defense prime", "subsegment": "aero-defense", "expectedVerdict": "Buy", "composite": 75.1 },
+    { "id": "IND-03", "provider": "IN-003", "scenario": "Transportation logistics", "subsegment": "transportation", "expectedVerdict": "Accumulate", "composite": 69.1 },
+    { "id": "IND-04", "provider": "IN-004", "scenario": "E&C project house", "subsegment": "eandc", "expectedVerdict": "Accumulate", "composite": 62.0 },
+    { "id": "IND-05", "provider": "IN-005", "scenario": "Electrical equipment", "subsegment": "electrical-equipment", "expectedVerdict": "Buy", "composite": 75.3 },
+    { "id": "IND-06", "provider": "IN-006", "scenario": "Diversified conglomerate", "subsegment": "diversified", "expectedVerdict": "Buy", "composite": 72.0 },
+    { "id": "IND-07", "provider": "IN-007", "scenario": "Demand shock / order cancellation", "subsegment": "capital-goods", "expectedVerdict": "Watch", "composite": 49.6, "override": ["order-cancellation"] },
+    { "id": "IND-08", "provider": "IN-008", "scenario": "Defense program failure", "subsegment": "aero-defense", "expectedVerdict": "Watch", "composite": 68.7, "override": ["defense-program"] },
+    { "id": "IND-09", "provider": "IN-009", "scenario": "EPC cost overrun", "subsegment": "eandc", "expectedVerdict": "Watch", "composite": 60.8, "override": ["epc-overrun"] },
+    { "id": "IND-10", "provider": "IN-010", "scenario": "Margin compression + leverage", "subsegment": "capital-goods", "expectedVerdict": "Watch", "composite": 54.6, "override": ["margin-compression"] }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "basis": "Frozen utilities expected outputs derived from IES-012 Normative Calculation Appendix D15 + utilities-calibration-1.0.0.",
+  "standard": "IES-012",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "expected": [
+    { "providerId": "UT-001", "segment": "regulated-electric", "composite": 74.1, "verdict": "Buy", "pillars": { "quality": 79.5, "growth": 75.0, "risk": 75.0, "profitability": 75.0, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "UT-002", "segment": "gas-distribution", "composite": 70.5, "verdict": "Buy", "pillars": { "quality": 75.0, "growth": 75.0, "risk": 75.0, "profitability": 75.0, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "UT-003", "segment": "water-utilities", "composite": 69.3, "verdict": "Accumulate", "pillars": { "quality": 75.0, "growth": 63.0, "risk": 75.0, "profitability": 75.0, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "UT-004", "segment": "multi-utility", "composite": 71.8, "verdict": "Buy", "pillars": { "quality": 79.5, "growth": 75.0, "risk": 75.0, "profitability": 75.0, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "UT-005", "segment": "ipp-merchant", "composite": 66.4, "verdict": "Accumulate", "pillars": { "quality": 70.5, "growth": 63.0, "risk": 75.0, "profitability": 69.0, "capitalEfficiency": 60.0, "valuation": 30 } },
+    { "providerId": "UT-006", "segment": "regulated-electric", "composite": 69.6, "verdict": "Accumulate", "pillars": { "quality": 64.5, "growth": 75.0, "risk": 75.0, "profitability": 75.0, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "UT-007", "segment": "regulated-electric", "composite": 61.5, "verdict": "Watch", "overrides": ["adverse-rate-case"], "pillars": { "quality": 64.5, "growth": 63.0, "risk": 55.0, "profitability": 69.0, "capitalEfficiency": 60.0, "valuation": 30 } },
+    { "providerId": "UT-008", "segment": "gas-distribution", "composite": 57.6, "verdict": "Watch", "overrides": ["regulatory-lag"], "pillars": { "quality": 64.5, "growth": 60.0, "risk": 55.0, "profitability": 60.0, "capitalEfficiency": 60.0, "valuation": 30 } },
+    { "providerId": "UT-009", "segment": "regulated-electric", "composite": 70.4, "verdict": "Watch", "overrides": ["capex-overrun"], "pillars": { "quality": 75.0, "growth": 63.0, "risk": 75.0, "profitability": 75.0, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "UT-010", "segment": "ipp-merchant", "composite": 47.5, "verdict": "Watch", "overrides": ["leverage-alert"], "pillars": { "quality": 58.5, "growth": 60.0, "risk": 30.0, "profitability": 52.0, "capitalEfficiency": 40.0, "valuation": 30 } },
+    { "providerId": "UT-011", "segment": "regulated-electric", "composite": 66.3, "verdict": "Watch", "overrides": ["stranded-asset"], "pillars": { "quality": 70.5, "growth": 63.0, "risk": 75.0, "profitability": 69.0, "capitalEfficiency": 60.0, "valuation": 30 } }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "report": "Capital Markets Replay Validation",
+  "version": "1.0.0",
+  "deterministic": true,
+  "rows": [
+    {
+      "firmId": "CM-001",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "firmId": "CM-002",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "firmId": "CM-003",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "firmId": "CM-004",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "firmId": "CM-005",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "firmId": "CM-006",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    }
+  ]
+}

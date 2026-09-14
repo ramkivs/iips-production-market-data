@@ -1,0 +1,17 @@
+{
+  "name": "@iips/platform",
+  "version": "0.1.0",
+  "description": "IIPS platform runtime foundation (IES-006.2A WP-1). Implements the frozen IES-005 contracts.",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/**/*.test.ts tests/regression/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "typescript": "^5.4.0",
+    "tsx": "^4.7.0"
+  }
+}

@@ -1,0 +1,164 @@
+/**
+ * IES-017 — Framework Integration (D28 fence-4 relief, Tier-3 A1 evidence).
+ * Proves Automobile integrates through all shared framework services unchanged (manifest,
+ * evidence, snapshot, replay, diagnostics, qualification, activation, transport), coexists as
+ * one of 14 plugins with the other sector engines + CSIP, and preserves replay determinism.
+ * Inputs are the frozen golden-reference providers AB-001 / AB-002.
+ */
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { Container } from '../../src/di/Container';
+import { createClock } from '../../src/infrastructure/Clock';
+import { createIdProvider } from '../../src/infrastructure/IdProvider';
+import { PluginLoader } from '../../src/plugin-loader/PluginLoader';
+import { SnapshotService } from '../../src/snapshot/SnapshotService';
+import { SnapshotStore } from '../../src/snapshot/SnapshotStore';
+import { ReplayService } from '../../src/replay/ReplayService';
+import { RuntimeCoordinator } from '../../src/runtime/RuntimeCoordinator';
+import { EvidencePipeline } from '../../src/framework/evidence/EvidencePipeline';
+import { ManifestLoader } from '../../src/framework/manifest/ManifestLoader';
+import { Transport } from '../../src/framework/transport/Transport';
+import { DiagnosticsService } from '../../src/framework/diagnostics/DiagnosticsService';
+import { QualificationService } from '../../src/framework/qualification/QualificationService';
+import { ActivationService } from '../../src/framework/activation/ActivationService';
+import { AutomobileEngine, AUTOMOBILE_ENGINE_ID } from '../../src/sector-engines/automobile/AutomobileEngine';
+import { BankingEngine, BANKING_ENGINE_ID } from '../../src/sector-engines/banking/BankingEngine';
+import { InsuranceEngine, INSURANCE_ENGINE_ID } from '../../src/sector-engines/insurance/InsuranceEngine';
+import { CapitalMarketsEngine, CAPITAL_MARKETS_ENGINE_ID } from '../../src/sector-engines/capital-markets/CapitalMarketsEngine';
+import { HealthcareEngine, HEALTHCARE_ENGINE_ID } from '../../src/sector-engines/healthcare/HealthcareEngine';
+import { HospitalityEngine, HOSPITALITY_ENGINE_ID } from '../../src/sector-engines/hospitality/HospitalityEngine';
+import { EnergyEngine, ENERGY_ENGINE_ID } from '../../src/sector-engines/energy/EnergyEngine';
+import { UtilitiesEngine, UTILITIES_ENGINE_ID } from '../../src/sector-engines/utilities/UtilitiesEngine';
+import { ConsumerEngine, CONSUMER_ENGINE_ID } from '../../src/sector-engines/consumer/ConsumerEngine';
+import { IndustrialsEngine, INDUSTRIALS_ENGINE_ID } from '../../src/sector-engines/industrials/IndustrialsEngine';
+import { TechnologyEngine, TECHNOLOGY_ENGINE_ID } from '../../src/sector-engines/technology/TechnologyEngine';
+import { CrossSectorPlugin, CROSS_SECTOR_PLUGIN_ID } from '../../src/sector-engines/cross-sector/CrossSectorPlugin';
+import { TelecommunicationsEngine, TELECOMMUNICATIONS_ENGINE_ID } from '../../src/sector-engines/telecommunications/TelecommunicationsEngine';
+import { MaterialsMetalsEngine, MATERIALS_METALS_ENGINE_ID } from '../../src/sector-engines/materials-metals/MaterialsMetalsEngine';
+
+function makeRuntime() {
+  const clock = createClock('fixed');
+  const id = createIdProvider('deterministic');
+  const evidence = new EvidencePipeline(clock);
+  const container = new Container({ clock, idProvider: id, evidenceService: evidence });
+  const plugins = new PluginLoader(container);
+  const snap = new SnapshotService(clock, id);
+  const store = new SnapshotStore();
+  const replay = new ReplayService(store);
+  const runtime = new RuntimeCoordinator(container, plugins, snap, store, replay);
+  container.register('runtimeCoordinator', runtime);
+  return { plugins, runtime, clock, evidence, store, replay };
+}
+
+test('IES017-FI-ACC1: automobile manifest via shared ManifestLoader', () => {
+  const engine = new AutomobileEngine();
+  const m = new ManifestLoader().load(engine.manifest);
+  assert.equal(m.engineId, AUTOMOBILE_ENGINE_ID);
+  assert.equal(Object.isFrozen(m), true);
+  assert.ok(m.capabilities.includes('calibration'));
+});
+
+test('IES017-FI-ACC2: automobile evidence via shared EvidencePipeline', () => {
+  const { evidence } = makeRuntime();
+  const pkg = evidence.build({
+    engineId: AUTOMOBILE_ENGINE_ID, recommendation: 'Buy', compositeScore: 71.3, confidence: 0.8,
+    supportingScores: [{ id: 'vehicleMargin', name: 'Vehicle Margin', value: 9 }],
+    calibrationVersion: 'automobile-calibration-1.0.0', replayReference: 'snap',
+    provenance: { frameworkVersion: '1.0', engineVersion: '1.0.0', methodologyVersion: 'IES-017 v1.0', snapshotId: 's1' },
+  });
+  assert.equal(evidence.validate(pkg), true);
+});
+
+test('IES017-FI-ACC3: automobile deterministic snapshot via shared Snapshot', () => {
+  const { plugins, runtime, store } = makeRuntime();
+  plugins.load(new AutomobileEngine());
+  plugins.initialize(AUTOMOBILE_ENGINE_ID);
+  const r = runtime.execute(AUTOMOBILE_ENGINE_ID, { requestId: 'ies017-snap', inputs: {"subsegment":"mass-market-oem","archetype":"full-line","ebitdaMargin":12,"revenueGrowth":8,"debtEbitda":1.8,"vehicleMargin":9,"capacityUtilization":85,"evMix":30,"fcfYield":5,"roic":12,"capexIntensity":12,"inventoryDays":45,"evEbitda":5.5,"aftersalesMix":18} });
+  assert.equal(r.result.state, 'COMPLETED');
+  assert.equal(store.size, 1);
+  assert.ok(r.result.snapshotRef);
+});
+
+test('IES017-FI-ACC4: automobile replay via shared ReplayService', () => {
+  const { plugins, runtime, replay } = makeRuntime();
+  plugins.load(new AutomobileEngine());
+  plugins.initialize(AUTOMOBILE_ENGINE_ID);
+  const snap = runtime.recordSnapshot(AUTOMOBILE_ENGINE_ID, { revenueGrowth: 8 }, { composite: 71.3 }, 'AUTOMOBILE_SUMMARY');
+  assert.equal(Object.isFrozen(snap), true);
+  assert.equal(replay.replay(snap.snapshotId)?.reproduced, true);
+});
+
+test('IES017-FI-ACC5: automobile diagnostics + qualification + activation via shared framework', () => {
+  const d = new DiagnosticsService();
+  const q = new QualificationService();
+  const a = new ActivationService();
+  d.capture({ engineId: AUTOMOBILE_ENGINE_ID, executionDurationMs: 3, registryVersions: { transport: '1.0' }, replayStatus: 'ok', transportStatus: 'ok', pluginPhase: 'Execution' });
+  assert.equal(d.list()[0].engineId, AUTOMOBILE_ENGINE_ID);
+  const qual = q.qualify({ engineId: AUTOMOBILE_ENGINE_ID, certified: true, replayVerified: true, regressionPassed: true, deterministic: true });
+  assert.equal(qual.qualified, true);
+  assert.equal(a.activate(AUTOMOBILE_ENGINE_ID, qual.qualified)?.toState, 'ACTIVE');
+});
+
+test('IES017-FI-ACC6: automobile transport via shared generic DTO', () => {
+  const { clock } = makeRuntime();
+  const t = new Transport(clock);
+  const dto = t.build(AUTOMOBILE_ENGINE_ID, [
+    { sectorId: 'SEC-AB', sectorFamily: 'Automobile', companyName: 'AB-001', metrics: { revenueGrowth: 8 }, scores: { composite: 71.3 }, verdict: 'Buy' },
+  ]);
+  assert.equal(t.validate(dto), true);
+  assert.equal(t.serialize(dto), t.serialize(dto));
+});
+
+test('IES017-FI-ACC7: 14 plugins coexist through the same framework without branching', () => {
+  const { plugins, runtime, store } = makeRuntime();
+  plugins.load(new BankingEngine());
+  plugins.load(new InsuranceEngine());
+  plugins.load(new CapitalMarketsEngine());
+  plugins.load(new HealthcareEngine());
+  plugins.load(new HospitalityEngine());
+  plugins.load(new EnergyEngine());
+  plugins.load(new UtilitiesEngine());
+  plugins.load(new ConsumerEngine());
+  plugins.load(new IndustrialsEngine());
+  plugins.load(new TechnologyEngine());
+  plugins.load(new CrossSectorPlugin());
+  plugins.load(new TelecommunicationsEngine());
+  plugins.load(new MaterialsMetalsEngine());
+  plugins.load(new AutomobileEngine());
+  plugins.initialize(BANKING_ENGINE_ID);
+  plugins.initialize(INSURANCE_ENGINE_ID);
+  plugins.initialize(CAPITAL_MARKETS_ENGINE_ID);
+  plugins.initialize(HEALTHCARE_ENGINE_ID);
+  plugins.initialize(HOSPITALITY_ENGINE_ID);
+  plugins.initialize(ENERGY_ENGINE_ID);
+  plugins.initialize(UTILITIES_ENGINE_ID);
+  plugins.initialize(CONSUMER_ENGINE_ID);
+  plugins.initialize(INDUSTRIALS_ENGINE_ID);
+  plugins.initialize(TECHNOLOGY_ENGINE_ID);
+  plugins.initialize(CROSS_SECTOR_PLUGIN_ID);
+  plugins.initialize(TELECOMMUNICATIONS_ENGINE_ID);
+  plugins.initialize(MATERIALS_METALS_ENGINE_ID);
+  plugins.initialize(AUTOMOBILE_ENGINE_ID);
+  assert.equal(plugins.size, 14);
+
+  runtime.execute(BANKING_ENGINE_ID, { requestId: 'bk', inputs: { 'BM-001': 1.6, 'BM-002': 15, 'BM-003': 3.9, 'BM-004': 46, 'BM-005': 1.4, 'BM-006': 0.5, 'BM-014': 14, 'BM-015': 17 } });
+  runtime.execute(INSURANCE_ENGINE_ID, { requestId: 'in', inputs: { 'IM-001': 92, 'IM-002': 1.7, 'IM-003': 1800, 'IM-004': 300, 'IM-005': 88 } });
+  runtime.execute(CAPITAL_MARKETS_ENGINE_ID, { requestId: 'cm', inputs: {} });
+  runtime.execute(HEALTHCARE_ENGINE_ID, { requestId: 'hc', inputs: {} });
+  runtime.execute(HOSPITALITY_ENGINE_ID, { requestId: 'hp', inputs: { businessModel: 'owned', occupancy: 78, adr: 12000, revpar: 9360, revparGrowth: 12, gopMargin: 40, ebitdaMargin: 32, feeMix: 10, demandQualityMix: 70, debtEbitda: 3.0, roic: 12 } });
+  runtime.execute(ENERGY_ENGINE_ID, { requestId: 'en', inputs: { segment: 'upstream', commodityExposure: 'price-taker', productionGrowth: 8, liftingCost: 18, reserveReplacement: 1.3, ebitdaMargin: 45, revenueGrowth: 9, debtEbitda: 2.2, roce: 16, transitionMix: 5, fcfYield: 10, evEbitda: 4 } });
+  runtime.execute(UTILITIES_ENGINE_ID, { requestId: 'ut', inputs: { segment: 'regulated-electric', regulatoryPosture: 'constructive', rateBaseGrowth: 7, allowedRoe: 10, ffoDebt: 18, omEfficiency: 18, demandGrowth: 2, saidi: 90, transitionCapexIntensity: 30, ebitdaMargin: 42, revenueGrowth: 4, debtEbitda: 3.5, peRatio: 18, roe: 11 } });
+  runtime.execute(CONSUMER_ENGINE_ID, { requestId: 'cs', inputs: { segment: 'staples', businessModel: 'branded', revenueGrowth: 4, priceContribution: 65, brandLoyalty: 85, marginResilience: 0.9, dtcShare: 20, fcfYield: 6, innovationIntensity: 10, privateLabelExposure: 10, ebitdaMargin: 22, debtEbitda: 2.2, peRatio: 20, roic: 16 } });
+  runtime.execute(INDUSTRIALS_ENGINE_ID, { requestId: 'ind', inputs: { subsegment: 'capital-goods', archetype: 'oem', ebitdaMargin: 22, revenueGrowth: 8, debtEbitda: 2.0, evEbitda: 12, roce: 20, backlog: 2.5, bookToBill: 1.05, aftermarketShare: 30, fcfYield: 8, orderGrowth: 8, operatingMargin: 22, projectRiskExposure: 20 } });
+  runtime.execute(TECHNOLOGY_ENGINE_ID, { requestId: 'te', inputs: { subsegment: 'digital-platforms', revenueGrowth: 30, grossMargin: 72 } });
+  runtime.execute(CROSS_SECTOR_PLUGIN_ID, { requestId: 'csip', inputs: { portfolioId: 'PF-05', scenario: 'Balanced', strategy: 'Balanced', outputs: [] } });
+  runtime.execute(TELECOMMUNICATIONS_ENGINE_ID, { requestId: 't16', inputs: {"subsegment":"wireless-mno","archetype":"consumer","ebitdaMargin":42,"revenueGrowth":6,"debtEbitda":2.2,"arpu":34,"churnRate":1.1,"postpaidMix":88,"fcfYield":6,"roic":12,"capexIntensity":15,"spectrumCost":0.8,"evEbitda":6.5,"usageGrowth":22} });
+  runtime.execute(MATERIALS_METALS_ENGINE_ID, { requestId: 't20', inputs: {"subsegment":"diversified-miners","archetype":"integrated","ebitdaMargin":32,"revenueGrowth":9,"debtEbitda":1.4,"reserveLife":22,"cashCostCurve":20,"realizedPriceSpread":106,"fcfYield":8,"roic":14,"capexIntensity":11,"inventoryDays":40,"evEbitda":5.5,"recyclingInputMix":15} });
+  const self = runtime.execute(AUTOMOBILE_ENGINE_ID, { requestId: 'ies017', inputs: {"subsegment":"premium-oem","archetype":"luxury","ebitdaMargin":16,"revenueGrowth":6,"debtEbitda":1.5,"vehicleMargin":14,"capacityUtilization":82,"evMix":25,"fcfYield":6,"roic":14,"capexIntensity":10,"inventoryDays":40,"evEbitda":6,"aftersalesMix":22} });
+
+  assert.equal(self.result.state, 'COMPLETED');
+  assert.equal(self.result.metadata.composite, 74.8);
+  assert.equal(self.result.metadata.verdict, 'Buy');
+  assert.ok(self.result.evidenceRef);
+  assert.equal(store.size, 14);
+});

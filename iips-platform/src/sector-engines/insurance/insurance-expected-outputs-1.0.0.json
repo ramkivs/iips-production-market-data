@@ -1,0 +1,76 @@
+{
+  "basis": "Frozen expected outputs derived from IES-007 D15 Normative Calculation Appendix. Composite = weighted pillar sum.",
+  "version": "1.0.0",
+  "expected": [
+    {
+      "insurerId": "IN-001",
+      "category": "Life Insurance",
+      "pillars": {
+        "underwriting": 72.2,
+        "solvency": 75,
+        "growth": 72.5,
+        "persistency": 75,
+        "profitability": 66.0
+      },
+      "compositeScore": 72.3,
+      "verdict": "Buy",
+      "confidence": 0.8
+    },
+    {
+      "insurerId": "IN-002",
+      "category": "General Insurance",
+      "pillars": {
+        "underwriting": 56.6,
+        "solvency": 90,
+        "growth": 47.5,
+        "persistency": 40,
+        "profitability": 52.0
+      },
+      "compositeScore": 58.3,
+      "verdict": "Hold",
+      "confidence": 0.8
+    },
+    {
+      "insurerId": "IN-003",
+      "category": "Health Insurance",
+      "pillars": {
+        "underwriting": 51.0,
+        "solvency": 75,
+        "growth": 55.0,
+        "persistency": 75,
+        "profitability": 66.0
+      },
+      "compositeScore": 62.5,
+      "verdict": "Accumulate",
+      "confidence": 0.8
+    },
+    {
+      "insurerId": "IN-004",
+      "category": "High-growth Insurer",
+      "pillars": {
+        "underwriting": 82.8,
+        "solvency": 90,
+        "growth": 90.0,
+        "persistency": 90,
+        "profitability": 72.0
+      },
+      "compositeScore": 85.1,
+      "verdict": "Strong Buy",
+      "confidence": 0.8
+    },
+    {
+      "insurerId": "IN-005",
+      "category": "Distressed Insurer",
+      "pillars": {
+        "underwriting": 21.8,
+        "solvency": 40,
+        "growth": 32.5,
+        "persistency": 40,
+        "profitability": 52.0
+      },
+      "compositeScore": 34.8,
+      "verdict": "Avoid",
+      "confidence": 0.8
+    }
+  ]
+}

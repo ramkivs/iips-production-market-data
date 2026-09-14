@@ -1,0 +1,76 @@
+{
+  "$schema": "https://iips-engineering-standards/calibration-profile.schema.json#1.0.0",
+  "profileId": "healthcare-calibration",
+  "version": "1.0.0",
+  "engineId": "sector.healthcare",
+  "sectorFamily": "Healthcare",
+  "immutable": true,
+  "publishedAt": "2026-08-06T00:00:00.000Z",
+  "metricThresholds": [
+    {
+      "metricId": "HC-001",
+      "name": "Bed Occupancy",
+      "unit": "%",
+      "bands": [
+        { "label": "Strong", "min": 80, "max": null },
+        { "label": "Good", "min": 70, "max": 80 },
+        { "label": "Adequate", "min": 60, "max": 70 },
+        { "label": "Weak", "min": null, "max": 60 }
+      ]
+    },
+    {
+      "metricId": "HC-004",
+      "name": "EBITDA Margin",
+      "unit": "%",
+      "bands": [
+        { "label": "Strong", "min": 25, "max": null },
+        { "label": "Good", "min": 15, "max": 25 },
+        { "label": "Adequate", "min": 10, "max": 15 },
+        { "label": "Weak", "min": null, "max": 10 }
+      ]
+    },
+    {
+      "metricId": "HC-005",
+      "name": "Revenue Growth",
+      "unit": "%",
+      "bands": [
+        { "label": "Strong", "min": 20, "max": null },
+        { "label": "Good", "min": 10, "max": 20 },
+        { "label": "Adequate", "min": 5, "max": 10 },
+        { "label": "Weak", "min": null, "max": 5 }
+      ]
+    }
+  ],
+  "scoreWeights": [
+    { "scoreId": "utilization", "weight": 0.25 },
+    { "scoreId": "revenue-quality", "weight": 0.20 },
+    { "scoreId": "profitability", "weight": 0.20 },
+    { "scoreId": "clinical-quality", "weight": 0.20 },
+    { "scoreId": "efficiency", "weight": 0.15 }
+  ],
+  "penaltyRules": [
+    { "rule": "occupancy-collapse", "description": "Occupancy < 50% caps composite at 60", "weight": 0.1 },
+    { "rule": "quality-failure", "description": "Clinical quality failure blocks Strong Buy", "weight": 0.2 }
+  ],
+  "verdictMapping": [
+    { "minScore": 80, "maxScore": 100, "verdict": "Strong Buy" },
+    { "minScore": 70, "maxScore": 80, "verdict": "Buy" },
+    { "minScore": 60, "maxScore": 70, "verdict": "Accumulate" },
+    { "minScore": 50, "maxScore": 60, "verdict": "Hold" },
+    { "minScore": 40, "maxScore": 50, "verdict": "Watch" },
+    { "minScore": 0, "maxScore": 40, "verdict": "Avoid" }
+  ],
+  "confidenceRules": {
+    "dataCompleteness": 0.9,
+    "dataQuality": 0.9,
+    "metricConsistency": 0.8,
+    "calibrationStability": 1.0,
+    "governanceChecks": 1.0
+  },
+  "overrideRules": [
+    { "rule": "clinical-quality-failure", "description": "Clinical quality failure caps recommendation at Avoid" },
+    { "rule": "regulatory-action", "description": "Regulatory action caps recommendation at Watch" },
+    { "rule": "occupancy-collapse", "description": "Occupancy collapse caps recommendation at Watch" },
+    { "rule": "pipeline-failure", "description": "Pipeline failure reduces recommendation" }
+  ]
+}

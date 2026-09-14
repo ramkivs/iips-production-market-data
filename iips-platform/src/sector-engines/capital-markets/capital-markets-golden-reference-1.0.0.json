@@ -1,0 +1,58 @@
+{
+  "dataset": "capital-markets-golden-reference",
+  "version": "1.0.0",
+  "methodologyVersion": "IES-008 v1.0-draft",
+  "calibrationProfile": "capital-markets-calibration-1.0.0",
+  "purpose": "Authoritative regression benchmark for the Capital Markets Sector Engine. Covers all five sub-sectors + a distressed case.",
+  "firms": [
+    {
+      "id": "CM-001",
+      "name": "AssetManager-Alpha",
+      "category": "Asset Management",
+      "inputs": {
+        "CM-001": 5000, "CM-002": 22, "CM-003": 0.6, "CM-004": 45,
+        "CM-005": 85, "CM-006": 12, "CM-008": 800
+      }
+    },
+    {
+      "id": "CM-002",
+      "name": "Brokerage-Beta",
+      "category": "Brokerage",
+      "inputs": {
+        "CM-004": 55, "CM-005": 60, "CM-006": 8, "CM-007": 1500
+      }
+    },
+    {
+      "id": "CM-003",
+      "name": "InvestmentBank-Gamma",
+      "category": "Investment Banking",
+      "inputs": {
+        "CM-004": 52, "CM-005": 45, "CM-006": 15
+      }
+    },
+    {
+      "id": "CM-004",
+      "name": "Exchange-Delta",
+      "category": "Infrastructure",
+      "inputs": {
+        "CM-004": 38, "CM-005": 90, "CM-006": 55
+      }
+    },
+    {
+      "id": "CM-005",
+      "name": "Wealth-Epsilon",
+      "category": "Distribution/Wealth",
+      "inputs": {
+        "CM-001": 2000, "CM-004": 48, "CM-005": 80, "CM-006": 10
+      }
+    },
+    {
+      "id": "CM-006",
+      "name": "Distressed-Zeta",
+      "category": "Distressed",
+      "inputs": {
+        "CM-004": 78, "CM-005": 35, "CM-006": 3, "CM-007": 400
+      }
+    }
+  ]
+}
