@@ -1,7 +1,8 @@
 /**
  * Program v3.0 — Phase 4: Resilience / state components.
  *
- * Loading, Empty, Error, PermissionDenied, Stale, Unavailable, Replay-state.
+ * Loading, Empty, Error, PermissionDenied, Stale, Unavailable.
+ * (Replay-state removed under the AD-17 L-6 amendment — see note below.)
  * Never fabricate investment values. Non-color-only. Accessible.
  */
 import type { ReactNode } from 'react';
@@ -43,13 +44,28 @@ export function UnavailableState({ reason = 'Data unavailable' }: { reason?: str
   return <StateBox testid="state-unavailable" title={reason}>Data is unavailable. No fabricated or placeholder investment values are shown.</StateBox>;
 }
 
-export function ReplayState({ match }: { match: 'match' | 'difference' | 'pending' | null }) {
-  const map: Record<string, { title: string; status: string }> = {
-    match: { title: 'REPLAY: MATCH', status: 'positive' },
-    difference: { title: 'REPLAY: DIFFERENCE', status: 'negative' },
-    pending: { title: 'REPLAY: PENDING', status: 'neutral' },
-  };
-  if (match === null) return <StateBox testid="state-replay" title="Replay unavailable">Replay result unavailable.</StateBox>;
-  const { title, status } = map[match];
-  return <StateBox testid={`state-replay-${match}`} title={title}><span style={{ color: `var(--color-status-${status})` }}>{title}</span></StateBox>;
-}
+/*
+ * ⚠ AD-17 L-6 SAFETY AMENDMENT — `ReplayState` DELETED (bounded).
+ *   Authority: D59 Decision B (recovered SHA 3602bf4b706713337ff809c5f717a4a5bedfaf3d;
+ *   original commit d3da1f1 destroyed — see D60 §5 for the binding SHA mapping).
+ *
+ *   This module PREVIOUSLY exported `ReplayState`, which rendered
+ *     match      → 'REPLAY: MATCH'      in --color-status-positive
+ *     difference → 'REPLAY: DIFFERENCE' in --color-status-negative
+ *   That asserted a VERIFIED replay verdict. No such verification exists:
+ *   `ReplayService` returns reproduced/byteIdentical as LITERALS (AD-17 / M-2,
+ *   UNRESOLVED).
+ *
+ *   It was DORMANT — zero non-test consumers — so it was not a live exposure. But it
+ *   was a public export of a module imported by 30 files, i.e. one import keystroke
+ *   away from reintroducing the prohibited claim. D59 therefore authorized proactive
+ *   removal, deletion being the preferred treatment: a component that cannot make the
+ *   claim needs no policing.
+ *
+ *   NO replacement replay-verification component is provided. Surfaces that must show
+ *   replay literals use the approved `components/evidence/Ad17Disclosure`
+ *   (`ReplayLiteralDisplay` / `Ad17Note`), as applied in D56 and D58.
+ *
+ *   ⚠ AD-17 / M-2 REMAIN UNRESOLVED. This removes a prohibited CLAIM. It performs no
+ *   verification, establishes no reproducibility, and grants no certification.
+ */
