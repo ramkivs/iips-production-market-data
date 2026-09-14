@@ -17,7 +17,7 @@ The existing untracked `iips-platform/` directory in the Arena workspace is here
 - Type: TypeScript platform runtime
 
 **Baseline Information:**
-- Baseline commit: `[TO BE RECORDED AFTER COMMIT]`
+- Baseline commit: `1dc7c53db9320fe5221fcafce0c33585bfbb33d4`
 - Branch: `arena/01a0853d-iips-production-market-data`
 - Repository: `ramkivs/iips-production-market-data`
 - Remote: `https://github.com/ramkivs/iips-production-market-data.git`
@@ -93,8 +93,15 @@ The iips-platform source has no prior git history, no provenance chain, and no c
 ## Verification
 
 **Pre-tracking content hash:** `826a642ee0908a89c63addbf8caf3068b967d2d8e995eb61d114715621f29b21`
-**Post-tracking content hash:** `[TO BE RECORDED AFTER COMMIT]`
-**Byte-for-byte preservation:** `[TO BE VERIFIED AFTER COMMIT]`
+**Post-tracking content hash:** `826a642ee0908a89c63addbf8caf3068b967d2d8e995eb61d114715621f29b21`
+**Byte-for-byte preservation:** ✅ CONFIRMED (all 424 file hashes identical)
+
+**Durability Verification:**
+- Local HEAD: `1dc7c53db9320fe5221fcafce0c33585bfbb33d4`
+- Remote HEAD: `1dc7c53db9320fe5221fcafce0c33585bfbb33d4`
+- Synchronization: ✅ CONFIRMED
+- Baseline reachability: ✅ CONFIRMED (reachable from remote)
+- Files tracked: 424 iips-platform/ files + 1 provenance record
 
 ---
 
@@ -107,6 +114,7 @@ After this provenance establishment:
 
 ---
 
-**Status:** PROVENANCE ESTABLISHED
-**Baseline SHA:** `[TO BE RECORDED AFTER COMMIT]`
-**Durability:** `[TO BE VERIFIED AFTER PUSH]`
+**Status:** PROVENANCE ESTABLISHED ✅
+**Baseline SHA:** `1dc7c53db9320fe5221fcafce0c33585bfbb33d4`
+**Durability:** ✅ CONFIRMED (local/remote synchronized, baseline reachable)
+**Content Preservation:** ✅ CONFIRMED (byte-for-byte, all hashes identical)
