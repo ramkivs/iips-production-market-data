@@ -198,7 +198,16 @@ These surfaces are implemented as embedded components or overlays rather than de
 - **Navigation:** NONE (accessed from UI16)
 - **Mechanism:** Dedicated route, no navigation entry (accessed from EvidenceExplorer)
 - **Exposed:** YES (authenticated viewer, from UI16)
-- **Verification Status:** PARTIAL (WIN-UI-VERIFY-01: Banking replay verified, byte-identical)
+- **Verification Status:** PARTIAL (WIN-UI-VERIFY-01: Banking replay surface rendered; replay values displayed as REPORTED, **NOT VERIFIED**)
+  - ⚠ **L-2 CORRECTION (D77).** This entry previously read *"Banking replay verified,
+    byte-identical"*. That wording asserted a verified reproduction and verified byte identity
+    that **has never been performed**, breaching AD-17 / P13 BS-1 (*"UI17 MUST NOT assert
+    verified replay"*). The accurate basis (D62/D71): `ReplayService` **computes** these values,
+    but the UI-facing values are **hardcoded by `executive-transport`** and never produced by a
+    runtime verification. What WIN-UI-VERIFY-01 observed was that the **surface rendered**, not
+    that replay was verified. **AD-17 / M-2 remain UNRESOLVED** (resolution gate: P15).
+    Corrected by addition — the original wording is quoted above in this note, not erased, and
+    `docs/P13B_IMPLEMENTATION_EVIDENCE.md`:442 retains it as a historical quotation under O-3.
 - **Status:** Implemented with dedicated route but no navigation entry
 
 #### **UI19 — AiAdvisory**

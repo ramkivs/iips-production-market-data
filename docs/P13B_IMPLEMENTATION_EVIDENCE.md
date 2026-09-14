@@ -161,6 +161,25 @@ the screening pipeline in transport and bypass the certified composition.
 
 ⚠ **No artificial call sites were added to inflate this matrix.**
 
+### R-6 disposition (D77) — 3 CLOSED, 1 OPEN
+
+Correction by addition. The N/A rationale above is **preserved unchanged**; this note records
+each export's governance disposition. Verified at `93ff7b5`: all four appear in
+`frontend/server/p12-transport.ts` **only inside the header comment at lines 21–25** — there are
+**zero executable call sites**, confirming no artificial invocation was ever added.
+
+| Export | Disposition | Basis |
+|---|---|---|
+| `buildAbsentQualityProvenance` | **CLOSED — permanently N/A** | Structural: every derived row already carries a governed quality (`unavailable` where absent) via `worstQuality`. No payload can reach this transport without quality, so the precondition cannot arise. Not dependent on R-2. |
+| `assertQualityTransition` | **CLOSED — permanently N/A** | Structural: this transport performs a **single** derivation. A transition guard requires two pipeline stages; there is no second stage to guard. Not dependent on R-2. |
+| `attachProvenance` | **CLOSED — permanently N/A** | Structural: the envelope carries provenance as a first-class field via `buildApiResponse`. Attaching again would **duplicate** it. Not dependent on R-2. |
+| `provenanceFromSnapshot` | **OPEN — DEFERRED pending R-2** | Requires a `DataSnapshot` from P05–P11 provider ingestion, which is **not wired** to this transport. Fabricating a snapshot is prohibited. **Re-assess when R-2 closes.** |
+
+The three CLOSED items are **permanently inapplicable by construction**, not deferred work — no
+future act is expected to invoke them, and their closure creates no obligation. **32-export matrix
+unchanged: 28 exercised + 4 N/A.** No export was added, removed, renamed or invoked; **no runtime
+behaviour changed by this disposition.**
+
 ---
 
 ## 6. DUAL-TRANSPORT MATRIX
