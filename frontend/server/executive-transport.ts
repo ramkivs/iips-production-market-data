@@ -57,6 +57,8 @@ import { MaterialsMetalsEngine, MATERIALS_METALS_ENGINE_ID } from '../../iips-pl
 import type { EngineOutput } from '../../iips-platform/src/sector-engines/cross-sector/ontology/OntologyMapper';
 import { AuthError } from '../src/core/auth/keycloakAdapter';
 import { MoSPISourceAdapter, MacroSourceError, type MacroSourceErrorCode } from './macro/mospi-source';
+// P13-B-01 (D54) — additive P12 governed surface routing predicates.
+import { isP12Path, p12SurfaceFor } from './p12-transport';
 
 const ENGINE_FACTORY: Record<string, () => unknown> = {
   [BANKING_ENGINE_ID]: () => new BankingEngine(),
@@ -590,6 +592,56 @@ function readSurfaceFor(url: string | undefined): string | null {
   return null;
 }
 
+/**
+ * P13-B-02 (D54) — Resolve the SERVER-ENFORCED tenant from the authenticated principal.
+ *
+ * ⚠ FAIL-CLOSED. The tenant is an authenticated server-side fact. No client-supplied
+ * header can set or widen it. When the principal carries no tenant identity the request
+ * is refused rather than defaulted to a shared or wildcard tenant.
+ */
+function resolvePrincipalTenant(principal: { tenantId?: string; subject?: string } | null): string {
+  const tenantId = principal?.tenantId;
+  if (typeof tenantId === 'string' && tenantId.length > 0) return tenantId;
+  throw new Error('tenant unresolved for authenticated principal — fail-closed; no data exposure');
+}
+
+/**
+ * P13-B (D54) — Governed universe provider for the additive P12 surface.
+ *
+ * ⚠ LINEAGE: rows are DERIVED from the CERTIFIED v2.0 decision-matrix computation that
+ * this transport already performs. The screening/resolution applied to them is
+ * P12-governed. The combination is disclosed as DUAL lineage — the rows are NOT
+ * relabelled as P12-produced data.
+ */
+function buildGovernedUniverseProvider(): import('./p12-request-handler').GovernedUniverseProvider {
+  const payload = () => computeCertifiedDecisionMatrix() as import('./p12-universe').CertifiedMatrixPayload;
+  const fallbackAsOf = () => {
+    const p = payload().provenance?.calibratedAt;
+    if (typeof p === 'string' && p.length > 0) return p;
+    // The frozen baseline carries no calibration timestamp — disclose the vintage
+    // identity rather than inventing an observation time.
+    return 'v1.1-replay-baseline';
+  };
+  return {
+    async screenerUniverse() {
+      const u = await import('./p12-universe');
+      return u.deriveScreenerUniverse(payload(), fallbackAsOf());
+    },
+    async searchUniverse() {
+      const u = await import('./p12-universe');
+      return u.deriveSearchUniverse(payload(), fallbackAsOf());
+    },
+    async securities() {
+      const u = await import('./p12-universe');
+      return u.deriveSecurities(payload());
+    },
+    async vintage() {
+      const u = await import('./p12-universe');
+      return u.deriveVintage(payload(), fallbackAsOf());
+    },
+  };
+}
+
 /** Lazily obtain the governed READ executor (real Keycloak; cached); null when no IdP is configured. */
 async function getReadExecutor(): Promise<import('./secured-executor').SecuredExecutor | null> {
   if (!readExecutor) {
@@ -793,6 +845,29 @@ const server = http.createServer((req, res) => {
         await admin.handleNotesRequest(req, res, executor);
       } catch (e) {
         res.writeHead(500); res.end(JSON.stringify({ error: 'notes transport error', detail: String(e) }));
+      }
+    })();
+    return;
+  }
+  // P13-B-01 (D54): the ADDITIVE P12 governed surface (screener/resolve/search) is DISPATCHED
+  // here with the EXISTING READ executor, mirroring the promoted P-1/P-2/AI-Advisory
+  // cross-module pattern. No new RBAC model, no new executor, and `readSurfaceFor` is NOT
+  // extended — the 13 existing v2.0 routes below are untouched by this branch.
+  //
+  // ⚠ Tenant scoping is SERVER-ENFORCED and FAIL-CLOSED: the tenant comes from the
+  //   authenticated principal, never from client input.
+  // ⚠ Binding these endpoints does NOT broaden C6/C7 certification scope and does NOT
+  //   certify UI05 or any other UI surface.
+  if (isP12Path(req.url)) {
+    void (async () => {
+      try {
+        const surface = p12SurfaceFor(req.url);
+        const principal = await authorizeRead(req, res, surface ?? 'decision-matrix');
+        if (!principal) return; // 401/403 already written by the existing guard
+        const { handleP12Request } = await import('./p12-request-handler');
+        await handleP12Request(req, res, resolvePrincipalTenant(principal), buildGovernedUniverseProvider());
+      } catch (e) {
+        res.writeHead(500); res.end(JSON.stringify({ error: 'p12 transport error', detail: String(e) }));
       }
     })();
     return;

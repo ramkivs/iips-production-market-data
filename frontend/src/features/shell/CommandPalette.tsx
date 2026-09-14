@@ -17,6 +17,13 @@
  * client for search, Session/useAuth for account. No second authorization model; results never
  * expose information the user could not already reach through the governed surface.
  *
+ * P13-B-06 (D54): search is now served by the certified P12 object-resolution contract
+ * (C7) via /api/search, which performs the matching and the deterministic ordering
+ * SERVER-SIDE. The palette renders the contract's order verbatim — no client ranking,
+ * scoring or fuzzy matching is introduced. If the governed C7 surface is unavailable the
+ * palette FALLS BACK to the pre-existing decision-matrix universe, and the fallback is
+ * DISCLOSED in the UI so the two lineages are never conflated. This surface is NOT certified.
+ *
  * Interaction primitives reused (no new framework): Modal (focus trap, Escape, focus restore
  * via useDialogFocus) + useTabList (arrow-key list navigation, roving tabindex) + existing
  * LoadingState/EmptyState/ErrorState. The Ctrl+K / Cmd+K shortcut is wired in AppShell.
@@ -27,6 +34,7 @@ import { Modal } from '../../components/interaction/InteractionComponents';
 import { useTabList } from '../../components/interaction/useTabList';
 import { LoadingState, EmptyState, ErrorState } from '../../components/state/StateComponents';
 import { fetchDecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
+import { executeSearch as executeGovernedSearch, type P12SearchHit } from '../../api/p12Search';
 import { visibleNav } from '../../app/navigation';
 import { useSession } from '../../core/session/SessionContext';
 import { useAuth } from '../../core/auth/AuthProvider';
@@ -51,6 +59,9 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState('');
+  // P13-B-06: governed C7 results + the disclosed lineage of whatever is displayed.
+  const [governedHits, setGovernedHits] = useState<readonly P12SearchHit[] | null>(null);
+  const [lineage, setLineage] = useState<string | null>(null);
 
   // One-time governed fetch of the decision-matrix sector universe, on first open (lazy).
   useEffect(() => {
@@ -66,6 +77,27 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   // Commands = existing role-filtered navigation (never a second authorization model).
   const commands = useMemo(() => visibleNav(session.role), [session.role]);
 
+  // P13-B-06 — governed search through the certified C7 contract. The contract performs
+  // matching AND ordering; this effect only transports the query and stores the result.
+  useEffect(() => {
+    const q = query.trim();
+    if (!open || q === '') { setGovernedHits(null); setLineage(null); return; }
+    let active = true;
+    void executeGovernedSearch({ q, maxResults: 20 })
+      .then((env) => {
+        if (!active) return;
+        setGovernedHits(env.data.results);
+        setLineage(env.lineage);
+      })
+      .catch(() => {
+        // Fail-soft to the PRE-EXISTING universe, and disclose that this is the fallback.
+        if (!active) return;
+        setGovernedHits(null);
+        setLineage('V2.0-CERTIFIED');
+      });
+    return () => { active = false; };
+  }, [open, query]);
+
   // Search: case-insensitive substring (prefix inclusive) over governed sector names.
   const results = useMemo(() => {
     if (!companies) return [];
@@ -77,10 +109,17 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   // List entries: commands when idle, search results while a query is present.
   const entries = useMemo<PaletteEntry[]>(() => {
     if (query.trim() !== '') {
+      // P13-B-06: certified C7 order preserved verbatim — never re-sorted here.
+      if (governedHits) {
+        return governedHits.map((h) => ({
+          label: h.name ?? h.id,
+          destination: h.sector ? `/research/company/${h.sector}` : '/search',
+        }));
+      }
       return results.map((c) => ({ label: c.sector, destination: `/research/company/${c.sector}` }));
     }
     return commands.map((n) => ({ label: n.label, destination: n.path }));
-  }, [query, results, commands]);
+  }, [query, results, commands, governedHits]);
 
   const labels = entries.map((e) => e.label);
   const safeActive = labels.includes(active) ? active : (labels[0] ?? '');
@@ -128,6 +167,15 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           </button>
         ))}
       </div>
+
+      {/* P13-B-08 — explicit lineage disclosure for whatever the palette just displayed. */}
+      {query.trim() !== '' && lineage && (
+        <p data-testid="palette-lineage" style={{ marginTop: 8, fontSize: 11, color: 'var(--color-ink-secondary)' }}>
+          {lineage === 'V2.0-CERTIFIED'
+            ? 'Governed search unavailable — showing the existing v2.0 certified sector universe (fallback).'
+            : 'Results from the certified P12 object-resolution contract (C7). Not a certified surface.'}
+        </p>
+      )}
 
       {/* Account context — existing Session/useAuth only; no email, no new identity fields. */}
       <div data-testid="palette-account" style={{ marginTop: 16, borderTop: '1px solid var(--color-border)', paddingTop: 12, fontSize: 13, color: 'var(--color-ink-secondary)' }}>

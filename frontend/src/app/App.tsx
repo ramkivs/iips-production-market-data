@@ -28,6 +28,10 @@ const EvidenceHub = lazy(() => import('../features/evidence/EvidenceHub').then((
 const ReplayExplorer = lazy(() => import('../features/replay/ReplayExplorer').then((m) => ({ default: m.ReplayExplorer })));
 const Screener = lazy(() => import('../features/screener/Screener').then((m) => ({ default: m.Screener })));
 const Administration = lazy(() => import('../features/admin/Administration').then((m) => ({ default: m.Administration })));
+// P13-B-05/06 (D54) — ADDITIVE P12-governed surfaces. The existing Screener above is
+// PRESERVED UNCHANGED; these are new routes, not replacements.
+const GovernedScreener = lazy(() => import('../features/screener/GovernedScreener').then((m) => ({ default: m.GovernedScreener })));
+const GovernedSearch = lazy(() => import('../features/search/GovernedSearch').then((m) => ({ default: m.GovernedSearch })));
 
 function Lazy({ children }: { children: ReactNode }) {
   return <Suspense fallback={<LoadingState />}>{children}</Suspense>;
@@ -61,6 +65,10 @@ export function App() {
         <Route path="/research/cross-sector" element={<Lazy><CrossSectorIntelligence /></Lazy>} />
         <Route path="/research/macro" element={<Lazy><MacroContext /></Lazy>} />
         <Route path="/screener" element={<Lazy><Screener /></Lazy>} />
+        {/* P13-B-05 (D54) — UI05 governed screener bound to the certified C6 contract. */}
+        <Route path="/screener/governed" element={<Lazy><GovernedScreener /></Lazy>} />
+        {/* P13-B-06 (D54) — UI13 governed search bound to the certified C7 contract. */}
+        <Route path="/search" element={<Lazy><GovernedSearch /></Lazy>} />
         <Route path="/intelligence" element={<Lazy><IntelligenceHub /></Lazy>} />
         <Route path="/intelligence/decision-matrix" element={<Lazy><DecisionMatrix /></Lazy>} />
         <Route path="/intelligence/*" element={<FeaturePlaceholder surface="Intelligence" />} />
