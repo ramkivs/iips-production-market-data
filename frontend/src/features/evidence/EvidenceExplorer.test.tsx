@@ -71,9 +71,51 @@ describe('Evidence Explorer', () => {
     expect(screen.getByTestId('snapshot-metadata-panel')).toBeInTheDocument();
   });
 
-  it('shows replay summary MATCH (certified replay equivalence)', async () => {
+  /* ------------------------------------------------------------------ *
+   * AD-17 L-1 SAFETY AMENDMENT (bounded, Program Authority authorized).  *
+   *                                                                      *
+   * The prior assertion required the replay summary to contain "MATCH",  *
+   * which encoded a PROHIBITED verified-byte-identity claim. AD-17/M-2   *
+   * are UNRESOLVED: ReplayService returns these values as LITERALS. The  *
+   * assertions below PROVE THE PROHIBITED PRESENTATION IS ABSENT — they  *
+   * do not merely omit it. They verify no replay verification.           *
+   * ------------------------------------------------------------------ */
+
+  it('shows the replay summary with reported literals, not a verification verdict', async () => {
     renderEvidence();
-    expect(await screen.findByTestId('replay-summary')).toHaveTextContent('MATCH');
+    const summary = await screen.findByTestId('replay-summary');
+    // The testid hook is preserved for existing consumers.
+    expect(summary).toBeInTheDocument();
+    // Literals remain visible…
+    expect(screen.getByTestId('replay-literal-byteIdentical')).toBeInTheDocument();
+    expect(screen.getByTestId('replay-literal-reproduced')).toBeInTheDocument();
+    // …explicitly marked unverified.
+    expect(summary).toHaveTextContent('NOT VERIFIED');
+  });
+
+  it('AD-17: replay summary NEVER renders a MATCH/DIFFERENCE verification verdict', async () => {
+    renderEvidence();
+    const summary = await screen.findByTestId('replay-summary');
+    const text = summary.textContent ?? '';
+    expect(text).not.toMatch(/\bMATCH\b/);
+    expect(text).not.toMatch(/\bDIFFERENCE\b/);
+  });
+
+  it('AD-17: replay summary uses no pass/fail status colour for byte identity', async () => {
+    renderEvidence();
+    const summary = await screen.findByTestId('replay-summary');
+    const coloured = [summary, ...Array.from(summary.querySelectorAll('*'))].filter((el) => {
+      const s = el.getAttribute('style') ?? '';
+      return s.includes('--color-status-positive') || s.includes('--color-status-negative');
+    });
+    expect(coloured).toHaveLength(0);
+  });
+
+  it('AD-17: replay summary carries the AD-17/M-2 UNRESOLVED disclosure', async () => {
+    renderEvidence();
+    const summary = await screen.findByTestId('replay-summary');
+    expect(summary).toHaveTextContent('AD-17 / M-2 — UNRESOLVED');
+    expect(summary).toHaveTextContent('have not been verified');
   });
 
   it('links to the full replay explorer', async () => {

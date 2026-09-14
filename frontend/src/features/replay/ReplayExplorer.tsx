@@ -100,14 +100,15 @@ export function ReplayExplorer() {
 
       {/* Reported equivalence — NOT a verified equivalence. No pass/fail colouring. */}
       <h2 style={{ fontSize: 18, marginTop: 24 }}>Reported Equivalence</h2>
-      <p data-testid="replay-equivalence" style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, background: 'var(--color-surface-1)' }}>
+      {/* <div> (not <p>): Ad17Note renders a block-level <p>, which may not nest inside a <p>. */}
+      <div data-testid="replay-equivalence" style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, background: 'var(--color-surface-1)' }}>
         <strong>
           Reported byteIdentical: <code>{String(replay.byteIdentical)}</code> — NOT VERIFIED
         </strong>
         <br />
         <span style={{ fontSize: 13 }}>{note}</span>
         <Ad17Note />
-      </p>
+      </div>
 
       {/* Evidence references (governed) */}
       <h2 style={{ fontSize: 18, marginTop: 24 }}>Evidence References</h2>

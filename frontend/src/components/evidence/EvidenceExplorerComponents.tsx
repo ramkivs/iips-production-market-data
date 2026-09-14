@@ -3,6 +3,8 @@
  * Display governed evidence/snapshot/replay/provenance. No computation or reasoning.
  */
 import type { ReactNode } from 'react';
+// AD-17 L-1 amendment: reuse the already-approved AD-17-safe treatment (no new variant).
+import { ReplayLiteralDisplay } from './Ad17Disclosure';
 
 /** Evidence chain timeline (Decision → Drivers → Metrics → Evidence → Snapshot → Provenance → Replay). */
 export function EvidenceTimeline({ steps }: { steps: readonly { label: string; content: ReactNode }[] }) {
@@ -57,16 +59,40 @@ export function SnapshotMetadataPanel({ snapshot }: { snapshot: { snapshotId: st
   );
 }
 
+/**
+ * Governed replay summary.
+ *
+ * ⚠ AD-17 L-1 SAFETY AMENDMENT (bounded, Program Authority authorized).
+ *
+ *   This component PREVIOUSLY rendered `byteIdentical ? 'MATCH' : 'DIFFERENCE'` in a
+ *   positive/negative status colour. That asserted a VERIFIED byte identity which has
+ *   never been verified: `ReplayService` returns `reproduced`/`byteIdentical` as LITERALS
+ *   (AD-17 / M-2, UNRESOLVED).
+ *
+ *   The literals are now rendered by the approved AD-17-safe `ReplayLiteralDisplay`, with
+ *   an explicit AD-17 disclosure and NO pass/fail colouring.
+ *
+ *   ⚠ AD-17 / M-2 REMAIN UNRESOLVED. This removes a prohibited CLAIM. It performs no
+ *   verification, establishes no reproducibility, and grants no certification.
+ *
+ *   The `data-testid="replay-summary"` hook, the `role="status"` semantics and the props
+ *   are preserved so existing consumers (UI16 EvidenceExplorer, CompanyTrustChain) keep
+ *   working unchanged.
+ */
 export function ReplaySummary({ replay }: { replay: { snapshotId: string; reproduced: boolean; byteIdentical: boolean } }) {
   return (
     <div data-testid="replay-summary" role="status" style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, background: 'var(--color-surface-1)', fontSize: 13 }}>
       <strong>Replay</strong>
-      <p style={{ margin: '4px 0' }}>
-        <span style={{ color: replay.byteIdentical ? 'var(--color-status-positive)' : 'var(--color-status-negative)', fontWeight: 600 }}>
-          {replay.byteIdentical ? 'MATCH' : 'DIFFERENCE'}
-        </span>
-        {' · '}reproduced: {String(replay.reproduced)} · snapshot <code>{replay.snapshotId}</code>
-      </p>
+      <ReplayLiteralDisplay
+        dto={{
+          // Carried verbatim as REPORTED literals; `verified*` pinned false so the
+          // AD-17 guard holds at the presentation boundary.
+          replayServiceLiterals: { reproduced: replay.reproduced, byteIdentical: replay.byteIdentical },
+          verifiedReproduction: false,
+          verifiedByteIdentical: false,
+        }}
+      />
+      <p style={{ margin: '4px 0 0' }}>snapshot <code>{replay.snapshotId}</code></p>
     </div>
   );
 }
