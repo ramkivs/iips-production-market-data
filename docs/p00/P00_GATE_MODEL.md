@@ -176,10 +176,14 @@ obligation (D25) · **AD-17/M-2 UNRESOLVED** · **AG-1** / **AG-2** **OPEN** (bo
 ⚠ **No concession was invoked and no concessions register was created** (P05 **PIT-7/NG-14**, P06:119).
 
 ⚠ **Lines :17 and :121 above — *"P07–P17 remain NOT ACCEPTED"* — are STALE** as to **P07** (accepted,
-§36), **P08** (accepted, §40), **P13** (accepted, reconciliation act 2026-09-14), and **P14**
-(accepted, reconciliation act 2026-09-14). They are **left unedited** as the record of their own
-moment and are **superseded by addition** by this block and the P13/P14 reconciliation sections
-below. **Formal gate status: P00, P01, P02, P03, P04, P05, P06, P07, P08, P13, P14 accepted.**
+§36), **P08** (accepted, §40), **P09** (accepted, P09–P16 reconciliation 2026-09-14), **P10**
+(accepted, P09–P16 reconciliation 2026-09-14), **P11** (accepted, P09–P16 reconciliation
+2026-09-14), **P12** (accepted, P09–P16 reconciliation 2026-09-14), **P13** (accepted, P13/P14
+reconciliation ce497d9), **P14** (accepted, P13/P14 reconciliation ce497d9), **P15** (accepted,
+P09–P16 reconciliation 2026-09-14), and **P16** (closed, P09–P16 reconciliation 2026-09-14).
+They are **left unedited** as the record of their own moment and are **superseded by addition**
+by this block, the P13/P14 reconciliation sections, and the P09–P16 reconciliation sections
+below. **Formal gate status: P00, P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, P16 accepted (17 gates).**
 
 ---
 
@@ -242,3 +246,120 @@ surfaces whose authoritative source remains unestablished) · **AD-17/M-2 UNRESO
 ⚠ This acceptance was recorded by the P14 acceptance act but was not reflected in the gate model
 until this reconciliation. The acceptance record is preserved byte-for-byte at
 `docs/PHASE_14_GATE_ACCEPTANCE.md`. This appended section reconciles the gate model to match.
+
+---
+
+## P09–P16 GATE RECONCILIATION — appended 2026-09-14
+
+> ### Reconciliation of P09, P10, P11, P12, P15, P16 into the formal gate status.
+
+Authority basis: P09–P16 Gate-Model-Status-Reconciliation adjudication (read-only, 2026-09-14),
+which determined that P09–P12 and P15–P16 each have explicit, durable, git-tracked acceptance or
+closure records with no superseding or revoking authority acts, and that the P00 gate-model table
+is STALE for these gates.
+
+This reconciliation appends acceptance/closure sections for each gate and updates the formal gate
+status to reflect the authoritative records.
+
+---
+
+### P09 — Fundamentals gate — ACCEPTED (reconciliation)
+
+> ### ✅ **P09 — Fundamentals gate — is ACCEPTED** by explicit **A3** act (acceptor **Sai**, P09 gate only).
+
+`docs/PHASE_09_ACCEPTANCE.md`, pinned baseline `62d4b8f` (P09 Entry Assessment). Scope:
+**P09-01** Fundamentals data model · **P09-02** Publication/effective time · **P09-03**
+PIT/restatement handling · **P09-04** Fundamentals lineage/provider abstraction — the complete
+D03 Fundamentals gate scope. Suite **723/723 PASS** (P05 264 · P06 113 · P07 159 · P08 90 ·
+**P09 97**).
+
+**A2 Certification:** CERTIFIED (C3, C4, C8, C11 within P09 D03 scope) — `docs/PHASE_09_CERTIFICATION_DECISION.md`,
+A2 authority Sai (designated `2d28e42`), baseline `e77d128`.
+
+⚠ **ACCEPTANCE IS NOT ACTIVATION.** Production activation **`NOT_AUTHORIZED`** (A4 at P16).
+⚠ This acceptance was not reflected in the gate model until this reconciliation.
+
+---
+
+### P10 — Intelligence Data gate — ACCEPTED (reconciliation)
+
+> ### ✅ **P10 — Intelligence Data gate — is ACCEPTED** by explicit **A3** act (acceptor **Ramki**, P10 gate only).
+
+`docs/PHASE_10_GATE_ACCEPTANCE.md`. Scope: **P10-01** D06 News/Events · **P10-02** D07 Estimates/Consensus ·
+**P10-03** D08 Macroeconomic Data · **P10-04** D09 Alternative Data (**67 P10 tests**, all passing).
+
+**A2 Certification:** PARTIAL CERTIFICATION (C3, C8 within P10 D06–D09 scope) —
+`docs/PHASE_10_CERTIFICATION_DECISION.md`, A2 authority Sai (designated `2d28e42`), baseline `efeb7a3`.
+
+⚠ **ACCEPTANCE IS NOT ACTIVATION.** Production activation **`NOT_AUTHORIZED`** (A4 at P16).
+⚠ This acceptance was not reflected in the gate model until this reconciliation.
+
+---
+
+### P11 — Engine Integration gate — ACCEPTED (reconciliation)
+
+> ### ✅ **P11 — Engine Integration gate — is ACCEPTED** by explicit **A3** act (acceptor **Raji**, P11 gate only).
+
+`docs/PHASE_11_GATE_ACCEPTANCE.md`, authorization basis D26 (P11 entry authorization), A3
+designated by D27. Scope: **P11-01** Engine Ingress Path · **P11-02** Namespace + Collision Guard ·
+**P11-03** Evidence/Snapshot/Replay ADAPT · **P11-04** Engine Registry (REUSE) (**63 P11 tests**,
+all passing).
+
+**A2 Certification:** CERTIFIED (C1, C2 within P11 Engine Integration scope) —
+`docs/PHASE_11_CERTIFICATION_DECISION.md`, A2 authority Sai (designated `2d28e42`), baseline `f093c74`.
+
+⚠ **ACCEPTANCE IS NOT ACTIVATION.** Production activation **`NOT_AUTHORIZED`** (A4 at P16).
+⚠ This acceptance was not reflected in the gate model until this reconciliation.
+
+---
+
+### P12 — API/DTO gate — ACCEPTED (reconciliation)
+
+> ### ✅ **P12 — API/DTO gate — is ACCEPTED** by explicit **A3** act (acceptor **Sai**, P12 gate only).
+
+`docs/PHASE_12_GATE_ACCEPTANCE.md`, implementation baseline `75f65b8`, authorization basis D29
+(commit `f03967e`), A3 designated by D31. Scope: **P12-01** through **P12-07** (7 work items;
+**153 P12 tests**, all passing).
+
+**A2 Certification:** CERTIFIED (C6, C7 within P12 API/DTO Gate scope) —
+`docs/PHASE_12_CERTIFICATION_DECISION.md`, A2 authority Sai (designated `2d28e42`), baseline `e6ccf6e`.
+
+⚠ **ACCEPTANCE IS NOT ACTIVATION.** Production activation **`NOT_AUTHORIZED`** (A4 at P16).
+⚠ This acceptance was not reflected in the gate model until this reconciliation.
+
+---
+
+### P15 — Full E2E certification gate — ACCEPTED AT A3 GATE (reconciliation)
+
+> ### ✅ **P15 — Full E2E certification gate — is ACCEPTED** at A3 gate (acceptor **Raji**, P15 gate only).
+
+`docs/P15_CLOSURE_REPORT.md` (Program Authority Closure Record, E-12). P15 market-data lineage
+propagation accepted at A3 gate after corrective implementation (Pass 2). Scope: **W-01** through
+**W-07** (lineage extraction, propagation, preservation, backward compatibility, tests).
+
+**P15 Certification: NONE** — explicitly stated in closure report. No A2 certification was
+granted for P15.
+
+⚠ **ACCEPTANCE IS NOT CERTIFICATION.** P15 Certification = **NONE**.
+⚠ **ACCEPTANCE IS NOT ACTIVATION.** Production activation **`NOT_AUTHORIZED`** (A4 at P16).
+⚠ This acceptance was not reflected in the gate model until this reconciliation.
+⚠ P15 is NOT reopened by this reconciliation. Its status remains exactly as recorded.
+
+---
+
+### P16 — Production activation authority gate — CLOSED (reconciliation)
+
+> ### ✅ **P16 — Production activation authority gate — is CLOSED** by Program Authority act.
+
+`docs/P16_CLOSURE.md` (Decision ID: P16-CLOSURE, Authority: Program Authority Sai / Ramki).
+P16 authority chain complete: A4-D1 (`3e6167b`) → A4-D2 (`728ea63`) → P16-D1 (`56b8fbd`) →
+P16-D2 (`2059715`) → P16-D3 (`fef6005`) → P16-D4 (`d5d9c87`) → Implementation (`e81157b`) →
+P16-A3 ACCEPTED by Raji (`f3c143c`) → P16-A2 CERTIFIED by Raji (`b6281f0`) → CLOSED.
+
+**P16 is an authority gate**, not a technical implementation gate. Its "ACCEPTED" status is
+expressed through the completed authority chain culminating in formal closure.
+
+⚠ **CLOSURE IS NOT PRODUCTION ACTIVATION.** P16 closure establishes the authority framework;
+it does not perform, authorize, or constitute production activation operations.
+⚠ **UI SOURCE NOT ESTABLISHED.** E13-10 and EB14-3 remain OPEN.
+⚠ P16 is NOT reopened by this reconciliation. Its CLOSED status remains exactly as recorded.
