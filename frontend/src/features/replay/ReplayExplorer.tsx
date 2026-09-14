@@ -1,20 +1,35 @@
 /**
- * Program v3.0 — Phase 11: Replay Explorer.
+ * Program v3.0 — Phase 11: Replay Explorer (UI17).
  *
- * Verification surface. Answers "Can this result be reproduced and independently verified?"
- * It displays the GOVERNED ReplayResult (reproduced + byteIdentical + evidenceRefs) and the
- * original certified result metadata. It does NOT compute replay, compare metrics, derive
- * differences, or infer causes.
+ * Reporting surface. It displays the GOVERNED ReplayResult literals
+ * (reproduced + byteIdentical + evidenceRefs) and the original certified result metadata.
+ * It does NOT compute replay, compare metrics, derive differences, or infer causes.
  *
- * HARD STOP honored: ReplayService exposes only reproduced/byteIdentical/evidenceRefs, so the
- * UI displays "Replay reproduced successfully; byte-identical: MATCH/DIFFERENCE" and does NOT
- * invent field-level/metric-level diffs.
+ * ⚠ P13-B-07 AD-17 SAFETY AMENDMENT (bounded, Program Authority authorized).
+ *
+ *   This surface PREVIOUSLY rendered `byteIdentical` as "MATCH — byte-identical" in a
+ *   positive pass/fail colour. That asserted a VERIFIED byte identity which has never been
+ *   verified, breaching the ALREADY-ACCEPTED P13 bounded condition and P13 BS-1:
+ *
+ *       "UI17 MUST NOT assert verified replay (AD-17/M-2)"
+ *
+ *   The defect was PRE-EXISTING — it was not introduced by P13-B. This amendment brings
+ *   the React surface into conformance with the accepted P13 record. It changes NO
+ *   accepted record, and it does NOT modify p13/src/boundedSurfaces.js.
+ *
+ *   ⚠ AD-17 / M-2 REMAIN UNRESOLVED. `ReplayService` returns reproduced/byteIdentical as
+ *   LITERALS. This amendment removes a prohibited CLAIM; it performs no verification,
+ *   grants no certification, and does not remediate AD-17 or M-2.
+ *
+ *   The literals are now rendered by the shared AD-17-safe `ReplayLiteralDisplay`, with an
+ *   explicit AD-17 disclosure and NO pass/fail colouring.
  */
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { DecisionBadge } from '../../components/decision/DecisionComponents';
-import { SnapshotMetadataPanel, ProvenanceChain, ReplaySummary } from '../../components/evidence/EvidenceExplorerComponents';
+import { SnapshotMetadataPanel, ProvenanceChain } from '../../components/evidence/EvidenceExplorerComponents';
+import { Ad17Note, ReplayLiteralDisplay } from '../../components/evidence/Ad17Disclosure';
 import { LoadingState, ErrorState, UnavailableState } from '../../components/state/StateComponents';
 import { CertifiedBadge, FreshnessBadge } from '../../components/ui/Badges';
 
@@ -65,18 +80,33 @@ export function ReplayExplorer() {
         <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-ink-secondary)' }}>Calibration <code>{original.calibrationVersion}</code></p>
       </div>
 
-      {/* Replay result (governed ReplayResult) */}
+      {/* Replay result — reported literals ONLY (AD-17 safe; no verification claim). */}
       <h2 style={{ fontSize: 18, marginTop: 24 }}>Replay Result</h2>
-      <ReplaySummary replay={replay} />
+      <div data-testid="replay-summary" role="status">
+        <ReplayLiteralDisplay
+          dto={{
+            // The platform reports these as LITERALS. They are carried verbatim and are
+            // explicitly NOT verified. `verified*` are pinned false — UI17 never claims
+            // verified reproduction or verified byte identity while AD-17/M-2 is open.
+            replayServiceLiterals: { reproduced: replay.reproduced, byteIdentical: replay.byteIdentical },
+            verifiedReproduction: false,
+            verifiedByteIdentical: false,
+          }}
+        />
+        <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-ink-secondary)' }}>
+          snapshot <code>{replay.snapshotId}</code>
+        </p>
+      </div>
 
-      {/* Equivalence status (governed byteIdentical; no invented diff) */}
-      <h2 style={{ fontSize: 18, marginTop: 24 }}>Equivalence</h2>
+      {/* Reported equivalence — NOT a verified equivalence. No pass/fail colouring. */}
+      <h2 style={{ fontSize: 18, marginTop: 24 }}>Reported Equivalence</h2>
       <p data-testid="replay-equivalence" style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, background: 'var(--color-surface-1)' }}>
-        <strong style={{ color: replay.byteIdentical ? 'var(--color-status-positive)' : 'var(--color-status-negative)' }}>
-          {replay.byteIdentical ? 'MATCH — byte-identical' : 'DIFFERENCE'}
+        <strong>
+          Reported byteIdentical: <code>{String(replay.byteIdentical)}</code> — NOT VERIFIED
         </strong>
         <br />
         <span style={{ fontSize: 13 }}>{note}</span>
+        <Ad17Note />
       </p>
 
       {/* Evidence references (governed) */}

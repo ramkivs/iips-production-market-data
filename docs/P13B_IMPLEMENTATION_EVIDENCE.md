@@ -4,7 +4,13 @@
 **Authority:** D54 P13-B Implementation Authorization (`dce5cdb4`)
 **A3 gate acceptor (designated, not exercised):** Sai — D53
 **Baseline commit:** `dce5cdb44a7c0a64ceebb3df91368802ca5a9953`
-**Status:** **C) IMPLEMENTATION INCOMPLETE — SPECIFIC REMAINING WORK** (see §11)
+**Amendment baseline:** `cfe33536573cc118870ba728d1088e020c20476f`
+**Status:** **A) P13-B-07 COMPLETE — P13-B READY FOR A3 ACCEPTANCE** (see §14)
+
+> **Revision 2** — the UI17 AD-17 safety amendment (§14) has been applied under the bounded
+> Program Authority adjudication `P13-B-R1-UI17-AD17-AUTHORITY-ADJUDICATION-01` (Decision A).
+> Sections 1–13 record the original implementation and remain accurate as written; §11 R-1 is
+> **now RESOLVED** and is superseded by §14.
 
 > This report records IMPLEMENTATION ONLY. It performs **no** A3 acceptance, grants **no**
 > certification, and grants **no** production authorization.
@@ -328,3 +334,165 @@ P13-B with the UI17 exposure formally recorded as a carried defect.
 
 **Recorded by:** Implementation Agent under D54
 **Baseline:** `dce5cdb44a7c0a64ceebb3df91368802ca5a9953`
+
+---
+
+# 14. UI17 AD-17 SAFETY AMENDMENT (P13-B-07 COMPLETION)
+
+**Act:** `P13-B-07-UI17-AD17-SAFETY-AMENDMENT-EXECUTION-01`
+**Authority:** D54 + bounded adjudication `P13-B-R1-UI17-AD17-AUTHORITY-ADJUDICATION-01` (Decision A)
+**Amendment baseline:** `cfe33536573cc118870ba728d1088e020c20476f`
+
+## 14.1 Why the amendment was authorized — the conflict was apparent, not real
+
+R-1 (§11) reported a conflict between D54 condition 5 (UI17 must not assert verified replay)
+and condition 13 (do not modify accepted P00–P16 records). Read-only inspection resolved it:
+
+| Source | Verbatim | Location |
+|---|---|---|
+| **Accepted P13 record** | `UI17 \| MUST NOT assert verified replay (AD-17/M-2) \| ✅ Bounded` | `docs/PHASE_13_GATE_ACCEPTANCE.md`:158 |
+| **Accepted P13 implementation** | `⚠ **BS-1** UI17 MUST NOT assert verified replay/reproduction (AD-17/M-2)` | `p13/src/boundedSurfaces.js`:13 |
+
+⚠ **The React surface was in BREACH of the accepted P13 record, not an expression of it.**
+D54 condition 5 and the accepted P13 bounded condition state the SAME requirement. The
+amendment therefore brings a non-conforming artifact into conformance with an existing
+acceptance. **It does not reopen, modify, or reinterpret any accepted record.**
+
+## 14.2 Pre-existing nature of the defect
+
+⚠ **The defect was PRE-EXISTING. P13-B did not introduce it.** At `cfe3353` — before this
+amendment and before any P13-B change to this file — `ReplayExplorer.tsx` read:
+
+```
+L75:  <strong style={{ color: replay.byteIdentical ? 'var(--color-status-positive)' : 'var(--color-status-negative)' }}>
+L76:    {replay.byteIdentical ? 'MATCH — byte-identical' : 'DIFFERENCE'}
+```
+
+This asserted a verified byte identity that has never been verified.
+
+## 14.3 Exact files changed — 2, both authorized
+
+| File | Δ | Change |
+|---|---|---|
+| `frontend/src/features/replay/ReplayExplorer.tsx` | +47 / −13 | Prohibited presentation removed; reuses the approved `ReplayLiteralDisplay` + `Ad17Note` |
+| `frontend/src/features/replay/ReplayExplorer.test.tsx` | +83 / −6 | Safety invariants added that PROVE absence of the claim |
+
+**Total: 2 files, +130 / −19.** No other file was touched.
+
+### ⚠ A shared component was deliberately NOT modified
+
+`ReplaySummary` (`components/evidence/EvidenceExplorerComponents.tsx`:60-72) **also** renders
+`byteIdentical ? 'MATCH' : 'DIFFERENCE'` in pass/fail colour. It is **shared with UI16
+EvidenceExplorer and CompanyTrustChain**, which are **outside** this authorization.
+
+**Resolution:** UI17 now **stops consuming** `ReplaySummary` and renders the AD-17-safe
+display instead. The shared component is left **byte-unchanged**, so UI16 and
+CompanyTrustChain are untouched. This achieved UI17 conformance **without** editing an
+unauthorized file.
+
+⚠ **CARRIED FORWARD — `ReplaySummary` still contains the same unsafe pattern for UI16 and
+CompanyTrustChain.** That is outside this bounded authorization and is **recorded, not
+fixed**. It requires a separate authority act.
+
+## 14.4 Explicit proof that UI17 no longer asserts verified replay
+
+**Static (source):**
+
+| Check | Result |
+|---|---|
+| `'MATCH'` rendered literal | **NONE** |
+| `'DIFFERENCE'` rendered literal | **NONE** |
+| `byteIdentical ?` ternary | **NONE** |
+| `--color-status-positive/negative` | **NONE** |
+| `MATCH — byte-identical` | 1 occurrence — **in the explanatory comment (L10) describing the REMOVED defect**, not in JSX |
+
+**Runtime (DOM assertions, fixture has `byteIdentical: true` — the worst case):**
+
+| Invariant | Result |
+|---|---|
+| DOM never contains `MATCH — byte-identical` | ✅ |
+| DOM never contains bare `MATCH` | ✅ |
+| Replay regions carry no pass/fail status colour | ✅ |
+| No `replay verified` / `successfully reproduced` / `reproducibility confirmed` / `independently verified` | ✅ |
+| AD-17/M-2 UNRESOLVED disclosure present | ✅ |
+| `byteIdentical:false` renders as a literal with no `DIFFERENCE` verdict | ✅ |
+
+The literals remain visible (`reproduced: true`, `byteIdentical: true`) — **reported, marked
+NOT VERIFIED, and accompanied by the AD-17 disclosure**.
+
+## 14.5 Test results (observed)
+
+| Suite | Before amendment | After amendment |
+|---|---|---|
+| **UI17 ReplayExplorer** | 6 pass | **11 pass / 0 fail** (6 original preserved + 5 AD-17 invariants) |
+| **Frontend (full)** | 727 pass / 0 fail | **732 pass / 0 fail / 32 skipped** |
+| **P12 contracts** | 153 pass / 0 fail | **153 pass / 0 fail** (unchanged) |
+| TypeScript app / server | clean | **clean (exit 0)** |
+
+**Cumulative vs the original pre-P13-B baseline: 656 → 732 pass (+76), 0 failures throughout.**
+
+⚠ One new guard test initially failed by correctly detecting a status colour — traced to the
+**unrelated confidence meter** (80% → positive), not to replay. The assertion was scoped to
+the replay regions. The *component* was already correct; the *assertion* was too broad.
+
+## 14.6 Documentation debt — flagged, NOT edited
+
+⚠ `docs/P13_UI_SURFACE_COMPONENT_RECONCILIATION.md`:201 states:
+
+> **Verification Status:** PARTIAL (WIN-UI-VERIFY-01: Banking replay verified, byte-identical)
+
+This wording asserts exactly what AD-17 prohibits. Per **O-3** it has **NOT been altered** —
+it is a historical quotation, flagged here as **pre-existing documentation debt**. It must
+**not** be cited as evidence of verified replay while AD-17/M-2 is UNRESOLVED.
+
+## 14.7 What this amendment does NOT do
+
+| Item | Status |
+|---|---|
+| AD-17 / M-2 | ⛔ **UNRESOLVED — NOT remediated.** A prohibited CLAIM was removed; no verification was performed |
+| Replay reproducibility | ⛔ NOT verified, NOT claimed |
+| P13 / P14 / P15 / P16 | ✅ **NOT reopened; acceptance and certification status UNCHANGED** |
+| `PHASE_13_GATE_ACCEPTANCE.md` | ✅ byte-unchanged |
+| `p13/src/boundedSurfaces.js` / BS-1 | ✅ byte-unchanged |
+| UI17 / P13-B certification | ⛔ NOT granted |
+| Production authorization | ⛔ NOT granted |
+| C6 / C7 scope | ✅ UNCHANGED |
+| P13-B A3 acceptance | ⛔ NOT performed — reserved to Sai (D53) |
+
+## 14.8 Boundary audit (post-amendment)
+
+```
+Files changed: EXACTLY 2 (both authorized)
+p05…p14 · p12 · p13 · iips-platform · docs/ · program-v1.1-certification  → ALL CLEAN
+PHASE_13_GATE_ACCEPTANCE.md · PHASE_14_GATE_ACCEPTANCE.md · boundedSurfaces.js → CLEAN
+EvidenceExplorerComponents.tsx (ReplaySummary) · UI16 · CompanyTrustChain → CLEAN
+v2.0 routes: 13 (unchanged) · executive-transport.ts: NOT modified by this amendment
+```
+
+## 14.9 FINAL STATUS OF P13-B-01 … -09
+
+| Item | Status |
+|---|---|
+| P13-B-01 transport adapter | ✅ COMPLETE |
+| P13-B-02 tenant/security (fail-closed) | ✅ COMPLETE |
+| P13-B-03 derived provenance DTO | ✅ COMPLETE |
+| P13-B-04 quality/degradation propagation | ✅ COMPLETE |
+| P13-B-05 Screener → C6 (UI05) | ✅ COMPLETE |
+| P13-B-06 Search/resolution → C7 (UI13/UI14) | ✅ COMPLETE |
+| **P13-B-07 evidence/replay linkage + AD-17** | ✅ **COMPLETE** (was blocked; R-1 resolved) |
+| P13-B-08 dual-transport disclosure | ✅ COMPLETE |
+| P13-B-09 as-of display | ✅ COMPLETE |
+
+**9 / 9 COMPLETE.**
+
+## 14.10 Acceptance readiness
+
+**A) P13-B-07 COMPLETE — P13-B READY FOR A3 ACCEPTANCE.**
+
+Carried limitations remain recorded and unresolved by design: **R-2** (no provider ingestion
+wired), **R-3** (saved screens validate, do not persist), **R-4** (UI07/08/09/10 endpoints
+unbound), **R-5** (C12 BLOCKED), **R-6** (4 exports justified N/A), **R-7** (no browser/runtime
+evidence), and **§14.3** (`ReplaySummary` unsafe pattern carried for UI16/CompanyTrustChain).
+
+**No acceptance, certification, or production authorization is performed or implied by this
+act.** A3 acceptance remains the separate act of **Sai** under D53.
