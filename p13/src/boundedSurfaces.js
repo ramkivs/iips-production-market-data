@@ -31,7 +31,7 @@ export const P13_BS_MODULE = 'P13-BOUNDED-SURFACES';
 export const UI17_AD17_CONSTRAINT = Object.freeze({
   surface: 'UI17',
   ad17Status: 'UNRESOLVED',
-  m2Defect: 'ReplayService returns reproduced/byteIdentical as literals',
+  m2Defect: 'the UI-facing reproduced/byteIdentical values are hardcoded by executive-transport, not produced by a runtime verification',
   uiConstraint: 'UI MUST NOT assert verified replay or reproduction',
   resolutionGate: 'P15 (E2E Certification)',
 });

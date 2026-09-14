@@ -64,6 +64,14 @@ describe('P13 Bounded Surfaces', () => {
     it('UI17_AD17_CONSTRAINT is frozen', () => {
       assert.ok(Object.isFrozen(UI17_AD17_CONSTRAINT));
     });
+
+    // D71 (Tier 1 / L-8): regression guard — see p12 evidenceReplayLinkage tests.
+    // This string is serialized into every UI17 replay view.
+    it('AD-17 m2Defect states the accurate basis, not the stale literal claim (D71)', () => {
+      assert.match(UI17_AD17_CONSTRAINT.m2Defect, /hardcoded by executive-transport/);
+      assert.doesNotMatch(UI17_AD17_CONSTRAINT.m2Defect, /returns\s+reproduced\/byteIdentical\s+as\s+literals/i);
+      assert.equal(UI17_AD17_CONSTRAINT.ad17Status, 'UNRESOLVED');
+    });
   });
 
   describe('UI18 EngineRegistry (AD-4 bounded)', () => {

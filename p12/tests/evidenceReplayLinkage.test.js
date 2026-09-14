@@ -124,6 +124,17 @@ describe('P12-05 Evidence / Replay Linkage', () => {
       assert.ok(Object.isFrozen(AD17_CONSTRAINT));
     });
 
+    // D71 (Tier 1 / L-8): regression guard. m2Defect previously stated that
+    // ReplayService "returns reproduced/byteIdentical as literals". That is false:
+    // ReplayService COMPUTES them; the UI-facing values are hardcoded by
+    // executive-transport. This string is serialized on every P12 governance payload.
+    it('AD-17 m2Defect states the accurate basis, not the stale literal claim (D71)', () => {
+      assert.match(AD17_CONSTRAINT.m2Defect, /hardcoded by executive-transport/);
+      assert.doesNotMatch(AD17_CONSTRAINT.m2Defect, /returns\s+reproduced\/byteIdentical\s+as\s+literals/i);
+      // AD-17 firewall unchanged: still no verified-replay claim.
+      assert.equal(AD17_CONSTRAINT.ad17Status, 'UNRESOLVED');
+    });
+
     it('rejects empty replayId', () => {
       assert.throws(
         () => buildReplayLinkage({ ...validArgs, replayId: '' }),

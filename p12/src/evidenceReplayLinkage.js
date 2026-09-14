@@ -30,7 +30,7 @@ export const P12_05_MODULE = 'P12-05-EVIDENCE-REPLAY-LINKAGE';
 export const AD17_CONSTRAINT = Object.freeze({
   ad17Status: 'UNRESOLVED',
   authority: 'existing-IIPS program',
-  m2Defect: 'ReplayService returns reproduced/byteIdentical as literals',
+  m2Defect: 'the UI-facing reproduced/byteIdentical values are hardcoded by executive-transport, not produced by a runtime verification',
   dtoConstraint: 'DTOs MUST NOT present these literals as verified reproduction',
   resolutionGate: 'P15 (E2E Certification)',
 });
