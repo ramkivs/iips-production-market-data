@@ -363,3 +363,68 @@ expressed through the completed authority chain culminating in formal closure.
 it does not perform, authorize, or constitute production activation operations.
 ⚠ **UI SOURCE NOT ESTABLISHED.** E13-10 and EB14-3 remain OPEN.
 ⚠ P16 is NOT reopened by this reconciliation. Its CLOSED status remains exactly as recorded.
+
+---
+
+### E13-10 — Structural Blocker Closure (reconciliation)
+
+> ### ✅ **E13-10 — CLOSED** by Program Authority act.
+
+`docs/E13-10_EB14-3_CLOSURE.md` (Decision ID: E13-10-EB14-3-CLOSURE, Authority: Program
+Authority Sai / Ramki). The structural blocker "zero UI source tracked" is discharged by the
+established authoritative frontend/ provenance:
+
+- **Authoritative source:** `frontend/` (`@iips/v3-frontend` v0.1.0)
+- **Immutable baseline:** `4b37e5b3fec81e06464a91ea524808d28c21acdf`
+- **Branch:** `arena/01a0853d-iips-production-market-data`
+- **Repository:** `ramkivs/iips-production-market-data`
+- **Files tracked:** 147 (78 `.tsx` React components across 14 feature directories)
+- **Authority designation:** UI-PROVENANCE-01 (Program Authority, explicit)
+- **Provenance record:** `docs/UI_SOURCE_PROVENANCE.md`
+
+The 14 frontend feature directories map to all 19 P13 UI surfaces (UI01–UI19), directly
+resolving the original E13-10 failure "zero .tsx/.jsx/.vue/.svelte or component files tracked."
+
+⚠ **E13-10 CLOSURE IS NOT UI IMPLEMENTATION.** No UI implementation or certification authority
+was granted by this act.
+⚠ **E13-10 CLOSURE IS NOT WINDOWS UI VERIFICATION.** Windows UI verification is ELIGIBLE for a
+separate authority act but was NOT performed.
+⚠ This closure was not reflected in the gate model until this reconciliation.
+
+---
+
+### EB14-3 — Bounded Condition Closure (reconciliation)
+
+> ### ✅ **EB14-3 — CLOSED** by Program Authority act.
+
+`docs/E13-10_EB14-3_CLOSURE.md` (Decision ID: E13-10-EB14-3-CLOSURE, Authority: Program
+Authority Sai / Ramki). The bounded condition "No UI source/oracle" is discharged by two
+satisfied components:
+
+**(a) UI source:** Satisfied by the established authoritative frontend/ provenance (same as
+E13-10 closure): `frontend/`, 147 files tracked, immutable baseline `4b37e5b`.
+
+**(b) Oracle:** Satisfied by D36 (P14-06 oracle definition) and P14 acceptance:
+- P14-06 acceptance: 15/15 tests PASS (`docs/PHASE_14_GATE_ACCEPTANCE.md`)
+- Non-regression oracle gate: PASS — all 7 checks
+- Oracle specification: `p14/evidence/P14_ORACLE_SPECIFICATION.json` (tracked)
+- Baseline manifest: `p14/evidence/P14_BASELINE_MANIFEST.json` (tracked)
+
+EB14-3 was reclassified from entry blocker to bounded condition by D35 ("P13 UI exists;
+oracle addressed during P14 planning") and D36 ("P13 UI exists; oracle defined in P14-06").
+Both components are now fully satisfied.
+
+⚠ **EB14-3 CLOSURE IS NOT UI IMPLEMENTATION.** No UI implementation or certification authority
+was granted by this act.
+⚠ **EB14-3 CLOSURE IS NOT WINDOWS UI VERIFICATION.** Windows UI verification is ELIGIBLE for a
+separate authority act but was NOT performed.
+⚠ This closure was not reflected in the gate model until this reconciliation.
+
+---
+
+### Windows UI Verification Eligibility (reconciliation)
+
+With E13-10 and EB14-3 formally closed, **Windows UI verification is ELIGIBLE for a separate
+explicit Program Authority act.** This eligibility does not constitute, authorize, or perform
+Windows UI verification. The authoritative frontend/ provenance baseline (`4b37e5b`) is the
+source to verify against.
