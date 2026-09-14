@@ -33,3 +33,6 @@ tmp/
 .vscode/
 .idea/
 *.code-workspace
+
+# R-3 (D74) — governed local persistence data directory (TD-7a); server-owned, never committed
+.iips-data/

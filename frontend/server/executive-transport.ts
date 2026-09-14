@@ -606,6 +606,18 @@ function resolvePrincipalTenant(principal: { tenantId?: string; subject?: string
 }
 
 /**
+ * R-3 (D74) — server-resolved OWNER for durable saved-screen persistence.
+ *
+ * Read exclusively from the authenticated principal; a client can never supply it.
+ * Returns undefined when no user identity is present, in which case the saved-screen
+ * endpoint keeps its prior validate-only behaviour rather than inventing an owner.
+ */
+function resolvePrincipalOwner(principal: { userId?: string; subject?: string } | null): string | undefined {
+  const userId = principal?.userId ?? principal?.subject;
+  return typeof userId === 'string' && userId.length > 0 ? userId : undefined;
+}
+
+/**
  * P13-B (D54) — Governed universe provider for the additive P12 surface.
  *
  * ⚠ LINEAGE: rows are DERIVED from the CERTIFIED v2.0 decision-matrix computation that
@@ -865,7 +877,15 @@ const server = http.createServer((req, res) => {
         const principal = await authorizeRead(req, res, surface ?? 'decision-matrix');
         if (!principal) return; // 401/403 already written by the existing guard
         const { handleP12Request } = await import('./p12-request-handler');
-        await handleP12Request(req, res, resolvePrincipalTenant(principal), buildGovernedUniverseProvider());
+        // R-3 (D74): owner is derived from the AUTHENTICATED principal only — never from
+        // the request body or query. Absent a userId no saved screen is persisted.
+        await handleP12Request(
+          req,
+          res,
+          resolvePrincipalTenant(principal),
+          buildGovernedUniverseProvider(),
+          resolvePrincipalOwner(principal),
+        );
       } catch (e) {
         res.writeHead(500); res.end(JSON.stringify({ error: 'p12 transport error', detail: String(e) }));
       }

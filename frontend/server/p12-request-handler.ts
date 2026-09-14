@@ -102,6 +102,14 @@ export async function handleP12Request(
   res: http.ServerResponse,
   tenantId: string,
   universe: GovernedUniverseProvider,
+  /**
+   * R-3 (D74) — server-resolved owner for durable saved-screen persistence.
+   *
+   * OPTIONAL and additive: when omitted, saved-screen behaviour is exactly as before
+   * (validate-only, no persistence). It is NEVER read from the request — the caller
+   * derives it from the authenticated principal.
+   */
+  ownerUserId?: string,
 ): Promise<void> {
   const url = req.url ?? '';
   const path = url.split('?')[0];
@@ -153,6 +161,28 @@ export async function handleP12Request(
     }
 
     if (path === '/api/screener/saved') {
+      // R-3 (D74) — GET lists this principal's durable saved screens. Additive: the
+      // pre-existing POST contract is unchanged.
+      if (req.method === 'GET') {
+        if (ownerUserId === undefined || ownerUserId === '') {
+          throw new P12TransportError(401, 'owner unresolved for authenticated principal — fail-closed');
+        }
+        const store = await import('./persistence/saved-screens-store');
+        const items = store.listScreens(store.savedScreensService(), tenantId, ownerUserId);
+        const provenance = deriveProvenance({
+          dataSource: vintage.dataSource,
+          asOf: vintage.asOf,
+          dataVersion: vintage.dataVersion,
+          mode: vintage.mode,
+          quality: 'good',
+          completenessPct: 100,
+          contributingSnapshotIds: vintage.contributingSnapshotIds,
+          classification: vintage.classification,
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(buildP12Response({ data: items, provenance, tenantId, endpoint: path })));
+        return;
+      }
       if (req.method !== 'POST') { throw new P12TransportError(405, 'method not allowed — use POST'); }
       const body = await readBody(req);
       buildRequestContext({ tenantId, endpoint: path, body, query });
@@ -164,6 +194,23 @@ export async function handleP12Request(
         tieBreakField: body.tieBreakField,
         tenantId,
       });
+
+      // R-3 (D74) — persist AFTER the certified C6 contract has validated and built the
+      // definition. Storage is transport-layer only; the contract is unchanged and the
+      // definition object is stored verbatim. Without a resolved owner we do NOT persist
+      // (and do not fabricate one) — behaviour then matches the prior validate-only path.
+      let persisted: { recordId: string; createdAt: string } | null = null;
+      if (ownerUserId !== undefined && ownerUserId !== '') {
+        const store = await import('./persistence/saved-screens-store');
+        const rec = store.saveScreen(
+          store.savedScreensService(),
+          tenantId,
+          ownerUserId,
+          String(body.screenId ?? ''),
+          definition,
+        );
+        persisted = { recordId: rec.recordId, createdAt: rec.createdAt };
+      }
 
       // No governed data rows are returned — provenance describes the definition vintage.
       const provenance = deriveProvenance({
@@ -177,8 +224,13 @@ export async function handleP12Request(
         classification: vintage.classification,
       });
 
+      // R-3 (D74): the certified definition is returned UNCHANGED. When the screen was
+      // persisted, the durable record identity is added alongside it — additive only, so
+      // every pre-existing field and its semantics are preserved.
+      const data = persisted === null ? definition : { ...definition, persisted };
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(buildP12Response({ data: definition, provenance, tenantId, endpoint: path })));
+      res.end(JSON.stringify(buildP12Response({ data, provenance, tenantId, endpoint: path })));
       return;
     }
 
