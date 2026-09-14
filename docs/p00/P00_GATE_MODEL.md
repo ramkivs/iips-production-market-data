@@ -176,6 +176,69 @@ obligation (D25) · **AD-17/M-2 UNRESOLVED** · **AG-1** / **AG-2** **OPEN** (bo
 ⚠ **No concession was invoked and no concessions register was created** (P05 **PIT-7/NG-14**, P06:119).
 
 ⚠ **Lines :17 and :121 above — *"P07–P17 remain NOT ACCEPTED"* — are STALE** as to **P07** (accepted,
-§36) and now as to **P08**. They are **left unedited** as the record of their own moment and are
-**superseded by addition** by this block. **Formal gate status: P00, P01, P02, P03, P04, P05, P06,
-P07, P08 accepted.**
+§36), **P08** (accepted, §40), **P13** (accepted, reconciliation act 2026-09-14), and **P14**
+(accepted, reconciliation act 2026-09-14). They are **left unedited** as the record of their own
+moment and are **superseded by addition** by this block and the P13/P14 reconciliation sections
+below. **Formal gate status: P00, P01, P02, P03, P04, P05, P06, P07, P08, P13, P14 accepted.**
+
+---
+
+## P13 GATE ACCEPTANCE — appended 2026-09-14 (reconciliation act)
+
+> ### ✅ **P13 — UI Integration Gate — is ACCEPTED** by explicit **A3** act (acceptor **Sai**, P13 gate only).
+
+`docs/PHASE_13_GATE_ACCEPTANCE.md`, authorization basis **D32** (commit `2f131d9`); A3 acceptor
+designated by **D33** (Program Authority, explicit naming). Scope: **UI01 through UI19** (19 UI
+surfaces) — per-surface provenance classification, degraded-state visibility, cross-surface rules
+**U1–U10** (**85 P13 tests**; 8 source files, 1,361 lines; 8 + 1 helper test files, 890 lines).
+
+**Implementation baseline provenance:** Original baseline commit `510b453ed672e4be25c4dce4c4346169a5e24d3d`
+is **UNRECOVERABLE** (confirmed not in any branch, reflog, or loose objects). Current `p13/src/`
+files are **designated as the authoritative P13 baseline** by explicit Program Authority act
+(reconciliation act 2026-09-14, Decision 2 Option C). File count and module names verified against
+acceptance record (8 source files: `dataSurfaces.js`, `screenerSurface.js`, `newSurfaces.js`,
+`extendSurfaces.js`, `resolverSurface.js`, `boundedSurfaces.js`, `crossSurfaceRules.js`,
+`provenanceView.js`).
+
+⚠ **ACCEPTANCE IS NOT CERTIFICATION.** P13 certification = **NONE** (not required before P14
+progression). Production activation **`NOT_AUTHORIZED`** (A4 at P16).
+
+⚠ **NOT resolved by this acceptance:** **AD-17/M-2 UNRESOLVED** (scoped to UI17, bounded) ·
+**E13-10 REMAINS OPEN** ("zero UI source tracked" — structural blocker; no authoritative UI
+application source established; `p13/src/` contains UI surface logic modules, not the actual UI
+application) · **existing-IIPS UI not identified or reconciled**.
+
+⚠ This acceptance was recorded by the P13 acceptance act but was not reflected in the gate model
+until this reconciliation. The acceptance record is preserved byte-for-byte at
+`docs/PHASE_13_GATE_ACCEPTANCE.md`. This appended section reconciles the gate model to match.
+
+---
+
+## P14 GATE ACCEPTANCE — appended 2026-09-14 (reconciliation act)
+
+> ### ✅ **P14 — UX/Visual/Browser Gate — is ACCEPTED** by explicit **A3** act (acceptor **Sai**, P14 gate only).
+
+`docs/PHASE_14_GATE_ACCEPTANCE.md`, implementation commit `9e45ac2fe88147591ad2cd8373b2311a7b0534d3`
+(recovered to branch `p14-implementation-recovered`); authorization basis **D38** (`22bf59e`); A3
+acceptor designated by **D37** (Program Authority, explicit naming). Scope: **P14-01** Provenance
+Integrity · **P14-02** Visual Parity Baseline · **P14-03** Visual Parity Qualification · **P14-04**
+Accessibility Conformance · **P14-05** Browser Compatibility · **P14-06** Non-Regression Oracle Gate
+(**75 P14 tests**; 6 source files; full regression **1160/1166 PASS**, 6 pre-existing stale
+boundary assertions — non-blocking).
+
+**Implementation provenance:** Commit `9e45ac2` was a dangling commit (not reachable from any
+branch). Recovered to branch `p14-implementation-recovered` by explicit Program Authority act
+(reconciliation act 2026-09-14, Decision 3 Option A). Parent chain verified: `9e45ac2` → `22bf59e`
+(D38) → `d107c41` (D37). Source files in commit byte-identical to current `p14/src/` files.
+
+⚠ **ACCEPTANCE IS NOT CERTIFICATION.** P14 certification = **NONE_GRANTED**. Production activation
+**`NOT_AUTHORIZED`** (A4 at P16).
+
+⚠ **NOT resolved by this acceptance:** **EB14-3 REMAINS OPEN** ("No UI source/oracle" — bounded
+condition; no authoritative UI application source established; P14 oracle validates against UI
+surfaces whose authoritative source remains unestablished) · **AD-17/M-2 UNRESOLVED** ·
+**existing-IIPS UI not identified or reconciled**.
+
+⚠ This acceptance was recorded by the P14 acceptance act but was not reflected in the gate model
+until this reconciliation. The acceptance record is preserved byte-for-byte at
+`docs/PHASE_14_GATE_ACCEPTANCE.md`. This appended section reconciles the gate model to match.
