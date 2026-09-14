@@ -431,7 +431,12 @@ function computeCertifiedReplay(sectorId: string): unknown {
     note: 'The governed ReplayService exposes reproduced + byteIdentical + evidenceRefs only. No field-level or metric-level difference is computed or displayed.',
     evidenceRefs: [`ev_${d.sector}`],
     provenance: {
-      dataSource: 'certified v2.0 platform (ReplayService ReplayResult) over frozen v1.1 Replay Baseline inputs',
+      // L-3 (D79): this dataSource previously read "(ReplayService ReplayResult)", attributing
+      // the hardcoded reproduced/byteIdentical values above to a runtime ReplayService
+      // execution. computeCertifiedReplay() does NOT invoke ReplayService — the values are
+      // transport-side fixture constants. The attribution is corrected; the values are unchanged
+      // and NO verification is claimed. AD-17 / M-2 remain UNRESOLVED.
+      dataSource: 'transport fixture constants over frozen v1.1 Replay Baseline inputs — reproduced/byteIdentical are hardcoded by executive-transport, NOT produced by a runtime ReplayService verification',
       freshness: 'SNAPSHOT',
       calibratedAt: '2026-08-09T00:00:00.000Z',
       transportSemantics: '1:1 mapping; transport transformation != decision transformation',
@@ -489,7 +494,11 @@ function computeCertifiedEvidence(sectorId: string): unknown {
       evidenceRefs: [`ev_${d.sector}`],
     },
     provenance: {
-      dataSource: 'certified v2.0 platform (EvidencePipeline + Snapshot + Replay) over frozen v1.1 Replay Baseline inputs',
+      // L-3 (D79): previously "(EvidencePipeline + Snapshot + Replay)", which attributed the
+      // hardcoded replay block above to a runtime pipeline execution. computeCertifiedEvidence()
+      // performs no runtime replay. Attribution corrected; values unchanged; no verification
+      // claimed. AD-17 / M-2 remain UNRESOLVED.
+      dataSource: 'transport fixture constants over frozen v1.1 Replay Baseline inputs — reproduced/byteIdentical are hardcoded by executive-transport, NOT produced by a runtime replay or EvidencePipeline verification',
       freshness: 'SNAPSHOT',
       calibratedAt: '2026-08-09T00:00:00.000Z',
       transportSemantics: '1:1 mapping; transport transformation != decision transformation',
