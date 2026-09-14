@@ -83,7 +83,7 @@ This act establishes all four.
 | **Repository** | `ramkivs/iips-production-market-data` |
 | **Path** | `frontend/` |
 | **Branch** | `arena/01a0853d-iips-production-market-data` |
-| **Baseline commit** | (recorded after commit) |
+| **Baseline commit** | `4b37e5b3fec81e06464a91ea524808d28c21acdf` |
 | **File count** | 147 |
 | **Source identity** | `@iips/v3-frontend` v0.1.0 |
 | **Authority** | Program Authority (Sai / Ramki) |
