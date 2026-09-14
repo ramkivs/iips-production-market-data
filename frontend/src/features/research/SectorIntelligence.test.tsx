@@ -226,15 +226,56 @@ describe('Sector Information — governed composition (S1)', () => {
 });
 
 describe('Sector Information — replay verification (S2)', () => {
+  /*
+   * ⚠ AD-17 L-5 SAFETY AMENDMENT. Authority: D57 (commit 9316b54), Decision A.
+   *
+   * This test PREVIOUSLY required the literal strings 'Reproduced: yes' and
+   * 'Byte-identical: yes'. Those assertions ENCODED the prohibited claim that replay
+   * reproduction and byte identity had been established. They never have been
+   * (AD-17 / M-2 UNRESOLVED — ReplayService returns both as literals).
+   *
+   * The differenceAvailable coverage is a platform capability flag, not a replay verdict,
+   * and is PRESERVED verbatim.
+   */
   it('renders the replay summary without forcing difference availability', async () => {
     globalThis.fetch = urlAwareMock();
     renderSector();
     await screen.findByRole('heading', { name: 'Banking' });
     const summary = screen.getByTestId('sector-replay-summary');
-    expect(summary).toHaveTextContent('Reproduced: yes');
-    expect(summary).toHaveTextContent('Byte-identical: yes');
     // differenceAvailable is false in the payload → must render "no" (never forced true).
     expect(summary).toHaveTextContent('Difference available: no');
+    expect(summary).toHaveTextContent('Snapshot: snap-Banking');
+  });
+
+  it('AD-17: never presents replay reproduction or byte identity as an established fact', async () => {
+    globalThis.fetch = urlAwareMock();
+    renderSector();
+    await screen.findByRole('heading', { name: 'Banking' });
+    const summary = screen.getByTestId('sector-replay-summary');
+    const text = summary.textContent ?? '';
+    expect(text).not.toMatch(/Reproduced:\s*yes/);
+    expect(text).not.toMatch(/Byte-identical:\s*yes/);
+    expect(text).not.toMatch(/MATCH|\bDIFFERENCE\b/);
+  });
+
+  it('AD-17: reports the literals as UNVERIFIED with the approved disclosure, uncoloured', async () => {
+    globalThis.fetch = urlAwareMock();
+    renderSector();
+    await screen.findByRole('heading', { name: 'Banking' });
+    const summary = screen.getByTestId('sector-replay-summary');
+    expect(summary).toHaveTextContent('Reported replay values — NOT VERIFIED');
+    expect(summary.querySelector('[data-testid="replay-literal-reproduced"]')).not.toBeNull();
+    expect(summary.querySelector('[data-testid="replay-literal-byteIdentical"]')).not.toBeNull();
+    const note = summary.querySelector('[data-testid="ad17-disclosure"]');
+    expect(note).not.toBeNull();
+    expect(note?.textContent ?? '').toMatch(/AD-17 \/ M-2 — UNRESOLVED/);
+
+    const nodes = [summary, ...Array.from(summary.querySelectorAll('*'))];
+    const coloured = nodes.filter((n) => {
+      const s = n.getAttribute('style') ?? '';
+      return s.includes('--color-status-positive') || s.includes('--color-status-negative');
+    });
+    expect(coloured).toHaveLength(0);
   });
 });
 

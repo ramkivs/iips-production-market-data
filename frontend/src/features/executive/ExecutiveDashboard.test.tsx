@@ -122,7 +122,17 @@ describe('Executive Dashboard — N+10 selected-decision trust chain', () => {
     expect(screen.getByText('Trust Chain — A')).toBeInTheDocument();
     expect(await screen.findByText('Evidence (governed)')).toBeInTheDocument();
     expect(screen.getByText('Replay Verification (governed)')).toBeInTheDocument();
-    expect(screen.getByTestId('company-replay-equivalence')).toHaveTextContent('MATCH — byte-identical');
+    // ⚠ AD-17 L-5 (authority: D57, commit 9316b54). This PREVIOUSLY asserted the literal
+    // 'MATCH — byte-identical', which encoded a verified-replay claim that has never been
+    // established (AD-17 / M-2 UNRESOLVED). Replaced by an absence proof, scoped to the
+    // verdict <strong> — replay.note is payload free text and contains 'MATCH' in the
+    // fixture, so a region-wide search would be unsound, not stronger.
+    {
+      const eq = screen.getByTestId('company-replay-equivalence');
+      expect(eq.querySelector('strong')?.textContent ?? '').not.toMatch(/MATCH|\bDIFFERENCE\b/);
+      expect(eq).toHaveTextContent('NOT VERIFIED');
+      expect(eq.querySelector('[data-testid="ad17-disclosure"]')).not.toBeNull();
+    }
   });
 
   it('propagates the selected decision\'s ACTUAL sector to evidence + replay (exact URLs)', async () => {
@@ -146,13 +156,22 @@ describe('Executive Dashboard — N+10 selected-decision trust chain', () => {
     expect(calls.some((u) => u.includes('/api/replay/A'))).toBe(false);
   });
 
-  it('renders DIFFERENCE when the governed replay is not byte-identical', async () => {
+  it('AD-17: reports byteIdentical=false as an unverified literal, with no DIFFERENCE verdict', async () => {
     const user = userEvent.setup();
     globalThis.fetch = urlAwareMock({ replayBIdentical: false });
     render(<ExecutiveDashboard />);
     await screen.findByTestId('decision-list');
     await user.click(screen.getByTestId('inspect-B'));
-    expect(await screen.findByTestId('company-replay-equivalence')).toHaveTextContent('DIFFERENCE');
+    // ⚠ AD-17 L-5 (authority: D57). This PREVIOUSLY asserted the 'DIFFERENCE' failure
+    // verdict, which is equally a verification claim. Now proves the verdict is absent and
+    // the literal is reported as UNVERIFIED.
+    {
+      const eq = await screen.findByTestId('company-replay-equivalence');
+      expect(eq.querySelector('strong')?.textContent ?? '').not.toMatch(/MATCH|\bDIFFERENCE\b/);
+      expect(eq).toHaveTextContent('Reported byteIdentical:');
+      expect(eq).toHaveTextContent('false');
+      expect(eq).toHaveTextContent('NOT VERIFIED');
+    }
   });
 
   it('shows a governed error state when the selected evidence fetch fails', async () => {

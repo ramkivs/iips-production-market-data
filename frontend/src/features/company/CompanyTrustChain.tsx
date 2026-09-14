@@ -16,6 +16,7 @@
 import type { EvidenceData } from '../../api/evidence';
 import type { ReplayData } from '../../api/replay';
 import { MetricCard, MetricGroup } from '../../components/data/DataComponents';
+import { Ad17Note } from '../../components/evidence/Ad17Disclosure';
 import { EvidenceRecordCard, ProvenanceChain, ReplaySummary, SnapshotMetadataPanel } from '../../components/evidence/EvidenceExplorerComponents';
 
 export function CompanyTrustChain({ evidence, replay }: { evidence: EvidenceData; replay: ReplayData }) {
@@ -46,16 +47,41 @@ export function CompanyTrustChain({ evidence, replay }: { evidence: EvidenceData
       {/* --- Replay: can the result be reproduced and independently verified --- */}
       <h2 style={{ fontSize: 18, marginTop: 24 }}>Replay Verification (governed)</h2>
       <ReplaySummary replay={replay.replay} />
-      <p
+      {/*
+        ⚠ AD-17 L-5 SAFETY AMENDMENT (bounded). Authority: D57 (commit 9316b54), Decision A.
+
+        This block PREVIOUSLY rendered `byteIdentical ? 'MATCH — byte-identical' : 'DIFFERENCE'`
+        inside a --color-status-positive / --color-status-negative <strong>. That asserted a
+        VERIFIED replay equivalence which has never been performed: `ReplayService` returns
+        `reproduced`/`byteIdentical` as LITERALS (AD-17 / M-2, UNRESOLVED).
+
+        Because this component is rendered by five live consumers (CompanyIntelligence UI02,
+        CrossSectorIntelligence UI15, DecisionMatrix UI06, ExecutiveDashboard, PortfolioWorkspace),
+        the prohibited claim reached all of them.
+
+        The reported literal is now shown neutrally and marked NOT VERIFIED, with the approved
+        `Ad17Note` disclosure attached — the same treatment already approved for UI17
+        ReplayExplorer. No third presentation variant is introduced. The full literal set is
+        already rendered immediately above by `ReplaySummary`, so `ReplayLiteralDisplay` is
+        deliberately NOT repeated here (it would duplicate its test hooks).
+
+        ⚠ AD-17 / M-2 REMAIN UNRESOLVED. This removes a prohibited CLAIM. It performs no
+        verification, establishes no reproducibility, and grants no certification.
+
+        <div> (not <p>): Ad17Note renders a block-level <p>, which may not nest inside a <p>.
+      */}
+      <div
         data-testid="company-replay-equivalence"
         style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, background: 'var(--color-surface-1)' }}
       >
-        <strong style={{ color: replay.replay.byteIdentical ? 'var(--color-status-positive)' : 'var(--color-status-negative)' }}>
-          {replay.replay.byteIdentical ? 'MATCH — byte-identical' : 'DIFFERENCE'}
+        {/* ⚠ Deliberately NOT colour-coded. Colour would imply a verified pass/fail. */}
+        <strong>
+          Reported byteIdentical: <code>{String(replay.replay.byteIdentical)}</code> — NOT VERIFIED
         </strong>
         <br />
         <span style={{ fontSize: 13 }}>{replay.note}</span>
-      </p>
+        <Ad17Note />
+      </div>
       <div data-testid="company-replay-original" style={{ marginTop: 8 }}>
         <SnapshotMetadataPanel
           snapshot={{

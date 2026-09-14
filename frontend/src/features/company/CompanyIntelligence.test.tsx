@@ -172,20 +172,39 @@ describe('Company Intelligence — N+5 vertical slice (preserved behavior)', () 
     expect(screen.getByText('Snapshot & Provenance')).toBeInTheDocument();
   });
 
-  it('renders the inline governed Replay result (MATCH equivalence + refs)', async () => {
+  it('renders the inline governed Replay result (AD-17-safe reported literal + refs)', async () => {
     globalThis.fetch = urlAwareMock();
     renderCompany('Technology');
     await screen.findByTestId('company-header');
     expect(screen.getByText('Replay Verification (governed)')).toBeInTheDocument();
-    expect(screen.getByTestId('company-replay-equivalence')).toHaveTextContent('MATCH — byte-identical');
+    // ⚠ AD-17 L-5 (authority: D57, commit 9316b54). This PREVIOUSLY asserted the literal
+    // 'MATCH — byte-identical', which encoded a verified-replay claim that has never been
+    // established (AD-17 / M-2 UNRESOLVED). Replaced by an absence proof, scoped to the
+    // verdict <strong> — replay.note is payload free text and contains 'MATCH' in the
+    // fixture, so a region-wide search would be unsound, not stronger.
+    {
+      const eq = screen.getByTestId('company-replay-equivalence');
+      expect(eq.querySelector('strong')?.textContent ?? '').not.toMatch(/MATCH|\bDIFFERENCE\b/);
+      expect(eq).toHaveTextContent('NOT VERIFIED');
+      expect(eq.querySelector('[data-testid="ad17-disclosure"]')).not.toBeNull();
+    }
     expect(screen.getByTestId('company-replay-refs')).toHaveTextContent('ev_Technology');
   });
 
-  it('renders DIFFERENCE when the governed replay is not byte-identical', async () => {
+  it('AD-17: reports byteIdentical=false as an unverified literal, with no DIFFERENCE verdict', async () => {
     globalThis.fetch = urlAwareMock({ replayBIdentical: false });
     renderCompany('Banking');
     await screen.findByTestId('company-header');
-    expect(screen.getByTestId('company-replay-equivalence')).toHaveTextContent('DIFFERENCE');
+    // ⚠ AD-17 L-5 (authority: D57). This PREVIOUSLY asserted the 'DIFFERENCE' failure
+    // verdict, which is equally a verification claim. Now proves the verdict is absent and
+    // the literal is reported as UNVERIFIED.
+    {
+      const eq = screen.getByTestId('company-replay-equivalence');
+      expect(eq.querySelector('strong')?.textContent ?? '').not.toMatch(/MATCH|\bDIFFERENCE\b/);
+      expect(eq).toHaveTextContent('Reported byteIdentical:');
+      expect(eq).toHaveTextContent('false');
+      expect(eq).toHaveTextContent('NOT VERIFIED');
+    }
   });
 
   it('shows pillar scores only where the engine exposes them', async () => {
@@ -329,7 +348,7 @@ describe('Company Intelligence — N+12 governed sector reachability', () => {
     expect(postSelection).not.toContain('/api/replay/Banking');
   });
 
-  it('renders the governed trust chain (MATCH) for the newly selected sector', async () => {
+  it('renders the governed trust chain (AD-17-safe) for the newly selected sector', async () => {
     const user = userEvent.setup();
     globalThis.fetch = urlAwareMock();
     renderCompany('Banking');
@@ -337,16 +356,35 @@ describe('Company Intelligence — N+12 governed sector reachability', () => {
     await user.selectOptions(screen.getByTestId('sector-select'), 'Technology');
     expect(await screen.findByText('Evidence (governed)')).toBeInTheDocument();
     expect(screen.getByText('Replay Verification (governed)')).toBeInTheDocument();
-    expect(screen.getByTestId('company-replay-equivalence')).toHaveTextContent('MATCH — byte-identical');
+    // ⚠ AD-17 L-5 (authority: D57, commit 9316b54). This PREVIOUSLY asserted the literal
+    // 'MATCH — byte-identical', which encoded a verified-replay claim that has never been
+    // established (AD-17 / M-2 UNRESOLVED). Replaced by an absence proof, scoped to the
+    // verdict <strong> — replay.note is payload free text and contains 'MATCH' in the
+    // fixture, so a region-wide search would be unsound, not stronger.
+    {
+      const eq = screen.getByTestId('company-replay-equivalence');
+      expect(eq.querySelector('strong')?.textContent ?? '').not.toMatch(/MATCH|\bDIFFERENCE\b/);
+      expect(eq).toHaveTextContent('NOT VERIFIED');
+      expect(eq.querySelector('[data-testid="ad17-disclosure"]')).not.toBeNull();
+    }
   });
 
-  it('renders DIFFERENCE for the selected sector when the governed replay is not byte-identical', async () => {
+  it('AD-17: reports byteIdentical=false for the selected sector as an unverified literal', async () => {
     const user = userEvent.setup();
     globalThis.fetch = urlAwareMock({ replayBIdentical: false });
     renderCompany('Banking');
     await screen.findByTestId('sector-select');
     await user.selectOptions(screen.getByTestId('sector-select'), 'Banking');
-    expect(await screen.findByTestId('company-replay-equivalence')).toHaveTextContent('DIFFERENCE');
+    // ⚠ AD-17 L-5 (authority: D57). This PREVIOUSLY asserted the 'DIFFERENCE' failure
+    // verdict, which is equally a verification claim. Now proves the verdict is absent and
+    // the literal is reported as UNVERIFIED.
+    {
+      const eq = await screen.findByTestId('company-replay-equivalence');
+      expect(eq.querySelector('strong')?.textContent ?? '').not.toMatch(/MATCH|\bDIFFERENCE\b/);
+      expect(eq).toHaveTextContent('Reported byteIdentical:');
+      expect(eq).toHaveTextContent('false');
+      expect(eq).toHaveTextContent('NOT VERIFIED');
+    }
   });
 
   it('shows a governed error state when the sector-list fetch fails (company content preserved)', async () => {

@@ -29,6 +29,7 @@ import { DecisionBadge } from '../../components/decision/DecisionComponents';
 import { LoadingState, ErrorState, UnavailableState } from '../../components/state/StateComponents';
 import { CertifiedBadge, FreshnessBadge, StatusBadge } from '../../components/ui/Badges';
 import { AiExplanation } from '../../components/ai/AiExplanation';
+import { ReplayLiteralDisplay } from '../../components/evidence/Ad17Disclosure';
 
 export function SectorIntelligence() {
   const navigate = useNavigate();
@@ -191,12 +192,39 @@ export function SectorIntelligence() {
 
       {/* S2: replay-verification summary (no full trust-chain duplication) */}
       <h2 style={{ fontSize: 18, marginTop: 24 }}>Replay Verification</h2>
-      <ul data-testid="sector-replay-summary" style={{ paddingLeft: 20 }}>
-        <li>Snapshot: {replay.original.snapshotId}</li>
-        <li>Reproduced: {replay.replay.reproduced ? 'yes' : 'no'}</li>
-        <li>Byte-identical: {replay.replay.byteIdentical ? 'yes' : 'no'}</li>
-        <li>Difference available: {replay.differenceAvailable ? 'yes' : 'no'}</li>
-      </ul>
+      {/*
+        ⚠ AD-17 L-5 SAFETY AMENDMENT (bounded). Authority: D57 (commit 9316b54), Decision A.
+
+        This summary PREVIOUSLY rendered `Reproduced: yes/no` and `Byte-identical: yes/no`
+        as bare literals with NO AD-17 disclosure. Read plainly, "Reproduced: yes" states
+        that reproduction happened and "Byte-identical: yes" states that byte identity was
+        established. Neither has been verified: `ReplayService` returns both as LITERALS
+        (AD-17 / M-2, UNRESOLVED).
+
+        The literals are now rendered by the approved AD-17-safe `ReplayLiteralDisplay`,
+        which marks them NOT VERIFIED and attaches the standing AD-17 disclosure. No
+        pass/fail semantics and no status-positive/negative styling are used.
+
+        `differenceAvailable` is a capability flag about the platform, not a replay verdict,
+        so it is retained verbatim and is unaffected by AD-17.
+
+        ⚠ AD-17 / M-2 REMAIN UNRESOLVED. This removes a prohibited CLAIM only.
+      */}
+      <div data-testid="sector-replay-summary">
+        <ul style={{ paddingLeft: 20 }}>
+          <li>Snapshot: {replay.original.snapshotId}</li>
+          <li>Difference available: {replay.differenceAvailable ? 'yes' : 'no'}</li>
+        </ul>
+        <ReplayLiteralDisplay
+          dto={{
+            // Carried verbatim as REPORTED literals; `verified*` pinned false so the
+            // AD-17 presentation-boundary guard holds.
+            replayServiceLiterals: { reproduced: replay.replay.reproduced, byteIdentical: replay.replay.byteIdentical },
+            verifiedReproduction: false,
+            verifiedByteIdentical: false,
+          }}
+        />
+      </div>
 
       {/* S3: mandatory Sector → Company link (the Company trust chain is the single full-chain authority) */}
       <p style={{ marginTop: 24 }}>

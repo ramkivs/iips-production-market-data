@@ -47,13 +47,72 @@ describe('CompanyTrustChain (reusable reference pattern)', () => {
     expect(screen.getByText('Snapshot & Provenance')).toBeInTheDocument();
   });
 
-  it('renders MATCH equivalence when byte-identical', () => {
+  /*
+   * ⚠ AD-17 L-5 SAFETY AMENDMENT. Authority: D57 (commit 9316b54), Decision A.
+   *
+   * Two tests here PREVIOUSLY asserted the literal strings 'MATCH — byte-identical' and
+   * 'DIFFERENCE'. Those assertions ENCODED the prohibited verification claim: they required
+   * the UI to state that replay equivalence had been established, which it never has
+   * (AD-17 / M-2, UNRESOLVED — ReplayService returns the values as literals).
+   *
+   * They are replaced by absence-proving tests. Assertions are scoped to the
+   * `company-replay-equivalence` region, NOT to the whole component: `replay.note` is
+   * free text supplied by the payload and the fixtures set it to 'MATCH'/'DIFFERENCE'.
+   * A blanket document-wide search would trip on fixture note text and would tempt a
+   * future maintainer to weaken the guard. The guard is scoped, not weakened.
+   */
+  function equivalenceRegion() {
+    return screen.getByTestId('company-replay-equivalence');
+  }
+
+  it('AD-17: never renders a MATCH/DIFFERENCE replay verdict (byteIdentical=true)', () => {
     render(<CompanyTrustChain evidence={EVIDENCE} replay={replayData(true)} />);
-    expect(screen.getByTestId('company-replay-equivalence')).toHaveTextContent('MATCH — byte-identical');
+    // The verdict was rendered inside <strong>; the note is a sibling <span>. Assert on
+    // the verdict-bearing elements only, so payload note text cannot mask a regression.
+    const strongs = Array.from(equivalenceRegion().querySelectorAll('strong')).map((e) => e.textContent ?? '');
+    expect(strongs.length).toBeGreaterThan(0);
+    for (const s of strongs) {
+      expect(s).not.toMatch(/MATCH/);
+      expect(s).not.toMatch(/\bDIFFERENCE\b/);
+    }
   });
 
-  it('renders DIFFERENCE equivalence when not byte-identical', () => {
+  it('AD-17: never renders a MATCH/DIFFERENCE replay verdict (byteIdentical=false)', () => {
     render(<CompanyTrustChain evidence={EVIDENCE} replay={replayData(false)} />);
-    expect(screen.getByTestId('company-replay-equivalence')).toHaveTextContent('DIFFERENCE');
+    const strongs = Array.from(equivalenceRegion().querySelectorAll('strong')).map((e) => e.textContent ?? '');
+    for (const s of strongs) {
+      expect(s).not.toMatch(/MATCH/);
+      expect(s).not.toMatch(/\bDIFFERENCE\b/);
+    }
+  });
+
+  it('AD-17: does not colour replay equivalence as a pass/fail verification state', () => {
+    render(<CompanyTrustChain evidence={EVIDENCE} replay={replayData(true)} />);
+    const region = equivalenceRegion();
+    const nodes = [region, ...Array.from(region.querySelectorAll('*'))];
+    const coloured = nodes.filter((n) => {
+      const s = n.getAttribute('style') ?? '';
+      return s.includes('--color-status-positive') || s.includes('--color-status-negative');
+    });
+    expect(coloured).toHaveLength(0);
+  });
+
+  it('AD-17: reports byteIdentical as an UNVERIFIED literal with the AD-17 disclosure', () => {
+    render(<CompanyTrustChain evidence={EVIDENCE} replay={replayData(true)} />);
+    const region = equivalenceRegion();
+    expect(region).toHaveTextContent('Reported byteIdentical:');
+    expect(region).toHaveTextContent('NOT VERIFIED');
+    const note = region.querySelector('[data-testid="ad17-disclosure"]');
+    expect(note).not.toBeNull();
+    expect(note?.textContent ?? '').toMatch(/AD-17 \/ M-2 — UNRESOLVED/);
+    expect(note?.textContent ?? '').toMatch(/have\s+not\s+been verified/);
+  });
+
+  it('AD-17: renders the false literal without a failure verdict', () => {
+    render(<CompanyTrustChain evidence={EVIDENCE} replay={replayData(false)} />);
+    const region = equivalenceRegion();
+    expect(region).toHaveTextContent('Reported byteIdentical:');
+    expect(region).toHaveTextContent('false');
+    expect(region).toHaveTextContent('NOT VERIFIED');
   });
 });
