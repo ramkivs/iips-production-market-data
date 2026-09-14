@@ -66,7 +66,9 @@ export function SnapshotMetadataPanel({ snapshot }: { snapshot: { snapshotId: st
  *
  *   This component PREVIOUSLY rendered `byteIdentical ? 'MATCH' : 'DIFFERENCE'` in a
  *   positive/negative status colour. That asserted a VERIFIED byte identity which has
- *   never been verified: `ReplayService` returns `reproduced`/`byteIdentical` as LITERALS
+ *   never been verified. Accurate basis (D62): `ReplayService` COMPUTES those values, but
+ *   the UI-facing ones are HARDCODED by `executive-transport.ts` `computeCertifiedReplay()`,
+ *   which never invokes it — so runtime verification is NOT ESTABLISHED
  *   (AD-17 / M-2, UNRESOLVED).
  *
  *   The literals are now rendered by the approved AD-17-safe `ReplayLiteralDisplay`, with

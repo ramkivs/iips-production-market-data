@@ -5,8 +5,15 @@
  *
  * ⚠⚠ THIS COMPONENT EXISTS TO PREVENT A CLAIM, NOT TO MAKE ONE. ⚠⚠
  *
- * AD-17 / M-2 are UNRESOLVED: the platform `ReplayService` returns `reproduced` and
- * `byteIdentical` as LITERALS — they are NOT the output of a verification procedure.
+ * AD-17 / M-2 are UNRESOLVED. The accurate current basis (D62, corrected by addition):
+ *
+ *   - The platform `ReplayService` COMPUTES `reproduced`/`byteIdentical` from a comparison
+ *     (see `ReplayService.ts`, "M-2 REPAIR (D41 Workstream C)"). It does not return literals.
+ *   - The values that actually reach this UI come from `executive-transport.ts`
+ *     `computeCertifiedReplay()`, which HARDCODES `reproduced: true` and
+ *     `byteIdentical: true` and never invokes the `ReplayService` instance it holds.
+ *   - Therefore runtime replay verification is NOT ESTABLISHED for the UI-facing values.
+ *
  * A surface that renders `byteIdentical: true` as "MATCH — byte-identical" is therefore
  * asserting a verified reproduction that has never been performed.
  *
@@ -23,7 +30,7 @@
 /** The AD-17 constraint as carried by the certified P12 evidence/replay linkage module. */
 export const AD17_DISCLOSURE = Object.freeze({
   ad17Status: 'UNRESOLVED',
-  m2Defect: 'ReplayService returns reproduced/byteIdentical as literals',
+  m2Defect: 'the UI-facing reproduced/byteIdentical values are hardcoded by executive-transport, not produced by a runtime verification',
   constraint: 'These values MUST NOT be presented as verified reproduction',
   resolutionGate: 'P15 (E2E Certification) — external Existing-IIPS authority',
 });
@@ -98,10 +105,10 @@ export function ReplayLiteralDisplay({ dto }: { dto: ReplayLinkageView }) {
 export function Ad17Note() {
   return (
     <p data-testid="ad17-disclosure" style={{ fontSize: 11, color: 'var(--color-ink-secondary)', margin: '8px 0 0' }}>
-      <strong>AD-17 / M-2 — UNRESOLVED.</strong> {AD17_DISCLOSURE.m2Defect}. These values are
-      reported by the platform as literals and have <strong>not</strong> been verified by a
-      reproduction procedure. They must not be read as evidence of verified replay or verified
-      byte identity. Resolution gate: {AD17_DISCLOSURE.resolutionGate}.
+      <strong>AD-17 / M-2 — UNRESOLVED.</strong> The platform replay service computes these
+      values, but {AD17_DISCLOSURE.m2Defect}. They have <strong>not</strong> been verified by a
+      reproduction procedure at runtime. They must not be read as evidence of verified replay or
+      verified byte identity. Resolution gate: {AD17_DISCLOSURE.resolutionGate}.
     </p>
   );
 }

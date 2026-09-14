@@ -80,7 +80,18 @@ describe('P13-B-07 — UI17 displays literals without asserting verification', (
     render(<Ad17Note />);
     const note = screen.getByTestId('ad17-disclosure');
     expect(note).toHaveTextContent('AD-17 / M-2 — UNRESOLVED');
-    expect(note).toHaveTextContent('literals');
     expect(note).toHaveTextContent('not');
+
+    // D66 (L-7): the disclosure must state the ACCURATE basis. The previous assertion
+    // required the word "literals", which encoded the stale claim that ReplayService
+    // returns literals. Per D62 it COMPUTES them; the UI-facing values are hardcoded by
+    // executive-transport. These assertions are strictly stronger than the one replaced.
+    expect(note).toHaveTextContent(/computes/i);
+    expect(note).toHaveTextContent(/hardcoded by executive-transport/i);
+    expect(note).toHaveTextContent(/not.+been verified by a reproduction procedure/i);
+    // Must NOT reinstate the stale characterisation.
+    expect(note.textContent ?? '').not.toMatch(/returns\s+reproduced\/byteIdentical\s+as\s+literals/i);
+    // Must NOT assert verified replay (AD-17 firewall).
+    expect(note).toHaveTextContent(/must not be read as evidence of verified replay/i);
   });
 });

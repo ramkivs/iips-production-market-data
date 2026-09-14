@@ -17,9 +17,11 @@
  *   the React surface into conformance with the accepted P13 record. It changes NO
  *   accepted record, and it does NOT modify p13/src/boundedSurfaces.js.
  *
- *   ⚠ AD-17 / M-2 REMAIN UNRESOLVED. `ReplayService` returns reproduced/byteIdentical as
- *   LITERALS. This amendment removes a prohibited CLAIM; it performs no verification,
- *   grants no certification, and does not remediate AD-17 or M-2.
+ *   ⚠ AD-17 / M-2 REMAIN UNRESOLVED. Accurate basis (D62): `ReplayService` COMPUTES
+ *   reproduced/byteIdentical, but the UI-facing values are HARDCODED by
+ *   `executive-transport.ts` `computeCertifiedReplay()`, which never invokes it; runtime
+ *   replay verification is NOT ESTABLISHED. This amendment removes a prohibited CLAIM; it
+ *   performs no verification, grants no certification, and does not remediate AD-17 or M-2.
  *
  *   The literals are now rendered by the shared AD-17-safe `ReplayLiteralDisplay`, with an
  *   explicit AD-17 disclosure and NO pass/fail colouring.

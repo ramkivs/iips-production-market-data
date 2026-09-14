@@ -430,8 +430,11 @@ export function buildGovernedEvidenceLinkage(args: Record<string, unknown>): Rea
 /**
  * P13-B-07 — Replay linkage DTO with the AD-17 guard applied AT THE TRANSPORT BOUNDARY.
  *
- * ⚠ AD-17/M-2 FIREWALL. `ReplayService` returns `reproduced`/`byteIdentical` as LITERALS.
- * They are carried under `replayServiceLiterals` and are explicitly NOT verified claims.
+ * ⚠ AD-17/M-2 FIREWALL. Accurate basis (D62): the platform `ReplayService` COMPUTES
+ * `reproduced`/`byteIdentical`, but the UI-facing values are HARDCODED by
+ * `executive-transport.ts` `computeCertifiedReplay()`, which never invokes it. Runtime
+ * replay verification is therefore NOT ESTABLISHED. The values are carried under
+ * `replayServiceLiterals` and are explicitly NOT verified claims.
  * `assertAd17ConstraintPreserved` is invoked on every DTO before it can leave this
  * process; if any caller ever sets a verified flag, the request fails rather than
  * emitting an unsupported reproduction claim. This PRESERVES AD-17 — it does not repair it.
