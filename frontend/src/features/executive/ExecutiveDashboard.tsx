@@ -17,7 +17,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { isDegraded } from '../../api/dataMode';
 import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
-import { fetchExecutiveData, type ExecutiveData, type RankedSector } from '../../api/executive';
+import { fetchExecutiveData, type ExecutiveResponse, type RankedSector } from '../../api/executive';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { ChartContainer, SimpleBarChart } from '../../components/viz/ChartFoundations';
@@ -29,7 +29,7 @@ import { CertifiedBadge, FreshnessBadge } from '../../components/ui/Badges';
 import { CompanyTrustChain } from '../company/CompanyTrustChain';
 
 export function ExecutiveDashboard() {
-  const [data, setData] = useState<ExecutiveData | null>(null);
+  const [data, setData] = useState<ExecutiveResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -65,7 +65,7 @@ export function ExecutiveDashboard() {
 
   // Phase 13-Hardening (C): memoize derived presentation arrays (recomputed only when data changes).
   const evidenceRefs: EvidenceReference[] = useMemo(() => {
-    if (!data) return [];
+    if (!data || isDegraded(data)) return [];
     return data.decisions.map((d) => ({
       evidenceId: `ev_${d.sector}`,
       engineId: `sector.${d.sector.toLowerCase()}`,
@@ -75,7 +75,7 @@ export function ExecutiveDashboard() {
   }, [data]);
 
   const rankedRows: RankedRow[] = useMemo(() => {
-    if (!data) return [];
+    if (!data || isDegraded(data)) return [];
     return data.ranking.map((r, i) => ({ ...r, index: i }));
   }, [data]);
 

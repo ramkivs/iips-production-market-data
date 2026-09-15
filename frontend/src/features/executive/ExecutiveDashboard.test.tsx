@@ -206,3 +206,124 @@ describe('Executive Dashboard — N+10 selected-decision trust chain', () => {
     expect(screen.getByTestId('decision-badge-Hold')).toHaveTextContent('Hold');
   });
 });
+
+describe('Executive Dashboard — D93 data-mode degraded state handling (no crash)', () => {
+  it('LIVE_UNAVAILABLE does not crash and renders the governed DataModeUnavailable UI', async () => {
+    const degradedLive = {
+      surface: 'Executive',
+      dataMode: 'LIVE',
+      state: 'LIVE_UNAVAILABLE',
+      dataAvailable: false,
+      reason: 'LIVE data is UNAVAILABLE for Executive. Live provider ingestion is not wired to this transport, so no live values exist to return.',
+      dependency: 'R-2 provider ingestion — OPEN and externally blocked (provider selection, licensing, credentials, entitlements).',
+      provenance: {
+        dataSource: 'none — no governed data source is available for this data mode',
+        freshness: 'UNAVAILABLE',
+        mode: 'LIVE',
+        transportSemantics: 'This response deliberately contains NO market data. The request is NOT silently served from the frozen v1.1 Replay Baseline, and no provider value is substituted or fabricated. Select SNAPSHOT to receive the certified baseline data.',
+      },
+    };
+
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/executive')) {
+        return Promise.resolve({ ok: true, json: async () => degradedLive }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(<ExecutiveDashboard />);
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('LIVE');
+    expect(screen.getByText(/LIVE data is UNAVAILABLE for Executive/)).toBeInTheDocument();
+    expect(screen.queryByTestId('decision-list')).not.toBeInTheDocument();
+  });
+
+  it('PIT_UNAVAILABLE does not crash and renders the governed DataModeUnavailable UI', async () => {
+    const degradedPit = {
+      surface: 'Executive',
+      dataMode: 'PIT',
+      state: 'PIT_UNAVAILABLE',
+      dataAvailable: false,
+      reason: 'PIT data is UNAVAILABLE for Executive. No point-in-time capability is wired to this transport, so no as-of values exist to return.',
+      dependency: 'PIT capability exists in p08 but is NOT wired to transport; wiring it is a separate authorized act.',
+      provenance: {
+        dataSource: 'none — no governed data source is available for this data mode',
+        freshness: 'UNAVAILABLE',
+        mode: 'PIT',
+        transportSemantics: 'This response deliberately contains NO market data. The request is NOT silently served from the frozen v1.1 Replay Baseline, and no provider value is substituted or fabricated. Select SNAPSHOT to receive the certified baseline data.',
+      },
+    };
+
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/executive')) {
+        return Promise.resolve({ ok: true, json: async () => degradedPit }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(<ExecutiveDashboard />);
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('PIT');
+    expect(screen.getByText(/PIT data is UNAVAILABLE for Executive/)).toBeInTheDocument();
+    expect(screen.queryByTestId('decision-list')).not.toBeInTheDocument();
+  });
+
+  it('successful-only arrays are never accessed for degraded payloads (decisions / ranking)', async () => {
+    // Pass a degraded object with traps on successful-only fields that throw if touched
+    const trappedDegraded = {
+      surface: 'Executive',
+      dataMode: 'LIVE',
+      state: 'LIVE_UNAVAILABLE',
+      dataAvailable: false,
+      reason: 'LIVE data is UNAVAILABLE for Executive.',
+      dependency: 'R-2 provider ingestion.',
+      provenance: {
+        dataSource: 'none',
+        freshness: 'UNAVAILABLE',
+        mode: 'LIVE',
+        transportSemantics: 'none',
+      },
+      get decisions() { throw new Error('Attempted to access data.decisions on degraded payload!'); },
+      get ranking() { throw new Error('Attempted to access data.ranking on degraded payload!'); },
+      get portfolio() { throw new Error('Attempted to access data.portfolio on degraded payload!'); },
+      get opportunity() { throw new Error('Attempted to access data.opportunity on degraded payload!'); },
+      get correlation() { throw new Error('Attempted to access data.correlation on degraded payload!'); },
+      get diversification() { throw new Error('Attempted to access data.diversification on degraded payload!'); },
+    };
+
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/executive')) {
+        return Promise.resolve({ ok: true, json: async () => trappedDegraded }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    expect(() => render(<ExecutiveDashboard />)).not.toThrow();
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+  });
+
+  it('no silent SNAPSHOT fallback occurs when degraded payload is returned', async () => {
+    const degradedLive = {
+      surface: 'Executive',
+      dataMode: 'LIVE',
+      state: 'LIVE_UNAVAILABLE',
+      dataAvailable: false,
+      reason: 'LIVE data is UNAVAILABLE for Executive.',
+      dependency: 'R-2',
+      provenance: { dataSource: 'none', freshness: 'UNAVAILABLE', mode: 'LIVE', transportSemantics: 'none' },
+    };
+
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => degradedLive }) as never;
+
+    render(<ExecutiveDashboard />);
+    await screen.findByTestId('data-mode-unavailable');
+    // None of the SNAPSHOT fixture cards or metrics should appear
+    expect(screen.queryByTestId('badge-certified')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('freshness-snapshot')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('top-opportunity')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('decision-badge-Buy')).not.toBeInTheDocument();
+  });
+});

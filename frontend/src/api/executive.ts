@@ -4,8 +4,11 @@
  * Mirrors the certified v2.0 transport DTO. Semantically inert: the client maps certified
  * results to the UI; it never computes scores/confidence/rankings/thresholds.
  * Presentation-only. No business logic.
+ *
+ * D93: Widened return type to represent successful ExecutiveData | DegradedData.
  */
 import type { Verdict } from '../components/decision/DecisionComponents';
+import type { DegradedData } from './dataMode';
 import { authFetch } from './authFetch';
 
 export interface PortfolioSummary {
@@ -46,6 +49,7 @@ export interface ExecutiveProvenance {
 }
 
 export interface ExecutiveData {
+  readonly dataAvailable?: undefined;
   readonly portfolio: PortfolioSummary;
   readonly diversification: Diversification;
   readonly ranking: readonly RankedSector[];
@@ -55,9 +59,11 @@ export interface ExecutiveData {
   readonly provenance: ExecutiveProvenance;
 }
 
+export type ExecutiveResponse = ExecutiveData | DegradedData;
+
 /** Fetch the certified executive data from the v3.0 transport. */
-export async function fetchExecutiveData(baseUrl = ''): Promise<ExecutiveData> {
+export async function fetchExecutiveData(baseUrl = ''): Promise<ExecutiveResponse> {
   const res = await authFetch(`${baseUrl}/api/executive`);
   if (!res.ok) throw new Error(`executive transport returned ${res.status}`);
-  return (await res.json()) as ExecutiveData;
+  return (await res.json()) as ExecutiveResponse;
 }
