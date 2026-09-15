@@ -1,0 +1,2 @@
+TradDt,BizDt,Sgmt,Src,FinInstrmTp,FinInstrmId,ISIN,TckrSymb,SctySrs,XpryDt,FininstrmActlXpryDt,TtlNbOfTxsExctd,PrvsClsgPric,OpnPric,HighPric,LowPric,LastPric,ClsPric,TtlTradgQty,TtlTradgVal,RltdRptdTxId,RptdTxSts,NewBrdLotQty,FaceVal,RltdSgmt,RltdSrc,RltdFinInstrmId,RltdISIN,Rsvd01,Rsvd02,Rsvd03,Rsvd04
+2026-03-15,2026-03-15,CM,NSE,STK,SYNTHETIC FUTURE DATED LTD,INE000F01014,SYNTHFUTURE,EQ,,,600,180.00,181.00,185.00,180.00,184.00,184.00,8000,1472000.00,,,1,10.00,,,,,,,,

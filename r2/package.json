@@ -1,0 +1,16 @@
+{
+  "name": "iips-r2-market-data-foundation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "R-2 provider-neutral market-data foundation: canonical NSE equity contract, provider/adapter boundary, CM-UDiFF Common Bhavcopy Final ingestion, ~15-minute current-state refresh with freshness control, configurable historical backfill, reconciliation and quality control. NO live provider, NO credentials, NO network, NO durable persistence. Real NSE acquisition remains an EXTERNAL LICENSING/ENTITLEMENT GATE. R-2 production live-data capability is NOT CLAIMED.",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "typecheck": "node --check src/*.js"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20"
+  }
+}
