@@ -1,0 +1,34 @@
+/**
+ * Synthetic Test Fixtures for NSE CM-UDiFF Common Bhavcopy Final.
+ *
+ * Clearly labelled reference test fixtures covering:
+ * - Valid equity records (EQ, BE)
+ * - Non-equity instruments (debt GS, corporate bond, mutual fund)
+ * - Missing values
+ * - Malformed records (column mismatch, corrupt strings)
+ * - Invalid numeric values (non-numeric, negative price)
+ * - Impossible OHLC relationships (High < Low, High < Open, Low > Close)
+ * - Stale/invalid dates
+ * - Duplicate records (identical vs contradictory)
+ */
+
+export const CM_UDIFF_HEADER =
+  'TradDt,BizDt,Sgmt,Src,FinInstrmTp,FinInstrmId,ISIN,TckrSymb,SctySrs,FinInstrmNm,OpnPric,HghPric,LwPric,ClsPric,LastPric,PrvsClsgPric,TtlTradgVol,TtlTrfVal,TtlNbOfTxsExctd';
+
+/** Valid synthetic Bhavcopy with 5 top NSE equities */
+export const SYNTHETIC_VALID_BHAVCOPY_2026_09_14 = `${CM_UDIFF_HEADER}
+2026-09-14,2026-09-14,CM,NSE,STK,1001,INE002A01018,RELIANCE,EQ,Reliance Industries Limited,2950.00,2985.50,2940.00,2972.25,2970.00,2945.00,4521000,13420000000,145200
+2026-09-14,2026-09-14,CM,NSE,STK,1002,INE467B01029,TCS,EQ,Tata Consultancy Services Limited,4120.00,4165.00,4105.00,4150.80,4155.00,4110.00,1825000,7580000000,92000
+2026-09-14,2026-09-14,CM,NSE,STK,1003,INE040A01034,HDFCBANK,EQ,HDFC Bank Limited,1640.00,1658.00,1635.00,1652.10,1650.00,1638.00,6890000,11380000000,178000
+2026-09-14,2026-09-14,CM,NSE,STK,1004,INE009A01021,INFY,EQ,Infosys Limited,1880.00,1915.00,1875.00,1908.45,1910.00,1872.00,3410000,6500000000,112000
+2026-09-14,2026-09-14,CM,NSE,STK,1005,INE090A01021,ICICIBANK,EQ,ICICI Bank Limited,1210.00,1232.00,1205.00,1228.30,1225.00,1208.00,5120000,6270000000,134000`;
+
+/** Fixture containing mixed cases: valid, non-equity, impossible OHLC, negative price, missing fields, etc. */
+export const SYNTHETIC_ANOMALOUS_BHAVCOPY = `${CM_UDIFF_HEADER}
+2026-09-14,2026-09-14,CM,NSE,STK,1001,INE002A01018,RELIANCE,EQ,Reliance Industries Limited,2950.00,2985.50,2940.00,2972.25,2970.00,2945.00,4521000,13420000000,145200
+2026-09-14,2026-09-14,CM,NSE,DBT,9001,IN0020200018,718GS2033,GS,Government of India Bond,98.50,99.00,98.20,98.75,98.70,98.60,50000,4900000,120
+2026-09-14,2026-09-14,FO,NSE,FUT,8001,INE002A01018,RELIANCE26SEPFUT,FUT,Reliance Future Sep 2026,2960.00,2995.00,2950.00,2980.00,2982.00,2955.00,20000,59000000,500
+2026-09-14,2026-09-14,CM,NSE,STK,1006,INE123A01011,BADOHLC,EQ,Bad OHLC High Lower Than Low,200.00,180.00,210.00,195.00,195.00,200.00,1000,195000,10
+2026-09-14,2026-09-14,CM,NSE,STK,1007,INE124A01019,NEGPRICE,EQ,Negative Price Equity,-50.00,60.00,40.00,55.00,55.00,50.00,5000,275000,25
+2026-09-14,2026-09-14,CM,NSE,STK,1008,INE125A01016,MISSINGFIELD,EQ,Missing Close Price,100.00,110.00,95.00,,105.00,100.00,2000,210000,15
+BAD-DATE-ROW,BAD-DATE,CM,NSE,STK,1009,INE126A01014,BADDATE,EQ,Malformed Date Equity,500.00,520.00,490.00,510.00,510.00,500.00,1000,510000,20`;

@@ -857,6 +857,21 @@ const server = http.createServer((req, res) => {
   // executor whose adminResourceGate rejects action='read' AND action='execute'. Mirrors the
   // promoted P-1 R-1-a pattern. Not admin-only; guardRead/guardExecute + owner scoping remain
   // the authorization; no new RBAC model; no new notes transport module.
+  // R-2: Provider-neutral Market Data foundation (NSE Capital Market equities).
+  // Kept behind an explicit licensing/credentials/entitlement gate.
+  if (req.url?.startsWith('/api/market-data/')) {
+    void (async () => {
+      try {
+        const executor = await getReadExecutor();
+        if (!executor) { res.writeHead(401); res.end(JSON.stringify({ error: 'authentication unavailable (no IdP configured)' })); return; }
+        const { handleMarketDataRequest } = await import('./market-data/market-data-transport');
+        await handleMarketDataRequest(req, res, executor);
+      } catch (e) {
+        res.writeHead(500); res.end(JSON.stringify({ error: 'market data transport error', detail: String(e) }));
+      }
+    })();
+    return;
+  }
   // UI10 (D83): governed Collaboration. Threads attach to governed IIPS objects resolved
   // SERVER-SIDE within the tenant; mentions/assignees resolve against the tenant roster. No
   // object-level ACL and no new identity model (M-5/G3 out of scope).

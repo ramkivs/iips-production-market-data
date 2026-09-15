@@ -7,6 +7,7 @@
  */
 import type { Role } from '../core/session/session';
 import { useAuth } from '../core/auth/AuthProvider';
+import { MarketDataFreshnessBadge } from '../components/data/MarketDataFreshnessBadge';
 
 interface TopBarProps {
   role: Role;
@@ -60,6 +61,7 @@ export function TopBar({ role, tenantId, onOpenPalette, onOpenNotifications, unr
             {'\u270E'} Notes
           </button>
         )}
+        <MarketDataFreshnessBadge />
         <span data-testid="topbar-tenant">Tenant: {tenantId}</span>
         <span data-testid="topbar-role">Role: {role}</span>
         {status === 'authenticated' && (
