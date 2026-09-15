@@ -144,3 +144,19 @@
 | **OI-P16-04** | **OPEN — OPERATIONAL/TECH** | Technical Operations | Static public IP registration and OpenSSH public key exchange with NSE SFTP operations (`eodsftp1.nseindia.com` / `eodsftp2.nseindia.com:7010`) upon contract execution. |
 | **OI-P16-05** | **OPEN — TECHNICAL/LEGAL** | Technical / Governance | Verification of applicable usage terms, rate boundaries, and single-user private research constraints for initial low-cost 15-minute runtime candidate (`yfinance`). |
 | **OI-P16-06** | **OPEN — COMMERCIAL/TECH** | Technical / Governance | Assessment of Dhan Data API account tier, data rights, and availability as an alternative low-cost runtime provider. |
+
+---
+
+## Operational Certification Addendum (D108 — 2026-09-15)
+
+### Layer-2 Operational EOD Route Certification
+
+| Dimension | Authoritative Status | Reference Record |
+|---|---|---|
+| **EOD Production Readiness Gate** | **`ACCEPTED`** (D107) | `docs/D107_EOD_PRODUCTION_READINESS_GATE_ADJUDICATION.md` |
+| **Certified Operational EOD Route** | **`OPERATOR_DROP`** | `docs/D105_PROGRAM_AUTHORITY_ADJUDICATION_OPERATOR_DROP.md` |
+| **Governed Drop Directory** | `.iips-data/bhavcopy/` | `docs/D106_OPERATOR_DROP_OPERATIONAL_RUNBOOK.md` |
+| **Operational EOD Ingestion Status** | **`CERTIFIED / OPERATIONALLY READY`** | D103-W1 / D103-DEMO-W2 / D103-WINDOWS-PROBE / D106 / D107 |
+| **Commercial NSE SFTP Acquisition** | **`EXTERNALLY GATED / OPEN`** | `OI-P16-01` through `OI-P16-06` (All preserved as OPEN) |
+| **10-Year Historical Population** | **`READY CAPABILITY / PENDING EXTERNAL DATA ACCESS`** | D98 §8m / D107 §3 / D108 §8n |
+| **Governance & Licensing Boundary** | **`NO COMMERCIAL ENTITLEMENT CLAIMED`** | Operational readiness only; scraping, URL harvesting, and unauthorized redistribution strictly prohibited. |
