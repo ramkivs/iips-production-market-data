@@ -857,6 +857,22 @@ const server = http.createServer((req, res) => {
   // executor whose adminResourceGate rejects action='read' AND action='execute'. Mirrors the
   // promoted P-1 R-1-a pattern. Not admin-only; guardRead/guardExecute + owner scoping remain
   // the authorization; no new RBAC model; no new notes transport module.
+  // UI07 (D81): governed Watchlists, dispatched with the EXISTING READ executor exactly as the
+  // promoted P-2 notes / UI12 settings surfaces. Governed rows come from the same P12 universe
+  // provider used by the additive P12 surface — nothing is fabricated here.
+  if (req.url?.startsWith('/api/watchlists')) {
+    void (async () => {
+      try {
+        const executor = await getReadExecutor();
+        if (!executor) { res.writeHead(401); res.end(JSON.stringify({ error: 'authentication unavailable (no IdP configured)' })); return; }
+        const wl = await import('./watchlists/watchlists-transport');
+        await wl.handleWatchlistsRequest(req, res, executor, buildGovernedUniverseProvider());
+      } catch (e) {
+        res.writeHead(500); res.end(JSON.stringify({ error: 'watchlists transport error', detail: String(e) }));
+      }
+    })();
+    return;
+  }
   // UI12 (D80): governed user Settings, dispatched with the EXISTING READ executor exactly as
   // the promoted P-2 notes surface. No new RBAC model and no new executor.
   if (req.url?.startsWith('/api/settings')) {
