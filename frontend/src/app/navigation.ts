@@ -115,6 +115,8 @@ export const NAV: NavItem[] = [
       { label: 'Migration / Workflow / Marketplace', path: '/admin/operations', minRole: 'admin', status: 'implemented' },
     ],
   },
+  // UI10 (D83) — governed collaboration: threads on governed objects, NS-5 pinned.
+  { label: 'Collaboration', path: '/collaboration', minRole: 'viewer', status: 'implemented' },
   // UI08 (D82) — governed reports: templates + generation, PIT-pinned, owner-scoped.
   { label: 'Reports', path: '/reports', minRole: 'viewer', status: 'implemented' },
   // UI07 (D81) — governed watchlists: persistent lists + triggers, owner-scoped.

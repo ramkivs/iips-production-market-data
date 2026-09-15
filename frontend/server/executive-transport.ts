@@ -857,6 +857,35 @@ const server = http.createServer((req, res) => {
   // executor whose adminResourceGate rejects action='read' AND action='execute'. Mirrors the
   // promoted P-1 R-1-a pattern. Not admin-only; guardRead/guardExecute + owner scoping remain
   // the authorization; no new RBAC model; no new notes transport module.
+  // UI10 (D83): governed Collaboration. Threads attach to governed IIPS objects resolved
+  // SERVER-SIDE within the tenant; mentions/assignees resolve against the tenant roster. No
+  // object-level ACL and no new identity model (M-5/G3 out of scope).
+  if (req.url?.startsWith('/api/collaboration')) {
+    void (async () => {
+      try {
+        const executor = await getReadExecutor();
+        if (!executor) { res.writeHead(401); res.end(JSON.stringify({ error: 'authentication unavailable (no IdP configured)' })); return; }
+        const cb = await import('./collaboration/collaboration-transport');
+        const cr = await import('./collaboration/collaboration-resolvers');
+        const u = await import('./p12-universe');
+        // Governed company/evidence identities come from the certified universe this transport
+        // already computes — never a raw provider record.
+        const governedIds = () => u
+          .deriveSearchUniverse(computeCertifiedDecisionMatrix() as import('./p12-universe').CertifiedMatrixPayload, 'v1.1-replay-baseline')
+          .map((r) => String((r as Record<string, unknown>).canonicalSecurityId));
+        await cb.handleCollaborationRequest(
+          req,
+          res,
+          executor,
+          buildGovernedUniverseProvider(),
+          (ownerUserId: string) => cr.buildCollaborationResolversFor(ownerUserId, governedIds),
+        );
+      } catch (e) {
+        res.writeHead(500); res.end(JSON.stringify({ error: 'collaboration transport error', detail: String(e) }));
+      }
+    })();
+    return;
+  }
   // UI08 (D82): governed Reports. Content is produced by the platform ReportingEngine over the
   // certified CSIP output already computed by this transport — no figure is invented, and the
   // client can only choose a template.
