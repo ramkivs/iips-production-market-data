@@ -160,3 +160,22 @@
 | **Commercial NSE SFTP Acquisition** | **`EXTERNALLY GATED / OPEN`** | `OI-P16-01` through `OI-P16-06` (All preserved as OPEN) |
 | **10-Year Historical Population** | **`READY CAPABILITY / PENDING EXTERNAL DATA ACCESS`** | D98 §8m / D107 §3 / D108 §8n |
 | **Governance & Licensing Boundary** | **`NO COMMERCIAL ENTITLEMENT CLAIMED`** | Operational readiness only; scraping, URL harvesting, and unauthorized redistribution strictly prohibited. |
+
+---
+
+## Governance Reconciliation Addendum (D108-R1 — 2026-09-15)
+
+### Authoritative Commercial NSE SFTP Open Items (D107 Controlling Baseline)
+
+Per **D108-R1**, the authoritative D107 definitions for the commercial active-active NSE SFTP track (`OI-P16-01` through `OI-P16-06`) are formally affirmed as the sole controlling meanings for Phase 16:
+
+| Item | Authoritative Status | Owner | D107 Controlling Definition |
+|---|---|---|---|
+| **OI-P16-01** | **OPEN / EXTERNAL** | Program Authority / Commercial | Cash Market EOD Feed Agreement with NSE Data & Analytics Limited. |
+| **OI-P16-02** | **OPEN / EXTERNAL** | Program Authority / Commercial | Permitted enterprise retention and analytical use determination. |
+| **OI-P16-03** | **OPEN / EXTERNAL** | Program Authority | Formal assignment of exchange SFTP User ID. |
+| **OI-P16-04** | **OPEN / EXTERNAL** | Technical Operations | Static public egress IP allowlisting on NSE perimeter firewalls. |
+| **OI-P16-05** | **OPEN / EXTERNAL** | Technical / Governance | Production SSH key pair binding and mutual authentication. |
+| **OI-P16-06** | **OPEN / EXTERNAL** | Technical Operations | Port 7010 active-active connectivity validation (`eodsftp1.nseindia.com` / `eodsftp2.nseindia.com`). |
+
+*Semantic Reconcilation Note:* Historical D98 entries that conflated `OI-P16-03` (public archive), `OI-P16-05` (yfinance terms), and `OI-P16-06` (Dhan Data API) are superseded by this addendum and the controlling D107 baseline. Layer-1 runtime candidate evaluations (yfinance / Dhan) are governed separately under D99-A / D101 and do not dilute or displace the commercial NSE SFTP track. Zero P16 items are closed.
