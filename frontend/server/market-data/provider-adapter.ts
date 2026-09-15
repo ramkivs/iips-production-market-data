@@ -4,7 +4,7 @@
  * Keeps the real authorized NSE acquisition adapter behind an explicit configuration/entitlement gate.
  */
 
-import type { CanonicalCurrentStateRecord, CanonicalEquityEodRecord } from './canonical-contract';
+import type { CanonicalCurrentStateRecord } from './canonical-contract';
 
 export interface MarketDataProviderAdapter {
   readonly providerId: string;
@@ -40,8 +40,10 @@ export class NseProductionAcquisitionAdapter implements MarketDataProviderAdapte
   public readonly providerId = 'NSE_CM_PRODUCTION';
   public readonly providerName = 'National Stock Exchange of India (Capital Market)';
   public readonly isEntitled: boolean;
+  public readonly credentialsConfig?: { apiKey?: string; apiSecret?: string; licensingId?: string };
 
-  constructor(private config?: { apiKey?: string; apiSecret?: string; licensingId?: string }) {
+  constructor(config?: { apiKey?: string; apiSecret?: string; licensingId?: string }) {
+    this.credentialsConfig = config;
     this.isEntitled = Boolean(config?.apiKey && config?.apiSecret && config?.licensingId);
   }
 
@@ -77,7 +79,7 @@ export class NseProductionAcquisitionAdapter implements MarketDataProviderAdapte
       return {
         success: false,
         error:
-          'EXTERNALLY_BLOCKED: Production NSE CM-UDiFF entitlement not provisioned. Manual/authorized download required.',
+          `EXTERNALLY_BLOCKED: Production NSE CM-UDiFF entitlement not provisioned for trade date ${tradeDate}. Manual/authorized download required.`,
       };
     }
 

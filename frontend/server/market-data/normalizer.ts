@@ -3,7 +3,7 @@
  */
 
 import type { CanonicalEquityEodRecord, QuarantinedRecord } from './canonical-contract';
-import { isEligibleEquity, type RawUdiffRecord } from './cm-udiff-parser';
+import type { RawUdiffRecord } from './cm-udiff-parser';
 
 export interface ValidationSuccess {
   readonly valid: true;

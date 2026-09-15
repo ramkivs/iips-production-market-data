@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    allowedHosts: true,
     proxy: {
       // Proxy the v3.0 executive transport (runs the certified platform in-process).
       '/api': { target: 'http://localhost:8787', changeOrigin: true },

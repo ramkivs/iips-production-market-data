@@ -9,7 +9,6 @@
  * - Persistence integration using repository convention (filesystem journal / JSON lines).
  */
 
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type {
   CanonicalEquityEodRecord,
@@ -32,9 +31,9 @@ export class MarketDataStore {
   // Quarantined records for audit
   private quarantinedRecords: QuarantinedRecord[] = [];
   // Historical ingestion log
-  private ingestionAuditLogs: Array<{ tradeDate: string; metrics: IngestionMetrics }> = [];
+  private ingestionAuditLogs: Array<{ tradeDate: string; sourceFile: string; metrics: IngestionMetrics }> = [];
 
-  private dataDir: string;
+  public readonly dataDir: string;
 
   constructor(customDataDir?: string) {
     this.dataDir = customDataDir ?? path.resolve(process.env.IIPS_DATA_DIR ?? path.join(process.cwd(), '.iips-data'));
@@ -144,7 +143,7 @@ export class MarketDataStore {
       freshnessState: 'CURRENT',
     });
 
-    this.ingestionAuditLogs.push({ tradeDate, metrics });
+    this.ingestionAuditLogs.push({ tradeDate, sourceFile, metrics });
 
     return {
       metrics,
@@ -160,7 +159,7 @@ export class MarketDataStore {
     const sym = symbol.toUpperCase();
     const results: CanonicalEquityEodRecord[] = [];
 
-    for (const [key, record] of this.historicalEod.entries()) {
+    for (const [, record] of this.historicalEod.entries()) {
       if (record.symbol === sym) {
         if (startDate && record.tradeDate < startDate) continue;
         if (endDate && record.tradeDate > endDate) continue;
