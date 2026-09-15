@@ -17,6 +17,7 @@ import type { MarketDataProviderAdapter } from './provider-adapter';
 
 export interface MonthlySchedulerConfig {
   readonly lookbackDays?: number;
+  readonly targetDates?: readonly string[];
   readonly autoStart?: boolean;
 }
 
@@ -34,6 +35,7 @@ export class EodMonthlyScheduler {
   private readonly store: MarketDataStore;
   private readonly adapter: MarketDataProviderAdapter;
   private readonly pipeline: EodIngestionPipeline;
+  private readonly explicitTargetDates?: readonly string[];
   private readonly lookbackDays: number;
   private lastRunResult: MonthlyBatchRunResult | null = null;
 
@@ -45,6 +47,7 @@ export class EodMonthlyScheduler {
     this.store = store;
     this.adapter = adapter;
     this.pipeline = new EodIngestionPipeline(this.store, this.adapter);
+    this.explicitTargetDates = config?.targetDates;
     this.lookbackDays = config?.lookbackDays ?? 35; // Default: ~1 month + 5 days buffer
   }
 
@@ -62,7 +65,9 @@ export class EodMonthlyScheduler {
     const startDate = lookbackStart.toISOString().split('T')[0];
 
     // Generate potential trading sessions in the lookback window
-    const windowSessions = NseTradingCalendar.generateTradingDays(startDate, today);
+    const windowSessions = this.explicitTargetDates
+      ? [...this.explicitTargetDates]
+      : NseTradingCalendar.generateTradingDays(startDate, today);
 
     // Identify already-ingested dates in the store
     const existingDates = new Set(this.store.getDistinctTradeDates());

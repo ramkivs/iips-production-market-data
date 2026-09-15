@@ -212,7 +212,7 @@ describe('EOD Pipeline & Monthly Scheduler Integration', () => {
     expect(store.getDistinctTradeDates()).toEqual(['2026-09-14']);
 
     // Re-run monthly scheduler: should skip already-ingested dates
-    const scheduler = new EodMonthlyScheduler(store, adapter, { lookbackDays: 7 });
+    const scheduler = new EodMonthlyScheduler(store, adapter, { targetDates: ['2026-09-14'] });
     const batchRes = await scheduler.executeMonthlyBatch();
 
     // Since 2026-09-14 is already in the store, it does not re-fetch it
