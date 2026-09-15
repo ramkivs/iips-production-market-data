@@ -207,6 +207,27 @@ describe('D89 — Macro exemption (WP-MACRO-03)', () => {
   });
 });
 
+describe('D91 — Macro exemption & LIVE-only governance (WP-MACRO-03)', () => {
+  it('Macro remains LIVE regardless of whether SNAPSHOT, LIVE, or PIT preference is saved', () => {
+    const s = svc();
+    for (const mode of ['SNAPSHOT', 'LIVE', 'PIT'] as const) {
+      savePreferences(TENANT_A, OWNER_1, { ...BASE, defaultDataMode: mode }, s);
+      expect(resolveDataMode(TENANT_A, OWNER_1, s)).toBe(mode);
+      const transport = fs.readFileSync(path.join(process.cwd(), 'server', 'executive-transport.ts'), 'utf8');
+      expect(transport).toMatch(/freshness:\s*'LIVE'/);
+    }
+  });
+
+  it('no UI12 preference is silently represented as controlling Macro', () => {
+    const macroSource = fs.readFileSync(
+      path.join(process.cwd(), 'src', 'features', 'research', 'MacroContext.tsx'), 'utf8',
+    );
+    expect(macroSource).toMatch(/macro-data-mode-exemption-disclosure/);
+    expect(macroSource).toMatch(/Governed LIVE-Only Source/);
+    expect(macroSource).not.toMatch(/usePreferences|defaultDataMode/);
+  });
+});
+
 describe('D90 — P12 additive routes mode dispatch & wiring', () => {
   it('handler wires dispatchForPrincipal for /api/screener/execute and /api/search', () => {
     const handlerSrc = fs.readFileSync(

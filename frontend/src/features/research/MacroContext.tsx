@@ -8,6 +8,9 @@
  *   - 1:1 MacroObservation presentation: values verbatim; null → "unavailable" (never 0);
  *     one observation per measure; no derived macro values; no interpretation/recommendations.
  *   - LIVE, never SNAPSHOT; retrievedAt = adapter FETCH time (never a publication date).
+ *   - D91 / D88 Macro Exemption Disclosure: Macro is governed LIVE-only and is EXEMPT from
+ *     account-level UI12 "Default data mode" preferences. Selecting SNAPSHOT or PIT in Settings
+ *     does not switch Macro data to SNAPSHOT or PIT.
  *   - No CSIP duplication: sector ranking / opportunity / concentration / sector decisions /
  *     sector comparison belong to Cross-Sector Intelligence and are NOT rendered here.
  *   - Dataset selector = frozen APPROVED_DATASETS allowlist (NAS/CPI/IIP); no discovery endpoint.
@@ -90,6 +93,26 @@ export function MacroContext() {
           Governed national statistics (MoSPI). Read-only, live, shown 1:1 — never derived or interpreted.
         </p>
       </header>
+
+      {/* D91 — UI12 Data-Mode Exemption Disclosure (WP-MACRO-03 / D88) */}
+      <div
+        data-testid="macro-data-mode-exemption-disclosure"
+        style={{
+          padding: '10px 14px',
+          marginBottom: 16,
+          borderRadius: 4,
+          border: '1px solid var(--color-border)',
+          background: 'var(--color-surface-1)',
+          fontSize: 13,
+          color: 'var(--color-ink-secondary)',
+          lineHeight: 1.4,
+        }}
+      >
+        <strong style={{ color: 'var(--color-ink)' }}>Governed LIVE-Only Source (UI12 Exempt):</strong> Macro
+        statistics are provided and served exclusively as LIVE data per WP-MACRO-03 source governance.
+        This surface is exempt from account-wide UI12 &ldquo;Default data mode&rdquo; preferences; selecting
+        SNAPSHOT or PIT does not alter Macro freshness or switch this data to baseline snapshot.
+      </div>
 
       {/* Frozen allowlist selector — NAS / CPI / IIP only (no discovery endpoint). */}
       <div data-testid="macro-dataset-selector" style={{ marginBottom: 16 }}>

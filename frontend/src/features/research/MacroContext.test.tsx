@@ -257,3 +257,23 @@ describe('Macro Context — route integration', () => {
     expect(screen.queryByTestId('shell-not-authorized')).not.toBeInTheDocument();
   });
 });
+
+describe('D91 — Macro UI12 data-mode exemption disclosure', () => {
+  it('renders explicit exemption disclosure stating Macro is LIVE-only and exempt from UI12', async () => {
+    globalThis.fetch = urlAwareMock(IIP_DATA);
+    renderMacro();
+    const disclosure = await screen.findByTestId('macro-data-mode-exemption-disclosure');
+    expect(disclosure).toBeInTheDocument();
+    expect(disclosure).toHaveTextContent(/Governed LIVE-Only Source \(UI12 Exempt\)/);
+    expect(disclosure).toHaveTextContent(/exempt from account-wide UI12/);
+    expect(disclosure).toHaveTextContent(/selecting SNAPSHOT or PIT does not alter Macro freshness/);
+  });
+
+  it('keeps freshness as LIVE regardless of context', async () => {
+    globalThis.fetch = urlAwareMock(IIP_DATA);
+    renderMacro();
+    await screen.findByTestId('macro-dataset-select');
+    expect(screen.getByTestId('freshness-live')).toBeInTheDocument();
+    expect(screen.queryByTestId('freshness-snapshot')).not.toBeInTheDocument();
+  });
+});
