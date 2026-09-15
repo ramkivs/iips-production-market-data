@@ -2,6 +2,7 @@
  * P13-B-05 — Typed API client for the GOVERNED SCREENER (C6).
  *
  * Authority: D54 P13-B Implementation Authorization (commit dce5cdb4)
+ * D90: mode-aware return type (P12Envelope<P12ScreenResult> | DegradedData).
  *
  * Reuses the EXISTING typed-API pattern: `authFetch` + `${baseUrl}/api/...`, identical to
  * `decisionMatrix.ts`. No new transport, no new auth mechanism.
@@ -12,6 +13,7 @@
  * ⚠ UI05 implementation is NOT UI05 certification.
  */
 import { authFetch } from './authFetch';
+import type { DegradedData } from './dataMode';
 
 /** P12 closed quality set (P05). Mirrors the certified contract; not redefined here. */
 export type P12Quality = 'good' | 'stale' | 'partial' | 'unavailable';
@@ -136,6 +138,7 @@ async function readError(res: Response): Promise<never> {
 
 /**
  * P13-B-05 — Execute a governed screen (C6, server-side).
+ * D90: returns SNAPSHOT envelope OR governed DegradedData when LIVE/PIT is requested.
  *
  * A C6 contract violation (unknown operator, missing tie-break, invalid sort) FAILS
  * CLOSED with a 400 and is surfaced as a `P12ApiError` — never silently degraded.
@@ -149,7 +152,7 @@ export async function executeScreen(
     asOf?: string;
   },
   baseUrl = '',
-): Promise<P12Envelope<P12ScreenResult>> {
+): Promise<P12Envelope<P12ScreenResult> | DegradedData> {
   const res = await authFetch(`${baseUrl}/api/screener/execute`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -162,7 +165,7 @@ export async function executeScreen(
     }),
   });
   if (!res.ok) return readError(res);
-  return (await res.json()) as P12Envelope<P12ScreenResult>;
+  return (await res.json()) as P12Envelope<P12ScreenResult> | DegradedData;
 }
 
 /** P13-B-05 — Validate + build a saved screen definition through the certified contract. */

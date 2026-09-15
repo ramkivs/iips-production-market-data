@@ -2,6 +2,7 @@
  * P13-B-06 — Typed API client for GOVERNED SEARCH / OBJECT RESOLUTION (C7).
  *
  * Authority: D54 P13-B Implementation Authorization (commit dce5cdb4)
+ * D90: mode-aware return type (P12Envelope<P12SearchResult> | DegradedData).
  *
  * Reuses the EXISTING typed-API pattern (`authFetch` + `${baseUrl}/api/...`).
  *
@@ -10,6 +11,7 @@
  * ⚠ Ordering is the certified deterministic order from C7 — the client does not re-sort.
  */
 import { authFetch } from './authFetch';
+import type { DegradedData } from './dataMode';
 import { P12ApiError, type P12Envelope } from './p12Screener';
 
 /** Input types accepted by the certified resolution contract (closed set). */
@@ -71,11 +73,14 @@ async function readError(res: Response): Promise<never> {
   throw new P12ApiError(res.status, message, rules);
 }
 
-/** P13-B-06 — Deterministic governed search (C7). */
+/**
+ * P13-B-06 — Deterministic governed search (C7).
+ * D90: returns SNAPSHOT envelope OR governed DegradedData when LIVE/PIT is requested.
+ */
 export async function executeSearch(
   args: { q: string; objectTypes?: readonly P12ObjectType[]; maxResults?: number; asOf?: string },
   baseUrl = '',
-): Promise<P12Envelope<P12SearchResult>> {
+): Promise<P12Envelope<P12SearchResult> | DegradedData> {
   const params = new URLSearchParams({ q: args.q });
   if (args.objectTypes?.length) params.set('objectTypes', args.objectTypes.join(','));
   if (typeof args.maxResults === 'number') params.set('maxResults', String(args.maxResults));
@@ -83,7 +88,7 @@ export async function executeSearch(
 
   const res = await authFetch(`${baseUrl}/api/search?${params.toString()}`);
   if (!res.ok) return readError(res);
-  return (await res.json()) as P12Envelope<P12SearchResult>;
+  return (await res.json()) as P12Envelope<P12SearchResult> | DegradedData;
 }
 
 /**

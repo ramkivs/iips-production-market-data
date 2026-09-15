@@ -258,3 +258,38 @@ describe('Command Palette — states + endpoint discipline', () => {
     for (const url of calls) expect(url).toContain('/api/decision-matrix');
   });
 });
+
+describe('D90 — Command Palette data-mode awareness', () => {
+  it('handles degraded search response gracefully without throwing and falls back to v2 lineage', async () => {
+    const degradedResponse = {
+      surface: 'Governed Search',
+      dataMode: 'LIVE',
+      state: 'LIVE_UNAVAILABLE',
+      dataAvailable: false,
+      reason: 'LIVE data is UNAVAILABLE for Governed Search.',
+      dependency: 'R-2 provider ingestion — OPEN and externally blocked.',
+      provenance: {
+        dataSource: 'none',
+        freshness: 'UNAVAILABLE',
+        mode: 'LIVE',
+        transportSemantics: 'This response deliberately contains NO market data.',
+      },
+    };
+
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/search')) {
+        return Promise.resolve({ ok: true, status: 200, json: async () => degradedResponse } as unknown as Response);
+      }
+      if (url.includes('/api/decision-matrix')) {
+        return Promise.resolve({ ok: true, status: 200, json: async () => DIRECTORY } as unknown as Response);
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) } as unknown as Response);
+    });
+
+    renderPalette();
+    fireEvent.change(await screen.findByTestId('palette-search'), { target: { value: 'Banking' } });
+    expect(await screen.findByText('Banking')).toBeInTheDocument();
+    expect(await screen.findByTestId('palette-lineage')).toHaveTextContent('fallback');
+  });
+});

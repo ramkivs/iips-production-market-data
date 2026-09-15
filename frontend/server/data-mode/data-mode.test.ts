@@ -49,6 +49,8 @@ const CERTIFIED: [string, () => unknown][] = [
   ['Company', () => computeCertifiedCompany('Banking')],
   ['Evidence', () => computeCertifiedEvidence('Banking')],
   ['Replay', () => computeCertifiedReplay('Banking')],
+  ['Governed Screener', () => ({ screenId: 's1', totalRows: 3, rows: [] })],
+  ['Governed Search', () => ({ query: 'test', totalMatches: 2, results: [] })],
 ];
 
 let dataDir: string;
@@ -202,5 +204,48 @@ describe('D89 — Macro exemption (WP-MACRO-03)', () => {
       path.join(process.cwd(), 'server', 'executive-transport.ts'), 'utf8',
     );
     expect(transport).toMatch(/dataSource: 'MoSPI National Statistical Office',\s*\n\s*freshness: 'LIVE'/);
+  });
+});
+
+describe('D90 — P12 additive routes mode dispatch & wiring', () => {
+  it('handler wires dispatchForPrincipal for /api/screener/execute and /api/search', () => {
+    const handlerSrc = fs.readFileSync(
+      path.join(process.cwd(), 'server', 'p12-request-handler.ts'), 'utf8',
+    );
+    expect(handlerSrc).toMatch(/dispatchForPrincipal\('Governed Screener'/);
+    expect(handlerSrc).toMatch(/dispatchForPrincipal\('Governed Search'/);
+  });
+
+  it('preserves exact SNAPSHOT object identity for Screener and Search', () => {
+    const screenerMarker = { screenId: 's1', rows: [1, 2] };
+    const searchMarker = { query: 'q', results: ['a', 'b'] };
+    expect(forMode('Governed Screener', 'SNAPSHOT', () => screenerMarker)).toBe(screenerMarker);
+    expect(forMode('Governed Search', 'SNAPSHOT', () => searchMarker)).toBe(searchMarker);
+  });
+
+  it('produces dataAvailable=false on LIVE and PIT without calling computation', () => {
+    for (const surface of ['Governed Screener', 'Governed Search']) {
+      let liveCalled = 0;
+      const liveOut = forMode(surface, 'LIVE', () => { liveCalled++; return {}; }) as Record<string, unknown>;
+      expect(liveCalled).toBe(0);
+      expect(liveOut.dataAvailable).toBe(false);
+      expect(liveOut.state).toBe('LIVE_UNAVAILABLE');
+
+      let pitCalled = 0;
+      const pitOut = forMode(surface, 'PIT', () => { pitCalled++; return {}; }) as Record<string, unknown>;
+      expect(pitCalled).toBe(0);
+      expect(pitOut.dataAvailable).toBe(false);
+      expect(pitOut.state).toBe('PIT_UNAVAILABLE');
+    }
+  });
+
+  it('defaults to SNAPSHOT when owner is undefined (preserves pre-D90 behaviour)', () => {
+    const marker = { result: 'ok' };
+    expect(
+      dispatchForPrincipal('Governed Screener', { tenantId: TENANT_A, ownerUserId: undefined }, () => marker, svc()),
+    ).toBe(marker);
+    expect(
+      dispatchForPrincipal('Governed Search', { tenantId: TENANT_A, ownerUserId: undefined }, () => marker, svc()),
+    ).toBe(marker);
   });
 });

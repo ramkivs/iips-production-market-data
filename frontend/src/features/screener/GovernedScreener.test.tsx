@@ -123,4 +123,50 @@ describe('UI05 Governed Screener (P13-B-05)', () => {
     // No table is rendered from stale or locally-filtered data.
     expect(screen.queryByTestId('governed-result-count')).not.toBeInTheDocument();
   });
+
+  it('D90 — renders governed DataModeUnavailable on LIVE degraded response without crashing', async () => {
+    const degradedLive = {
+      surface: 'Governed Screener',
+      dataMode: 'LIVE',
+      state: 'LIVE_UNAVAILABLE',
+      dataAvailable: false,
+      reason: 'LIVE data is UNAVAILABLE for Governed Screener.',
+      dependency: 'R-2 provider ingestion — OPEN and externally blocked.',
+      provenance: {
+        dataSource: 'none',
+        freshness: 'UNAVAILABLE',
+        mode: 'LIVE',
+        transportSemantics: 'This response deliberately contains NO market data.',
+      },
+    };
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => degradedLive }) as never;
+    render(<MemoryRouter><GovernedScreener /></MemoryRouter>);
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('LIVE');
+    expect(screen.getByText(/LIVE data is UNAVAILABLE for Governed Screener/)).toBeInTheDocument();
+    expect(screen.queryByTestId('governed-result-count')).not.toBeInTheDocument();
+  });
+
+  it('D90 — renders governed DataModeUnavailable on PIT degraded response without crashing', async () => {
+    const degradedPit = {
+      surface: 'Governed Screener',
+      dataMode: 'PIT',
+      state: 'PIT_UNAVAILABLE',
+      dataAvailable: false,
+      reason: 'PIT data is UNAVAILABLE for Governed Screener.',
+      dependency: 'PIT capability exists in p08 but is NOT wired to transport.',
+      provenance: {
+        dataSource: 'none',
+        freshness: 'UNAVAILABLE',
+        mode: 'PIT',
+        transportSemantics: 'This response deliberately contains NO market data.',
+      },
+    };
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => degradedPit }) as never;
+    render(<MemoryRouter><GovernedScreener /></MemoryRouter>);
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('PIT');
+    expect(screen.getByText(/PIT data is UNAVAILABLE for Governed Screener/)).toBeInTheDocument();
+    expect(screen.queryByTestId('governed-result-count')).not.toBeInTheDocument();
+  });
 });

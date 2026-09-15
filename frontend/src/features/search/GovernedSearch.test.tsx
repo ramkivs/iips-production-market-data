@@ -87,4 +87,50 @@ describe('UI13 Governed Search (P13-B-06)', () => {
     expect(screen.getByTestId('search-error')).toHaveTextContent('fail-closed');
     expect(screen.queryByTestId('search-result-count')).not.toBeInTheDocument();
   });
+
+  it('D90 — renders governed DataModeUnavailable on LIVE degraded response without crashing', async () => {
+    const degradedLive = {
+      surface: 'Governed Search',
+      dataMode: 'LIVE',
+      state: 'LIVE_UNAVAILABLE',
+      dataAvailable: false,
+      reason: 'LIVE data is UNAVAILABLE for Governed Search.',
+      dependency: 'R-2 provider ingestion — OPEN and externally blocked.',
+      provenance: {
+        dataSource: 'none',
+        freshness: 'UNAVAILABLE',
+        mode: 'LIVE',
+        transportSemantics: 'This response deliberately contains NO market data.',
+      },
+    };
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => degradedLive }) as never;
+    await searchFor('ban');
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('LIVE');
+    expect(screen.getByText(/LIVE data is UNAVAILABLE for Governed Search/)).toBeInTheDocument();
+    expect(screen.queryByTestId('search-result-count')).not.toBeInTheDocument();
+  });
+
+  it('D90 — renders governed DataModeUnavailable on PIT degraded response without crashing', async () => {
+    const degradedPit = {
+      surface: 'Governed Search',
+      dataMode: 'PIT',
+      state: 'PIT_UNAVAILABLE',
+      dataAvailable: false,
+      reason: 'PIT data is UNAVAILABLE for Governed Search.',
+      dependency: 'PIT capability exists in p08 but is NOT wired to transport.',
+      provenance: {
+        dataSource: 'none',
+        freshness: 'UNAVAILABLE',
+        mode: 'PIT',
+        transportSemantics: 'This response deliberately contains NO market data.',
+      },
+    };
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => degradedPit }) as never;
+    await searchFor('ban');
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('PIT');
+    expect(screen.getByText(/PIT data is UNAVAILABLE for Governed Search/)).toBeInTheDocument();
+    expect(screen.queryByTestId('search-result-count')).not.toBeInTheDocument();
+  });
 });

@@ -34,6 +34,7 @@ import { Modal } from '../../components/interaction/InteractionComponents';
 import { useTabList } from '../../components/interaction/useTabList';
 import { LoadingState, EmptyState, ErrorState } from '../../components/state/StateComponents';
 import { fetchDecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
+import { isDegraded } from '../../api/dataMode';
 import { executeSearch as executeGovernedSearch, type P12SearchHit } from '../../api/p12Search';
 import { visibleNav } from '../../app/navigation';
 import { useSession } from '../../core/session/SessionContext';
@@ -86,6 +87,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     void executeGovernedSearch({ q, maxResults: 20 })
       .then((env) => {
         if (!active) return;
+        if (isDegraded(env)) {
+          setGovernedHits(null);
+          setLineage('V2.0-CERTIFIED');
+          return;
+        }
         setGovernedHits(env.data.results);
         setLineage(env.lineage);
       })

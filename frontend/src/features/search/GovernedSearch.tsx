@@ -2,6 +2,7 @@
  * P13-B-06 — UI13 GOVERNED SEARCH (bound to the certified C7 contract).
  *
  * Authority: D54 P13-B Implementation Authorization (commit dce5cdb4)
+ * D90: mode-aware UI12 propagation with discriminated DegradedData guard.
  *
  * ⚠ Matching and ordering are performed SERVER-SIDE by the certified C7 contract
  *   (deterministic order by objectType then canonical identity). React does not re-sort.
@@ -11,6 +12,8 @@
  */
 import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { isDegraded, type DegradedData } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { executeSearch, type P12SearchResult } from '../../api/p12Search';
 import { P12ApiError, type P12Envelope } from '../../api/p12Screener';
 import { DataTable } from '../../components/data/DataComponents';
@@ -26,24 +29,29 @@ type Hit = P12SearchResult['results'][number];
 
 export function GovernedSearch() {
   const [query, setQuery] = useState('');
-  const [envelope, setEnvelope] = useState<P12Envelope<P12SearchResult> | null>(null);
+  const [data, setData] = useState<P12Envelope<P12SearchResult> | DegradedData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const run = useCallback(async (q: string) => {
-    if (q.trim() === '') { setEnvelope(null); setError(null); return; }
+    if (q.trim() === '') { setData(null); setError(null); return; }
     setLoading(true);
     try {
-      setEnvelope(await executeSearch({ q: q.trim() }));
+      setData(await executeSearch({ q: q.trim() }));
       setError(null);
     } catch (e) {
-      setEnvelope(null);
+      setData(null);
       setError(e instanceof P12ApiError ? e.message : String(e));
     } finally {
       setLoading(false);
     }
   }, []);
 
+  if (isDegraded(data)) {
+    return <DataModeUnavailable data={data} title="Governed Search" />;
+  }
+
+  const envelope = data;
   const result = envelope?.data ?? null;
 
   return (

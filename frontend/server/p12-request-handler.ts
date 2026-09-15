@@ -25,6 +25,7 @@
  *   ⚠ No certification is claimed by exposing these endpoints.
  */
 import type http from 'node:http';
+import { dispatchForPrincipal } from './data-mode/data-mode';
 import {
   P12TransportError,
   buildP12Response,
@@ -155,8 +156,11 @@ export async function handleP12Request(
         classification: vintage.classification,
       });
 
+      const computeSnapshot = () => buildP12Response({ data: result, provenance, tenantId, endpoint: path });
+      const payload = dispatchForPrincipal('Governed Screener', { tenantId, ownerUserId }, computeSnapshot);
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(buildP12Response({ data: result, provenance, tenantId, endpoint: path })));
+      res.end(JSON.stringify(payload));
       return;
     }
 
@@ -294,8 +298,11 @@ export async function handleP12Request(
         classification: vintage.classification,
       });
 
+      const computeSnapshot = () => buildP12Response({ data: result, provenance, tenantId, endpoint: path });
+      const payload = dispatchForPrincipal('Governed Search', { tenantId, ownerUserId }, computeSnapshot);
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(buildP12Response({ data: result, provenance, tenantId, endpoint: path })));
+      res.end(JSON.stringify(payload));
       return;
     }
 

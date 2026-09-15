@@ -2,6 +2,7 @@
  * P13-B-05 — UI05 GOVERNED SCREENER (bound to the certified C6 contract).
  *
  * Authority: D54 P13-B Implementation Authorization (commit dce5cdb4)
+ * D90: mode-aware UI12 propagation with discriminated DegradedData guard.
  *
  * This is the program's FIRST GENUINE SCREENER. The prior `Screener.tsx` composed the
  * certified Decision Matrix payload and filtered it in React; it was a filter-and-navigate
@@ -21,6 +22,8 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { isDegraded, type DegradedData } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import {
   executeScreen,
   P12ApiError,
@@ -46,7 +49,7 @@ const SORT_FIELDS = ['composite', 'sector', 'verdict', 'canonicalSecurityId'] as
 const TIE_BREAK_FIELD = 'canonicalSecurityId';
 
 export function GovernedScreener() {
-  const [envelope, setEnvelope] = useState<P12Envelope<P12ScreenResult> | null>(null);
+  const [data, setData] = useState<P12Envelope<P12ScreenResult> | DegradedData | null>(null);
   const [error, setError] = useState<{ message: string; rules: readonly string[] } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -73,12 +76,12 @@ export function GovernedScreener() {
     setLoading(true);
     try {
       const result = await executeScreen({ filters, sort, tieBreakField: TIE_BREAK_FIELD, screenId: 'ui05-adhoc' });
-      setEnvelope(result);
+      setData(result);
       setError(null);
     } catch (e) {
       // Fail-closed: a governed contract violation clears the result rather than
       // presenting a partially-filtered or locally-approximated table.
-      setEnvelope(null);
+      setData(null);
       setError(
         e instanceof P12ApiError
           ? { message: e.message, rules: e.rules }
@@ -91,6 +94,32 @@ export function GovernedScreener() {
 
   useEffect(() => { void run(); /* initial governed execution */ }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  if (loading) return <LoadingState />;
+
+  if (error) {
+    return (
+      <section aria-label="Governed Screener">
+        <header style={{ marginBottom: 16 }}>
+          <h1 style={{ fontSize: 24, margin: 0 }}>Governed Screener</h1>
+        </header>
+        <div data-testid="screener-error">
+          <ErrorState message={`Governed screen refused: ${error.message}`} />
+          {error.rules.length > 0 && (
+            <p style={{ fontSize: 12, color: 'var(--color-ink-secondary)' }}>
+              Contract rules: {error.rules.join(', ')}
+            </p>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  // D90: Degraded data guard MUST precede any SNAPSHOT shape dereference.
+  if (isDegraded(data)) {
+    return <DataModeUnavailable data={data} title="Governed Screener" />;
+  }
+
+  const envelope = data;
   const result = envelope?.data ?? null;
 
   return (
@@ -146,20 +175,7 @@ export function GovernedScreener() {
         </p>
       </div>
 
-      {loading && <LoadingState />}
-
-      {error && (
-        <div data-testid="screener-error">
-          <ErrorState message={`Governed screen refused: ${error.message}`} />
-          {error.rules.length > 0 && (
-            <p style={{ fontSize: 12, color: 'var(--color-ink-secondary)' }}>
-              Contract rules: {error.rules.join(', ')}
-            </p>
-          )}
-        </div>
-      )}
-
-      {!loading && !error && result && (
+      {result && (
         <>
           <p data-testid="governed-result-count" style={{ fontSize: 13, color: 'var(--color-ink-secondary)' }}>
             {result.totalRows} governed rows · screen <code>{result.screenId}</code> · mode {result.mode}
