@@ -510,6 +510,81 @@ export async function handleNotesRequest(
 }
 
 /**
+ * UI12 Settings handler (D80 — UI12 Settings recovery).
+ *
+ * Placed alongside the other governed handlers and DISPATCHED from executive-transport.ts with
+ * the EXISTING READ executor, mirroring the promoted P-2 notes pattern exactly. No new RBAC
+ * model, no new executor, `readSurfaceFor` is NOT extended.
+ *
+ * Authorization: `guardRead` to read one's own preferences; `guardExecute` to save them —
+ * the same ranked gate used by notes. OWNER IDENTITY is the access restriction.
+ *
+ * ⚠ Tenant and owner are taken from the authenticated principal ONLY. The request body carries
+ *   preference values and nothing else; any tenant/owner/ownerUserId key a client might send is
+ *   ignored by `validatePreferences` and can never reach storage.
+ *
+ * ⚠ M-5 / G3: this handler consumes the existing authentication boundary unchanged. It performs
+ *   no authentication or session remediation; M-5 remains OPEN.
+ */
+export async function handleSettingsRequest(
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  executor: SecuredExecutor,
+  opts: { readonly store?: import('./persistence/persistence-service').PersistenceService } = {},
+): Promise<void> {
+  const url = (req.url ?? '').split('?')[0];
+  const token = (req.headers.authorization ?? '').replace(/^Bearer /, '').trim();
+  res.setHeader('Content-Type', 'application/json');
+
+  const provenance = {
+    dataSource: 'governed UI12 user preferences (PF-1 durable journal)',
+    freshness: 'LIVE',
+    authority: 'PLATFORM',
+    transportSemantics:
+      'owner-scoped user preferences; append-only revisions, tenant+owner derived from the authenticated principal',
+  };
+
+  try {
+    const svc = await import('./settings/settings-service');
+    const store = opts.store ?? svc.getSettingsPersistence();
+
+    // GET /api/settings — the caller's OWN effective preferences (defaults when never saved).
+    if (url === '/api/settings' && (req.method ?? 'GET') === 'GET') {
+      const p = await guardRead(executor, token, 'settings'); // 401/403
+      res.writeHead(200);
+      res.end(JSON.stringify({ data: svc.readPreferences(p.tenantId, p.userId, store), provenance }));
+      return;
+    }
+
+    // PUT /api/settings — save a new preference revision (analyst-and-above, as for notes).
+    if (url === '/api/settings' && req.method === 'PUT') {
+      const p = await guardExecute(executor, token, 'settings'); // 401/403 (viewer denied)
+      const body = await readBody(req);
+      const raw = (body as Record<string, unknown>).preferences;
+      if (raw === undefined || raw === null) throw new TransportError(400, 'preferences-required');
+      let saved;
+      try {
+        // Tenant + owner are server-derived; only preference VALUES come from the client.
+        saved = svc.savePreferences(p.tenantId, p.userId, raw, store);
+      } catch (e) {
+        if (e instanceof svc.SettingsValidationError) throw new TransportError(422, e.message);
+        throw e;
+      }
+      res.writeHead(200);
+      res.end(JSON.stringify({ data: saved, provenance }));
+      return;
+    }
+
+    res.writeHead(404);
+    res.end(JSON.stringify({ error: 'settings-not-found' }));
+  } catch (e) {
+    if (e instanceof AuthError) { res.writeHead(e.status); res.end(JSON.stringify({ error: e.message })); return; }
+    if (e instanceof TransportError) { res.writeHead(e.status); res.end(JSON.stringify({ error: e.message })); return; }
+    res.writeHead(500); res.end(JSON.stringify({ error: 'settings transport error', detail: String(e) }));
+  }
+}
+
+/**
  * PF-2 TW-2 — injected sync-trigger seam.
  *
  * Mirrors `handleMacroReadRequest`'s injected `fetchImpl`: optional and backward-compatible,

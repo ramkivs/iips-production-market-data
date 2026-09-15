@@ -217,8 +217,13 @@ describe('G-AI-IMPL T7 — no standalone AI route or navigation entry (D3/D4)', 
   });
 
   it('leaves the navigation inventory unchanged in size and top-level labels', () => {
+    // The guard's subject is the AI advisory surface: it must add NO navigation entry.
+    // 'Settings' is the UI12 recovery surface added by D80 under explicit authority — the
+    // exact-list assertion is retained (not relaxed to a subset) so any further unauthorized
+    // nav addition still fails, and the AI-specific assertions below remain unchanged.
     expect(NAV.map((n) => n.label)).toEqual([
-      'Executive', 'Portfolio', 'Research', 'Intelligence', 'Evidence', 'Administration',
+      'Executive', 'Portfolio', 'Research', 'Intelligence', 'Evidence', 'Administration', 'Settings',
     ]);
+    expect(NAV.map((n) => n.label).some((l) => /ai|advisory/i.test(l))).toBe(false);
   });
 });

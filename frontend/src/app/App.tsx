@@ -28,6 +28,8 @@ const EvidenceHub = lazy(() => import('../features/evidence/EvidenceHub').then((
 const ReplayExplorer = lazy(() => import('../features/replay/ReplayExplorer').then((m) => ({ default: m.ReplayExplorer })));
 const Screener = lazy(() => import('../features/screener/Screener').then((m) => ({ default: m.Screener })));
 const Administration = lazy(() => import('../features/admin/Administration').then((m) => ({ default: m.Administration })));
+// UI12 (D80) — first-class governed Settings surface.
+const Settings = lazy(() => import('../features/settings/Settings').then((m) => ({ default: m.Settings })));
 // P13-B-05/06 (D54) — ADDITIVE P12-governed surfaces. The existing Screener above is
 // PRESERVED UNCHANGED; these are new routes, not replacements.
 const GovernedScreener = lazy(() => import('../features/screener/GovernedScreener').then((m) => ({ default: m.GovernedScreener })));
@@ -75,6 +77,8 @@ export function App() {
         <Route path="/evidence" element={<Lazy><EvidenceHub /></Lazy>} />
         <Route path="/evidence/:id" element={<Lazy><EvidenceExplorer /></Lazy>} />
         <Route path="/evidence/replay/:id" element={<Lazy><ReplayExplorer /></Lazy>} />
+        {/* UI12 (D80) — governed user settings; viewer+ may read, saving is server-gated. */}
+        <Route path="/settings" element={<Lazy><Settings /></Lazy>} />
         <Route path="/admin/*" element={<Lazy><Administration /></Lazy>} />
         <Route path="*" element={<FeaturePlaceholder surface="Unknown route" />} />
       </Route>

@@ -115,6 +115,9 @@ export const NAV: NavItem[] = [
       { label: 'Migration / Workflow / Marketplace', path: '/admin/operations', minRole: 'admin', status: 'implemented' },
     ],
   },
+  // UI12 (D80) — governed user settings. viewer+ (unlike admin-only Administration): these are
+  // the USER's own data preferences, server-scoped to the authenticated principal.
+  { label: 'Settings', path: '/settings', minRole: 'viewer', status: 'implemented' },
 ];
 
 /** Human-facing label for a nav status (presentation only). */

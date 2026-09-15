@@ -857,6 +857,21 @@ const server = http.createServer((req, res) => {
   // executor whose adminResourceGate rejects action='read' AND action='execute'. Mirrors the
   // promoted P-1 R-1-a pattern. Not admin-only; guardRead/guardExecute + owner scoping remain
   // the authorization; no new RBAC model; no new notes transport module.
+  // UI12 (D80): governed user Settings, dispatched with the EXISTING READ executor exactly as
+  // the promoted P-2 notes surface. No new RBAC model and no new executor.
+  if (req.url?.startsWith('/api/settings')) {
+    void (async () => {
+      try {
+        const executor = await getReadExecutor();
+        if (!executor) { res.writeHead(401); res.end(JSON.stringify({ error: 'authentication unavailable (no IdP configured)' })); return; }
+        const admin = await import('./admin-transport');
+        await admin.handleSettingsRequest(req, res, executor);
+      } catch (e) {
+        res.writeHead(500); res.end(JSON.stringify({ error: 'settings transport error', detail: String(e) }));
+      }
+    })();
+    return;
+  }
   if (req.url?.startsWith('/api/notes')) {
     void (async () => {
       try {
