@@ -1032,7 +1032,18 @@ const server = http.createServer((req, res) => {
         res.writeHead(200); res.end(JSON.stringify(computeCertifiedExecutive())); return;
       }
       if (req.url === '/api/portfolio') {
-        res.writeHead(200); res.end(JSON.stringify(computeCertifiedPortfolio())); return;
+        // D85 — UI12 data-mode propagation. The mode is read SERVER-SIDE from the authenticated
+        // principal's persisted UI12 settings; no client-supplied mode is accepted. SNAPSHOT
+        // invokes `computeCertifiedPortfolio()` UNCHANGED; LIVE/PIT return an explicit governed
+        // degraded state and NEVER fall back to the baseline or substitute provider data.
+        const dm = await import('./portfolio/portfolio-data-mode');
+        const owner = resolvePrincipalOwner(principal);
+        const mode = owner === undefined
+          ? 'SNAPSHOT' // no resolvable owner → governed default; behaviour unchanged
+          : dm.resolvePortfolioDataMode(resolvePrincipalTenant(principal), owner);
+        res.writeHead(200);
+        res.end(JSON.stringify(dm.portfolioForMode(mode, computeCertifiedPortfolio)));
+        return;
       }
       if (req.url === '/api/decision-matrix') {
         res.writeHead(200); res.end(JSON.stringify(computeCertifiedDecisionMatrix())); return;
