@@ -242,3 +242,99 @@ describe('Portfolio Workspace — N+8 holding trust chain', () => {
     expect(screen.queryByTestId('portfolio-trust-chain')).not.toBeInTheDocument();
   });
 });
+
+/**
+ * D86 — governed degraded-state consumer fix (D85 LIVE/PIT contract).
+ *
+ * Before D86, `PortfolioWorkspace` assumed every non-null response carried the SNAPSHOT
+ * `portfolio` object and threw on `portfolio.holdings` before the governed LIVE_UNAVAILABLE
+ * state could render. These tests pin the corrected behaviour.
+ *
+ * ⚠ The D85 SERVER contract is unchanged — these fixtures mirror it exactly.
+ */
+const LIVE_UNAVAILABLE = {
+  dataMode: 'LIVE',
+  state: 'LIVE_UNAVAILABLE',
+  dataAvailable: false,
+  holdings: [],
+  reason: 'LIVE portfolio data is UNAVAILABLE. Live provider ingestion is not wired to this transport, so no live values exist to return.',
+  dependency: 'R-2 provider ingestion — OPEN and externally blocked (provider selection, licensing, credentials, entitlements).',
+  provenance: {
+    dataSource: 'none — no governed data source is available for this data mode',
+    freshness: 'UNAVAILABLE',
+    mode: 'LIVE',
+    transportSemantics: 'This response deliberately contains NO portfolio data. The request is NOT silently served from the frozen v1.1 Replay Baseline, and no provider value is substituted or fabricated. Select SNAPSHOT to receive the certified baseline portfolio.',
+  },
+};
+
+const PIT_UNAVAILABLE = {
+  ...LIVE_UNAVAILABLE,
+  dataMode: 'PIT',
+  state: 'PIT_UNAVAILABLE',
+  reason: 'PIT portfolio data is UNAVAILABLE. No point-in-time capability is wired to this transport, so no as-of values exist to return.',
+  dependency: 'PIT capability exists in p08 but is NOT wired to transport; wiring it is a separate authorized act.',
+  provenance: { ...LIVE_UNAVAILABLE.provenance, mode: 'PIT' },
+};
+
+function degradedMock(payload: unknown): FetchMock {
+  return vi.fn((input: unknown) => {
+    const url = String(input);
+    if (url.includes('/api/portfolio')) return Promise.resolve({ ok: true, json: async () => payload }) as never;
+    return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+  });
+}
+
+describe('D86 — governed degraded Portfolio states render without throwing', () => {
+  it('LIVE_UNAVAILABLE renders the governed state instead of crashing', async () => {
+    globalThis.fetch = degradedMock(LIVE_UNAVAILABLE);
+    render(<PortfolioWorkspace />);
+    expect(await screen.findByTestId('portfolio-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('portfolio-unavailable-mode')).toHaveTextContent('LIVE');
+    // The SNAPSHOT surface must NOT render — no portfolio table, no metric shell.
+    expect(screen.queryByTestId('data-table')).not.toBeInTheDocument();
+  });
+
+  it('LIVE_UNAVAILABLE surfaces the server reason and the R-2 dependency verbatim', async () => {
+    globalThis.fetch = degradedMock(LIVE_UNAVAILABLE);
+    render(<PortfolioWorkspace />);
+    await screen.findByTestId('portfolio-unavailable');
+    expect(screen.getByTestId('state-unavailable')).toHaveTextContent('LIVE portfolio data is UNAVAILABLE');
+    expect(screen.getByTestId('portfolio-unavailable-dependency')).toHaveTextContent('R-2 provider ingestion');
+  });
+
+  it('LIVE_UNAVAILABLE states that no SNAPSHOT fallback or substitution occurred', async () => {
+    globalThis.fetch = degradedMock(LIVE_UNAVAILABLE);
+    render(<PortfolioWorkspace />);
+    await screen.findByTestId('portfolio-unavailable');
+    const semantics = screen.getByTestId('portfolio-unavailable-semantics');
+    expect(semantics).toHaveTextContent('NOT silently served from the frozen v1.1 Replay Baseline');
+    expect(semantics).toHaveTextContent('no provider value is substituted or fabricated');
+  });
+
+  it('LIVE_UNAVAILABLE renders no fabricated portfolio figures', async () => {
+    globalThis.fetch = degradedMock(LIVE_UNAVAILABLE);
+    const { container } = render(<PortfolioWorkspace />);
+    await screen.findByTestId('portfolio-unavailable');
+    // No baseline holding identifiers or metric labels leak into the degraded surface.
+    expect(container.textContent).not.toMatch(/A-H1|B-H1/);
+    expect(container.textContent).not.toMatch(/Avg Conviction|Portfolio Overview/);
+  });
+
+  it('PIT_UNAVAILABLE renders the governed state instead of crashing', async () => {
+    globalThis.fetch = degradedMock(PIT_UNAVAILABLE);
+    render(<PortfolioWorkspace />);
+    expect(await screen.findByTestId('portfolio-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('portfolio-unavailable-mode')).toHaveTextContent('PIT');
+    expect(screen.getByTestId('state-unavailable')).toHaveTextContent('PIT portfolio data is UNAVAILABLE');
+    expect(screen.getByTestId('portfolio-unavailable-dependency')).toHaveTextContent('NOT wired to transport');
+  });
+
+  it('SNAPSHOT still renders the certified portfolio unchanged', async () => {
+    globalThis.fetch = urlAwareMock();
+    render(<PortfolioWorkspace />);
+    await screen.findByTestId('data-table');
+    // The degraded surface must NOT appear for SNAPSHOT.
+    expect(screen.queryByTestId('portfolio-unavailable')).not.toBeInTheDocument();
+    expect(screen.getByText('Portfolio Overview')).toBeInTheDocument();
+  });
+});

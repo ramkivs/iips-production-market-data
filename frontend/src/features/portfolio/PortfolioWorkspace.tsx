@@ -14,7 +14,7 @@
  * recomputation, no fabrication. Client-side composition only (no server changes).
  */
 import { useEffect, useMemo, useState } from 'react';
-import { fetchPortfolioData, type PortfolioData, type PortfolioHolding } from '../../api/portfolio';
+import { fetchPortfolioData, isPortfolioUnavailable, type PortfolioData, type PortfolioHolding } from '../../api/portfolio';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { ChartContainer, SimpleBarChart, LegendConventions } from '../../components/viz/ChartFoundations';
@@ -79,6 +79,38 @@ export function PortfolioWorkspace() {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load certified portfolio data: ${error}`} />;
   if (!data) return <UnavailableState />;
+
+  /*
+   * D86 — governed degraded state (D85 LIVE/PIT contract).
+   *
+   * ⚠ This guard MUST precede the destructure below: the LIVE_UNAVAILABLE / PIT_UNAVAILABLE
+   *   response deliberately carries NO `portfolio` object, so dereferencing `portfolio.holdings`
+   *   threw before the governed state could render. The server contract is unchanged; only this
+   *   consumer assumption is corrected.
+   *
+   * ⚠ The server's own `reason` and `dependency` are surfaced VERBATIM. No SNAPSHOT fallback and
+   *   no substituted value is rendered — showing an empty portfolio shell here would discard the
+   *   honesty D85 established.
+   */
+  if (isPortfolioUnavailable(data)) {
+    return (
+      <section aria-label="Portfolio workspace" data-testid="portfolio-unavailable">
+        <header style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: 24, margin: 0 }}>Portfolio</h1>
+            <code data-testid="portfolio-unavailable-mode" style={{ fontSize: 13 }}>{data.dataMode}</code>
+          </div>
+        </header>
+        <UnavailableState reason={data.reason} />
+        <p data-testid="portfolio-unavailable-dependency" style={{ color: 'var(--color-ink-secondary)', margin: '12px 0 0', fontSize: 13 }}>
+          Blocking dependency: {data.dependency}
+        </p>
+        <p data-testid="portfolio-unavailable-semantics" style={{ color: 'var(--color-ink-secondary)', margin: '8px 0 0', fontSize: 12 }}>
+          {data.provenance.transportSemantics}
+        </p>
+      </section>
+    );
+  }
 
   const { portfolio, diversification, allocation, opportunity, correlation, evidenceRefs, provenance } = data;
 

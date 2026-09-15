@@ -17,7 +17,37 @@ export interface PortfolioHolding {
   readonly weight: number;
 }
 
-export interface PortfolioData {
+/**
+ * D86 — governed degraded Portfolio response (D85 contract, consumer side).
+ *
+ * `/api/portfolio` honours the authenticated principal's UI12 `defaultDataMode`. For LIVE and
+ * PIT the server returns this shape instead of portfolio data: **no `portfolio` object, no
+ * holdings, no fallback to SNAPSHOT and no substituted provider values** (D85 A–C).
+ *
+ * ⚠ Mirrors the server contract 1:1 and does NOT alter it. The consumer must narrow on
+ *   `dataAvailable` BEFORE dereferencing any SNAPSHOT-only field.
+ */
+export interface PortfolioUnavailableData {
+  readonly dataMode: 'LIVE' | 'PIT';
+  readonly state: 'LIVE_UNAVAILABLE' | 'PIT_UNAVAILABLE';
+  /** Literal `false` — the discriminant. This response carries NO portfolio data. */
+  readonly dataAvailable: false;
+  readonly holdings: readonly [];
+  /** Server-authored explanation, rendered verbatim. */
+  readonly reason: string;
+  /** Server-authored blocking dependency (e.g. R-2), rendered verbatim. */
+  readonly dependency: string;
+  readonly provenance: {
+    readonly dataSource: string;
+    readonly freshness: string;
+    readonly mode: 'LIVE' | 'PIT';
+    readonly transportSemantics: string;
+  };
+}
+
+/** The certified SNAPSHOT payload — unchanged by D86. */
+export interface PortfolioSnapshotData {
+  readonly dataAvailable?: undefined;
   readonly portfolio: {
     readonly portfolioId: string;
     readonly scenario: string;
@@ -36,6 +66,19 @@ export interface PortfolioData {
   readonly correlation: { readonly flags: readonly string[]; readonly concentrationSectors: readonly string[] };
   readonly evidenceRefs: readonly { readonly evidenceId: string; readonly engineId: string; readonly recommendation: string; readonly compositeScore: number }[];
   readonly provenance: ExecutiveProvenance;
+}
+
+/**
+ * D86 — discriminated union on `dataAvailable`.
+ *
+ * TypeScript now FORCES the consumer to narrow before touching `portfolio`, so the LIVE/PIT
+ * degraded response can no longer reach a SNAPSHOT-only dereference at compile time.
+ */
+export type PortfolioData = PortfolioSnapshotData | PortfolioUnavailableData;
+
+/** Narrowing helper — true when the server returned a governed degraded state. */
+export function isPortfolioUnavailable(d: PortfolioData): d is PortfolioUnavailableData {
+  return (d as PortfolioUnavailableData).dataAvailable === false;
 }
 
 export async function fetchPortfolioData(baseUrl = ''): Promise<PortfolioData> {
