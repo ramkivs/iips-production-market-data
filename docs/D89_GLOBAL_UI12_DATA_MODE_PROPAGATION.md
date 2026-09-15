@@ -129,3 +129,11 @@ beyond the added branch; Macro was never forced toward SNAPSHOT.
 | R-2 · R-4 · R-7 | **OPEN** · R-5/C12 **BLOCKED** · M-5 **OPEN** |
 | AD-17 / M-2 | **UNRESOLVED** · P14 **INCOMPLETE** · P15 UI certification **NONE** |
 | **Production authorization** | **NOT GRANTED** |
+
+
+---
+
+### Addendum D98 (2026-09-15) — R-2 Status Reconciliation
+Per D97 and D98 Program Adjudications:
+- **R-2 Engineering Status:** **CLOSED — IMPLEMENTED / TESTED / READY**.
+- **Global Data Mode Integration:** The global propagation of SNAPSHOT (deterministic) and LIVE (fail-closed degraded) modes is verified end-to-end with the canonical market data store and TopBar freshness badge.

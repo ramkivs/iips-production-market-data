@@ -312,3 +312,13 @@ Windows observation remains. **No surface is classified FULL/PASS in this docume
 | Code modified by this act | **NONE** — read-only |
 
 **No Windows/browser result is claimed anywhere in this record.**
+
+
+---
+
+### Addendum D98 (2026-09-15) — R-2 Acceptance & Qualification Alignment
+Per D97 and D98 Program Adjudications:
+- **R-2 Engineering Status:** **CLOSED — IMPLEMENTED / TESTED / READY**.
+- **UI Qualification Outcome:** The R-2 Windows UI Acceptance suite (`frontend/src/test/r2-ui-acceptance.test.tsx`) executed with 7/7 PASS.
+- **Data Mode Verification:** SNAPSHOT mode is verified deterministic; LIVE mode is verified fail-closed (`LIVE_UNAVAILABLE` with active gate notice) when unentitled.
+- **Historical Regeneration:** Confirmed as a downstream data-activation dependency.

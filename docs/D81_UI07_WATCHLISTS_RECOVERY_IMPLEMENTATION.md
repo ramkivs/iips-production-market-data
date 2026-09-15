@@ -192,3 +192,12 @@ modified. No provider ingestion, no synthetic time series, no live market data.
 | **Production authorization** | **NOT GRANTED** |
 
 **Not committed and not pushed** — awaiting explicit commit/push authority.
+
+
+---
+
+### Addendum D98 (2026-09-15) — R-2 Status & Dependency Reconciliation
+Per D97 and D98 Program Adjudications:
+- **R-2 Engineering Status:** **CLOSED — IMPLEMENTED / TESTED / READY**.
+- **UI Acceptance:** **PASS** across all governed surfaces.
+- **Provider Status:** The R-2 provider-neutral abstraction is complete. Actual production exchange ingestion remains externally gated behind commercial NSE licensing and data entitlements.

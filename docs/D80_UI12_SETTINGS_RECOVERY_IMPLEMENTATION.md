@@ -171,3 +171,12 @@ No other UI surface modified. No R-2 dependency introduced. No provider ingestio
 | **Production authorization** | **NOT GRANTED** |
 
 **Not committed and not pushed** — awaiting explicit commit/push authority.
+
+
+---
+
+### Addendum D98 (2026-09-15) — R-2 Status & Dependency Reconciliation
+Per D97 and D98 Program Adjudications:
+- **R-2 Engineering Status:** **CLOSED — IMPLEMENTED / TESTED / READY** (`frontend/server/market-data/`).
+- **UI Acceptance:** **PASS** (7/7 tests passed in `frontend/src/test/r2-ui-acceptance.test.tsx`).
+- **Production Market Data:** EXTERNALLY GATED. The `LIVE_UNAVAILABLE` fail-closed state verified here is fully consistent with the accepted R-2 architecture. Production provider access is not an engineering defect or open implementation task.

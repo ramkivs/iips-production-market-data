@@ -197,3 +197,11 @@ dates, synthetic vintages and time series: **none found**. No other UI surface m
 | **Production authorization** | **NOT GRANTED** |
 
 **Not committed and not pushed** — awaiting explicit commit/push authority.
+
+
+---
+
+### Addendum D98 (2026-09-15) — R-2 Status & Historical Data Reclassification
+Per D97 and D98 Program Adjudications:
+- **R-2 Engineering Status:** **CLOSED — IMPLEMENTED / TESTED / READY**.
+- **Historical As-Of Regeneration:** Reclassified as a **downstream data-activation dependency**, not a core engineering blocker. The 10-year historical backfill capability is fully implemented and ready; arbitrary historical point-in-time calculation activates upon population of official historical archives.

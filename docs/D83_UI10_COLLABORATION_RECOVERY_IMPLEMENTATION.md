@@ -174,3 +174,11 @@ change is the additive dispatch branch. **AD-17 / M-2 untouched.** No other UI s
 | **Production authorization** | **NOT GRANTED** |
 
 **Not committed and not pushed** — awaiting explicit commit/push authority.
+
+
+---
+
+### Addendum D98 (2026-09-15) — R-2 Status & Dependency Reconciliation
+Per D97 and D98 Program Adjudications:
+- **R-2 Engineering Status:** **CLOSED — IMPLEMENTED / TESTED / READY**.
+- **Market Data Foundation:** Decoupled from core collaboration features. Provider-neutral canonical market data pipeline is accepted.

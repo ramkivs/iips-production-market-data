@@ -121,3 +121,11 @@ Introducing a silent SNAPSHOT fallback into `forMode` (`return computeSnapshot()
 | R-2 · R-4 · R-7 | **OPEN** · R-5/C12 **BLOCKED** · M-5 **OPEN** |
 | AD-17 / M-2 | **UNRESOLVED** · P14 **INCOMPLETE** · P15 UI certification **NONE** |
 | **Production authorization** | **NOT GRANTED** |
+
+
+---
+
+### Addendum D98 (2026-09-15) — R-2 Status Reconciliation
+Per D97 and D98 Program Adjudications:
+- **R-2 Engineering Status:** **CLOSED — IMPLEMENTED / TESTED / READY**.
+- **Phase 2 Routes:** Screener and search transports operate seamlessly under canonical data contracts; production market data boundary remains fail-closed.

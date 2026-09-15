@@ -152,3 +152,11 @@ modification, or scope expansion.
 | P13 | ACCEPTED, NOT CERTIFIED · P15 **ACCEPTED — certification NONE** · P16 **CERTIFIED / CLOSED** |
 | **Production authorization** | **NOT GRANTED** |
 | Next free D-number | **D86** |
+
+
+---
+
+### Addendum D98 (2026-09-15) — R-2 Status & Data Mode Reconciliation
+Per D97 and D98 Program Adjudications:
+- **R-2 Engineering Status:** **CLOSED — IMPLEMENTED / TESTED / READY**.
+- **LIVE Data Mode Behavior:** The `LIVE_UNAVAILABLE` degraded state rendered in Portfolio Workspace is verified as the correct, certified fail-closed response under the accepted R-2 provider-adapter architecture.

@@ -102,3 +102,11 @@ The remediation is strictly **consumer-side**:
 | **Production authorization** | **NOT GRANTED** |
 | **R-2 · R-4 · R-7** | **OPEN** · R-5/C12 **BLOCKED** · M-5 **OPEN** |
 | **AD-17 / M-2** | **UNRESOLVED** · P14 **INCOMPLETE** · P15 UI certification **NONE** |
+
+
+---
+
+### Addendum D98 (2026-09-15) — R-2 Status Reconciliation
+Per D97 and D98 Program Adjudications:
+- **R-2 Engineering Status:** **CLOSED — IMPLEMENTED / TESTED / READY**.
+- **Executive Transport:** Fully integrated with `/api/market-data/*` endpoints; fail-closed and freshness semantics verified.

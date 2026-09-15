@@ -128,3 +128,19 @@
 | **Blocking P05 / P06 / P11** | OI-10 |
 | **Blocking P15 / P16 / P17** | M-1 |
 | **Resolved by this register** | **NONE — recording is not resolution** |
+
+
+---
+
+## Post-Reconciliation Addendum (D98 — 2026-09-15)
+
+### Authority & Provider Economics Open Items
+
+| Item | Status | Owner | Description / Governing Rule |
+|---|---|---|---|
+| **OI-P16-01** | **OPEN — COMMERCIAL/LEGAL** | Program Authority / Commercial | Commercial Licensing & Redistribution Agreement with NSE Data & Analytics Limited for Cash Market EOD & Historical data. |
+| **OI-P16-02** | **OPEN — COMMERCIAL/LEGAL** | Program Authority / Commercial | Evaluation of Clause 3 & 8 Non-Commercial / Academic / Research fee waiver applicability with NSE Data & Analytics. |
+| **OI-P16-03** | **OPEN — GOVERNANCE** | Program Authority | Legal & policy determination regarding whether controlled, rate-limited public archive acquisition is permissible for offline research bootstrap, or whether formal SFTP archive entitlement is required. (Engineering status: `NOT DETERMINED BY ENGINEERING`). |
+| **OI-P16-04** | **OPEN — OPERATIONAL/TECH** | Technical Operations | Static public IP registration and OpenSSH public key exchange with NSE SFTP operations (`eodsftp1.nseindia.com` / `eodsftp2.nseindia.com:7010`) upon contract execution. |
+| **OI-P16-05** | **OPEN — TECHNICAL/LEGAL** | Technical / Governance | Verification of applicable usage terms, rate boundaries, and single-user private research constraints for initial low-cost 15-minute runtime candidate (`yfinance`). |
+| **OI-P16-06** | **OPEN — COMMERCIAL/TECH** | Technical / Governance | Assessment of Dhan Data API account tier, data rights, and availability as an alternative low-cost runtime provider. |
