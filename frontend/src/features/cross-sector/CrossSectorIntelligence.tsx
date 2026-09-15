@@ -12,6 +12,8 @@
  * Provenance). Client-side composition only (no server changes), no fabrication.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { isDegraded } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { Link } from 'react-router-dom';
 import { fetchCrossSectorData, type CrossSectorData } from '../../api/crossSector';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
@@ -81,6 +83,8 @@ export function CrossSectorIntelligence() {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load cross-sector data: ${error}`} />;
   if (!data) return <UnavailableState />;
+  // D89 — governed degraded state (UI12 LIVE/PIT). MUST precede any SNAPSHOT-shape dereference.
+  if (isDegraded(data)) return <DataModeUnavailable data={data} title="Cross-Sector Intelligence" />;
 
   const { portfolio, diversification, opportunity, correlation, decisions, provenance } = data;
 

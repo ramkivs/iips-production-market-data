@@ -15,6 +15,8 @@
  * Provenance). Client-side composition only (no server changes), no fabrication.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { isDegraded } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { fetchExecutiveData, type ExecutiveData, type RankedSector } from '../../api/executive';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
@@ -80,6 +82,8 @@ export function ExecutiveDashboard() {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load certified executive data: ${error}`} />;
   if (!data) return <UnavailableState />;
+  // D89 — governed degraded state (UI12 LIVE/PIT). MUST precede any SNAPSHOT-shape dereference.
+  if (isDegraded(data)) return <DataModeUnavailable data={data} title="Executive" />;
 
   const { portfolio, diversification, opportunity, correlation, decisions, provenance } = data;
 

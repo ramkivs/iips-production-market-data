@@ -15,6 +15,8 @@
  * only variable; client-side composition only (no server changes), no fabrication.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { isDegraded } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { Link } from 'react-router-dom';
 import { fetchDecisionMatrixData, type DecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
@@ -74,6 +76,8 @@ export function DecisionMatrix() {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load decision matrix: ${error}`} />;
   if (!data) return <UnavailableState />;
+  // D89 — governed degraded state (UI12 LIVE/PIT). MUST precede any SNAPSHOT-shape dereference.
+  if (isDegraded(data)) return <DataModeUnavailable data={data} title="Decision Matrix" />;
 
   return (
     <section aria-label="Decision matrix">

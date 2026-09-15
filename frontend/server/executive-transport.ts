@@ -1028,8 +1028,20 @@ const server = http.createServer((req, res) => {
       const principal = await authorizeRead(req, res, surface);
       if (!principal) return; // 401/403 already written
 
+      // D89 — global UI12 data-mode propagation (D88=A, bounded D54 §97 exception).
+      // SNAPSHOT invokes the certified computation UNCHANGED and returns it verbatim; LIVE/PIT
+      // are new branches returning a governed degraded state. Mode is server-derived from the
+      // authenticated principal's persisted UI12 preference — never client-supplied.
+      const modePrincipal = {
+        tenantId: resolvePrincipalTenant(principal),
+        ownerUserId: resolvePrincipalOwner(principal),
+      };
+      const dataMode = await import('./data-mode/data-mode');
+
       if (req.url === '/api/executive') {
-        res.writeHead(200); res.end(JSON.stringify(computeCertifiedExecutive())); return;
+        res.writeHead(200);
+        res.end(JSON.stringify(dataMode.dispatchForPrincipal('Executive', modePrincipal, computeCertifiedExecutive)));
+        return;
       }
       if (req.url === '/api/portfolio') {
         // D85 — UI12 data-mode propagation. The mode is read SERVER-SIDE from the authenticated
@@ -1046,15 +1058,20 @@ const server = http.createServer((req, res) => {
         return;
       }
       if (req.url === '/api/decision-matrix') {
-        res.writeHead(200); res.end(JSON.stringify(computeCertifiedDecisionMatrix())); return;
+        res.writeHead(200);
+        res.end(JSON.stringify(dataMode.dispatchForPrincipal('Decision Matrix', modePrincipal, computeCertifiedDecisionMatrix)));
+        return;
       }
       if (req.url === '/api/cross-sector') {
-        res.writeHead(200); res.end(JSON.stringify(computeCertifiedCrossSector())); return;
+        res.writeHead(200);
+        res.end(JSON.stringify(dataMode.dispatchForPrincipal('Cross-Sector', modePrincipal, computeCertifiedCrossSector)));
+        return;
       }
       if (req.url?.startsWith('/api/company/')) {
         const id = decodeURIComponent(req.url.slice('/api/company/'.length));
         try {
-          const payload = computeCertifiedCompany(id);
+          // D89 — mode dispatch; SNAPSHOT returns the certified payload verbatim.
+          const payload = dataMode.dispatchForPrincipal('Company', modePrincipal, () => computeCertifiedCompany(id));
           res.writeHead(200); res.end(JSON.stringify(payload)); return;
         } catch (e) {
           res.writeHead(404); res.end(JSON.stringify({ error: String(e) })); return;
@@ -1063,7 +1080,8 @@ const server = http.createServer((req, res) => {
       if (req.url?.startsWith('/api/evidence/')) {
         const id = decodeURIComponent(req.url.slice('/api/evidence/'.length));
         try {
-          const payload = computeCertifiedEvidence(id);
+          // D89 — mode dispatch; SNAPSHOT returns the certified payload verbatim.
+          const payload = dataMode.dispatchForPrincipal('Evidence', modePrincipal, () => computeCertifiedEvidence(id));
           res.writeHead(200); res.end(JSON.stringify(payload)); return;
         } catch (e) {
           res.writeHead(404); res.end(JSON.stringify({ error: String(e) })); return;
@@ -1072,7 +1090,8 @@ const server = http.createServer((req, res) => {
       if (req.url?.startsWith('/api/replay/')) {
         const id = decodeURIComponent(req.url.slice('/api/replay/'.length));
         try {
-          const payload = computeCertifiedReplay(id);
+          // D89 — mode dispatch; SNAPSHOT returns the certified payload verbatim.
+          const payload = dataMode.dispatchForPrincipal('Replay', modePrincipal, () => computeCertifiedReplay(id));
           res.writeHead(200); res.end(JSON.stringify(payload)); return;
         } catch (e) {
           res.writeHead(404); res.end(JSON.stringify({ error: String(e) })); return;

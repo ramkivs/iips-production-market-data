@@ -19,6 +19,8 @@
  * endpoint, no recomputation, no fabrication, no persistence.
  */
 import { useEffect, useState } from 'react';
+import { isDegraded } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { fetchCompanyData, type CompanyData } from '../../api/company';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
@@ -68,6 +70,10 @@ export function SectorIntelligence() {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load sector data: ${error}`} />;
   if (!company || !evidence || !replay) return <UnavailableState />;
+  // D89 — any of the three mode-aware routes may return a governed degraded state.
+  if (isDegraded(company)) return <DataModeUnavailable data={company} title="Sector Intelligence" />;
+  if (isDegraded(evidence)) return <DataModeUnavailable data={evidence} title="Sector Intelligence" />;
+  if (isDegraded(replay)) return <DataModeUnavailable data={replay} title="Sector Intelligence" />;
 
   const pillarEntries = company.pillars
     ? Object.entries(company.pillars).map(([k, v]) => ({ key: k, value: v }))

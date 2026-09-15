@@ -17,6 +17,8 @@
  * /api/company/:sector, /api/evidence/:sector, and /api/replay/:sector.
  */
 import { useEffect, useState } from 'react';
+import { isDegraded } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchCompanyData, type CompanyData } from '../../api/company';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
@@ -68,6 +70,10 @@ export function CompanyIntelligence() {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load company data: ${error}`} />;
   if (!company || !evidence || !replay) return <UnavailableState />;
+  // D89 — any of the three mode-aware routes may return a governed degraded state.
+  if (isDegraded(company)) return <DataModeUnavailable data={company} title="Company Intelligence" />;
+  if (isDegraded(evidence)) return <DataModeUnavailable data={evidence} title="Company Intelligence" />;
+  if (isDegraded(replay)) return <DataModeUnavailable data={replay} title="Company Intelligence" />;
 
   const pillarEntries = company.pillars
     ? Object.entries(company.pillars).map(([k, v]) => ({ key: k, value: v }))
