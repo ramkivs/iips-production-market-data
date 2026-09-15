@@ -28,6 +28,8 @@ const EvidenceHub = lazy(() => import('../features/evidence/EvidenceHub').then((
 const ReplayExplorer = lazy(() => import('../features/replay/ReplayExplorer').then((m) => ({ default: m.ReplayExplorer })));
 const Screener = lazy(() => import('../features/screener/Screener').then((m) => ({ default: m.Screener })));
 const Administration = lazy(() => import('../features/admin/Administration').then((m) => ({ default: m.Administration })));
+// UI08 (D82) — first-class governed Reports surface.
+const Reports = lazy(() => import('../features/reports/Reports').then((m) => ({ default: m.Reports })));
 // UI07 (D81) — first-class governed Watchlists surface.
 const Watchlists = lazy(() => import('../features/watchlists/Watchlists').then((m) => ({ default: m.Watchlists })));
 // UI12 (D80) — first-class governed Settings surface.
@@ -79,6 +81,8 @@ export function App() {
         <Route path="/evidence" element={<Lazy><EvidenceHub /></Lazy>} />
         <Route path="/evidence/:id" element={<Lazy><EvidenceExplorer /></Lazy>} />
         <Route path="/evidence/replay/:id" element={<Lazy><ReplayExplorer /></Lazy>} />
+        {/* UI08 (D82) — governed reports; viewer+ may read, generation is server-gated. */}
+        <Route path="/reports" element={<Lazy><Reports /></Lazy>} />
         {/* UI07 (D81) — governed watchlists; viewer+ may read, mutations are server-gated. */}
         <Route path="/watchlists" element={<Lazy><Watchlists /></Lazy>} />
         {/* UI12 (D80) — governed user settings; viewer+ may read, saving is server-gated. */}

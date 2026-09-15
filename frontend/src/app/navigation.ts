@@ -115,6 +115,8 @@ export const NAV: NavItem[] = [
       { label: 'Migration / Workflow / Marketplace', path: '/admin/operations', minRole: 'admin', status: 'implemented' },
     ],
   },
+  // UI08 (D82) — governed reports: templates + generation, PIT-pinned, owner-scoped.
+  { label: 'Reports', path: '/reports', minRole: 'viewer', status: 'implemented' },
   // UI07 (D81) — governed watchlists: persistent lists + triggers, owner-scoped.
   { label: 'Watchlists', path: '/watchlists', minRole: 'viewer', status: 'implemented' },
   // UI12 (D80) — governed user settings. viewer+ (unlike admin-only Administration): these are
