@@ -2,12 +2,16 @@
  * Program v3.0 — Phase 10: Typed API client for the Evidence Explorer.
  * Inspection surface over governed v2.0 evidence/snapshot/replay contracts.
  * No analytical/reasoning logic in the client.
+ *
+ * D96: Widened return type to represent successful EvidenceData | DegradedData.
  */
 import type { Verdict } from '../components/decision/DecisionComponents';
 import type { ExecutiveProvenance } from './executive';
+import type { DegradedData } from './dataMode';
 import { authFetch } from './authFetch';
 
 export interface EvidenceData {
+  readonly dataAvailable?: undefined;
   readonly decision: { readonly verdict: Verdict; readonly composite: number; readonly confidence: number | null };
   readonly evidence: {
     readonly evidenceId: string;
@@ -35,8 +39,10 @@ export interface EvidenceData {
   readonly provenance: ExecutiveProvenance;
 }
 
-export async function fetchEvidenceData(sector: string, baseUrl = ''): Promise<EvidenceData> {
+export type EvidenceResponse = EvidenceData | DegradedData;
+
+export async function fetchEvidenceData(sector: string, baseUrl = ''): Promise<EvidenceResponse> {
   const res = await authFetch(`${baseUrl}/api/evidence/${encodeURIComponent(sector)}`);
   if (!res.ok) throw new Error(`evidence transport returned ${res.status}`);
-  return (await res.json()) as EvidenceData;
+  return (await res.json()) as EvidenceResponse;
 }

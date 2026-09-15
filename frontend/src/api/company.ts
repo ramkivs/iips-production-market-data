@@ -2,12 +2,16 @@
  * Program v3.0 — Phase 7: Typed API client for the Company Intelligence workspace.
  * Mirrors the certified v2.0 transport DTO. Semantically inert; presentation-only.
  * Pillars are null where the certified engine does not expose them (never fabricated).
+ *
+ * D96: Widened return type to represent successful CompanyData | DegradedData.
  */
 import type { Verdict } from '../components/decision/DecisionComponents';
 import type { ExecutiveProvenance } from './executive';
+import type { DegradedData } from './dataMode';
 import { authFetch } from './authFetch';
 
 export interface CompanyData {
+  readonly dataAvailable?: undefined;
   readonly companyId: string;
   readonly sector: string;
   readonly decision: { readonly verdict: Verdict; readonly composite: number; readonly confidence: number | null };
@@ -21,8 +25,10 @@ export interface CompanyData {
   readonly provenance: ExecutiveProvenance;
 }
 
-export async function fetchCompanyData(sector: string, baseUrl = ''): Promise<CompanyData> {
+export type CompanyResponse = CompanyData | DegradedData;
+
+export async function fetchCompanyData(sector: string, baseUrl = ''): Promise<CompanyResponse> {
   const res = await authFetch(`${baseUrl}/api/company/${encodeURIComponent(sector)}`);
   if (!res.ok) throw new Error(`company transport returned ${res.status}`);
-  return (await res.json()) as CompanyData;
+  return (await res.json()) as CompanyResponse;
 }

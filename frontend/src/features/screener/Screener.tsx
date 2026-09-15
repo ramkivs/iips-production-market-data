@@ -11,9 +11,13 @@
  * Result rows navigate to the existing Company Intelligence trust chain
  * (/research/company/:sector). The Screener is a filter-and-navigate surface, NOT an
  * analytics engine.
+ *
+ * D96: mode-aware UI12 propagation with guarded degraded handling.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { isDegraded, type DegradedData } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { fetchDecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
 import type { Verdict } from '../../components/decision/DecisionComponents';
 import { DataTable } from '../../components/data/DataComponents';
@@ -30,6 +34,7 @@ function bound(raw: string): number | null {
 
 export function Screener() {
   const [companies, setCompanies] = useState<MatrixCompany[] | null>(null);
+  const [degraded, setDegraded] = useState<DegradedData | null>(null);
   const [provenance, setProvenance] = useState<string | null>(null);
   const [freshness, setFreshness] = useState<'LIVE' | 'SNAPSHOT' | 'STALE' | 'UNAVAILABLE' | 'REPLAY'>('SNAPSHOT');
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +58,13 @@ export function Screener() {
     fetchDecisionMatrixData()
       .then((d) => {
         if (!active) return;
+        if (isDegraded(d)) {
+          setDegraded(d);
+          setCompanies(null);
+          setError(null);
+          return;
+        }
+        setDegraded(null);
         setCompanies([...d.companies]);
         setProvenance(d.provenance.dataSource);
         setFreshness(d.provenance.freshness);
@@ -109,6 +121,7 @@ export function Screener() {
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load screener universe: ${error}`} />;
+  if (degraded) return <DataModeUnavailable data={degraded} title="Screener" />;
   if (!companies) return <UnavailableState />;
 
   return (

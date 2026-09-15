@@ -219,3 +219,95 @@ describe('Cross-Sector Intelligence — N+11 selected-sector trust chain', () =>
     expect(screen.getByTestId('cross-sector-opportunities')).toBeInTheDocument();
   });
 });
+
+describe('Cross-Sector Intelligence — D96 data-mode degraded state handling', () => {
+  const degradedLive = {
+    surface: 'Cross-Sector',
+    dataMode: 'LIVE',
+    state: 'LIVE_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'LIVE data is UNAVAILABLE for Cross-Sector.',
+    dependency: 'R-2 provider ingestion.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'LIVE',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  const degradedPit = {
+    surface: 'Cross-Sector',
+    dataMode: 'PIT',
+    state: 'PIT_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'PIT data is UNAVAILABLE for Cross-Sector.',
+    dependency: 'PIT capability in p08 not wired.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'PIT',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  it('LIVE_UNAVAILABLE does not crash and renders governed DataModeUnavailable UI', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/cross-sector')) {
+        return Promise.resolve({ ok: true, json: async () => degradedLive }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(<MemoryRouter><CrossSectorIntelligence /></MemoryRouter>);
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('LIVE');
+    expect(screen.queryByTestId('data-table')).not.toBeInTheDocument();
+  });
+
+  it('PIT_UNAVAILABLE does not crash and renders governed DataModeUnavailable UI', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/cross-sector')) {
+        return Promise.resolve({ ok: true, json: async () => degradedPit }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(<MemoryRouter><CrossSectorIntelligence /></MemoryRouter>);
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('PIT');
+    expect(screen.queryByTestId('data-table')).not.toBeInTheDocument();
+  });
+
+  it('successful-only fields are never accessed for degraded payloads', async () => {
+    const trapped = {
+      ...degradedLive,
+      get ranking() { throw new Error('Attempted to access data.ranking on degraded payload!'); },
+      get decisions() { throw new Error('Attempted to access data.decisions on degraded payload!'); },
+      get portfolio() { throw new Error('Attempted to access data.portfolio on degraded payload!'); },
+      get opportunity() { throw new Error('Attempted to access data.opportunity on degraded payload!'); },
+      get correlation() { throw new Error('Attempted to access data.correlation on degraded payload!'); },
+    };
+
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/cross-sector')) {
+        return Promise.resolve({ ok: true, json: async () => trapped }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    expect(() => render(<MemoryRouter><CrossSectorIntelligence /></MemoryRouter>)).not.toThrow();
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+  });
+
+  it('no silent SNAPSHOT fallback occurs when degraded payload is returned', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => degradedLive }) as never;
+    render(<MemoryRouter><CrossSectorIntelligence /></MemoryRouter>);
+    await screen.findByTestId('data-mode-unavailable');
+    expect(screen.queryByTestId('badge-certified')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('data-table')).not.toBeInTheDocument();
+  });
+});

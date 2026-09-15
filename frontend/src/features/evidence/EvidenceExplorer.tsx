@@ -7,10 +7,14 @@
  *
  * Chain: Decision → Drivers → Metrics → Evidence → Snapshot → Provenance → Replay.
  * No reasoning/analytical logic in React. All values from governed contracts.
+ *
+ * D96: mode-aware UI12 propagation with guarded degraded handling.
  */
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
+import { isDegraded } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
+import { fetchEvidenceData, type EvidenceResponse } from '../../api/evidence';
 import { DecisionBadge } from '../../components/decision/DecisionComponents';
 import { MetricCard, MetricGroup } from '../../components/data/DataComponents';
 import { EvidenceTimeline, EvidenceRecordCard, ProvenanceChain, SnapshotMetadataPanel, ReplaySummary } from '../../components/evidence/EvidenceExplorerComponents';
@@ -19,7 +23,7 @@ import { CertifiedBadge, FreshnessBadge } from '../../components/ui/Badges';
 
 export function EvidenceExplorer() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<EvidenceData | null>(null);
+  const [data, setData] = useState<EvidenceResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +41,8 @@ export function EvidenceExplorer() {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load evidence: ${error}`} />;
   if (!data) return <UnavailableState />;
+  // D96 — governed degraded state (UI12 LIVE/PIT). MUST precede any SNAPSHOT-shape dereference.
+  if (isDegraded(data)) return <DataModeUnavailable data={data} title="Evidence" />;
 
   const { decision, evidence, snapshot, replay, provenance } = data;
 

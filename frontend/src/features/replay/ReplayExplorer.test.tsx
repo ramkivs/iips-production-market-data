@@ -152,3 +152,110 @@ describe('Replay Explorer', () => {
     expect(await screen.findByTestId('state-error')).toHaveTextContent('Unable to load replay');
   });
 });
+
+describe('Replay Explorer — D96 data-mode degraded state handling', () => {
+  const degradedLive = {
+    surface: 'Replay',
+    dataMode: 'LIVE',
+    state: 'LIVE_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'LIVE data is UNAVAILABLE for Replay.',
+    dependency: 'R-2 provider ingestion.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'LIVE',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  const degradedPit = {
+    surface: 'Replay',
+    dataMode: 'PIT',
+    state: 'PIT_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'PIT data is UNAVAILABLE for Replay.',
+    dependency: 'PIT capability in p08 not wired.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'PIT',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  it('LIVE_UNAVAILABLE does not crash and renders governed DataModeUnavailable UI', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/replay/')) {
+        return Promise.resolve({ ok: true, json: async () => degradedLive }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/evidence/replay/Technology']}>
+        <Routes><Route path="/evidence/replay/:id" element={<ReplayExplorer />} /></Routes>
+      </MemoryRouter>,
+    );
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('LIVE');
+    expect(screen.queryByTestId('replay-original')).not.toBeInTheDocument();
+  });
+
+  it('PIT_UNAVAILABLE does not crash and renders governed DataModeUnavailable UI', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/replay/')) {
+        return Promise.resolve({ ok: true, json: async () => degradedPit }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/evidence/replay/Technology']}>
+        <Routes><Route path="/evidence/replay/:id" element={<ReplayExplorer />} /></Routes>
+      </MemoryRouter>,
+    );
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('PIT');
+    expect(screen.queryByTestId('replay-original')).not.toBeInTheDocument();
+  });
+
+  it('successful-only fields are never accessed for degraded payloads', async () => {
+    const trapped = {
+      ...degradedLive,
+      get original() { throw new Error('Attempted to access data.original on degraded payload!'); },
+      get replay() { throw new Error('Attempted to access data.replay on degraded payload!'); },
+      get differenceAvailable() { throw new Error('Attempted to access data.differenceAvailable on degraded payload!'); },
+      get note() { throw new Error('Attempted to access data.note on degraded payload!'); },
+      get evidenceRefs() { throw new Error('Attempted to access data.evidenceRefs on degraded payload!'); },
+    };
+
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/replay/')) {
+        return Promise.resolve({ ok: true, json: async () => trapped }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    expect(() => render(
+      <MemoryRouter initialEntries={['/evidence/replay/Technology']}>
+        <Routes><Route path="/evidence/replay/:id" element={<ReplayExplorer />} /></Routes>
+      </MemoryRouter>,
+    )).not.toThrow();
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+  });
+
+  it('no silent SNAPSHOT fallback occurs when degraded payload is returned', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => degradedLive }) as never;
+    render(
+      <MemoryRouter initialEntries={['/evidence/replay/Technology']}>
+        <Routes><Route path="/evidence/replay/:id" element={<ReplayExplorer />} /></Routes>
+      </MemoryRouter>,
+    );
+    await screen.findByTestId('data-mode-unavailable');
+    expect(screen.queryByTestId('badge-certified')).not.toBeInTheDocument();
+  });
+});

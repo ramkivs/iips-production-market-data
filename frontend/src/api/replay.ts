@@ -1,12 +1,16 @@
 /**
  * Program v3.0 — Phase 11: Typed API client for the Replay Explorer.
  * Governed ReplayResult surface only. No replay/diff computation in the client.
+ *
+ * D96: Widened return type to represent successful ReplayData | DegradedData.
  */
 import type { Verdict } from '../components/decision/DecisionComponents';
 import type { ExecutiveProvenance } from './executive';
+import type { DegradedData } from './dataMode';
 import { authFetch } from './authFetch';
 
 export interface ReplayData {
+  readonly dataAvailable?: undefined;
   readonly original: {
     readonly snapshotId: string;
     readonly engineId: string;
@@ -25,8 +29,10 @@ export interface ReplayData {
   readonly provenance: ExecutiveProvenance;
 }
 
-export async function fetchReplayData(sector: string, baseUrl = ''): Promise<ReplayData> {
+export type ReplayResponse = ReplayData | DegradedData;
+
+export async function fetchReplayData(sector: string, baseUrl = ''): Promise<ReplayResponse> {
   const res = await authFetch(`${baseUrl}/api/replay/${encodeURIComponent(sector)}`);
   if (!res.ok) throw new Error(`replay transport returned ${res.status}`);
-  return (await res.json()) as ReplayData;
+  return (await res.json()) as ReplayResponse;
 }

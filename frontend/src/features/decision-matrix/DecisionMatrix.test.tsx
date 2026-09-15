@@ -303,3 +303,93 @@ describe('G-AI-IMPL — embedded AI explanation (T5 host binding · T6 no regres
     expect(screen.queryByText(/supplementary advisory explanation/)).not.toBeInTheDocument();
   });
 });
+
+describe('Decision Matrix — D96 data-mode degraded state handling', () => {
+  const degradedLive = {
+    surface: 'Decision Matrix',
+    dataMode: 'LIVE',
+    state: 'LIVE_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'LIVE data is UNAVAILABLE for Decision Matrix.',
+    dependency: 'R-2 provider ingestion.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'LIVE',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  const degradedPit = {
+    surface: 'Decision Matrix',
+    dataMode: 'PIT',
+    state: 'PIT_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'PIT data is UNAVAILABLE for Decision Matrix.',
+    dependency: 'PIT capability in p08 not wired.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'PIT',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  it('LIVE_UNAVAILABLE does not crash and renders governed DataModeUnavailable UI', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/decision-matrix')) {
+        return Promise.resolve({ ok: true, json: async () => degradedLive }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(<MemoryRouter><DecisionMatrix /></MemoryRouter>);
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('LIVE');
+    expect(screen.queryByTestId('matrix-scatter')).not.toBeInTheDocument();
+  });
+
+  it('PIT_UNAVAILABLE does not crash and renders governed DataModeUnavailable UI', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/decision-matrix')) {
+        return Promise.resolve({ ok: true, json: async () => degradedPit }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(<MemoryRouter><DecisionMatrix /></MemoryRouter>);
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('PIT');
+    expect(screen.queryByTestId('matrix-scatter')).not.toBeInTheDocument();
+  });
+
+  it('successful-only fields are never accessed for degraded payloads', async () => {
+    const trapped = {
+      ...degradedLive,
+      get companies() { throw new Error('Attempted to access data.companies on degraded payload!'); },
+      get universe() { throw new Error('Attempted to access data.universe on degraded payload!'); },
+      get note() { throw new Error('Attempted to access data.note on degraded payload!'); },
+    };
+
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/decision-matrix')) {
+        return Promise.resolve({ ok: true, json: async () => trapped }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    expect(() => render(<MemoryRouter><DecisionMatrix /></MemoryRouter>)).not.toThrow();
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+  });
+
+  it('no silent SNAPSHOT fallback occurs when degraded payload is returned', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => degradedLive }) as never;
+    render(<MemoryRouter><DecisionMatrix /></MemoryRouter>);
+    await screen.findByTestId('data-mode-unavailable');
+    expect(screen.queryByTestId('badge-certified')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('matrix-scatter')).not.toBeInTheDocument();
+  });
+});

@@ -26,9 +26,12 @@
  * reference-baseline date, so the surface presents the fixed lifecycle sequence and states
  * plainly that it is NOT a temporal timeline. No event store, no persistence, no new
  * endpoint, no fabrication.
+ *
+ * D96: mode-aware UI12 propagation with guarded degraded handling.
  */
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { isDegraded } from '../../api/dataMode';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { fetchDecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
@@ -55,6 +58,7 @@ export function ResearchEvents() {
 
   // S7: partial-data honesty — allSettled so one failing endpoint does not fabricate the
   // other's events; missing events render "unavailable" (never invented).
+  // D96: treat degraded LIVE/PIT responses as unavailable rather than dereferencing successful fields.
   useEffect(() => {
     if (!id) return;
     let active = true;
@@ -62,25 +66,34 @@ export function ResearchEvents() {
     Promise.allSettled([fetchEvidenceData(id), fetchReplayData(id)])
       .then(([e, r]) => {
         if (!active) return;
-        const ev = e.status === 'fulfilled' ? e.value : null;
-        const rp = r.status === 'fulfilled' ? r.value : null;
+        const ev = e.status === 'fulfilled' && !isDegraded(e.value) ? e.value : null;
+        const rp = r.status === 'fulfilled' && !isDegraded(r.value) ? r.value : null;
         setEvidence(ev);
         setReplay(rp);
         const failures: string[] = [];
-        if (e.status === 'rejected') failures.push('evidence');
-        if (r.status === 'rejected') failures.push('replay');
-        setPartialError(failures.length > 0 ? `Unable to load: ${failures.join(', ')}` : null);
-        setError(!ev && !rp ? 'Unable to load research events' : null);
+        if (e.status === 'rejected' || (e.status === 'fulfilled' && isDegraded(e.value))) failures.push('evidence');
+        if (r.status === 'rejected' || (r.status === 'fulfilled' && isDegraded(r.value))) failures.push('replay');
+        setPartialError(failures.length > 0 ? `Some sources are unavailable (${failures.join(', ')})` : null);
+        setError(!ev && !rp && failures.length === 2 && e.status === 'rejected' && r.status === 'rejected' ? 'Unable to load research events' : null);
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [id]);
 
   // S6: governed sector universe (sourced only from /api/decision-matrix; never hardcoded — N+12 pattern).
+  // D96: guard against degraded decision-matrix payload.
   useEffect(() => {
     let active = true;
     fetchDecisionMatrixData()
-      .then((d) => { if (active) setSectors([...d.companies]); })
+      .then((d) => {
+        if (!active) return;
+        if (isDegraded(d)) {
+          setSectorsError(`Sector list unavailable in ${d.dataMode} data mode.`);
+          setSectors(null);
+          return;
+        }
+        setSectors([...d.companies]);
+      })
       .catch((e) => { if (active) setSectorsError(String(e)); });
     return () => { active = false; };
   }, []);
@@ -93,6 +106,7 @@ export function ResearchEvents() {
   const freshness = prov?.freshness ?? 'SNAPSHOT';
 
   // S2/S4: the four governed events in FIXED lifecycle order (never timestamp-sorted).
+  // D96: safe access — when evidence or replay is degraded, ev/rp is null and timestamp is 'unavailable'.
   const events: ResearchEvent[] = [
     { key: 'calibration', label: 'Calibration', timestamp: evidence?.provenance.calibratedAt, source: '/api/evidence/:sector · provenance.calibratedAt' },
     { key: 'snapshot', label: 'Snapshot generated', timestamp: evidence?.snapshot.generatedAt, source: '/api/evidence/:sector · snapshot.generatedAt' },

@@ -129,3 +129,109 @@ describe('Evidence Explorer', () => {
     expect(await screen.findByTestId('state-error')).toHaveTextContent('Unable to load evidence');
   });
 });
+
+describe('Evidence Explorer — D96 data-mode degraded state handling', () => {
+  const degradedLive = {
+    surface: 'Evidence',
+    dataMode: 'LIVE',
+    state: 'LIVE_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'LIVE data is UNAVAILABLE for Evidence.',
+    dependency: 'R-2 provider ingestion.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'LIVE',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  const degradedPit = {
+    surface: 'Evidence',
+    dataMode: 'PIT',
+    state: 'PIT_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'PIT data is UNAVAILABLE for Evidence.',
+    dependency: 'PIT capability in p08 not wired.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'PIT',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  it('LIVE_UNAVAILABLE does not crash and renders governed DataModeUnavailable UI', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/evidence/')) {
+        return Promise.resolve({ ok: true, json: async () => degradedLive }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/evidence/Technology']}>
+        <Routes><Route path="/evidence/:id" element={<EvidenceExplorer />} /></Routes>
+      </MemoryRouter>,
+    );
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('LIVE');
+    expect(screen.queryByTestId('evidence-timeline')).not.toBeInTheDocument();
+  });
+
+  it('PIT_UNAVAILABLE does not crash and renders governed DataModeUnavailable UI', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/evidence/')) {
+        return Promise.resolve({ ok: true, json: async () => degradedPit }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/evidence/Technology']}>
+        <Routes><Route path="/evidence/:id" element={<EvidenceExplorer />} /></Routes>
+      </MemoryRouter>,
+    );
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('PIT');
+    expect(screen.queryByTestId('evidence-timeline')).not.toBeInTheDocument();
+  });
+
+  it('successful-only fields are never accessed for degraded payloads', async () => {
+    const trapped = {
+      ...degradedLive,
+      get decision() { throw new Error('Attempted to access data.decision on degraded payload!'); },
+      get evidence() { throw new Error('Attempted to access data.evidence on degraded payload!'); },
+      get snapshot() { throw new Error('Attempted to access data.snapshot on degraded payload!'); },
+      get replay() { throw new Error('Attempted to access data.replay on degraded payload!'); },
+    };
+
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/evidence/')) {
+        return Promise.resolve({ ok: true, json: async () => trapped }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    expect(() => render(
+      <MemoryRouter initialEntries={['/evidence/Technology']}>
+        <Routes><Route path="/evidence/:id" element={<EvidenceExplorer />} /></Routes>
+      </MemoryRouter>,
+    )).not.toThrow();
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+  });
+
+  it('no silent SNAPSHOT fallback occurs when degraded payload is returned', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => degradedLive }) as never;
+    render(
+      <MemoryRouter initialEntries={['/evidence/Technology']}>
+        <Routes><Route path="/evidence/:id" element={<EvidenceExplorer />} /></Routes>
+      </MemoryRouter>,
+    );
+    await screen.findByTestId('data-mode-unavailable');
+    expect(screen.queryByTestId('badge-certified')).not.toBeInTheDocument();
+  });
+});

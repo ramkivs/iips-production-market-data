@@ -20,9 +20,9 @@ import { useEffect, useState } from 'react';
 import { isDegraded } from '../../api/dataMode';
 import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchCompanyData, type CompanyData } from '../../api/company';
-import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
-import { fetchReplayData, type ReplayData } from '../../api/replay';
+import { fetchCompanyData, type CompanyResponse } from '../../api/company';
+import { fetchEvidenceData, type EvidenceResponse } from '../../api/evidence';
+import { fetchReplayData, type ReplayResponse } from '../../api/replay';
 import { fetchDecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
 import { CompanyHeader } from '../../components/company/CompanyHeader';
 import { MetricGroup, MetricCard, DataTable } from '../../components/data/DataComponents';
@@ -34,9 +34,9 @@ import { AiExplanation } from '../../components/ai/AiExplanation';
 export function CompanyIntelligence() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [company, setCompany] = useState<CompanyData | null>(null);
-  const [evidence, setEvidence] = useState<EvidenceData | null>(null);
-  const [replay, setReplay] = useState<ReplayData | null>(null);
+  const [company, setCompany] = useState<CompanyResponse | null>(null);
+  const [evidence, setEvidence] = useState<EvidenceResponse | null>(null);
+  const [replay, setReplay] = useState<ReplayResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,7 +62,15 @@ export function CompanyIntelligence() {
   useEffect(() => {
     let active = true;
     fetchDecisionMatrixData()
-      .then((d) => { if (active) setSectors([...d.companies]); })
+      .then((d) => {
+        if (!active) return;
+        if (isDegraded(d)) {
+          setSectorsError(`Sector list unavailable in ${d.dataMode} data mode.`);
+          setSectors(null);
+          return;
+        }
+        setSectors([...d.companies]);
+      })
       .catch((e) => { if (active) setSectorsError(String(e)); });
     return () => { active = false; };
   }, []);

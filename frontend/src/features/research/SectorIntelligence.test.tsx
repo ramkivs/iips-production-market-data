@@ -362,3 +362,42 @@ describe('G-AI-IMPL — embedded AI explanation (T5 host binding · T6 no regres
     expect(screen.queryByText(/supplementary advisory explanation/)).not.toBeInTheDocument();
   });
 });
+
+describe('Sector Intelligence — D96 data-mode degraded state handling', () => {
+  const degradedMatrix = {
+    surface: 'Decision Matrix',
+    dataMode: 'LIVE',
+    state: 'LIVE_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'LIVE data is UNAVAILABLE for Decision Matrix.',
+    dependency: 'R-2 provider ingestion.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'LIVE',
+      transportSemantics: 'none',
+    },
+  };
+
+  it('handles degraded decision-matrix selector sub-fetch honestly without crash', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/decision-matrix')) return Promise.resolve({ ok: true, json: async () => degradedMatrix }) as never;
+      if (url.includes('/api/company/')) return Promise.resolve({ ok: true, json: async () => COMPANY }) as never;
+      if (url.includes('/api/evidence/')) return Promise.resolve({ ok: true, json: async () => EVIDENCE }) as never;
+      if (url.includes('/api/replay/')) return Promise.resolve({ ok: true, json: async () => REPLAY }) as never;
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/research/sector/Banking']}>
+        <Routes><Route path="/research/sector/:id" element={<SectorIntelligence />} /></Routes>
+      </MemoryRouter>,
+    );
+
+    // Parent UI renders successfully
+    expect(await screen.findByText('Banking')).toBeInTheDocument();
+    // Selector honestly displays degraded availability error rather than crashing
+    expect(screen.getByTestId('sector-selector-error')).toHaveTextContent(/Sector list unavailable/);
+  });
+});

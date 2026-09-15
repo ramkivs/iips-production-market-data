@@ -25,10 +25,14 @@
  *
  *   The literals are now rendered by the shared AD-17-safe `ReplayLiteralDisplay`, with an
  *   explicit AD-17 disclosure and NO pass/fail colouring.
+ *
+ * D96: mode-aware UI12 propagation with guarded degraded handling.
  */
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchReplayData, type ReplayData } from '../../api/replay';
+import { isDegraded } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
+import { fetchReplayData, type ReplayResponse } from '../../api/replay';
 import { DecisionBadge } from '../../components/decision/DecisionComponents';
 import { SnapshotMetadataPanel, ProvenanceChain } from '../../components/evidence/EvidenceExplorerComponents';
 import { Ad17Note, ReplayLiteralDisplay } from '../../components/evidence/Ad17Disclosure';
@@ -37,7 +41,7 @@ import { CertifiedBadge, FreshnessBadge } from '../../components/ui/Badges';
 
 export function ReplayExplorer() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<ReplayData | null>(null);
+  const [data, setData] = useState<ReplayResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -55,6 +59,8 @@ export function ReplayExplorer() {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load replay: ${error}`} />;
   if (!data) return <UnavailableState />;
+  // D96 — governed degraded state (UI12 LIVE/PIT). MUST precede any SNAPSHOT-shape dereference.
+  if (isDegraded(data)) return <DataModeUnavailable data={data} title="Replay" />;
 
   const { original, replay, differenceAvailable, note, provenance } = data;
   void differenceAvailable; // governed flag: no field-level diff is available (displayed in note)

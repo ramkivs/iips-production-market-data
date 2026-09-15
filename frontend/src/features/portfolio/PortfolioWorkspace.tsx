@@ -14,6 +14,7 @@
  * recomputation, no fabrication. Client-side composition only (no server changes).
  */
 import { useEffect, useMemo, useState } from 'react';
+import { isDegraded } from '../../api/dataMode';
 import { fetchPortfolioData, isPortfolioUnavailable, type PortfolioData, type PortfolioHolding } from '../../api/portfolio';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
@@ -58,7 +59,17 @@ export function PortfolioWorkspace() {
     setChainLoading(true);
     setChainError(null);
     Promise.all([fetchEvidenceData(selectedSector), fetchReplayData(selectedSector)])
-      .then(([e, r]) => { if (active) { setChainEvidence(e); setChainReplay(r); } })
+      .then(([e, r]) => {
+        if (!active) return;
+        if (isDegraded(e) || isDegraded(r)) {
+          setChainError('Holding evidence or replay is unavailable in the current data mode.');
+          setChainEvidence(null);
+          setChainReplay(null);
+          return;
+        }
+        setChainEvidence(e);
+        setChainReplay(r);
+      })
       .catch((e) => { if (active) setChainError(String(e)); })
       .finally(() => { if (active) setChainLoading(false); });
     return () => { active = false; };

@@ -57,7 +57,17 @@ export function ExecutiveDashboard() {
     setChainLoading(true);
     setChainError(null);
     Promise.all([fetchEvidenceData(selectedSector), fetchReplayData(selectedSector)])
-      .then(([e, r]) => { if (active) { setChainEvidence(e); setChainReplay(r); } })
+      .then(([e, r]) => {
+        if (!active) return;
+        if (isDegraded(e) || isDegraded(r)) {
+          setChainError('Decision evidence or replay is unavailable in the current data mode.');
+          setChainEvidence(null);
+          setChainReplay(null);
+          return;
+        }
+        setChainEvidence(e);
+        setChainReplay(r);
+      })
       .catch((e) => { if (active) setChainError(String(e)); })
       .finally(() => { if (active) setChainLoading(false); });
     return () => { active = false; };

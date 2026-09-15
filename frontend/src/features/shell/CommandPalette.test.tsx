@@ -293,3 +293,36 @@ describe('D90 — Command Palette data-mode awareness', () => {
     expect(await screen.findByTestId('palette-lineage')).toHaveTextContent('fallback');
   });
 });
+
+describe('Command Palette — D96 data-mode degraded fallback-universe handling', () => {
+  const degradedMatrix = {
+    surface: 'Decision Matrix',
+    dataMode: 'LIVE',
+    state: 'LIVE_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'LIVE data is UNAVAILABLE for Decision Matrix.',
+    dependency: 'R-2 provider ingestion.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'LIVE',
+      transportSemantics: 'none',
+    },
+  };
+
+  it('handles degraded decision-matrix fallback universe without crashing when search fails', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/decision-matrix')) return Promise.resolve({ ok: true, json: async () => degradedMatrix }) as never;
+      if (url.includes('/api/search')) return Promise.resolve({ ok: false, status: 500, json: async () => ({}) }) as never;
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(
+      <MemoryRouter>
+        <CommandPalette open={true} onClose={() => {}} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId('palette-search')).toBeInTheDocument();
+  });
+});

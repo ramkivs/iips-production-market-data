@@ -10,12 +10,14 @@
  * governed endpoints for that ACTUAL sector (/api/evidence/:sector + /api/replay/:sector) and
  * renders the shared, payload-driven CompanyTrustChain (Decision → Evidence → Replay →
  * Provenance). Client-side composition only (no server changes), no fabrication.
+ *
+ * D96: mode-aware UI12 propagation with guarded useMemos & trust-chain handling.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { isDegraded } from '../../api/dataMode';
 import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { Link } from 'react-router-dom';
-import { fetchCrossSectorData, type CrossSectorData } from '../../api/crossSector';
+import { fetchCrossSectorData, type CrossSectorResponse } from '../../api/crossSector';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { MetricCard, MetricGroup, DataTable } from '../../components/data/DataComponents';
@@ -29,7 +31,7 @@ import { CompanyTrustChain } from '../company/CompanyTrustChain';
 type SortKey = 'conviction' | 'sector';
 
 export function CrossSectorIntelligence() {
-  const [data, setData] = useState<CrossSectorData | null>(null);
+  const [data, setData] = useState<CrossSectorResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>('conviction');
@@ -58,23 +60,35 @@ export function CrossSectorIntelligence() {
     setChainLoading(true);
     setChainError(null);
     Promise.all([fetchEvidenceData(selectedSector), fetchReplayData(selectedSector)])
-      .then(([e, r]) => { if (active) { setChainEvidence(e); setChainReplay(r); } })
+      .then(([e, r]) => {
+        if (!active) return;
+        if (isDegraded(e) || isDegraded(r)) {
+          setChainError('Holding evidence or replay is unavailable in the current data mode.');
+          setChainEvidence(null);
+          setChainReplay(null);
+          return;
+        }
+        setChainEvidence(e);
+        setChainReplay(r);
+      })
       .catch((e) => { if (active) setChainError(String(e)); })
       .finally(() => { if (active) setChainLoading(false); });
     return () => { active = false; };
   }, [selectedSector]);
 
   // Presentational sorting only (does not change certified meaning).
+  // D96: guard against degraded response before dereferencing data.ranking
   const sortedRanking = useMemo(() => {
-    if (!data) return [];
+    if (!data || isDegraded(data)) return [];
     const copy = [...data.ranking];
     copy.sort((a, b) => sortKey === 'conviction' ? b.conviction - a.conviction : a.sector.localeCompare(b.sector));
     return copy;
   }, [data, sortKey]);
 
   // Decision distribution is a presentational grouping of certified decisions.
+  // D96: guard against degraded response before dereferencing data.decisions
   const decisionDistribution = useMemo(() => {
-    if (!data) return [];
+    if (!data || isDegraded(data)) return [];
     const counts = new Map<string, number>();
     for (const d of data.decisions) counts.set(d.verdict, (counts.get(d.verdict) ?? 0) + 1);
     return [...counts.entries()].map(([verdict, count]) => ({ verdict, count }));

@@ -9,9 +9,13 @@
  * fetchDecisionMatrixData client) and links each row to the certified Company trust-chain
  * surface (/research/company/:sector). It does NOT duplicate Company trust-chain content, and
  * it never hardcodes sectors, recomputes scores, or fabricates values.
+ *
+ * D96: mode-aware UI12 propagation with guarded degraded handling.
  */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { isDegraded, type DegradedData } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { fetchDecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
 import { DataTable } from '../../components/data/DataComponents';
 import { DecisionBadge } from '../../components/decision/DecisionComponents';
@@ -20,6 +24,7 @@ import { CertifiedBadge, FreshnessBadge } from '../../components/ui/Badges';
 
 export function ResearchHub() {
   const [companies, setCompanies] = useState<MatrixCompany[] | null>(null);
+  const [degraded, setDegraded] = useState<DegradedData | null>(null);
   const [provenance, setProvenance] = useState<string | null>(null);
   const [freshness, setFreshness] = useState<'LIVE' | 'SNAPSHOT' | 'STALE' | 'UNAVAILABLE' | 'REPLAY'>('SNAPSHOT');
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +36,13 @@ export function ResearchHub() {
     fetchDecisionMatrixData()
       .then((d) => {
         if (!active) return;
+        if (isDegraded(d)) {
+          setDegraded(d);
+          setCompanies(null);
+          setError(null);
+          return;
+        }
+        setDegraded(null);
         setCompanies([...d.companies]);
         setProvenance(d.provenance.dataSource);
         setFreshness(d.provenance.freshness);
@@ -43,6 +55,7 @@ export function ResearchHub() {
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load research directory: ${error}`} />;
+  if (degraded) return <DataModeUnavailable data={degraded} title="Research Hub" />;
   if (!companies) return <UnavailableState />;
 
   return (

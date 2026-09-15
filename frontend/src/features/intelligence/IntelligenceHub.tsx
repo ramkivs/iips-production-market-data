@@ -10,9 +10,13 @@
  * primary entry links to the implemented Decision Matrix and Cross-Sector surfaces. Future
  * intelligence surfaces (Opportunities / Risks / Rankings) are marked honestly — no links, no
  * fabricated data. Never hardcodes sectors, never recomputes, never derives values.
+ *
+ * D96: mode-aware UI12 propagation with guarded degraded handling.
  */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { isDegraded, type DegradedData } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { fetchDecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
 import { DataTable, MetricGroup, MetricCard } from '../../components/data/DataComponents';
 import { DecisionBadge } from '../../components/decision/DecisionComponents';
@@ -22,6 +26,7 @@ import { CertifiedBadge, FreshnessBadge } from '../../components/ui/Badges';
 export function IntelligenceHub() {
   const [companies, setCompanies] = useState<MatrixCompany[] | null>(null);
   const [universe, setUniverse] = useState<{ avgConviction: number; avgQuality: number; holdings: number } | null>(null);
+  const [degraded, setDegraded] = useState<DegradedData | null>(null);
   const [provenance, setProvenance] = useState<string | null>(null);
   const [freshness, setFreshness] = useState<'LIVE' | 'SNAPSHOT' | 'STALE' | 'UNAVAILABLE' | 'REPLAY'>('SNAPSHOT');
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +38,14 @@ export function IntelligenceHub() {
     fetchDecisionMatrixData()
       .then((d) => {
         if (!active) return;
+        if (isDegraded(d)) {
+          setDegraded(d);
+          setCompanies(null);
+          setUniverse(null);
+          setError(null);
+          return;
+        }
+        setDegraded(null);
         setCompanies([...d.companies]);
         setUniverse(d.universe);
         setProvenance(d.provenance.dataSource);
@@ -46,6 +59,7 @@ export function IntelligenceHub() {
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load intelligence directory: ${error}`} />;
+  if (degraded) return <DataModeUnavailable data={degraded} title="Intelligence Hub" />;
   if (!companies || !universe) return <UnavailableState />;
 
   return (

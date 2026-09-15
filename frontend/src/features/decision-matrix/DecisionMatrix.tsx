@@ -13,12 +13,14 @@
  * ACTUAL sector — /api/evidence/:sector + /api/replay/:sector — and renders the shared,
  * payload-driven CompanyTrustChain (Decision → Evidence → Replay → Provenance). Sector is the
  * only variable; client-side composition only (no server changes), no fabrication.
+ *
+ * D96: mode-aware UI12 propagation with guarded useMemo & trust-chain handling.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { isDegraded } from '../../api/dataMode';
 import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { Link } from 'react-router-dom';
-import { fetchDecisionMatrixData, type DecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
+import { fetchDecisionMatrixData, type DecisionMatrixResponse, type MatrixCompany } from '../../api/decisionMatrix';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { MetricCard, MetricGroup } from '../../components/data/DataComponents';
@@ -29,7 +31,7 @@ import { CompanyTrustChain } from '../company/CompanyTrustChain';
 import { AiExplanation } from '../../components/ai/AiExplanation';
 
 export function DecisionMatrix() {
-  const [data, setData] = useState<DecisionMatrixData | null>(null);
+  const [data, setData] = useState<DecisionMatrixResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<MatrixCompany | null>(null);
@@ -57,15 +59,26 @@ export function DecisionMatrix() {
     setChainLoading(true);
     setChainError(null);
     Promise.all([fetchEvidenceData(selected.sector), fetchReplayData(selected.sector)])
-      .then(([e, r]) => { if (active) { setChainEvidence(e); setChainReplay(r); } })
+      .then(([e, r]) => {
+        if (!active) return;
+        if (isDegraded(e) || isDegraded(r)) {
+          setChainError('Holding evidence or replay is unavailable in the current data mode.');
+          setChainEvidence(null);
+          setChainReplay(null);
+          return;
+        }
+        setChainEvidence(e);
+        setChainReplay(r);
+      })
       .catch((e) => { if (active) setChainError(String(e)); })
       .finally(() => { if (active) setChainLoading(false); });
     return () => { active = false; };
   }, [selected]);
 
   // Phase 13-Hardening (C): memoize the presentational positioning (recomputed only when data changes).
+  // D96: guard against degraded response before dereferencing data.companies
   const positioned = useMemo(() => {
-    if (!data) return [];
+    if (!data || isDegraded(data)) return [];
     return data.companies.map((c) => {
       const q = c.quality ?? 0;
       const v = c.valuation ?? 0;

@@ -134,3 +134,47 @@ describe('Evidence Hub — route integration', () => {
     expect(screen.queryByTestId('shell-not-authorized')).not.toBeInTheDocument();
   });
 });
+
+describe('Evidence Hub — D96 data-mode degraded state handling', () => {
+  const degradedLive = {
+    surface: 'Decision Matrix',
+    dataMode: 'LIVE',
+    state: 'LIVE_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'LIVE data is UNAVAILABLE for Decision Matrix.',
+    dependency: 'R-2 provider ingestion.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'LIVE',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  it('LIVE_UNAVAILABLE does not crash and renders governed DataModeUnavailable UI', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/decision-matrix')) {
+        return Promise.resolve({ ok: true, json: async () => degradedLive }) as never;
+      }
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(<MemoryRouter><EvidenceHub /></MemoryRouter>);
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+    expect(screen.getByTestId('data-mode-unavailable-mode')).toHaveTextContent('LIVE');
+    expect(screen.queryByTestId('data-table')).not.toBeInTheDocument();
+  });
+
+  it('successful-only fields are never accessed for degraded payloads', async () => {
+    const trapped = {
+      ...degradedLive,
+      get companies() { throw new Error('Attempted to access data.companies on degraded payload!'); },
+      get universe() { throw new Error('Attempted to access data.universe on degraded payload!'); },
+    };
+
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => trapped }) as never;
+    expect(() => render(<MemoryRouter><EvidenceHub /></MemoryRouter>)).not.toThrow();
+    expect(await screen.findByTestId('data-mode-unavailable')).toBeInTheDocument();
+  });
+});

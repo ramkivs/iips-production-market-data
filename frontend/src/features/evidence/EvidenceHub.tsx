@@ -10,9 +10,13 @@
  * fetchDecisionMatrixData client) and links each row to the certified explorers. It does NOT
  * duplicate Evidence/Replay Explorer logic, and it never hardcodes sectors, derives verdicts/
  * composites, or fabricates evidence values.
+ *
+ * D96: mode-aware UI12 propagation with guarded degraded handling.
  */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { isDegraded, type DegradedData } from '../../api/dataMode';
+import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { fetchDecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
 import { DataTable } from '../../components/data/DataComponents';
 import { DecisionBadge } from '../../components/decision/DecisionComponents';
@@ -21,6 +25,7 @@ import { CertifiedBadge, FreshnessBadge } from '../../components/ui/Badges';
 
 export function EvidenceHub() {
   const [companies, setCompanies] = useState<MatrixCompany[] | null>(null);
+  const [degraded, setDegraded] = useState<DegradedData | null>(null);
   const [provenance, setProvenance] = useState<string | null>(null);
   const [freshness, setFreshness] = useState<'LIVE' | 'SNAPSHOT' | 'STALE' | 'UNAVAILABLE' | 'REPLAY'>('SNAPSHOT');
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +37,13 @@ export function EvidenceHub() {
     fetchDecisionMatrixData()
       .then((d) => {
         if (!active) return;
+        if (isDegraded(d)) {
+          setDegraded(d);
+          setCompanies(null);
+          setError(null);
+          return;
+        }
+        setDegraded(null);
         setCompanies([...d.companies]);
         setProvenance(d.provenance.dataSource);
         setFreshness(d.provenance.freshness);
@@ -44,6 +56,7 @@ export function EvidenceHub() {
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load evidence directory: ${error}`} />;
+  if (degraded) return <DataModeUnavailable data={degraded} title="Evidence Hub" />;
   if (!companies) return <UnavailableState />;
 
   return (

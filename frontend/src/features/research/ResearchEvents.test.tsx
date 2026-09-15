@@ -265,3 +265,73 @@ describe('Research Events — route integration', () => {
     expect(screen.queryByTestId('shell-not-authorized')).not.toBeInTheDocument();
   });
 });
+
+describe('Research Events — D96 data-mode degraded state handling', () => {
+  const degradedLive = {
+    surface: 'Evidence',
+    dataMode: 'LIVE',
+    state: 'LIVE_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'LIVE data is UNAVAILABLE for Evidence.',
+    dependency: 'R-2 provider ingestion.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'LIVE',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  const degradedMatrix = {
+    surface: 'Decision Matrix',
+    dataMode: 'LIVE',
+    state: 'LIVE_UNAVAILABLE',
+    dataAvailable: false,
+    reason: 'LIVE data is UNAVAILABLE for Decision Matrix.',
+    dependency: 'R-2 provider ingestion.',
+    provenance: {
+      dataSource: 'none',
+      freshness: 'UNAVAILABLE',
+      mode: 'LIVE',
+      transportSemantics: 'This response deliberately contains NO market data.',
+    },
+  };
+
+  it('renders honest unavailable timestamp and partial note when evidence/replay are degraded', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/decision-matrix')) return Promise.resolve({ ok: true, json: async () => ({ companies: [{ sector: 'Technology' }] }) }) as never;
+      if (url.includes('/api/evidence/')) return Promise.resolve({ ok: true, json: async () => degradedLive }) as never;
+      if (url.includes('/api/replay/')) return Promise.resolve({ ok: true, json: async () => ({ ...degradedLive, surface: 'Replay' }) }) as never;
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/research/events/Technology']}>
+        <Routes><Route path="/research/events/:id" element={<ResearchEvents />} /></Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByTestId('events-partial-error')).toBeInTheDocument();
+    expect(screen.getByTestId('event-snapshot-time')).toHaveTextContent('unavailable');
+    expect(screen.getByTestId('event-replay-time')).toHaveTextContent('unavailable');
+  });
+
+  it('handles degraded decision-matrix gracefully without crash', async () => {
+    globalThis.fetch = vi.fn((input: unknown) => {
+      const url = String(input);
+      if (url.includes('/api/decision-matrix')) return Promise.resolve({ ok: true, json: async () => degradedMatrix }) as never;
+      if (url.includes('/api/evidence/')) return Promise.resolve({ ok: true, json: async () => degradedLive }) as never;
+      if (url.includes('/api/replay/')) return Promise.resolve({ ok: true, json: async () => ({ ...degradedLive, surface: 'Replay' }) }) as never;
+      return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+    });
+
+    expect(() => render(
+      <MemoryRouter initialEntries={['/research/events/Technology']}>
+        <Routes><Route path="/research/events/:id" element={<ResearchEvents />} /></Routes>
+      </MemoryRouter>,
+    )).not.toThrow();
+
+    expect(await screen.findByTestId('sector-selector-error')).toHaveTextContent(/Sector list unavailable/);
+  });
+});

@@ -69,7 +69,14 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     if (open && companies === null && !searchError && !loading) {
       setLoading(true);
       fetchDecisionMatrixData()
-        .then((d) => setCompanies([...d.companies]))
+        .then((d) => {
+          if (isDegraded(d)) {
+            // Fail-soft: degraded decision-matrix cannot provide fallback sector universe
+            setCompanies([]);
+            return;
+          }
+          setCompanies([...d.companies]);
+        })
         .catch((e: unknown) => setSearchError(String(e)))
         .finally(() => setLoading(false));
     }
