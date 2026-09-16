@@ -157,7 +157,18 @@ export async function handleP12Request(
       });
 
       const computeSnapshot = () => buildP12Response({ data: result, provenance, tenantId, endpoint: path });
-      const payload = dispatchForPrincipal('Governed Screener', { tenantId, ownerUserId }, computeSnapshot);
+
+      const mode = ownerUserId === undefined || ownerUserId === ''
+        ? 'SNAPSHOT'
+        : (await import('./data-mode/data-mode')).resolveDataMode(tenantId, ownerUserId);
+
+      let payload: unknown;
+      if (mode === 'LIVE') {
+        const { defaultDynamicDispatcher } = await import('./dynamic-transport/dynamic-transport-dispatcher');
+        payload = defaultDynamicDispatcher.dispatchScreener();
+      } else {
+        payload = dispatchForPrincipal('Governed Screener', { tenantId, ownerUserId }, computeSnapshot);
+      }
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(payload));

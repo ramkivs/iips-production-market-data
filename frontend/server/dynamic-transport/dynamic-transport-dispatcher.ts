@@ -153,6 +153,7 @@ export class DynamicTransportDispatcher {
         avgConviction: 75.0,
         avgQuality: 75.0,
         avgRisk: 65.0,
+        holdings: companies.length,
       },
       provenance,
     };
@@ -277,18 +278,25 @@ export class DynamicTransportDispatcher {
     const evidencedSecurities = ['TECH-H1', 'ENERGY-H1', 'BANK-H1'];
     const rows = [];
 
-    for (const id of evidencedSecurities) {
+    for (let i = 0; i < evidencedSecurities.length; i++) {
+      const id = evidencedSecurities[i];
       const res = this.executeForSecurity(id, asOfDate);
       if (res.status === 'DYNAMIC_EXECUTION_COMPLETED' && res.composite !== null) {
         rows.push({
+          rank: i + 1,
           canonicalSecurityId: res.canonicalSecurityId,
           companyId: res.canonicalSecurityId,
           sector: res.sector,
           verdict: res.verdict,
           composite: res.composite,
+          qualityAxis: (res.pillars?.quality as number) ?? 75.0,
           quality: res.pillars?.quality ?? 75.0,
           valuation: res.pillars?.valuation ?? null,
           status: res.status,
+          _degradation: 'good',
+          _rowQuality: 'good',
+          _rowCompleteness: 100,
+          _rowAsOf: asOfDate,
           provenance: {
             freshness: 'DEVELOPMENT_MIXED_VINTAGE',
             dataMode: 'LIVE',
@@ -297,15 +305,21 @@ export class DynamicTransportDispatcher {
       } else {
         // Explicit degraded row for blocked sectors (e.g. Banking)
         rows.push({
+          rank: i + 1,
           canonicalSecurityId: res.canonicalSecurityId ?? id,
           companyId: res.canonicalSecurityId ?? id,
           sector: res.sector ?? 'Unknown',
           verdict: 'UNAVAILABLE',
           composite: null,
+          qualityAxis: null,
           quality: null,
           valuation: null,
           status: res.status,
           degradationReason: res.reason,
+          _degradation: 'degraded-unavailable',
+          _rowQuality: 'unavailable',
+          _rowCompleteness: 33,
+          _rowAsOf: asOfDate,
           provenance: {
             freshness: 'DEVELOPMENT_MIXED_VINTAGE',
             dataMode: 'LIVE',
@@ -314,20 +328,67 @@ export class DynamicTransportDispatcher {
       }
     }
 
-    return {
+    const screenerResult = {
+      screenId: 'dynamic-live-screener',
+      tenantId: 'tenant-dev',
+      asOf: asOfDate,
+      executedAt: new Date().toISOString(),
+      mode: 'LIVE',
+      totalRows: rows.length,
+      quality: 'good',
+      filters: [],
+      sort: [{ field: 'composite', direction: 'desc' }],
+      tieBreakField: 'canonicalSecurityId',
+      rows,
+    };
+
+    const screenerProvenance = {
+      dataSource: 'IIPS Dynamic Screener Pipeline (DEVELOPMENT_HARNESS)',
+      freshness: 'DEVELOPMENT_MIXED_VINTAGE',
+      calibratedAt: '2026-08-09T00:00:00.000Z',
+      transportSemantics: 'Development test harness; fundamental denominators held static; NOT PRODUCTION CERTIFIED',
+      asOf: asOfDate,
+      receivedAt: new Date().toISOString(),
+      dataVersion: 'v1.1-reference',
+      mode: 'LIVE',
+      quality: 'good',
+      completenessPct: 100,
+      contributingSnapshotIds: ['snap-dynamic-live'],
+      identityMappingVersion: '1.0.0',
+      namespaceVersion: '1.0.0',
+      classification: 'DEVELOPMENT_HARNESS',
+    };
+
+    const envelope = {
+      apiVersion: '1.0',
+      endpoint: '/api/screener/execute',
+      tenantId: 'tenant-dev',
+      data: screenerResult,
+      provenance: screenerProvenance,
+      responseGeneratedAt: new Date().toISOString(),
+      lineage: 'DUAL',
+      transportDisclosure: {
+        dualTransport: true,
+        statement: 'Two transports operate; they are NOT interchangeable.',
+        p12Scope: 'P12 API/DTO Gate scope only.',
+        v2Scope: 'The 13 pre-existing certified v2.0 read routes.',
+        certificationNote: 'Transport binding does NOT certify any UI surface.',
+      },
+      governanceLimitations: {
+        ad17: { ad17Status: 'UNRESOLVED' },
+        security: { c12Status: 'BLOCKED' },
+        ui05Certified: false,
+        uiSurfaceCertified: false,
+        productionAuthorized: false,
+      },
+      // Top-level fallbacks for consumers expecting flat screener result
       dataMode: 'LIVE',
       freshness: 'DEVELOPMENT_MIXED_VINTAGE',
       totalCount: rows.length,
       rows,
-      provenance: {
-        dataSource: 'IIPS Dynamic Screener Pipeline (DEVELOPMENT_HARNESS)',
-        dataMode: 'LIVE',
-        freshness: 'DEVELOPMENT_MIXED_VINTAGE',
-        fundamentalsVintage: 'v1.1-reference',
-        certificationState: 'DEVELOPMENT_HARNESS_VERIFIED_ONLY',
-        transportSemantics: 'Development test harness; fundamental denominators held static; NOT PRODUCTION CERTIFIED',
-      },
     };
+
+    return envelope;
   }
 }
 

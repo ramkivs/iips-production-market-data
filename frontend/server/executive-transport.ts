@@ -1084,6 +1084,17 @@ const server = http.createServer((req, res) => {
         return;
       }
       if (req.url === '/api/decision-matrix') {
+        const mode = modePrincipal.ownerUserId === undefined || modePrincipal.ownerUserId === ''
+          ? 'SNAPSHOT'
+          : dataMode.resolveDataMode(modePrincipal.tenantId, modePrincipal.ownerUserId);
+
+        if (mode === 'LIVE') {
+          const { defaultDynamicDispatcher } = await import('./dynamic-transport/dynamic-transport-dispatcher');
+          res.writeHead(200);
+          res.end(JSON.stringify(defaultDynamicDispatcher.dispatchDecisionMatrix()));
+          return;
+        }
+
         res.writeHead(200);
         res.end(JSON.stringify(dataMode.dispatchForPrincipal('Decision Matrix', modePrincipal, computeCertifiedDecisionMatrix)));
         return;

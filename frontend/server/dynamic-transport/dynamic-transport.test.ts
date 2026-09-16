@@ -278,5 +278,49 @@ describe('D112-E LIVE Transport & UI Routing Dual-Plane Invariant Suite', () => 
     const res2 = dispatcher.dispatchExecutive('2026-09-14');
     assert.deepEqual(res, res2);
   });
+
+  it('13. [DECISION MATRIX DTO CONTRACT] satisfies full canonical DecisionMatrixData shape with universe.holdings', () => {
+    const res = dispatcher.dispatchDecisionMatrix('2026-09-14') as Record<string, unknown>;
+    assert.equal(res.matrixType, 'scatter');
+    assert.ok(typeof res.note === 'string');
+    assert.ok(Array.isArray(res.companies));
+    assert.ok((res.companies as Array<unknown>).length >= 2);
+
+    const univ = res.universe as Record<string, unknown>;
+    assert.ok(typeof univ.avgConviction === 'number');
+    assert.ok(typeof univ.avgQuality === 'number');
+    assert.ok(typeof univ.holdings === 'number');
+    assert.equal(univ.holdings, (res.companies as Array<unknown>).length);
+
+    const prov = res.provenance as Record<string, unknown>;
+    assert.equal(prov.dataMode, 'LIVE');
+    assert.equal(prov.freshness, 'DEVELOPMENT_MIXED_VINTAGE');
+  });
+
+  it('14. [SCREENER ENVELOPE DTO CONTRACT] satisfies both P12 envelope data contract and top-level screener consumer', () => {
+    const env = dispatcher.dispatchScreener('2026-09-14') as Record<string, unknown>;
+    assert.equal(env.apiVersion, '1.0');
+    assert.equal(env.endpoint, '/api/screener/execute');
+    assert.equal(env.lineage, 'DUAL');
+
+    const data = env.data as Record<string, unknown>;
+    assert.ok(data);
+    assert.equal(data.mode, 'LIVE');
+    assert.ok(Array.isArray(data.rows));
+    assert.ok((data.rows as Array<unknown>).length >= 3);
+
+    // Verify row structure conforms to P12ScreenRow
+    const firstRow = (data.rows as Array<Record<string, unknown>>)[0];
+    assert.ok(typeof firstRow.rank === 'number');
+    assert.ok(typeof firstRow.canonicalSecurityId === 'string');
+    assert.ok(typeof firstRow.sector === 'string');
+    assert.ok(typeof firstRow.composite === 'number');
+    assert.ok(typeof firstRow._degradation === 'string');
+
+    // Verify top-level fallback fields exist for flat consumers
+    assert.equal(env.dataMode, 'LIVE');
+    assert.equal(env.freshness, 'DEVELOPMENT_MIXED_VINTAGE');
+    assert.ok(Array.isArray(env.rows));
+  });
 });
 
