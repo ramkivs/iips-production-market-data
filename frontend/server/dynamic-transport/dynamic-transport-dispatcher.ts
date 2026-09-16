@@ -198,7 +198,41 @@ export class DynamicTransportDispatcher {
       }
     }
 
-    const avgConviction = validCount > 0 ? Number((totalScore / validCount).toFixed(2)) : null;
+    const avgConviction = validCount > 0 ? Number((totalScore / validCount).toFixed(2)) : 0;
+
+    // Deterministically derive ranking from valid decisions, sorted by composite descending
+    const ranking = decisions
+      .filter((d): d is typeof d & { composite: number; verdict: string } => d.composite !== null && d.verdict !== null && d.verdict !== 'UNAVAILABLE')
+      .sort((a, b) => b.composite - a.composite)
+      .map((d) => ({
+        companyId: `${d.sector}-H1`,
+        sector: d.sector,
+        conviction: d.composite,
+      }));
+
+    // Deterministically derive opportunity from ranking
+    const opportunity = ranking.slice(0, 3);
+
+    // Compute sector exposure for valid dynamic holdings
+    const sectorExposure: Record<string, number> = {};
+    if (validCount > 0) {
+      const equalWeight = Number((1 / validCount).toFixed(4));
+      for (const r of ranking) {
+        sectorExposure[r.sector] = equalWeight;
+      }
+    }
+
+    const diversification = {
+      band: validCount >= 3 ? 'Adequate' : 'Moderate',
+      flags: validCount < 3
+        ? ['Development harness active: uncalibrated sectors fail-closed to preserve boundary safety']
+        : [],
+    };
+
+    const correlation = {
+      flags: [] as readonly string[],
+      concentrationSectors: validCount > 0 ? [ranking[0].sector] : ([] as readonly string[]),
+    };
 
     const provenance: DynamicTransportProvenance = {
       dataMode: 'LIVE',
@@ -220,10 +254,17 @@ export class DynamicTransportDispatcher {
         portfolioId: 'PF-DYNAMIC-DEV',
         scenario: 'Balanced',
         holdings: validCount,
+        sectorExposure,
+        concentration: validCount > 0 ? Number((100 / validCount).toFixed(1)) : 0,
+        diversificationScore: validCount >= 2 ? 68.0 : 45.0,
         avgConviction,
         avgQuality: 75.0,
         avgRisk: 65.0,
       },
+      diversification,
+      ranking,
+      opportunity,
+      correlation,
       decisions,
       provenance,
     };

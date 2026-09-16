@@ -224,5 +224,59 @@ describe('D112-E LIVE Transport & UI Routing Dual-Plane Invariant Suite', () => 
     assert.equal(banking.verdict, 'UNAVAILABLE');
     assert.equal(banking.composite, null);
   });
+
+  it('12. [EXECUTIVE LIVE FULL DTO CONTRACT] verifies all 7 canonical ExecutiveData structures are present and deterministic', () => {
+    const res = dispatcher.dispatchExecutive('2026-09-14') as Record<string, unknown>;
+
+    // 1. All 7 top-level structures present
+    assert.ok(res.portfolio, 'portfolio must be defined');
+    assert.ok(res.diversification, 'diversification must be defined');
+    assert.ok(res.ranking, 'ranking must be defined');
+    assert.ok(res.opportunity, 'opportunity must be defined');
+    assert.ok(res.correlation, 'correlation must be defined');
+    assert.ok(res.decisions, 'decisions must be defined');
+    assert.ok(res.provenance, 'provenance must be defined');
+
+    // 2. ranking is array and deterministically derived
+    const ranking = res.ranking as Array<Record<string, unknown>>;
+    assert.ok(Array.isArray(ranking));
+    assert.ok(ranking.length >= 2);
+    assert.ok(typeof ranking[0].companyId === 'string');
+    assert.ok(typeof ranking[0].sector === 'string');
+    assert.ok(typeof ranking[0].conviction === 'number');
+    // Descending order verified
+    assert.ok((ranking[0].conviction as number) >= (ranking[1].conviction as number));
+
+    // 3. opportunity is array derived from ranking
+    const opportunity = res.opportunity as Array<Record<string, unknown>>;
+    assert.ok(Array.isArray(opportunity));
+    assert.ok(opportunity.length <= 3);
+
+    // 4. diversification contains band and flags array
+    const div = res.diversification as Record<string, unknown>;
+    assert.ok(typeof div.band === 'string');
+    assert.ok(Array.isArray(div.flags));
+
+    // 5 & 6. correlation contains flags and concentrationSectors arrays
+    const corr = res.correlation as Record<string, unknown>;
+    assert.ok(Array.isArray(corr.flags));
+    assert.ok(Array.isArray(corr.concentrationSectors));
+
+    // 7. portfolio contains all expected fields
+    const pf = res.portfolio as Record<string, unknown>;
+    assert.ok(typeof pf.portfolioId === 'string');
+    assert.ok(typeof pf.scenario === 'string');
+    assert.ok(typeof pf.holdings === 'number');
+    assert.ok(typeof pf.sectorExposure === 'object' && pf.sectorExposure !== null);
+    assert.ok(typeof pf.concentration === 'number');
+    assert.ok(typeof pf.diversificationScore === 'number');
+    assert.ok(typeof pf.avgConviction === 'number');
+    assert.ok(typeof pf.avgQuality === 'number');
+    assert.ok(typeof pf.avgRisk === 'number');
+
+    // 8. Determinism
+    const res2 = dispatcher.dispatchExecutive('2026-09-14');
+    assert.deepEqual(res, res2);
+  });
 });
 
