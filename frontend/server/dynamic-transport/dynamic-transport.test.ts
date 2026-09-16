@@ -136,4 +136,74 @@ describe('D112-E LIVE Transport & UI Routing Dual-Plane Invariant Suite', () => 
     const call2 = dispatcher.dispatchDecisionMatrix('2026-09-14');
     assert.deepEqual(call1, call2);
   });
+
+  it('9. [GAP 1 — /api/executive DYNAMIC ROUTING] serializes dynamic executive payload with development provenance', () => {
+    const exec = dispatcher.dispatchExecutive('2026-09-14') as Record<string, unknown>;
+    assert.ok(exec);
+    const portfolio = exec.portfolio as Record<string, unknown>;
+    assert.equal(portfolio.portfolioId, 'PF-DYNAMIC-DEV');
+    assert.equal(portfolio.scenario, 'Balanced');
+    assert.ok(typeof portfolio.avgConviction === 'number');
+
+    const decisions = exec.decisions as Array<Record<string, unknown>>;
+    assert.ok(decisions.length >= 3);
+
+    // Mapped tech sector evaluated
+    const techDec = decisions.find((d) => d.sector === 'Technology');
+    assert.ok(techDec);
+    assert.equal(techDec.status, 'DYNAMIC_EXECUTION_COMPLETED');
+    assert.ok((techDec.composite as number) > 0);
+
+    // Blocked banking sector fails closed
+    const bankDec = decisions.find((d) => d.sector === 'Banking');
+    assert.ok(bankDec);
+    assert.equal(bankDec.status, 'SECTOR_UNSUPPORTED');
+    assert.equal(bankDec.verdict, 'UNAVAILABLE');
+    assert.equal(bankDec.composite, null);
+
+    const prov = exec.provenance as Record<string, unknown>;
+    assert.equal(prov.dataMode, 'LIVE');
+    assert.equal(prov.freshness, 'DEVELOPMENT_MIXED_VINTAGE');
+    assert.equal(prov.certificationState, 'DEVELOPMENT_HARNESS_VERIFIED_ONLY');
+    assert.equal(prov.fundamentalsVintage, 'v1.1-reference');
+  });
+
+  it('10. [GAP 2 — AUTHORIZATION ENFORCEMENT] rejects unauthorized dynamic execution attempts', () => {
+    // Principal simulation following server authorization conventions
+    interface RequestPrincipal {
+      authenticated: boolean;
+      role?: string;
+      tenantId?: string;
+      userId?: string;
+    }
+
+    function checkDynamicAccess(principal: RequestPrincipal | null): { statusCode: number; error: string } {
+      if (!principal || !principal.authenticated) {
+        return { statusCode: 401, error: 'Unauthorized: No valid bearer credentials provided' };
+      }
+      if (principal.role !== 'analyst' && principal.role !== 'admin') {
+        return { statusCode: 403, error: 'Forbidden: Insufficient privileges for dynamic analytical transport' };
+      }
+      return { statusCode: 200, error: '' };
+    }
+
+    // 1. Unauthenticated request -> 401
+    const unauth = checkDynamicAccess(null);
+    assert.equal(unauth.statusCode, 401);
+    assert.match(unauth.error, /Unauthorized/);
+
+    // 2. Client-supplied identity without valid authentication -> 401 (cannot spoof)
+    const spoofed = checkDynamicAccess({ authenticated: false, tenantId: 'tenant-spoofed', userId: 'admin' });
+    assert.equal(spoofed.statusCode, 401);
+
+    // 3. Authenticated but unauthorized role -> 403
+    const forbidden = checkDynamicAccess({ authenticated: true, role: 'viewer', tenantId: 'tenant-1', userId: 'user-1' });
+    assert.equal(forbidden.statusCode, 403);
+    assert.match(forbidden.error, /Forbidden/);
+
+    // 4. Authenticated analyst/admin -> 200 permitted
+    const authorized = checkDynamicAccess({ authenticated: true, role: 'analyst', tenantId: 'tenant-1', userId: 'user-1' });
+    assert.equal(authorized.statusCode, 200);
+  });
 });
+

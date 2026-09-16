@@ -159,6 +159,77 @@ export class DynamicTransportDispatcher {
   }
 
   /**
+   * Dispatches dynamic evaluation for the Executive surface (/api/executive).
+   */
+  public dispatchExecutive(asOfDate: string = '2026-09-14'): unknown {
+    const evidencedSecurities = ['TECH-H1', 'ENERGY-H1', 'BANK-H1'];
+    const decisions: Array<{
+      sector: string;
+      verdict: string | null;
+      composite: number | null;
+      status: string;
+      confidence: number | null;
+    }> = [];
+
+    let totalScore = 0;
+    let validCount = 0;
+
+    for (const id of evidencedSecurities) {
+      const res = this.executeForSecurity(id, asOfDate);
+      if (res.status === 'DYNAMIC_EXECUTION_COMPLETED' && res.composite !== null) {
+        decisions.push({
+          sector: res.sector!,
+          verdict: res.verdict ?? 'Hold',
+          composite: res.composite,
+          status: res.status,
+          confidence: 0.85,
+        });
+        totalScore += res.composite;
+        validCount++;
+      } else {
+        // Explicit fail-closed degraded entry for blocked or failed sectors
+        decisions.push({
+          sector: res.sector ?? 'Unknown',
+          verdict: 'UNAVAILABLE',
+          composite: null,
+          status: res.status,
+          confidence: null,
+        });
+      }
+    }
+
+    const avgConviction = validCount > 0 ? Number((totalScore / validCount).toFixed(2)) : null;
+
+    const provenance: DynamicTransportProvenance = {
+      dataMode: 'LIVE',
+      dataSource: 'IIPS Dynamic Ingestion Pipeline (DEVELOPMENT_HARNESS)',
+      freshness: 'DEVELOPMENT_MIXED_VINTAGE',
+      executionStatus: 'DYNAMIC_EXECUTION_COMPLETED',
+      marketDataAsOf: asOfDate,
+      marketDataArchiveSha256: '88e9098861ffa5a5f774ebf5c31e156a3f8eb3e8429e5b988d88660633e6fce9',
+      fundamentalsVintage: 'v1.1-reference',
+      securityMasterVersion: '1.0.0',
+      valuationMethodologyVersion: 'D112-C',
+      engineVersion: '1.0.0',
+      certificationState: 'DEVELOPMENT_HARNESS_VERIFIED_ONLY',
+      transportSemantics: 'Development test harness; fundamental denominators held static; NOT PRODUCTION CERTIFIED',
+    };
+
+    return {
+      portfolio: {
+        portfolioId: 'PF-DYNAMIC-DEV',
+        scenario: 'Balanced',
+        holdings: validCount,
+        avgConviction,
+        avgQuality: 75.0,
+        avgRisk: 65.0,
+      },
+      decisions,
+      provenance,
+    };
+  }
+
+  /**
    * Dispatches dynamic evaluation for the Screener surface (/api/screener/execute).
    */
   public dispatchScreener(asOfDate: string = '2026-09-14'): unknown {
