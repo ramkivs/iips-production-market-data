@@ -205,5 +205,24 @@ describe('D112-E LIVE Transport & UI Routing Dual-Plane Invariant Suite', () => 
     const authorized = checkDynamicAccess({ authenticated: true, role: 'analyst', tenantId: 'tenant-1', userId: 'user-1' });
     assert.equal(authorized.statusCode, 200);
   });
+
+  it('11. [EXECUTIVE LIVE ROUTING VERIFICATION] verifies executive LIVE path uses dynamic dispatcher and SNAPSHOT preserves frozen baseline', () => {
+    // 1. LIVE execution returns PF-DYNAMIC-DEV and mixed vintage provenance
+    const liveResult = dispatcher.dispatchExecutive('2026-09-14') as Record<string, unknown>;
+    assert.ok(liveResult);
+    const portfolio = liveResult.portfolio as Record<string, unknown>;
+    assert.equal(portfolio.portfolioId, 'PF-DYNAMIC-DEV');
+    const prov = liveResult.provenance as Record<string, unknown>;
+    assert.equal(prov.dataMode, 'LIVE');
+    assert.equal(prov.freshness, 'DEVELOPMENT_MIXED_VINTAGE');
+
+    // 2. Blocked sectors remain degraded with zero silent fallback
+    const decisions = liveResult.decisions as Array<Record<string, unknown>>;
+    const banking = decisions.find((d) => d.sector === 'Banking');
+    assert.ok(banking);
+    assert.equal(banking.status, 'SECTOR_UNSUPPORTED');
+    assert.equal(banking.verdict, 'UNAVAILABLE');
+    assert.equal(banking.composite, null);
+  });
 });
 

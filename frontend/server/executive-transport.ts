@@ -1054,6 +1054,17 @@ const server = http.createServer((req, res) => {
       const dataMode = await import('./data-mode/data-mode');
 
       if (req.url === '/api/executive') {
+        const mode = modePrincipal.ownerUserId === undefined || modePrincipal.ownerUserId === ''
+          ? 'SNAPSHOT'
+          : dataMode.resolveDataMode(modePrincipal.tenantId, modePrincipal.ownerUserId);
+
+        if (mode === 'LIVE') {
+          const { defaultDynamicDispatcher } = await import('./dynamic-transport/dynamic-transport-dispatcher');
+          res.writeHead(200);
+          res.end(JSON.stringify(defaultDynamicDispatcher.dispatchExecutive()));
+          return;
+        }
+
         res.writeHead(200);
         res.end(JSON.stringify(dataMode.dispatchForPrincipal('Executive', modePrincipal, computeCertifiedExecutive)));
         return;
