@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schemaVersion": "1.0.0",
+  "publishedDate": "2026-09-16",
+  "authoritativeSource": "IIPS Program Authority Adjudication D112-A",
+  "description": "Immutable canonical security master linking evidenced NSE CM-UDiFF market identities to IIPS sector entities.",
+  "entries": [
+    {
+      "canonicalSecurityId": "ENERGY-H1",
+      "tickerSymbol": "RELIANCE",
+      "isin": "INE002A01018",
+      "exchange": "NSE",
+      "series": "EQ",
+      "sector": "Energy",
+      "companyName": "Reliance Industries Limited",
+      "dhanSecurityId": "2885",
+      "listingStatus": "ACTIVE",
+      "effectiveFrom": "2000-01-01",
+      "mappingVersion": "1.0.0",
+      "evidenceSource": "docs/D103_DEMO_W2_NSE_PUBLIC_ARCHIVE_INGESTION_REPORT.md; frontend/server/market-data/operator-drop.test.ts; frontend/server/market-data/dhan-instrument-master.ts"
+    },
+    {
+      "canonicalSecurityId": "TECH-H1",
+      "tickerSymbol": "TCS",
+      "isin": "INE467B01029",
+      "exchange": "NSE",
+      "series": "EQ",
+      "sector": "Technology",
+      "companyName": "Tata Consultancy Services Limited",
+      "dhanSecurityId": "11536",
+      "listingStatus": "ACTIVE",
+      "effectiveFrom": "2004-08-25",
+      "mappingVersion": "1.0.0",
+      "evidenceSource": "docs/D103_DEMO_W2_NSE_PUBLIC_ARCHIVE_INGESTION_REPORT.md; frontend/server/market-data/fixtures/synthetic-fixtures.ts; frontend/server/market-data/dhan-instrument-master.ts"
+    },
+    {
+      "canonicalSecurityId": "BANK-H1",
+      "tickerSymbol": "HDFCBANK",
+      "isin": "INE040A01034",
+      "exchange": "NSE",
+      "series": "EQ",
+      "sector": "Banking",
+      "companyName": "HDFC Bank Limited",
+      "dhanSecurityId": "1333",
+      "listingStatus": "ACTIVE",
+      "effectiveFrom": "2000-01-01",
+      "mappingVersion": "1.0.0",
+      "evidenceSource": "docs/D103_DEMO_W2_NSE_PUBLIC_ARCHIVE_INGESTION_REPORT.md; frontend/server/market-data/fixtures/synthetic-fixtures.ts; frontend/server/market-data/dhan-instrument-master.ts"
+    }
+  ],
+  "excludedCandidateMappings": [
+    {
+      "candidateSymbol": "TATAMOTORS",
+      "candidateIsin": "INE155A01022",
+      "targetSector": "Automobile",
+      "exclusionReason": "UNMAPPED_FAIL_CLOSED: Insufficient direct repository/fixture evidence linking ISIN INE155A01022 and FinInstrmNm in local store. Pending authoritative master CSV ingest."
+    },
+    {
+      "candidateSymbol": "HINDUNILVR",
+      "candidateIsin": "INE030A01027",
+      "targetSector": "Consumer",
+      "exclusionReason": "UNMAPPED_FAIL_CLOSED: Insufficient direct repository/fixture evidence linking ISIN INE030A01027 in local store. Pending authoritative master CSV ingest."
+    },
+    {
+      "candidateSymbol": "SUNPHARMA",
+      "candidateIsin": "INE044A01036",
+      "targetSector": "Healthcare",
+      "exclusionReason": "UNMAPPED_FAIL_CLOSED: Insufficient direct repository/fixture evidence linking ISIN INE044A01036 in local store. Pending authoritative master CSV ingest."
+    },
+    {
+      "candidateSymbol": "BHARTIARTL",
+      "candidateIsin": "INE397D01024",
+      "targetSector": "Telecommunications",
+      "exclusionReason": "UNMAPPED_FAIL_CLOSED: Dhan ID 10604 evidenced, but ISIN INE397D01024 not evidenced in repository Bhavcopy fixtures. Pending authoritative master CSV ingest."
+    },
+    {
+      "candidateSymbol": "TATASTEEL",
+      "candidateIsin": "INE081A01020",
+      "targetSector": "Materials & Metals",
+      "exclusionReason": "UNMAPPED_FAIL_CLOSED: Insufficient direct repository/fixture evidence linking ISIN INE081A01020 in local store. Pending authoritative master CSV ingest."
+    },
+    {
+      "candidateSymbol": "NTPC",
+      "candidateIsin": "INE733E01010",
+      "targetSector": "Utilities",
+      "exclusionReason": "UNMAPPED_FAIL_CLOSED: Insufficient direct repository/fixture evidence linking ISIN INE733E01010 in local store. Pending authoritative master CSV ingest."
+    },
+    {
+      "candidateSymbol": "LT",
+      "candidateIsin": "INE018A01030",
+      "targetSector": "Industrials",
+      "exclusionReason": "UNMAPPED_FAIL_CLOSED: Dhan ID 11483 evidenced, but ISIN INE018A01030 not evidenced in repository Bhavcopy fixtures. Pending authoritative master CSV ingest."
+    },
+    {
+      "candidateSymbol": "HDFCLIFE",
+      "candidateIsin": "INE795G01014",
+      "targetSector": "Insurance",
+      "exclusionReason": "UNMAPPED_FAIL_CLOSED: Insufficient direct repository/fixture evidence linking ISIN INE795G01014 in local store. Pending authoritative master CSV ingest."
+    },
+    {
+      "candidateSymbol": "INDHOTEL",
+      "candidateIsin": "INE053A01029",
+      "targetSector": "Hospitality",
+      "exclusionReason": "UNMAPPED_FAIL_CLOSED: Insufficient direct repository/fixture evidence linking ISIN INE053A01029 in local store. Pending authoritative master CSV ingest."
+    },
+    {
+      "candidateSymbol": "BSE",
+      "candidateIsin": "INE118H01025",
+      "targetSector": "Capital Markets",
+      "exclusionReason": "UNMAPPED_FAIL_CLOSED: Insufficient direct repository/fixture evidence linking ISIN INE118H01025 in local store. Pending authoritative master CSV ingest."
+    }
+  ]
+}
