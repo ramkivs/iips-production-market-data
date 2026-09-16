@@ -8,7 +8,7 @@
 import { PersistenceService, type PersistedRecord } from './persistence-service';
 import { AggregateMutationError, type AggregateHistory, type AggregateRecord, type MutationInput, type MutationResult, type MultiMutationInput } from './aggregate-persistence';
 
-interface Prepared<T> { kind: 'aggregate.prepare'; groupId: string; mutation: MutationInput<T>; value: T; fromVersion: number; occurredAt: string; historyId: string; }
+interface Prepared<T> { kind: 'aggregate.prepare'; groupId: string; mutation: MutationInput<T>; value: T; fromVersion: number; occurredAt: string; historyId: string; fingerprint: string; }
 interface Committed { kind: 'aggregate.commit'; groupId: string; mutationKeys: string[]; }
 type JournalPayload<T> = Prepared<T> | Committed;
 
@@ -16,7 +16,9 @@ export class JournalAggregateStore<T> {
   private records = new Map<string, AggregateRecord<T>>();
   private histories = new Map<string, AggregateHistory<T>[]>();
   private idempotency = new Map<string, MutationResult<T>>();
+  private fingerprints = new Map<string, string>();
   private recovered = false;
+  private groupSequence = 0;
 
   constructor(
     private readonly journal: PersistenceService,
@@ -37,21 +39,27 @@ export class JournalAggregateStore<T> {
 
   mutateMany(inputs: readonly MultiMutationInput<T>[]): readonly MutationResult<T>[] {
     if (inputs.length === 0 || new Set(inputs.map((x) => x.groupKey)).size !== 1) throw new AggregateMutationError('INVALID_MUTATION', 'one non-empty mutation group is required');
-    const groupId = `${inputs[0].tenantId}:${inputs[0].ownerUserId}:${inputs[0].groupKey}:${this.clock()}`;
+    const groupId = `${inputs[0].tenantId}:${inputs[0].ownerUserId}:${inputs[0].groupKey}:${this.clock()}:${++this.groupSequence}`;
     const prepared: Prepared<T>[] = [];
     const results: MutationResult<T>[] = [];
     for (const input of inputs) {
       this.validate(input);
-      const idem = this.idempotency.get(this.idem(input));
-      if (idem) { results.push({ ...idem, replayed: true }); continue; }
       const current = this.records.get(input.aggregateId);
+      const candidate = input.mutate(current?.value);
+      if (candidate === undefined) throw new AggregateMutationError('INVALID_MUTATION', 'mutation returned undefined');
+      const fingerprint = this.fingerprint(input, candidate);
+      const idemKey = this.idem(input);
+      const prior = this.idempotency.get(idemKey);
+      if (prior) {
+        if (this.fingerprints.get(idemKey) !== fingerprint) throw new AggregateMutationError('IDEMPOTENCY_REPLAY', 'idempotency key was reused with a different mutation');
+        results.push({ ...prior, replayed: true }); continue;
+      }
       if (current && (current.tenantId !== input.tenantId || current.ownerUserId !== input.ownerUserId)) throw new AggregateMutationError('TENANT_SCOPE_DENIED', 'aggregate is outside the authenticated scope');
       const version = current?.version ?? 0;
       if (version !== input.expectedVersion) throw new AggregateMutationError('VERSION_CONFLICT', `expected version ${input.expectedVersion}, actual ${version}`);
-      const value = input.mutate(current?.value);
-      if (value === undefined) throw new AggregateMutationError('INVALID_MUTATION', 'mutation returned undefined');
+      const value = candidate;
       const occurredAt = input.now ?? this.clock();
-      prepared.push({ kind: 'aggregate.prepare', groupId, mutation: input, value: structuredClone(value), fromVersion: version, occurredAt, historyId: this.idFactory() });
+      prepared.push({ kind: 'aggregate.prepare', groupId, mutation: input, value: structuredClone(value), fromVersion: version, occurredAt, historyId: this.idFactory(), fingerprint });
     }
     if (prepared.length === 0) return Object.freeze(results);
     for (const p of prepared) this.journal.append({ tenantId: p.mutation.tenantId, ownerUserId: p.mutation.ownerUserId, dedupKey: `aggregate:${p.groupId}:prepare:${p.mutation.idempotencyKey}`, payload: p });
@@ -79,25 +87,52 @@ export class JournalAggregateStore<T> {
 
   /** Rebuild one authenticated tenant/owner scope from the existing journal. */
   recoverScope(tenantId: string, ownerUserId: string): void {
+    for (const [id, record] of this.records) if (record.tenantId === tenantId && record.ownerUserId === ownerUserId) this.records.delete(id);
+    for (const [id, history] of this.histories) if (history[0]?.tenantId === tenantId && history[0]?.ownerUserId === ownerUserId) this.histories.delete(id);
+    for (const [key, result] of this.idempotency) if (result.record.tenantId === tenantId && result.record.ownerUserId === ownerUserId) { this.idempotency.delete(key); this.fingerprints.delete(key); }
     const records = this.journal.listOrdered(tenantId, ownerUserId);
-    const prepared = new Map<string, Prepared<T>[]>(); const committed = new Set<string>();
+    const prepared = new Map<string, Prepared<T>[]>(); const committed = new Map<string, string>(); const conflicted = new Set<string>();
     for (const r of records) {
       const p = r.payload as Partial<JournalPayload<T>>;
-      if (p.kind === 'aggregate.prepare' && typeof p.groupId === 'string') {
+      if (p.kind === 'aggregate.prepare') {
+        if (!this.validPrepare(p)) continue;
         const list = prepared.get(p.groupId) ?? []; list.push(p as Prepared<T>); prepared.set(p.groupId, list);
-      } else if (p.kind === 'aggregate.commit' && typeof p.groupId === 'string') committed.add(p.groupId);
+      } else if (p.kind === 'aggregate.commit') {
+        if (!this.validCommit(p) || conflicted.has(p.groupId)) continue;
+        const signature = JSON.stringify(p.mutationKeys);
+        const prior = committed.get(p.groupId);
+        if (prior !== undefined && prior !== signature) { conflicted.add(p.groupId); committed.delete(p.groupId); continue; }
+        committed.set(p.groupId, signature);
+      }
     }
-    for (const [groupId, list] of prepared) if (committed.has(groupId)) for (const p of list) {
+    for (const [groupId, list] of [...prepared.entries()].sort((a, b) => (a[1][0]?.fromVersion ?? 0) - (b[1][0]?.fromVersion ?? 0))) if (committed.has(groupId) && !conflicted.has(groupId)) for (const p of list) {
       if (p.mutation.tenantId === tenantId && p.mutation.ownerUserId === ownerUserId) this.apply(p);
     }
+  }
+
+  private validPrepare(value: Partial<Prepared<T>>): boolean {
+    const m = value.mutation;
+    return typeof value.groupId === 'string' && value.groupId.length > 0 && typeof value.historyId === 'string' &&
+      typeof value.fingerprint === 'string' && Number.isInteger(value.fromVersion) && value.fromVersion >= 0 &&
+      typeof value.occurredAt === 'string' && !!m && typeof m.aggregateId === 'string' && !!m.tenantId && !!m.ownerUserId &&
+      typeof m.idempotencyKey === 'string';
+  }
+
+  private validCommit(value: Partial<Committed>): boolean {
+    return typeof value.groupId === 'string' && value.groupId.length > 0 && Array.isArray(value.mutationKeys) &&
+      value.mutationKeys.every((key) => typeof key === 'string');
   }
 
   private apply(p: Prepared<T>): MutationResult<T> {
     const current = this.records.get(p.mutation.aggregateId); const record: AggregateRecord<T> = Object.freeze({ aggregateId: p.mutation.aggregateId, tenantId: p.mutation.tenantId, ownerUserId: p.mutation.ownerUserId, version: p.fromVersion + 1, value: structuredClone(p.value), updatedAt: p.occurredAt });
     const history: AggregateHistory<T> = Object.freeze({ historyId: p.historyId, aggregateId: p.mutation.aggregateId, tenantId: p.mutation.tenantId, ownerUserId: p.mutation.ownerUserId, fromVersion: p.fromVersion, toVersion: record.version, value: structuredClone(p.value), mutationKey: p.mutation.idempotencyKey, occurredAt: p.occurredAt });
-    const result = Object.freeze({ record, history, replayed: false }); this.records.set(record.aggregateId, record); this.histories.set(record.aggregateId, [...(this.histories.get(record.aggregateId) ?? []), history]); this.idempotency.set(this.idem(p.mutation), result); void current; return result;
+    const result = Object.freeze({ record, history, replayed: false }); this.records.set(record.aggregateId, record); this.histories.set(record.aggregateId, [...(this.histories.get(record.aggregateId) ?? []), history]); this.idempotency.set(this.idem(p.mutation), result); this.fingerprints.set(this.idem(p.mutation), p.fingerprint); void current; return result;
   }
 
   private idem(input: MutationInput<T>): string { return `${input.tenantId}\u0000${input.ownerUserId}\u0000${input.idempotencyKey}`; }
+  private fingerprint(input: MutationInput<T>, value: T): string {
+    return JSON.stringify({ aggregateId: input.aggregateId, expectedVersion: input.expectedVersion, value });
+  }
+
   private validate(input: MutationInput<T>): void { if (!input.tenantId || !input.ownerUserId || !input.aggregateId || !input.idempotencyKey || !Number.isInteger(input.expectedVersion) || input.expectedVersion < 0 || typeof input.mutate !== 'function') throw new AggregateMutationError('INVALID_MUTATION', 'invalid mutation envelope'); }
 }
