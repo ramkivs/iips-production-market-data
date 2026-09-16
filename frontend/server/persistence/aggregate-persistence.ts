@@ -62,7 +62,16 @@ export interface MultiMutationInput<T> extends MutationInput<T> {
  * Deterministic in-process transaction boundary. The injected clock and id factory are test
  * seams; production callers must provide server-owned values. No client identity is trusted.
  */
-export class AggregateMutationStore<T> {
+export interface AggregatePersistence<T> {
+  read(tenantId: string, ownerUserId: string, aggregateId: string): AggregateRecord<T> | undefined;
+  mutate(input: MutationInput<T>): MutationResult<T>;
+  mutateMany(inputs: readonly MultiMutationInput<T>[]): readonly MutationResult<T>[];
+  historyFor(tenantId: string, ownerUserId: string, aggregateId: string): readonly AggregateHistory<T>[];
+  recoverScope(tenantId: string, ownerUserId: string): void;
+}
+
+/** TEST-ONLY / NON-PRODUCTION in-memory implementation. Production code must use JournalAggregateStore. */
+export class AggregateMutationStore<T> implements Omit<AggregatePersistence<T>, 'recoverScope'> {
   private readonly records = new Map<string, AggregateRecord<T>>();
   private readonly history = new Map<string, AggregateHistory<T>[]>();
   private readonly idempotency = new Map<string, MutationResult<T>>();

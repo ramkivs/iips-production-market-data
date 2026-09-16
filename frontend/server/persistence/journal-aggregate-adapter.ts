@@ -6,13 +6,14 @@
  * groups, so a crash between appends cannot expose partial aggregate state.
  */
 import { PersistenceService, type PersistedRecord } from './persistence-service';
-import { AggregateMutationError, type AggregateHistory, type AggregateRecord, type MutationInput, type MutationResult, type MultiMutationInput } from './aggregate-persistence';
+import { AggregateMutationError, type AggregateHistory, type AggregatePersistence, type AggregateRecord, type MutationInput, type MutationResult, type MultiMutationInput } from './aggregate-persistence';
 
 interface Prepared<T> { kind: 'aggregate.prepare'; groupId: string; mutation: MutationInput<T>; value: T; fromVersion: number; occurredAt: string; historyId: string; fingerprint: string; }
 interface Committed { kind: 'aggregate.commit'; groupId: string; mutationKeys: string[]; }
 type JournalPayload<T> = Prepared<T> | Committed;
 
-export class JournalAggregateStore<T> {
+/** Authoritative production aggregate persistence implementation. */
+export class JournalAggregateStore<T> implements AggregatePersistence<T> {
   private records = new Map<string, AggregateRecord<T>>();
   private histories = new Map<string, AggregateHistory<T>[]>();
   private idempotency = new Map<string, MutationResult<T>>();

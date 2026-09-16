@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PersistenceService } from './persistence-service';
-import { AggregateMutationError } from './aggregate-persistence';
+import { AggregateMutationError, type AggregatePersistence } from './aggregate-persistence';
 import { JournalAggregateStore } from './journal-aggregate-adapter';
 
 type V = { state: string };
@@ -11,6 +11,7 @@ function fixture() { const dir = mkdtempSync(join(tmpdir(), 'iips-agg-')); const
 const mutation = (expectedVersion = 0, key = 'k1', aggregateId = 'a1') => ({ tenantId: 't1', ownerUserId: 'u1', aggregateId, expectedVersion, idempotencyKey: key, mutate: () => ({ state: 'ready' }) });
 
 describe('P13-B bounded journal adapter', () => {
+  it('satisfies the shared aggregate persistence interface through the journal', () => { const f = fixture(); try { const persistence: AggregatePersistence<V> = f.make(); persistence.mutate(mutation()); expect(persistence.read('t1', 'u1', 'a1')?.version).toBe(1); } finally { rmSync(f.dir, { recursive: true, force: true }); } });
   it('persists records/history and recovers them from the existing journal', () => { const f = fixture(); try { const a = f.make(); a.mutate(mutation()); const b = f.make(); b.recoverScope('t1', 'u1'); expect(b.read('t1', 'u1', 'a1')?.version).toBe(1); expect(b.historyFor('t1', 'u1', 'a1')).toHaveLength(1); } finally { rmSync(f.dir, { recursive: true, force: true }); } });
   it('replays idempotency after reconstruction and conflicts on stale version', () => { const f = fixture(); try { f.make().mutate(mutation()); const b = f.make(); b.recoverScope('t1', 'u1'); expect(b.mutate(mutation()).replayed).toBe(true); expect(() => b.mutate(mutation(0, 'k2'))).toThrowError(AggregateMutationError); } finally { rmSync(f.dir, { recursive: true, force: true }); } });
   it('rejects materially different reuse of an idempotency key before and after restart', () => { const f = fixture(); try { f.make().mutate(mutation()); const b = f.make(); b.recoverScope('t1', 'u1'); expect(() => b.mutate({ ...mutation(0, 'k1'), mutate: () => ({ state: 'different' }) })).toThrowError(AggregateMutationError); } finally { rmSync(f.dir, { recursive: true, force: true }); } });
