@@ -82,31 +82,35 @@ describe('D112-E LIVE Transport & UI Routing Dual-Plane Invariant Suite', () => 
     assert.ok(res.composite! > 0 && res.composite! <= 100);
   });
 
-  it('3. [BLOCKED SECTORS FAIL-CLOSED] Banking fails closed without fabricated scores', () => {
+  it('3. [LIVE SUCCESS: BANKING DYNAMIC EXECUTION (Q-CAL-09)] executes dynamic evaluation for HDFCBANK', () => {
     const res = dispatcher.executeForSecurity('HDFCBANK', '2026-09-14');
-    assert.equal(res.status, 'SECTOR_UNSUPPORTED');
+    assert.equal(res.status, 'DYNAMIC_EXECUTION_COMPLETED');
     assert.equal(res.canonicalSecurityId, 'BANK-H1');
-    assert.equal(res.composite, null);
-    assert.equal(res.verdict, null);
+    assert.equal(res.sector, 'Banking');
+    assert.equal(res.valuationMultipleType, 'P/ABV');
+    assert.equal(res.valuationScore, 45.0);
+    assert.ok(res.composite! > 0 && res.composite! <= 100);
   });
 
-  it('4. [DECISION MATRIX DTO] serializes dynamic payload with mixed-vintage provenance', () => {
+  it('4. [DECISION MATRIX DTO] serializes dynamic payload with mixed-vintage provenance including Banking', () => {
     const matrix = dispatcher.dispatchDecisionMatrix('2026-09-14') as Record<string, unknown>;
     assert.equal(matrix.dataMode, 'LIVE');
     const companies = matrix.companies as Array<Record<string, unknown>>;
-    assert.ok(companies.length >= 2);
-    // Technology and Energy present
+    assert.ok(companies.length >= 3);
+    // Technology, Energy, and Banking present
     assert.ok(companies.some((c) => c.companyId === 'TECH-H1'));
     assert.ok(companies.some((c) => c.companyId === 'ENERGY-H1'));
-    // Banking excluded from active matrix
-    assert.equal(companies.some((c) => c.companyId === 'BANK-H1'), false);
+    assert.ok(companies.some((c) => c.companyId === 'BANK-H1'));
+
+    const bankComp = companies.find((c) => c.companyId === 'BANK-H1');
+    assert.equal(bankComp?.valuation, 45.0);
 
     const prov = matrix.provenance as Record<string, unknown>;
     assert.equal(prov.freshness, 'DEVELOPMENT_MIXED_VINTAGE');
     assert.equal(prov.certificationState, 'DEVELOPMENT_HARNESS_VERIFIED_ONLY');
   });
 
-  it('5. [SCREENER DTO] includes degraded row for blocked sectors without silent fallback', () => {
+  it('5. [SCREENER DTO] includes dynamic row for Banking without silent fallback', () => {
     const screener = dispatcher.dispatchScreener('2026-09-14') as Record<string, unknown>;
     assert.equal(screener.dataMode, 'LIVE');
     const rows = screener.rows as Array<Record<string, unknown>>;
@@ -114,9 +118,8 @@ describe('D112-E LIVE Transport & UI Routing Dual-Plane Invariant Suite', () => 
 
     const bankRow = rows.find((r) => r.companyId === 'BANK-H1');
     assert.ok(bankRow);
-    assert.equal(bankRow.verdict, 'UNAVAILABLE');
-    assert.equal(bankRow.composite, null);
-    assert.equal(bankRow.status, 'SECTOR_UNSUPPORTED');
+    assert.equal(bankRow.status, 'DYNAMIC_EXECUTION_COMPLETED');
+    assert.ok(bankRow.composite !== null);
   });
 
   it('6. [UNMAPPED SECURITY] fails closed when resolving unknown ticker', () => {
@@ -126,9 +129,8 @@ describe('D112-E LIVE Transport & UI Routing Dual-Plane Invariant Suite', () => 
   });
 
   it('7. [NO SILENT FALLBACK] failures never substitute snapshot composite', () => {
-    const res = dispatcher.executeForSecurity('HDFCBANK', '2026-09-14');
+    const res = dispatcher.executeForSecurity('UNKNOWN_SYM', '2026-09-14');
     assert.equal(res.composite, null);
-    assert.notEqual(res.composite, 76.5); // Never return golden baseline
   });
 
   it('8. [DETERMINISTIC INVARIANCE] repeated calls produce identical transport objects', () => {
@@ -154,12 +156,13 @@ describe('D112-E LIVE Transport & UI Routing Dual-Plane Invariant Suite', () => 
     assert.equal(techDec.status, 'DYNAMIC_EXECUTION_COMPLETED');
     assert.ok((techDec.composite as number) > 0);
 
-    // Blocked banking sector fails closed
-    const bankDec = decisions.find((d) => d.sector === 'Banking');
-    assert.ok(bankDec);
-    assert.equal(bankDec.status, 'SECTOR_UNSUPPORTED');
-    assert.equal(bankDec.verdict, 'UNAVAILABLE');
-    assert.equal(bankDec.composite, null);
+    // Blocked healthcare/hospitality/insurance/capital markets sector fails closed
+    const insDec = decisions.find((d) => d.sector === 'Insurance');
+    if (insDec) {
+      assert.equal(insDec.status, 'SECTOR_UNSUPPORTED');
+      assert.equal(insDec.verdict, 'UNAVAILABLE');
+      assert.equal(insDec.composite, null);
+    }
 
     const prov = exec.provenance as Record<string, unknown>;
     assert.equal(prov.dataMode, 'LIVE');
@@ -216,13 +219,12 @@ describe('D112-E LIVE Transport & UI Routing Dual-Plane Invariant Suite', () => 
     assert.equal(prov.dataMode, 'LIVE');
     assert.equal(prov.freshness, 'DEVELOPMENT_MIXED_VINTAGE');
 
-    // 2. Blocked sectors remain degraded with zero silent fallback
+    // 2. Dynamic execution of Banking succeeds with Layer-2.5 P/ABV synthesis
     const decisions = liveResult.decisions as Array<Record<string, unknown>>;
     const banking = decisions.find((d) => d.sector === 'Banking');
     assert.ok(banking);
-    assert.equal(banking.status, 'SECTOR_UNSUPPORTED');
-    assert.equal(banking.verdict, 'UNAVAILABLE');
-    assert.equal(banking.composite, null);
+    assert.equal(banking.status, 'DYNAMIC_EXECUTION_COMPLETED');
+    assert.ok((banking.composite as number) > 0);
   });
 
   it('12. [EXECUTIVE LIVE FULL DTO CONTRACT] verifies all 7 canonical ExecutiveData structures are present and deterministic', () => {

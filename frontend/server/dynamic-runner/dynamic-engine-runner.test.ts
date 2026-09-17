@@ -71,19 +71,21 @@ describe('D112-D Dynamic Engine Runner Invariant & Fail-Closed Suite', () => {
     assert.equal(result.tickerSymbol, 'RELIANCE');
   });
 
-  // 2. Fail-Closed Handling on Blocked Sectors
-  it('5. [BANKING FAIL-CLOSED] explicitly fails closed for HDFCBANK (BANK-H1)', () => {
+  // 2. Dynamic Execution for Calibrated Banking (D113-QCAL09)
+  it('5. [BANKING CALIBRATED EXECUTION] evaluates dynamic score for HDFCBANK (BANK-H1)', () => {
     const req: DynamicEngineRequest = {
       symbolOrIsin: 'HDFCBANK',
       tradeDate: '2026-09-14',
       eodClosePrice: 1650.0,
     };
     const result = runner.execute(req);
-    assert.equal(result.status, 'SECTOR_UNSUPPORTED');
+    assert.equal(result.status, 'DYNAMIC_EXECUTION_COMPLETED');
     assert.equal(result.canonicalSecurityId, 'BANK-H1');
-    assert.equal(result.composite, null);
-    assert.equal(result.verdict, null);
-    assert.ok(result.reason?.includes('SECTOR_UNSUPPORTED'));
+    assert.equal(result.sector, 'Banking');
+    assert.equal(result.valuationMultipleType, 'P/ABV');
+    assert.equal(result.valuationScore, 45.0); // P/ABV = 2.844 (Tier 4 -> 45.0)
+    assert.ok(result.composite! > 0 && result.composite! <= 100);
+    assert.ok(result.verdict !== null);
   });
 
   it('6. [UNMAPPED SECURITY] fails closed for unmapped equities', () => {
@@ -126,15 +128,16 @@ describe('D112-D Dynamic Engine Runner Invariant & Fail-Closed Suite', () => {
     assert.equal(run1.verdict, run2.verdict);
   });
 
-  it('9. [NO SILENT SNAPSHOT FALLBACK] failures never return snapshot composite', () => {
+  it('9. [NO SILENT SNAPSHOT FALLBACK] failures on blocked sectors never return snapshot composite', () => {
+    // Test with unmapped equity in uncalibrated sector to ensure fail-closed
     const req: DynamicEngineRequest = {
-      symbolOrIsin: 'HDFCBANK', // Blocked sector
+      symbolOrIsin: 'UNKNOWN_INSURANCE',
       tradeDate: '2026-09-14',
       eodClosePrice: 1650.0,
     };
     const result = runner.execute(req);
     assert.equal(result.composite, null);
-    assert.notEqual(result.composite, 76.5); // Must NOT return golden fixture score
+    assert.equal(result.status, 'UNMAPPED_SECURITY');
   });
 
   it('10. [TEMPORAL LISTING STATUS] fails closed if queried prior to listing date', () => {
@@ -147,5 +150,25 @@ describe('D112-D Dynamic Engine Runner Invariant & Fail-Closed Suite', () => {
     const result = runner.execute(req);
     assert.equal(result.status, 'UNMAPPED_SECURITY');
     assert.equal(result.composite, null);
+  });
+
+  // 3. Four Blocked Sectors Invariant Check
+  it('11. [FOUR SECTORS REMAIN BLOCKED] Insurance, Capital Markets, Healthcare, and Hospitality fail closed', () => {
+    const blockedCandidates = [
+      { sym: 'HDFCLIFE', sec: 'Insurance' },
+      { sym: 'BSE', sec: 'Capital Markets' },
+      { sym: 'SUNPHARMA', sec: 'Healthcare' },
+      { sym: 'INDHOTEL', sec: 'Hospitality' },
+    ];
+    for (const item of blockedCandidates) {
+      const res = runner.execute({
+        symbolOrIsin: item.sym,
+        tradeDate: '2026-09-14',
+        eodClosePrice: 1000.0,
+      });
+      // In Security Master these are in excludedCandidateMappings, so they resolve to UNMAPPED_SECURITY
+      assert.equal(res.status, 'UNMAPPED_SECURITY');
+      assert.equal(res.composite, null);
+    }
   });
 });

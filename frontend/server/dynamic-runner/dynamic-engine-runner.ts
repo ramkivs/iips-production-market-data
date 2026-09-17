@@ -46,6 +46,7 @@ export class DynamicEngineRunner {
       Automobile: 'automobile/automobile-calibration-1.0.0.json',
       Consumer: 'consumer/consumer-calibration-1.0.0.json',
       Utilities: 'utilities/utilities-calibration-1.0.0.json',
+      Banking: 'banking/frozen-assets/banking-calibration-1.0.0.json',
     };
 
     for (const [sec, rel] of Object.entries(fileMap)) {
@@ -60,13 +61,13 @@ export class DynamicEngineRunner {
   public execute(request: DynamicEngineRequest): DynamicEngineResult {
     const baseProvenance: DynamicEngineProvenanceDto = {
       dataMode: 'LIVE',
-      dataSource: 'IIPS Dynamic Engine Runner (D112-D DEVELOPMENT_HARNESS)',
+      dataSource: 'IIPS Dynamic Engine Runner (D112-D / D113-QCAL09 DEVELOPMENT_HARNESS)',
       freshness: 'DEVELOPMENT_MIXED_VINTAGE',
       eodTradeDate: request.tradeDate,
       eodArchiveSha256: request.archiveSha256 ?? 'UNSPECIFIED_LOCAL_SHA256',
       fundamentalsVintage: 'v1.1-reference',
       securityMasterVersion: '1.0.0',
-      valuationMethodologyVersion: 'D112-C',
+      valuationMethodologyVersion: 'D113-STAGE2',
       engineVersion: '1.0.0',
       executionStatus: 'UNMAPPED_SECURITY',
       transportSemantics: 'Development test harness; fundamental denominators held static; NOT PRODUCTION CERTIFIED',
@@ -108,7 +109,9 @@ export class DynamicEngineRunner {
     }
 
     // 3. Fail-Closed Check on Blocked / Uncalibrated Sectors
-    const blockedSectors = ['Banking', 'Insurance', 'Capital Markets', 'Healthcare', 'Hospitality'];
+    // D113-QCAL09: Banking is unlocked following ratified calibration Q-CAL-01..10.
+    // Four remaining sectors (Insurance, Capital Markets, Healthcare, Hospitality) remain strictly blocked.
+    const blockedSectors = ['Insurance', 'Capital Markets', 'Healthcare', 'Hospitality'];
     if (blockedSectors.includes(security.sector)) {
       return {
         canonicalSecurityId: security.canonicalSecurityId,
@@ -139,7 +142,7 @@ export class DynamicEngineRunner {
       };
     }
 
-    // 5. Synthesize Dynamic Valuation Multiple via D112-C
+    // 5. Synthesize Dynamic Valuation Multiple via D112-C / D113-STAGE2
     const valResult = this.valuationSynthesizer.synthesize({
       canonicalSecurityId: security.canonicalSecurityId,
       sector: security.sector,
@@ -149,7 +152,7 @@ export class DynamicEngineRunner {
       archiveSha256: request.archiveSha256,
     });
 
-    if (valResult.status !== 'CALCULATED' || typeof valResult.calculatedMultiple !== 'number') {
+    if (valResult.status !== 'CALCULATED' || typeof valResult.calculatedMultiple !== 'number' || typeof valResult.valuationScore !== 'number') {
       return {
         canonicalSecurityId: security.canonicalSecurityId,
         tickerSymbol: security.tickerSymbol,
@@ -182,7 +185,7 @@ export class DynamicEngineRunner {
     }
 
     // 7. Calculate Deterministic Mathematical Scores
-    const valScore = valResult.valuationScore ?? 50.0;
+    const valScore = valResult.valuationScore;
     const baseComposite = 72.0; // Benchmark composite baseline
     // Dynamic composite reflects dynamic valuation weight (15% standard allocation)
     const composite = Math.round((baseComposite * 0.85 + valScore * 0.15) * 10) / 10;

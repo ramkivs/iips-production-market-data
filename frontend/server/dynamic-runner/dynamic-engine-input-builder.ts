@@ -32,16 +32,20 @@ export class DynamicEngineInputBuilder {
       Automobile: 'automobile/automobile-golden-reference-1.0.0.json',
       Consumer: 'consumer/consumer-golden-reference-1.0.0.json',
       Utilities: 'utilities/utilities-golden-reference-1.0.0.json',
+      Banking: 'banking/frozen-assets/banking-golden-reference-1.0.0.json',
     };
 
     for (const [sec, relPath] of Object.entries(fixtureMap)) {
       const fullPath = path.resolve(__dirname, `../../../iips-platform/src/sector-engines/${relPath}`);
       if (fs.existsSync(fullPath)) {
         const raw = fs.readFileSync(fullPath, 'utf8');
-        const parsed = JSON.parse(raw) as { providers?: Array<Record<string, unknown>> };
+        const parsed = JSON.parse(raw) as { providers?: Array<Record<string, unknown>>; banks?: Array<Record<string, unknown>> };
         if (parsed.providers && parsed.providers.length > 0) {
           // Use the primary representative benchmark scenario (index 0) as the development fundamental base
           this.referenceFixtures.set(sec, parsed.providers[0]);
+        } else if (parsed.banks && parsed.banks.length > 0) {
+          // Banking golden reference uses "banks" array
+          this.referenceFixtures.set(sec, parsed.banks[0]);
         }
       }
     }
@@ -57,7 +61,16 @@ export class DynamicEngineInputBuilder {
 
     // Standard representative balance-sheet denominators for Indian sector leaders
     // (Consistently scaled in INR Crores)
-    const denominatorsBySector: Record<string, { shares: number; debt: number; cash: number; rev: number; ebitda: number; eps: number }> = {
+    const denominatorsBySector: Record<string, {
+      shares: number;
+      debt: number;
+      cash: number;
+      rev?: number;
+      ebitda?: number;
+      eps?: number;
+      tangibleNetWorth?: number;
+      netNpa?: number;
+    }> = {
       Technology: { shares: 36.18, debt: 5000, cash: 12000, rev: 240000, ebitda: 65000, eps: 125.0 },
       Industrials: { shares: 13.7, debt: 25000, cash: 6000, rev: 180000, ebitda: 22000, eps: 85.0 },
       Energy: { shares: 67.6, debt: 300000, cash: 100000, rev: 890000, ebitda: 175000, eps: 105.0 },
@@ -66,6 +79,8 @@ export class DynamicEngineInputBuilder {
       Automobile: { shares: 33.2, debt: 60000, cash: 15000, rev: 430000, ebitda: 58000, eps: 95.0 },
       Consumer: { shares: 23.5, debt: 1500, cash: 8000, rev: 61000, ebitda: 15000, eps: 45.0 },
       Utilities: { shares: 96.9, debt: 220000, cash: 10000, rev: 175000, ebitda: 52000, eps: 22.0 },
+      // D113 Q-CAL-09: Banking representative denominator (HDFC Bank scale in INR Crores)
+      Banking: { shares: 760.0, debt: 0, cash: 0, tangibleNetWorth: 450000.0, netNpa: 9000.0 },
     };
 
     const den = denominatorsBySector[security.sector];
@@ -80,6 +95,8 @@ export class DynamicEngineInputBuilder {
       ltmRevenue: den.rev,
       ltmEbitda: den.ebitda,
       ltmEps: den.eps,
+      tangibleNetWorth: den.tangibleNetWorth,
+      netNpa: den.netNpa,
     };
   }
 
@@ -96,7 +113,7 @@ export class DynamicEngineInputBuilder {
       throw new Error(`MISSING_FIXTURE: No reference fundamental fixture found for sector ${sector}`);
     }
 
-    const subsegment = (ref.subsegment as string) ?? (ref.segment as string) ?? 'default';
+    const subsegment = (ref.subsegment as string) ?? (ref.segment as string) ?? (ref.category as string) ?? 'default';
     const archetype = (ref.archetype as string) ?? (ref.businessModel as string) ?? 'default';
 
     // Clone all non-valuation fundamental ratios from the certified reference scenario
@@ -120,6 +137,11 @@ export class DynamicEngineInputBuilder {
       case 'Utilities':
         valuationInputKey = 'peRatio';
         metrics.peRatio = synthesizedMultiple;
+        break;
+      case 'Banking':
+        // D113-QCAL09: Banking valuation multiple key
+        valuationInputKey = 'pAbv';
+        metrics.pAbv = synthesizedMultiple;
         break;
       default:
         throw new Error(`UNSUPPORTED_SECTOR: ${sector}`);
