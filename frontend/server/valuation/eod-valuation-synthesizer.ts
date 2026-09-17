@@ -97,6 +97,15 @@ export class EodValuationSynthesizer {
 
     // 1. Check Uncalibrated / Blocked Sectors (Insurance, CapMarkets, Healthcare, Hospitality)
     if (UNCALIBRATED_BLOCKED_SECTORS.includes(input.sector as (typeof UNCALIBRATED_BLOCKED_SECTORS)[number])) {
+      if (input.sector === 'Insurance') {
+        // D115-STAGE1: Life Insurance Layer-2.5 Valuation Scaffold
+        return this.synthesizeInsuranceScaffold(input, provenance);
+      }
+      if (input.sector === 'Capital Markets') {
+        // D115-STAGE1: Capital Markets Layer-2.5 Valuation Scaffold (AMC vs Non-AMC)
+        return this.synthesizeCapitalMarketsScaffold(input, provenance);
+      }
+
       return {
         canonicalSecurityId: input.canonicalSecurityId,
         sector: input.sector,
@@ -377,6 +386,334 @@ export class EodValuationSynthesizer {
       enterpriseValue,
       adjustedBookValue,
       adjustedBookValuePerShare: Math.round(adjustedBookValuePerShare * 100) / 100,
+      provenance,
+    };
+  }
+
+  /**
+   * Stage 1 Life Insurance Layer-2.5 Valuation Scaffold.
+   * Under Program Authority Decisions Q-GRP2-01..05 & Q-GRP2-12:
+   * - Restricts initial scope strictly to Life Insurance.
+   * - Evaluates raw Price-to-Embedded Value (P/EV) metric per D115 specification.
+   * - Formula:
+   *     EVPS = embeddedValue / sharesOutstanding
+   *     P/EV = eodClosePrice / EVPS
+   * - Solvency guard: Solvency Ratio < 1.50 => fail closed with UNAVAILABLE.
+   * - Exceptional events: exceptionalEventFlag === true => fail closed with UNAVAILABLE.
+   * - Non-Life Insurance: fails closed with BLOCKED_UNCALIBRATED.
+   * - Critical Boundary: Numerical calibration bands are explicitly deferred (Q-GRP2-12 = C).
+   *   Returns status: 'CALIBRATION_PENDING', valuationScore: null.
+   */
+  private synthesizeInsuranceScaffold(
+    input: ValuationInputPayload,
+    provenance: ValuationProvenanceDto
+  ): ValuationResult {
+    const f = input.fundamentals;
+
+    // 1. Validate Fundamentals Presence
+    if (!f || typeof f !== 'object') {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: 'MISSING_FUNDAMENTALS: Fundamental inputs object is null or undefined',
+        provenance,
+      };
+    }
+
+    // If insurance-specific fundamentals (embeddedValue) are absent, preserve BLOCKED_UNCALIBRATED
+    if (typeof f.embeddedValue === 'undefined') {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'BLOCKED_UNCALIBRATED',
+        valuationScore: null,
+        reason: `UNCALIBRATED_SECTOR: ${input.sector} fundamentals lack embeddedValue (IM-006)`,
+        provenance,
+      };
+    }
+
+    // 2. Validate Category: Scope restricted strictly to Life Insurance (Q-GRP2-01/02/04)
+    const category = f.insuranceCategory ?? 'Life';
+    if (category !== 'Life' && category !== 'Life Insurance') {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'BLOCKED_UNCALIBRATED',
+        valuationScore: null,
+        reason: `NON_LIFE_INSURANCE_EXCLUDED: Insurance valuation currently authorized strictly for Life Insurance. Category '${category}' remains blocked under Q-GRP2-01/04`,
+        provenance,
+      };
+    }
+
+    // 3. Exceptional Event Exclusion (Q-GRP2-13)
+    if (f.exceptionalEventFlag === true) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: `EXCEPTIONAL_EVENT_EXCLUDED: Valuation evaluation blocked due to defined exceptional event: ${f.exceptionalEventReason ?? 'UNSPECIFIED_EVENT'}`,
+        provenance,
+      };
+    }
+
+    // 4. Validate EOD Close Price
+    if (typeof input.eodClosePrice !== 'number' || input.eodClosePrice <= 0 || !Number.isFinite(input.eodClosePrice)) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: 'INVALID_EOD_CLOSE_PRICE: EOD closing price must be a finite positive number',
+        provenance,
+      };
+    }
+
+    // 5. Validate Shares Outstanding
+    if (typeof f.sharesOutstanding !== 'number' || f.sharesOutstanding <= 0 || !Number.isFinite(f.sharesOutstanding)) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: 'INVALID_SHARES_OUTSTANDING: Shares outstanding must be a finite positive number',
+        provenance,
+      };
+    }
+
+    const marketCap = input.eodClosePrice * f.sharesOutstanding;
+    const debt = typeof f.debt === 'number' && Number.isFinite(f.debt) ? f.debt : 0;
+    const cash = typeof f.cash === 'number' && Number.isFinite(f.cash) ? f.cash : 0;
+    const enterpriseValue = marketCap + debt - cash;
+
+    // 6. Solvency Ratio Guard (Q-GRP2-05: Solvency < 1.50 => Fail Closed)
+    if (typeof f.solvencyRatio === 'number') {
+      if (!Number.isFinite(f.solvencyRatio) || f.solvencyRatio < 1.50) {
+        return {
+          canonicalSecurityId: input.canonicalSecurityId,
+          sector: input.sector,
+          status: 'UNAVAILABLE',
+          valuationScore: null,
+          marketCap,
+          enterpriseValue,
+          reason: `SOLVENCY_BELOW_REGULATORY_MINIMUM: Solvency ratio (${f.solvencyRatio}) is below statutory minimum threshold of 1.50`,
+          provenance,
+        };
+      }
+    }
+
+    // 7. Validate Embedded Value (IM-006)
+    if (typeof f.embeddedValue !== 'number' || !Number.isFinite(f.embeddedValue)) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        marketCap,
+        enterpriseValue,
+        reason: 'MISSING_EMBEDDED_VALUE: Life insurance valuation requires finite positive Embedded Value (IM-006)',
+        provenance,
+      };
+    }
+
+    if (f.embeddedValue <= 0) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        marketCap,
+        enterpriseValue,
+        embeddedValue: f.embeddedValue,
+        reason: 'NON_POSITIVE_EMBEDDED_VALUE: Embedded Value must be strictly positive',
+        provenance,
+      };
+    }
+
+    // 8. Compute EVPS and raw P/EV Multiple
+    const embeddedValuePerShare = f.embeddedValue / f.sharesOutstanding;
+    const pev = input.eodClosePrice / embeddedValuePerShare;
+
+    // 9. Enforce Q-GRP2-12 Boundary: Numerical Calibration is Pending
+    return {
+      canonicalSecurityId: input.canonicalSecurityId,
+      sector: input.sector,
+      status: 'CALIBRATION_PENDING',
+      valuationScore: null,
+      multipleType: 'P/EV',
+      calculatedMultiple: Math.round(pev * 1000) / 1000,
+      marketCap,
+      enterpriseValue,
+      embeddedValue: f.embeddedValue,
+      embeddedValuePerShare: Math.round(embeddedValuePerShare * 100) / 100,
+      reason: 'CALIBRATION_PENDING: Raw P/EV metric computed; numerical calibration bands deferred under Program Authority Decision Q-GRP2-12',
+      provenance,
+    };
+  }
+
+  /**
+   * Stage 1 Capital Markets Layer-2.5 Valuation Scaffold.
+   * Under Program Authority Decisions Q-GRP2-06..10 & Q-GRP2-12:
+   * - Segments Capital Markets into AMC and Non-AMC.
+   * - AMC: Market Cap / AUM Ratio (%) = (Market Cap / Total AUM) * 100.
+   * - Non-AMC: Price-to-Earnings (P/E) Multiple = EOD Close Price / EPS.
+   * - Exceptional events: exceptionalEventFlag === true => fail closed with UNAVAILABLE.
+   * - Critical Boundary: Numerical calibration bands are explicitly deferred (Q-GRP2-12 = C).
+   *   Returns status: 'CALIBRATION_PENDING', valuationScore: null.
+   */
+  private synthesizeCapitalMarketsScaffold(
+    input: ValuationInputPayload,
+    provenance: ValuationProvenanceDto
+  ): ValuationResult {
+    const f = input.fundamentals;
+
+    // 1. Validate Fundamentals Presence
+    if (!f || typeof f !== 'object') {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: 'MISSING_FUNDAMENTALS: Fundamental inputs object is null or undefined',
+        provenance,
+      };
+    }
+
+    // If capital-markets-specific category is absent and neither totalAum nor financial-sector eps is explicitly designated,
+    // preserve BLOCKED_UNCALIBRATED
+    if (typeof f.capitalMarketsCategory === 'undefined' && typeof f.totalAum === 'undefined') {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'BLOCKED_UNCALIBRATED',
+        valuationScore: null,
+        reason: `UNCALIBRATED_SECTOR: ${input.sector} fundamentals lack capitalMarketsCategory or totalAum`,
+        provenance,
+      };
+    }
+
+    // 2. Exceptional Event Exclusion (Q-GRP2-13)
+    if (f.exceptionalEventFlag === true) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: `EXCEPTIONAL_EVENT_EXCLUDED: Valuation evaluation blocked due to defined exceptional event: ${f.exceptionalEventReason ?? 'UNSPECIFIED_EVENT'}`,
+        provenance,
+      };
+    }
+
+    // 3. Validate EOD Close Price
+    if (typeof input.eodClosePrice !== 'number' || input.eodClosePrice <= 0 || !Number.isFinite(input.eodClosePrice)) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: 'INVALID_EOD_CLOSE_PRICE: EOD closing price must be a finite positive number',
+        provenance,
+      };
+    }
+
+    // 4. Validate Shares Outstanding
+    if (typeof f.sharesOutstanding !== 'number' || f.sharesOutstanding <= 0 || !Number.isFinite(f.sharesOutstanding)) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: 'INVALID_SHARES_OUTSTANDING: Shares outstanding must be a finite positive number',
+        provenance,
+      };
+    }
+
+    const marketCap = input.eodClosePrice * f.sharesOutstanding;
+    const debt = typeof f.debt === 'number' && Number.isFinite(f.debt) ? f.debt : 0;
+    const cash = typeof f.cash === 'number' && Number.isFinite(f.cash) ? f.cash : 0;
+    const enterpriseValue = marketCap + debt - cash;
+
+    const category = f.capitalMarketsCategory ?? 'NON-AMC';
+
+    // 5. AMC Branch: Market Cap / AUM Ratio (%)
+    if (category === 'AMC' || category === 'Asset Management') {
+      if (typeof f.totalAum !== 'number' || !Number.isFinite(f.totalAum)) {
+        return {
+          canonicalSecurityId: input.canonicalSecurityId,
+          sector: input.sector,
+          status: 'UNAVAILABLE',
+          valuationScore: null,
+          marketCap,
+          enterpriseValue,
+          reason: 'MISSING_TOTAL_AUM: AMC valuation requires finite positive Total AUM (CM-001)',
+          provenance,
+        };
+      }
+
+      if (f.totalAum <= 0) {
+        return {
+          canonicalSecurityId: input.canonicalSecurityId,
+          sector: input.sector,
+          status: 'UNAVAILABLE',
+          valuationScore: null,
+          marketCap,
+          enterpriseValue,
+          totalAum: f.totalAum,
+          reason: 'NON_POSITIVE_TOTAL_AUM: Total AUM must be strictly positive',
+          provenance,
+        };
+      }
+
+      const mcapToAumPercent = (marketCap / f.totalAum) * 100;
+
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'CALIBRATION_PENDING',
+        valuationScore: null,
+        multipleType: 'Market Cap / AUM (%)',
+        calculatedMultiple: Math.round(mcapToAumPercent * 1000) / 1000,
+        marketCap,
+        enterpriseValue,
+        totalAum: f.totalAum,
+        reason: 'CALIBRATION_PENDING: Raw Market Cap / AUM (%) computed; numerical calibration bands deferred under Program Authority Decision Q-GRP2-12',
+        provenance,
+      };
+    }
+
+    // 6. Non-AMC Branch: Price-to-Earnings (P/E) Multiple
+    let pe: number | null = null;
+    if (typeof f.ltmEps === 'number' && Number.isFinite(f.ltmEps) && f.ltmEps > 0) {
+      pe = input.eodClosePrice / f.ltmEps;
+    } else if (typeof f.ltmNetIncome === 'number' && Number.isFinite(f.ltmNetIncome) && f.ltmNetIncome > 0) {
+      pe = marketCap / f.ltmNetIncome;
+    }
+
+    if (pe === null) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        marketCap,
+        enterpriseValue,
+        reason: 'NON_POSITIVE_EARNINGS: Non-AMC Capital Markets valuation requires finite positive EPS or Net Income for P/E calculation',
+        provenance,
+      };
+    }
+
+    return {
+      canonicalSecurityId: input.canonicalSecurityId,
+      sector: input.sector,
+      status: 'CALIBRATION_PENDING',
+      valuationScore: null,
+      multipleType: 'P/E',
+      calculatedMultiple: Math.round(pe * 1000) / 1000,
+      marketCap,
+      enterpriseValue,
+      reason: 'CALIBRATION_PENDING: Raw P/E metric computed; numerical calibration bands deferred under Program Authority Decision Q-GRP2-12',
       provenance,
     };
   }

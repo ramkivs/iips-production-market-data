@@ -22,9 +22,16 @@ export interface ValuationCompanyFundamentals {
   // Banking fundamental inputs (P/ABV methodology)
   readonly netNpa?: number;           // Net NPA absolute in Crores
   readonly tangibleNetWorth?: number; // Tangible Net Worth in Crores (or total equity if tangible)
-  // Optional flag for defined exceptional events (Q-CAL-06)
+  // Optional flag for defined exceptional events (Q-CAL-06 / Q-GRP2-13)
   readonly exceptionalEventFlag?: boolean;
   readonly exceptionalEventReason?: string;
+  // D115-STAGE1: Insurance fundamental inputs (P/EV methodology)
+  readonly insuranceCategory?: 'Life' | 'General' | 'Health' | 'Reinsurance' | string;
+  readonly embeddedValue?: number;     // IM-006 Embedded Value in Crores
+  readonly solvencyRatio?: number;     // IM-002 Solvency ratio multiple (e.g. 1.70 = 170%)
+  // D115-STAGE1: Capital Markets fundamental inputs (AMC vs Non-AMC)
+  readonly capitalMarketsCategory?: 'AMC' | 'NON-AMC' | string;
+  readonly totalAum?: number;          // CM-001 Total AUM in Crores (for AMC)
 }
 
 export interface ValuationInputPayload {
@@ -55,12 +62,15 @@ export interface ValuationResult {
   readonly sector: string;
   readonly status: ValuationStatus;
   readonly valuationScore: number | null; // 0..100 score or null
-  readonly multipleType?: 'EV/Revenue' | 'EV/EBITDA' | 'P/E' | 'P/B' | 'P/ABV';
+  readonly multipleType?: 'EV/Revenue' | 'EV/EBITDA' | 'P/E' | 'P/B' | 'P/ABV' | 'P/EV' | 'Market Cap / AUM (%)';
   readonly calculatedMultiple?: number;
   readonly marketCap?: number;
   readonly enterpriseValue?: number;
   readonly adjustedBookValue?: number;    // Absolute Adjusted Book Value in Crores
   readonly adjustedBookValuePerShare?: number; // ABVPS in INR per share
+  readonly embeddedValue?: number;        // EV in Crores (for Life Insurance)
+  readonly embeddedValuePerShare?: number;// EVPS in INR per share (for Life Insurance)
+  readonly totalAum?: number;             // AUM in Crores (for AMC)
   readonly reason?: string;
   readonly provenance: ValuationProvenanceDto;
 }
