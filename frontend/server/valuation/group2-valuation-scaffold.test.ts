@@ -62,21 +62,23 @@ describe('D115-STAGE1 Group 2 Valuation Scaffold Verification Suite (Life Insura
   // SECTION 1: LIFE INSURANCE (P/EV)
   // ==========================================
 
-  it('1.1. [LIFE INSURANCE: VALID P/EV] computes raw P/EV multiple and outputs CALIBRATION_PENDING with valuationScore null', () => {
+  it('1.1. [LIFE INSURANCE: VALID P/EV] computes raw P/EV multiple and outputs CALCULATED valuationScore (Stage 2 Calibrated)', () => {
     // EVPS = 45000 / 215 = 209.30232558 INR
     // P/EV = 650 / 209.30232558 = 3.105555... -> rounded to 3 decimal places = 3.106x
+    // In range 2.400 <= P/EV < 3.200 -> Score 60.0 (Tier 3)
     const res = synthesizer.synthesize(baseLifeInsuranceInput);
 
-    assert.equal(res.status, 'CALIBRATION_PENDING');
-    assert.equal(res.valuationScore, null, 'Valuation score must be strictly null (Q-GRP2-12 = C)');
+    assert.equal(res.status, 'CALCULATED');
+    assert.equal(res.valuationScore, 60.0, 'Valuation score evaluated via approved calibration profile');
     assert.equal(res.multipleType, 'P/EV');
     assert.equal(res.calculatedMultiple, 3.106);
     assert.equal(res.embeddedValue, 45000.0);
     assert.equal(res.embeddedValuePerShare, 209.3);
-    assert.ok(res.reason?.includes('CALIBRATION_PENDING'));
     assert.equal(res.provenance.dataMode, 'LIVE');
     assert.equal(res.provenance.freshness, 'DEVELOPMENT_MIXED_VINTAGE');
     assert.equal(res.provenance.fundamentalsVintage, 'v1.1-reference');
+    assert.equal(res.provenance.calibrationProfileId, 'insurance-valuation-calibration');
+    assert.equal(res.provenance.calibrationVersion, '1.0.0');
   });
 
   it('1.2. [LIFE INSURANCE: MISSING EV] fails closed with UNAVAILABLE when embeddedValue is undefined', () => {
@@ -171,9 +173,9 @@ describe('D115-STAGE1 Group 2 Valuation Scaffold Verification Suite (Life Insura
       },
     };
     const resExact = synthesizer.synthesize(inputExact);
-    assert.equal(resExact.status, 'CALIBRATION_PENDING');
+    assert.equal(resExact.status, 'CALCULATED');
     assert.equal(resExact.multipleType, 'P/EV');
-    assert.equal(resExact.valuationScore, null);
+    assert.equal(resExact.valuationScore, 60.0);
   });
 
   it('1.8. [LIFE INSURANCE: EXCEPTIONAL EVENT] fails closed when exceptionalEventFlag === true per Q-GRP2-13', () => {
@@ -212,19 +214,21 @@ describe('D115-STAGE1 Group 2 Valuation Scaffold Verification Suite (Life Insura
   // SECTION 2: CAPITAL MARKETS — AMC
   // ==========================================
 
-  it('2.1. [CAPITAL MARKETS AMC: VALID MCAP/AUM] computes Market Cap / AUM (%) and outputs CALIBRATION_PENDING with valuationScore null', () => {
+  it('2.1. [CAPITAL MARKETS AMC: VALID MCAP/AUM] computes Market Cap / AUM (%) and outputs CALCULATED valuationScore (Stage 2 Calibrated)', () => {
     // Market Cap = 3200 * 21.3 = 68,160 Cr
     // Total AUM = 650,000 Cr
     // MCap / AUM (%) = (68160 / 650000) * 100 = 10.486%
+    // In range 9.000% <= MCap/AUM < 13.000% -> Score 60.0 (Tier 3)
     const res = synthesizer.synthesize(baseAmcInput);
 
-    assert.equal(res.status, 'CALIBRATION_PENDING');
-    assert.equal(res.valuationScore, null, 'Valuation score must be strictly null (Q-GRP2-12 = C)');
+    assert.equal(res.status, 'CALCULATED');
+    assert.equal(res.valuationScore, 60.0, 'Valuation score evaluated via approved calibration profile');
     assert.equal(res.multipleType, 'Market Cap / AUM (%)');
     assert.equal(res.calculatedMultiple, 10.486);
     assert.equal(res.marketCap, 68160.0);
     assert.equal(res.totalAum, 650000.0);
-    assert.ok(res.reason?.includes('CALIBRATION_PENDING'));
+    assert.equal(res.provenance.calibrationProfileId, 'capital-markets-valuation-calibration');
+    assert.equal(res.provenance.calibrationVersion, '1.0.0');
   });
 
   it('2.2. [CAPITAL MARKETS AMC: MISSING AUM] fails closed with UNAVAILABLE when totalAum is undefined', () => {
@@ -303,15 +307,17 @@ describe('D115-STAGE1 Group 2 Valuation Scaffold Verification Suite (Life Insura
   // SECTION 3: CAPITAL MARKETS — NON-AMC
   // ==========================================
 
-  it('3.1. [CAPITAL MARKETS NON-AMC: VALID P/E] computes raw P/E multiple and outputs CALIBRATION_PENDING with valuationScore null', () => {
+  it('3.1. [CAPITAL MARKETS NON-AMC: VALID P/E] computes raw P/E multiple and outputs CALCULATED valuationScore (Stage 2 Calibrated)', () => {
     // P/E = 2450 / 70 = 35.0x
+    // In range 26.000 <= P/E < 38.000 -> Score 60.0 (Tier 3)
     const res = synthesizer.synthesize(baseNonAmcInput);
 
-    assert.equal(res.status, 'CALIBRATION_PENDING');
-    assert.equal(res.valuationScore, null, 'Valuation score must be strictly null (Q-GRP2-12 = C)');
+    assert.equal(res.status, 'CALCULATED');
+    assert.equal(res.valuationScore, 60.0, 'Valuation score evaluated via approved calibration profile');
     assert.equal(res.multipleType, 'P/E');
     assert.equal(res.calculatedMultiple, 35.0);
-    assert.ok(res.reason?.includes('CALIBRATION_PENDING'));
+    assert.equal(res.provenance.calibrationProfileId, 'capital-markets-valuation-calibration');
+    assert.equal(res.provenance.calibrationVersion, '1.0.0');
   });
 
   it('3.2. [CAPITAL MARKETS NON-AMC: MISSING EPS] fails closed with UNAVAILABLE when ltmEps and ltmNetIncome are missing', () => {

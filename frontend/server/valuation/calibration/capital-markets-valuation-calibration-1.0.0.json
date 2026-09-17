@@ -1,0 +1,58 @@
+{
+  "$schema": "https://iips-engineering-standards/valuation-calibration-profile.schema.json#1.0.0",
+  "profileId": "capital-markets-valuation-calibration",
+  "version": "1.0.0",
+  "sector": "Capital Markets",
+  "subSectors": ["AMC", "Non-AMC"],
+  "engineId": "sector.capital-markets",
+  "multipleTypes": ["Market Cap / AUM (%)", "P/E"],
+  "metricCodes": {
+    "AMC": "CM-VAL-001",
+    "Non-AMC": "CM-VAL-002"
+  },
+  "effectiveDate": "2026-09-17",
+  "ratifiedBy": "IIPS Program Authority Adjudication D115-STAGE2 (Q-GRP2-CAL-01 through Q-GRP2-CAL-10)",
+  "adjudicationReference": "docs/D115_STAGE2_GROUP2_CALIBRATION_ADJUDICATION.md",
+  "immutable": true,
+  "description": "Ratified static expert-calibrated policy bands for Indian Capital Markets: AMC (Market Cap / AUM %) and Non-AMC (P/E).",
+  "bandScores": {
+    "CM-VAL-001": [
+      ["lt", 6.0, 90.0],
+      ["range", 6.0, 9.0, 75.0],
+      ["range", 9.0, 13.0, 60.0],
+      ["range", 13.0, 17.0, 45.0],
+      ["gte", 17.0, 20.0]
+    ],
+    "CM-VAL-002": [
+      ["lt", 18.0, 90.0],
+      ["range", 18.0, 26.0, 75.0],
+      ["range", 26.0, 38.0, 60.0],
+      ["range", 38.0, 52.0, 45.0],
+      ["gte", 52.0, 20.0]
+    ]
+  },
+  "scoreTiers": {
+    "AMC": [
+      { "tier": 1, "label": "Deep Value / Undervalued", "operator": "lt", "threshold": 6.0, "score": 90.0 },
+      { "tier": 2, "label": "Attractive Valuation", "min": 6.0, "max": 9.0, "score": 75.0 },
+      { "tier": 3, "label": "Fair Value Benchmark", "min": 9.0, "max": 13.0, "score": 60.0 },
+      { "tier": 4, "label": "Stretched Valuation", "min": 13.0, "max": 17.0, "score": 45.0 },
+      { "tier": 5, "label": "Overvalued / Expensive", "operator": "gte", "threshold": 17.0, "score": 20.0 }
+    ],
+    "Non-AMC": [
+      { "tier": 1, "label": "Deep Value / Undervalued", "operator": "lt", "threshold": 18.0, "score": 90.0 },
+      { "tier": 2, "label": "Attractive Valuation", "min": 18.0, "max": 26.0, "score": 75.0 },
+      { "tier": 3, "label": "Fair Value Benchmark", "min": 26.0, "max": 38.0, "score": 60.0 },
+      { "tier": 4, "label": "Stretched Valuation", "min": 38.0, "max": 52.0, "score": 45.0 },
+      { "tier": 5, "label": "Overvalued / Expensive", "operator": "gte", "threshold": 52.0, "score": 20.0 }
+    ]
+  },
+  "governanceRules": {
+    "segmentation": "Strict AMC vs Non-AMC; zero cross-methodology fallback",
+    "nonPositiveAumFailClosed": true,
+    "nonPositiveEpsFailClosed": true,
+    "exceptionalEventExclusion": true,
+    "recalibrationCadence": "annual",
+    "presentationAxis": "orthogonal-decision-matrix"
+  }
+}

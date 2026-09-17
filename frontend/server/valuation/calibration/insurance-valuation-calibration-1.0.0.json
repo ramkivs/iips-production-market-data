@@ -1,0 +1,40 @@
+{
+  "$schema": "https://iips-engineering-standards/valuation-calibration-profile.schema.json#1.0.0",
+  "profileId": "insurance-valuation-calibration",
+  "version": "1.0.0",
+  "sector": "Insurance",
+  "subSector": "Life Insurance",
+  "engineId": "sector.insurance",
+  "multipleType": "P/EV",
+  "metricCode": "IM-VAL-001",
+  "effectiveDate": "2026-09-17",
+  "ratifiedBy": "IIPS Program Authority Adjudication D115-STAGE2 (Q-GRP2-CAL-01 through Q-GRP2-CAL-10)",
+  "adjudicationReference": "docs/D115_STAGE2_GROUP2_CALIBRATION_ADJUDICATION.md",
+  "immutable": true,
+  "description": "Ratified static expert-calibrated policy bands for Indian Life Insurance Price-to-Embedded Value (P/EV) multiples.",
+  "bandScores": {
+    "IM-VAL-001": [
+      ["lt", 1.8, 90.0],
+      ["range", 1.8, 2.4, 75.0],
+      ["range", 2.4, 3.2, 60.0],
+      ["range", 3.2, 4.0, 45.0],
+      ["gte", 4.0, 20.0]
+    ]
+  },
+  "scoreTiers": [
+    { "tier": 1, "label": "Elite / Deep Value / Undervalued", "operator": "lt", "threshold": 1.8, "score": 90.0 },
+    { "tier": 2, "label": "Attractive Valuation", "min": 1.8, "max": 2.4, "score": 75.0 },
+    { "tier": 3, "label": "Fair Value / Benchmark Baseline", "min": 2.4, "max": 3.2, "score": 60.0 },
+    { "tier": 4, "label": "Stretched Valuation", "min": 3.2, "max": 4.0, "score": 45.0 },
+    { "tier": 5, "label": "Overvalued / Expensive", "operator": "gte", "threshold": 4.0, "score": 20.0 }
+  ],
+  "governanceRules": {
+    "scope": "Life Insurance only",
+    "nonLifeExcluded": true,
+    "solvencyRatioMinimum": 1.50,
+    "nonPositiveEvFailClosed": true,
+    "exceptionalEventExclusion": true,
+    "recalibrationCadence": "annual",
+    "presentationAxis": "orthogonal-decision-matrix"
+  }
+}

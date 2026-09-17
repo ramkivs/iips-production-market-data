@@ -21,12 +21,12 @@ export const CALIBRATED_VALUATION_SECTORS = [
   'Consumer',
   'Utilities',
   'Banking', // D113-STAGE2: Banking P/ABV calibrated under Q-CAL-01..10
+  'Insurance', // D115-STAGE2: Life Insurance P/EV calibrated under Q-GRP2-CAL-01..10
+  'Capital Markets', // D115-STAGE2: Capital Markets AMC / Non-AMC calibrated under Q-GRP2-CAL-01..10
 ] as const;
 
 /** Sectors lacking valuation calibration or explicitly blocked by Program Authority. */
 export const UNCALIBRATED_BLOCKED_SECTORS = [
-  'Insurance',
-  'Capital Markets',
   'Healthcare',
   'Hospitality',
 ] as const;
@@ -74,6 +74,20 @@ export class EodValuationSynthesizer {
       const raw = fs.readFileSync(bankingCalibrationPath, 'utf8');
       this.calibrationProfiles.set('Banking', JSON.parse(raw) as CalibrationProfile);
     }
+
+    // D115-STAGE2: Load Insurance P/EV ratified calibration profile
+    const insuranceCalibrationPath = path.resolve(__dirname, 'calibration/insurance-valuation-calibration-1.0.0.json');
+    if (fs.existsSync(insuranceCalibrationPath)) {
+      const raw = fs.readFileSync(insuranceCalibrationPath, 'utf8');
+      this.calibrationProfiles.set('Insurance', JSON.parse(raw) as CalibrationProfile);
+    }
+
+    // D115-STAGE2: Load Capital Markets AMC / Non-AMC ratified calibration profile
+    const capMarketsCalibrationPath = path.resolve(__dirname, 'calibration/capital-markets-valuation-calibration-1.0.0.json');
+    if (fs.existsSync(capMarketsCalibrationPath)) {
+      const raw = fs.readFileSync(capMarketsCalibrationPath, 'utf8');
+      this.calibrationProfiles.set('Capital Markets', JSON.parse(raw) as CalibrationProfile);
+    }
   }
 
   /**
@@ -81,31 +95,22 @@ export class EodValuationSynthesizer {
    * Strictly enforces D112-B DEVELOPMENT_MIXED_VINTAGE provenance.
    */
   public synthesize(input: ValuationInputPayload): ValuationResult {
-    const bankingProfile = input.sector === 'Banking' ? this.calibrationProfiles.get('Banking') : undefined;
+    const activeProfile = this.calibrationProfiles.get(input.sector);
 
     const provenance: ValuationProvenanceDto = {
       dataMode: 'LIVE',
-      dataSource: 'IIPS EOD Valuation Synthesizer (D112-C / D113-STAGE2 DEVELOPMENT_HARNESS)',
+      dataSource: 'IIPS EOD Valuation Synthesizer (D112-C / D113-STAGE2 / D115-STAGE2 DEVELOPMENT_HARNESS)',
       freshness: 'DEVELOPMENT_MIXED_VINTAGE',
       marketDataAsOf: input.tradeDate,
       marketDataSha256: input.archiveSha256 ?? 'UNSPECIFIED_LOCAL_SHA256',
       fundamentalsVintage: 'v1.1-reference',
       transportSemantics: 'Development test harness; fundamental denominators held static',
-      calibrationProfileId: bankingProfile?.profileId,
-      calibrationVersion: bankingProfile?.version,
+      calibrationProfileId: activeProfile?.profileId,
+      calibrationVersion: activeProfile?.version,
     };
 
-    // 1. Check Uncalibrated / Blocked Sectors (Insurance, CapMarkets, Healthcare, Hospitality)
+    // 1. Check Uncalibrated / Blocked Sectors (Healthcare, Hospitality per Decision C2)
     if (UNCALIBRATED_BLOCKED_SECTORS.includes(input.sector as (typeof UNCALIBRATED_BLOCKED_SECTORS)[number])) {
-      if (input.sector === 'Insurance') {
-        // D115-STAGE1: Life Insurance Layer-2.5 Valuation Scaffold
-        return this.synthesizeInsuranceScaffold(input, provenance);
-      }
-      if (input.sector === 'Capital Markets') {
-        // D115-STAGE1: Capital Markets Layer-2.5 Valuation Scaffold (AMC vs Non-AMC)
-        return this.synthesizeCapitalMarketsScaffold(input, provenance);
-      }
-
       return {
         canonicalSecurityId: input.canonicalSecurityId,
         sector: input.sector,
@@ -114,6 +119,16 @@ export class EodValuationSynthesizer {
         reason: `UNCALIBRATED_SECTOR: ${input.sector} does not possess an authorized valuation calibration profile in repository`,
         provenance,
       };
+    }
+
+    // D115-STAGE2: Calibrated Life Insurance synthesis
+    if (input.sector === 'Insurance') {
+      return this.synthesizeInsuranceCalibrated(input, provenance);
+    }
+
+    // D115-STAGE2: Calibrated Capital Markets synthesis (AMC vs Non-AMC)
+    if (input.sector === 'Capital Markets') {
+      return this.synthesizeCapitalMarketsCalibrated(input, provenance);
     }
 
     // 2. Validate EOD Close Price
@@ -391,20 +406,22 @@ export class EodValuationSynthesizer {
   }
 
   /**
-   * Stage 1 Life Insurance Layer-2.5 Valuation Scaffold.
-   * Under Program Authority Decisions Q-GRP2-01..05 & Q-GRP2-12:
-   * - Restricts initial scope strictly to Life Insurance.
-   * - Evaluates raw Price-to-Embedded Value (P/EV) metric per D115 specification.
-   * - Formula:
-   *     EVPS = embeddedValue / sharesOutstanding
-   *     P/EV = eodClosePrice / EVPS
-   * - Solvency guard: Solvency Ratio < 1.50 => fail closed with UNAVAILABLE.
-   * - Exceptional events: exceptionalEventFlag === true => fail closed with UNAVAILABLE.
-   * - Non-Life Insurance: fails closed with BLOCKED_UNCALIBRATED.
-   * - Critical Boundary: Numerical calibration bands are explicitly deferred (Q-GRP2-12 = C).
-   *   Returns status: 'CALIBRATION_PENDING', valuationScore: null.
+   * Stage 2 Life Insurance Layer-2.5 Calibrated Valuation Synthesis.
+   * Governed by Program Authority Adjudication Q-GRP2-CAL-01 through Q-GRP2-CAL-10:
+   * - Q-GRP2-CAL-01: Static Policy Bands (Option A).
+   * - Q-GRP2-CAL-02: Unified Life Insurance population.
+   * - Q-GRP2-CAL-04: Ratified Thresholds:
+   *     P/EV < 1.800         => Score 90.0
+   *     1.800 <= P/EV < 2.400 => Score 75.0
+   *     2.400 <= P/EV < 3.200 => Score 60.0
+   *     3.200 <= P/EV < 4.000 => Score 45.0
+   *     P/EV >= 4.000        => Score 20.0
+   * - Q-GRP2-CAL-05: exceptionalEventFlag === true fails closed (status: UNAVAILABLE, score: null).
+   * - Q-GRP2-CAL-06: Non-positive EV (EV <= 0) or Solvency < 1.50 fails closed (status: UNAVAILABLE, score: null).
+   * - Q-GRP2-CAL-07: Calibrated via immutable profile insurance-valuation-calibration-1.0.0.json.
+   * - Non-Life Insurance remains strictly excluded (BLOCKED_UNCALIBRATED) per Q-GRP2-04.
    */
-  private synthesizeInsuranceScaffold(
+  private synthesizeInsuranceCalibrated(
     input: ValuationInputPayload,
     provenance: ValuationProvenanceDto
   ): ValuationResult {
@@ -447,7 +464,7 @@ export class EodValuationSynthesizer {
       };
     }
 
-    // 3. Exceptional Event Exclusion (Q-GRP2-13)
+    // 3. Exceptional Event Exclusion (Q-GRP2-CAL-05)
     if (f.exceptionalEventFlag === true) {
       return {
         canonicalSecurityId: input.canonicalSecurityId,
@@ -488,7 +505,7 @@ export class EodValuationSynthesizer {
     const cash = typeof f.cash === 'number' && Number.isFinite(f.cash) ? f.cash : 0;
     const enterpriseValue = marketCap + debt - cash;
 
-    // 6. Solvency Ratio Guard (Q-GRP2-05: Solvency < 1.50 => Fail Closed)
+    // 6. Solvency Ratio Guard (Q-GRP2-CAL-06 / Q-GRP2-05: Solvency < 1.50 => Fail Closed)
     if (typeof f.solvencyRatio === 'number') {
       if (!Number.isFinite(f.solvencyRatio) || f.solvencyRatio < 1.50) {
         return {
@@ -504,7 +521,7 @@ export class EodValuationSynthesizer {
       }
     }
 
-    // 7. Validate Embedded Value (IM-006)
+    // 7. Validate Embedded Value (IM-006 per Q-GRP2-CAL-06)
     if (typeof f.embeddedValue !== 'number' || !Number.isFinite(f.embeddedValue)) {
       return {
         canonicalSecurityId: input.canonicalSecurityId,
@@ -535,35 +552,48 @@ export class EodValuationSynthesizer {
     // 8. Compute EVPS and raw P/EV Multiple
     const embeddedValuePerShare = f.embeddedValue / f.sharesOutstanding;
     const pev = input.eodClosePrice / embeddedValuePerShare;
+    const roundedMultiple = Math.round(pev * 1000) / 1000;
 
-    // 9. Enforce Q-GRP2-12 Boundary: Numerical Calibration is Pending
+    // 9. Calibrated Score Evaluation (Q-GRP2-CAL-04 / Q-GRP2-CAL-07)
+    const score = this.evaluateBand('Insurance', 'IM-VAL-001', roundedMultiple);
+
     return {
       canonicalSecurityId: input.canonicalSecurityId,
       sector: input.sector,
-      status: 'CALIBRATION_PENDING',
-      valuationScore: null,
+      status: 'CALCULATED',
+      valuationScore: score,
       multipleType: 'P/EV',
-      calculatedMultiple: Math.round(pev * 1000) / 1000,
+      calculatedMultiple: roundedMultiple,
       marketCap,
       enterpriseValue,
       embeddedValue: f.embeddedValue,
       embeddedValuePerShare: Math.round(embeddedValuePerShare * 100) / 100,
-      reason: 'CALIBRATION_PENDING: Raw P/EV metric computed; numerical calibration bands deferred under Program Authority Decision Q-GRP2-12',
       provenance,
     };
   }
 
   /**
-   * Stage 1 Capital Markets Layer-2.5 Valuation Scaffold.
-   * Under Program Authority Decisions Q-GRP2-06..10 & Q-GRP2-12:
-   * - Segments Capital Markets into AMC and Non-AMC.
-   * - AMC: Market Cap / AUM Ratio (%) = (Market Cap / Total AUM) * 100.
-   * - Non-AMC: Price-to-Earnings (P/E) Multiple = EOD Close Price / EPS.
-   * - Exceptional events: exceptionalEventFlag === true => fail closed with UNAVAILABLE.
-   * - Critical Boundary: Numerical calibration bands are explicitly deferred (Q-GRP2-12 = C).
-   *   Returns status: 'CALIBRATION_PENDING', valuationScore: null.
+   * Stage 2 Capital Markets Layer-2.5 Calibrated Valuation Synthesis.
+   * Governed by Program Authority Adjudication Q-GRP2-CAL-01 through Q-GRP2-CAL-10:
+   * - Q-GRP2-CAL-03: Strict AMC vs Non-AMC segmentation; zero cross-methodology fallback.
+   * - Q-GRP2-CAL-04: Ratified Thresholds:
+   *     AMC (Market Cap / AUM %):
+   *       MCap/AUM < 6.000%          => Score 90.0
+   *       6.000% <= MCap/AUM < 9.000% => Score 75.0
+   *       9.000% <= MCap/AUM < 13.000% => Score 60.0
+   *       13.000% <= MCap/AUM < 17.000% => Score 45.0
+   *       MCap/AUM >= 17.000%        => Score 20.0
+   *     Non-AMC (P/E):
+   *       P/E < 18.000               => Score 90.0
+   *       18.000 <= P/E < 26.000     => Score 75.0
+   *       26.000 <= P/E < 38.000     => Score 60.0
+   *       38.000 <= P/E < 52.000     => Score 45.0
+   *       P/E >= 52.000              => Score 20.0
+   * - Q-GRP2-CAL-05: exceptionalEventFlag === true fails closed (status: UNAVAILABLE, score: null).
+   * - Q-GRP2-CAL-06: Non-positive AUM (AUM <= 0) or EPS (EPS <= 0) fails closed.
+   * - Q-GRP2-CAL-07: Calibrated via immutable profile capital-markets-valuation-calibration-1.0.0.json.
    */
-  private synthesizeCapitalMarketsScaffold(
+  private synthesizeCapitalMarketsCalibrated(
     input: ValuationInputPayload,
     provenance: ValuationProvenanceDto
   ): ValuationResult {
@@ -594,7 +624,7 @@ export class EodValuationSynthesizer {
       };
     }
 
-    // 2. Exceptional Event Exclusion (Q-GRP2-13)
+    // 2. Exceptional Event Exclusion (Q-GRP2-CAL-05)
     if (f.exceptionalEventFlag === true) {
       return {
         canonicalSecurityId: input.canonicalSecurityId,
@@ -667,18 +697,19 @@ export class EodValuationSynthesizer {
       }
 
       const mcapToAumPercent = (marketCap / f.totalAum) * 100;
+      const roundedMultiple = Math.round(mcapToAumPercent * 1000) / 1000;
+      const score = this.evaluateBand('Capital Markets', 'CM-VAL-001', roundedMultiple);
 
       return {
         canonicalSecurityId: input.canonicalSecurityId,
         sector: input.sector,
-        status: 'CALIBRATION_PENDING',
-        valuationScore: null,
+        status: 'CALCULATED',
+        valuationScore: score,
         multipleType: 'Market Cap / AUM (%)',
-        calculatedMultiple: Math.round(mcapToAumPercent * 1000) / 1000,
+        calculatedMultiple: roundedMultiple,
         marketCap,
         enterpriseValue,
         totalAum: f.totalAum,
-        reason: 'CALIBRATION_PENDING: Raw Market Cap / AUM (%) computed; numerical calibration bands deferred under Program Authority Decision Q-GRP2-12',
         provenance,
       };
     }
@@ -704,16 +735,18 @@ export class EodValuationSynthesizer {
       };
     }
 
+    const roundedMultiple = Math.round(pe * 1000) / 1000;
+    const score = this.evaluateBand('Capital Markets', 'CM-VAL-002', roundedMultiple);
+
     return {
       canonicalSecurityId: input.canonicalSecurityId,
       sector: input.sector,
-      status: 'CALIBRATION_PENDING',
-      valuationScore: null,
+      status: 'CALCULATED',
+      valuationScore: score,
       multipleType: 'P/E',
-      calculatedMultiple: Math.round(pe * 1000) / 1000,
+      calculatedMultiple: roundedMultiple,
       marketCap,
       enterpriseValue,
-      reason: 'CALIBRATION_PENDING: Raw P/E metric computed; numerical calibration bands deferred under Program Authority Decision Q-GRP2-12',
       provenance,
     };
   }
