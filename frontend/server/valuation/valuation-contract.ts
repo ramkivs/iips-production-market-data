@@ -1,11 +1,11 @@
 /**
- * D112-C / D113-STAGE1 Valuation Synthesizer Contract.
+ * D112-C / D113-STAGE2 Valuation Synthesizer Contract.
  *
  * Responsibilities:
  * - Define type-safe inputs and outputs for dynamic valuation synthesis.
  * - Enforce DEVELOPMENT_MIXED_VINTAGE provenance contract (D112-B).
  * - Distinguish between successfully synthesized scores, explicit unavailable states,
- *   blocked uncalibrated sectors, and calibration-pending states (Stage 1 Banking).
+ *   blocked uncalibrated sectors, and calibration-pending states.
  */
 
 export interface ValuationCompanyFundamentals {
@@ -19,9 +19,12 @@ export interface ValuationCompanyFundamentals {
   readonly ltmNetIncome?: number;     // In Crores
   readonly ltmEps?: number;           // Per share
   readonly totalEquity?: number;      // Book value in Crores
-  // Banking Stage 1 fundamental inputs (P/ABV methodology)
+  // Banking fundamental inputs (P/ABV methodology)
   readonly netNpa?: number;           // Net NPA absolute in Crores
   readonly tangibleNetWorth?: number; // Tangible Net Worth in Crores (or total equity if tangible)
+  // Optional flag for defined exceptional events (Q-CAL-06)
+  readonly exceptionalEventFlag?: boolean;
+  readonly exceptionalEventReason?: string;
 }
 
 export interface ValuationInputPayload {
@@ -41,6 +44,8 @@ export interface ValuationProvenanceDto {
   readonly marketDataSha256: string;
   readonly fundamentalsVintage: 'v1.1-reference';
   readonly transportSemantics: string;
+  readonly calibrationProfileId?: string;
+  readonly calibrationVersion?: string;
 }
 
 export type ValuationStatus = 'CALCULATED' | 'UNAVAILABLE' | 'BLOCKED_UNCALIBRATED' | 'CALIBRATION_PENDING';

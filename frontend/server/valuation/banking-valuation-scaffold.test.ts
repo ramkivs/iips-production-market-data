@@ -23,22 +23,23 @@ describe('D113-STAGE1 Banking Valuation Layer-2.5 Scaffold Verification Suite', 
     },
   };
 
-  it('A. [VALID BANKING SCAFFOLD] produces raw P/ABV metric and enforces CALIBRATION_PENDING (Decision B2)', () => {
+  it('A. [VALID BANKING CALIBRATION] produces raw P/ABV metric and evaluates calibrated score (D113 Stage 2)', () => {
     // ABV = 450000 - 9000 = 441000 Cr
     // ABVPS = 441000 / 760 = 580.26315 INR
-    // P/ABV = 1650 / 580.26315 = 2.843
+    // P/ABV = 1650 / 580.26315 = 2.844 (in range 2.5..3.2 -> Score 45.0)
     const result = synthesizer.synthesize(validBankingInput);
 
-    assert.equal(result.status, 'CALIBRATION_PENDING');
-    assert.equal(result.valuationScore, null, 'Valuation score MUST remain null under Decision B2');
+    assert.equal(result.status, 'CALCULATED');
+    assert.equal(result.valuationScore, 45.0, 'Valuation score evaluated via approved calibration profile');
     assert.equal(result.multipleType, 'P/ABV');
     assert.equal(result.calculatedMultiple, 2.844);
     assert.equal(result.adjustedBookValue, 441000.0);
     assert.equal(result.adjustedBookValuePerShare, 580.26);
-    assert.ok(result.reason?.includes('CALIBRATION_PENDING'));
     assert.equal(result.provenance.dataMode, 'LIVE');
     assert.equal(result.provenance.freshness, 'DEVELOPMENT_MIXED_VINTAGE');
     assert.equal(result.provenance.fundamentalsVintage, 'v1.1-reference');
+    assert.equal(result.provenance.calibrationProfileId, 'banking-valuation-calibration');
+    assert.equal(result.provenance.calibrationVersion, '1.0.0');
   });
 
   it('B. [TOTAL EQUITY FALLBACK] derives ABV using totalEquity when tangibleNetWorth is omitted', () => {
@@ -54,10 +55,11 @@ describe('D113-STAGE1 Banking Valuation Layer-2.5 Scaffold Verification Suite', 
         netNpa: 5000.0,
       },
     };
-    // ABV = 250000 - 5000 = 245000; ABVPS = 245000 / 500 = 490; P/ABV = 1650 / 490 = 3.367
+    // ABV = 250000 - 5000 = 245000; ABVPS = 245000 / 500 = 490; P/ABV = 1650 / 490 = 3.367 (>= 3.2 -> Score 20.0)
     const result = synthesizer.synthesize(input);
-    assert.equal(result.status, 'CALIBRATION_PENDING');
+    assert.equal(result.status, 'CALCULATED');
     assert.equal(result.calculatedMultiple, 3.367);
+    assert.equal(result.valuationScore, 20.0);
     assert.equal(result.adjustedBookValue, 245000.0);
   });
 
@@ -69,10 +71,11 @@ describe('D113-STAGE1 Banking Valuation Layer-2.5 Scaffold Verification Suite', 
         netNpa: 0,
       },
     };
-    // ABV = 450000 - 0 = 450000; ABVPS = 450000 / 760 = 592.105; P/ABV = 1650 / 592.105 = 2.787
+    // ABV = 450000 - 0 = 450000; ABVPS = 450000 / 760 = 592.105; P/ABV = 1650 / 592.105 = 2.787 (in 2.5..3.2 -> Score 45.0)
     const result = synthesizer.synthesize(input);
-    assert.equal(result.status, 'CALIBRATION_PENDING');
+    assert.equal(result.status, 'CALCULATED');
     assert.equal(result.calculatedMultiple, 2.787);
+    assert.equal(result.valuationScore, 45.0);
   });
 
   it('D. [NEGATIVE NET NPA] fails closed if netNpa is negative', () => {
@@ -156,11 +159,11 @@ describe('D113-STAGE1 Banking Valuation Layer-2.5 Scaffold Verification Suite', 
     assert.ok(result.reason?.includes('MISSING_FUNDAMENTALS'));
   });
 
-  it('J. [DECISION B2 BOUNDARY VERIFICATION] confirms zero invented thresholds and null valuationScore', () => {
+  it('J. [APPROVED CALIBRATION PROFILE MAPPING] confirms evaluation against banking-valuation-calibration-1.0.0.json', () => {
     const result = synthesizer.synthesize(validBankingInput);
-    // Explicitly verify no numerical score is assigned
-    assert.equal(result.valuationScore, null);
-    assert.equal(result.status, 'CALIBRATION_PENDING');
+    assert.equal(result.valuationScore, 45.0);
+    assert.equal(result.status, 'CALCULATED');
+    assert.equal(result.provenance.calibrationProfileId, 'banking-valuation-calibration');
   });
 
   it('K. [DETERMINISTIC INVARIANCE] repeated synthesis produces strictly identical calculations', () => {

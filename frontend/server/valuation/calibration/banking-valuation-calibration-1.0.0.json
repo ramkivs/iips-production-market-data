@@ -1,0 +1,36 @@
+{
+  "$schema": "https://iips-engineering-standards/valuation-calibration-profile.schema.json#1.0.0",
+  "profileId": "banking-valuation-calibration",
+  "version": "1.0.0",
+  "sector": "Banking",
+  "engineId": "sector.banking",
+  "multipleType": "P/ABV",
+  "metricCode": "BM-VAL-001",
+  "effectiveDate": "2026-09-17",
+  "ratifiedBy": "IIPS Program Authority Adjudication D113-STAGE2 (Q-CAL-01 through Q-CAL-10)",
+  "adjudicationReference": "docs/D113_STAGE2_BANKING_CALIBRATION_ADJUDICATION.md",
+  "immutable": true,
+  "description": "Ratified static expert-calibrated policy bands for Indian Commercial Banking P/ABV multiples.",
+  "bandScores": {
+    "BM-VAL-001": [
+      ["lt", 1.2, 90.0],
+      ["range", 1.2, 1.8, 75.0],
+      ["range", 1.8, 2.5, 60.0],
+      ["range", 2.5, 3.2, 45.0],
+      ["gte", 3.2, 20.0]
+    ]
+  },
+  "scoreTiers": [
+    { "tier": 1, "label": "Elite / Deep Value / Undervalued", "operator": "lt", "threshold": 1.2, "score": 90.0 },
+    { "tier": 2, "label": "Attractive Valuation", "min": 1.2, "max": 1.8, "score": 75.0 },
+    { "tier": 3, "label": "Fair Value / Benchmark Baseline", "min": 1.8, "max": 2.5, "score": 60.0 },
+    { "tier": 4, "label": "Stretched Valuation", "min": 2.5, "max": 3.2, "score": 45.0 },
+    { "tier": 5, "label": "Overvalued / Expensive", "operator": "gte", "threshold": 3.2, "score": 20.0 }
+  ],
+  "governanceRules": {
+    "negativeAbvFailClosed": true,
+    "exceptionalEventExclusion": true,
+    "recalibrationCadence": "annual",
+    "presentationAxis": "orthogonal-decision-matrix"
+  }
+}

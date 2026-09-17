@@ -20,11 +20,11 @@ export const CALIBRATED_VALUATION_SECTORS = [
   'Automobile',
   'Consumer',
   'Utilities',
+  'Banking', // D113-STAGE2: Banking P/ABV calibrated under Q-CAL-01..10
 ] as const;
 
 /** Sectors lacking valuation calibration or explicitly blocked by Program Authority. */
 export const UNCALIBRATED_BLOCKED_SECTORS = [
-  'Banking',
   'Insurance',
   'Capital Markets',
   'Healthcare',
@@ -34,6 +34,8 @@ export const UNCALIBRATED_BLOCKED_SECTORS = [
 type BandTuple = [string, number, number] | [string, number, number, number];
 
 interface CalibrationProfile {
+  profileId?: string;
+  version?: string;
   bandScores?: Record<string, BandTuple[]>;
   metricBands?: Record<string, BandTuple[]>;
 }
@@ -46,7 +48,8 @@ export class EodValuationSynthesizer {
   }
 
   private loadCalibrations(): void {
-    const sectorFileMap: Record<string, string> = {
+    // 8 Pre-calibrated sectors from iips-platform
+    const platformSectorMap: Record<string, string> = {
       Technology: 'technology/technology-calibration-1.0.0.json',
       Industrials: 'industrials/industrials-calibration-1.0.0.json',
       Energy: 'energy/energy-calibration-1.0.0.json',
@@ -57,12 +60,19 @@ export class EodValuationSynthesizer {
       Utilities: 'utilities/utilities-calibration-1.0.0.json',
     };
 
-    for (const [sec, relPath] of Object.entries(sectorFileMap)) {
+    for (const [sec, relPath] of Object.entries(platformSectorMap)) {
       const fullPath = path.resolve(__dirname, `../../../iips-platform/src/sector-engines/${relPath}`);
       if (fs.existsSync(fullPath)) {
         const raw = fs.readFileSync(fullPath, 'utf8');
         this.calibrationProfiles.set(sec, JSON.parse(raw) as CalibrationProfile);
       }
+    }
+
+    // D113-STAGE2: Load Banking P/ABV ratified calibration profile
+    const bankingCalibrationPath = path.resolve(__dirname, 'calibration/banking-valuation-calibration-1.0.0.json');
+    if (fs.existsSync(bankingCalibrationPath)) {
+      const raw = fs.readFileSync(bankingCalibrationPath, 'utf8');
+      this.calibrationProfiles.set('Banking', JSON.parse(raw) as CalibrationProfile);
     }
   }
 
@@ -71,25 +81,22 @@ export class EodValuationSynthesizer {
    * Strictly enforces D112-B DEVELOPMENT_MIXED_VINTAGE provenance.
    */
   public synthesize(input: ValuationInputPayload): ValuationResult {
+    const bankingProfile = input.sector === 'Banking' ? this.calibrationProfiles.get('Banking') : undefined;
+
     const provenance: ValuationProvenanceDto = {
       dataMode: 'LIVE',
-      dataSource: 'IIPS EOD Valuation Synthesizer (D112-C / D113-STAGE1 DEVELOPMENT_HARNESS)',
+      dataSource: 'IIPS EOD Valuation Synthesizer (D112-C / D113-STAGE2 DEVELOPMENT_HARNESS)',
       freshness: 'DEVELOPMENT_MIXED_VINTAGE',
       marketDataAsOf: input.tradeDate,
       marketDataSha256: input.archiveSha256 ?? 'UNSPECIFIED_LOCAL_SHA256',
       fundamentalsVintage: 'v1.1-reference',
       transportSemantics: 'Development test harness; fundamental denominators held static',
+      calibrationProfileId: bankingProfile?.profileId,
+      calibrationVersion: bankingProfile?.version,
     };
 
-    // 1. Check Uncalibrated / Blocked Sectors
-    // Note: For Banking under D113 Stage 1, if banking fundamentals (tangibleNetWorth / totalEquity)
-    // are absent, it fails closed as uncalibrated or missing inputs.
+    // 1. Check Uncalibrated / Blocked Sectors (Insurance, CapMarkets, Healthcare, Hospitality)
     if (UNCALIBRATED_BLOCKED_SECTORS.includes(input.sector as (typeof UNCALIBRATED_BLOCKED_SECTORS)[number])) {
-      if (input.sector === 'Banking') {
-        // Evaluate Banking Stage 1 scaffold if input provides banking fundamentals
-        return this.synthesizeBankingScaffold(input, provenance);
-      }
-
       return {
         canonicalSecurityId: input.canonicalSecurityId,
         sector: input.sector,
@@ -145,6 +152,11 @@ export class EodValuationSynthesizer {
 
     // 6. Sector-Specific Multiple Synthesis and Evaluation
     switch (input.sector) {
+      case 'Banking': {
+        // D113-STAGE2: Banking Layer-2.5 Calibrated P/ABV Evaluation (Decisions A1, B2/Q-CAL-01..10)
+        return this.synthesizeBankingCalibrated(input, provenance);
+      }
+
       case 'Technology': {
         // Metric TM-004: EV / Revenue
         if (typeof f.ltmRevenue !== 'number' || f.ltmRevenue <= 0 || !Number.isFinite(f.ltmRevenue)) {
@@ -222,19 +234,21 @@ export class EodValuationSynthesizer {
   }
 
   /**
-   * Stage 1 Banking Layer-2.5 Valuation Scaffold.
-   * Under Program Authority Decisions A1 and B2:
-   * - Evaluates raw Price-to-Adjusted Book Value (P/ABV) metric per D113 specification.
-   * - Formula:
-   *     Adjusted Book Value (ABV) = Tangible Net Worth (or Total Equity) - Net NPA
-   *     ABVPS = ABV / Shares Outstanding
-   *     P/ABV = EOD Close Price / ABVPS (or Market Cap / ABV)
-   * - Critical Boundary (B2): Numerical calibration bands are NOT authorized.
-   *   Returns status: 'CALIBRATION_PENDING', valuationScore: null.
-   * - If banking fundamentals are missing or zero/negative, fails closed according to repository semantics.
-   * - If no banking-specific equity/tangibleNetWorth is present, preserves BLOCKED_UNCALIBRATED behavior.
+   * Stage 2 Banking Layer-2.5 Calibrated Valuation Synthesis.
+   * Governed by Program Authority Adjudication Q-CAL-01 through Q-CAL-10:
+   * - Q-CAL-01: Static Policy Bands (Option D).
+   * - Q-CAL-04: Ratified Thresholds:
+   *     P/ABV < 1.2x        => Score 90.0
+   *     1.2x <= P/ABV < 1.8x => Score 75.0
+   *     1.8x <= P/ABV < 2.5x => Score 60.0
+   *     2.5x <= P/ABV < 3.2x => Score 45.0
+   *     P/ABV >= 3.2x       => Score 20.0
+   * - Q-CAL-05: Non-positive ABV (Net NPA >= Net Worth) fails closed (status: UNAVAILABLE, score: null).
+   * - Q-CAL-06: Defined exceptional events excluded; fail-closed if flagged.
+   * - Q-CAL-08: Calibrated via immutable profile banking-valuation-calibration-1.0.0.json.
+   * - Q-CAL-10: Exposed as orthogonal valuation score.
    */
-  private synthesizeBankingScaffold(
+  private synthesizeBankingCalibrated(
     input: ValuationInputPayload,
     provenance: ValuationProvenanceDto
   ): ValuationResult {
@@ -262,7 +276,19 @@ export class EodValuationSynthesizer {
       };
     }
 
-    // 2. Validate Shares Outstanding
+    // 2. Exceptional Event Exclusion (Q-CAL-06)
+    if (f.exceptionalEventFlag === true) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: `EXCEPTIONAL_EVENT_EXCLUDED: Valuation evaluation blocked due to defined exceptional bank event: ${f.exceptionalEventReason ?? 'UNSPECIFIED_EVENT'}`,
+        provenance,
+      };
+    }
+
+    // 3. Validate Shares Outstanding
     if (typeof f.sharesOutstanding !== 'number' || f.sharesOutstanding <= 0 || !Number.isFinite(f.sharesOutstanding)) {
       return {
         canonicalSecurityId: input.canonicalSecurityId,
@@ -279,7 +305,7 @@ export class EodValuationSynthesizer {
     const cash = typeof f.cash === 'number' && Number.isFinite(f.cash) ? f.cash : 0;
     const enterpriseValue = marketCap + debt - cash;
 
-    // 3. Determine Net Worth Base (Tangible Net Worth or Total Equity)
+    // 4. Determine Net Worth Base (Tangible Net Worth or Total Equity)
     const hasTangibleNetWorth = typeof f.tangibleNetWorth === 'number' && Number.isFinite(f.tangibleNetWorth);
     const hasTotalEquity = typeof f.totalEquity === 'number' && Number.isFinite(f.totalEquity);
 
@@ -292,14 +318,14 @@ export class EodValuationSynthesizer {
         valuationScore: null,
         marketCap,
         enterpriseValue,
-        reason: `UNCALIBRATED_SECTOR: ${input.sector} does not possess an authorized valuation calibration profile in repository`,
+        reason: `UNCALIBRATED_SECTOR: ${input.sector} fundamentals lack tangibleNetWorth or totalEquity`,
         provenance,
       };
     }
 
     const netWorth = hasTangibleNetWorth ? f.tangibleNetWorth! : f.totalEquity!;
 
-    // 4. Validate Net NPA (defaults to 0 if bank reports zero net NPA)
+    // 5. Validate Net NPA (defaults to 0 if bank reports zero net NPA)
     const netNpa = typeof f.netNpa === 'number' && Number.isFinite(f.netNpa) ? f.netNpa : 0;
     if (netNpa < 0) {
       return {
@@ -314,10 +340,10 @@ export class EodValuationSynthesizer {
       };
     }
 
-    // 5. Compute Adjusted Book Value (ABV)
+    // 6. Compute Adjusted Book Value (ABV)
     const adjustedBookValue = netWorth - netNpa;
 
-    // Fail closed if ABV is zero or negative (distressed balance sheet)
+    // Fail closed if ABV is zero or negative (distressed balance sheet per Q-CAL-05)
     if (adjustedBookValue <= 0) {
       return {
         canonicalSecurityId: input.canonicalSecurityId,
@@ -332,24 +358,25 @@ export class EodValuationSynthesizer {
       };
     }
 
-    // 6. Compute ABVPS and raw P/ABV Multiple
+    // 7. Compute ABVPS and raw P/ABV Multiple
     const adjustedBookValuePerShare = adjustedBookValue / f.sharesOutstanding;
     const pabv = input.eodClosePrice / adjustedBookValuePerShare;
+    const roundedMultiple = Math.round(pabv * 1000) / 1000;
 
-    // 7. Enforce Decision B2 Boundary: Numerical Calibration is Pending
-    // valuationScore MUST remain null; status MUST be CALIBRATION_PENDING.
+    // 8. Evaluate Calibrated Score via Approved Profile (Q-CAL-04 / Q-CAL-08)
+    const score = this.evaluateBand('Banking', 'BM-VAL-001', roundedMultiple);
+
     return {
       canonicalSecurityId: input.canonicalSecurityId,
       sector: input.sector,
-      status: 'CALIBRATION_PENDING',
-      valuationScore: null,
+      status: 'CALCULATED',
+      valuationScore: score,
       multipleType: 'P/ABV',
-      calculatedMultiple: Math.round(pabv * 1000) / 1000,
+      calculatedMultiple: roundedMultiple,
       marketCap,
       enterpriseValue,
       adjustedBookValue,
       adjustedBookValuePerShare: Math.round(adjustedBookValuePerShare * 100) / 100,
-      reason: 'CALIBRATION_PENDING: Raw P/ABV metric computed; numerical calibration bands deferred under Program Authority Decision B2',
       provenance,
     };
   }
@@ -459,6 +486,6 @@ export class EodValuationSynthesizer {
 
     // Default to lowest bucket if value exceeds defined range
     const last = bands[bands.length - 1];
-    return (last[last.length - 1] as number) ?? 30.0;
+    return (last[last.length - 1] as number) ?? 20.0;
   }
 }
