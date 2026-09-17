@@ -1,10 +1,11 @@
 /**
- * D112-C Valuation Synthesizer Contract.
+ * D112-C / D113-STAGE1 Valuation Synthesizer Contract.
  *
  * Responsibilities:
  * - Define type-safe inputs and outputs for dynamic valuation synthesis.
  * - Enforce DEVELOPMENT_MIXED_VINTAGE provenance contract (D112-B).
- * - Distinguish between successfully synthesized scores and explicit unavailable states.
+ * - Distinguish between successfully synthesized scores, explicit unavailable states,
+ *   blocked uncalibrated sectors, and calibration-pending states (Stage 1 Banking).
  */
 
 export interface ValuationCompanyFundamentals {
@@ -18,6 +19,9 @@ export interface ValuationCompanyFundamentals {
   readonly ltmNetIncome?: number;     // In Crores
   readonly ltmEps?: number;           // Per share
   readonly totalEquity?: number;      // Book value in Crores
+  // Banking Stage 1 fundamental inputs (P/ABV methodology)
+  readonly netNpa?: number;           // Net NPA absolute in Crores
+  readonly tangibleNetWorth?: number; // Tangible Net Worth in Crores (or total equity if tangible)
 }
 
 export interface ValuationInputPayload {
@@ -39,17 +43,19 @@ export interface ValuationProvenanceDto {
   readonly transportSemantics: string;
 }
 
-export type ValuationStatus = 'CALCULATED' | 'UNAVAILABLE' | 'BLOCKED_UNCALIBRATED';
+export type ValuationStatus = 'CALCULATED' | 'UNAVAILABLE' | 'BLOCKED_UNCALIBRATED' | 'CALIBRATION_PENDING';
 
 export interface ValuationResult {
   readonly canonicalSecurityId: string;
   readonly sector: string;
   readonly status: ValuationStatus;
   readonly valuationScore: number | null; // 0..100 score or null
-  readonly multipleType?: 'EV/Revenue' | 'EV/EBITDA' | 'P/E' | 'P/B';
+  readonly multipleType?: 'EV/Revenue' | 'EV/EBITDA' | 'P/E' | 'P/B' | 'P/ABV';
   readonly calculatedMultiple?: number;
   readonly marketCap?: number;
   readonly enterpriseValue?: number;
+  readonly adjustedBookValue?: number;    // Absolute Adjusted Book Value in Crores
+  readonly adjustedBookValuePerShare?: number; // ABVPS in INR per share
   readonly reason?: string;
   readonly provenance: ValuationProvenanceDto;
 }

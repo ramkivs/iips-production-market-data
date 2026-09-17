@@ -73,7 +73,7 @@ export class EodValuationSynthesizer {
   public synthesize(input: ValuationInputPayload): ValuationResult {
     const provenance: ValuationProvenanceDto = {
       dataMode: 'LIVE',
-      dataSource: 'IIPS EOD Valuation Synthesizer (D112-C DEVELOPMENT_HARNESS)',
+      dataSource: 'IIPS EOD Valuation Synthesizer (D112-C / D113-STAGE1 DEVELOPMENT_HARNESS)',
       freshness: 'DEVELOPMENT_MIXED_VINTAGE',
       marketDataAsOf: input.tradeDate,
       marketDataSha256: input.archiveSha256 ?? 'UNSPECIFIED_LOCAL_SHA256',
@@ -82,7 +82,14 @@ export class EodValuationSynthesizer {
     };
 
     // 1. Check Uncalibrated / Blocked Sectors
+    // Note: For Banking under D113 Stage 1, if banking fundamentals (tangibleNetWorth / totalEquity)
+    // are absent, it fails closed as uncalibrated or missing inputs.
     if (UNCALIBRATED_BLOCKED_SECTORS.includes(input.sector as (typeof UNCALIBRATED_BLOCKED_SECTORS)[number])) {
+      if (input.sector === 'Banking') {
+        // Evaluate Banking Stage 1 scaffold if input provides banking fundamentals
+        return this.synthesizeBankingScaffold(input, provenance);
+      }
+
       return {
         canonicalSecurityId: input.canonicalSecurityId,
         sector: input.sector,
@@ -212,6 +219,139 @@ export class EodValuationSynthesizer {
           provenance,
         };
     }
+  }
+
+  /**
+   * Stage 1 Banking Layer-2.5 Valuation Scaffold.
+   * Under Program Authority Decisions A1 and B2:
+   * - Evaluates raw Price-to-Adjusted Book Value (P/ABV) metric per D113 specification.
+   * - Formula:
+   *     Adjusted Book Value (ABV) = Tangible Net Worth (or Total Equity) - Net NPA
+   *     ABVPS = ABV / Shares Outstanding
+   *     P/ABV = EOD Close Price / ABVPS (or Market Cap / ABV)
+   * - Critical Boundary (B2): Numerical calibration bands are NOT authorized.
+   *   Returns status: 'CALIBRATION_PENDING', valuationScore: null.
+   * - If banking fundamentals are missing or zero/negative, fails closed according to repository semantics.
+   * - If no banking-specific equity/tangibleNetWorth is present, preserves BLOCKED_UNCALIBRATED behavior.
+   */
+  private synthesizeBankingScaffold(
+    input: ValuationInputPayload,
+    provenance: ValuationProvenanceDto
+  ): ValuationResult {
+    // 1. Validate EOD Close Price
+    if (typeof input.eodClosePrice !== 'number' || input.eodClosePrice <= 0 || !Number.isFinite(input.eodClosePrice)) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: 'INVALID_EOD_CLOSE_PRICE: EOD closing price must be a finite positive number',
+        provenance,
+      };
+    }
+
+    const f = input.fundamentals;
+    if (!f || typeof f !== 'object') {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: 'MISSING_FUNDAMENTALS: Fundamental inputs object is null or undefined',
+        provenance,
+      };
+    }
+
+    // 2. Validate Shares Outstanding
+    if (typeof f.sharesOutstanding !== 'number' || f.sharesOutstanding <= 0 || !Number.isFinite(f.sharesOutstanding)) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        reason: 'INVALID_SHARES_OUTSTANDING: Shares outstanding must be a finite positive number',
+        provenance,
+      };
+    }
+
+    const marketCap = input.eodClosePrice * f.sharesOutstanding;
+    const debt = typeof f.debt === 'number' && Number.isFinite(f.debt) ? f.debt : 0;
+    const cash = typeof f.cash === 'number' && Number.isFinite(f.cash) ? f.cash : 0;
+    const enterpriseValue = marketCap + debt - cash;
+
+    // 3. Determine Net Worth Base (Tangible Net Worth or Total Equity)
+    const hasTangibleNetWorth = typeof f.tangibleNetWorth === 'number' && Number.isFinite(f.tangibleNetWorth);
+    const hasTotalEquity = typeof f.totalEquity === 'number' && Number.isFinite(f.totalEquity);
+
+    if (!hasTangibleNetWorth && !hasTotalEquity) {
+      // If neither tangibleNetWorth nor totalEquity is provided, Banking remains BLOCKED_UNCALIBRATED
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'BLOCKED_UNCALIBRATED',
+        valuationScore: null,
+        marketCap,
+        enterpriseValue,
+        reason: `UNCALIBRATED_SECTOR: ${input.sector} does not possess an authorized valuation calibration profile in repository`,
+        provenance,
+      };
+    }
+
+    const netWorth = hasTangibleNetWorth ? f.tangibleNetWorth! : f.totalEquity!;
+
+    // 4. Validate Net NPA (defaults to 0 if bank reports zero net NPA)
+    const netNpa = typeof f.netNpa === 'number' && Number.isFinite(f.netNpa) ? f.netNpa : 0;
+    if (netNpa < 0) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        marketCap,
+        enterpriseValue,
+        reason: 'INVALID_NET_NPA: Net NPA cannot be negative',
+        provenance,
+      };
+    }
+
+    // 5. Compute Adjusted Book Value (ABV)
+    const adjustedBookValue = netWorth - netNpa;
+
+    // Fail closed if ABV is zero or negative (distressed balance sheet)
+    if (adjustedBookValue <= 0) {
+      return {
+        canonicalSecurityId: input.canonicalSecurityId,
+        sector: input.sector,
+        status: 'UNAVAILABLE',
+        valuationScore: null,
+        marketCap,
+        enterpriseValue,
+        adjustedBookValue,
+        reason: 'NON_POSITIVE_ADJUSTED_BOOK_VALUE: Adjusted Book Value (Net Worth - Net NPA) must be strictly positive',
+        provenance,
+      };
+    }
+
+    // 6. Compute ABVPS and raw P/ABV Multiple
+    const adjustedBookValuePerShare = adjustedBookValue / f.sharesOutstanding;
+    const pabv = input.eodClosePrice / adjustedBookValuePerShare;
+
+    // 7. Enforce Decision B2 Boundary: Numerical Calibration is Pending
+    // valuationScore MUST remain null; status MUST be CALIBRATION_PENDING.
+    return {
+      canonicalSecurityId: input.canonicalSecurityId,
+      sector: input.sector,
+      status: 'CALIBRATION_PENDING',
+      valuationScore: null,
+      multipleType: 'P/ABV',
+      calculatedMultiple: Math.round(pabv * 1000) / 1000,
+      marketCap,
+      enterpriseValue,
+      adjustedBookValue,
+      adjustedBookValuePerShare: Math.round(adjustedBookValuePerShare * 100) / 100,
+      reason: 'CALIBRATION_PENDING: Raw P/ABV metric computed; numerical calibration bands deferred under Program Authority Decision B2',
+      provenance,
+    };
   }
 
   private synthesizeEvEbitda(
