@@ -1,0 +1,160 @@
+/* Program v3.0 — Phase 3: Global base styles (token-driven, institutional). */
+
+:root {
+  color-scheme: light dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-ink);
+  background: var(--color-surface-0);
+  -webkit-font-smoothing: antialiased;
+}
+
+code,
+.snapshot-id,
+.version {
+  font-family: ui-monospace, 'SF Mono', 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+a {
+  color: var(--color-status-informational);
+}
+
+/* Visible, accessible focus — never removed. */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Reduced motion: disable non-essential transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Screen-reader-only utility. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Phase 13-Hardening (B1): responsive shell foundation ---
+   Desktop layout preserved exactly; below 960px the shell collapses to a
+   single column and the sidebar becomes a horizontally scrollable nav strip. */
+.app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: 56px 1fr;
+  grid-template-areas:
+    'topbar topbar'
+    'sidebar content';
+  height: 100vh;
+}
+
+.app-topbar { grid-area: topbar; }
+.app-sidebar { grid-area: sidebar; }
+.app-main {
+  grid-area: content;
+  overflow: auto;
+  padding: 24px;
+}
+
+.app-nav {
+  list-style: none;
+  margin: 0;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+  background: var(--color-surface-1);
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+}
+
+/* Skip link (B2): off-screen until focused, ahead of all other content. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 300;
+  padding: 8px 12px;
+  background: var(--color-surface-0);
+  color: var(--color-ink);
+  border: 2px solid var(--color-focus);
+  border-radius: var(--radius-md);
+}
+
+.skip-link:focus {
+  left: 8px;
+  top: 8px;
+}
+
+/* Horizontal scroll wrapper for dense analytical tables. */
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+@media (max-width: 959px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 56px auto 1fr;
+    grid-template-areas:
+      'topbar'
+      'sidebar'
+      'content';
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .app-main {
+    padding: 16px;
+  }
+
+  .app-nav {
+    flex-direction: row;
+    height: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 8px;
+  }
+
+  .app-nav li {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 639px) {
+  .app-main {
+    padding: 12px;
+  }
+}

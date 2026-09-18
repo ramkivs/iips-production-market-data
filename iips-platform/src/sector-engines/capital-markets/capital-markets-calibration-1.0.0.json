@@ -1,0 +1,76 @@
+{
+  "$schema": "https://iips-engineering-standards/calibration-profile.schema.json#1.0.0",
+  "profileId": "capital-markets-calibration",
+  "version": "1.0.0",
+  "engineId": "sector.capital-markets",
+  "sectorFamily": "Capital Markets",
+  "immutable": true,
+  "publishedAt": "2026-08-06T00:00:00.000Z",
+  "metricThresholds": [
+    {
+      "metricId": "CM-004",
+      "name": "Cost-to-Income Ratio",
+      "unit": "%",
+      "bands": [
+        { "label": "Strong", "min": null, "max": 50 },
+        { "label": "Good", "min": 50, "max": 60 },
+        { "label": "Adequate", "min": 60, "max": 70 },
+        { "label": "Weak", "min": 70, "max": null }
+      ]
+    },
+    {
+      "metricId": "CM-005",
+      "name": "Recurring Revenue %",
+      "unit": "%",
+      "bands": [
+        { "label": "High quality", "min": 70, "max": null },
+        { "label": "Moderate", "min": 50, "max": 70 },
+        { "label": "Cyclical", "min": null, "max": 50 }
+      ]
+    },
+    {
+      "metricId": "CM-002",
+      "name": "AUM Growth",
+      "unit": "%",
+      "bands": [
+        { "label": "Exceptional", "min": 20, "max": null },
+        { "label": "Strong", "min": 10, "max": 20 },
+        { "label": "Adequate", "min": 5, "max": 10 },
+        { "label": "Weak", "min": null, "max": 5 }
+      ]
+    }
+  ],
+  "scoreWeights": [
+    { "scoreId": "earnings-quality", "weight": 0.25 },
+    { "scoreId": "growth", "weight": 0.20 },
+    { "scoreId": "profitability", "weight": 0.20 },
+    { "scoreId": "franchise", "weight": 0.20 },
+    { "scoreId": "operating-efficiency", "weight": 0.15 }
+  ],
+  "penaltyRules": [
+    { "rule": "cost-blowout", "description": "Cost-to-income > 70% caps composite at 60", "weight": 0.1 },
+    { "rule": "regulatory-breach", "description": "Regulatory/compliance breach blocks Strong Buy", "weight": 0.2 }
+  ],
+  "verdictMapping": [
+    { "minScore": 80, "maxScore": 100, "verdict": "Strong Buy" },
+    { "minScore": 70, "maxScore": 80, "verdict": "Buy" },
+    { "minScore": 60, "maxScore": 70, "verdict": "Accumulate" },
+    { "minScore": 50, "maxScore": 60, "verdict": "Hold" },
+    { "minScore": 40, "maxScore": 50, "verdict": "Watch" },
+    { "minScore": 0, "maxScore": 40, "verdict": "Avoid" }
+  ],
+  "confidenceRules": {
+    "dataCompleteness": 0.9,
+    "dataQuality": 0.9,
+    "metricConsistency": 0.8,
+    "calibrationStability": 1.0,
+    "governanceChecks": 1.0
+  },
+  "overrideRules": [
+    { "rule": "regulatory-breach", "description": "Regulatory/compliance breach caps recommendation at Avoid" },
+    { "rule": "governance-failure", "description": "Severe governance failure caps recommendation at Avoid" },
+    { "rule": "severe-aum-outflow", "description": "Severe AUM outflow reduces recommendation" },
+    { "rule": "cost-blowout", "description": "Cost blowout (cost-to-income > 70%) caps recommendation at Watch" },
+    { "rule": "market-cycle-stress", "description": "Market-cycle stress reduces recommendation" }
+  ]
+}
