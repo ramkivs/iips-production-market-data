@@ -1,0 +1,60 @@
+﻿{
+    "recordType":  "D115-ST3-HDFCLIFE-NSE-CORPORATE-FILINGS-RESULTSET",
+    "schemaVersion":  "1.0.0",
+    "issuer":  {
+                   "companyName":  "HDFC Life Insurance Company Limited",
+                   "symbol":  "HDFCLIFE",
+                   "isin":  "INE795G01014"
+               },
+    "query":  {
+                  "provider":  "NSE",
+                  "surface":  "Corporate Filings / Announcements",
+                  "symbol":  "HDFCLIFE",
+                  "fromDate":  "2026-08-27",
+                  "toDate":  "2026-09-15",
+                  "subjectFilter":  null
+              },
+    "executionEvidence":  {
+                              "executionTimestampIST":  null,
+                              "executionTimestampStatus":  "NOT_CAPTURED",
+                              "source":  "NSE browser UI"
+                          },
+    "resultSet":  {
+                      "exported":  true,
+                      "exportFile":  "CF-AN-equities-HDFCLIFE-27-08-2026-to-15-09-2026.csv",
+                      "exportSha256":  "0898DF08B407F2C06ABB447307A18EF58FC4D542639EEA156E15936205A1D188",
+                      "exportedDataRowCount":  2,
+                      "uiTotalResultCount":  null,
+                      "uiTotalResultCountStatus":  "NOT_DISPLAYED",
+                      "pagination":  {
+                                         "explicitPaginationDisplayed":  false,
+                                         "explicitTotalPagesDisplayed":  false,
+                                         "bottomOfResultsObserved":  true,
+                                         "bottomOfResultsObservation":  "Blank; no explicit total-result or pagination information displayed."
+                                     },
+                      "completenessDisposition":  "EXPORT_RESULTSET_PRESERVED_BUT_UI_COMPLETENESS_METADATA_NOT_DISPLAYED"
+                  },
+    "returnedArtifacts":  [
+                              {
+                                  "broadcastDateTime":  "2026-09-11T20:36:55+05:30",
+                                  "subject":  "Action(s) taken or orders passed",
+                                  "attachment":  "HDFCLIFE2_11092026203642_GSTOrder.pdf",
+                                  "sha256":  "3228ED46B32E8D66E82F5AEC8F91BB429C3F3707B6A0508C1FE54BAA0B717752"
+                              },
+                              {
+                                  "broadcastDateTime":  "2026-08-31T17:22:59+05:30",
+                                  "subject":  "Analysts/Institutional Investor Meet/Con. Call Updates",
+                                  "attachment":  "HDFCLIFE2_31082026172241_SE_Intimation_-_Analyst_Meet.pdf",
+                                  "sha256":  "EE29A235756C1E83F46969B5FBF9EBA2EA35C9568530D7F538A9512A63EEB4E1"
+                              }
+                          ],
+    "governance":  {
+                       "purpose":  "D115 Stage 3 HDFC Life post-26-Aug-2026 capital-action perimeter evidence",
+                       "coverageCutoff11Sep":  "PENDING_ARENA_ADJUDICATION",
+                       "coverageCutoff15Sep":  "PENDING_ARENA_ADJUDICATION",
+                       "pointInTimeShareCount":  "UNRESOLVED",
+                       "eodAcceptance":  "NOT_ACCEPTED",
+                       "adST307":  "BLOCKED",
+                       "productionEligible":  false
+                   }
+}
