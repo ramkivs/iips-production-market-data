@@ -1,0 +1,38 @@
+{
+  "validCorporateActions": [
+    {
+      "companyId": "INFY",
+      "actionId": "CA-INFY-2026-01",
+      "actionType": "DIVIDEND",
+      "status": "EFFECTIVE",
+      "exDate": "2026-06-01T00:00:00.000Z",
+      "recordDate": "2026-06-02T00:00:00.000Z",
+      "dividendAmount": 20.0,
+      "adjustmentFactor": 0.985
+    },
+    {
+      "companyId": "TCS",
+      "actionId": "CA-TCS-2026-01",
+      "actionType": "BONUS",
+      "status": "EFFECTIVE",
+      "exDate": "2026-07-15T00:00:00.000Z",
+      "recordDate": "2026-07-16T00:00:00.000Z",
+      "ratioNumerator": 1,
+      "ratioDenominator": 1,
+      "adjustmentFactor": 0.5
+    }
+  ],
+  "invalidCorporateActions": [
+    {
+      "companyId": "INFY",
+      "actionId": "CA-ERR-01",
+      "actionType": "SPLIT",
+      "status": "EFFECTIVE",
+      "exDate": "2026-06-01T00:00:00.000Z",
+      "recordDate": "2026-06-02T00:00:00.000Z",
+      "ratioNumerator": -1,
+      "ratioDenominator": 0,
+      "adjustmentFactor": -0.5
+    }
+  ]
+}

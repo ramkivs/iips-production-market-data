@@ -1,0 +1,29 @@
+{
+  "validEstimates": [
+    {
+      "companyId": "INFY",
+      "metric": "REVENUE",
+      "targetPeriod": "FY2027",
+      "consensusMean": 1680000000000,
+      "consensusMedian": 1675000000000,
+      "highEstimate": 1720000000000,
+      "lowEstimate": 1640000000000,
+      "analystCount": 38,
+      "currency": "INR",
+      "asOfDate": "2026-09-01T00:00:00.000Z"
+    }
+  ],
+  "invalidEstimates": [
+    {
+      "companyId": "",
+      "metric": "REVENUE",
+      "targetPeriod": "",
+      "consensusMean": 1000,
+      "highEstimate": 800,
+      "lowEstimate": 1200,
+      "analystCount": 0,
+      "currency": "INR",
+      "asOfDate": "2026-09-01T00:00:00.000Z"
+    }
+  ]
+}

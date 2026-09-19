@@ -1,0 +1,25 @@
+{
+  "name": "iips-production-market-data",
+  "version": "1.0.0",
+  "description": "Institutional Investment Platform System (IIPS) - Production Market Data & Intelligence Pipeline",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/tests/*.test.js",
+    "test:direct": "node --test --experimental-strip-types tests/*.test.ts"
+  },
+  "keywords": [
+    "iips",
+    "market-data",
+    "canonical-contracts",
+    "security-master",
+    "data-quality",
+    "point-in-time"
+  ],
+  "author": "Ramki / Sai <sairam260573@gmail.com>",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "^5.8.2"
+  }
+}

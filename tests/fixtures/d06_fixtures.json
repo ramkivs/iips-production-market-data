@@ -1,0 +1,28 @@
+{
+  "validNews": [
+    {
+      "companyId": "INFY",
+      "newsId": "NEWS-INFY-20260918-01",
+      "headline": "Infosys expands AI services footprint across European enterprise clients",
+      "summary": "Infosys today announced multi-year expansion of enterprise cloud and AI delivery capabilities.",
+      "publishedAt": "2026-09-18T08:30:00.000Z",
+      "category": "CORPORATE",
+      "sentimentScore": 0.65,
+      "relevanceScore": 0.95,
+      "sourcePublisher": "GOVERNED_EXCHANGE_DISCLOSURE",
+      "tags": ["AI", "Enterprise", "Cloud"]
+    }
+  ],
+  "invalidNews": [
+    {
+      "newsId": "",
+      "headline": "",
+      "publishedAt": "INVALID_DATE",
+      "category": "CORPORATE",
+      "sentimentScore": 5.0,
+      "relevanceScore": -1.0,
+      "sourcePublisher": "UNKNOWN",
+      "tags": []
+    }
+  ]
+}

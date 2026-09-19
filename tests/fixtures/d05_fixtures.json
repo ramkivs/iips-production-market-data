@@ -1,0 +1,82 @@
+{
+  "validInstruments": [
+    {
+      "companyId": "INFY",
+      "isin": "INE009A01021",
+      "cin": "L85110KA1981PLC013115",
+      "companyName": "Infosys Limited",
+      "industry": "Information Technology",
+      "sector": "Technology",
+      "listingStatus": "ACTIVE",
+      "lotSize": 1,
+      "tickSize": 0.05,
+      "faceValue": 5,
+      "currency": "INR",
+      "effectiveFrom": "2000-01-01T00:00:00.000Z",
+      "listings": [
+        {
+          "exchange": "NSE",
+          "symbol": "INFY",
+          "status": "ACTIVE",
+          "lotSize": 1,
+          "tickSize": 0.05
+        },
+        {
+          "exchange": "BSE",
+          "symbol": "INFY",
+          "scripCode": "500209",
+          "status": "ACTIVE",
+          "lotSize": 1,
+          "tickSize": 0.05
+        }
+      ]
+    },
+    {
+      "companyId": "TCS",
+      "isin": "INE467B01029",
+      "cin": "L22210MH1995PLC084781",
+      "companyName": "Tata Consultancy Services Limited",
+      "industry": "Information Technology",
+      "sector": "Technology",
+      "listingStatus": "ACTIVE",
+      "lotSize": 1,
+      "tickSize": 0.05,
+      "faceValue": 1,
+      "currency": "INR",
+      "effectiveFrom": "2004-08-25T00:00:00.000Z",
+      "listings": [
+        {
+          "exchange": "NSE",
+          "symbol": "TCS",
+          "status": "ACTIVE",
+          "lotSize": 1,
+          "tickSize": 0.05
+        },
+        {
+          "exchange": "BSE",
+          "symbol": "TCS",
+          "scripCode": "532540",
+          "status": "ACTIVE",
+          "lotSize": 1,
+          "tickSize": 0.05
+        }
+      ]
+    }
+  ],
+  "invalidInstruments": [
+    {
+      "companyId": "BAD_CO",
+      "isin": "INVALID_ISIN_FORMAT",
+      "companyName": "Bad Company",
+      "industry": "None",
+      "sector": "None",
+      "listingStatus": "ACTIVE",
+      "lotSize": -1,
+      "tickSize": -0.05,
+      "faceValue": 0,
+      "currency": "INR",
+      "effectiveFrom": "2026-01-01T00:00:00.000Z",
+      "listings": []
+    }
+  ]
+}

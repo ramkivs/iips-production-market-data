@@ -1,0 +1,62 @@
+{
+  "validQuotes": [
+    {
+      "companyId": "INFY",
+      "symbol": "INFY",
+      "exchange": "NSE",
+      "currency": "INR",
+      "bid": 1520.25,
+      "ask": 1520.50,
+      "ltp": 1520.35,
+      "open": 1510.00,
+      "high": 1530.00,
+      "low": 1505.50,
+      "close": 1520.35,
+      "previousClose": 1508.00,
+      "volume": 2540000,
+      "vwap": 1518.75,
+      "turnover": 3857625000,
+      "change": 12.35,
+      "pctChange": 0.82,
+      "tradeCount": 85400
+    },
+    {
+      "companyId": "TCS",
+      "symbol": "TCS",
+      "exchange": "NSE",
+      "currency": "INR",
+      "bid": 3850.00,
+      "ask": 3850.75,
+      "ltp": 3850.50,
+      "open": 3820.00,
+      "high": 3865.00,
+      "low": 3815.00,
+      "close": 3850.50,
+      "previousClose": 3810.00,
+      "volume": 1200500,
+      "vwap": 3842.10,
+      "turnover": 4612441050,
+      "change": 40.50,
+      "pctChange": 1.06,
+      "tradeCount": 62000
+    }
+  ],
+  "invalidQuotes": [
+    {
+      "companyId": "INFY",
+      "symbol": "INFY",
+      "exchange": "NSE",
+      "currency": "INR",
+      "bid": 1520.00,
+      "ask": 1510.00,
+      "ltp": 1515.00,
+      "open": 1500.00,
+      "high": 1490.00,
+      "low": 1530.00,
+      "previousClose": 1500.00,
+      "volume": -100,
+      "change": 15.00,
+      "pctChange": 1.00
+    }
+  ]
+}
