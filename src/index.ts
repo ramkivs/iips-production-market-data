@@ -2,8 +2,8 @@
  * Institutional Investment Platform System (IIPS)
  * Production Market Data & Intelligence Pipeline - Root Module
  *
- * Wave 1, Wave 2, Wave 3 & Wave 4 Implementation (WS-A, WS-B, WS-C, WS-D, WS-E)
- * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W1-AUTH-2026-01 / AD-W2-AUTH-2026-01 / AD-W3-AUTH-2026-01 / AD-W4-AUTH-2026-01
+ * Wave 1, Wave 2, Wave 3, Wave 4 & Wave 5 Implementation (WS-A, WS-B, WS-C, WS-D, WS-E, WS-F)
+ * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W1-AUTH-2026-01 / AD-W2-AUTH-2026-01 / AD-W3-AUTH-2026-01 / AD-W4-AUTH-2026-01 / AD-W5-AUTH-2026-01
  * Execution Mode: LOCAL_FIXTURE_AND_OFFLINE_DEV
  */
 
@@ -21,3 +21,5 @@ export * from './intelligence/index.js';
 export * from './engine_adapters/index.js';
 export * from './transports/index.js';
 export * from './ui/index.js';
+export * from './e2e/index.js';
+export * from './operations/index.js';
