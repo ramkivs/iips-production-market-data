@@ -1,0 +1,129 @@
+﻿D115 — HDFC LIFE NSE COMPLETENESS CAPTURE
+
+Capture ID:
+D115-ST3-HDFCLIFE-NSE-COMPLETENESS-20260918-02
+
+Repository:
+G:\IIPS-Production-Market-Data-UI-VERIFY
+
+Evidence directory:
+G:\IIPS-Production-Market-Data-UI-VERIFY\d115\evidence\hdfclife\external-discovery-20260918\D115-ST3-HDFCLIFE-NSE-COMPLETENESS-20260918-02
+
+QUERY IDENTITY
+--------------
+Provider:
+NSE
+
+Surface:
+Corporate Filings / Announcements
+
+Symbol:
+HDFCLIFE
+
+Issuer:
+HDFC Life Insurance Company Limited
+
+ISIN:
+INE795G01014
+
+From date:
+2026-08-27
+
+To date:
+2026-09-15
+
+Subject filter:
+NONE
+
+
+WINDOWS OPERATOR RECORD
+-----------------------
+
+Operator:
+[ENTER NAME]
+
+Operator capture start:
+2026-09-18T22:22:40.2703339+05:30
+
+Exact NSE query execution timestamp:
+[ENTER EXACT TIMESTAMP AS DISPLAYED/RECORDED BY NSE, INCLUDING TIMEZONE]
+
+Result count displayed by NSE:
+[ENTER NUMBER OR NOT_DISPLAYED]
+
+Pagination displayed:
+[YES / NO / NOT_DISPLAYED]
+
+Current page:
+[ENTER VALUE OR NOT_DISPLAYED]
+
+Total pages:
+[ENTER VALUE OR NOT_DISPLAYED]
+
+Page size:
+[ENTER VALUE OR NOT_DISPLAYED]
+
+Lazy loading / Load More:
+[YES / NO / NOT_DISPLAYED]
+
+Additional scrolling required:
+[YES / NO]
+
+Number of pages actually inspected:
+[ENTER VALUE]
+
+Evidence all pages/results were loaded:
+[YES / NO / NOT_ESTABLISHED]
+
+Bottom-of-results observed:
+[YES / NO]
+
+NSE completeness statement:
+[PASTE EXACT OBSERVED TEXT OR NOT_DISPLAYED]
+
+API/network response available:
+[YES / NO]
+
+Downloaded/exported result set:
+[YES / NO]
+
+Export filename:
+[ENTER]
+
+Export byte count:
+[ENTER]
+
+Export SHA-256:
+[ENTER]
+
+Returned row count:
+[ENTER]
+
+Attachment count:
+[ENTER]
+
+Attachment inventory:
+[LIST EVERY RETURNED ATTACHMENT]
+
+Notes:
+[ENTER ONLY OBSERVED FACTS]
+
+
+GOVERNANCE
+----------
+
+Do NOT infer completeness from:
+- blank page bottom
+- absence of visible additional rows
+- expected search behavior
+- prior NSE queries
+
+Do NOT:
+- overwrite prior evidence
+- modify the prior CSV
+- modify the prior manifest
+- select an EOD date
+- accept a share count
+- clear AD-ST3-07
+- activate mapping
+- authorize production

@@ -1,0 +1,84 @@
+﻿{
+    "recordType":  "D115-ST3-HDFCLIFE-EOD-INTAKE",
+    "schemaVersion":  "1.0.0",
+    "createdAtUtc":  "2026-09-19T04:56:23.0363711Z",
+    "target":  {
+                   "issuer":  "HDFC Life Insurance Company Limited",
+                   "symbol":  "HDFCLIFE",
+                   "series":  "EQ",
+                   "isin":  "INE795G01014",
+                   "observationDate":  "2026-09-15"
+               },
+    "source":  {
+                   "provider":  "NSE",
+                   "dataset":  "CM-UDiFF Common Bhavcopy Final",
+                   "originalPath":  "G:\\IIPS-Production-Market-Data-UI-VERIFY\\.iips-data\\bhavcopy\\OPERATOR_DROP\\D115\\BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv.zip",
+                   "originalFilename":  "BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv.zip",
+                   "originalBytes":  206785,
+                   "originalSha256":  "1838E677DC64454862D7AEF4E802A624D964796446E7ED474F562A04167078CA",
+                   "governedRoute":  "OPERATOR_DROP"
+               },
+    "extractedArtifact":  {
+                              "filename":  "BhavCopy_NSE_CM_0_0_0_20260915_F_0000.extracted.csv",
+                              "bytes":  636695,
+                              "sha256":  "8731E2B6F7394AD52884AA15D5BA0327C8082F3EA89BCB92227FAD43E801C6A7",
+                              "sourceZipEntry":  "BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv"
+                          },
+    "exactRecord":  {
+                        "filename":  "HDFCLIFE-15SEP-2026-source-record.exact.csv",
+                        "bytes":  176,
+                        "sha256":  "8044462DBBBADE8C4FE3CE42C8469EE047329A41B4537EB332BA61D2DE27CB8E",
+                        "sourceCsvByteOffset":  235849,
+                        "originalLineTerminatorBytes":  0,
+                        "sourceSliceVerified":  true
+                    },
+    "sourceFields":  {
+                         "tradingDate":  "TradDt",
+                         "businessDate":  "BizDt",
+                         "segment":  "Sgmt",
+                         "source":  "Src",
+                         "isin":  "ISIN",
+                         "symbol":  "TckrSymb",
+                         "series":  "SctySrs",
+                         "close":  "ClsPric",
+                         "last":  "LastPric",
+                         "previousClose":  "PrvsClsgPric",
+                         "settlement":  "SttlmPric"
+                     },
+    "verifiedValues":  {
+                           "TradDt":  "2026-09-15",
+                           "BizDt":  "2026-09-15",
+                           "Sgmt":  "CM",
+                           "Src":  "NSE",
+                           "ISIN":  "INE795G01014",
+                           "TckrSymb":  "HDFCLIFE",
+                           "SctySrs":  "EQ",
+                           "ClsPric":  "516.10",
+                           "LastPric":  "516.10",
+                           "PrvsClsgPric":  "530.00",
+                           "SttlmPric":  "516.09"
+                       },
+    "provenance":  {
+                       "acquisitionTimestampUtc":  "2026-09-19T04:56:23.0363711Z",
+                       "operator":  "USER",
+                       "machine":  "DESKTOP-NO0NHTP",
+                       "repositoryRoot":  "G:\\IIPS-Production-Market-Data-UI-VERIFY",
+                       "custodyRoute":  "OPERATOR_DROP"
+                   },
+    "governance":  {
+                       "observationDateAuthority":  "PROGRAM_AUTHORITY_ESTABLISHED",
+                       "eodAcceptance":  "NOT_ACCEPTED",
+                       "independentReview":  "PENDING",
+                       "shareAcceptance":  "NOT_ACCEPTED",
+                       "exceptionalEventFlag":  "UNASSIGNED",
+                       "securityMasterActivation":  "NOT_AUTHORIZED",
+                       "mappingActivation":  "NOT_AUTHORIZED",
+                       "adSt307":  "NOT_ACCEPTED",
+                       "productionAuthorized":  false,
+                       "productionEligible":  false
+                   },
+    "currency":  {
+                     "sourceFieldPresent":  false,
+                     "status":  "NOT_ESTABLISHED_FROM_CM_UDIFF_RECORD"
+                 }
+}

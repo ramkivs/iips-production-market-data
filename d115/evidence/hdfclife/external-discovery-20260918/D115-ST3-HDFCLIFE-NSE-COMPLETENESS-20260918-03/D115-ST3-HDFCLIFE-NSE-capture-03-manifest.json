@@ -1,0 +1,75 @@
+﻿{
+    "recordType":  "D115-ST3-HDFCLIFE-NSE-CORPORATE-FILINGS-CAPTURE-03",
+    "schemaVersion":  "1.0.0",
+    "issuer":  {
+                   "companyName":  "HDFC Life Insurance Company Limited",
+                   "symbol":  "HDFCLIFE",
+                   "isin":  "INE795G01014"
+               },
+    "query":  {
+                  "provider":  "NSE",
+                  "surface":  "Corporate Filings / Announcements",
+                  "symbol":  "HDFCLIFE",
+                  "fromDate":  "2026-08-27",
+                  "toDate":  "2026-09-15",
+                  "subjectFilter":  null
+              },
+    "capture":  {
+                    "captureTimestampIST":  "2026-09-18T22:28:00+05:30",
+                    "sourceType":  "NSE underlying response payload supplied by operator",
+                    "rawResponseFile":  "D115-ST3-HDFCLIFE-NSE-capture-03-raw-response.json",
+                    "rawResponseBytes":  1742,
+                    "rawResponseSHA256":  "FEE32F519CBE84C1CF7BE8548D44A120CDC0C8A038570CF38A85619634C9AD10",
+                    "recordCount":  2
+                },
+    "completeness":  {
+                         "totalResultCount":  null,
+                         "totalResultCountDisposition":  "NOT_DISPLAYED",
+                         "paginationMetadata":  null,
+                         "paginationDisposition":  "NOT_DISPLAYED",
+                         "pageCount":  null,
+                         "pageCountDisposition":  "NOT_DISPLAYED",
+                         "lazyLoadCompleteness":  "NOT_ESTABLISHED",
+                         "completeServerSideResultSet":  "NOT_ESTABLISHED",
+                         "completenessDisposition":  "CAPTURED_RESPONSE_CONTAINS_2_RECORDS_BUT_TOTAL_RESULT_COMPLETENESS_IS_NOT_ESTABLISHED"
+                     },
+    "returnedRecords":  [
+                            {
+                                "seq_id":  "106779363",
+                                "symbol":  "HDFCLIFE",
+                                "isin":  "INE795G01014",
+                                "companyName":  "HDFC Life Insurance Company Limited",
+                                "broadcastDateTime":  "11-Sep-2026 20:36:55",
+                                "subject":  "Action(s) taken or orders passed",
+                                "attachment":  "https://nsearchives.nseindia.com/corporate/HDFCLIFE2_11092026203642_GSTOrder.pdf",
+                                "exchangeDissemination":  "11-Sep-2026 20:36:56"
+                            },
+                            {
+                                "seq_id":  "106762592",
+                                "symbol":  "HDFCLIFE",
+                                "isin":  "INE795G01014",
+                                "companyName":  "HDFC Life Insurance Company Limited",
+                                "broadcastDateTime":  "31-Aug-2026 17:22:59",
+                                "subject":  "Analysts/Institutional Investor Meet/Con. Call Updates",
+                                "attachment":  "https://nsearchives.nseindia.com/corporate/HDFCLIFE2_31082026172241_SE_Intimation_-_Analyst_Meet.pdf",
+                                "exchangeDissemination":  "31-Aug-2026 17:23:00"
+                            }
+                        ],
+    "governance":  {
+                       "purpose":  "D115 post-26-Aug-2026 HDFCLIFE capital-action perimeter evidence",
+                       "coverageCutoff11Sep2026":  "PENDING_ARENA_ADJUDICATION",
+                       "coverageCutoff15Sep2026":  "PENDING_ARENA_ADJUDICATION",
+                       "pointInTimeShares":  "UNRESOLVED",
+                       "eodAcceptance":  "NOT_ACCEPTED",
+                       "exceptionalEventFlag":  "BLOCKED",
+                       "AD_ST3_07":  "BLOCKED",
+                       "productionEligible":  false
+                   },
+    "controls":  {
+                     "rawResponseMutated":  false,
+                     "completenessInferred":  false,
+                     "pointInTimeSharesInferred":  false,
+                     "eodPerformed":  false,
+                     "productionActivation":  false
+                 }
+}

@@ -1,0 +1,38 @@
+﻿D115 HDFC LIFE NSE COMPLETENESS HANDOFF
+
+Capture ID:
+D115-ST3-HDFCLIFE-NSE-COMPLETENESS-20260918-02
+
+Repository HEAD:
+dcd391f6f2d19e43faebd8d97b79f075f7d565f5
+
+Remote HEAD:
+dcd391f6f2d19e43faebd8d97b79f075f7d565f5
+
+Evidence directory:
+G:\IIPS-Production-Market-Data-UI-VERIFY\d115\evidence\hdfclife\external-discovery-20260918\D115-ST3-HDFCLIFE-NSE-COMPLETENESS-20260918-02
+
+Artifacts:
+Name=D115-ST3-HDFCLIFE-NSE-completeness-capture-operator-record.txt; Bytes=2051; SHA256=9D450425349BA4F138126830CFADD4F7C79A6B4D228EB4EC669D7E28B78F7310
+
+
+IMPORTANT:
+This handoff does NOT itself establish NSE completeness.
+
+The operator must separately record the actual NSE UI observations in:
+
+G:\IIPS-Production-Market-Data-UI-VERIFY\d115\evidence\hdfclife\external-discovery-20260918\D115-ST3-HDFCLIFE-NSE-COMPLETENESS-20260918-02\D115-ST3-HDFCLIFE-NSE-completeness-capture-operator-record.txt
+
+No repository mutation was performed by this script.
+
+DO NOT:
+- git add
+- git commit
+- git push
+- modify previous evidence
+- overwrite prior CSV/manifest
+- infer completeness
+- accept EOD
+- accept shares
+- clear AD-ST3-07
+- authorize production

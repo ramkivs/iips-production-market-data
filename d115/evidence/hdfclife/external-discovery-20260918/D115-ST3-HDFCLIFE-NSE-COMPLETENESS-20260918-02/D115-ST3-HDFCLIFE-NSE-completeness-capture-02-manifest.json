@@ -1,0 +1,91 @@
+﻿{
+    "recordType":  "D115-ST3-HDFCLIFE-NSE-CORPORATE-FILINGS-COMPLETENESS-MANIFEST",
+    "schemaVersion":  "1.0.0",
+    "captureId":  "D115-ST3-HDFCLIFE-NSE-COMPLETENESS-20260918-02",
+    "provider":  "NSE",
+    "surface":  "Corporate Filings / Announcements",
+    "issuer":  {
+                   "companyName":  "HDFC Life Insurance Company Limited",
+                   "symbol":  "HDFCLIFE",
+                   "isin":  "INE795G01014"
+               },
+    "query":  {
+                  "fromDate":  "2026-08-27",
+                  "toDate":  "2026-09-15",
+                  "subjectFilter":  null
+              },
+    "capture":  {
+                    "operatorCaptureTimestamp":  "2026-09-18T22:28:00+05:30",
+                    "exactNseExecutionTimestamp":  "NOT_CAPTURED",
+                    "resultCountDisplayed":  "NOT_DISPLAYED",
+                    "paginationDisplayed":  "NOT_DISPLAYED",
+                    "totalPagesDisplayed":  "NOT_DISPLAYED",
+                    "completenessStatementDisplayed":  "NOT_DISPLAYED",
+                    "bottomOfResultsObserved":  true,
+                    "bottomObservation":  "BLANK; NO EXPLICIT TOTAL-RESULT OR PAGINATION INFORMATION DISPLAYED",
+                    "allResultsLoaded":  "NOT_ESTABLISHED",
+                    "completenessDisposition":  "NOT_ESTABLISHED"
+                },
+    "export":  {
+                   "filename":  null,
+                   "bytes":  844,
+                   "sha256":  "0898DF08B407F2C06ABB447307A18EF58FC4D542639EEA156E15936205A1D188",
+                   "rowCount":  2
+               },
+    "observationRecord":  {
+                              "filename":  null,
+                              "bytes":  4621,
+                              "sha256":  "6F5178D2FA5D4E789872DF76A51D9A8DFFBBC9454B40A84B6A43C83D0B50423A"
+                          },
+    "returnedArtifacts":  [
+                              {
+                                  "filename":  "HDFCLIFE2_11092026203642_GSTOrder.pdf",
+                                  "sha256":  "3228ED46B32E8D66E82F5AEC8F91BB429C3F3707B6A0508C1FE54BAA0B717752",
+                                  "broadcastDateTime":  "11-Sep-2026 20:36:55",
+                                  "subject":  "Action(s) taken or orders passed",
+                                  "classification":  "NON_CAPITAL_ACTION",
+                                  "shareCountEffect":  "NONE_ESTABLISHED"
+                              },
+                              {
+                                  "filename":  "HDFCLIFE2_31082026172241_SE_Intimation_-_Analyst_Meet.pdf",
+                                  "sha256":  "EE29A235756C1E83F46969B5FBF9EBA2EA35C9568530D7F538A9512A63EEB4E1",
+                                  "broadcastDateTime":  "31-Aug-2026 17:22:59",
+                                  "subject":  "Analysts/Institutional Investor Meet/Con. Call Updates",
+                                  "classification":  "NON_CAPITAL_ACTION",
+                                  "shareCountEffect":  "NONE_ESTABLISHED"
+                              }
+                          ],
+    "returnedRows":  [
+                         {
+                             "symbol":  "HDFCLIFE",
+                             "companyName":  "HDFC Life Insurance Company Limited",
+                             "subject":  "Action(s) taken or orders passed",
+                             "broadcastDateTime":  "11-Sep-2026 20:36:55",
+                             "attachment":  "https://nsearchives.nseindia.com/corporate/HDFCLIFE2_11092026203642_GSTOrder.pdf"
+                         },
+                         {
+                             "symbol":  "HDFCLIFE",
+                             "companyName":  "HDFC Life Insurance Company Limited",
+                             "subject":  "Analysts/Institutional Investor Meet/Con. Call Updates",
+                             "broadcastDateTime":  "31-Aug-2026 17:22:59",
+                             "attachment":  "https://nsearchives.nseindia.com/corporate/HDFCLIFE2_31082026172241_SE_Intimation_-_Analyst_Meet.pdf"
+                         }
+                     ],
+    "governance":  {
+                       "perimeterEvidencePreserved":  true,
+                       "completeNseResultPerimeter":  "NOT_ESTABLISHED",
+                       "capitalActionCoverageThrough2026_09_11":  "NOT_ESTABLISHED",
+                       "capitalActionCoverageThrough2026_09_15":  "NOT_ESTABLISHED",
+                       "pointInTimeShares2026_09_11":  "UNRESOLVED",
+                       "pointInTimeShares2026_09_15":  "UNRESOLVED",
+                       "eodAcceptance":  "NOT_ACCEPTED",
+                       "adSt307":  "BLOCKED",
+                       "productionEligible":  false
+                   },
+    "mutationPolicy":  {
+                           "sourceCsvOverwritten":  false,
+                           "priorManifestOverwritten":  false,
+                           "priorEvidenceDeleted":  false,
+                           "inferencePerformed":  false
+                       }
+}
