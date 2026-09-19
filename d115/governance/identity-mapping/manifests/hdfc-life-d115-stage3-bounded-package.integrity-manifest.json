@@ -1,0 +1,115 @@
+{
+  "manifestVersion": "d115-stage3-bounded-package-integrity-manifest/1.0.0",
+  "manifestClassification": "D115_STAGE3_DEVELOPMENT_REFERENCE_INTEGRITY_ONLY",
+  "packageAcceptanceReference": "D115-ST3-HDFCLIFE-PACKAGE-ACCEPT-20260918-01",
+  "proposalId": "D115-ST3-HDFCLIFE-MAPPING-PROPOSAL-20260918-01",
+  "repositoryBranch": "arena/01a0ae80-iips-production-market-data",
+  "repositoryHEAD": "da4305149bd5495789f893f530edb2526d08bb5b",
+  "serializationRule": "UTF-8 JSON; two-space indentation; LF line endings; one trailing LF; array order preserved",
+  "selfHashPolicy": "MANIFEST_EXCLUDES_ITS_OWN_HASH",
+  "artifacts": [
+    {
+      "path": "d115/evidence/security-master/EQUITY_L.csv",
+      "sha256": "bede9d10e93f47eed3f97707aba1ec6acf50784a31309f26c8a70332f0c909ee",
+      "bytes": 182067,
+      "artifactRole": "NSE_EQUITY_LIST_IDENTITY_EVIDENCE",
+      "presence": "VERIFIED_ARTIFACT"
+    },
+    {
+      "path": "d115/governance/canonical-identity/allocation-register.jsonl",
+      "sha256": "eb2925c87d4996eadabf85017a74de25d811bcbbea730164a209458ed1211fe1",
+      "bytes": 4445,
+      "artifactRole": "CANONICAL_ID_ALLOCATION_REGISTER",
+      "presence": "VERIFIED_ARTIFACT"
+    },
+    {
+      "path": "d115/governance/canonical-identity/readiness/readiness-report.json",
+      "sha256": "3bc31e75dbd72539d721a18f4a876bfa5fce08af2463b6ff9110e5b6448828c8",
+      "bytes": 4558,
+      "artifactRole": "CANONICAL_ID_ALLOCATOR_READINESS_EVIDENCE",
+      "presence": "VERIFIED_ARTIFACT"
+    },
+    {
+      "path": "d115/governance/identity-mapping/mapping-proposal.schema.json",
+      "sha256": "b6c4dd661ede90a6cf834fa634fee27e77c9c38eb6c277a0f1e122464e8e297a",
+      "bytes": 5266,
+      "artifactRole": "GOVERNED_MAPPING_PROPOSAL_SCHEMA",
+      "presence": "VERIFIED_ARTIFACT"
+    },
+    {
+      "path": "d115/governance/identity-mapping/proposals/hdfc-life-idmap-d115-group2-1.0.0.proposal.json",
+      "sha256": "915ea2a9f6e1a33fa20e2eee609d1edf052d5b097a68c7441b2eb0841363017b",
+      "bytes": 3815,
+      "artifactRole": "HDFC_LIFE_MAPPING_PROPOSAL",
+      "presence": "VERIFIED_ARTIFACT"
+    }
+  ],
+  "responseRecordedAuthorityDecisions": [
+    {
+      "reference": "MODEL-A-ST3-01",
+      "role": "MODEL_A_ACCEPTANCE",
+      "presence": "RESPONSE_RECORDED_AUTHORITY_DECISION_NO_REPOSITORY_ARTIFACT"
+    },
+    {
+      "reference": "MODEL-A-ST3-02",
+      "role": "MODEL_A_ACCEPTANCE",
+      "presence": "RESPONSE_RECORDED_AUTHORITY_DECISION_NO_REPOSITORY_ARTIFACT"
+    },
+    {
+      "reference": "HDFC LIFE CLASSIFICATION = ACCEPTED",
+      "role": "HDFC_LIFE_CLASSIFICATION_ACCEPTANCE",
+      "presence": "RESPONSE_RECORDED_AUTHORITY_DECISION_NO_REPOSITORY_ARTIFACT"
+    },
+    {
+      "reference": "FUND-ST3-03",
+      "role": "HDFC_LIFE_SHARE_COUNT_RESOLUTION",
+      "presence": "RESPONSE_RECORDED_AUTHORITY_DECISION_NO_REPOSITORY_ARTIFACT"
+    },
+    {
+      "reference": "D115-ST3-CANONICAL-ID-ALLOCATOR-READINESS-ACCEPT-20260918-01",
+      "role": "CANONICAL_ID_ALLOCATOR_READINESS_ACCEPTANCE",
+      "presence": "RESPONSE_RECORDED_AUTHORITY_DECISION_NO_REPOSITORY_ARTIFACT"
+    },
+    {
+      "reference": "D115-ST3-HDFCLIFE-CANONICAL-ID-ALLOCATION-AUTH-20260918-01",
+      "role": "HDFC_LIFE_CANONICAL_ID_ALLOCATION_AUTHORITY",
+      "presence": "RESPONSE_RECORDED_AUTHORITY_DECISION_NO_REPOSITORY_ARTIFACT"
+    },
+    {
+      "reference": "D115-ST3-HDFCLIFE-EFFECTIVEFROM-ADJ-20260918-01",
+      "role": "HDFC_LIFE_EFFECTIVEFROM_ADJUDICATION",
+      "presence": "RESPONSE_RECORDED_AUTHORITY_DECISION_NO_REPOSITORY_ARTIFACT"
+    },
+    {
+      "reference": "D115-ST3-MAPPING-PROPOSAL-SCHEMA-ADJ-20260918-01",
+      "role": "MAPPING_PROPOSAL_SCHEMA_AUTHORITY",
+      "presence": "RESPONSE_RECORDED_AUTHORITY_DECISION_NO_REPOSITORY_ARTIFACT"
+    },
+    {
+      "reference": "D115-ST3-HDFCLIFE-MAPPING-RAJ-REVIEW-20260918-01",
+      "role": "RAJ_INDEPENDENT_REVIEW",
+      "presence": "RESPONSE_RECORDED_AUTHORITY_DECISION_NO_REPOSITORY_ARTIFACT"
+    },
+    {
+      "reference": "D115-ST3-HDFCLIFE-PACKAGE-ACCEPT-20260918-01",
+      "role": "RAMKI_BOUNDED_PACKAGE_ACCEPTANCE",
+      "presence": "RESPONSE_RECORDED_AUTHORITY_DECISION_NO_REPOSITORY_ARTIFACT"
+    }
+  ],
+  "retainedGovernanceState": {
+    "rightsStatus": "PENDING",
+    "custodyStatus": "PENDING",
+    "EV_GOVERNING_ACCEPTANCE": "PENDING",
+    "SOLVENCY_GOVERNING_ACCEPTANCE": "PENDING",
+    "EXCEPTIONAL_EVENT_DETERMINATION": "BLOCKED",
+    "OPERATOR_DROP_EOD_EVIDENCE": "BLOCKED",
+    "AD-ST3-07": "NOT_ACCEPTED_BLOCKED",
+    "mappingStatus": "PROPOSED",
+    "activationStatus": "NOT_ACTIVE",
+    "securityMasterActivationStatus": "NOT_ACTIVATED",
+    "identityMappingVersion": "idmap-d115-group2-1.0.0",
+    "identityMappingVersionReleaseStatus": "NOT_RELEASED",
+    "productionEligibility": false,
+    "finalPackageIntegrityManifestStatus": "ESTABLISHED_PENDING_ACCEPTANCE"
+  }
+}

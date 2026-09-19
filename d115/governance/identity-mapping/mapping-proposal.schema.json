@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:iips:d115:stage3:identity-mapping-proposal:1.0.0",
+  "title": "D115 Stage 3 Identity Mapping Proposal",
+  "description": "Development/reference proposal contract. Conformance does not activate a Security Master mapping or confer production eligibility.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recordSchemaVersion",
+    "proposalId",
+    "proposalClassification",
+    "mappingStatus",
+    "activationStatus",
+    "identityMappingVersion",
+    "effectiveFrom",
+    "effectiveTo",
+    "canonicalIssuerId",
+    "canonicalSecurityId",
+    "companyId",
+    "provider",
+    "dataset",
+    "sourceReference",
+    "externalIdentifiers",
+    "legalEntityName",
+    "instrumentType",
+    "series",
+    "isin",
+    "identityMatchMethod",
+    "evidenceConfidence",
+    "evidenceReferences",
+    "provenanceReferences",
+    "approvalReferences",
+    "auditReferences",
+    "rightsStatus",
+    "custodyStatus",
+    "securityMasterActivationStatus",
+    "remainingGovernanceBlockers",
+    "productionEligibility"
+  ],
+  "properties": {
+    "recordSchemaVersion": { "const": "d115-stage3-identity-mapping-proposal/1.0.0" },
+    "proposalId": {
+      "type": "string",
+      "pattern": "^D115-ST3-[A-Z0-9-]+-PROPOSAL-[0-9]{8}-[0-9]{2}$"
+    },
+    "proposalClassification": { "const": "D115_STAGE3_DEVELOPMENT_REFERENCE" },
+    "mappingStatus": { "enum": ["PROPOSED", "ACCEPTED_FOR_REVIEW", "REJECTED"] },
+    "activationStatus": { "const": "NOT_ACTIVE" },
+    "identityMappingVersion": { "type": "string", "pattern": "^idmap-d115-[a-z0-9-]+-[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "effectiveFrom": { "$ref": "#/$defs/utcTimestamp" },
+    "effectiveTo": { "oneOf": [{ "$ref": "#/$defs/utcTimestamp" }, { "type": "null" }] },
+    "canonicalIssuerId": { "$ref": "#/$defs/lowercaseUuidV4" },
+    "canonicalSecurityId": { "$ref": "#/$defs/lowercaseUuidV4" },
+    "companyId": { "$ref": "#/$defs/lowercaseUuidV4" },
+    "provider": { "$ref": "#/$defs/nonemptyString" },
+    "dataset": { "$ref": "#/$defs/nonemptyString" },
+    "sourceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "artifactSha256", "artifactBytes", "httpStatus", "retrievalExitCode", "retrievalCompletedAt"],
+      "properties": {
+        "url": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "artifactSha256": { "type": "string", "pattern": "^[A-F0-9]{64}$" },
+        "artifactBytes": { "type": "integer", "minimum": 1 },
+        "httpStatus": { "type": "integer", "minimum": 100, "maximum": 599 },
+        "retrievalExitCode": { "type": "integer", "minimum": 0 },
+        "retrievalCompletedAt": { "$ref": "#/$defs/utcTimestamp" }
+      }
+    },
+    "externalIdentifiers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "value", "authorityStatus", "matchKey"],
+        "properties": {
+          "type": { "enum": ["NSE_SYMBOL", "SERIES", "ISIN"] },
+          "value": { "$ref": "#/$defs/nonemptyString" },
+          "authorityStatus": { "enum": ["AUTHORITATIVE", "NON_AUTHORITATIVE"] },
+          "matchKey": { "type": "boolean" }
+        }
+      }
+    },
+    "legalEntityName": { "$ref": "#/$defs/nonemptyString" },
+    "instrumentType": { "const": "EQUITY" },
+    "series": { "$ref": "#/$defs/nonemptyString" },
+    "isin": { "type": "string", "pattern": "^[A-Z]{2}[A-Z0-9]{9}[0-9]$" },
+    "identityMatchMethod": { "const": "AUTHORITATIVE_IDENTIFIER_MATCH" },
+    "evidenceConfidence": { "enum": ["EVIDENCE_VERIFIED", "EVIDENCE_CORROBORATED", "UNRESOLVED"] },
+    "evidenceReferences": { "$ref": "#/$defs/referenceArray" },
+    "provenanceReferences": { "$ref": "#/$defs/referenceArray" },
+    "approvalReferences": { "$ref": "#/$defs/referenceArray" },
+    "auditReferences": { "$ref": "#/$defs/referenceArray" },
+    "rightsStatus": { "$ref": "#/$defs/governanceStatus" },
+    "custodyStatus": { "$ref": "#/$defs/governanceStatus" },
+    "securityMasterActivationStatus": { "const": "NOT_ACTIVATED" },
+    "remainingGovernanceBlockers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dimension", "status"],
+        "properties": {
+          "dimension": { "$ref": "#/$defs/nonemptyString" },
+          "status": { "$ref": "#/$defs/governanceStatus" }
+        }
+      }
+    },
+    "productionEligibility": { "const": false }
+  },
+  "$defs": {
+    "nonemptyString": { "type": "string", "minLength": 1 },
+    "lowercaseUuidV4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "utcTimestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]+)?Z$"
+    },
+    "referenceArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonemptyString" }
+    },
+    "governanceStatus": { "enum": ["PENDING", "ACCEPTED", "REJECTED", "BLOCKED"] }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:iips:d115:canonical-identity-allocation-register:1.0.0",
+  "title": "IIPS Canonical Identity Allocation Register Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recordSchemaVersion", "recordSequence", "previousRecordDigest", "recordDigest",
+    "allocatedId", "identityType", "namespace", "allocationStatus", "allocationTimestamp",
+    "allocatorProcessVersion", "executingActor", "governanceOwner", "evidenceReferences",
+    "externalIdentifierReferences", "identityMatchResult", "collisionCheckResult",
+    "duplicateSearchResult", "reason", "approvalReference", "auditReference",
+    "supersessionReference", "usageMarker"
+  ],
+  "properties": {
+    "recordSchemaVersion": {"const": "d115-canonical-identity-allocation-register/1.0.0"},
+    "recordSequence": {"type": "integer", "minimum": 1},
+    "previousRecordDigest": {"anyOf": [{"const": "GENESIS"}, {"type": "string", "pattern": "^[0-9a-f]{64}$"}]},
+    "recordDigest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "allocatedId": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "identityType": {"enum": ["CANONICAL_ISSUER", "CANONICAL_SECURITY", "CSIP_COMPANY"]},
+    "namespace": {"enum": ["IIPS-CANONICAL-ISSUER", "IIPS-CANONICAL-SECURITY", "IIPS-CSIP-COMPANY"]},
+    "allocationStatus": {"enum": ["RELEASED", "SUPERSEDED"]},
+    "allocationTimestamp": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"},
+    "allocatorProcessVersion": {"const": "d115-canonical-id-allocator/1.0.0"},
+    "executingActor": {"type": "string", "minLength": 1},
+    "governanceOwner": {"type": "string", "minLength": 1},
+    "evidenceReferences": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "externalIdentifierReferences": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["type", "value"],
+        "properties": {"type": {"type": "string", "minLength": 1}, "value": {"type": "string", "minLength": 1}}
+      }
+    },
+    "identityMatchResult": {"type": "string", "minLength": 1},
+    "collisionCheckResult": {"type": "string", "minLength": 1},
+    "duplicateSearchResult": {"type": "string", "minLength": 1},
+    "reason": {"type": "string", "minLength": 1},
+    "approvalReference": {"type": "string", "minLength": 1},
+    "auditReference": {"type": "string", "minLength": 1},
+    "supersessionReference": {"type": ["string", "null"]},
+    "usageMarker": {"type": "string", "minLength": 1}
+  },
+  "allOf": [
+    {"if": {"properties": {"namespace": {"const": "IIPS-CANONICAL-ISSUER"}}}, "then": {"properties": {"identityType": {"const": "CANONICAL_ISSUER"}}}},
+    {"if": {"properties": {"namespace": {"const": "IIPS-CANONICAL-SECURITY"}}}, "then": {"properties": {"identityType": {"const": "CANONICAL_SECURITY"}}}},
+    {"if": {"properties": {"namespace": {"const": "IIPS-CSIP-COMPANY"}}}, "then": {"properties": {"identityType": {"const": "CSIP_COMPANY"}}}},
+    {"if": {"properties": {"allocationStatus": {"const": "SUPERSEDED"}}}, "then": {"properties": {"supersessionReference": {"type": "string", "minLength": 1}}}}
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "authorityReference": "D115-ST3-CANONICAL-ID-ALLOCATOR-AUTH-20260918-01",
+  "scope": "DEVELOPMENT_REFERENCE_ONLY",
+  "readinessStatus": "IMPLEMENTED_TESTED_PENDING_PROGRAM_AUTHORITY_ACCEPTANCE",
+  "recordSchemaVersion": "d115-canonical-identity-allocation-register/1.0.0",
+  "allocatorProcessVersion": "d115-canonical-id-allocator/1.0.0",
+  "identityMappingVersion": {
+    "value": "idmap-d115-group2-1.0.0",
+    "status": "NOT_RELEASED"
+  },
+  "namespaces": {
+    "IIPS-CANONICAL-ISSUER": "CANONICAL_ISSUER",
+    "IIPS-CANONICAL-SECURITY": "CANONICAL_SECURITY",
+    "IIPS-CSIP-COMPANY": "CSIP_COMPANY"
+  },
+  "testCommand": "python3 -m unittest discover -s d115/tools/canonical-identity-allocator -p 'test_*.py' -v",
+  "finalRuns": [
+    {"environment": "working tree", "tests": 30, "passed": 30, "failed": 0, "errors": 0, "skipped": 0, "status": "PASS"},
+    {"environment": "clean HEAD archive plus exact implementation overlay", "tests": 30, "passed": 30, "failed": 0, "errors": 0, "skipped": 0, "status": "PASS"}
+  ],
+  "developmentIterations": [
+    {"status": "FAIL_CORRECTED", "result": "1 import error", "cause": "dynamic test module was not registered in sys.modules before dataclass evaluation"},
+    {"status": "FAIL_CORRECTED", "result": "29 passed, 1 error", "cause": "test request helper lacked approval_reference override"}
+  ],
+  "mandatoryControlCoverage": [
+    {"id": 1, "control": "schema validation", "status": "PASS", "tests": [2, 17, 18, 30]},
+    {"id": 2, "control": "namespace isolation", "status": "PASS", "tests": [3, 6]},
+    {"id": 3, "control": "UUIDv4 validation", "status": "PASS", "tests": [4, 5]},
+    {"id": 4, "control": "global collision behavior", "status": "PASS", "tests": [6]},
+    {"id": 5, "control": "duplicate-resolution behavior", "status": "PASS", "tests": [8, 14, 19]},
+    {"id": 6, "control": "historical non-reuse", "status": "PASS", "tests": [7]},
+    {"id": 7, "control": "atomicity and exclusive lock", "status": "PASS", "tests": [10, 15, 29]},
+    {"id": 8, "control": "append-only behavior", "status": "PASS", "tests": [12, 27, 29]},
+    {"id": 9, "control": "audit completeness", "status": "PASS", "tests": [2, 21, 22]},
+    {"id": 10, "control": "fail-closed conflict handling", "status": "PASS", "tests": [9, 20, 24]},
+    {"id": 11, "control": "synthetic-fixture isolation", "status": "PASS", "tests": [23, 25]},
+    {"id": 12, "control": "deterministic retained-ID resolution", "status": "PASS", "tests": [8, 14]},
+    {"id": 13, "control": "empty register and explicit genesis", "status": "PASS", "tests": [1]},
+    {"id": 14, "control": "cross-namespace UUID collision", "status": "PASS", "tests": [6]},
+    {"id": 15, "control": "concurrent allocation serialization", "status": "PASS", "tests": [15]},
+    {"id": 16, "control": "fsync and re-read verification", "status": "PASS", "tests": [16]},
+    {"id": 17, "control": "unknown versions fail closed", "status": "PASS", "tests": [17, 18]},
+    {"id": 18, "control": "missing approval/evidence rejected", "status": "PASS", "tests": [21, 22]},
+    {"id": 19, "control": "no product or Security Master integration", "status": "PASS", "tests": [26]},
+    {"id": 20, "control": "no HDFC Life allocation", "status": "PASS", "tests": [25]}
+  ],
+  "additionalCoverage": [
+    {"control": "truncated journal detection", "status": "PASS", "tests": [11]},
+    {"control": "digest-chain tamper detection", "status": "PASS", "tests": [13]},
+    {"control": "append-only correction and supersession", "status": "PASS", "tests": [12, 27]},
+    {"control": "non-monotonic sequence rejection", "status": "PASS", "tests": [28]},
+    {"control": "Git merge-marker rejection", "status": "PASS", "tests": [24]}
+  ],
+  "realRegister": {
+    "path": "d115/governance/canonical-identity/allocation-register.jsonl",
+    "bytes": 0,
+    "records": 0,
+    "hdfcLifeAllocation": false,
+    "status": "VALID_EMPTY_PRE_ALLOCATION_REGISTER"
+  },
+  "cleanCheckoutReproducibility": {
+    "status": "PASS",
+    "method": "git archive of authoritative HEAD with exact uncommitted authorized implementation overlaid into an isolated temporary directory",
+    "tests": 30,
+    "passed": 30,
+    "failed": 0,
+    "skipped": 0
+  },
+  "retainedState": {
+    "hdfcLifeIssuerId": "NOT_CREATED",
+    "hdfcLifeSecurityId": "NOT_CREATED",
+    "hdfcLifeCompanyId": "NOT_CREATED",
+    "effectiveFrom": "NOT_APPLIED",
+    "mapping": "PROPOSED_NOT_ACTIVE",
+    "securityMasterAcceptance": "NOT_GRANTED",
+    "adStage3_07": "NOT_ACCEPTED_BLOCKED",
+    "productionEligible": false
+  }
+}

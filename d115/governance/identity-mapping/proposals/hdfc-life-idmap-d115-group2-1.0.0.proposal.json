@@ -1,0 +1,94 @@
+{
+  "recordSchemaVersion": "d115-stage3-identity-mapping-proposal/1.0.0",
+  "proposalId": "D115-ST3-HDFCLIFE-MAPPING-PROPOSAL-20260918-01",
+  "proposalClassification": "D115_STAGE3_DEVELOPMENT_REFERENCE",
+  "mappingStatus": "PROPOSED",
+  "activationStatus": "NOT_ACTIVE",
+  "identityMappingVersion": "idmap-d115-group2-1.0.0",
+  "effectiveFrom": "2026-09-18T11:14:46Z",
+  "effectiveTo": null,
+  "canonicalIssuerId": "008e9766-4135-4d5b-9ecf-b3fcf721ebdb",
+  "canonicalSecurityId": "7c4322d5-6f87-4dc8-a0a9-1b5f937cb0b1",
+  "companyId": "5233149d-2a2d-4644-a6a7-e1ed5e133285",
+  "provider": "National Stock Exchange of India Limited",
+  "dataset": "NSE Equity List / Equity Master (EQUITY_L.csv)",
+  "sourceReference": {
+    "url": "https://archives.nseindia.com/content/equities/EQUITY_L.csv",
+    "artifactSha256": "BEDE9D10E93F47EED3F97707ABA1EC6ACF50784A31309F26C8A70332F0C909EE",
+    "artifactBytes": 182067,
+    "httpStatus": 200,
+    "retrievalExitCode": 0,
+    "retrievalCompletedAt": "2026-09-18T11:14:46Z"
+  },
+  "externalIdentifiers": [
+    {
+      "type": "NSE_SYMBOL",
+      "value": "HDFCLIFE",
+      "authorityStatus": "NON_AUTHORITATIVE",
+      "matchKey": true
+    },
+    {
+      "type": "SERIES",
+      "value": "EQ",
+      "authorityStatus": "NON_AUTHORITATIVE",
+      "matchKey": true
+    },
+    {
+      "type": "ISIN",
+      "value": "INE795G01014",
+      "authorityStatus": "NON_AUTHORITATIVE",
+      "matchKey": true
+    }
+  ],
+  "legalEntityName": "HDFC Life Insurance Company Limited",
+  "instrumentType": "EQUITY",
+  "series": "EQ",
+  "isin": "INE795G01014",
+  "identityMatchMethod": "AUTHORITATIVE_IDENTIFIER_MATCH",
+  "evidenceConfidence": "EVIDENCE_VERIFIED",
+  "evidenceReferences": [
+    "d115/evidence/security-master/EQUITY_L.csv",
+    "SHA-256:BEDE9D10E93F47EED3F97707ABA1EC6ACF50784A31309F26C8A70332F0C909EE",
+    "MODEL-A-ST3-01",
+    "MODEL-A-ST3-02",
+    "HDFC LIFE CLASSIFICATION = ACCEPTED",
+    "FUND-ST3-03"
+  ],
+  "provenanceReferences": [
+    "https://archives.nseindia.com/content/equities/EQUITY_L.csv",
+    "CONTROLLED RETRIEVAL:HTTP=200;CURL_EXIT=0;BYTES=182067;COMPLETED_AT=2026-09-18T11:14:46Z",
+    "d115/governance/canonical-identity/allocation-register.jsonl",
+    "ALLOCATION_REGISTER_SHA256:eb2925c87d4996eadabf85017a74de25d811bcbbea730164a209458ed1211fe1"
+  ],
+  "approvalReferences": [
+    "MODEL-A-ST3-01",
+    "MODEL-A-ST3-02",
+    "HDFC LIFE CLASSIFICATION = ACCEPTED",
+    "FUND-ST3-03",
+    "D115-ST3-CANONICAL-ID-ALLOCATOR-READINESS-ACCEPT-20260918-01",
+    "D115-ST3-HDFCLIFE-CANONICAL-ID-ALLOCATION-AUTH-20260918-01",
+    "D115-ST3-HDFCLIFE-EFFECTIVEFROM-ADJ-20260918-01",
+    "D115-ST3-MAPPING-PROPOSAL-SCHEMA-ADJ-20260918-01"
+  ],
+  "auditReferences": [
+    "D115-ST3-HDFCLIFE-CANONICAL-ID-ALLOCATION-AUDIT-20260918-01",
+    "D115-ST3-HDFCLIFE-CANONICAL-ID-ALLOCATION-AUDIT-20260918-02",
+    "D115-ST3-HDFCLIFE-CANONICAL-ID-ALLOCATION-AUDIT-20260918-03"
+  ],
+  "rightsStatus": "PENDING",
+  "custodyStatus": "PENDING",
+  "securityMasterActivationStatus": "NOT_ACTIVATED",
+  "remainingGovernanceBlockers": [
+    { "dimension": "EV_GOVERNING_ACCEPTANCE", "status": "PENDING" },
+    { "dimension": "SOLVENCY_GOVERNING_ACCEPTANCE", "status": "PENDING" },
+    { "dimension": "EXCEPTIONAL_EVENT_DETERMINATION", "status": "BLOCKED" },
+    { "dimension": "OPERATOR_DROP_EOD_EVIDENCE", "status": "BLOCKED" },
+    { "dimension": "RIGHTS_ACCEPTANCE", "status": "PENDING" },
+    { "dimension": "CUSTODY_CHAIN_OF_CUSTODY", "status": "PENDING" },
+    { "dimension": "FINAL_PACKAGE_INTEGRITY_MANIFEST", "status": "PENDING" },
+    { "dimension": "RAJ_INDEPENDENT_REVIEW", "status": "PENDING" },
+    { "dimension": "RAMKI_PACKAGE_ACCEPTOR_DECISION", "status": "PENDING" },
+    { "dimension": "AD-ST3-07", "status": "BLOCKED" }
+  ],
+  "productionEligibility": false
+}
