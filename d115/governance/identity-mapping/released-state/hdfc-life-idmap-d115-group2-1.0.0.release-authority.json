@@ -1,0 +1,64 @@
+{
+  "recordSchemaVersion": "d115-stage3-identity-mapping-release-authority/1.0.0",
+  "recordId": "D115-ST3-HDFCLIFE-IDMAP-RELEASED-STATE-20260919-01",
+  "recordClassification": "D115_STAGE3_BOUNDED_DEVELOPMENT_REFERENCE",
+  "authorityDecision": {
+    "decisionId": "D115-ST3-HDFCLIFE-IDMAP-RELEASE-AUTH-20260919-01",
+    "programAuthority": "Ramki",
+    "decisionTimestamp": "2026-09-19T08:02:36Z",
+    "authoritySource": "RESPONSE_RECORDED_GOVERNANCE_DECISION"
+  },
+  "identity": {
+    "legalEntityName": "HDFC Life Insurance Company Limited",
+    "symbol": "HDFCLIFE",
+    "isin": "INE795G01014",
+    "series": "EQ"
+  },
+  "identityMappingVersion": "idmap-d115-group2-1.0.0",
+  "immutableProposal": {
+    "proposalId": "D115-ST3-HDFCLIFE-MAPPING-PROPOSAL-20260918-01",
+    "path": "d115/governance/identity-mapping/proposals/hdfc-life-idmap-d115-group2-1.0.0.proposal.json",
+    "sha256": "915ea2a9f6e1a33fa20e2eee609d1edf052d5b097a68c7441b2eb0841363017b",
+    "bytes": 3815,
+    "historicalMappingStatus": "PROPOSED",
+    "historicalActivationStatus": "NOT_ACTIVE",
+    "mutationPolicy": "IMMUTABLE_DO_NOT_REWRITE"
+  },
+  "canonicalIdentity": {
+    "canonicalIssuerId": "008e9766-4135-4d5b-9ecf-b3fcf721ebdb",
+    "canonicalSecurityId": "7c4322d5-6f87-4dc8-a0a9-1b5f937cb0b1",
+    "csipCompanyId": "5233149d-2a2d-4644-a6a7-e1ed5e133285",
+    "allocationRegisterPath": "d115/governance/canonical-identity/allocation-register.jsonl",
+    "allocationRegisterSha256": "eb2925c87d4996eadabf85017a74de25d811bcbbea730164a209458ed1211fe1"
+  },
+  "effectiveFrom": "2026-09-18T11:14:46Z",
+  "effectiveTo": null,
+  "evidenceConfidence": "EVIDENCE_VERIFIED",
+  "scope": {
+    "program": "D115",
+    "stage": "STAGE_3",
+    "usage": "BOUNDED_DEVELOPMENT_REFERENCE_ONLY"
+  },
+  "releaseState": {
+    "releaseAuthorization": "GRANTED",
+    "mappingReleased": "NOT_YET_IMPLEMENTED",
+    "mappingActivated": false,
+    "mappingRegistered": false,
+    "mappingLoaded": false
+  },
+  "downstreamProhibitions": {
+    "securityMaster": "INACTIVE_NOT_AUTHORIZED",
+    "mappingActivation": "NOT_AUTHORIZED",
+    "mappingRegistration": "NOT_AUTHORIZED",
+    "mappingLoading": "NOT_AUTHORIZED",
+    "valuation": "NOT_EXECUTED_NOT_RELEASED",
+    "valuationAuthority": "NOT_AUTHORIZED",
+    "production": "NOT_AUTHORIZED",
+    "commercialDataUse": "NOT_AUTHORIZED",
+    "redistribution": "NOT_AUTHORIZED",
+    "externalProviderCertification": "NOT_CONFERRED",
+    "productionEntitlement": "NOT_CONFERRED"
+  },
+  "productionEligible": false,
+  "implementationBoundary": "AUTHORIZATION_RECORD_ONLY_NO_RELEASE_IMPLEMENTATION_ACTIVATION_REGISTRATION_OR_LOADING"
+}

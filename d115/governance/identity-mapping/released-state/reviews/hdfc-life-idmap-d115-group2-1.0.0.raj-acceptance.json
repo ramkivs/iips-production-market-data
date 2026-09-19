@@ -1,0 +1,61 @@
+{
+  "recordSchemaVersion": "d115-stage3-identity-mapping-release-authority-independent-acceptance/1.0.0",
+  "acceptanceReference": "D115-ST3-HDFCLIFE-IDMAP-RELEASED-STATE-RAJ-ACCEPT-20260919-01",
+  "reviewer": "Raj",
+  "reviewerRole": "INDEPENDENT_REVIEWER",
+  "decision": "ACCEPTED",
+  "decisionTimestamp": "2026-09-19T08:07:05Z",
+  "authoritySource": "RESPONSE_RECORDED_GOVERNANCE_DECISION",
+  "persistenceAuthorization": {
+    "decisionId": "D115-ST3-HDFCLIFE-RELEASED-STATE-PERSIST-AUTH-20260919-01",
+    "programAuthority": "Ramki",
+    "decision": "AUTHORIZED",
+    "decisionTimestamp": "2026-09-19T08:08:38Z",
+    "scope": "REPOSITORY_PERSISTENCE_ONLY"
+  },
+  "releasedStateArtifact": {
+    "path": "d115/governance/identity-mapping/released-state/hdfc-life-idmap-d115-group2-1.0.0.release-authority.json",
+    "recordId": "D115-ST3-HDFCLIFE-IDMAP-RELEASED-STATE-20260919-01",
+    "schemaVersion": "d115-stage3-identity-mapping-release-authority/1.0.0",
+    "sha256": "726952db2dc789e243d71a30fe3ff425cd405436ec3f7ecbbc03be1f605a9276",
+    "bytes": 2635
+  },
+  "releaseAuthorizationReference": "D115-ST3-HDFCLIFE-IDMAP-RELEASE-AUTH-20260919-01",
+  "immutableProposal": {
+    "proposalId": "D115-ST3-HDFCLIFE-MAPPING-PROPOSAL-20260918-01",
+    "sha256": "915ea2a9f6e1a33fa20e2eee609d1edf052d5b097a68c7441b2eb0841363017b",
+    "bytes": 3815,
+    "mappingStatus": "PROPOSED",
+    "activationStatus": "NOT_ACTIVE"
+  },
+  "verification": {
+    "authorityBinding": "PASS",
+    "immutableProposalBinding": "PASS",
+    "canonicalIdentityBinding": "PASS",
+    "effectiveDateBinding": "PASS",
+    "boundedScope": "PASS",
+    "releaseAuthorizationSemantics": "PASS",
+    "nonImplementationSemantics": "PASS",
+    "downstreamProhibitions": "PASS",
+    "productionEligibilityFalse": "PASS",
+    "additiveImmutableBoundary": "PASS",
+    "artifactByteHashIntegrity": "PASS"
+  },
+  "acceptedState": {
+    "releaseAuthorization": "GRANTED",
+    "releaseImplementation": "NOT_PERFORMED",
+    "mappingActivation": "NOT_AUTHORIZED",
+    "mappingRegistration": "NOT_AUTHORIZED",
+    "mappingLoading": "NOT_AUTHORIZED",
+    "securityMaster": "INACTIVE_NOT_AUTHORIZED",
+    "valuation": "NOT_EXECUTED_NOT_RELEASED",
+    "valuationAuthority": "NOT_AUTHORIZED",
+    "production": "NOT_AUTHORIZED",
+    "commercialDataUse": "NOT_AUTHORIZED",
+    "redistribution": "NOT_AUTHORIZED",
+    "externalProviderCertification": "NOT_CONFERRED",
+    "productionEntitlement": "NOT_CONFERRED",
+    "productionEligible": false
+  },
+  "implementationBoundary": "INDEPENDENT_ACCEPTANCE_AND_REPOSITORY_PERSISTENCE_ONLY_NO_IMPLEMENTATION_ACTIVATION_REGISTRATION_LOADING_VALUATION_OR_PRODUCTION_AUTHORITY"
+}
