@@ -586,7 +586,32 @@ export class HistoricalFeasibilityRunner {
       evaluatedAt: new Date().toISOString(),
     };
 
-    const manifestIntegrityDigest = computeLineageHash(manifestBody, {
+    const deterministicDigestPayload = {
+      releaseVersion: 'v1.0.0-rc1' as const,
+      targetRange: {
+        startDate: config.startDate,
+        endDate: config.endDate,
+        totalCalendarDays: allDates.length,
+        expectedTradingDays,
+        weekendDays,
+        knownHolidays,
+      },
+      acquisitionSummary: {
+        totalCalendarDays: allDates.length,
+        expectedTradingDays,
+        acquiredValidCount,
+        skippedWeekendCount,
+        skippedHolidayCount,
+        http404Count,
+        networkErrorCount,
+        corruptArchiveCount,
+        schemaMismatchCount,
+        pendingExecutionCount,
+      },
+      records,
+    };
+
+    const manifestIntegrityDigest = computeLineageHash(deterministicDigestPayload, {
       sourceClassification: 'CANONICAL_MARKET_DATA',
       asOf: '2026-09-20T00:00:00.000Z',
       dataVersion: 'v1.0.0-d114-feasibility',
@@ -1027,10 +1052,50 @@ foreach ($rec in $Records.Values) {
 }
 $ShaMap | ConvertTo-Json -Depth 5 | Set-Content -Path $Sha256Path
 
+# 5. Archive Integrity Report
+$IntegrityReports = @()
+foreach ($rec in $Records.Values) {
+    if ($rec.fileSizeBytes -gt 0 -or $rec.status -eq "CORRUPT_ARCHIVE") {
+        $IntegrityReports += [PSCustomObject]@{
+            date = $rec.date
+            localFilename = $rec.localFilename
+            fileSizeBytes = $rec.fileSizeBytes
+            sha256Hex = $rec.sha256Hex
+            zipValid = $rec.zipValidity
+            csvExtracted = $rec.csvValidity
+            extractionError = $rec.failureReason
+        }
+    }
+}
+$IntegrityReports | ConvertTo-Json -Depth 5 | Set-Content -Path $IntegrityPath
+
+# 6. Schema Validation Report
+$SchemaReports = @()
+foreach ($rec in $Records.Values) {
+    if ($rec.recordCount -gt 0 -or $rec.status -eq "SCHEMA_MISMATCH") {
+        $SchemaReports += [PSCustomObject]@{
+            date = $rec.date
+            localFilename = $rec.localFilename
+            schemaValid = $rec.schemaValidity
+            totalRows = $rec.recordCount
+            validRows = $rec.validRecordCount
+            invalidRows = $rec.invalidRecordCount
+            discoveredHeaders = $RequiredHeaders
+            missingHeaders = @($rec.schemaErrors | Where-Object { $_ -like "Missing*" })
+            sampleErrors = @($rec.schemaErrors)
+        }
+    }
+}
+$SchemaReports | ConvertTo-Json -Depth 5 | Set-Content -Path $SchemaPath
+
 Write-Host "=============================================================================="
-Write-Host "D114 Evidence Runner Complete."
-Write-Host "Manifest: $ManifestPath"
-Write-Host "Summary:  $CoveragePath"
+Write-Host "D114 Evidence Runner Complete (6/6 Artifacts Emitted)."
+Write-Host "Manifest:          $ManifestPath"
+Write-Host "Coverage Summary:  $CoveragePath"
+Write-Host "Failure Register:  $FailurePath"
+Write-Host "SHA-256 Manifest:  $Sha256Path"
+Write-Host "Archive Integrity: $IntegrityPath"
+Write-Host "Schema Validation: $SchemaPath"
 Write-Host "=============================================================================="
 `;
   }

@@ -242,14 +242,27 @@ INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15
       'C:\\IIPS_Data\\NSE_CM_UDiFF_10Y'
     );
 
+    // Assert definitions of all 6 output artifact paths
     assert.ok(script.includes('historical-acquisition-manifest.json'));
     assert.ok(script.includes('historical-coverage-summary.json'));
     assert.ok(script.includes('failure-unavailable-date-register.json'));
     assert.ok(script.includes('archive-integrity-report.json'));
     assert.ok(script.includes('sha256-manifest.json'));
     assert.ok(script.includes('schema-validation-report.json'));
+
+    // Assert explicit disk serialization logic for all 6 artifacts
+    assert.ok(script.includes('Set-Content -Path $ManifestPath'), 'Must serialize manifest');
+    assert.ok(script.includes('Set-Content -Path $CoveragePath'), 'Must serialize coverage summary');
+    assert.ok(script.includes('Set-Content -Path $FailurePath'), 'Must serialize failure register');
+    assert.ok(script.includes('Set-Content -Path $Sha256Path'), 'Must serialize SHA-256 manifest');
+    assert.ok(script.includes('Set-Content -Path $IntegrityPath'), 'Must serialize archive integrity report');
+    assert.ok(script.includes('Set-Content -Path $SchemaPath'), 'Must serialize schema validation report');
+
+    // Assert core classification and resume handlers
     assert.ok(script.includes('ACQUIRED_VALID'));
     assert.ok(script.includes('HTTP_404'));
+    assert.ok(script.includes('$Resume'));
+    assert.ok(script.includes('[REUSED]'));
   });
 
   // ──────────────────────────────────────────────────────────────────────────
