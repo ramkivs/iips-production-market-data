@@ -11,6 +11,8 @@
  *
  * Milestone N+17: future-only children render as non-navigable text with a Future badge —
  * never links to placeholder surfaces. Implemented and partial surfaces remain links.
+ *
+ * P14-R7: structured visual navigation hierarchy and semantic status badge presentation.
  */
 import { NavLink } from 'react-router-dom';
 import { visibleNav, NAV_STATUS_LABEL, type NavItem, type NavStatus } from './navigation';
@@ -22,29 +24,38 @@ const topLinkStyle = {
   padding: '8px 12px',
   textDecoration: 'none',
   borderRadius: '4px',
+  fontSize: 14,
+  transition: 'background 0.12s ease, color 0.12s ease',
 } as const;
 
 const childLinkStyle = {
   display: 'block',
   flex: 1,
-  padding: '4px 12px',
+  padding: '5px 12px',
   fontSize: 13,
   textDecoration: 'none',
   borderRadius: '4px',
+  transition: 'background 0.12s ease, color 0.12s ease',
 } as const;
 
 function StatusBadge({ label, status }: { label: string; status: NavStatus }) {
   if (status === 'implemented') return null;
+  const isPartial = status === 'partial';
   return (
     <span
       data-testid={`nav-status-${label}`}
+      className={`nav-status-badge ${isPartial ? 'nav-status-partial' : 'nav-status-future'}`}
       style={{
-        fontSize: 11,
+        fontSize: 10,
+        fontWeight: 600,
         padding: '1px 6px',
-        border: '1px solid var(--color-border)',
+        border: `1px solid ${isPartial ? 'var(--color-status-warning)' : 'var(--color-border)'}`,
         borderRadius: 4,
-        color: 'var(--color-ink-muted)',
+        color: isPartial ? 'var(--color-status-warning)' : 'var(--color-ink-muted)',
+        background: 'var(--color-surface-0)',
         whiteSpace: 'nowrap',
+        letterSpacing: '0.03em',
+        lineHeight: 1.4,
       }}
     >
       {NAV_STATUS_LABEL[status]}
@@ -61,7 +72,11 @@ function NavRow({ item, child = false }: { item: NavItem; child?: boolean }) {
       {isFuture ? (
         <span
           data-testid={`nav-future-${item.label}`}
-          style={{ ...base, color: 'var(--color-ink-muted)' }}
+          style={{
+            ...base,
+            color: 'var(--color-ink-muted)',
+            borderLeft: '3px solid transparent',
+          }}
         >
           {item.label}
         </span>
@@ -73,6 +88,7 @@ function NavRow({ item, child = false }: { item: NavItem; child?: boolean }) {
             color: isActive ? 'var(--color-ink)' : 'var(--color-ink-secondary)',
             background: isActive ? 'var(--color-surface-2)' : 'transparent',
             fontWeight: isActive ? 600 : 400,
+            borderLeft: isActive ? '3px solid var(--color-accent)' : '3px solid transparent',
           })}
         >
           {item.label}
@@ -88,30 +104,33 @@ export function Sidebar() {
   const items = visibleNav(session.role);
 
   return (
-    <ul className="app-nav">
-      {items.map((item) => (
-        <li key={item.path}>
-          <NavRow item={item} />
-          {item.children && item.children.length > 0 && (
-            <ul
-              style={{
-                listStyle: 'none',
-                margin: '2px 0 4px',
-                paddingLeft: 20,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2,
-              }}
-            >
-              {item.children.map((child) => (
-                <li key={child.path}>
-                  <NavRow item={child} child />
-                </li>
-              ))}
-            </ul>
-          )}
-        </li>
-      ))}
-    </ul>
+    <nav aria-label="Main Navigation">
+      <ul className="app-nav">
+        {items.map((item) => (
+          <li key={item.path} style={{ marginBottom: 2 }}>
+            <NavRow item={item} />
+            {item.children && item.children.length > 0 && (
+              <ul
+                style={{
+                  listStyle: 'none',
+                  margin: '3px 0 6px 14px',
+                  paddingLeft: 10,
+                  borderLeft: '1px solid var(--color-border)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2,
+                }}
+              >
+                {item.children.map((child) => (
+                  <li key={child.path}>
+                    <NavRow item={child} child />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }

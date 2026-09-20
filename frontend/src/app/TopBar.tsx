@@ -4,6 +4,7 @@
  *
  * P-1: exposes the command-palette trigger (opens the AppShell-mounted palette).
  * P-2 (S-9a): exposes the Notes trigger (opens the AppShell-mounted Notes drawer).
+ * P14-R7: institutional tokenized styling for brand identity and action triggers.
  */
 import type { Role } from '../core/session/session';
 import { useAuth } from '../core/auth/AuthProvider';
@@ -24,46 +25,59 @@ interface TopBarProps {
 export function TopBar({ role, tenantId, onOpenPalette, onOpenNotifications, unreadCount = 0, onOpenNotes }: TopBarProps) {
   const { status, logout } = useAuth();
   return (
-    <header
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        height: '100%',
-        padding: '0 24px',
-        borderBottom: '1px solid var(--color-border)',
-        background: 'var(--color-surface-1)',
-      }}
-    >
-      <strong style={{ fontSize: '16px' }}>IIPS — Enterprise Investment Intelligence</strong>
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', fontSize: '13px' }}>
+    <header className="topbar-header">
+      <div className="topbar-brand">
+        <span className="topbar-brand-mark" aria-hidden="true">I</span>
+        <strong style={{ fontSize: '15px' }}>IIPS — Enterprise Investment Intelligence</strong>
+      </div>
+      <div className="topbar-controls">
         {onOpenPalette && (
-          <button type="button" data-testid="palette-trigger" onClick={onOpenPalette} aria-label="Open command palette">
-            ⌕ Search
+          <button
+            type="button"
+            className="topbar-btn"
+            data-testid="palette-trigger"
+            onClick={onOpenPalette}
+            aria-label="Open command palette"
+          >
+            <span>⌕</span> Search
           </button>
         )}
         {onOpenNotifications && (
           <button
             type="button"
+            className="topbar-btn"
             data-testid="notification-trigger"
             onClick={onOpenNotifications}
             aria-label={unreadCount > 0 ? `Open notifications, ${unreadCount} unread` : 'Open notifications'}
           >
-            {'\u2691'} Notifications
+            <span>{'\u2691'}</span> Notifications
             {unreadCount > 0 && (
-              <span data-testid="notification-badge" style={{ marginLeft: 6 }}>({unreadCount})</span>
+              <span data-testid="notification-badge" className="topbar-badge" style={{ marginLeft: 4 }}>
+                ({unreadCount})
+              </span>
             )}
           </button>
         )}
         {onOpenNotes && (
-          <button type="button" data-testid="notes-trigger" onClick={onOpenNotes} aria-label="Open notes">
-            {'\u270E'} Notes
+          <button
+            type="button"
+            className="topbar-btn"
+            data-testid="notes-trigger"
+            onClick={onOpenNotes}
+            aria-label="Open notes"
+          >
+            <span>{'\u270E'}</span> Notes
           </button>
         )}
-        <span data-testid="topbar-tenant">Tenant: {tenantId}</span>
-        <span data-testid="topbar-role">Role: {role}</span>
+        <span data-testid="topbar-tenant" className="topbar-session-tag">Tenant: {tenantId}</span>
+        <span data-testid="topbar-role" className="topbar-session-tag">Role: {role}</span>
         {status === 'authenticated' && (
-          <button type="button" data-testid="sign-out" onClick={() => { void logout(); }}>
+          <button
+            type="button"
+            className="topbar-btn"
+            data-testid="sign-out"
+            onClick={() => { void logout(); }}
+          >
             Sign out
           </button>
         )}
