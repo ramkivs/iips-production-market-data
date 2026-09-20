@@ -586,6 +586,12 @@ export class HistoricalFeasibilityRunner {
       evaluatedAt: new Date().toISOString(),
     };
 
+    const sanitizedRecords: Record<string, Record<string, unknown>> = {};
+    for (const [d, r] of Object.entries(records)) {
+      const { evaluatedAt: _evaluatedAt, ...rest } = r;
+      sanitizedRecords[d] = rest;
+    }
+
     const deterministicDigestPayload = {
       releaseVersion: 'v1.0.0-rc1' as const,
       targetRange: {
@@ -608,7 +614,7 @@ export class HistoricalFeasibilityRunner {
         schemaMismatchCount,
         pendingExecutionCount,
       },
-      records,
+      records: sanitizedRecords,
     };
 
     const manifestIntegrityDigest = computeLineageHash(deterministicDigestPayload, {
