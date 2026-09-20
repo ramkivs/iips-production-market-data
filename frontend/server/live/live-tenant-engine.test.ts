@@ -20,6 +20,7 @@ import http from 'node:http';
 import { EnterpriseRuntime, type Principal } from '../../../iips-platform/src/distributed/EnterpriseRuntime';
 import { DataGovernanceRuntime } from '../../../iips-platform/src/distributed/DataGovernanceRuntime';
 import { MarketDataSource, DataBoundExecutor, type DataBoundRequest } from '../../../iips-platform/src/distributed/LiveDataRuntime';
+import { namespaceFields } from '../../../iips-platform/src/governance/namespaceHelper';
 import { Container } from '../../../iips-platform/src/di/Container';
 import { createClock } from '../../../iips-platform/src/infrastructure/Clock';
 import { createIdProvider } from '../../../iips-platform/src/infrastructure/IdProvider';
@@ -198,10 +199,10 @@ describe.skipIf(!kcUp)('G3 LIVE — real Keycloak authenticated tenant-scoped en
     // Ingest a LIVE market-data snapshot (a tenant-owned resource) — deterministic test feed;
     // the RESULT is computed live by the certified engine, never read from golden outputs.
     const source = new MarketDataSource<Record<string, unknown>>('live-feed');
-    const liveSnapshot = source.snapshot('live-banking-v1', '2026-08-11T00:00:00Z', 'good', 100, {
+    const liveSnapshot = source.snapshot('live-banking-v1', '2026-08-11T00:00:00Z', 'good', 100, namespaceFields({
       'BM-001': 0.55, 'BM-002': 9.5, 'BM-003': 2.6, 'BM-004': 40, 'BM-005': 6.5,
       'BM-006': 3, 'BM-014': 11, 'BM-015': 13, governanceFlag: undefined,
-    } as Record<string, unknown>);
+    } as Record<string, unknown>));
 
     // Tenant ownership + classification (data-governance layer).
     const owned = governance.classify('live-snapshot-A', 'tenant-A', 'confidential', 'ap-south', 90, true);
