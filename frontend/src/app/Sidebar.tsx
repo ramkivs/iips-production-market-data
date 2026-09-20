@@ -14,6 +14,8 @@
  *
  * P14-R7: INT-017 target visual convergence (dedicated SVG route icons, active item
  * solid accent treatment, structured nested tree hierarchy, and collapse footer affordance).
+ * P14-R7 Responsive Remediation: reflows from permanent desktop 240px canvas to responsive horizontal
+ * navigation at tablet and mobile viewports.
  */
 import { NavLink } from 'react-router-dom';
 import { visibleNav, NAV_STATUS_LABEL, type NavItem, type NavStatus } from './navigation';
@@ -211,23 +213,13 @@ export function Sidebar() {
   const items = visibleNav(session.role);
 
   return (
-    <nav aria-label="Main Navigation" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <ul className="app-nav" style={{ flex: 1 }}>
+    <nav aria-label="Main Navigation" className="app-sidebar-nav">
+      <ul className="app-nav">
         {items.map((item) => (
-          <li key={item.path} style={{ marginBottom: 2 }}>
+          <li key={item.path} className="sidebar-nav-item">
             <NavRow item={item} />
             {item.children && item.children.length > 0 && (
-              <ul
-                style={{
-                  listStyle: 'none',
-                  margin: '3px 0 6px 14px',
-                  paddingLeft: 10,
-                  borderLeft: '1px solid var(--color-border)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                }}
-              >
+              <ul className="sidebar-child-list">
                 {item.children.map((child) => (
                   <li key={child.path}>
                     <NavRow item={child} child />

@@ -6,6 +6,7 @@
  * P-2 (S-9a): exposes the Notes trigger (opens the AppShell-mounted Notes drawer).
  * P14-R7: INT-017 target visual convergence (institutional brand lockup, search bar,
  * notification counter pill, and session profile block).
+ * P14-R7 Responsive Remediation: compacts gracefully for tablet, mobile, and 375px small mobile.
  */
 import type { Role } from '../core/session/session';
 import { useAuth } from '../core/auth/AuthProvider';
@@ -30,7 +31,7 @@ export function TopBar({ role, tenantId, onOpenPalette, onOpenNotifications, unr
       {/* Target brand lockup: [II] IIPS Platform */}
       <div className="topbar-brand">
         <span className="topbar-monogram" aria-hidden="true">II</span>
-        <strong style={{ fontSize: '15px' }}>IIPS Platform</strong>
+        <strong className="topbar-brand-title">IIPS Platform</strong>
         <span className="sr-only">IIPS — Enterprise Investment Intelligence</span>
       </div>
 
@@ -45,7 +46,7 @@ export function TopBar({ role, tenantId, onOpenPalette, onOpenNotifications, unr
             aria-label="Open command palette"
           >
             <span style={{ fontSize: '14px' }}>⌕</span>
-            <span>Global Search</span>
+            <span className="topbar-search-text">Global Search</span>
             <kbd className="topbar-kbd">⌘K</kbd>
           </button>
         )}
@@ -72,7 +73,7 @@ export function TopBar({ role, tenantId, onOpenPalette, onOpenNotifications, unr
             style={{ position: 'relative' }}
           >
             <span style={{ fontSize: '14px' }}>{'\u2691'}</span>
-            <span>Notifications</span>
+            <span className="topbar-btn-text">Notifications</span>
             {unreadCount > 0 && (
               <span data-testid="notification-badge" className="topbar-badge">
                 ({unreadCount})
@@ -90,25 +91,25 @@ export function TopBar({ role, tenantId, onOpenPalette, onOpenNotifications, unr
             aria-label="Open notes"
           >
             <span>{'\u270E'}</span>
-            <span>Notes</span>
+            <span className="topbar-btn-text">Notes</span>
           </button>
         )}
 
         {/* Target user profile presentation */}
-        <div className="topbar-session-tag" style={{ gap: 8 }}>
+        <div className="topbar-session-tag">
           <span className="topbar-avatar-circle" aria-hidden="true">
             {role.charAt(0).toUpperCase()}
           </span>
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-            <span data-testid="topbar-tenant" style={{ fontWeight: 600 }}>Tenant: {tenantId}</span>
-            <span data-testid="topbar-role" style={{ fontSize: '11px', color: 'var(--color-ink-muted)' }}>Role: {role}</span>
+          <div className="topbar-session-details">
+            <span data-testid="topbar-tenant" className="topbar-tenant-text">Tenant: {tenantId}</span>
+            <span data-testid="topbar-role" className="topbar-role-text">Role: {role}</span>
           </div>
         </div>
 
         {status === 'authenticated' && (
           <button
             type="button"
-            className="topbar-btn"
+            className="topbar-btn topbar-signout-btn"
             data-testid="sign-out"
             onClick={() => { void logout(); }}
           >

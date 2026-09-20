@@ -95,16 +95,12 @@
  *   • U1–U10 preserved: where no `sectorExposure` entry exists, an explicit empty state is shown;
  *     nothing is fabricated to fill the section.
  *
- * P14-R7: INT-017 Target Visual Convergence:
- *   • Executive greeting header with action buttons (+ Add Widget, Customize, ...).
- *   • 5-card uniform KPI strip (Total Portfolio Value honestly marked unavailable under D-A;
- *     Active Positions, IIPS Average Score, Risk Exposure, Alerts Requiring Action).
- *   • 3-column analytical canvas + 280px right utility rail.
- *   • Column 1: Priority Opportunities / Movers + Upcoming Events (Decision D-A deferral).
- *   • Column 2: IIPS Score Distribution + Decision Distribution + Alerts Requiring Attention.
- *   • Column 3: Watchlist Highlights + Recent Research & Insights (R-2 / P10 honest disclosure).
- *   • Right Rail: Quick Actions + Risks Requiring Attention + Recent Companies (Decision D-B deferral).
- *   • Bottom Product Preview Strip: 5 compact preview cards + Governed Domain Previews + Decisions Trust Chain.
+ * P14-R7: INT-017 Target Visual Convergence + Responsive Qualification Remediation:
+ *   • Tier 1: Desktop >=1100px — target desktop composition.
+ *   • Tier 2: Tablet 768–1099px — reflows analytical panels without page-level overflow.
+ *   • Tier 3: Mobile 480–767px — single-column analytical stack, 2-column KPI strip.
+ *   • Tier 4: Small Mobile <=479px (375px) — 1-column KPI stack, 1-column analytical stack,
+ *     100% viewport fit, zero horizontal scrollbar.
  *   • Zero data fabrication: all governed testids, DTO contracts, and honest disclosures 100% preserved.
  */
 import { useEffect, useMemo, useState } from 'react';
@@ -422,32 +418,32 @@ export function ExecutiveDashboard() {
   return (
     <section aria-label="Executive dashboard" className="executive-dashboard">
       {/* Target Executive greeting header */}
-      <header className="executive-header" style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <h1 className="executive-header-title" style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>
+      <header className="executive-header">
+        <div className="executive-header-banner">
+          <div className="executive-header-copy">
+            <h1 className="executive-header-title">
               Good morning, Alex
             </h1>
-            <p style={{ color: 'var(--color-ink-muted)', fontSize: 13, margin: '4px 0 0' }}>
+            <p className="executive-header-subtitle">
               Here&apos;s what&apos;s important today across your governed enterprise portfolio.
             </p>
-            <div className="executive-header-title-row" style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="executive-header-title-row">
               <span className="sr-only">Executive</span>
               <CertifiedBadge />
               <FreshnessBadge state={provenance.freshness === 'SNAPSHOT' ? 'snapshot' : 'live'} />
-              <span className="executive-header-source" style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+              <span className="executive-header-source">
                 {provenance.dataSource}
               </span>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button type="button" className="topbar-btn" style={{ padding: '6px 14px', fontSize: 13, fontWeight: 600 }}>
+          <div className="executive-header-actions">
+            <button type="button" className="topbar-btn executive-action-btn">
               + Add Widget
             </button>
-            <button type="button" className="topbar-btn" style={{ padding: '6px 14px', fontSize: 13, fontWeight: 600 }}>
+            <button type="button" className="topbar-btn executive-action-btn">
               Customize
             </button>
-            <button type="button" className="topbar-btn" style={{ padding: '6px 10px', fontSize: 13, fontWeight: 600 }}>
+            <button type="button" className="topbar-btn executive-action-btn">
               ···
             </button>
           </div>
@@ -455,7 +451,7 @@ export function ExecutiveDashboard() {
       </header>
 
       {/* INT-017 Five-Card KPI Strip */}
-      <div className="kpi-strip" style={{ marginBottom: 20 }}>
+      <div className="kpi-strip">
         {/* Card 1: Total Portfolio Value (honestly unavailable under Decision D-A) */}
         <div className="kpi-card" data-testid="kpi-total-portfolio-value">
           <div className="kpi-card-header">
@@ -537,7 +533,7 @@ export function ExecutiveDashboard() {
       </div>
 
       {/* Governed Portfolio Health Summary — MetricGroup */}
-      <div className="executive-panel" style={{ marginBottom: 20 }}>
+      <div className="executive-panel portfolio-health-panel">
         <MetricGroup label="Portfolio Health">
           <MetricCard label="Holdings" value={portfolio.holdings} />
           <MetricCard label="Avg Conviction" value={portfolio.avgConviction} />
@@ -549,7 +545,7 @@ export function ExecutiveDashboard() {
       </div>
 
       {/* INT-017 Analytical Canvas: 3 Columns + Right Utility Rail */}
-      <div className="executive-main-layout" style={{ marginBottom: 20 }}>
+      <div className="executive-main-layout">
         {/* COLUMN 1: Priority Opportunities / Movers + Upcoming Events */}
         <div className="analytical-col">
           {/* Priority Opportunities (FIRST DataTable in document order) */}
@@ -942,24 +938,13 @@ export function ExecutiveDashboard() {
                 offered rather than inventing one.
               </p>
             ) : (
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6, padding: 0, margin: '8px 0 0' }}>
+              <ul className="quick-actions-list">
                 {quickActions.map((action) => (
                   <li key={`${action.path}-${action.label}`}>
                     <Link
                       data-testid={`quick-action-${actionSlug(action.label)}`}
                       to={action.path}
-                      style={{
-                        display: 'block',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: 6,
-                        padding: '6px 12px',
-                        fontSize: 13,
-                        textDecoration: 'none',
-                        background: 'var(--color-surface-0)',
-                        color: 'var(--color-ink)',
-                        boxShadow: 'var(--elev-1)',
-                        transition: 'border-color 0.15s ease',
-                      }}
+                      className="quick-action-link"
                     >
                       {action.label} →
                     </Link>
@@ -1004,8 +989,8 @@ export function ExecutiveDashboard() {
       </div>
 
       {/* INT-017 Bottom Product Preview Strip */}
-      <div style={{ marginBottom: 20 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-ink-secondary)', marginBottom: 8 }}>
+      <div className="preview-strip-section">
+        <h3 className="preview-strip-title">
           Governed Platform Workspaces
         </h3>
         <div className="preview-strip">
@@ -1044,9 +1029,9 @@ export function ExecutiveDashboard() {
           <div className="executive-panel-header">
             <h2 className="executive-panel-title">Recent Decisions</h2>
           </div>
-          <div data-testid="decision-list" style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))' }}>
+          <div data-testid="decision-list" className="decision-grid">
             {decisions.map((d) => (
-              <article key={d.sector} data-testid="recent-decision" style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, background: 'var(--color-surface-0)', boxShadow: 'var(--elev-1)' }}>
+              <article key={d.sector} data-testid="recent-decision" className="decision-card">
                 <strong>{d.sector}</strong>
                 <div style={{ margin: '6px 0' }}><DecisionBadge verdict={d.verdict} /></div>
                 <span>Composite: {d.composite}</span>
@@ -1091,9 +1076,9 @@ export function ExecutiveDashboard() {
           <div className="executive-panel-header">
             <h2 className="executive-panel-title">Evidence &amp; Replay</h2>
           </div>
-          <div data-testid="evidence-list" style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))' }}>
+          <div data-testid="evidence-list" className="evidence-grid">
             {evidenceEntries.map((e) => (
-              <div key={e.reference.evidenceId}>
+              <div key={e.reference.evidenceId} className="evidence-grid-item">
                 <EvidenceCard reference={e.reference} />
                 <div style={{ marginTop: 6, fontSize: 13 }}>
                   <Link data-testid={`evidence-link-${e.sector}`} to={`/evidence/${e.sector}`}>Open evidence →</Link>
@@ -1124,12 +1109,12 @@ export function ExecutiveDashboard() {
               none is fabricated to fill this section.
             </p>
           ) : (
-            <div data-testid="domain-previews" style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))' }}>
+            <div data-testid="domain-previews" className="domain-preview-grid">
               {domainPreviews.map((preview) => (
                 <div
                   key={preview.sector}
                   data-testid={`domain-preview-${preview.sector}`}
-                  style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, background: 'var(--color-surface-0)', boxShadow: 'var(--elev-1)' }}
+                  className="domain-preview-card"
                 >
                   <strong style={{ display: 'block' }}>{preview.sector}</strong>
                   <span data-testid={`domain-preview-exposure-${preview.sector}`} style={{ fontSize: 13 }}>
