@@ -10,6 +10,8 @@ import * as assert from 'node:assert';
 import * as zlib from 'zlib';
 import {
   CmUdiffParser,
+  LegacyBhavcopyParser,
+  UnifiedHistoricalAdapter,
   HistoricalFeasibilityRunner,
   DateAssessmentRecord,
 } from '../src/index.js';
@@ -36,15 +38,19 @@ function createSyntheticUdiffZip(filename: string, csvContent: string): Buffer {
 }
 
 describe('WS-H / D114: 10-Year NSE CM-UDiFF Historical Acquisition Feasibility Suite', () => {
-  const sampleValidCsv = `TradDt,BizDt,Sgmt,Src,ISIN,TckrSymb,SctySrs,ClsPric,LastPric,PrvsClsgPric,SttlmPric,OpnPric,HghPric,LwPric,TtlTradgVol
+  const sampleValidUdiffCsv = `TradDt,BizDt,Sgmt,Src,ISIN,TckrSymb,SctySrs,ClsPric,LastPric,PrvsClsgPric,SttlmPric,OpnPric,HghPric,LwPric,TtlTradgVol
 2026-09-15,2026-09-15,CM,NSE,INE795G01014,HDFCLIFE,EQ,516.10,516.10,530.00,516.09,530.00,532.00,515.00,1500000
 2026-09-15,2026-09-15,CM,NSE,INE009A01021,INFY,EQ,1850.00,1850.00,1830.00,1850.00,1835.00,1860.00,1830.00,4500000`;
+
+  const sampleValidLegacyCsv = `SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN
+HDFCLIFE,EQ,530.00,532.00,515.00,516.10,516.10,530.00,1500000,774150000.00,15-SEP-2023,45000,INE795G01014
+INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15-SEP-2023,85000,INE009A01021`;
 
   // ──────────────────────────────────────────────────────────────────────────
   // 1. CM-UDiFF Zip Extraction & CSV Parsing
   // ──────────────────────────────────────────────────────────────────────────
   it('D114-01: extracts and parses valid CM-UDiFF ZIP archive buffer', () => {
-    const zipBuf = createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv', sampleValidCsv);
+    const zipBuf = createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv', sampleValidUdiffCsv);
     const extraction = CmUdiffParser.extractZipArchive(zipBuf);
 
     assert.strictEqual(extraction.isValid, true);
@@ -88,7 +94,7 @@ describe('WS-H / D114: 10-Year NSE CM-UDiFF Historical Acquisition Feasibility S
   // 4. Canonical D01 Quote & D02 OHLCV Normalization
   // ──────────────────────────────────────────────────────────────────────────
   it('D114-04: normalizes CM-UDiFF record to canonical D01 quote and D02 OHLCV candle', () => {
-    const { headers, records } = CmUdiffParser.parseCsv(sampleValidCsv);
+    const { headers, records } = CmUdiffParser.parseCsv(sampleValidUdiffCsv);
     const quote = CmUdiffParser.toCanonicalQuote(records[0]);
 
     assert.strictEqual(quote.symbol, 'HDFCLIFE');
@@ -137,7 +143,7 @@ describe('WS-H / D114: 10-Year NSE CM-UDiFF Historical Acquisition Feasibility S
   // 7. Feasibility Evaluation of Synthetic Archive
   // ──────────────────────────────────────────────────────────────────────────
   it('D114-07: evaluates synthetic archive buffer and returns ACQUIRED record', () => {
-    const zipBuf = createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv', sampleValidCsv);
+    const zipBuf = createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv', sampleValidUdiffCsv);
     const assessment = HistoricalFeasibilityRunner.evaluateArchive('2026-09-15', zipBuf);
 
     assert.strictEqual(assessment.date, '2026-09-15');
@@ -159,7 +165,7 @@ describe('WS-H / D114: 10-Year NSE CM-UDiFF Historical Acquisition Feasibility S
     };
 
     // Pre-evaluate 2026-09-15
-    const zipBuf = createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv', sampleValidCsv);
+    const zipBuf = createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv', sampleValidUdiffCsv);
     const existingRec = HistoricalFeasibilityRunner.evaluateArchive('2026-09-15', zipBuf);
 
     const existingMap: Record<string, DateAssessmentRecord> = {
@@ -189,5 +195,53 @@ describe('WS-H / D114: 10-Year NSE CM-UDiFF Historical Acquisition Feasibility S
     assert.ok(script.includes('BhavCopy_NSE_CM_0_0_0_'));
     assert.ok(script.includes('https://nsearchives.nseindia.com/content/cm/'));
     assert.ok(script.includes('Invoke-WebRequest'));
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 10. Legacy Pre-July-2024 Bhavcopy Parsing & Normalization
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-10: parses and validates legacy Pre-July-2024 NSE Bhavcopy format', () => {
+    const { headers, records } = LegacyBhavcopyParser.parseCsv(sampleValidLegacyCsv);
+    const schema = LegacyBhavcopyParser.validateSchema(headers, records);
+
+    assert.strictEqual(schema.isValid, true);
+    assert.strictEqual(schema.totalRows, 2);
+
+    const quote = LegacyBhavcopyParser.toCanonicalQuote(records[0]);
+    assert.strictEqual(quote.symbol, 'HDFCLIFE');
+    assert.strictEqual(quote.ltp, 516.10);
+    assert.strictEqual(quote.previousClose, 530.00);
+
+    const candle = LegacyBhavcopyParser.toCanonicalOHLCV(records[0]);
+    assert.strictEqual(candle.symbol, 'HDFCLIFE');
+    assert.strictEqual(candle.interval, '1d');
+    assert.strictEqual(candle.candleStart, '2023-09-15T09:15:00.000Z');
+    assert.strictEqual(candle.open, 530.00);
+    assert.strictEqual(candle.close, 516.10);
+
+    const { filename, url } = LegacyBhavcopyParser.getLegacyArchiveUrl('2023-09-15');
+    assert.strictEqual(filename, 'cm15SEP2023bhav.csv.zip');
+    assert.strictEqual(url, 'https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/SEP/cm15SEP2023bhav.csv.zip');
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 11. Unified Historical Adapter Auto-Detection
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-11: auto-detects archive era and unifies normalization into canonical D01/D02', () => {
+    const udiffParsed = UnifiedHistoricalAdapter.parseAndNormalize(sampleValidUdiffCsv);
+    assert.strictEqual(udiffParsed.format, 'CM_UDIFF');
+    assert.strictEqual(udiffParsed.isValid, true);
+    assert.strictEqual(udiffParsed.quotes.length, 2);
+    assert.strictEqual(udiffParsed.candles.length, 2);
+
+    const legacyParsed = UnifiedHistoricalAdapter.parseAndNormalize(sampleValidLegacyCsv);
+    assert.strictEqual(legacyParsed.format, 'LEGACY_BHAVCOPY');
+    assert.strictEqual(legacyParsed.isValid, true);
+    assert.strictEqual(legacyParsed.quotes.length, 2);
+    assert.strictEqual(legacyParsed.candles.length, 2);
+
+    const unknownParsed = UnifiedHistoricalAdapter.parseAndNormalize('FOO,BAR,BAZ\n1,2,3');
+    assert.strictEqual(unknownParsed.format, 'UNKNOWN');
+    assert.strictEqual(unknownParsed.isValid, false);
   });
 });

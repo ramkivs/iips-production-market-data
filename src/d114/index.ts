@@ -6,4 +6,6 @@
  */
 
 export * from './cm_udiff_parser.js';
+export * from './legacy_bhavcopy_parser.js';
+export * from './unified_historical_adapter.js';
 export * from './historical_feasibility_runner.js';
