@@ -15,7 +15,7 @@
  * P14-R7: INT-017 target visual convergence (dedicated SVG route icons, active item
  * solid accent treatment, structured nested tree hierarchy, and collapse footer affordance).
  * P14-R7 Responsive Remediation: reflows from permanent desktop 240px canvas to responsive horizontal
- * navigation at tablet and mobile viewports.
+ * navigation at tablet and mobile viewports with content-driven compact mobile height.
  */
 import { NavLink } from 'react-router-dom';
 import { visibleNav, NAV_STATUS_LABEL, type NavItem, type NavStatus } from './navigation';
@@ -159,10 +159,11 @@ function NavRow({ item, child = false }: { item: NavItem; child?: boolean }) {
   const fontSize = child ? 13 : 14;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div className="sidebar-nav-row" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       {isFuture ? (
         <span
           data-testid={`nav-future-${item.label}`}
+          className="sidebar-future-label"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -180,6 +181,7 @@ function NavRow({ item, child = false }: { item: NavItem; child?: boolean }) {
       ) : (
         <NavLink
           to={item.path}
+          className="sidebar-nav-link"
           style={({ isActive }) => ({
             display: 'flex',
             alignItems: 'center',
@@ -221,7 +223,7 @@ export function Sidebar() {
             {item.children && item.children.length > 0 && (
               <ul className="sidebar-child-list">
                 {item.children.map((child) => (
-                  <li key={child.path}>
+                  <li key={child.path} className="sidebar-child-item">
                     <NavRow item={child} child />
                   </li>
                 ))}
