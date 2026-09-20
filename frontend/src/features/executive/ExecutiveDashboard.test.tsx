@@ -92,11 +92,96 @@ const DEGRADED_UNIVERSE = {
   provenance: { dataSource: 'none', freshness: 'UNAVAILABLE', mode: 'LIVE', transportSemantics: 'no fallback' },
 };
 
+/**
+ * TGT-08 — governed watchlist envelope fixture. Mirrors the server contract 1:1:
+ * deltas are BASELINE vs CURRENT (not a time series); `changed` is the contract's own flag.
+ */
+interface FixtureDelta { readonly field: string; readonly baselineValue: number; readonly currentValue: number; readonly delta: number; readonly changed: boolean; }
+interface FixtureItem {
+  readonly canonicalSecurityId: string;
+  readonly baseline: Record<string, unknown>;
+  readonly baselineAsOf: string;
+  readonly addedAt: string;
+  readonly triggers: readonly unknown[];
+  readonly deltas: readonly FixtureDelta[];
+  readonly current: Record<string, unknown> | null;
+  readonly currentAsOf: string | null;
+  readonly _quality: string;
+}
+
+function watchlistItem(securityId: string, sector: string, baselineValue: number, currentValue: number): FixtureItem {
+  const delta = currentValue - baselineValue;
+  return {
+    canonicalSecurityId: securityId,
+    baseline: { canonicalSecurityId: securityId, sector, composite: baselineValue },
+    baselineAsOf: '2026-08-09T00:00:00.000Z',
+    addedAt: '2026-08-10T00:00:00.000Z',
+    triggers: [],
+    deltas: [{ field: 'composite', baselineValue, currentValue, delta, changed: delta !== 0 }],
+    current: { canonicalSecurityId: securityId, sector, composite: currentValue },
+    currentAsOf: '2026-08-09T00:00:00.000Z',
+    _quality: 'good',
+  };
+}
+
+const WATCHLISTS = {
+  data: [
+    {
+      surfaceName: 'UI07', disposition: 'NEW', watchlistId: 'wl-core', name: 'Core',
+      createdAt: '2026-08-10T00:00:00.000Z', totalItems: 3,
+      items: [
+        watchlistItem('A-H1', 'A', 70, 70), // delta 0 — the governed result on the frozen baseline
+        watchlistItem('B-H1', 'B', 50, 50),
+        watchlistItem('C-H1', 'C', 80, 80),
+      ],
+    },
+    {
+      surfaceName: 'UI07', disposition: 'NEW', watchlistId: 'wl-watch', name: 'Watch',
+      createdAt: '2026-08-10T00:00:00.000Z', totalItems: 1,
+      items: [watchlistItem('D-H1', 'D', 40, 40)],
+    },
+  ],
+  provenance: {
+    dataSource: 'P12 governed universe over frozen v1.1 replay baseline',
+    asOf: '2026-08-09T00:00:00.000Z', dataVersion: 'v1.1-replay-baseline',
+    mode: 'SNAPSHOT', freshness: 'SNAPSHOT', authority: 'PLATFORM',
+    transportSemantics: 'owner-scoped watchlists (append-only journal). Deltas compare each item PERSISTED BASELINE against the CURRENT governed value. Values derive from the frozen v1.1 replay baseline — this is NOT a live feed and NOT a time series.',
+  },
+};
+
+/** The same envelope, but with one governed change genuinely flagged by the contract. */
+const WATCHLISTS_WITH_CHANGE = {
+  ...WATCHLISTS,
+  data: [
+    { ...WATCHLISTS.data[0], items: [watchlistItem('A-H1', 'A', 60, 70), watchlistItem('B-H1', 'B', 50, 50)] },
+  ],
+};
+
+/** No governed lists at all — must not be filled with fabricated content. */
+const WATCHLISTS_EMPTY = { data: [], provenance: WATCHLISTS.provenance };
+
+/** A row whose governed sector is absent — no company link may be invented. */
+const WATCHLISTS_NO_SECTOR = {
+  ...WATCHLISTS,
+  data: [
+    {
+      ...WATCHLISTS.data[0],
+      items: [{
+        ...watchlistItem('E-H1', 'E', 30, 30),
+        baseline: { canonicalSecurityId: 'E-H1', composite: 30 },
+        current: { canonicalSecurityId: 'E-H1', composite: 30 },
+      }],
+    },
+  ],
+};
+
 function urlAwareMock(opts: {
   replayBIdentical?: boolean;
   evidenceFails?: boolean;
   /** TGT-04: omitted → 404 (preserves every pre-Phase-2 test unchanged). */
   universe?: DecisionMatrixData | 'fail' | 'degraded' | 'malformed';
+  /** TGT-08: omitted → 404 (preserves every pre-Phase-3 test unchanged). */
+  watchlists?: unknown | 'fail';
 } = {}) {
   return vi.fn((input: unknown) => {
     const url = String(input);
@@ -116,6 +201,10 @@ function urlAwareMock(opts: {
       // A 200 response that is NOT a governed universe (e.g. another surface's DTO).
       if (opts.universe === 'malformed') return Promise.resolve({ ok: true, json: async () => ({ matrixType: 'scatter', provenance: {} }) }) as never;
       if (opts.universe) return Promise.resolve({ ok: true, json: async () => opts.universe }) as never;
+    }
+    if (url.includes('/api/watchlists')) {
+      if (opts.watchlists === 'fail') return Promise.reject(new Error('watchlists down')) as never;
+      if (opts.watchlists !== undefined) return Promise.resolve({ ok: true, json: async () => opts.watchlists }) as never;
     }
     return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
   });
@@ -406,5 +495,168 @@ describe('Executive Dashboard — Phase 2 TGT-03 governed mover semantics', () =
     const table = screen.getAllByTestId('data-table')[0];
     const cells = Array.from(table.querySelectorAll('tbody tr')).map((tr) => tr.querySelector('td')?.textContent);
     expect(cells).toEqual(['A', 'B']);
+  });
+});
+
+/**
+ * TARGET-UI-CONVERGENCE PHASE 3 — TGT-08 Watchlist Highlights (authorized bounded scope).
+ * Composition-only over the EXISTING governed /api/watchlists contract. Every assertion is
+ * repo-establishable (jsdom). NOTHING here is a browser, responsive, accessibility, Windows or
+ * screenshot-parity claim.
+ */
+describe('Executive Dashboard — Phase 3 TGT-08 Watchlist Highlights', () => {
+  it('renders the governed watchlist highlights from the existing contract', async () => {
+    globalThis.fetch = urlAwareMock({ watchlists: WATCHLISTS });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    await screen.findByTestId('watchlist-highlight-wl-core');
+
+    expect(screen.getByTestId('watchlist-highlight-wl-core')).toHaveTextContent('Core');
+    expect(screen.getByTestId('watchlist-highlight-wl-core')).toHaveTextContent('3 item(s)');
+    expect(screen.getByTestId('watchlist-highlight-wl-watch')).toHaveTextContent('Watch');
+    // Governed values rendered verbatim: baseline 70, current 70, change 0 (unchanged).
+    const core = screen.getByTestId('watchlist-highlight-wl-core');
+    const row = core.querySelector('tbody tr');
+    expect(row?.textContent).toContain('A-H1');
+    expect(row?.textContent).toContain('70');
+    expect(row?.textContent).toContain('0 (unchanged)');
+  });
+
+  it('represents delta = 0 as the CORRECT governed result, not missing data', async () => {
+    globalThis.fetch = urlAwareMock({ watchlists: WATCHLISTS });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    const noChanges = await screen.findByTestId('watchlist-no-changes');
+    expect(noChanges).toHaveTextContent('No governed changes detected');
+    expect(noChanges).toHaveTextContent('delta = 0 is the correct governed result');
+    expect(noChanges).toHaveTextContent('not missing data');
+    // Nothing was promoted into a change highlight.
+    expect(screen.queryByTestId('watchlist-changed-highlights')).not.toBeInTheDocument();
+  });
+
+  it('flags a governed change ONLY from the contract`s own `changed` flag', async () => {
+    globalThis.fetch = urlAwareMock({ watchlists: WATCHLISTS_WITH_CHANGE });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    const highlights = await screen.findByTestId('watchlist-changed-highlights');
+    expect(highlights).toHaveTextContent('A-H1');
+    expect(highlights).toHaveTextContent('governed change detected');
+    // The unchanged sibling is never listed as a change.
+    expect(highlights).not.toHaveTextContent('B-H1');
+    expect(screen.queryByTestId('watchlist-no-changes')).not.toBeInTheDocument();
+  });
+
+  it('discloses the baseline-vs-current semantics, the source and the as-of vintage', async () => {
+    globalThis.fetch = urlAwareMock({ watchlists: WATCHLISTS });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect(await screen.findByTestId('watchlist-highlights-disclosure'))
+      .toHaveTextContent('NOT a time series and not a live feed');
+    const prov = screen.getByTestId('watchlist-highlights-provenance');
+    expect(prov).toHaveTextContent('P12 governed universe over frozen v1.1 replay baseline');
+    expect(prov).toHaveTextContent('as of 2026-08-09T00:00:00.000Z');
+    expect(prov).toHaveTextContent('freshness SNAPSHOT');
+    expect(prov).toHaveTextContent('NOT a live feed and NOT a time series');
+  });
+
+  it('drills through using the governed sector carried in the row', async () => {
+    globalThis.fetch = urlAwareMock({ watchlists: WATCHLISTS });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect((await screen.findByTestId('watchlist-item-company-A-H1')).getAttribute('href')).toBe('/research/company/A');
+    expect(screen.getByTestId('watchlist-item-company-C-H1').getAttribute('href')).toBe('/research/company/C');
+    expect(screen.getByTestId('watchlist-highlights-open').getAttribute('href')).toBe('/watchlists');
+  });
+
+  it('invents no company link when the governed sector is absent', async () => {
+    globalThis.fetch = urlAwareMock({ watchlists: WATCHLISTS_NO_SECTOR });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    const core = await screen.findByTestId('watchlist-highlight-wl-core');
+    expect(screen.queryByTestId('watchlist-item-company-E-H1')).not.toBeInTheDocument();
+    expect(core).toHaveTextContent('sector unavailable');
+  });
+
+  it('caps rows by a DISCLOSED presentational limit in payload order (not a ranking)', async () => {
+    globalThis.fetch = urlAwareMock({
+      watchlists: {
+        ...WATCHLISTS,
+        data: [{
+          ...WATCHLISTS.data[0],
+          totalItems: 7,
+          items: Array.from({ length: 7 }, (_, i) => watchlistItem(`S${i}-H1`, 'A', 50 + i, 50 + i)),
+        }],
+      },
+    });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    const core = await screen.findByTestId('watchlist-highlight-wl-core');
+    // Payload order preserved verbatim (S0 first) and capped at 5.
+    const ids = Array.from(core.querySelectorAll('tbody tr')).map((tr) => tr.querySelector('td')?.textContent);
+    expect(ids).toEqual(['S0-H1', 'S1-H1', 'S2-H1', 'S3-H1', 'S4-H1']);
+    expect(screen.getByTestId('watchlist-truncation-wl-core')).toHaveTextContent('first 5 of 7 items');
+    expect(screen.getByTestId('watchlist-truncation-wl-core')).toHaveTextContent('NOT a ranking');
+  });
+
+  it('degrades ALONE on failure: no fallback data, certified dashboard unaffected', async () => {
+    globalThis.fetch = urlAwareMock({ watchlists: 'fail' });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    const unavailable = await screen.findByTestId('watchlist-highlights-unavailable');
+    expect(unavailable).toHaveTextContent('watchlists down');
+    expect(unavailable).toHaveTextContent('No substitute or sample data is shown');
+    // No watchlist content and no page-level error state; the certified payload still renders.
+    expect(screen.queryByTestId('watchlist-highlight-wl-core')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('state-error')).not.toBeInTheDocument();
+    expect(screen.getByTestId('freshness-snapshot')).toHaveTextContent('SNAPSHOT');
+    expect(screen.getAllByTestId('recent-decision').length).toBe(2);
+  });
+
+  it('D86-class: a non-envelope 200 payload is refused instead of crashing the dashboard', async () => {
+    globalThis.fetch = urlAwareMock({ watchlists: { provenance: {} } });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect(await screen.findByTestId('watchlist-highlights-unavailable'))
+      .toHaveTextContent('no governed watchlist data was returned');
+    expect(screen.getByTestId('freshness-snapshot')).toHaveTextContent('SNAPSHOT');
+    expect(screen.queryByTestId('watchlist-highlight-wl-core')).not.toBeInTheDocument();
+  });
+
+  it('renders an explicit empty state when no governed watchlists exist', async () => {
+    globalThis.fetch = urlAwareMock({ watchlists: WATCHLISTS_EMPTY });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect(await screen.findByTestId('watchlist-highlights-empty'))
+      .toHaveTextContent('No governed watchlists exist for this account');
+    expect(screen.queryByTestId('watchlist-changed-highlights')).not.toBeInTheDocument();
+  });
+
+  it('does not mutate the governed watchlist payload it renders', async () => {
+    const frozen = JSON.parse(JSON.stringify(WATCHLISTS)) as typeof WATCHLISTS;
+    const deepFreeze = (o: unknown): void => {
+      if (o && typeof o === 'object') { Object.values(o as object).forEach(deepFreeze); Object.freeze(o); }
+    };
+    deepFreeze(frozen);
+    globalThis.fetch = urlAwareMock({ watchlists: frozen });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    await screen.findByTestId('watchlist-highlight-wl-core');
+    // Frozen input survived rendering unchanged (a mutation attempt would have thrown in strict mode).
+    expect(frozen.data[0].items[0].deltas[0].delta).toBe(0);
+    expect(frozen.data[0].items[0].canonicalSecurityId).toBe('A-H1');
+    expect(frozen.data[0].totalItems).toBe(3);
+  });
+
+  it('leaves the certified executive payload and the TGT-04 distribution untouched', async () => {
+    globalThis.fetch = urlAwareMock({ watchlists: WATCHLISTS, universe: UNIVERSE });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    await screen.findByTestId('watchlist-highlight-wl-core');
+    // Existing surface behaviour is unchanged by the Phase 3 composition.
+    expect(screen.getByTestId('metric-group')).toBeInTheDocument();
+    expect(screen.getByTestId('freshness-snapshot')).toHaveTextContent('SNAPSHOT');
+    expect(screen.getAllByTestId('recent-decision').length).toBe(2);
+    expect(screen.getAllByTestId('evidence-card').length).toBe(2);
+    expect(await screen.findByTestId('score-distribution-disclosure')).toHaveTextContent('/api/decision-matrix');
   });
 });

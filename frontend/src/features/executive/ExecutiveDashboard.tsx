@@ -35,6 +35,23 @@
  *   ⚠ AD-17 / M-2 remain UNRESOLVED: evidence/replay continues to render through the existing
  *     CompanyTrustChain → Ad17Disclosure path. No verified-replay claim is added here.
  *   ⚠ No contract, schema, API, fixture or server change is made by these additions.
+ *
+ * TARGET-UI-CONVERGENCE PHASE 3 — TGT-08 Watchlist Highlights (authorized bounded scope).
+ * COMPOSITION-ONLY over the EXISTING governed watchlist domain:
+ *   • Source is the existing governed `/api/watchlists` endpoint through the existing typed client
+ *     `api/watchlists.ts`. NO new endpoint, NO new persistence, NO parallel watchlist model, and
+ *     the existing UI07 contract (`p13/src/newSurfaces.js`) is consumed unmodified.
+ *   • Deltas are the contract's own BASELINE-vs-CURRENT values, rendered verbatim. Against the
+ *     frozen v1.1 Replay Baseline a delta of 0 is the CORRECT governed result — it is presented as
+ *     such, never as a missing or failed value.
+ *   • A "governed change" is the contract's own `changed` flag. No movement is derived from rank
+ *     position, timestamps, rendering order, ordering, or any client-side heuristic. This is NOT a
+ *     mover engine.
+ *   • Row order is the payload's own order, truncated by a DISCLOSED presentational cap. The cap is
+ *     not a ranking and does not reorder anything.
+ *   • U1–U10 preserved; ownership/authorization remain server-derived and untouched; the envelope's
+ *     own provenance (source, as-of, mode, freshness, authority, transport semantics) is shown
+ *     verbatim. Nothing is substituted when the watchlist surface is unavailable.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -44,6 +61,7 @@ import { fetchExecutiveData, type ExecutiveData, type RankedSector } from '../..
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { fetchDecisionMatrixData, type DecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
+import { fetchWatchlists, type WatchlistItemView, type WatchlistView, type WatchlistsProvenance } from '../../api/watchlists';
 import { ChartContainer, SimpleBarChart } from '../../components/viz/ChartFoundations';
 import { DecisionBadge } from '../../components/decision/DecisionComponents';
 import { MetricCard, MetricGroup, MetricTable, DataTable, TrendIndicator } from '../../components/data/DataComponents';
@@ -65,6 +83,35 @@ function isGovernedUniverse(d: unknown): d is DecisionMatrixData {
     d !== null &&
     Array.isArray((d as { companies?: unknown }).companies)
   );
+}
+
+/**
+ * TGT-08 shape guard — the same D86-class narrowing, applied to the governed watchlist envelope.
+ * A 200 response without a governed `data` array is refused and disclosed rather than dereferenced.
+ */
+function isWatchlistsEnvelope(d: unknown): d is { data: readonly WatchlistView[]; provenance?: WatchlistsProvenance } {
+  return typeof d === 'object' && d !== null && Array.isArray((d as { data?: unknown }).data);
+}
+
+/** TGT-08 — rows shown per list. A DISCLOSED presentational cap in payload order; not a ranking. */
+const WATCHLIST_HIGHLIGHT_CAP = 5;
+
+/** Render a governed delta without pass/fail colour — a delta is not a verdict (UI07 convention). */
+function fmtDelta(value: number | null): string {
+  if (value === null) return 'unavailable';
+  if (value === 0) return '0 (unchanged)';
+  return value > 0 ? `+${value}` : String(value);
+}
+
+/**
+ * TGT-08 — read the governed `sector` already carried inside a watchlist row's persisted baseline
+ * or current record. This is a NARROWING read of a governed value the server placed in the
+ * payload; it derives nothing and invents no identity. Returns null when absent.
+ */
+function governedSector(record: Readonly<Record<string, unknown>> | null): string | null {
+  if (record === null) return null;
+  const s = record.sector;
+  return typeof s === 'string' && s.length > 0 ? s : null;
 }
 
 export function ExecutiveDashboard() {
@@ -118,6 +165,41 @@ export function ExecutiveDashboard() {
         setUniverseError(String(e));
       })
       .finally(() => { if (active) setUniverseLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  // TGT-08 — governed watchlists (Watchlist Highlights). OWN state, exactly as TGT-04: a failure
+  // here must never blank the certified executive payload.
+  const [watchlists, setWatchlists] = useState<readonly WatchlistView[] | null>(null);
+  const [watchlistsProvenance, setWatchlistsProvenance] = useState<WatchlistsProvenance | null>(null);
+  const [watchlistsError, setWatchlistsError] = useState<string | null>(null);
+  const [watchlistsLoading, setWatchlistsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setWatchlistsLoading(true);
+    fetchWatchlists()
+      .then((env) => {
+        if (!active) return;
+        // D86-class hardening: refuse a payload that does not carry the governed list array
+        // instead of dereferencing a missing shape (which would blank the whole dashboard).
+        if (!isWatchlistsEnvelope(env)) {
+          setWatchlists(null);
+          setWatchlistsProvenance(null);
+          setWatchlistsError('unexpected payload shape — no governed watchlist data was returned');
+          return;
+        }
+        setWatchlists(env.data);
+        setWatchlistsProvenance(env.provenance ?? null);
+        setWatchlistsError(null);
+      })
+      .catch((e) => {
+        if (!active) return;
+        setWatchlists(null);
+        setWatchlistsProvenance(null);
+        setWatchlistsError(String(e));
+      })
+      .finally(() => { if (active) setWatchlistsLoading(false); });
     return () => { active = false; };
   }, []);
 
@@ -180,6 +262,20 @@ export function ExecutiveDashboard() {
     const median = values.length % 2 === 0 ? (values[mid - 1] + values[mid]) / 2 : values[mid];
     return { companies: values.length, min: values[0], median, max: values[values.length - 1] };
   }, [universe]);
+
+  // TGT-08 — the governed-change highlight set. Membership is decided SOLELY by the contract's
+  // own per-field `changed` flag on the baseline-vs-current comparison. No rank, timestamp,
+  // ordering or heuristic input. On the frozen baseline this set is legitimately empty.
+  const changedItems: WatchlistHighlight[] = useMemo(() => {
+    if (!watchlists) return [];
+    const out: WatchlistHighlight[] = [];
+    for (const list of watchlists) {
+      for (const item of list.items) {
+        if (item.deltas.some((d) => d.changed)) out.push({ listName: list.name, item });
+      }
+    }
+    return out;
+  }, [watchlists]);
 
   const rankedRows: RankedRow[] = useMemo(() => {
     if (!data) return [];
@@ -336,6 +432,114 @@ export function ExecutiveDashboard() {
         </>
       )}
 
+      {/* TGT-08 — WATCHLIST HIGHLIGHTS (governed /api/watchlists; no new endpoint).
+          Composed in its OWN state: if the watchlist surface is unavailable, this block degrades
+          alone and the certified executive payload is unaffected — nothing is substituted. */}
+      <h2 style={{ fontSize: 18, marginTop: 24 }}>Watchlist Highlights</h2>
+      {watchlistsLoading && <p data-testid="watchlist-highlights-loading" style={{ fontSize: 13 }}>Loading governed watchlists…</p>}
+
+      {!watchlistsLoading && watchlistsError !== null && (
+        <p data-testid="watchlist-highlights-unavailable" style={{ color: 'var(--color-ink-secondary)', fontSize: 13 }}>
+          Governed watchlists unavailable: {watchlistsError}. No substitute or sample data is shown.
+        </p>
+      )}
+
+      {!watchlistsLoading && watchlists !== null && (
+        <>
+          <p data-testid="watchlist-highlights-disclosure" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '0 0 8px' }}>
+            Governed watchlist rows. Baseline is each security&apos;s PERSISTED value when it was added;
+            Current is the current governed value. This is a baseline-vs-current comparison, NOT a time
+            series and not a live feed. Where the governed universe derives from the frozen v1.1 replay
+            baseline, a change of <strong>0 (unchanged)</strong> is the CORRECT result.
+          </p>
+
+          {watchlists.length === 0 ? (
+            <p data-testid="watchlist-highlights-empty" style={{ fontSize: 13 }}>
+              No governed watchlists exist for this account. Nothing is fabricated to fill this block.
+            </p>
+          ) : (
+            <>
+              {/* Governed-change highlights — membership is the contract's own `changed` flag only. */}
+              {changedItems.length > 0 ? (
+                <ul data-testid="watchlist-changed-highlights" style={{ paddingLeft: 20, fontSize: 13 }}>
+                  {changedItems.map((h) => (
+                    <li key={`${h.listName}:${h.item.canonicalSecurityId}`}>
+                      {h.listName} · {h.item.canonicalSecurityId} — governed change detected
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p data-testid="watchlist-no-changes" style={{ fontSize: 13 }}>
+                  No governed changes detected: every item&apos;s current value equals its persisted
+                  baseline. Against the frozen v1.1 replay baseline <strong>delta = 0 is the correct
+                  governed result</strong>, not missing data. No movement is inferred from rank,
+                  ordering or timestamps.
+                </p>
+              )}
+
+              {watchlists.map((list) => {
+                const rows: HighlightRow[] = list.items.slice(0, WATCHLIST_HIGHLIGHT_CAP).map((item) => ({
+                  securityId: item.canonicalSecurityId,
+                  item,
+                  sector: governedSector(item.current ?? item.baseline),
+                }));
+                return (
+                  <article key={list.watchlistId} data-testid={`watchlist-highlight-${list.watchlistId}`} style={{ marginTop: 12, border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, background: 'var(--color-surface-1)' }}>
+                    <h3 style={{ fontSize: 14, margin: '0 0 8px' }}>
+                      {list.name}
+                      <span style={{ color: 'var(--color-ink-secondary)', fontWeight: 400 }}> · {list.totalItems} item(s)</span>
+                    </h3>
+                    {list.items.length === 0 ? (
+                      <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)' }}>No securities in this list.</p>
+                    ) : (
+                      <DataTable
+                        columns={[
+                          { key: 'security', header: 'Security', render: (r: HighlightRow) => r.securityId },
+                          { key: 'baseline', header: 'Baseline', render: (r: HighlightRow) => fmtDelta(r.item.deltas.find((d) => d.field === 'composite')?.baselineValue ?? null) },
+                          { key: 'current', header: 'Current', render: (r: HighlightRow) => fmtDelta(r.item.deltas.find((d) => d.field === 'composite')?.currentValue ?? null) },
+                          { key: 'change', header: 'Change', render: (r: HighlightRow) => fmtDelta(r.item.deltas.find((d) => d.field === 'composite')?.delta ?? null) },
+                          {
+                            key: 'company',
+                            header: 'Company',
+                            // Drill-through only when the governed payload carries a sector string.
+                            // Absent → no link is invented.
+                            render: (r: HighlightRow) => (r.sector === null
+                              ? <span style={{ color: 'var(--color-ink-secondary)' }}>sector unavailable</span>
+                              : <Link data-testid={`watchlist-item-company-${r.securityId}`} to={`/research/company/${r.sector}`}>Open company →</Link>),
+                          },
+                        ]}
+                        rows={rows}
+                        emptyLabel="No securities in this list"
+                      />
+                    )}
+                    {list.items.length > WATCHLIST_HIGHLIGHT_CAP && (
+                      <p data-testid={`watchlist-truncation-${list.watchlistId}`} style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '8px 0 0' }}>
+                        Showing the first {WATCHLIST_HIGHLIGHT_CAP} of {list.totalItems} items in the
+                        payload&apos;s own order — a presentational cap, NOT a ranking. Open the
+                        watchlist for the complete list.
+                      </p>
+                    )}
+                  </article>
+                );
+              })}
+            </>
+          )}
+
+          {watchlistsProvenance !== null && (
+            <p data-testid="watchlist-highlights-provenance" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, marginTop: 12 }}>
+              {watchlistsProvenance.dataSource} · as of {watchlistsProvenance.asOf} · {watchlistsProvenance.mode} ·
+              freshness {watchlistsProvenance.freshness} · authority {watchlistsProvenance.authority}
+              <br />
+              {watchlistsProvenance.transportSemantics}
+            </p>
+          )}
+
+          <p style={{ marginTop: 12, fontSize: 13 }}>
+            <Link data-testid="watchlist-highlights-open" to="/watchlists">Open watchlists →</Link>
+          </p>
+        </>
+      )}
+
       {/* Recent decisions with CERTIFIED authority + evidence entry points (N+10: selectable) */}
       <h2 style={{ fontSize: 18, marginTop: 24 }}>Recent Decisions</h2>
       <div data-testid="decision-list" style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))' }}>
@@ -425,4 +629,17 @@ interface ScoreStats {
   readonly min: number;
   readonly median: number;
   readonly max: number;
+}
+
+/** TGT-08 — one governed item surfaced by the contract's own `changed` flag. */
+interface WatchlistHighlight {
+  readonly listName: string;
+  readonly item: WatchlistItemView;
+}
+
+/** TGT-08 — one presentational row of a governed watchlist (payload order, capped). */
+interface HighlightRow {
+  readonly securityId: string;
+  readonly item: WatchlistItemView;
+  readonly sector: string | null;
 }
