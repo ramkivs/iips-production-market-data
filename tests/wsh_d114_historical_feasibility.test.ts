@@ -8,12 +8,16 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
 import * as zlib from 'zlib';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import {
   CmUdiffParser,
   LegacyBhavcopyParser,
   UnifiedHistoricalAdapter,
   HistoricalFeasibilityRunner,
   HistoricalEvidenceReconciler,
+  HistoricalEvidenceHandoff,
   DetailedDateAssessment,
 } from '../src/index.js';
 
@@ -306,5 +310,122 @@ INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15
     assert.strictEqual(report.governanceDisposition.productionEligibility, 'NOT AUTHORIZED');
     assert.strictEqual(report.governanceDisposition.programDisposition, 'NON_PRODUCTION_HOLD');
     assert.strictEqual(report.reconciliationLineageDigest.length, 64);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 18. Governed Evidence Handoff: Valid 6-Artifact Intake Validation
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-18: accepts complete 6-file valid evidence package from deposit directory', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iips-d114-intake-test-'));
+
+    const zipBuf = createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv', sampleValidUdiffCsv);
+    const validRec = HistoricalFeasibilityRunner.evaluateArchive('2026-09-15', { zipBuffer: zipBuf });
+    const manifest = HistoricalFeasibilityRunner.buildFeasibilityManifest(
+      { startDate: '2026-09-14', endDate: '2026-09-20' },
+      { '2026-09-15': validRec }
+    );
+    const pkg = HistoricalFeasibilityRunner.generateEvidencePackage(manifest);
+
+    // Write all 6 files to temp directory
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.MANIFEST_FILE), JSON.stringify(pkg.manifest, null, 2));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.COVERAGE_SUMMARY_FILE), JSON.stringify(pkg.coverageSummary, null, 2));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.FAILURE_REGISTER_FILE), JSON.stringify(pkg.failureRegister, null, 2));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.ARCHIVE_INTEGRITY_FILE), JSON.stringify(pkg.archiveIntegrityReport, null, 2));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.SHA256_MANIFEST_FILE), JSON.stringify(pkg.sha256Manifest, null, 2));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.SCHEMA_VALIDATION_FILE), JSON.stringify(pkg.schemaValidationReport, null, 2));
+
+    const result = HistoricalEvidenceHandoff.validateAndLoadEvidencePackage(tempDir);
+
+    assert.strictEqual(result.status, 'ACCEPTED');
+    assert.strictEqual(result.missingArtifacts.length, 0);
+    assert.strictEqual(result.artifactsDiscovered.length, 6);
+    assert.strictEqual(Object.keys(result.fileChecksumsSha256).length, 6);
+    assert.ok(result.evidencePackage);
+    assert.strictEqual(result.governanceDisposition.oiHist01Status, 'OPEN / EXTERNAL / HISTORICAL ACQUISITION BLOCKED');
+    assert.strictEqual(result.governanceDisposition.productionEligibility, 'NOT AUTHORIZED');
+    assert.strictEqual(result.intakeLineageDigest.length, 64);
+
+    // Clean up
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 19. Governed Evidence Handoff: Missing Artifact Handling
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-19: rejects incomplete package with missing required artifacts and fails closed', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iips-d114-intake-missing-'));
+
+    // Write only 3 out of 6 files
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.MANIFEST_FILE), JSON.stringify({ manifestId: 'm1' }));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.COVERAGE_SUMMARY_FILE), JSON.stringify({ metrics: {} }));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.FAILURE_REGISTER_FILE), JSON.stringify([]));
+
+    const result = HistoricalEvidenceHandoff.validateAndLoadEvidencePackage(tempDir);
+
+    assert.strictEqual(result.status, 'REJECTED');
+    assert.strictEqual(result.missingArtifacts.length, 3);
+    assert.ok(result.quarantineReason?.includes('Incomplete evidence package'));
+    assert.strictEqual(result.evidencePackage, undefined);
+
+    // Clean up
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 20. Governed Evidence Handoff: Malformed JSON Handling
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-20: rejects malformed JSON artifact and prevents invalid package intake', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iips-d114-intake-malformed-'));
+
+    // Write 5 valid files, 1 malformed JSON
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.MANIFEST_FILE), '{ "corrupt": "json" truncated...');
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.COVERAGE_SUMMARY_FILE), JSON.stringify({ metrics: {} }));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.FAILURE_REGISTER_FILE), JSON.stringify([]));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.ARCHIVE_INTEGRITY_FILE), JSON.stringify([]));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.SHA256_MANIFEST_FILE), JSON.stringify({}));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.SCHEMA_VALIDATION_FILE), JSON.stringify([]));
+
+    const result = HistoricalEvidenceHandoff.validateAndLoadEvidencePackage(tempDir);
+
+    assert.strictEqual(result.status, 'REJECTED');
+    assert.ok(result.quarantineReason?.includes('Schema or syntax validation failure'));
+    assert.strictEqual(result.evidencePackage, undefined);
+
+    // Clean up
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 21. Governed Pipeline: Deposit -> Validation -> Reconciliation
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-21: executes full transition from deposited package to reconciliation report', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iips-d114-intake-pipeline-'));
+
+    const zipBuf = createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv', sampleValidUdiffCsv);
+    const validRec = HistoricalFeasibilityRunner.evaluateArchive('2026-09-15', { zipBuffer: zipBuf });
+    const manifest = HistoricalFeasibilityRunner.buildFeasibilityManifest(
+      { startDate: '2026-09-14', endDate: '2026-09-20' },
+      { '2026-09-15': validRec }
+    );
+    const pkg = HistoricalFeasibilityRunner.generateEvidencePackage(manifest);
+
+    // Write all 6 files
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.MANIFEST_FILE), JSON.stringify(pkg.manifest, null, 2));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.COVERAGE_SUMMARY_FILE), JSON.stringify(pkg.coverageSummary, null, 2));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.FAILURE_REGISTER_FILE), JSON.stringify(pkg.failureRegister, null, 2));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.ARCHIVE_INTEGRITY_FILE), JSON.stringify(pkg.archiveIntegrityReport, null, 2));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.SHA256_MANIFEST_FILE), JSON.stringify(pkg.sha256Manifest, null, 2));
+    fs.writeFileSync(path.join(tempDir, HistoricalEvidenceHandoff.SCHEMA_VALIDATION_FILE), JSON.stringify(pkg.schemaValidationReport, null, 2));
+
+    const summary = HistoricalEvidenceHandoff.executeGovernedIntakeAndReconciliation(tempDir);
+
+    assert.strictEqual(summary.intakeResult.status, 'ACCEPTED');
+    assert.strictEqual(summary.isReconciliationTriggered, true);
+    assert.ok(summary.reconciliationReport);
+    assert.strictEqual(summary.reconciliationReport.governanceDisposition.oiHist01Status, 'OPEN / EXTERNAL / HISTORICAL ACQUISITION BLOCKED');
+    assert.strictEqual(summary.reconciliationReport.governanceDisposition.productionEligibility, 'NOT AUTHORIZED');
+
+    // Clean up
+    fs.rmSync(tempDir, { recursive: true, force: true });
   });
 });
