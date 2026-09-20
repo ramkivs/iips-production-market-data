@@ -183,6 +183,91 @@ function governedSector(record: Readonly<Record<string, unknown>> | null): strin
   return typeof s === 'string' && s.length > 0 ? s : null;
 }
 
+/**
+ * P14-R7 — Presentation-only radial/donut visualization over the certified scoreDistribution counts.
+ * Uses ONLY governed Buy/Hold/Sell counts with center holdings count.
+ * No score bands, thresholds, or bins are invented.
+ */
+function ScoreDonut({
+  holdings,
+  scoreDistribution,
+}: {
+  holdings: number;
+  scoreDistribution: readonly ScoreBucket[];
+}) {
+  const total = scoreDistribution.reduce((acc, b) => acc + b.count, 0);
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius; // ~226.19
+
+  const verdictColors: Record<string, string> = {
+    Buy: 'var(--color-status-positive, #22c55e)',
+    Hold: 'var(--color-status-warning, #f59e0b)',
+    Sell: 'var(--color-status-negative, #ef4444)',
+  };
+
+  let cumulativeAngle = 0;
+
+  return (
+    <div className="score-donut-container">
+      <div className="score-donut-graphic">
+        <svg width="96" height="96" viewBox="0 0 96 96" className="score-donut-svg">
+          <circle
+            cx="48"
+            cy="48"
+            r={radius}
+            fill="none"
+            stroke="var(--color-surface-2, #e2e8f0)"
+            strokeWidth="10"
+          />
+          {total > 0 &&
+            scoreDistribution.map((b) => {
+              const strokeDash = (b.count / total) * circumference;
+              const strokeOffset = -cumulativeAngle;
+              cumulativeAngle += strokeDash;
+              const strokeColor = verdictColors[b.verdict] ?? 'var(--color-accent)';
+              return (
+                <circle
+                  key={b.verdict}
+                  cx="48"
+                  cy="48"
+                  r={radius}
+                  fill="none"
+                  stroke={strokeColor}
+                  strokeWidth="10"
+                  strokeDasharray={`${strokeDash} ${circumference - strokeDash}`}
+                  strokeDashoffset={strokeOffset}
+                  strokeLinecap="round"
+                />
+              );
+            })}
+        </svg>
+        <div className="score-donut-center">
+          <span className="score-donut-count">{holdings}</span>
+          <span className="score-donut-label">Holdings</span>
+        </div>
+      </div>
+
+      <div className="score-donut-legend">
+        {scoreDistribution.map((b) => {
+          const color = verdictColors[b.verdict] ?? 'var(--color-accent)';
+          const pct = total > 0 ? Math.round((b.count / total) * 100) : 0;
+          return (
+            <div key={b.verdict} className="score-donut-legend-item">
+              <div className="score-donut-legend-left">
+                <span className="score-donut-dot" style={{ background: color }} />
+                <span className="score-donut-verdict">{b.verdict}</span>
+              </div>
+              <span className="score-donut-legend-val">
+                {b.count} ({pct}%)
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function ExecutiveDashboard() {
   const { session } = useSession();
   const [data, setData] = useState<ExecutiveData | null>(null);
@@ -236,6 +321,8 @@ export function ExecutiveDashboard() {
   const [watchlistsProvenance, setWatchlistsProvenance] = useState<WatchlistsProvenance | null>(null);
   const [watchlistsError, setWatchlistsError] = useState<string | null>(null);
   const [watchlistsLoading, setWatchlistsLoading] = useState(true);
+  const [activeWatchlistId, setActiveWatchlistId] = useState<string | null>(null);
+  const currentWatchlistId = activeWatchlistId ?? (watchlists && watchlists.length > 0 ? watchlists[0].watchlistId : null);
 
   useEffect(() => {
     let active = true;
@@ -586,6 +673,11 @@ export function ExecutiveDashboard() {
               The Trend column is a presentational rank cue derived from the certified rank position. It
               is NOT a verified movement signal and carries no certified delta.
             </p>
+            <div className="target-card-footer">
+              <Link to="/research/company/Banking" className="target-action-link">
+                View all opportunities →
+              </Link>
+            </div>
           </div>
 
           {/* Upcoming Events (Decision D-A Honest Deferral) */}
@@ -600,6 +692,11 @@ export function ExecutiveDashboard() {
             </p>
             <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', background: 'var(--color-surface-1)', padding: 10, borderRadius: 6, marginTop: 8 }}>
               Scheduled calendar window: Available upon live provider integration.
+            </div>
+            <div className="target-card-footer">
+              <span className="target-action-link" style={{ opacity: 0.6 }}>
+                View calendar →
+              </span>
             </div>
           </div>
         </div>
@@ -628,6 +725,8 @@ export function ExecutiveDashboard() {
 
             {!universeLoading && universe && (
               <>
+                <ScoreDonut holdings={portfolio.holdings} scoreDistribution={scoreDistribution} />
+
                 <ChartContainer title="Certified composite distribution — companies per certified verdict class">
                   <SimpleBarChart data={scoreDistribution.map((b) => ({ label: b.verdict, value: b.count }))} />
                 </ChartContainer>
@@ -668,6 +767,11 @@ export function ExecutiveDashboard() {
                   layer from the CERTIFIED values returned by that endpoint. No score band, bin edge, quadrant or
                   threshold is computed or invented, and no value is substituted when the universe is unavailable.
                 </p>
+                <div className="target-card-footer">
+                  <Link to="/intelligence/decision-matrix" className="target-action-link">
+                    View all holdings →
+                  </Link>
+                </div>
               </>
             )}
           </div>
@@ -727,41 +831,49 @@ export function ExecutiveDashboard() {
                     The records remain listed by the Notifications drawer; none is hidden here.
                   </p>
                 ) : (
-                  <DataTable
-                    columns={[
-                      {
-                        key: 'alert',
-                        header: 'Alert',
-                        render: (n: NotificationItem) => (
-                          <div data-testid={`alerts-item-${n.notificationId}`}>
-                            <strong style={{ display: 'block' }}>{n.title}</strong>
-                            {n.summary !== null && <span style={{ fontSize: 12 }}>{n.summary}</span>}
-                            <p
-                              data-testid={`alerts-source-state-note-${n.notificationId}`}
-                              data-source-state-durability={n.sourceStateDurability}
-                              style={{ fontSize: 12, opacity: 0.85, margin: '6px 0 0' }}
-                            >
-                              {n.sourceStateNote}
-                            </p>
-                          </div>
-                        ),
-                      },
-                      { key: 'type', header: 'Event type', render: (n: NotificationItem) => n.type },
-                      { key: 'createdAt', header: 'Recorded at', render: (n: NotificationItem) => n.createdAt },
-                      {
-                        key: 'link',
-                        header: 'Target',
-                        render: (n: NotificationItem) => (
-                          <Link data-testid={`alerts-deep-link-${n.notificationId}`} to={n.deepLink}>View governed data →</Link>
-                        ),
-                      },
-                    ]}
-                    rows={alertsRequiringAttention}
-                    emptyLabel="No alerts require attention"
-                  />
+                  <div className="alerts-compact-feed">
+                    <table className="alerts-compact-table">
+                      <tbody>
+                        {alertsRequiringAttention.map((n) => (
+                          <tr key={n.notificationId} className="alert-compact-row">
+                            <td className="alert-compact-cell">
+                              <div data-testid={`alerts-item-${n.notificationId}`} className="alert-compact-item">
+                                <div className="alert-compact-header-row">
+                                  <span className="alert-indicator-badge">Unread</span>
+                                  <strong className="alert-compact-title">{n.title}</strong>
+                                  <span className="alert-compact-time">{n.createdAt}</span>
+                                </div>
+                                {n.summary !== null && (
+                                  <div className="alert-compact-summary">{n.summary}</div>
+                                )}
+                                <div className="alert-compact-meta-row">
+                                  <span className="alert-compact-type">{n.type}</span>
+                                  <span className="alert-compact-sep">·</span>
+                                  <Link
+                                    data-testid={`alerts-deep-link-${n.notificationId}`}
+                                    to={n.deepLink}
+                                    className="alert-compact-link"
+                                  >
+                                    View governed data →
+                                  </Link>
+                                </div>
+                                <p
+                                  data-testid={`alerts-source-state-note-${n.notificationId}`}
+                                  data-source-state-durability={n.sourceStateDurability}
+                                  className="alert-compact-source-note"
+                                >
+                                  {n.sourceStateNote}
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
 
-                <p data-testid="alerts-read-note" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: 0 }}>
+                <p data-testid="alerts-read-note" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '8px 0 0' }}>
                   This block is read-only. Marking a notification read is the existing governed, idempotent
                   and non-reversible action available from the Notifications drawer.
                 </p>
@@ -773,6 +885,12 @@ export function ExecutiveDashboard() {
                     {alertsProvenance.transportSemantics}
                   </p>
                 )}
+
+                <div className="target-card-footer">
+                  <Link to="/alerts" className="target-action-link">
+                    View all alerts →
+                  </Link>
+                </div>
               </>
             )}
           </div>
@@ -826,14 +944,35 @@ export function ExecutiveDashboard() {
                       </p>
                     )}
 
+                    {watchlists.length > 1 && (
+                      <div className="target-tabs watchlist-tabs">
+                        {watchlists.map((list) => (
+                          <button
+                            key={list.watchlistId}
+                            type="button"
+                            className={`target-tab-btn ${currentWatchlistId === list.watchlistId ? 'target-tab-btn-active' : ''}`}
+                            onClick={() => setActiveWatchlistId(list.watchlistId)}
+                          >
+                            {list.name} ({list.totalItems})
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {watchlists.map((list) => {
+                      const isActive = currentWatchlistId === list.watchlistId;
                       const rows: HighlightRow[] = list.items.slice(0, WATCHLIST_HIGHLIGHT_CAP).map((item) => ({
                         securityId: item.canonicalSecurityId,
                         item,
                         sector: governedSector(item.current ?? item.baseline),
                       }));
                       return (
-                        <article key={list.watchlistId} data-testid={`watchlist-highlight-${list.watchlistId}`} style={{ marginTop: 8, border: '1px solid var(--color-border)', borderRadius: 6, padding: 10, background: 'var(--color-surface-0)' }}>
+                        <article
+                          key={list.watchlistId}
+                          data-testid={`watchlist-highlight-${list.watchlistId}`}
+                          className="watchlist-highlight-panel"
+                          style={{ display: isActive ? 'block' : 'none' }}
+                        >
                           <h3 style={{ fontSize: 14, margin: '0 0 8px' }}>
                             {list.name}
                             <span style={{ color: 'var(--color-ink-secondary)', fontWeight: 400 }}> · {list.totalItems} item(s)</span>
@@ -881,9 +1020,11 @@ export function ExecutiveDashboard() {
                   </p>
                 )}
 
-                <p style={{ marginTop: 8, fontSize: 13 }}>
-                  <Link data-testid="watchlist-highlights-open" to="/watchlists">Open watchlists →</Link>
-                </p>
+                <div className="target-card-footer">
+                  <Link data-testid="watchlist-highlights-open" to="/watchlists" className="target-action-link">
+                    View watchlists →
+                  </Link>
+                </div>
               </>
             )}
           </div>
@@ -901,6 +1042,11 @@ export function ExecutiveDashboard() {
             <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', background: 'var(--color-surface-1)', padding: 10, borderRadius: 6, marginTop: 8 }}>
               <Link to="/research" style={{ color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}>
                 Explore Research Workspace →
+              </Link>
+            </div>
+            <div className="target-card-footer">
+              <Link to="/research" className="target-action-link">
+                View all research →
               </Link>
             </div>
           </div>
@@ -984,6 +1130,11 @@ export function ExecutiveDashboard() {
                 Open Company Workspace →
               </Link>
             </div>
+            <div className="target-card-footer">
+              <Link to="/research/company/Banking" className="target-action-link">
+                View all →
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -995,29 +1146,89 @@ export function ExecutiveDashboard() {
         </h3>
         <div className="preview-strip">
           <Link to="/research/company/Banking" className="preview-card">
-            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>1. Company Workspace</div>
-            <div style={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>Fundamental analysis &amp; multi-pillar model</div>
-            <div style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600, marginTop: 4 }}>Open workspace →</div>
+            <div className="preview-card-header">
+              <span className="preview-card-num">1</span>
+              <span className="preview-card-title">Company Workspace</span>
+            </div>
+            <div className="preview-wireframe">
+              <div className="wireframe-row">
+                <div className="wireframe-badge" />
+                <div className="wireframe-line wide" />
+              </div>
+              <div className="wireframe-mini-bars">
+                <div className="wireframe-mini-bar" style={{ height: '60%' }} />
+                <div className="wireframe-mini-bar" style={{ height: '85%' }} />
+                <div className="wireframe-mini-bar" style={{ height: '40%' }} />
+                <div className="wireframe-mini-bar" style={{ height: '70%' }} />
+              </div>
+            </div>
+            <div className="preview-card-desc">Fundamental analysis &amp; multi-pillar model</div>
+            <div className="preview-card-link">Open workspace →</div>
           </Link>
           <Link to="/portfolio" className="preview-card">
-            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>2. Portfolio</div>
-            <div style={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>Holdings, allocations &amp; concentration risk</div>
-            <div style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600, marginTop: 4 }}>Open portfolio →</div>
+            <div className="preview-card-header">
+              <span className="preview-card-num">2</span>
+              <span className="preview-card-title">Portfolio</span>
+            </div>
+            <div className="preview-wireframe">
+              <div className="wireframe-row">
+                <div className="wireframe-circle" />
+                <div className="wireframe-line" style={{ width: '60%' }} />
+              </div>
+              <div className="wireframe-chart-line" />
+            </div>
+            <div className="preview-card-desc">Holdings, allocations &amp; concentration risk</div>
+            <div className="preview-card-link">Open portfolio →</div>
           </Link>
           <Link to="/research" className="preview-card">
-            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>3. Research</div>
-            <div style={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>Sector intelligence &amp; macro overlays</div>
-            <div style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600, marginTop: 4 }}>Open research →</div>
+            <div className="preview-card-header">
+              <span className="preview-card-num">3</span>
+              <span className="preview-card-title">Research</span>
+            </div>
+            <div className="preview-wireframe">
+              <div className="wireframe-search-bar" />
+              <div className="wireframe-pills">
+                <div className="wireframe-pill" />
+                <div className="wireframe-pill" />
+                <div className="wireframe-pill" />
+              </div>
+            </div>
+            <div className="preview-card-desc">Sector intelligence &amp; macro overlays</div>
+            <div className="preview-card-link">Open research →</div>
           </Link>
           <Link to="/screener" className="preview-card">
-            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>4. Screener</div>
-            <div style={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>Cross-pillar screening &amp; filtering</div>
-            <div style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600, marginTop: 4 }}>Open screener →</div>
+            <div className="preview-card-header">
+              <span className="preview-card-num">4</span>
+              <span className="preview-card-title">Screener</span>
+            </div>
+            <div className="preview-wireframe">
+              <div className="wireframe-controls-row">
+                <div className="wireframe-pill wide" />
+                <div className="wireframe-pill wide" />
+              </div>
+              <div className="wireframe-grid-rows">
+                <div className="wireframe-line wide" />
+                <div className="wireframe-line wide" />
+              </div>
+            </div>
+            <div className="preview-card-desc">Cross-pillar screening &amp; filtering</div>
+            <div className="preview-card-link">Open screener →</div>
           </Link>
           <Link to="/intelligence" className="preview-card">
-            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>5. Decision Center</div>
-            <div style={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>Decision matrix &amp; evidence verification</div>
-            <div style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600, marginTop: 4 }}>Open intelligence →</div>
+            <div className="preview-card-header">
+              <span className="preview-card-num">5</span>
+              <span className="preview-card-title">Decision Center</span>
+            </div>
+            <div className="preview-wireframe">
+              <div className="wireframe-stat-boxes">
+                <div className="wireframe-stat-box" />
+                <div className="wireframe-stat-box" />
+                <div className="wireframe-stat-box" />
+              </div>
+              <div className="wireframe-line wide" />
+            </div>
+            <div className="preview-card-desc">Decision matrix &amp; evidence verification</div>
+            <div className="preview-card-link">Open intelligence →</div>
           </Link>
         </div>
       </div>
