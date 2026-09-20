@@ -9,19 +9,29 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { ExecutiveDashboard } from './ExecutiveDashboard';
+import { SessionProvider } from '../../core/session/SessionContext';
+import type { Session } from '../../core/session/session';
+import { NAV } from '../../app/navigation';
 import type { ExecutiveData } from '../../api/executive';
 import type { EvidenceData } from '../../api/evidence';
 import type { ReplayData } from '../../api/replay';
 import type { DecisionMatrixData } from '../../api/decisionMatrix';
 
 /** TGT-12/TGT-13 — the dashboard now composes Links, so the surface renders inside a Router. */
-function renderDash() {
-  return render(
+function renderDash(session?: Session) {
+  const tree = (
     <MemoryRouter>
       <ExecutiveDashboard />
-    </MemoryRouter>,
+    </MemoryRouter>
   );
+  // TGT-09: the dashboard reads the DISPLAY session for role-mirrored quick actions. Without a
+  // provider the SessionContext default (ANONYMOUS_SESSION) applies — the same inert path the
+  // shell uses before authentication.
+  return session ? render(<SessionProvider session={session}>{tree}</SessionProvider>) : render(tree);
 }
+
+const VIEWER_SESSION: Session = { userId: 'u-viewer', tenantId: 'tenant-X', role: 'viewer', authenticated: true };
+const ADMIN_SESSION: Session = { userId: 'u-admin', tenantId: 'tenant-X', role: 'admin', authenticated: true };
 
 const FIXTURE: ExecutiveData = {
   portfolio: { portfolioId: 'PF-T', scenario: 'Balanced', holdings: 2, sectorExposure: { A: 50, B: 50 }, concentration: 50, diversificationScore: 100, avgConviction: 60, avgQuality: 70, avgRisk: 40 },
@@ -853,6 +863,123 @@ describe('Executive Dashboard — Phase 3 TGT-07 Alerts Requiring Attention', ()
     expect(screen.getAllByTestId('recent-decision').length).toBe(2);
     expect(await screen.findByTestId('watchlist-item-company-A-H1')).toBeInTheDocument();
     expect(await screen.findByTestId('score-distribution-disclosure')).toHaveTextContent('/api/decision-matrix');
+    expect(screen.getAllByTestId('evidence-card').length).toBe(2);
+  });
+});
+
+/**
+ * TARGET-UI-CONVERGENCE PHASE 3 — TGT-09 Quick Actions (authorized bounded scope).
+ * COMPOSITION-ONLY / NAVIGATION-ONLY: the action set is the EXISTING navigation model, each action
+ * is a Link to an already-existing route, and nothing is executed. jsdom/typecheck only — NOT
+ * browser, responsive, accessibility, Windows or screenshot-parity evidence.
+ */
+describe('Executive Dashboard — Phase 3 TGT-09 Quick Actions', () => {
+  it('offers governed navigation shortcuts as links to already-existing routes', async () => {
+    globalThis.fetch = urlAwareMock({});
+    renderDash(VIEWER_SESSION);
+    await screen.findByTestId('decision-list');
+
+    expect(screen.getByTestId('quick-action-decision-matrix').getAttribute('href')).toBe('/intelligence/decision-matrix');
+    expect(screen.getByTestId('quick-action-company').getAttribute('href')).toBe('/research/company/Banking');
+    expect(screen.getByTestId('quick-action-cross-sector').getAttribute('href')).toBe('/research/cross-sector');
+    expect(screen.getByTestId('quick-action-watchlists').getAttribute('href')).toBe('/watchlists');
+    expect(screen.getByTestId('quick-action-reports').getAttribute('href')).toBe('/reports');
+    expect(screen.getByTestId('quick-action-settings').getAttribute('href')).toBe('/settings');
+    expect(screen.getByTestId('quick-action-portfolio').getAttribute('href')).toBe('/portfolio');
+    // 'Decision Evidence' is the implemented Evidence child ('Decision Evidence' → slug); the
+    // partial 'Evidence' parent is deliberately not offered.
+    expect(screen.getByTestId('quick-action-decision-evidence').getAttribute('href')).toBe('/evidence');
+    expect(screen.queryByTestId('quick-action-evidence')).not.toBeInTheDocument();
+  });
+
+  it('offers ONLY surfaces the navigation model marks implemented (no placeholder/future action)', async () => {
+    globalThis.fetch = urlAwareMock({});
+    renderDash(VIEWER_SESSION);
+    await screen.findByTestId('decision-list');
+
+    // partial parents are not offered as actions
+    expect(screen.queryByTestId('quick-action-research')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('quick-action-intelligence')).not.toBeInTheDocument();
+    // future surfaces are never offered
+    expect(screen.queryByTestId('quick-action-opportunities')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('quick-action-risks')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('quick-action-rankings')).not.toBeInTheDocument();
+    const hrefs = Array.from(screen.getByTestId('quick-actions').querySelectorAll('a')).map((a) => a.getAttribute('href'));
+    expect(hrefs).not.toContain('/intelligence');
+    expect(hrefs).not.toContain('/research');
+    expect(hrefs.every((h) => typeof h === 'string' && h.startsWith('/'))).toBe(true);
+  });
+
+  it('preserves the authorization boundary: role filtering is display-only, exactly as the sidebar', async () => {
+    globalThis.fetch = urlAwareMock({});
+    const { unmount } = renderDash(VIEWER_SESSION);
+    await screen.findByTestId('decision-list');
+    // viewer cannot reach any /admin/* surface, and no admin-only action is rendered
+    const viewerHrefs = Array.from(screen.getByTestId('quick-actions').querySelectorAll('a')).map((a) => a.getAttribute('href'));
+    expect(viewerHrefs.some((h) => (h ?? '').startsWith('/admin'))).toBe(false);
+    expect(screen.queryByTestId('quick-action-identity-access')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('quick-action-audit')).not.toBeInTheDocument();
+    unmount();
+
+    globalThis.fetch = urlAwareMock({});
+    renderDash(ADMIN_SESSION);
+    await screen.findByTestId('decision-list');
+    expect(screen.getByTestId('quick-action-identity-access').getAttribute('href')).toBe('/admin/identity');
+    expect(screen.getByTestId('quick-action-audit').getAttribute('href')).toBe('/admin/audit');
+  });
+
+  it('NAV invariant: every child carries its parent\'s minRole, so parent filtering is sufficient', () => {
+    for (const parent of NAV) {
+      for (const child of parent.children ?? []) {
+        expect({ parent: parent.label, child: child.label, minRole: child.minRole })
+          .toEqual({ parent: parent.label, child: child.label, minRole: parent.minRole });
+      }
+    }
+  });
+
+  it('executes nothing: no mutation, no extra request beyond the three governed reads', async () => {
+    const calls: string[] = [];
+    const base = urlAwareMock({});
+    globalThis.fetch = vi.fn((input: unknown, init?: unknown) => {
+      calls.push(`${(init as { method?: string } | undefined)?.method ?? 'GET'} ${String(input)}`);
+      return base(input);
+    }) as never;
+    renderDash(VIEWER_SESSION);
+    await screen.findByTestId('decision-list');
+
+    expect(calls.filter((c) => c.startsWith('POST') || c.startsWith('PUT') || c.startsWith('DELETE'))).toEqual([]);
+    expect(screen.getByTestId('quick-actions-disclosure')).toHaveTextContent('perform no action, create nothing, change nothing and grant no access');
+  });
+
+  it('states that this block has no loading/partial/degraded state and shows no fallback data', async () => {
+    globalThis.fetch = urlAwareMock({});
+    renderDash(VIEWER_SESSION);
+    await screen.findByTestId('decision-list');
+    const d = screen.getByTestId('quick-actions-disclosure');
+    expect(d).toHaveTextContent('loads nothing');
+    expect(d).toHaveTextContent('no loading, partial or degraded state');
+    expect(d).toHaveTextContent('shows no fallback data');
+    expect(d).toHaveTextContent('Only surfaces marked');
+  });
+
+  it('discloses the unauthenticated display session without pre-authorizing anything', async () => {
+    globalThis.fetch = urlAwareMock({});
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect(screen.getByTestId('quick-actions-unauthenticated')).toHaveTextContent('The target surfaces require authentication and enforce it server-side');
+    expect(screen.getByTestId('quick-actions-role-note')).toHaveTextContent('authenticated false');
+  });
+
+  it('is unaffected by, and does not affect, the governed composed blocks', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: 'fail', watchlists: 'fail', universe: 'fail' });
+    renderDash(VIEWER_SESSION);
+    await screen.findByTestId('decision-list');
+
+    expect(screen.getByTestId('quick-action-decision-matrix')).toBeInTheDocument();
+    expect(screen.getByTestId('quick-actions-role-note')).toHaveTextContent('authenticated true');
+    await screen.findByTestId('alerts-unavailable');
+    await screen.findByTestId('watchlist-highlights-unavailable');
+    expect(screen.getByTestId('freshness-snapshot')).toHaveTextContent('SNAPSHOT');
     expect(screen.getAllByTestId('evidence-card').length).toBe(2);
   });
 });

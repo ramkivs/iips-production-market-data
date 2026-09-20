@@ -70,6 +70,25 @@
  *   • The item `deepLink` is rendered verbatim from the governed payload — never constructed here.
  *   • `/api/notifications` is NOT a D89 mode-aware route family, so no degraded data-mode shape is
  *     invented for it; failure renders an explicit unavailable state with no substitute or sample.
+ *
+ * TARGET-UI-CONVERGENCE PHASE 3 — TGT-09 Quick Actions (authorized bounded scope).
+ * COMPOSITION-ONLY, NAVIGATION-ONLY:
+ *   • The action set is derived from the platform's EXISTING navigation model (`app/navigation.ts`
+ *     `NAV` + the existing `visibleNav(role)` filter) and every action is an existing route `<Link>`.
+ *     NO new endpoint, NO new route, NO new capability, NO new permission, NO new action semantics
+ *     and NO new workflow state is introduced.
+ *   • A quick action here performs NOTHING: it navigates to a governed surface that remains fully
+ *     responsible for its own authorization and data. No mutation is issued from this surface.
+ *   • Only entries the navigation model marks `implemented` are offered, so a `partial`/`future`
+ *     entry is never presented as a real capability. Nothing is fabricated and no placeholder or
+ *     sample action is shown.
+ *   • Role filtering reuses the existing `visibleNav` result for DISPLAY ONLY — exactly as the
+ *     Sidebar already does. The frontend does not decide permissions; the server authorizes every
+ *     request. (All NAV children carry the same `minRole` as their parent, which is asserted by a
+ *     test so a future stricter child cannot silently over-expose an action.)
+ *   • There is no network load, no partial state and no fallback for this block, so no
+ *     loading/degraded/error state is applicable — and none is simulated. The absence is stated on
+ *     the surface rather than implied.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -81,6 +100,8 @@ import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { fetchDecisionMatrixData, type DecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
 import { fetchWatchlists, type WatchlistItemView, type WatchlistView, type WatchlistsProvenance } from '../../api/watchlists';
 import { fetchNotifications, type NotificationItem, type NotificationProvenance } from '../../api/notifications';
+import { visibleNav, type NavItem } from '../../app/navigation';
+import { useSession } from '../../core/session/SessionContext';
 import { ChartContainer, SimpleBarChart } from '../../components/viz/ChartFoundations';
 import { DecisionBadge } from '../../components/decision/DecisionComponents';
 import { MetricCard, MetricGroup, MetricTable, DataTable, TrendIndicator } from '../../components/data/DataComponents';
@@ -123,6 +144,14 @@ function isNotificationsEnvelope(d: unknown): d is { data: readonly Notification
   return typeof d === 'object' && d !== null && Array.isArray((d as { data?: unknown }).data);
 }
 
+/**
+ * TGT-09 — stable, readable test id for a navigation entry. Derived from the existing label only;
+ * it is a presentation handle and carries no routing or permission meaning.
+ */
+function actionSlug(label: string): string {
+  return label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
 /** Render a governed delta without pass/fail colour — a delta is not a verdict (UI07 convention). */
 function fmtDelta(value: number | null): string {
   if (value === null) return 'unavailable';
@@ -142,6 +171,7 @@ function governedSector(record: Readonly<Record<string, unknown>> | null): strin
 }
 
 export function ExecutiveDashboard() {
+  const { session } = useSession();
   const [data, setData] = useState<ExecutiveData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -329,6 +359,32 @@ export function ExecutiveDashboard() {
     return { companies: values.length, min: values[0], median, max: values[values.length - 1] };
   }, [universe]);
 
+  // TGT-09 — Quick Actions: the EXISTING navigation model, filtered by the existing `visibleNav`
+  // role rule and restricted to entries the model marks `implemented`. This is pure local
+  // composition: no network, no state, no capability of its own. Every action is a Link to an
+  // already-existing route, and the role filter is DISPLAY ONLY (the Sidebar's rule verbatim) —
+  // the server authorizes every request the target surface issues.
+  const quickActions = useMemo<readonly NavItem[]>(() => {
+    const actions: NavItem[] = [];
+    const seenPaths = new Set<string>();
+    for (const parent of visibleNav(session.role)) {
+      if (parent.status === 'implemented') actions.push(parent);
+      // Every NAV child carries the same `minRole` as its parent (asserted in tests), so the
+      // existing parent-level role filter is sufficient — no second permission rule is created.
+      for (const child of parent.children ?? []) {
+        if (child.status === 'implemented') actions.push(child);
+      }
+    }
+    // A navigation entry that resolves to the SAME existing route as one already listed is shown
+    // once (e.g. Portfolio and its Overview child both resolve to /portfolio). Presentational
+    // de-duplication only: no route is created, dropped or reordered beyond first-occurrence order.
+    return actions.filter((action) => {
+      if (seenPaths.has(action.path)) return false;
+      seenPaths.add(action.path);
+      return true;
+    });
+  }, [session.role]);
+
   // TGT-07 — the attention set. Membership is SOLELY the contract's own `read` flag (unread ⇒
   // requires attention). No severity/priority/age/ranking input; order is the server's own
   // createdAt-DESC order, preserved verbatim (no client re-sort).
@@ -386,6 +442,55 @@ export function ExecutiveDashboard() {
         <MetricCard label="Concentration" value={portfolio.concentration} />
         <MetricCard label="Diversification" value={portfolio.diversificationScore} direction="positive" />
       </MetricGroup>
+
+      {/* TGT-09 — QUICK ACTIONS. Navigation-only shortcuts derived from the EXISTING navigation
+          model (no new endpoint, route, capability or permission). Nothing here executes: each
+          action navigates to an existing governed surface that owns its own authorization and
+          data. Only `implemented` surfaces are offered, so no future/placeholder surface is
+          presented as a real capability. No async source ⇒ no loading/degraded state exists and
+          none is simulated; that is stated on the surface rather than implied. */}
+      <h2 style={{ fontSize: 18, marginTop: 24 }}>Quick Actions</h2>
+      <div data-testid="quick-actions" style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, background: 'var(--color-surface-1)' }}>
+        <p data-testid="quick-actions-disclosure" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: 0 }}>
+          Navigation shortcuts to existing governed surfaces, derived from the platform&apos;s own
+          navigation model. They perform no action, create nothing, change nothing and grant no
+          access. Only surfaces marked <em>implemented</em> are offered — no placeholder, future or
+          sample action is listed. An entry that resolves to the same existing route as one already
+          listed appears once. Role filtering mirrors the navigation for <strong>display only</strong>:
+          the frontend does not decide permissions, and every request the target surface issues is
+          authorized server-side. This block loads nothing, so it has no loading, partial or
+          degraded state and shows no fallback data.
+        </p>
+        {session.authenticated === false && (
+          <p data-testid="quick-actions-unauthenticated" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '6px 0 0' }}>
+            Displayed session is unauthenticated ({session.role}). The target surfaces require
+            authentication and enforce it server-side; nothing is pre-authorized here.
+          </p>
+        )}
+        {quickActions.length === 0 ? (
+          <p data-testid="quick-actions-empty" style={{ fontSize: 13, margin: '8px 0 0' }}>
+            No implemented governed surface is available to the current display role — no action is
+            offered rather than inventing one.
+          </p>
+        ) : (
+          <ul style={{ listStyle: 'none', display: 'flex', flexWrap: 'wrap', gap: 8, padding: 0, margin: '8px 0 0' }}>
+            {quickActions.map((action) => (
+              <li key={`${action.path}-${action.label}`}>
+                <Link
+                  data-testid={`quick-action-${actionSlug(action.label)}`}
+                  to={action.path}
+                  style={{ display: 'inline-block', border: '1px solid var(--color-border)', borderRadius: 4, padding: '4px 10px', fontSize: 13, textDecoration: 'none' }}
+                >
+                  {action.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p data-testid="quick-actions-role-note" style={{ color: 'var(--color-ink-muted)', fontSize: 11, margin: '8px 0 0' }}>
+          Display session: role {session.role} · authenticated {String(session.authenticated)} · actions offered {quickActions.length}
+        </p>
+      </div>
 
       {/* Top opportunity highlight (from certified opportunity output) — TGT-13: drills through
           to the existing governed company route using the payload's own sector identity. */}
