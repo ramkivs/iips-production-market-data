@@ -103,3 +103,100 @@ Runtime replay equivalence: NOT VERIFIED.
 Runtime byte identity: NOT VERIFIED.
 
 No production certification.
+
+## Additional Evidence-detail observations — final five
+
+### Industrials
+Route: /evidence/Industrials
+Evidence: ev_Industrials
+Snapshot: snap_Industrials
+Evidence chain: OBSERVED
+Replay disclosure: reproduced=true — NOT VERIFIED
+Replay disclosure: byteIdentical=true — NOT VERIFIED
+AD-17 / M-2: UNRESOLVED
+Full Replay Explorer route: not separately browser-qualified.
+
+### Technology
+Route: /evidence/Technology
+Evidence: ev_Technology
+Snapshot: snap_Technology
+Evidence chain: OBSERVED
+Replay disclosure: reproduced=true — NOT VERIFIED
+Replay disclosure: byteIdentical=true — NOT VERIFIED
+AD-17 / M-2: UNRESOLVED
+Full Replay Explorer route: not separately browser-qualified.
+
+### Telecommunications
+Route: /evidence/Telecommunications
+Evidence: ev_Telecommunications
+Snapshot: snap_Telecommunications
+Evidence chain: OBSERVED
+Replay disclosure: reproduced=true — NOT VERIFIED
+Replay disclosure: byteIdentical=true — NOT VERIFIED
+AD-17 / M-2: UNRESOLVED
+Full Replay Explorer route: not separately browser-qualified.
+
+### Automobile
+Route: /evidence/Automobile
+Evidence: ev_Automobile
+Snapshot: snap_Automobile
+Evidence chain: OBSERVED
+Replay disclosure: reproduced=true — NOT VERIFIED
+Replay disclosure: byteIdentical=true — NOT VERIFIED
+AD-17 / M-2: UNRESOLVED
+Full Replay Explorer route: not separately browser-qualified.
+
+### Materials & Metals
+Route: /evidence/Materials%20%26%20Metals
+Evidence: ev_Materials & Metals
+Snapshot: snap_Materials & Metals
+Evidence chain: OBSERVED
+Replay disclosure: reproduced=true — NOT VERIFIED
+Replay disclosure: byteIdentical=true — NOT VERIFIED
+AD-17 / M-2: UNRESOLVED
+Full Replay Explorer route: not separately browser-qualified.
+
+## Final Evidence-directory coverage
+
+All 13 Evidence-directory entries were browser-observed at their Evidence/detail surfaces:
+
+Banking
+Insurance
+Capital Markets
+Healthcare
+Hospitality
+Energy
+Utilities
+Consumer
+Industrials
+Technology
+Telecommunications
+Automobile
+Materials & Metals
+
+Full Replay Explorer browser observations were directly performed for:
+
+Banking
+Insurance
+Capital Markets
+Healthcare
+
+## Final acceptance boundary
+
+Evidence/detail UI rendering and governance disclosure:
+OBSERVED for all 13 Evidence-directory entries.
+
+Full Replay Explorer runtime equivalence:
+NOT VERIFIED.
+
+Runtime byte identity:
+NOT VERIFIED.
+
+AD-17 / M-2:
+OPEN / UNRESOLVED.
+
+P15 / E2E Certification:
+External Existing-IIPS authority remains the stated resolution gate.
+
+Production authorization:
+NOT ESTABLISHED OR IMPLIED.
