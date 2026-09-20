@@ -30,6 +30,11 @@ function renderDash(session?: Session) {
   return session ? render(<SessionProvider session={session}>{tree}</SessionProvider>) : render(tree);
 }
 
+/** TGT-11 — deep-freeze guard: proves the surface cannot mutate the certified payload it renders. */
+function deepFreeze(o: unknown): void {
+  if (o && typeof o === 'object') { Object.values(o as object).forEach(deepFreeze); Object.freeze(o); }
+}
+
 const VIEWER_SESSION: Session = { userId: 'u-viewer', tenantId: 'tenant-X', role: 'viewer', authenticated: true };
 const ADMIN_SESSION: Session = { userId: 'u-admin', tenantId: 'tenant-X', role: 'admin', authenticated: true };
 
@@ -240,10 +245,15 @@ function urlAwareMock(opts: {
   watchlists?: unknown | 'fail';
   /** TGT-07: omitted → 404 (preserves every earlier test unchanged). */
   notifications?: unknown | 'fail';
+  /** TGT-11: override the certified executive payload (default = FIXTURE). */
+  executive?: unknown | 'fail';
 } = {}) {
   return vi.fn((input: unknown) => {
     const url = String(input);
-    if (url.includes('/api/executive')) return Promise.resolve({ ok: true, json: async () => FIXTURE }) as never;
+    if (url.includes('/api/executive')) {
+      if (opts.executive === 'fail') return Promise.reject(new Error('executive down')) as never;
+      return Promise.resolve({ ok: true, json: async () => (opts.executive ?? FIXTURE) }) as never;
+    }
     if (url.includes('/api/evidence/')) {
       if (opts.evidenceFails) return Promise.reject(new Error('evidence down')) as never;
       const sector = url.includes('/api/evidence/B') ? 'B' : 'A';
@@ -981,5 +991,112 @@ describe('Executive Dashboard — Phase 3 TGT-09 Quick Actions', () => {
     await screen.findByTestId('watchlist-highlights-unavailable');
     expect(screen.getByTestId('freshness-snapshot')).toHaveTextContent('SNAPSHOT');
     expect(screen.getAllByTestId('evidence-card').length).toBe(2);
+  });
+});
+
+/**
+ * TARGET-UI-CONVERGENCE PHASE 3 — TGT-11 Domain Previews (authorized bounded scope).
+ * COMPOSITION-ONLY over the certified payload's OWN sectorExposure / band / concentrationSectors.
+ * No new fetch, no new aggregate, no ranking, no re-sort. jsdom/typecheck only — NOT browser,
+ * responsive, accessibility, Windows or screenshot-parity evidence.
+ */
+describe('Executive Dashboard — Phase 3 TGT-11 Domain Previews', () => {
+  it('renders one preview per governed sectorExposure entry, values verbatim', async () => {
+    globalThis.fetch = urlAwareMock({});
+    renderDash();
+    await screen.findByTestId('decision-list');
+    await screen.findByTestId('domain-previews');
+
+    expect(screen.getByTestId('domain-preview-exposure-A')).toHaveTextContent('certified sectorExposure: 50');
+    expect(screen.getByTestId('domain-preview-exposure-B')).toHaveTextContent('certified sectorExposure: 50');
+    expect(screen.getByTestId('domain-previews-band')).toHaveTextContent('Governed diversification band: High');
+  });
+
+  it('preserves the payload\'s own order and never re-sorts or ranks the domains', async () => {
+    const ordered: ExecutiveData = {
+      ...FIXTURE,
+      portfolio: { ...FIXTURE.portfolio, sectorExposure: { Zeta: 70, Alpha: 30, Mid: 10 } },
+    };
+    globalThis.fetch = urlAwareMock({ executive: ordered });
+    renderDash();
+    await screen.findByTestId('decision-list');
+
+    const cards = Array.from(screen.getByTestId('domain-previews').querySelectorAll('[data-testid^="domain-preview-"]'))
+      .map((el) => el.getAttribute('data-testid'))
+      .filter((t) => t !== null && !t.startsWith('domain-preview-exposure') && !t.startsWith('domain-preview-concentration') && !t.startsWith('domain-preview-link'));
+    expect(cards).toEqual(['domain-preview-Zeta', 'domain-preview-Alpha', 'domain-preview-Mid']);
+  });
+
+  it('shows the concentration marker ONLY where the payload\'s own list names the domain', async () => {
+    // the default fixture's concentrationSectors list is EMPTY → no marker at all
+    globalThis.fetch = urlAwareMock({});
+    const first = renderDash();
+    await screen.findByTestId('decision-list');
+    await screen.findByTestId('domain-previews');
+    expect(screen.queryByTestId('domain-preview-concentration-A')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('domain-preview-concentration-B')).not.toBeInTheDocument();
+    first.unmount();
+
+    // and when the payload DOES name a domain, the marker follows the payload exactly
+    const concentrated: ExecutiveData = { ...FIXTURE, correlation: { flags: FIXTURE.correlation.flags, concentrationSectors: ['A'] } };
+    globalThis.fetch = urlAwareMock({ executive: concentrated });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect(screen.getByTestId('domain-preview-concentration-A')).toHaveTextContent('Listed in the certified concentration sectors');
+    expect(screen.queryByTestId('domain-preview-concentration-B')).not.toBeInTheDocument();
+  });
+
+  it('drills through to the EXISTING governed domain route using the payload\'s own sector', async () => {
+    globalThis.fetch = urlAwareMock({});
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect(screen.getByTestId('domain-preview-link-A').getAttribute('href')).toBe('/research/sector/A');
+    expect(screen.getByTestId('domain-preview-link-B').getAttribute('href')).toBe('/research/sector/B');
+  });
+
+  it('fabricates nothing when the payload carries no exposure entry', async () => {
+    const noExposure: ExecutiveData = { ...FIXTURE, portfolio: { ...FIXTURE.portfolio, sectorExposure: {} } };
+    globalThis.fetch = urlAwareMock({ executive: noExposure });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect(screen.getByTestId('domain-previews-empty'))
+      .toHaveTextContent('no domain preview is shown');
+    expect(screen.queryByTestId('domain-previews')).not.toBeInTheDocument();
+  });
+
+  it('D86-class: a malformed exposure payload neither crashes nor coerces values', async () => {
+    const malformed = {
+      ...FIXTURE,
+      portfolio: { ...FIXTURE.portfolio, sectorExposure: { A: 'n/a', B: 50 } },
+    } as unknown as ExecutiveData;
+    globalThis.fetch = urlAwareMock({ executive: malformed });
+    renderDash();
+    await screen.findByTestId('decision-list');
+
+    // the entry is never dropped and never coerced — it renders as unavailable
+    expect(screen.getByTestId('domain-preview-exposure-A')).toHaveTextContent('certified sectorExposure: unavailable');
+    expect(screen.getByTestId('domain-preview-exposure-B')).toHaveTextContent('certified sectorExposure: 50');
+    // a missing/odd concentrationSectors yields no marker rather than a fabricated one
+    expect(screen.queryByTestId('domain-preview-concentration-B')).not.toBeInTheDocument();
+    expect(screen.getByTestId('freshness-snapshot')).toHaveTextContent('SNAPSHOT');
+  });
+
+  it('shows no domain preview at all when the certified payload is unavailable', async () => {
+    globalThis.fetch = urlAwareMock({ executive: 'fail' });
+    renderDash();
+    await screen.findByTestId('state-error');
+    expect(screen.queryByTestId('domain-previews')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('domain-previews-empty')).not.toBeInTheDocument();
+  });
+
+  it('does not mutate the certified payload it renders', async () => {
+    const frozen = JSON.parse(JSON.stringify(FIXTURE)) as ExecutiveData;
+    deepFreeze(frozen);
+    globalThis.fetch = urlAwareMock({ executive: frozen });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    await screen.findByTestId('domain-previews');
+    expect(frozen.portfolio.sectorExposure).toEqual({ A: 50, B: 50 });
+    expect(Object.keys(frozen.portfolio.sectorExposure)).toEqual(['A', 'B']);
   });
 });

@@ -89,6 +89,23 @@
  *   • There is no network load, no partial state and no fallback for this block, so no
  *     loading/degraded/error state is applicable — and none is simulated. The absence is stated on
  *     the surface rather than implied.
+ *
+ * TARGET-UI-CONVERGENCE PHASE 3 — TGT-11 Domain Previews (authorized bounded scope).
+ * COMPOSITION-ONLY over values the certified `/api/executive` payload ALREADY carries:
+ *   • Sources are the payload's own `portfolio.sectorExposure` (a certified CSIP aggregate) and its
+ *     own `diversification.band` / `concentrationSectors`. NO new endpoint, NO new fetch, NO new
+ *     domain aggregate, sector score, ranking or preview metric is introduced, and no domain is
+ *     added, merged or omitted.
+ *   • No client-side derivation: the payload's entry order is preserved verbatim (not a ranking and
+ *     not sorted), values are rendered exactly as received, and a non-numeric value renders as
+ *     `unavailable` rather than being coerced or hidden.
+ *   • A `concentration` marker appears only where the payload's own `concentrationSectors` names
+ *     that domain — the marker mirrors the governed list (already surfaced in the risks block) and
+ *     is not a computed threshold or band.
+ *   • Drill-through uses the payload's own sector value on the ALREADY-EXISTING
+ *     `/research/sector/:id` route; no identity is invented.
+ *   • When the payload carries no exposure entry, an explicit empty state is shown and nothing is
+ *     fabricated; SNAPSHOT/provenance semantics are untouched.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -358,6 +375,25 @@ export function ExecutiveDashboard() {
     const median = values.length % 2 === 0 ? (values[mid - 1] + values[mid]) / 2 : values[mid];
     return { companies: values.length, min: values[0], median, max: values[values.length - 1] };
   }, [universe]);
+
+  // TGT-11 — Domain previews. Read STRAIGHT from the certified payload: one entry per governed
+  // `portfolio.sectorExposure` key in the payload's own order, plus the payload's own
+  // `concentrationSectors` membership. No grouping, no summing, no ranking, no re-sort and no
+  // derived metric is performed — a value whose type is unexpected renders as `unavailable`
+  // rather than being coerced, and the entry itself is never dropped.
+  const domainPreviews = useMemo<readonly DomainPreview[]>(() => {
+    const exposure = (data?.portfolio as { sectorExposure?: unknown } | undefined)?.sectorExposure;
+    if (typeof exposure !== 'object' || exposure === null || Array.isArray(exposure)) return [];
+    const concentrated = (data?.correlation as { concentrationSectors?: unknown } | undefined)?.concentrationSectors;
+    const concentratedSet = Array.isArray(concentrated)
+      ? new Set(concentrated.filter((s): s is string => typeof s === 'string'))
+      : new Set<string>();
+    return Object.entries(exposure as Record<string, unknown>).map(([sector, value]) => ({
+      sector,
+      exposure: typeof value === 'number' ? value : null,
+      concentrated: concentratedSet.has(sector),
+    }));
+  }, [data]);
 
   // TGT-09 — Quick Actions: the EXISTING navigation model, filtered by the existing `visibleNav`
   // role rule and restricted to entries the model marks `implemented`. This is pure local
@@ -870,6 +906,55 @@ export function ExecutiveDashboard() {
         ))}
       </div>
 
+      {/* TGT-11 — DOMAIN PREVIEWS. Composed ONLY from the governed values the certified
+          /api/executive payload ALREADY carries: `portfolio.sectorExposure` (a certified CSIP
+          aggregate) and `diversification.band`. Nothing is computed, ranked, rescaled or
+          re-sorted here — the payload's own entry order is preserved verbatim — and each domain
+          drills through to the existing /research/sector/:id route. Where the payload carries no
+          exposure entry, an explicit empty state is shown rather than a fabricated preview. */}
+      <h2 style={{ fontSize: 18, marginTop: 24 }}>Domain Previews</h2>
+      <p data-testid="domain-previews-disclosure" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '0 0 8px' }}>
+        Each preview shows the certified payload&apos;s own <code>sectorExposure</code> value for that
+        domain, in the payload&apos;s own order — nothing is ranked, re-sorted, rescaled or recomputed
+        here, and no domain is omitted or invented. A <em>concentration</em> marker is shown only
+        where the payload&apos;s own <code>concentrationSectors</code> list names that domain. Selecting
+        a preview opens the existing governed domain route.
+      </p>
+      <p data-testid="domain-previews-band" style={{ fontSize: 12, margin: '0 0 8px' }}>
+        Governed diversification band: <strong>{typeof diversification.band === 'string' && diversification.band.length > 0 ? diversification.band : 'unavailable'}</strong>
+      </p>
+      {domainPreviews.length === 0 ? (
+        <p data-testid="domain-previews-empty" style={{ fontSize: 13 }}>
+          The certified payload carries no sectorExposure entry, so no domain preview is shown —
+          none is fabricated to fill this section.
+        </p>
+      ) : (
+        <div data-testid="domain-previews" style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))' }}>
+          {domainPreviews.map((preview) => (
+            <div
+              key={preview.sector}
+              data-testid={`domain-preview-${preview.sector}`}
+              style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 12, background: 'var(--color-surface-1)' }}
+            >
+              <strong style={{ display: 'block' }}>{preview.sector}</strong>
+              <span data-testid={`domain-preview-exposure-${preview.sector}`} style={{ fontSize: 13 }}>
+                certified sectorExposure: {preview.exposure === null ? 'unavailable' : preview.exposure}
+              </span>
+              {preview.concentrated && (
+                <span data-testid={`domain-preview-concentration-${preview.sector}`} style={{ display: 'block', fontSize: 12, opacity: 0.85 }}>
+                  Listed in the certified concentration sectors
+                </span>
+              )}
+              <div style={{ marginTop: 6, fontSize: 13 }}>
+                <Link data-testid={`domain-preview-link-${preview.sector}`} to={`/research/sector/${preview.sector}`}>
+                  Open domain →
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Freshness / provenance — SNAPSHOT is a certified frozen snapshot, not "stale".
           A stale warning is shown only when the platform reports the data as STALE. */}
       {provenance.freshness === 'STALE' && <StaleDataState asOf={provenance.calibratedAt} />}
@@ -899,6 +984,15 @@ interface ScoreStats {
   readonly min: number;
   readonly median: number;
   readonly max: number;
+}
+
+/** TGT-11 — one governed domain preview, read verbatim from the certified payload. */
+interface DomainPreview {
+  readonly sector: string;
+  /** The payload's own `sectorExposure` value, or null when the payload's value is not numeric. */
+  readonly exposure: number | null;
+  /** True only when the payload's own `concentrationSectors` list names this domain. */
+  readonly concentrated: boolean;
 }
 
 /** TGT-08 — one governed item surfaced by the contract's own `changed` flag. */
