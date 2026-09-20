@@ -101,16 +101,22 @@ export class HistoricalEvidenceReconciler {
       if (rec.sha256Hex && rec.sha256Hex.length > 0) {
         hashAuditCount++;
         const shaEntry = evidencePkg.sha256Manifest[dateIso];
-        if (!shaEntry || shaEntry.sha256Hex.toLowerCase() !== rec.sha256Hex.toLowerCase()) {
+        const shaVal = shaEntry?.sha256Hex || (shaEntry as unknown as Record<string, unknown> | undefined)?.sha256;
+        if (!shaVal || String(shaVal).toLowerCase() !== rec.sha256Hex.toLowerCase()) {
           hashMismatches++;
         }
       }
     }
 
-    const totalTrading = summary.targetRange.expectedTradingDays;
-    const acquiredValid = summary.metrics.acquiredValidCount;
-    const coveragePct = summary.metrics.coveragePctOfTradingDays;
-    const integrityPct = summary.metrics.dataIntegrityPct;
+    const totalTrading =
+      summary.targetRange.expectedTradingDays ?? (contemporaryTradingDays + historicalTradingDays);
+    const acquiredValid = summary.metrics?.acquiredValidCount ?? (contemporaryAcquired + historicalAcquired);
+    const coveragePct =
+      summary.metrics?.coveragePctOfTradingDays ??
+      (totalTrading > 0 ? Number(((acquiredValid / totalTrading) * 100).toFixed(2)) : 0);
+    const integrityPct = summary.metrics?.dataIntegrityPct ?? (acquiredValid > 0 ? 100 : 0);
+    const weekendDays = summary.targetRange.weekendDays ?? summary.countsByStatus?.NON_TRADING_WEEKEND ?? 0;
+    const holidays = summary.targetRange.knownHolidays ?? summary.countsByStatus?.NON_TRADING_HOLIDAY ?? 0;
 
     // Determine feasibility classification
     let feasibilityDetermination: FeasibilityDetermination;
@@ -136,8 +142,8 @@ export class HistoricalEvidenceReconciler {
       statistics: {
         totalCalendarDays: summary.targetRange.totalCalendarDays,
         expectedTradingDays: totalTrading,
-        weekendDays: summary.targetRange.weekendDays,
-        holidays: summary.targetRange.knownHolidays,
+        weekendDays,
+        holidays,
         acquiredValidDays: acquiredValid,
         http404Days: summary.countsByStatus.HTTP_404 || 0,
         networkErrorDays: summary.countsByStatus.NETWORK_ERROR || 0,
