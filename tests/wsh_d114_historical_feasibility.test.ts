@@ -13,6 +13,7 @@ import {
   LegacyBhavcopyParser,
   UnifiedHistoricalAdapter,
   HistoricalFeasibilityRunner,
+  HistoricalEvidenceReconciler,
   DetailedDateAssessment,
 } from '../src/index.js';
 
@@ -219,7 +220,7 @@ INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15
     assert.ok(pkg.manifest);
     assert.ok(pkg.coverageSummary);
     assert.strictEqual(pkg.coverageSummary.metrics.acquiredValidCount, 1);
-    assert.strictEqual(pkg.failureRegister.length, 1); // 2026-09-16 404
+    assert.strictEqual(pkg.failureRegister.length, 1);
     assert.strictEqual(pkg.failureRegister[0].date, '2026-09-16');
     assert.strictEqual(pkg.failureRegister[0].status, 'HTTP_404');
     assert.ok(pkg.archiveIntegrityReport.length >= 1);
@@ -278,5 +279,32 @@ INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15
     const legacyParsed = UnifiedHistoricalAdapter.parseAndNormalize(sampleValidLegacyCsv);
     assert.strictEqual(legacyParsed.format, 'LEGACY_BHAVCOPY');
     assert.strictEqual(legacyParsed.isValid, true);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 17. Evidence Reconciliation Engine Evaluation
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-17: reconciles complete evidence package and produces cryptographic report', () => {
+    const zipBuf = createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20260915_F_0000.csv', sampleValidUdiffCsv);
+    const validRec = HistoricalFeasibilityRunner.evaluateArchive('2026-09-15', { zipBuffer: zipBuf });
+    const notFoundRec = HistoricalFeasibilityRunner.evaluateArchive('2023-09-15', { httpStatusCode: 404 });
+
+    const manifest = HistoricalFeasibilityRunner.buildFeasibilityManifest(
+      { startDate: '2023-09-14', endDate: '2026-09-20' },
+      { '2026-09-15': validRec, '2023-09-15': notFoundRec }
+    );
+
+    const pkg = HistoricalFeasibilityRunner.generateEvidencePackage(manifest);
+    const report = HistoricalEvidenceReconciler.reconcileEvidencePackage(pkg);
+
+    assert.ok(report.reconciliationId);
+    assert.strictEqual(report.sourceManifestId, manifest.manifestId);
+    assert.strictEqual(report.hashAudit.isCryptographicallyConsistent, true);
+    assert.strictEqual(report.hashAudit.totalHashesChecked, 1);
+    assert.strictEqual(report.hashAudit.mismatchesDetected, 0);
+    assert.strictEqual(report.governanceDisposition.oiHist01Status, 'OPEN / EXTERNAL / HISTORICAL ACQUISITION BLOCKED');
+    assert.strictEqual(report.governanceDisposition.productionEligibility, 'NOT AUTHORIZED');
+    assert.strictEqual(report.governanceDisposition.programDisposition, 'NON_PRODUCTION_HOLD');
+    assert.strictEqual(report.reconciliationLineageDigest.length, 64);
   });
 });
