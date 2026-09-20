@@ -1,0 +1,88 @@
+{
+  "reconciliationId": "d114-recon-dual-era-1789912745284",
+  "evaluatedAt": "2026-09-20T13:59:05.284Z",
+  "governingDecisionId": "d114-stage4-auth-2026-09-20-001",
+  "governingGate": "GATE-D114-STAGE4-LEGACY-ACQUISITION",
+  "gateStatus": "CLOSED",
+  "operatingMode": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+  "feasibilityDetermination": "FEASIBLE_DUAL_ERA_ACQUIRED",
+  "fullDateRange": {
+    "startDate": "2016-09-20",
+    "endDate": "2026-09-20",
+    "totalCalendarDays": 3653
+  },
+  "legacyEra": {
+    "dateRange": "2016-09-20 through 2024-07-07",
+    "totalCalendarDays": 2848,
+    "expectedTradingDays": 2013,
+    "acquiredLegacyDays": 1919,
+    "http404Days": 94,
+    "weekendDays": 814,
+    "holidays": 21,
+    "coveragePct": 95.33,
+    "archiveFormat": "LEGACY_BHAVCOPY",
+    "parserModule": "LegacyBhavcopyParser / UnifiedHistoricalAdapter"
+  },
+  "contemporaryEra": {
+    "dateRange": "2024-07-08 through 2026-09-20",
+    "totalCalendarDays": 805,
+    "expectedTradingDays": 568,
+    "acquiredContemporaryDays": 543,
+    "http404Days": 25,
+    "weekendDays": 230,
+    "holidays": 7,
+    "coveragePct": 95.6,
+    "archiveFormat": "CM_UDIFF",
+    "parserModule": "CmUdiffParser / UnifiedHistoricalAdapter"
+  },
+  "combinedStatistics": {
+    "totalCalendarDays": 3653,
+    "expectedTradingDays": 2715,
+    "acquiredLegacyDays": 1919,
+    "acquiredContemporaryDays": 668,
+    "acquiredValidDays": 2587,
+    "unavailable404Days": 128,
+    "weekendDays": 1098,
+    "holidays": 29,
+    "networkErrors": 0,
+    "corruptArchives": 0,
+    "schemaMismatches": 0,
+    "hashMismatches": 0,
+    "coveragePct": 95.29,
+    "integrityPct": 100
+  },
+  "hashAudit": {
+    "totalHashesChecked": 2587,
+    "mismatchesDetected": 0,
+    "isCryptographicallyConsistent": true
+  },
+  "evidencePackageLineage": {
+    "contemporaryIntakeLineageDigest": "48dbef8df6f755294a49c4c0c4602bdda9336e5599e7a4ae1a586c0504984d56",
+    "contemporaryReconciliationLineageDigest": "221ab1036a6a1cf6a5c4cd71e3315cb936e523fc78fd33dbd8d77859253ae410",
+    "legacyIntakeLineageDigest": "9b2f2c4723e4c03deed8554e0eed3ea41c210965c2f1afd6106bb6e17df9d39d",
+    "legacyReconciliationLineageDigest": "c9da2047aedcc64a0e21eff6e3bb3d5beefdac7a56367b7552c849cb5f37906d",
+    "stage4AuthorityDecisionDigest": "2340667ece5edbeedbfa3199a4b79806433e8074f27b7037a35132df942677ce"
+  },
+  "canonicalAdapterDisposition": "DUAL_ERA_UNIFIED_ADAPTER_ACTIVE (UnifiedHistoricalAdapter dispatching to LegacyBhavcopyParser and CmUdiffParser with canonical D01/D02 normalization)",
+  "governanceDisposition": {
+    "oiHist01Status": "OPEN / EXTERNAL / HISTORICAL ACQUISITION BLOCKED",
+    "masterGateG004": "OPEN / PRESERVED",
+    "productionHistoricalEligibility": "NOT AUTHORIZED",
+    "operatingMode": "OFFLINE_BOOTSTRAP / NON_PRODUCTION",
+    "programDisposition": "NON_PRODUCTION_HOLD",
+    "gateD114Stage4LegacyAcquisition": "CLOSED"
+  },
+  "gateClosureDetails": {
+    "stage4Gate": "GATE-D114-STAGE4-LEGACY-ACQUISITION",
+    "status": "CLOSED",
+    "closureRationale": "Controlled legacy historical acquisition executed on operator Windows host; 1,919 legacy archives acquired with 100% data integrity; 6-file evidence package validated and accepted; dual-era reconciliation consolidated across full 10-year horizon (2016-09-20 to 2026-09-20).",
+    "governanceInvariantsPreserved": "OI-HIST-01 and G-004 remain strictly OPEN. Production eligibility remains NOT AUTHORIZED."
+  },
+  "residualBlockers": [
+    "OI-HIST-01: Commercial data licensing and exchange entitlement onboarding remain open and required prior to production backfill.",
+    "Master Gate G-004: Live production deployment prohibited.",
+    "Production Eligibility: All historical data restricted to offline local fixtures and bootstrap simulation."
+  ],
+  "nextGovernedAction": "Stage-5 Historical Ingestion into PointInTimeStore under OFFLINE_BOOTSTRAP mode using UnifiedHistoricalAdapter.",
+  "reconciliationLineageDigest": "378a7c6daec678a54316a0e192f7fcb0999d1bf6ad07a3a5d6643686687b1552"
+}

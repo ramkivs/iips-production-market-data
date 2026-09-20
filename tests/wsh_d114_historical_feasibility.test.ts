@@ -538,4 +538,57 @@ INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15
     assert.ok(script.includes('sha256-manifest.json'));
     assert.ok(script.includes('schema-validation-report.json'));
   });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 25. Dual-Era Full-Horizon Reconciliation & Stage-4 Gate Closure
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-25: reconciles dual-era evidence packages into unified 10-year report and validates Stage-4 gate closure', () => {
+    const contHandoff = HistoricalEvidenceHandoff.validateAndLoadEvidencePackage('evidence/d114');
+    const legHandoff = HistoricalEvidenceHandoff.validateAndLoadEvidencePackage('evidence/d114-legacy');
+
+    assert.strictEqual(contHandoff.status, 'ACCEPTED');
+    assert.strictEqual(legHandoff.status, 'ACCEPTED');
+    assert.ok(contHandoff.evidencePackage);
+    assert.ok(legHandoff.evidencePackage);
+
+    const dualReport = HistoricalEvidenceReconciler.reconcileDualEraEvidencePackages(
+      legHandoff.evidencePackage,
+      contHandoff.evidencePackage,
+      {
+        contemporaryIntakeLineageDigest: contHandoff.intakeLineageDigest,
+        contemporaryReconciliationLineageDigest: '221ab1036a6a1cf6a5c4cd71e3315cb936e523fc78fd33dbd8d77859253ae410',
+        legacyIntakeLineageDigest: legHandoff.intakeLineageDigest,
+        legacyReconciliationLineageDigest: 'c9da2047aedcc64a0e21eff6e3bb3d5beefdac7a56367b7552c849cb5f37906d',
+        stage4AuthorityDecisionDigest: '2340667ece5edbeedbfa3199a4b79806433e8074f27b7037a35132df942677ce',
+      }
+    );
+
+    // Date range
+    assert.strictEqual(dualReport.fullDateRange.startDate, '2016-09-20');
+    assert.strictEqual(dualReport.fullDateRange.endDate, '2026-09-20');
+    assert.strictEqual(dualReport.fullDateRange.totalCalendarDays, 3653);
+
+    // Combined statistics
+    assert.strictEqual(dualReport.combinedStatistics.acquiredLegacyDays, 1919);
+    assert.strictEqual(dualReport.combinedStatistics.acquiredContemporaryDays, 668);
+    assert.strictEqual(dualReport.combinedStatistics.acquiredValidDays, 2587);
+    assert.strictEqual(dualReport.combinedStatistics.expectedTradingDays, 2715);
+    assert.strictEqual(dualReport.combinedStatistics.coveragePct, 95.29);
+    assert.strictEqual(dualReport.combinedStatistics.integrityPct, 100);
+
+    // Gate closure
+    assert.strictEqual(dualReport.gateStatus, 'CLOSED');
+    assert.strictEqual(dualReport.governanceDisposition.gateD114Stage4LegacyAcquisition, 'CLOSED');
+
+    // Invariants
+    assert.strictEqual(dualReport.governanceDisposition.oiHist01Status, 'OPEN / EXTERNAL / HISTORICAL ACQUISITION BLOCKED');
+    assert.strictEqual(dualReport.governanceDisposition.masterGateG004, 'OPEN / PRESERVED');
+    assert.strictEqual(dualReport.governanceDisposition.productionHistoricalEligibility, 'NOT AUTHORIZED');
+
+    // Hash audit
+    assert.strictEqual(dualReport.hashAudit.isCryptographicallyConsistent, true);
+    assert.strictEqual(dualReport.hashAudit.mismatchesDetected, 0);
+    assert.strictEqual(dualReport.hashAudit.totalHashesChecked, 2587);
+    assert.strictEqual(dualReport.reconciliationLineageDigest.length, 64);
+  });
 });
