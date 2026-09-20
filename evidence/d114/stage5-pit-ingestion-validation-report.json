@@ -1,0 +1,62 @@
+{
+  "manifestHeader": {
+    "package": "WS-H / D114 Stage-5",
+    "stage": "STAGE_5_PIT_INGESTION",
+    "status": "PASSED",
+    "operatingMode": "OFFLINE_BOOTSTRAP",
+    "executionTimestamp": "2026-09-20T12:00:00.000Z"
+  },
+  "reconciliationReference": {
+    "consolidatedReconciliationId": "d114-recon-dual-era-1789912745284",
+    "expectedTradingDays": 2715,
+    "acquiredValidArchives": 2587,
+    "combinedCoveragePct": 95.29,
+    "dualEraReconciliationDigest": "378a7c6daec678a54316a0e192f7fcb0999d1bf6ad07a3a5d6643686687b1552"
+  },
+  "metrics": {
+    "legacyRecordsConsidered": 3,
+    "contemporaryRecordsConsidered": 3,
+    "totalRecordsConsidered": 6,
+    "canonicalD01Loaded": 6,
+    "canonicalD02Loaded": 6,
+    "totalCanonicalLoaded": 12,
+    "acceptedRecords": 12,
+    "rejectedRecords": 0,
+    "quarantinedRecords": 0,
+    "duplicateRecords": 0,
+    "idempotentlySkipped": 0,
+    "malformedRecords": 0,
+    "schemaFailures": 0
+  },
+  "coverage": {
+    "firstHistoricalDate": "2022-06-15",
+    "lastHistoricalDate": "2024-08-01",
+    "uniqueSymbolsCount": 3,
+    "uniqueIsinsCount": 0
+  },
+  "storePopulation": {
+    "quoteStoreRecordCount": 6,
+    "candleStoreRecordCount": 6,
+    "totalStoreRecordCount": 12
+  },
+  "replayVerification": {
+    "replayDeterministic": true,
+    "zeroFutureDataLeakage": true,
+    "idempotencyVerified": true,
+    "sampleQueryAsOf": "2022-06-15T16:00:00.000Z",
+    "sampleCompanyId": "TCS",
+    "sampleMatchedQuoteLtp": 4260
+  },
+  "governanceInvariants": {
+    "externalProviderCalls": 0,
+    "liveSocketsBound": 0,
+    "commercialVendorDependency": "NONE",
+    "oiHist01Status": "OPEN / EXTERNAL / HISTORICAL ACQUISITION BLOCKED",
+    "masterGateG004": "OPEN / PRESERVED",
+    "stage4LegacyGate": "CLOSED",
+    "productionHistoricalEligibility": "NOT AUTHORIZED",
+    "programOperatingDisposition": "NON_PRODUCTION_HOLD",
+    "stage5Disposition": "VALIDATED_LOCAL_OFFLINE_FIXTURES_ONLY"
+  },
+  "ingestionDigest": "e4c28a411d78ea5d156492376e9eac700e3f3a59eb364a222c35fc198a21f194"
+}

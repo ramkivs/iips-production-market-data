@@ -18,6 +18,7 @@ import {
   HistoricalFeasibilityRunner,
   HistoricalEvidenceReconciler,
   HistoricalEvidenceHandoff,
+  HistoricalPitIngestionLoader,
   DetailedDateAssessment,
 } from '../src/index.js';
 
@@ -590,5 +591,203 @@ INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15
     assert.strictEqual(dualReport.hashAudit.mismatchesDetected, 0);
     assert.strictEqual(dualReport.hashAudit.totalHashesChecked, 2587);
     assert.strictEqual(dualReport.reconciliationLineageDigest.length, 64);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 26. Stage-5 PIT Ingestion: Dual-Era Canonical D01 Quotes & D02 OHLCV
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-26: ingests dual-era archives into canonical PointInTimeStore for D01 and D02', () => {
+    const legacyCsv =
+      'SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN\n' +
+      'TCS,EQ,3200.00,3250.00,3180.00,3240.00,3238.00,3190.00,1000000,3240000000,15-JUN-2022,25000,INE467B01029\n' +
+      'INFY,EQ,1450.00,1475.00,1440.00,1465.00,1463.00,1445.00,2000000,2930000000,15-JUN-2022,40000,INE009A01021';
+    const legacyZip = createSyntheticUdiffZip('cm15JUN2022bhav.csv', legacyCsv);
+
+    const udiffCsv =
+      'TradDt,BizDt,Sgmt,Src,FinInstrmTp,FinInstrmId,ISIN,TckrSymb,SctySrs,OpnPric,HghPric,LwPric,ClsPric,LastPric,PrvsClsgPric,UndrlygPric,SttlmPric,OpnIntrst,ChngInOpnIntrst,TtlTradgVol,TtlTrfVal,TtlNbOfTxsExctd,SsnId,NewBrdLotQty,Rmks,Rsvd01,Rsvd02,Rsvd03,Rsvd04\n' +
+      '2024-08-01,2024-08-01,EQ,NSE,EQUITY,11536,INE467B01029,TCS,EQ,4200.00,4280.00,4190.00,4260.00,4255.00,4180.00,0.0,4260.00,0,0,1500000,6390000000,50000,1,1,-,-,-,-,-\n' +
+      '2024-08-01,2024-08-01,EQ,NSE,EQUITY,1594,INE009A01021,INFY,EQ,1800.00,1830.00,1790.00,1820.00,1815.00,1795.00,0.0,1820.00,0,0,3000000,5460000000,75000,1,1,-,-,-,-,-';
+    const udiffZip = createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20240801_F_0000.csv', udiffCsv);
+
+    const loader = new HistoricalPitIngestionLoader();
+    const result = loader.ingestBatch([
+      { date: '2022-06-15', buffer: legacyZip, filename: 'cm15JUN2022bhav.csv.zip' },
+      { date: '2024-08-01', buffer: udiffZip, filename: 'BhavCopy_NSE_CM_0_0_0_20240801_F_0000.csv.zip' },
+    ]);
+
+    assert.strictEqual(result.totalArchivesProcessed, 2);
+    assert.strictEqual(result.successfulIngestions, 2);
+    assert.strictEqual(result.quarantinedArchives, 0);
+    assert.strictEqual(result.d01QuotesIngested, 4);
+    assert.strictEqual(result.d02CandlesIngested, 4);
+
+    const pitD01 = loader.getD01Store();
+    const pitD02 = loader.getD02Store();
+
+    // Verify TCS quotes and candles exist in PIT stores
+    const tcsQuote2022 = pitD01.queryAsOf({ companyId: 'TCS', domain: 'D01_QUOTES', asOf: '2022-06-15T23:59:59.000Z' });
+    assert.ok(tcsQuote2022);
+    assert.strictEqual(tcsQuote2022.payload.ltp, 3238);
+
+    const tcsQuote2024 = pitD01.queryAsOf({ companyId: 'TCS', domain: 'D01_QUOTES', asOf: '2024-08-01T23:59:59.000Z' });
+    assert.ok(tcsQuote2024);
+    assert.strictEqual(tcsQuote2024.payload.ltp, 4260);
+
+    const tcsCandle2022 = pitD02.queryAsOf({ companyId: 'TCS', domain: 'D02_OHLCV', asOf: '2022-06-15T23:59:59.000Z' });
+    assert.ok(tcsCandle2022);
+    assert.strictEqual(tcsCandle2022.payload.high, 3250);
+    assert.strictEqual(tcsCandle2022.payload.low, 3180);
+    assert.strictEqual(tcsCandle2022.payload.close, 3240);
+
+    const tcsCandle2024 = pitD02.queryAsOf({ companyId: 'TCS', domain: 'D02_OHLCV', asOf: '2024-08-01T23:59:59.000Z' });
+    assert.ok(tcsCandle2024);
+    assert.strictEqual(tcsCandle2024.payload.high, 4280);
+    assert.strictEqual(tcsCandle2024.payload.low, 4190);
+    assert.strictEqual(tcsCandle2024.payload.close, 4260);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 27. Stage-5 PIT Queries: Point-in-Time Point & Range Semantics (No Future Leakage)
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-27: guarantees strict chronological asOf query semantics without future data leakage', () => {
+    const loader = new HistoricalPitIngestionLoader();
+
+    const legacyCsv1 =
+      'SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN\n' +
+      'TCS,EQ,3000.00,3050.00,2980.00,3020.00,3020.00,2990.00,100000,302000000,10-JAN-2020,1000,INE467B01029';
+    const legacyCsv2 =
+      'SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN\n' +
+      'TCS,EQ,3100.00,3150.00,3080.00,3120.00,3120.00,3020.00,120000,374400000,15-JAN-2020,1200,INE467B01029';
+
+    loader.ingestSingleArchive('2020-01-10', createSyntheticUdiffZip('cm10JAN2020bhav.csv', legacyCsv1), 'cm10JAN2020bhav.csv.zip');
+    loader.ingestSingleArchive('2020-01-15', createSyntheticUdiffZip('cm15JAN2020bhav.csv', legacyCsv2), 'cm15JAN2020bhav.csv.zip');
+
+    const pitD01 = loader.getD01Store();
+
+    // Query before 2020-01-10 -> undefined
+    const beforeFirst = pitD01.queryAsOf({ companyId: 'TCS', domain: 'D01_QUOTES', asOf: '2020-01-09T23:59:59.000Z' });
+    assert.strictEqual(beforeFirst, undefined);
+
+    // Query on 2020-01-12 (between first and second) -> returns 2020-01-10 data
+    const midQuery = pitD01.queryAsOf({ companyId: 'TCS', domain: 'D01_QUOTES', asOf: '2020-01-12T00:00:00.000Z' });
+    assert.ok(midQuery);
+    assert.strictEqual(midQuery.payload.ltp, 3020);
+
+    // Query on 2020-01-16 -> returns 2020-01-15 data
+    const afterSecond = pitD01.queryAsOf({ companyId: 'TCS', domain: 'D01_QUOTES', asOf: '2020-01-16T00:00:00.000Z' });
+    assert.ok(afterSecond);
+    assert.strictEqual(afterSecond.payload.ltp, 3120);
+
+    // Range query across both dates
+    const rangeResult = pitD01.queryRange('TCS', 'D01_QUOTES', '2020-01-01T00:00:00.000Z', '2020-01-20T00:00:00.000Z');
+    assert.strictEqual(rangeResult.length, 2);
+    assert.strictEqual(rangeResult[0].payload.ltp, 3020);
+    assert.strictEqual(rangeResult[1].payload.ltp, 3120);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 28. Stage-5 PIT Ingestion: Idempotency & Deduplication
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-28: guarantees exact idempotency and zero duplicate insertions on repeated ingestion runs', () => {
+    const loader = new HistoricalPitIngestionLoader();
+    const legacyCsv =
+      'SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN\n' +
+      'RELIANCE,EQ,2500.00,2550.00,2480.00,2520.00,2520.00,2490.00,500000,1260000000,20-MAY-2021,15000,INE002A01018';
+    const legacyZip = createSyntheticUdiffZip('cm20MAY2021bhav.csv', legacyCsv);
+
+    // First ingestion
+    const firstRun = loader.ingestSingleArchive('2021-05-20', legacyZip, 'cm20MAY2021bhav.csv.zip');
+    assert.strictEqual(firstRun.success, true);
+    assert.strictEqual(firstRun.d01Count, 1);
+    assert.strictEqual(firstRun.d02Count, 1);
+    assert.strictEqual(loader.getD01Store().getRecordCount(), 1);
+    assert.strictEqual(loader.getD02Store().getRecordCount(), 1);
+
+    // Second ingestion with identical archive
+    const secondRun = loader.ingestSingleArchive('2021-05-20', legacyZip, 'cm20MAY2021bhav.csv.zip');
+    assert.strictEqual(secondRun.success, true);
+    assert.strictEqual(secondRun.d01Count, 0); // deduplicated
+    assert.strictEqual(secondRun.d02Count, 0); // deduplicated
+
+    // Total records in PIT stores remain 1
+    assert.strictEqual(loader.getD01Store().getRecordCount(), 1);
+    assert.strictEqual(loader.getD02Store().getRecordCount(), 1);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 29. Stage-5 PIT Ingestion: Fail-Closed Quarantine Handling
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-29: fails closed on corrupted or unrecognized archive without corrupting PIT stores', () => {
+    const loader = new HistoricalPitIngestionLoader();
+    const corruptZip = Buffer.from('NOT_A_VALID_ZIP_FILE_DATA_HEX_CORRUPT');
+
+    const result = loader.ingestSingleArchive('2023-01-10', corruptZip, 'cm10JAN2023bhav.csv.zip');
+    assert.strictEqual(result.success, false);
+    assert.ok(result.error);
+    assert.strictEqual(loader.getD01Store().getRecordCount(), 0);
+    assert.strictEqual(loader.getD02Store().getRecordCount(), 0);
+
+    // Ingest batch with one valid and one corrupt archive
+    const validCsv =
+      'SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN\n' +
+      'INFY,EQ,1400.00,1420.00,1390.00,1410.00,1410.00,1395.00,300000,423000000,11-JAN-2023,8000,INE009A01021';
+    const validZip = createSyntheticUdiffZip('cm11JAN2023bhav.csv', validCsv);
+
+    const batchResult = loader.ingestBatch([
+      { date: '2023-01-10', buffer: corruptZip, filename: 'corrupt.zip' },
+      { date: '2023-01-11', buffer: validZip, filename: 'cm11JAN2023bhav.csv.zip' },
+    ]);
+
+    assert.strictEqual(batchResult.totalArchivesProcessed, 2);
+    assert.strictEqual(batchResult.successfulIngestions, 1);
+    assert.strictEqual(batchResult.quarantinedArchives, 1);
+    assert.strictEqual(loader.getD01Store().getRecordCount(), 1);
+    assert.strictEqual(loader.getD02Store().getRecordCount(), 1);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 30. Stage-5 Validation Report & Governance Invariant Verification
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-30: generates complete Stage-5 Ingestion Validation Report and verifies all governance invariants', () => {
+    const legacyCsv =
+      'SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN\n' +
+      'TCS,EQ,3200.00,3250.00,3180.00,3240.00,3238.00,3190.00,1000000,3240000000,15-JUN-2022,25000,INE467B01029';
+    const udiffCsv =
+      'TradDt,BizDt,Sgmt,Src,FinInstrmTp,FinInstrmId,ISIN,TckrSymb,SctySrs,OpnPric,HghPric,LwPric,ClsPric,LastPric,PrvsClsgPric,UndrlygPric,SttlmPric,OpnIntrst,ChngInOpnIntrst,TtlTradgVol,TtlTrfVal,TtlNbOfTxsExctd,SsnId,NewBrdLotQty,Rmks,Rsvd01,Rsvd02,Rsvd03,Rsvd04\n' +
+      '2024-08-01,2024-08-01,EQ,NSE,EQUITY,11536,INE467B01029,TCS,EQ,4200.00,4280.00,4190.00,4260.00,4255.00,4180.00,0.0,4260.00,0,0,1500000,6390000000,50000,1,1,-,-,-,-,-\n' +
+      '2024-08-01,2024-08-01,EQ,NSE,EQUITY,1594,INE009A01021,INFY,EQ,1800.00,1830.00,1790.00,1820.00,1815.00,1795.00,0.0,1820.00,0,0,3000000,5460000000,75000,1,1,-,-,-,-,-';
+
+    const loader = new HistoricalPitIngestionLoader();
+    loader.ingestBatch([
+      { date: '2022-06-15', buffer: createSyntheticUdiffZip('cm15JUN2022bhav.csv', legacyCsv), filename: 'cm15JUN2022bhav.csv.zip' },
+      { date: '2024-08-01', buffer: createSyntheticUdiffZip('BhavCopy_NSE_CM_0_0_0_20240801_F_0000.csv', udiffCsv), filename: 'BhavCopy_NSE_CM_0_0_0_20240801_F_0000.csv.zip' },
+    ]);
+
+    const report = loader.generateValidationReport({
+      corpusTotalValidArchives: 2587,
+      corpusLegacyValidArchives: 1919,
+      corpusContemporaryValidArchives: 668,
+      fullHorizonStartDate: '2016-09-20',
+      fullHorizonEndDate: '2026-09-20',
+      dualEraReconciliationDigest: '378a7c6daec678a54316a0e192f7fcb0999d1bf6ad07a3a5d6643686687b1552',
+    });
+
+    assert.strictEqual(report.manifestHeader.package, 'WS-H / D114 Stage-5');
+    assert.strictEqual(report.manifestHeader.stage, 'STAGE_5_PIT_INGESTION');
+    assert.strictEqual(report.manifestHeader.status, 'PASSED');
+    assert.strictEqual(report.manifestHeader.operatingMode, 'OFFLINE_BOOTSTRAP');
+
+    // Invariant checks
+    assert.strictEqual(report.governanceInvariants.oiHist01Status, 'OPEN / EXTERNAL / HISTORICAL ACQUISITION BLOCKED');
+    assert.strictEqual(report.governanceInvariants.masterGateG004, 'OPEN / PRESERVED');
+    assert.strictEqual(report.governanceInvariants.stage4LegacyGate, 'CLOSED');
+    assert.strictEqual(report.governanceInvariants.productionHistoricalEligibility, 'NOT AUTHORIZED');
+    assert.strictEqual(report.governanceInvariants.externalProviderCalls, 0);
+
+    // Replay verification
+    assert.strictEqual(report.replayVerification.replayDeterministic, true);
+    assert.strictEqual(report.replayVerification.zeroFutureDataLeakage, true);
+    assert.strictEqual(report.replayVerification.idempotencyVerified, true);
+    assert.strictEqual(report.ingestionDigest.length, 64);
   });
 });
