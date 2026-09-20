@@ -776,19 +776,6 @@ export function ExecutiveDashboard() {
             )}
           </div>
 
-          {/* Decision Distribution (Composite by sector) */}
-          <div className="executive-panel target-card">
-            <div className="target-card-header">
-              <h2 className="executive-panel-title" style={{ fontSize: 16 }}>Decision Distribution</h2>
-            </div>
-            <p className="executive-panel-disclosure">
-              Certified composite score distribution across active sectors.
-            </p>
-            <ChartContainer title="Composite by Sector">
-              <SimpleBarChart data={decisions.map((d) => ({ label: d.sector, value: d.composite }))} max={100} />
-            </ChartContainer>
-          </div>
-
           {/* Alerts Requiring Attention */}
           <div className="executive-panel target-card">
             <div className="target-card-header">
@@ -896,8 +883,32 @@ export function ExecutiveDashboard() {
           </div>
         </div>
 
-        {/* COLUMN 3: Watchlist Highlights + Recent Research & Insights */}
+        {/* COLUMN 3: Recent Research & Insights + Watchlist Highlights */}
         <div className="analytical-col">
+          {/* Recent Research & Insights (R-2 / P10 Honest Disclose) */}
+          <div className="executive-panel target-card" data-testid="target-card-research">
+            <div className="target-card-header">
+              <h3 className="target-card-title">Recent Research &amp; Insights</h3>
+              <span style={{ fontSize: 11, color: 'var(--color-status-warning)', fontWeight: 600 }}>R-2 / P10</span>
+            </div>
+            <div className="target-card-body">
+              <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', margin: '4px 0 0' }}>
+                Governed research notes and market intelligence insights are blocked pending R-2 / P10 contract
+                finalization. Zero mock articles are fabricated.
+              </p>
+              <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', background: 'var(--color-surface-1)', padding: 10, borderRadius: 6, marginTop: 8 }}>
+                <Link to="/research" style={{ color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}>
+                  Explore Research Workspace →
+                </Link>
+              </div>
+            </div>
+            <div className="target-card-footer">
+              <Link to="/research" className="target-action-link">
+                View all research →
+              </Link>
+            </div>
+          </div>
+
           {/* Watchlist Highlights */}
           <div className="executive-panel target-card">
             <div className="target-card-header">
@@ -1027,28 +1038,6 @@ export function ExecutiveDashboard() {
                 </div>
               </>
             )}
-          </div>
-
-          {/* Recent Research & Insights (R-2 / P10 Honest Disclose) */}
-          <div className="executive-panel target-card" data-testid="target-card-research">
-            <div className="target-card-header">
-              <h3 className="target-card-title">Recent Research &amp; Insights</h3>
-              <span style={{ fontSize: 11, color: 'var(--color-status-warning)', fontWeight: 600 }}>R-2 / P10</span>
-            </div>
-            <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', margin: '4px 0 0' }}>
-              Governed research notes and market intelligence insights are blocked pending R-2 / P10 contract
-              finalization. Zero mock articles are fabricated.
-            </p>
-            <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', background: 'var(--color-surface-1)', padding: 10, borderRadius: 6, marginTop: 8 }}>
-              <Link to="/research" style={{ color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}>
-                Explore Research Workspace →
-              </Link>
-            </div>
-            <div className="target-card-footer">
-              <Link to="/research" className="target-action-link">
-                View all research →
-              </Link>
-            </div>
           </div>
         </div>
 
@@ -1235,6 +1224,19 @@ export function ExecutiveDashboard() {
 
       {/* Governed Analytical Panels Grid */}
       <div className="executive-grid">
+        {/* Decision Distribution (Composite by sector) */}
+        <div className="col-span-12 executive-panel target-card">
+          <div className="target-card-header">
+            <h2 className="executive-panel-title" style={{ fontSize: 16 }}>Decision Distribution</h2>
+          </div>
+          <p className="executive-panel-disclosure">
+            Certified composite score distribution across active sectors.
+          </p>
+          <ChartContainer title="Composite by Sector">
+            <SimpleBarChart data={decisions.map((d) => ({ label: d.sector, value: d.composite }))} max={100} />
+          </ChartContainer>
+        </div>
+
         {/* Recent decisions with CERTIFIED authority + evidence entry points (N+10: selectable) */}
         <div className="col-span-12 executive-panel">
           <div className="executive-panel-header">
