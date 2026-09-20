@@ -175,6 +175,52 @@ const WATCHLISTS_NO_SECTOR = {
   ],
 };
 
+/**
+ * TGT-07 — governed notification envelope fixture. Mirrors the server contract 1:1:
+ * `unreadCount` is carried in the envelope (U-2b); `read` is the contract's own flag;
+ * `sourceStateNote` is the U-4 / DG-1′ verbatim wording (historical, non-durable source state).
+ */
+const U4_NOTE = 'Historical record — the classification shown here was recorded at the time of this event and is not the current stored state.';
+
+function notification(id: string, read: boolean, overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    notificationId: id,
+    tenantId: 'tenant-X',
+    recipientUserId: 'u1',
+    eventId: `evt-${id}`,
+    type: 'data-governance.classified',
+    title: `Classification recorded (${id})`,
+    summary: 'data-governance.classified',
+    createdAt: '2026-09-01T10:00:00.000Z',
+    read,
+    deepLink: '/admin/data',
+    sourceStateDurability: 'NON_DURABLE',
+    sourceStateNote: U4_NOTE,
+    ...overrides,
+  };
+}
+
+const NOTIFICATIONS = {
+  data: [notification('n1', false), notification('n2', true)],
+  unreadCount: 1,
+  provenance: {
+    dataSource: 'governed P-1 notifications (PF-1 durable journal)',
+    freshness: 'LIVE',
+    authority: 'PLATFORM',
+    transportSemantics: 'recipient-scoped historical assertions; not a current-state read model',
+  },
+};
+
+/** All read — nothing requires attention, but records exist. */
+const NOTIFICATIONS_ALL_READ = {
+  data: [notification('n1', true), notification('n2', true)],
+  unreadCount: 0,
+  provenance: NOTIFICATIONS.provenance,
+};
+
+/** No governed notifications for this principal — a legitimate governed result. */
+const NOTIFICATIONS_EMPTY = { data: [], unreadCount: 0, provenance: NOTIFICATIONS.provenance };
+
 function urlAwareMock(opts: {
   replayBIdentical?: boolean;
   evidenceFails?: boolean;
@@ -182,6 +228,8 @@ function urlAwareMock(opts: {
   universe?: DecisionMatrixData | 'fail' | 'degraded' | 'malformed';
   /** TGT-08: omitted → 404 (preserves every pre-Phase-3 test unchanged). */
   watchlists?: unknown | 'fail';
+  /** TGT-07: omitted → 404 (preserves every earlier test unchanged). */
+  notifications?: unknown | 'fail';
 } = {}) {
   return vi.fn((input: unknown) => {
     const url = String(input);
@@ -201,6 +249,10 @@ function urlAwareMock(opts: {
       // A 200 response that is NOT a governed universe (e.g. another surface's DTO).
       if (opts.universe === 'malformed') return Promise.resolve({ ok: true, json: async () => ({ matrixType: 'scatter', provenance: {} }) }) as never;
       if (opts.universe) return Promise.resolve({ ok: true, json: async () => opts.universe }) as never;
+    }
+    if (url.includes('/api/notifications')) {
+      if (opts.notifications === 'fail') return Promise.reject(new Error('notifications down')) as never;
+      if (opts.notifications !== undefined) return Promise.resolve({ ok: true, json: async () => opts.notifications }) as never;
     }
     if (url.includes('/api/watchlists')) {
       if (opts.watchlists === 'fail') return Promise.reject(new Error('watchlists down')) as never;
@@ -658,5 +710,149 @@ describe('Executive Dashboard — Phase 3 TGT-08 Watchlist Highlights', () => {
     expect(screen.getAllByTestId('recent-decision').length).toBe(2);
     expect(screen.getAllByTestId('evidence-card').length).toBe(2);
     expect(await screen.findByTestId('score-distribution-disclosure')).toHaveTextContent('/api/decision-matrix');
+  });
+});
+
+/**
+ * TARGET-UI-CONVERGENCE PHASE 3 — TGT-07 Alerts Requiring Attention (authorized bounded scope).
+ * Composition-only over the EXISTING governed /api/notifications contract. jsdom/typecheck only —
+ * NOT browser, responsive, accessibility, Windows or screenshot-parity evidence.
+ */
+describe('Executive Dashboard — Phase 3 TGT-07 Alerts Requiring Attention', () => {
+  it('renders only the governed unread records, with the envelope unread count verbatim', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: NOTIFICATIONS });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    await screen.findByTestId('alerts-item-n1');
+
+    // Unread (n1) requires attention; read (n2) is not listed as requiring attention.
+    expect(screen.getByTestId('alerts-item-n1')).toBeInTheDocument();
+    expect(screen.queryByTestId('alerts-item-n2')).not.toBeInTheDocument();
+    // The governed count is displayed as supplied; it is not recomputed client-side.
+    expect(screen.getByTestId('alerts-unread-count')).toHaveTextContent('Unread (governed count): 1');
+    expect(screen.getByTestId('alerts-unread-count')).toHaveTextContent('records returned: 2');
+  });
+
+  it('preserves the U-4 / DG-1′ non-durability wording verbatim with its marker', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: NOTIFICATIONS });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    const note = await screen.findByTestId('alerts-source-state-note-n1');
+    expect(note).toHaveTextContent(U4_NOTE);
+    expect(note.getAttribute('data-source-state-durability')).toBe('NON_DURABLE');
+  });
+
+  it('preserves the one-event-type limitation and states no history is inferred', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: NOTIFICATIONS });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    const d = await screen.findByTestId('alerts-disclosure');
+    expect(d).toHaveTextContent('single v1 event type');
+    expect(d).toHaveTextContent('data-governance.classified');
+    expect(d).toHaveTextContent('historical assertions');
+    expect(d).toHaveTextContent('not a current-state read model');
+    expect(d).toHaveTextContent('no severity, priority or age is inferred');
+    // The item's governed type is also shown verbatim.
+    expect(screen.getByTestId('alerts-item-n1').closest('tr')).toHaveTextContent('data-governance.classified');
+  });
+
+  it('renders the deep link verbatim from the governed payload', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: NOTIFICATIONS });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect((await screen.findByTestId('alerts-deep-link-n1')).getAttribute('href')).toBe('/admin/data');
+  });
+
+  it('is read-only: no mark-read mutation is performed from the dashboard block', async () => {
+    const calls: string[] = [];
+    const base = urlAwareMock({ notifications: NOTIFICATIONS });
+    globalThis.fetch = vi.fn((input: unknown, init?: unknown) => {
+      calls.push(`${(init as { method?: string } | undefined)?.method ?? 'GET'} ${String(input)}`);
+      return base(input);
+    }) as never;
+    renderDash();
+    await screen.findByTestId('decision-list');
+    await screen.findByTestId('alerts-item-n1');
+    expect(calls.some((c) => c.includes('/read'))).toBe(false);
+    expect(screen.getByTestId('alerts-read-note')).toHaveTextContent('read-only');
+  });
+
+  it('states honestly when every governed notification is already read', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: NOTIFICATIONS_ALL_READ });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect(await screen.findByTestId('alerts-none-requiring-attention'))
+      .toHaveTextContent('every governed notification on this account is marked read');
+    expect(screen.getByTestId('alerts-unread-count')).toHaveTextContent('Unread (governed count): 0');
+    expect(screen.queryByTestId('alerts-item-n1')).not.toBeInTheDocument();
+  });
+
+  it('renders an explicit empty state with no fabricated alerts', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: NOTIFICATIONS_EMPTY });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect(await screen.findByTestId('alerts-empty'))
+      .toHaveTextContent('No governed notifications exist for this account');
+    expect(screen.queryByTestId('alerts-item-n1')).not.toBeInTheDocument();
+  });
+
+  it('degrades ALONE on failure: no substitute data, certified dashboard unaffected', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: 'fail' });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    const unavailable = await screen.findByTestId('alerts-unavailable');
+    expect(unavailable).toHaveTextContent('notifications down');
+    expect(unavailable).toHaveTextContent('No substitute, sample or placeholder alert is shown');
+    expect(screen.queryByTestId('alerts-item-n1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('state-error')).not.toBeInTheDocument();
+    expect(screen.getByTestId('freshness-snapshot')).toHaveTextContent('SNAPSHOT');
+  });
+
+  it('D86-class: a non-envelope 200 payload is refused instead of crashing the dashboard', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: { unreadCount: 3 } });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    expect(await screen.findByTestId('alerts-unavailable'))
+      .toHaveTextContent('no governed notification data was returned');
+    expect(screen.getByTestId('freshness-snapshot')).toHaveTextContent('SNAPSHOT');
+  });
+
+  it('preserves the governed provenance verbatim', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: NOTIFICATIONS });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    const prov = await screen.findByTestId('alerts-provenance');
+    expect(prov).toHaveTextContent('governed P-1 notifications (PF-1 durable journal)');
+    expect(prov).toHaveTextContent('freshness LIVE');
+    expect(prov).toHaveTextContent('authority PLATFORM');
+    expect(prov).toHaveTextContent('not a current-state read model');
+  });
+
+  it('does not mutate the governed notification payload it renders', async () => {
+    const frozen = JSON.parse(JSON.stringify(NOTIFICATIONS)) as typeof NOTIFICATIONS;
+    const deepFreeze = (o: unknown): void => {
+      if (o && typeof o === 'object') { Object.values(o as object).forEach(deepFreeze); Object.freeze(o); }
+    };
+    deepFreeze(frozen);
+    globalThis.fetch = urlAwareMock({ notifications: frozen });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    await screen.findByTestId('alerts-item-n1');
+    expect(frozen.data[0].read).toBe(false);
+    expect(frozen.unreadCount).toBe(1);
+    expect(frozen.data[0].deepLink).toBe('/admin/data');
+  });
+
+  it('does not disturb the other Phase 2/3 blocks or the certified payload', async () => {
+    globalThis.fetch = urlAwareMock({ notifications: NOTIFICATIONS, watchlists: WATCHLISTS, universe: UNIVERSE });
+    renderDash();
+    await screen.findByTestId('decision-list');
+    await screen.findByTestId('alerts-item-n1');
+    expect(screen.getByTestId('metric-group')).toBeInTheDocument();
+    expect(screen.getByTestId('freshness-snapshot')).toHaveTextContent('SNAPSHOT');
+    expect(screen.getAllByTestId('recent-decision').length).toBe(2);
+    expect(await screen.findByTestId('watchlist-item-company-A-H1')).toBeInTheDocument();
+    expect(await screen.findByTestId('score-distribution-disclosure')).toHaveTextContent('/api/decision-matrix');
+    expect(screen.getAllByTestId('evidence-card').length).toBe(2);
   });
 });

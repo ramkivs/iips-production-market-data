@@ -52,6 +52,24 @@
  *   • U1–U10 preserved; ownership/authorization remain server-derived and untouched; the envelope's
  *     own provenance (source, as-of, mode, freshness, authority, transport semantics) is shown
  *     verbatim. Nothing is substituted when the watchlist surface is unavailable.
+ *
+ * TARGET-UI-CONVERGENCE PHASE 3 — TGT-07 Alerts Requiring Attention (authorized bounded scope).
+ * COMPOSITION-ONLY over the EXISTING governed notification surface:
+ *   • Source is the existing governed `/api/notifications` endpoint through the existing typed
+ *     client `api/notifications.ts`. NO new endpoint, NO new persistence, NO new event model, and
+ *     NO change to the notification contract/service.
+ *   • "Requires attention" is decided SOLELY by the contract's own `read` flag (unread ⇒ requires
+ *     attention). No severity, priority, age bucket or ranking is inferred from `createdAt`,
+ *     `type`, list position or any heuristic. The envelope's own `unreadCount` is displayed
+ *     verbatim and is NOT recomputed.
+ *   • The ONE-EVENT-TYPE limitation and the U-4 / DG-1′ non-durability semantics are preserved:
+ *     each item's `sourceStateNote` is rendered VERBATIM with its `sourceStateDurability` marker,
+ *     so the surface never implies the referenced state is persisted or current.
+ *   • Read-only composition: no mutation is performed here. Mark-read (existing, idempotent,
+ *     NON-REVERSIBLE) remains in the existing Notifications drawer; an affordance note is shown.
+ *   • The item `deepLink` is rendered verbatim from the governed payload — never constructed here.
+ *   • `/api/notifications` is NOT a D89 mode-aware route family, so no degraded data-mode shape is
+ *     invented for it; failure renders an explicit unavailable state with no substitute or sample.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -62,6 +80,7 @@ import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { fetchDecisionMatrixData, type DecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
 import { fetchWatchlists, type WatchlistItemView, type WatchlistView, type WatchlistsProvenance } from '../../api/watchlists';
+import { fetchNotifications, type NotificationItem, type NotificationProvenance } from '../../api/notifications';
 import { ChartContainer, SimpleBarChart } from '../../components/viz/ChartFoundations';
 import { DecisionBadge } from '../../components/decision/DecisionComponents';
 import { MetricCard, MetricGroup, MetricTable, DataTable, TrendIndicator } from '../../components/data/DataComponents';
@@ -95,6 +114,14 @@ function isWatchlistsEnvelope(d: unknown): d is { data: readonly WatchlistView[]
 
 /** TGT-08 — rows shown per list. A DISCLOSED presentational cap in payload order; not a ranking. */
 const WATCHLIST_HIGHLIGHT_CAP = 5;
+
+/**
+ * TGT-07 shape guard — the same D86-class narrowing, applied to the governed notification
+ * envelope. A 200 response without a governed `data` array is refused and disclosed.
+ */
+function isNotificationsEnvelope(d: unknown): d is { data: readonly NotificationItem[]; unreadCount?: number; provenance?: NotificationProvenance } {
+  return typeof d === 'object' && d !== null && Array.isArray((d as { data?: unknown }).data);
+}
 
 /** Render a governed delta without pass/fail colour — a delta is not a verdict (UI07 convention). */
 function fmtDelta(value: number | null): string {
@@ -203,6 +230,45 @@ export function ExecutiveDashboard() {
     return () => { active = false; };
   }, []);
 
+  // TGT-07 — governed notifications ("Alerts Requiring Attention"). OWN state, exactly as
+  // TGT-04/TGT-08: a failure here must never blank the certified executive payload.
+  const [alerts, setAlerts] = useState<readonly NotificationItem[] | null>(null);
+  const [alertsUnread, setAlertsUnread] = useState<number | null>(null);
+  const [alertsProvenance, setAlertsProvenance] = useState<NotificationProvenance | null>(null);
+  const [alertsError, setAlertsError] = useState<string | null>(null);
+  const [alertsLoading, setAlertsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setAlertsLoading(true);
+    fetchNotifications()
+      .then((env) => {
+        if (!active) return;
+        // D86-class hardening: refuse a payload without the governed notification array rather
+        // than dereferencing a missing shape (which would blank the whole dashboard).
+        if (!isNotificationsEnvelope(env)) {
+          setAlerts(null);
+          setAlertsUnread(null);
+          setAlertsProvenance(null);
+          setAlertsError('unexpected payload shape — no governed notification data was returned');
+          return;
+        }
+        setAlerts(env.data);
+        setAlertsUnread(typeof env.unreadCount === 'number' ? env.unreadCount : null);
+        setAlertsProvenance(env.provenance ?? null);
+        setAlertsError(null);
+      })
+      .catch((e) => {
+        if (!active) return;
+        setAlerts(null);
+        setAlertsUnread(null);
+        setAlertsProvenance(null);
+        setAlertsError(String(e));
+      })
+      .finally(() => { if (active) setAlertsLoading(false); });
+    return () => { active = false; };
+  }, []);
+
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -262,6 +328,14 @@ export function ExecutiveDashboard() {
     const median = values.length % 2 === 0 ? (values[mid - 1] + values[mid]) / 2 : values[mid];
     return { companies: values.length, min: values[0], median, max: values[values.length - 1] };
   }, [universe]);
+
+  // TGT-07 — the attention set. Membership is SOLELY the contract's own `read` flag (unread ⇒
+  // requires attention). No severity/priority/age/ranking input; order is the server's own
+  // createdAt-DESC order, preserved verbatim (no client re-sort).
+  const alertsRequiringAttention: readonly NotificationItem[] = useMemo(() => {
+    if (!alerts) return [];
+    return alerts.filter((n) => n.read === false);
+  }, [alerts]);
 
   // TGT-08 — the governed-change highlight set. Membership is decided SOLELY by the contract's
   // own per-field `changed` flag on the baseline-vs-current comparison. No rank, timestamp,
@@ -537,6 +611,97 @@ export function ExecutiveDashboard() {
           <p style={{ marginTop: 12, fontSize: 13 }}>
             <Link data-testid="watchlist-highlights-open" to="/watchlists">Open watchlists →</Link>
           </p>
+        </>
+      )}
+
+      {/* TGT-07 — ALERTS REQUIRING ATTENTION (governed /api/notifications; no new endpoint).
+          Composed in its OWN state: if the notification surface is unavailable, this block
+          degrades alone and the certified executive payload is unaffected. */}
+      <h2 style={{ fontSize: 18, marginTop: 24 }}>Alerts Requiring Attention</h2>
+      {alertsLoading && <p data-testid="alerts-loading" style={{ fontSize: 13 }}>Loading governed notifications…</p>}
+
+      {!alertsLoading && alertsError !== null && (
+        <p data-testid="alerts-unavailable" style={{ color: 'var(--color-ink-secondary)', fontSize: 13 }}>
+          Governed notifications unavailable: {alertsError}. No substitute, sample or placeholder
+          alert is shown.
+        </p>
+      )}
+
+      {!alertsLoading && alerts !== null && (
+        <>
+          <p data-testid="alerts-disclosure" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '0 0 8px' }}>
+            &ldquo;Requires attention&rdquo; is the governed notification contract&apos;s own unread flag —
+            no severity, priority or age is inferred, and nothing is ranked. These records are
+            <strong> historical assertions</strong> made when the event occurred; they are not a
+            current-state read model. The governed notification service emits a single v1 event type
+            (<code>data-governance.classified</code>), so this block shows no event categories beyond
+            it. Recipients are resolved server-side: an account with no delivered notifications
+            legitimately sees none.
+          </p>
+
+          <p data-testid="alerts-unread-count" style={{ fontSize: 13, margin: '0 0 8px' }}>
+            Unread (governed count): <strong>{alertsUnread === null ? 'unavailable' : alertsUnread}</strong>
+            {' '}· records returned: {alerts.length}
+          </p>
+
+          {alerts.length === 0 ? (
+            <p data-testid="alerts-empty" style={{ fontSize: 13 }}>
+              No governed notifications exist for this account. Nothing is fabricated to fill this block.
+            </p>
+          ) : alertsRequiringAttention.length === 0 ? (
+            <p data-testid="alerts-none-requiring-attention" style={{ fontSize: 13 }}>
+              No alerts require attention: every governed notification on this account is marked read.
+              The records remain listed by the Notifications drawer; none is hidden here.
+            </p>
+          ) : (
+            <DataTable
+              columns={[
+                {
+                  key: 'alert',
+                  header: 'Alert',
+                  render: (n: NotificationItem) => (
+                    <div data-testid={`alerts-item-${n.notificationId}`}>
+                      <strong style={{ display: 'block' }}>{n.title}</strong>
+                      {n.summary !== null && <span style={{ fontSize: 12 }}>{n.summary}</span>}
+                      {/* U-4 / DG-1′ — verbatim, with the machine-readable marker, on every record. */}
+                      <p
+                        data-testid={`alerts-source-state-note-${n.notificationId}`}
+                        data-source-state-durability={n.sourceStateDurability}
+                        style={{ fontSize: 12, opacity: 0.85, margin: '6px 0 0' }}
+                      >
+                        {n.sourceStateNote}
+                      </p>
+                    </div>
+                  ),
+                },
+                { key: 'type', header: 'Event type', render: (n: NotificationItem) => n.type },
+                { key: 'createdAt', header: 'Recorded at', render: (n: NotificationItem) => n.createdAt },
+                {
+                  key: 'link',
+                  header: 'Target',
+                  // Rendered VERBATIM from the governed payload — never constructed here.
+                  render: (n: NotificationItem) => (
+                    <Link data-testid={`alerts-deep-link-${n.notificationId}`} to={n.deepLink}>View governed data →</Link>
+                  ),
+                },
+              ]}
+              rows={alertsRequiringAttention}
+              emptyLabel="No alerts require attention"
+            />
+          )}
+
+          <p data-testid="alerts-read-note" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '8px 0 0' }}>
+            This block is read-only. Marking a notification read is the existing governed, idempotent
+            and non-reversible action available from the Notifications drawer.
+          </p>
+
+          {alertsProvenance !== null && (
+            <p data-testid="alerts-provenance" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, marginTop: 8 }}>
+              {alertsProvenance.dataSource} · freshness {alertsProvenance.freshness} · authority {alertsProvenance.authority}
+              <br />
+              {alertsProvenance.transportSemantics}
+            </p>
+          )}
         </>
       )}
 
