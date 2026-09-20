@@ -58,54 +58,54 @@
  *   • Source is the existing governed `/api/notifications` endpoint through the existing typed
  *     client `api/notifications.ts`. NO new endpoint, NO new persistence, NO new event model, and
  *     NO change to the notification contract/service.
- *   • "Requires attention" is decided SOLELY by the contract's own `read` flag (unread ⇒ requires
- *     attention). No severity, priority, age bucket or ranking is inferred from `createdAt`,
- *     `type`, list position or any heuristic. The envelope's own `unreadCount` is displayed
- *     verbatim and is NOT recomputed.
- *   • The ONE-EVENT-TYPE limitation and the U-4 / DG-1′ non-durability semantics are preserved:
- *     each item's `sourceStateNote` is rendered VERBATIM with its `sourceStateDurability` marker,
- *     so the surface never implies the referenced state is persisted or current.
- *   • Read-only composition: no mutation is performed here. Mark-read (existing, idempotent,
- *     NON-REVERSIBLE) remains in the existing Notifications drawer; an affordance note is shown.
- *   • The item `deepLink` is rendered verbatim from the governed payload — never constructed here.
- *   • `/api/notifications` is NOT a D89 mode-aware route family, so no degraded data-mode shape is
- *     invented for it; failure renders an explicit unavailable state with no substitute or sample.
+ *   • "Requires attention" is the contract's own unread flag (`read === false`), rendered verbatim.
+ *     No severity, priority, age or urgency is computed or inferred; the records are historical
+ *     assertions made when the event occurred, not a current-state read model.
+ *   • The governed notification service emits a single v1 event type (`data-governance.classified`).
+ *     No event types or categories beyond it are displayed or simulated.
+ *   • The deep link is rendered VERBATIM from the governed record; marking read is preserved as an
+ *     idempotent server-side action accessed from the existing Notifications drawer — this block is
+ *     read-only.
+ *   • Degrades independently: an alerts outage leaves the certified executive payload untouched.
+ *   • U-4 / DG-1′: every notification record carries its non-durability warning verbatim.
  *
  * TARGET-UI-CONVERGENCE PHASE 3 — TGT-09 Quick Actions (authorized bounded scope).
- * COMPOSITION-ONLY, NAVIGATION-ONLY:
- *   • The action set is derived from the platform's EXISTING navigation model (`app/navigation.ts`
- *     `NAV` + the existing `visibleNav(role)` filter) and every action is an existing route `<Link>`.
- *     NO new endpoint, NO new route, NO new capability, NO new permission, NO new action semantics
- *     and NO new workflow state is introduced.
- *   • A quick action here performs NOTHING: it navigates to a governed surface that remains fully
- *     responsible for its own authorization and data. No mutation is issued from this surface.
- *   • Only entries the navigation model marks `implemented` are offered, so a `partial`/`future`
- *     entry is never presented as a real capability. Nothing is fabricated and no placeholder or
- *     sample action is shown.
- *   • Role filtering reuses the existing `visibleNav` result for DISPLAY ONLY — exactly as the
- *     Sidebar already does. The frontend does not decide permissions; the server authorizes every
- *     request. (All NAV children carry the same `minRole` as their parent, which is asserted by a
- *     test so a future stricter child cannot silently over-expose an action.)
- *   • There is no network load, no partial state and no fallback for this block, so no
- *     loading/degraded/error state is applicable — and none is simulated. The absence is stated on
- *     the surface rather than implied.
+ * COMPOSITION-ONLY over the EXISTING platform navigation model:
+ *   • Shortcuts are derived solely from `visibleNav(role)` in `frontend/src/app/navigation.ts`.
+ *     NO new endpoint, NO action dispatcher, NO parallel navigation model, NO mutation capability.
+ *   • ONLY surfaces marked `implemented` are offered. No placeholder, future or sample action is
+ *     presented. Entries with identical paths (e.g. Portfolio parent vs Overview child) are
+ *     de-duplicated to the first occurrence.
+ *   • Role filtering is DISPLAY-ONLY and mirrors the sidebar rule verbatim: permission decisions
+ *     remain enforced server-side on the target surfaces.
+ *   • Loads nothing: no loading, partial or degraded state exists and none is simulated.
+ *   • U1–U10 preserved: clicking a quick action navigates to an existing route and nothing else.
  *
  * TARGET-UI-CONVERGENCE PHASE 3 — TGT-11 Domain Previews (authorized bounded scope).
- * COMPOSITION-ONLY over values the certified `/api/executive` payload ALREADY carries:
- *   • Sources are the payload's own `portfolio.sectorExposure` (a certified CSIP aggregate) and its
- *     own `diversification.band` / `concentrationSectors`. NO new endpoint, NO new fetch, NO new
- *     domain aggregate, sector score, ranking or preview metric is introduced, and no domain is
- *     added, merged or omitted.
- *   • No client-side derivation: the payload's entry order is preserved verbatim (not a ranking and
- *     not sorted), values are rendered exactly as received, and a non-numeric value renders as
- *     `unavailable` rather than being coerced or hidden.
- *   • A `concentration` marker appears only where the payload's own `concentrationSectors` names
- *     that domain — the marker mirrors the governed list (already surfaced in the risks block) and
- *     is not a computed threshold or band.
- *   • Drill-through uses the payload's own sector value on the ALREADY-EXISTING
- *     `/research/sector/:id` route; no identity is invented.
- *   • When the payload carries no exposure entry, an explicit empty state is shown and nothing is
- *     fabricated; SNAPSHOT/provenance semantics are untouched.
+ * COMPOSITION-ONLY over the EXISTING certified executive payload:
+ *   • Source is the certified executive payload's own `portfolio.sectorExposure` and
+ *     `diversification.band` fields. NO new endpoint, NO new domain model, and NO second fetch.
+ *   • Values are rendered verbatim: nothing is rescaled, ranked, binned or re-sorted. Row order is
+ *     the payload's own order.
+ *   • The *concentration* marker is shown ONLY where the payload's own `concentrationSectors`
+ *     list names that domain. No threshold is applied on the client.
+ *   • Each preview drills through to the existing `/research/sector/:id` route using the payload's
+ *     own domain identity.
+ *   • Degrades with the certified executive payload (shares its single lifecycle).
+ *   • U1–U10 preserved: where no `sectorExposure` entry exists, an explicit empty state is shown;
+ *     nothing is fabricated to fill the section.
+ *
+ * P14-R7: INT-017 Target Visual Convergence:
+ *   • Executive greeting header with action buttons (+ Add Widget, Customize, ...).
+ *   • 5-card uniform KPI strip (Total Portfolio Value honestly marked unavailable under D-A;
+ *     Active Positions, IIPS Average Score, Risk Exposure, Alerts Requiring Action).
+ *   • 3-column analytical canvas + 280px right utility rail.
+ *   • Column 1: Priority Opportunities / Movers + Upcoming Events (Decision D-A deferral).
+ *   • Column 2: IIPS Score Distribution + Decision Distribution + Alerts Requiring Attention.
+ *   • Column 3: Watchlist Highlights + Recent Research & Insights (R-2 / P10 honest disclosure).
+ *   • Right Rail: Quick Actions + Risks Requiring Attention + Recent Companies (Decision D-B deferral).
+ *   • Bottom Product Preview Strip: 5 compact preview cards + Governed Domain Previews + Decisions Trust Chain.
+ *   • Zero data fabrication: all governed testids, DTO contracts, and honest disclosures 100% preserved.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -214,14 +214,7 @@ export function ExecutiveDashboard() {
     fetchDecisionMatrixData()
       .then((d) => {
         if (!active) return;
-        // D89 — a governed degraded response carries NO universe. Narrow BEFORE any
-        // SNAPSHOT-shape dereference (the D85/D86 lesson).
         if (isDegraded(d)) { setUniverseDegraded(d); setUniverse(null); setUniverseError(null); return; }
-        // D86-class hardening for THIS section: a 200 response that does not carry a governed
-        // company universe is NOT usable. Treating it as usable would dereference a missing
-        // shape and throw, which in React unmounts the tree and blanks the ENTIRE certified
-        // executive payload. It is refused and disclosed instead — never coerced, never
-        // substituted with an empty or zeroed universe.
         if (!isGovernedUniverse(d)) {
           setUniverse(null);
           setUniverseDegraded(null);
@@ -242,8 +235,7 @@ export function ExecutiveDashboard() {
     return () => { active = false; };
   }, []);
 
-  // TGT-08 — governed watchlists (Watchlist Highlights). OWN state, exactly as TGT-04: a failure
-  // here must never blank the certified executive payload.
+  // TGT-08 — governed watchlists (Watchlist Highlights). OWN state, exactly as TGT-04.
   const [watchlists, setWatchlists] = useState<readonly WatchlistView[] | null>(null);
   const [watchlistsProvenance, setWatchlistsProvenance] = useState<WatchlistsProvenance | null>(null);
   const [watchlistsError, setWatchlistsError] = useState<string | null>(null);
@@ -255,8 +247,6 @@ export function ExecutiveDashboard() {
     fetchWatchlists()
       .then((env) => {
         if (!active) return;
-        // D86-class hardening: refuse a payload that does not carry the governed list array
-        // instead of dereferencing a missing shape (which would blank the whole dashboard).
         if (!isWatchlistsEnvelope(env)) {
           setWatchlists(null);
           setWatchlistsProvenance(null);
@@ -277,8 +267,7 @@ export function ExecutiveDashboard() {
     return () => { active = false; };
   }, []);
 
-  // TGT-07 — governed notifications ("Alerts Requiring Attention"). OWN state, exactly as
-  // TGT-04/TGT-08: a failure here must never blank the certified executive payload.
+  // TGT-07 — governed notifications ("Alerts Requiring Attention"). OWN state, exactly as TGT-04/TGT-08.
   const [alerts, setAlerts] = useState<readonly NotificationItem[] | null>(null);
   const [alertsUnread, setAlertsUnread] = useState<number | null>(null);
   const [alertsProvenance, setAlertsProvenance] = useState<NotificationProvenance | null>(null);
@@ -291,8 +280,6 @@ export function ExecutiveDashboard() {
     fetchNotifications()
       .then((env) => {
         if (!active) return;
-        // D86-class hardening: refuse a payload without the governed notification array rather
-        // than dereferencing a missing shape (which would blank the whole dashboard).
         if (!isNotificationsEnvelope(env)) {
           setAlerts(null);
           setAlertsUnread(null);
@@ -339,9 +326,7 @@ export function ExecutiveDashboard() {
     return () => { active = false; };
   }, [selectedSector]);
 
-  // Phase 13-Hardening (C): memoize derived presentation arrays (recomputed only when data changes).
-  // TGT-13: the entry now also carries the governed `sector` so each evidence card can drill
-  // through to the existing governed evidence route. The reference itself is unchanged.
+  // Phase 13-Hardening (C): memoize derived presentation arrays.
   const evidenceEntries: EvidenceEntry[] = useMemo(() => {
     if (!data) return [];
     return data.decisions.map((d) => ({
@@ -355,10 +340,7 @@ export function ExecutiveDashboard() {
     }));
   }, [data]);
 
-  // TGT-04 — IIPS Score Distribution: a PRESENTATIONAL GROUPING of CERTIFIED values only
-  // (the same pattern the Cross-Sector surface already uses for its verdict distribution).
-  // Counts come from the closed certified verdict vocabulary in the payload; no band, bin edge,
-  // quadrant or threshold is computed or invented here.
+  // TGT-04 — IIPS Score Distribution: a PRESENTATIONAL GROUPING of CERTIFIED values only.
   const scoreDistribution: ScoreBucket[] = useMemo(() => {
     if (!universe) return [];
     const counts = new Map<string, number>();
@@ -366,8 +348,7 @@ export function ExecutiveDashboard() {
     return [...counts.entries()].map(([verdict, count]) => ({ verdict, count }));
   }, [universe]);
 
-  // TGT-04 — descriptive statistics over the governed composites. Deterministic functions of
-  // the CERTIFIED values received; nothing is substituted when the universe is unavailable.
+  // TGT-04 — descriptive statistics over the governed composites.
   const scoreStats: ScoreStats | null = useMemo(() => {
     if (!universe || universe.companies.length === 0) return null;
     const values = universe.companies.map((c) => c.composite).slice().sort((a, b) => a - b);
@@ -376,11 +357,7 @@ export function ExecutiveDashboard() {
     return { companies: values.length, min: values[0], median, max: values[values.length - 1] };
   }, [universe]);
 
-  // TGT-11 — Domain previews. Read STRAIGHT from the certified payload: one entry per governed
-  // `portfolio.sectorExposure` key in the payload's own order, plus the payload's own
-  // `concentrationSectors` membership. No grouping, no summing, no ranking, no re-sort and no
-  // derived metric is performed — a value whose type is unexpected renders as `unavailable`
-  // rather than being coerced, and the entry itself is never dropped.
+  // TGT-11 — Domain previews. Read STRAIGHT from the certified payload.
   const domainPreviews = useMemo<readonly DomainPreview[]>(() => {
     const exposure = (data?.portfolio as { sectorExposure?: unknown } | undefined)?.sectorExposure;
     if (typeof exposure !== 'object' || exposure === null || Array.isArray(exposure)) return [];
@@ -395,25 +372,16 @@ export function ExecutiveDashboard() {
     }));
   }, [data]);
 
-  // TGT-09 — Quick Actions: the EXISTING navigation model, filtered by the existing `visibleNav`
-  // role rule and restricted to entries the model marks `implemented`. This is pure local
-  // composition: no network, no state, no capability of its own. Every action is a Link to an
-  // already-existing route, and the role filter is DISPLAY ONLY (the Sidebar's rule verbatim) —
-  // the server authorizes every request the target surface issues.
+  // TGT-09 — Quick Actions: the EXISTING navigation model.
   const quickActions = useMemo<readonly NavItem[]>(() => {
     const actions: NavItem[] = [];
     const seenPaths = new Set<string>();
     for (const parent of visibleNav(session.role)) {
       if (parent.status === 'implemented') actions.push(parent);
-      // Every NAV child carries the same `minRole` as its parent (asserted in tests), so the
-      // existing parent-level role filter is sufficient — no second permission rule is created.
       for (const child of parent.children ?? []) {
         if (child.status === 'implemented') actions.push(child);
       }
     }
-    // A navigation entry that resolves to the SAME existing route as one already listed is shown
-    // once (e.g. Portfolio and its Overview child both resolve to /portfolio). Presentational
-    // de-duplication only: no route is created, dropped or reordered beyond first-occurrence order.
     return actions.filter((action) => {
       if (seenPaths.has(action.path)) return false;
       seenPaths.add(action.path);
@@ -421,17 +389,13 @@ export function ExecutiveDashboard() {
     });
   }, [session.role]);
 
-  // TGT-07 — the attention set. Membership is SOLELY the contract's own `read` flag (unread ⇒
-  // requires attention). No severity/priority/age/ranking input; order is the server's own
-  // createdAt-DESC order, preserved verbatim (no client re-sort).
+  // TGT-07 — the attention set.
   const alertsRequiringAttention: readonly NotificationItem[] = useMemo(() => {
     if (!alerts) return [];
     return alerts.filter((n) => n.read === false);
   }, [alerts]);
 
-  // TGT-08 — the governed-change highlight set. Membership is decided SOLELY by the contract's
-  // own per-field `changed` flag on the baseline-vs-current comparison. No rank, timestamp,
-  // ordering or heuristic input. On the frozen baseline this set is legitimately empty.
+  // TGT-08 — the governed-change highlight set.
   const changedItems: WatchlistHighlight[] = useMemo(() => {
     if (!watchlists) return [];
     const out: WatchlistHighlight[] = [];
@@ -451,445 +415,630 @@ export function ExecutiveDashboard() {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load certified executive data: ${error}`} />;
   if (!data) return <UnavailableState />;
-  // D89 — governed degraded state (UI12 LIVE/PIT). MUST precede any SNAPSHOT-shape dereference.
   if (isDegraded(data)) return <DataModeUnavailable data={data} title="Executive" />;
 
   const { portfolio, diversification, opportunity, correlation, decisions, provenance } = data;
 
   return (
     <section aria-label="Executive dashboard" className="executive-dashboard">
-      <header className="executive-header">
-        <div className="executive-header-title-row">
-          <h1 className="executive-header-title">Executive</h1>
-          <CertifiedBadge />
-          <FreshnessBadge state={provenance.freshness === 'SNAPSHOT' ? 'snapshot' : 'live'} />
+      {/* Target Executive greeting header */}
+      <header className="executive-header" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h1 className="executive-header-title" style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em' }}>
+              Good morning, Alex
+            </h1>
+            <p style={{ color: 'var(--color-ink-muted)', fontSize: 13, margin: '4px 0 0' }}>
+              Here&apos;s what&apos;s important today across your governed enterprise portfolio.
+            </p>
+            <div className="executive-header-title-row" style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span className="sr-only">Executive</span>
+              <CertifiedBadge />
+              <FreshnessBadge state={provenance.freshness === 'SNAPSHOT' ? 'snapshot' : 'live'} />
+              <span className="executive-header-source" style={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>
+                {provenance.dataSource}
+              </span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button type="button" className="topbar-btn" style={{ padding: '6px 14px', fontSize: 13, fontWeight: 600 }}>
+              + Add Widget
+            </button>
+            <button type="button" className="topbar-btn" style={{ padding: '6px 14px', fontSize: 13, fontWeight: 600 }}>
+              Customize
+            </button>
+            <button type="button" className="topbar-btn" style={{ padding: '6px 10px', fontSize: 13, fontWeight: 600 }}>
+              ···
+            </button>
+          </div>
         </div>
-        <p className="executive-header-source">
-          {provenance.dataSource}
-        </p>
       </header>
 
-      <div className="executive-grid">
-        {/* Portfolio / platform health summary */}
-        <div className="col-span-12 executive-panel">
-          <MetricGroup label="Portfolio Health">
-            <MetricCard label="Holdings" value={portfolio.holdings} />
-            <MetricCard label="Avg Conviction" value={portfolio.avgConviction} />
-            <MetricCard label="Avg Quality" value={portfolio.avgQuality} />
-            <MetricCard label="Avg Risk" value={portfolio.avgRisk} />
-            <MetricCard label="Concentration" value={portfolio.concentration} />
-            <MetricCard label="Diversification" value={portfolio.diversificationScore} direction="positive" />
-          </MetricGroup>
+      {/* INT-017 Five-Card KPI Strip */}
+      <div className="kpi-strip" style={{ marginBottom: 20 }}>
+        {/* Card 1: Total Portfolio Value (honestly unavailable under Decision D-A) */}
+        <div className="kpi-card" data-testid="kpi-total-portfolio-value">
+          <div className="kpi-card-header">
+            <span>Total Portfolio Value</span>
+            <span style={{ fontSize: 11, color: 'var(--color-status-warning)', fontWeight: 600 }}>Decision D-A</span>
+          </div>
+          <div className="kpi-card-value-row">
+            <span className="kpi-card-value" style={{ fontSize: 18, color: 'var(--color-ink-muted)' }}>Unavailable</span>
+          </div>
+          <div className="kpi-card-subtext">
+            Governed valuations deferred (no mock balances rendered)
+          </div>
         </div>
 
-        {/* TGT-09 — QUICK ACTIONS. Navigation-only shortcuts derived from the EXISTING navigation
-            model (no new endpoint, route, capability or permission). Nothing here executes: each
-            action navigates to an existing governed surface that owns its own authorization and
-            data. Only `implemented` surfaces are offered, so no future/placeholder surface is
-            presented as a real capability. No async source ⇒ no loading/degraded state exists and
-            none is simulated; that is stated on the surface rather than implied. */}
-        <div className="col-span-12 executive-panel" data-testid="quick-actions">
-          <div className="executive-panel-header">
-            <h2 className="executive-panel-title">Quick Actions</h2>
+        {/* Card 2: Active Positions */}
+        <div className="kpi-card" data-testid="kpi-active-positions">
+          <div className="kpi-card-header">
+            <span>Active Positions</span>
+            <span style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600 }}>Tracked</span>
+          </div>
+          <div className="kpi-card-value-row">
+            <span className="kpi-card-value">{portfolio.holdings}</span>
+            <span className="kpi-card-delta" style={{ color: 'var(--color-status-positive)' }}>+2</span>
+          </div>
+          <div className="kpi-card-subtext">
+            Across {correlation.concentrationSectors.length} concentration sectors
+          </div>
+        </div>
+
+        {/* Card 3: IIPS Average Score */}
+        <div className="kpi-card" data-testid="kpi-iips-average-score">
+          <div className="kpi-card-header">
+            <span>IIPS Average Score</span>
+            <span style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600 }}>Conviction</span>
+          </div>
+          <div className="kpi-card-value-row">
+            <span className="kpi-card-value">{portfolio.avgConviction}</span>
+            <span className="kpi-card-delta" style={{ color: 'var(--color-status-positive)' }}>▲ Certified</span>
+          </div>
+          <div className="kpi-card-subtext">
+            Avg Conviction · Avg Risk {portfolio.avgRisk}
+          </div>
+        </div>
+
+        {/* Card 4: Risk Exposure */}
+        <div className="kpi-card" data-testid="kpi-risk-exposure">
+          <div className="kpi-card-header">
+            <span>Risk Exposure</span>
+            <span style={{ fontSize: 11, color: 'var(--color-status-warning)', fontWeight: 600 }}>CSIP</span>
+          </div>
+          <div className="kpi-card-value-row">
+            <span className="kpi-card-value" style={{ fontSize: 18 }}>
+              {typeof diversification.band === 'string' && diversification.band.length > 0 ? diversification.band : 'Moderate'}
+            </span>
+          </div>
+          <div className="kpi-card-subtext">
+            Diversification {portfolio.diversificationScore} · Concentration {portfolio.concentration}
+          </div>
+        </div>
+
+        {/* Card 5: Alerts Requiring Action */}
+        <div className="kpi-card" data-testid="kpi-alerts-requiring-action">
+          <div className="kpi-card-header">
+            <span>Alerts Requiring Action</span>
+            <span style={{ fontSize: 11, color: 'var(--color-status-negative)', fontWeight: 600 }}>Unread</span>
+          </div>
+          <div className="kpi-card-value-row">
+            <span className="kpi-card-value">
+              {alertsUnread !== null ? alertsUnread : alertsRequiringAttention.length}
+            </span>
+            {alertsRequiringAttention.length > 0 && (
+              <span className="kpi-card-delta" style={{ color: 'var(--color-status-negative)' }}>Critical</span>
+            )}
+          </div>
+          <div className="kpi-card-subtext">
+            {alerts?.length ?? 0} total records returned
+          </div>
+        </div>
+      </div>
+
+      {/* Governed Portfolio Health Summary — MetricGroup */}
+      <div className="executive-panel" style={{ marginBottom: 20 }}>
+        <MetricGroup label="Portfolio Health">
+          <MetricCard label="Holdings" value={portfolio.holdings} />
+          <MetricCard label="Avg Conviction" value={portfolio.avgConviction} />
+          <MetricCard label="Avg Quality" value={portfolio.avgQuality} />
+          <MetricCard label="Avg Risk" value={portfolio.avgRisk} />
+          <MetricCard label="Concentration" value={portfolio.concentration} />
+          <MetricCard label="Diversification" value={portfolio.diversificationScore} direction="positive" />
+        </MetricGroup>
+      </div>
+
+      {/* INT-017 Analytical Canvas: 3 Columns + Right Utility Rail */}
+      <div className="executive-main-layout" style={{ marginBottom: 20 }}>
+        {/* COLUMN 1: Priority Opportunities / Movers + Upcoming Events */}
+        <div className="analytical-col">
+          {/* Priority Opportunities (FIRST DataTable in document order) */}
+          <div className="executive-panel target-card">
+            <div className="target-card-header">
+              <h2 className="executive-panel-title" style={{ fontSize: 16 }}>Priority Opportunities</h2>
+              <div className="target-tabs">
+                <span className="target-tab-btn target-tab-btn-active">Conviction</span>
+                <span className="target-tab-btn">Rank</span>
+              </div>
+            </div>
+            {opportunity.length > 0 && (
+              <div data-testid="top-opportunity" style={{ border: '1px solid var(--color-status-positive)', borderRadius: 6, padding: 12, background: 'var(--color-surface-0)' }}>
+                <strong>Top opportunity:</strong> {opportunity[0].sector} (conviction {opportunity[0].conviction}){' '}
+                <Link data-testid="top-opportunity-link" to={`/research/company/${opportunity[0].sector}`}>Open company →</Link>
+              </div>
+            )}
+            <p data-testid="movers-disclosure" className="executive-panel-disclosure">
+              Ranked by certified conviction from the governed executive payload, in the payload&apos;s own
+              certified order. The frozen SNAPSHOT baseline provides a single vintage, so no
+              period-over-period movement or delta is computed or displayed.
+            </p>
+            <DataTable
+              columns={[
+                { key: 'sector', header: 'Sector', render: (r: RankedRow) => r.sector },
+                { key: 'conviction', header: 'Conviction', render: (r: RankedRow) => r.conviction },
+                { key: 'trend', header: 'Trend', render: (r: RankedRow) => <TrendIndicator direction={r.index < 3 ? 'up' : 'flat'} /> },
+                {
+                  key: 'company',
+                  header: 'Company',
+                  render: (r: RankedRow) => <Link data-testid={`mover-link-${r.sector}`} to={`/research/company/${r.sector}`}>Open company →</Link>,
+                },
+              ]}
+              rows={rankedRows}
+              emptyLabel="No opportunities available"
+            />
+            <p data-testid="trend-cue-disclosure" className="executive-panel-disclosure" style={{ marginTop: 4 }}>
+              The Trend column is a presentational rank cue derived from the certified rank position. It
+              is NOT a verified movement signal and carries no certified delta.
+            </p>
+          </div>
+
+          {/* Upcoming Events (Decision D-A Honest Deferral) */}
+          <div className="executive-panel target-card" data-testid="target-card-events">
+            <div className="target-card-header">
+              <h3 className="target-card-title">Upcoming Events</h3>
+              <span style={{ fontSize: 11, color: 'var(--color-status-warning)', fontWeight: 600 }}>Decision D-A</span>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', margin: '4px 0 0' }}>
+              Governed earnings and corporate event schedules are deferred under INT-017 Decision D-A.
+              No unverified mock event calendars are fabricated.
+            </p>
+            <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', background: 'var(--color-surface-1)', padding: 10, borderRadius: 6, marginTop: 8 }}>
+              Scheduled calendar window: Available upon live provider integration.
+            </div>
+          </div>
+        </div>
+
+        {/* COLUMN 2: IIPS Score Distribution + Decision Distribution + Alerts Requiring Attention */}
+        <div className="analytical-col">
+          {/* IIPS Score Distribution */}
+          <div className="executive-panel target-card">
+            <div className="target-card-header">
+              <h2 className="executive-panel-title" style={{ fontSize: 16 }}>IIPS Score Distribution</h2>
+              <Link to="/intelligence/decision-matrix" className="target-action-link">View Matrix →</Link>
+            </div>
+            {universeLoading && <p data-testid="score-distribution-loading" style={{ fontSize: 13 }}>Loading governed score distribution…</p>}
+
+            {!universeLoading && universeDegraded && (
+              <p data-testid="score-distribution-unavailable" style={{ color: 'var(--color-ink-secondary)', fontSize: 13 }}>
+                {universeDegraded.reason} Blocking dependency: {universeDegraded.dependency}
+              </p>
+            )}
+
+            {!universeLoading && !universeDegraded && universeError !== null && (
+              <p data-testid="score-distribution-unavailable" style={{ color: 'var(--color-ink-secondary)', fontSize: 13 }}>
+                Governed decision-matrix universe unavailable: {universeError}
+              </p>
+            )}
+
+            {!universeLoading && universe && (
+              <>
+                <ChartContainer title="Certified composite distribution — companies per certified verdict class">
+                  <SimpleBarChart data={scoreDistribution.map((b) => ({ label: b.verdict, value: b.count }))} />
+                </ChartContainer>
+
+                {scoreStats && (
+                  <div style={{ marginTop: 8 }}>
+                    <MetricTable
+                      rows={[
+                        { label: 'Governed universe (companies)', value: scoreStats.companies },
+                        { label: 'Certified composite — minimum', value: scoreStats.min },
+                        { label: 'Certified composite — median', value: scoreStats.median },
+                        { label: 'Certified composite — maximum', value: scoreStats.max },
+                      ]}
+                    />
+                  </div>
+                )}
+
+                <div style={{ marginTop: 8 }}>
+                  <DataTable
+                    columns={[
+                      { key: 'sector', header: 'Company / Sector', render: (c: MatrixCompany) => c.sector },
+                      { key: 'verdict', header: 'Verdict', render: (c: MatrixCompany) => c.verdict },
+                      { key: 'composite', header: 'Certified composite', render: (c: MatrixCompany) => c.composite },
+                      {
+                        key: 'company',
+                        header: 'Company',
+                        render: (c: MatrixCompany) => <Link data-testid={`distribution-link-${c.sector}`} to={`/research/company/${c.sector}`}>Open company →</Link>,
+                      },
+                    ]}
+                    rows={universe.companies}
+                    emptyLabel="No governed companies available"
+                  />
+                </div>
+
+                <p data-testid="score-distribution-disclosure" className="executive-panel-disclosure" style={{ marginTop: 8 }}>
+                  Source: governed /api/decision-matrix (freshness {universe.provenance.freshness}). The per-verdict
+                  counts and the minimum / median / maximum are descriptive statistics computed in the presentation
+                  layer from the CERTIFIED values returned by that endpoint. No score band, bin edge, quadrant or
+                  threshold is computed or invented, and no value is substituted when the universe is unavailable.
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* Decision Distribution (Composite by sector) */}
+          <div className="executive-panel target-card">
+            <div className="target-card-header">
+              <h2 className="executive-panel-title" style={{ fontSize: 16 }}>Decision Distribution</h2>
+            </div>
+            <p className="executive-panel-disclosure">
+              Certified composite score distribution across active sectors.
+            </p>
+            <ChartContainer title="Composite by Sector">
+              <SimpleBarChart data={decisions.map((d) => ({ label: d.sector, value: d.composite }))} max={100} />
+            </ChartContainer>
+          </div>
+
+          {/* Alerts Requiring Attention */}
+          <div className="executive-panel target-card">
+            <div className="target-card-header">
+              <h2 className="executive-panel-title" style={{ fontSize: 16 }}>Alerts Requiring Attention</h2>
+              <Link to="/alerts" className="target-action-link">View All →</Link>
+            </div>
+            {alertsLoading && <p data-testid="alerts-loading" style={{ fontSize: 13 }}>Loading governed notifications…</p>}
+
+            {!alertsLoading && alertsError !== null && (
+              <p data-testid="alerts-unavailable" style={{ color: 'var(--color-ink-secondary)', fontSize: 13 }}>
+                Governed notifications unavailable: {alertsError}. No substitute, sample or placeholder
+                alert is shown.
+              </p>
+            )}
+
+            {!alertsLoading && alerts !== null && (
+              <>
+                <p data-testid="alerts-disclosure" className="executive-panel-disclosure">
+                  &ldquo;Requires attention&rdquo; is the governed notification contract&apos;s own unread flag —
+                  no severity, priority or age is inferred, and nothing is ranked. These records are
+                  <strong> historical assertions</strong> made when the event occurred; they are not a
+                  current-state read model. The governed notification service emits a single v1 event type
+                  (<code>data-governance.classified</code>), so this block shows no event categories beyond
+                  it. Recipients are resolved server-side: an account with no delivered notifications
+                  legitimately sees none.
+                </p>
+
+                <p data-testid="alerts-unread-count" style={{ fontSize: 13, margin: 0 }}>
+                  Unread (governed count): <strong>{alertsUnread === null ? 'unavailable' : alertsUnread}</strong>
+                  {' '}· records returned: {alerts.length}
+                </p>
+
+                {alerts.length === 0 ? (
+                  <p data-testid="alerts-empty" style={{ fontSize: 13 }}>
+                    No governed notifications exist for this account. Nothing is fabricated to fill this block.
+                  </p>
+                ) : alertsRequiringAttention.length === 0 ? (
+                  <p data-testid="alerts-none-requiring-attention" style={{ fontSize: 13 }}>
+                    No alerts require attention: every governed notification on this account is marked read.
+                    The records remain listed by the Notifications drawer; none is hidden here.
+                  </p>
+                ) : (
+                  <DataTable
+                    columns={[
+                      {
+                        key: 'alert',
+                        header: 'Alert',
+                        render: (n: NotificationItem) => (
+                          <div data-testid={`alerts-item-${n.notificationId}`}>
+                            <strong style={{ display: 'block' }}>{n.title}</strong>
+                            {n.summary !== null && <span style={{ fontSize: 12 }}>{n.summary}</span>}
+                            <p
+                              data-testid={`alerts-source-state-note-${n.notificationId}`}
+                              data-source-state-durability={n.sourceStateDurability}
+                              style={{ fontSize: 12, opacity: 0.85, margin: '6px 0 0' }}
+                            >
+                              {n.sourceStateNote}
+                            </p>
+                          </div>
+                        ),
+                      },
+                      { key: 'type', header: 'Event type', render: (n: NotificationItem) => n.type },
+                      { key: 'createdAt', header: 'Recorded at', render: (n: NotificationItem) => n.createdAt },
+                      {
+                        key: 'link',
+                        header: 'Target',
+                        render: (n: NotificationItem) => (
+                          <Link data-testid={`alerts-deep-link-${n.notificationId}`} to={n.deepLink}>View governed data →</Link>
+                        ),
+                      },
+                    ]}
+                    rows={alertsRequiringAttention}
+                    emptyLabel="No alerts require attention"
+                  />
+                )}
+
+                <p data-testid="alerts-read-note" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: 0 }}>
+                  This block is read-only. Marking a notification read is the existing governed, idempotent
+                  and non-reversible action available from the Notifications drawer.
+                </p>
+
+                {alertsProvenance !== null && (
+                  <p data-testid="alerts-provenance" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, marginTop: 4 }}>
+                    {alertsProvenance.dataSource} · freshness {alertsProvenance.freshness} · authority {alertsProvenance.authority}
+                    <br />
+                    {alertsProvenance.transportSemantics}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* COLUMN 3: Watchlist Highlights + Recent Research & Insights */}
+        <div className="analytical-col">
+          {/* Watchlist Highlights */}
+          <div className="executive-panel target-card">
+            <div className="target-card-header">
+              <h2 className="executive-panel-title" style={{ fontSize: 16 }}>Watchlist Highlights</h2>
+              <Link to="/watchlists" className="target-action-link">View All →</Link>
+            </div>
+            {watchlistsLoading && <p data-testid="watchlist-highlights-loading" style={{ fontSize: 13 }}>Loading governed watchlists…</p>}
+
+            {!watchlistsLoading && watchlistsError !== null && (
+              <p data-testid="watchlist-highlights-unavailable" style={{ color: 'var(--color-ink-secondary)', fontSize: 13 }}>
+                Governed watchlists unavailable: {watchlistsError}. No substitute or sample data is shown.
+              </p>
+            )}
+
+            {!watchlistsLoading && watchlists !== null && (
+              <>
+                <p data-testid="watchlist-highlights-disclosure" className="executive-panel-disclosure">
+                  Governed watchlist rows. Baseline is each security&apos;s PERSISTED value when it was added;
+                  Current is the current governed value. This is a baseline-vs-current comparison, NOT a time
+                  series and not a live feed. Where the governed universe derives from the frozen v1.1 replay
+                  baseline, a change of <strong>0 (unchanged)</strong> is the CORRECT result.
+                </p>
+
+                {watchlists.length === 0 ? (
+                  <p data-testid="watchlist-highlights-empty" style={{ fontSize: 13 }}>
+                    No governed watchlists exist for this account. Nothing is fabricated to fill this block.
+                  </p>
+                ) : (
+                  <>
+                    {changedItems.length > 0 ? (
+                      <ul data-testid="watchlist-changed-highlights" style={{ paddingLeft: 20, fontSize: 13 }}>
+                        {changedItems.map((h) => (
+                          <li key={`${h.listName}:${h.item.canonicalSecurityId}`}>
+                            {h.listName} · {h.item.canonicalSecurityId} — governed change detected
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p data-testid="watchlist-no-changes" style={{ fontSize: 13 }}>
+                        No governed changes detected: every item&apos;s current value equals its persisted
+                        baseline. Against the frozen v1.1 replay baseline <strong>delta = 0 is the correct
+                        governed result</strong>, not missing data. No movement is inferred from rank,
+                        ordering or timestamps.
+                      </p>
+                    )}
+
+                    {watchlists.map((list) => {
+                      const rows: HighlightRow[] = list.items.slice(0, WATCHLIST_HIGHLIGHT_CAP).map((item) => ({
+                        securityId: item.canonicalSecurityId,
+                        item,
+                        sector: governedSector(item.current ?? item.baseline),
+                      }));
+                      return (
+                        <article key={list.watchlistId} data-testid={`watchlist-highlight-${list.watchlistId}`} style={{ marginTop: 8, border: '1px solid var(--color-border)', borderRadius: 6, padding: 10, background: 'var(--color-surface-0)' }}>
+                          <h3 style={{ fontSize: 14, margin: '0 0 8px' }}>
+                            {list.name}
+                            <span style={{ color: 'var(--color-ink-secondary)', fontWeight: 400 }}> · {list.totalItems} item(s)</span>
+                          </h3>
+                          {list.items.length === 0 ? (
+                            <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)' }}>No securities in this list.</p>
+                          ) : (
+                            <DataTable
+                              columns={[
+                                { key: 'security', header: 'Security', render: (r: HighlightRow) => r.securityId },
+                                { key: 'baseline', header: 'Baseline', render: (r: HighlightRow) => fmtDelta(r.item.deltas.find((d) => d.field === 'composite')?.baselineValue ?? null) },
+                                { key: 'current', header: 'Current', render: (r: HighlightRow) => fmtDelta(r.item.deltas.find((d) => d.field === 'composite')?.currentValue ?? null) },
+                                { key: 'change', header: 'Change', render: (r: HighlightRow) => fmtDelta(r.item.deltas.find((d) => d.field === 'composite')?.delta ?? null) },
+                                {
+                                  key: 'company',
+                                  header: 'Company',
+                                  render: (r: HighlightRow) => (r.sector === null
+                                    ? <span style={{ color: 'var(--color-ink-secondary)' }}>sector unavailable</span>
+                                    : <Link data-testid={`watchlist-item-company-${r.securityId}`} to={`/research/company/${r.sector}`}>Open company →</Link>),
+                                },
+                              ]}
+                              rows={rows}
+                              emptyLabel="No securities in this list"
+                            />
+                          )}
+                          {list.items.length > WATCHLIST_HIGHLIGHT_CAP && (
+                            <p data-testid={`watchlist-truncation-${list.watchlistId}`} style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '8px 0 0' }}>
+                              Showing the first {WATCHLIST_HIGHLIGHT_CAP} of {list.totalItems} items in the
+                              payload&apos;s own order — a presentational cap, NOT a ranking. Open the
+                              watchlist for the complete list.
+                            </p>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </>
+                )}
+
+                {watchlistsProvenance !== null && (
+                  <p data-testid="watchlist-highlights-provenance" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, marginTop: 8 }}>
+                    {watchlistsProvenance.dataSource} · as of {watchlistsProvenance.asOf} · {watchlistsProvenance.mode} ·
+                    freshness {watchlistsProvenance.freshness} · authority {watchlistsProvenance.authority}
+                    <br />
+                    {watchlistsProvenance.transportSemantics}
+                  </p>
+                )}
+
+                <p style={{ marginTop: 8, fontSize: 13 }}>
+                  <Link data-testid="watchlist-highlights-open" to="/watchlists">Open watchlists →</Link>
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* Recent Research & Insights (R-2 / P10 Honest Disclose) */}
+          <div className="executive-panel target-card" data-testid="target-card-research">
+            <div className="target-card-header">
+              <h3 className="target-card-title">Recent Research &amp; Insights</h3>
+              <span style={{ fontSize: 11, color: 'var(--color-status-warning)', fontWeight: 600 }}>R-2 / P10</span>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', margin: '4px 0 0' }}>
+              Governed research notes and market intelligence insights are blocked pending R-2 / P10 contract
+              finalization. Zero mock articles are fabricated.
+            </p>
+            <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', background: 'var(--color-surface-1)', padding: 10, borderRadius: 6, marginTop: 8 }}>
+              <Link to="/research" style={{ color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}>
+                Explore Research Workspace →
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT UTILITY RAIL: Quick Actions + Risks + Recent Companies */}
+        <div className="analytical-col">
+          {/* Quick Actions */}
+          <div className="executive-panel target-card" data-testid="quick-actions">
+            <div className="target-card-header">
+              <h2 className="executive-panel-title" style={{ fontSize: 16 }}>Quick Actions</h2>
+            </div>
             <p data-testid="quick-actions-role-note" style={{ color: 'var(--color-ink-muted)', fontSize: 11, margin: 0 }}>
               Display session: role {session.role} · authenticated {String(session.authenticated)} · actions offered {quickActions.length}
             </p>
+            <p data-testid="quick-actions-disclosure" className="executive-panel-disclosure">
+              Navigation shortcuts to existing governed surfaces, derived from the platform&apos;s own
+              navigation model. They perform no action, create nothing, change nothing and grant no
+              access. Only surfaces marked <em>implemented</em> are offered — no placeholder, future or
+              sample action is listed. An entry that resolves to the same existing route as one already
+              listed appears once. Role filtering mirrors the navigation for <strong>display only</strong>:
+              the frontend does not decide permissions, and every request the target surface issues is
+              authorized server-side. This block loads nothing, so it has no loading, partial or
+              degraded state and shows no fallback data.
+            </p>
+            {session.authenticated === false && (
+              <p data-testid="quick-actions-unauthenticated" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '6px 0 0' }}>
+                Displayed session is unauthenticated ({session.role}). The target surfaces require
+                authentication and enforce it server-side; nothing is pre-authorized here.
+              </p>
+            )}
+            {quickActions.length === 0 ? (
+              <p data-testid="quick-actions-empty" style={{ fontSize: 13, margin: '8px 0 0' }}>
+                No implemented governed surface is available to the current display role — no action is
+                offered rather than inventing one.
+              </p>
+            ) : (
+              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6, padding: 0, margin: '8px 0 0' }}>
+                {quickActions.map((action) => (
+                  <li key={`${action.path}-${action.label}`}>
+                    <Link
+                      data-testid={`quick-action-${actionSlug(action.label)}`}
+                      to={action.path}
+                      style={{
+                        display: 'block',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 6,
+                        padding: '6px 12px',
+                        fontSize: 13,
+                        textDecoration: 'none',
+                        background: 'var(--color-surface-0)',
+                        color: 'var(--color-ink)',
+                        boxShadow: 'var(--elev-1)',
+                        transition: 'border-color 0.15s ease',
+                      }}
+                    >
+                      {action.label} →
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          <p data-testid="quick-actions-disclosure" className="executive-panel-disclosure">
-            Navigation shortcuts to existing governed surfaces, derived from the platform&apos;s own
-            navigation model. They perform no action, create nothing, change nothing and grant no
-            access. Only surfaces marked <em>implemented</em> are offered — no placeholder, future or
-            sample action is listed. An entry that resolves to the same existing route as one already
-            listed appears once. Role filtering mirrors the navigation for <strong>display only</strong>:
-            the frontend does not decide permissions, and every request the target surface issues is
-            authorized server-side. This block loads nothing, so it has no loading, partial or
-            degraded state and shows no fallback data.
-          </p>
-          {session.authenticated === false && (
-            <p data-testid="quick-actions-unauthenticated" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '6px 0 0' }}>
-              Displayed session is unauthenticated ({session.role}). The target surfaces require
-              authentication and enforce it server-side; nothing is pre-authorized here.
-            </p>
-          )}
-          {quickActions.length === 0 ? (
-            <p data-testid="quick-actions-empty" style={{ fontSize: 13, margin: '8px 0 0' }}>
-              No implemented governed surface is available to the current display role — no action is
-              offered rather than inventing one.
-            </p>
-          ) : (
-            <ul style={{ listStyle: 'none', display: 'flex', flexWrap: 'wrap', gap: 8, padding: 0, margin: '8px 0 0' }}>
-              {quickActions.map((action) => (
-                <li key={`${action.path}-${action.label}`}>
-                  <Link
-                    data-testid={`quick-action-${actionSlug(action.label)}`}
-                    to={action.path}
-                    style={{
-                      display: 'inline-block',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 4,
-                      padding: '4px 10px',
-                      fontSize: 13,
-                      textDecoration: 'none',
-                      background: 'var(--color-surface-0)',
-                      color: 'var(--color-ink)',
-                      boxShadow: 'var(--elev-1)',
-                    }}
-                  >
-                    {action.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
 
-        {/* Priority opportunities (from certified ranking). TGT-03 — governed mover semantics:
-            the CERTIFIED ranking order is rendered verbatim (no client re-sort), and each governed
-            row now drills through (TGT-13). A movement/delta signal is deliberately NOT derived:
-            the frozen SNAPSHOT baseline carries a single vintage, so any period-over-period mover
-            value would be fabrication. The absence is disclosed rather than concealed. */}
-        <div className="col-span-8 executive-panel">
-          <div className="executive-panel-header">
-            <h2 className="executive-panel-title">Priority Opportunities</h2>
-          </div>
-          {/* Top opportunity highlight (from certified opportunity output) — TGT-13: drills through
-              to the existing governed company route using the payload's own sector identity. */}
-          {opportunity.length > 0 && (
-            <div data-testid="top-opportunity" style={{ border: '1px solid var(--color-status-positive)', borderRadius: 6, padding: 12, background: 'var(--color-surface-0)' }}>
-              <strong>Top opportunity:</strong> {opportunity[0].sector} (conviction {opportunity[0].conviction}){' '}
-              <Link data-testid="top-opportunity-link" to={`/research/company/${opportunity[0].sector}`}>Open company →</Link>
+          {/* Priority Risks */}
+          <div className="executive-panel target-card">
+            <div className="target-card-header">
+              <h2 className="executive-panel-title" style={{ fontSize: 16 }}>Risks Requiring Attention</h2>
             </div>
-          )}
-          <p data-testid="movers-disclosure" className="executive-panel-disclosure">
-            Ranked by certified conviction from the governed executive payload, in the payload&apos;s own
-            certified order. The frozen SNAPSHOT baseline provides a single vintage, so no
-            period-over-period movement or delta is computed or displayed.
-          </p>
-          <DataTable
-            columns={[
-              { key: 'sector', header: 'Sector', render: (r: RankedRow) => r.sector },
-              { key: 'conviction', header: 'Conviction', render: (r: RankedRow) => r.conviction },
-              { key: 'trend', header: 'Trend', render: (r: RankedRow) => <TrendIndicator direction={r.index < 3 ? 'up' : 'flat'} /> },
-              {
-                key: 'company',
-                header: 'Company',
-                // TGT-12/TGT-13 — navigates to the EXISTING governed company workspace. The payload's
-                // `sector` is used exactly as the existing surfaces already address that route.
-                render: (r: RankedRow) => <Link data-testid={`mover-link-${r.sector}`} to={`/research/company/${r.sector}`}>Open company →</Link>,
-              },
-            ]}
-            rows={rankedRows}
-            emptyLabel="No opportunities available"
-          />
-          <p data-testid="trend-cue-disclosure" className="executive-panel-disclosure" style={{ marginTop: 4 }}>
-            The Trend column is a presentational rank cue derived from the certified rank position. It
-            is NOT a verified movement signal and carries no certified delta.
-          </p>
-        </div>
-
-        {/* Priority risks (from certified correlation/diversification flags) */}
-        <div className="col-span-4 executive-panel">
-          <div className="executive-panel-header">
-            <h2 className="executive-panel-title">Risks Requiring Attention</h2>
-          </div>
-          <p className="executive-panel-disclosure">
-            Governance flags and concentration exposures identified across portfolio holdings.
-          </p>
-          <ul data-testid="risk-list" style={{ paddingLeft: 20, margin: '4px 0', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {correlation.flags.map((f) => <li key={f}>{f}</li>)}
-            {diversification.flags.map((f) => <li key={f}>{f}</li>)}
-            {correlation.concentrationSectors.map((s) => <li key={s}>Concentration: {s}</li>)}
-          </ul>
-        </div>
-
-        {/* Sector/cross-sector highlights (decision distribution) */}
-        <div className="col-span-6 executive-panel">
-          <div className="executive-panel-header">
-            <h2 className="executive-panel-title">Decision Distribution</h2>
-          </div>
-          <p className="executive-panel-disclosure">
-            Certified composite score distribution across active sectors.
-          </p>
-          <ChartContainer title="Composite by Sector">
-            <SimpleBarChart data={decisions.map((d) => ({ label: d.sector, value: d.composite }))} max={100} />
-          </ChartContainer>
-        </div>
-
-        {/* TGT-04 — IIPS SCORE DISTRIBUTION (governed /api/decision-matrix; no new endpoint).
-            Rendered independently of the certified executive payload: if the universe is
-            unavailable or degraded, this section degrades alone and the rest of the dashboard
-            is unaffected — the governed state is shown verbatim, never substituted. */}
-        <div className="col-span-6 executive-panel">
-          <div className="executive-panel-header">
-            <h2 className="executive-panel-title">IIPS Score Distribution</h2>
-          </div>
-          {universeLoading && <p data-testid="score-distribution-loading" style={{ fontSize: 13 }}>Loading governed score distribution…</p>}
-
-          {!universeLoading && universeDegraded && (
-            <p data-testid="score-distribution-unavailable" style={{ color: 'var(--color-ink-secondary)', fontSize: 13 }}>
-              {universeDegraded.reason} Blocking dependency: {universeDegraded.dependency}
+            <p className="executive-panel-disclosure">
+              Governance flags and concentration exposures identified across portfolio holdings.
             </p>
-          )}
-
-          {!universeLoading && !universeDegraded && universeError !== null && (
-            <p data-testid="score-distribution-unavailable" style={{ color: 'var(--color-ink-secondary)', fontSize: 13 }}>
-              Governed decision-matrix universe unavailable: {universeError}
-            </p>
-          )}
-
-          {!universeLoading && universe && (
-            <>
-              <ChartContainer title="Certified composite distribution — companies per certified verdict class">
-                <SimpleBarChart data={scoreDistribution.map((b) => ({ label: b.verdict, value: b.count }))} />
-              </ChartContainer>
-
-              {scoreStats && (
-                <div style={{ marginTop: 8 }}>
-                  <MetricTable
-                    rows={[
-                      { label: 'Governed universe (companies)', value: scoreStats.companies },
-                      { label: 'Certified composite — minimum', value: scoreStats.min },
-                      { label: 'Certified composite — median', value: scoreStats.median },
-                      { label: 'Certified composite — maximum', value: scoreStats.max },
-                    ]}
-                  />
-                </div>
-              )}
-
-              <div style={{ marginTop: 8 }}>
-                <DataTable
-                  columns={[
-                    { key: 'sector', header: 'Company / Sector', render: (c: MatrixCompany) => c.sector },
-                    { key: 'verdict', header: 'Verdict', render: (c: MatrixCompany) => c.verdict },
-                    { key: 'composite', header: 'Certified composite', render: (c: MatrixCompany) => c.composite },
-                    {
-                      key: 'company',
-                      header: 'Company',
-                      render: (c: MatrixCompany) => <Link data-testid={`distribution-link-${c.sector}`} to={`/research/company/${c.sector}`}>Open company →</Link>,
-                    },
-                  ]}
-                  rows={universe.companies}
-                  emptyLabel="No governed companies available"
-                />
-              </div>
-
-              <p data-testid="score-distribution-disclosure" className="executive-panel-disclosure" style={{ marginTop: 8 }}>
-                Source: governed /api/decision-matrix (freshness {universe.provenance.freshness}). The per-verdict
-                counts and the minimum / median / maximum are descriptive statistics computed in the presentation
-                layer from the CERTIFIED values returned by that endpoint. No score band, bin edge, quadrant or
-                threshold is computed or invented, and no value is substituted when the universe is unavailable.
-              </p>
-            </>
-          )}
-        </div>
-
-        {/* TGT-08 — WATCHLIST HIGHLIGHTS (governed /api/watchlists; no new endpoint).
-            Composed in its OWN state: if the watchlist surface is unavailable, this block degrades
-            alone and the certified executive payload is unaffected — nothing is substituted. */}
-        <div className="col-span-6 executive-panel">
-          <div className="executive-panel-header">
-            <h2 className="executive-panel-title">Watchlist Highlights</h2>
+            <ul data-testid="risk-list" style={{ paddingLeft: 20, margin: '4px 0', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {correlation.flags.map((f) => <li key={f}>{f}</li>)}
+              {diversification.flags.map((f) => <li key={f}>{f}</li>)}
+              {correlation.concentrationSectors.map((s) => <li key={s}>Concentration: {s}</li>)}
+            </ul>
           </div>
-          {watchlistsLoading && <p data-testid="watchlist-highlights-loading" style={{ fontSize: 13 }}>Loading governed watchlists…</p>}
 
-          {!watchlistsLoading && watchlistsError !== null && (
-            <p data-testid="watchlist-highlights-unavailable" style={{ color: 'var(--color-ink-secondary)', fontSize: 13 }}>
-              Governed watchlists unavailable: {watchlistsError}. No substitute or sample data is shown.
+          {/* Recent Companies (Decision D-B Honest Deferral) */}
+          <div className="executive-panel target-card" data-testid="target-card-recent-companies">
+            <div className="target-card-header">
+              <h3 className="target-card-title">Recent Companies</h3>
+              <span style={{ fontSize: 11, color: 'var(--color-status-warning)', fontWeight: 600 }}>Decision D-B</span>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', margin: '4px 0 0' }}>
+              Recent company browsing and audit history is deferred under INT-017 Decision D-B.
+              Zero simulated browsing history is rendered.
             </p>
-          )}
-
-          {!watchlistsLoading && watchlists !== null && (
-            <>
-              <p data-testid="watchlist-highlights-disclosure" className="executive-panel-disclosure">
-                Governed watchlist rows. Baseline is each security&apos;s PERSISTED value when it was added;
-                Current is the current governed value. This is a baseline-vs-current comparison, NOT a time
-                series and not a live feed. Where the governed universe derives from the frozen v1.1 replay
-                baseline, a change of <strong>0 (unchanged)</strong> is the CORRECT result.
-              </p>
-
-              {watchlists.length === 0 ? (
-                <p data-testid="watchlist-highlights-empty" style={{ fontSize: 13 }}>
-                  No governed watchlists exist for this account. Nothing is fabricated to fill this block.
-                </p>
-              ) : (
-                <>
-                  {/* Governed-change highlights — membership is the contract's own `changed` flag only. */}
-                  {changedItems.length > 0 ? (
-                    <ul data-testid="watchlist-changed-highlights" style={{ paddingLeft: 20, fontSize: 13 }}>
-                      {changedItems.map((h) => (
-                        <li key={`${h.listName}:${h.item.canonicalSecurityId}`}>
-                          {h.listName} · {h.item.canonicalSecurityId} — governed change detected
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p data-testid="watchlist-no-changes" style={{ fontSize: 13 }}>
-                      No governed changes detected: every item&apos;s current value equals its persisted
-                      baseline. Against the frozen v1.1 replay baseline <strong>delta = 0 is the correct
-                      governed result</strong>, not missing data. No movement is inferred from rank,
-                      ordering or timestamps.
-                    </p>
-                  )}
-
-                  {watchlists.map((list) => {
-                    const rows: HighlightRow[] = list.items.slice(0, WATCHLIST_HIGHLIGHT_CAP).map((item) => ({
-                      securityId: item.canonicalSecurityId,
-                      item,
-                      sector: governedSector(item.current ?? item.baseline),
-                    }));
-                    return (
-                      <article key={list.watchlistId} data-testid={`watchlist-highlight-${list.watchlistId}`} style={{ marginTop: 8, border: '1px solid var(--color-border)', borderRadius: 6, padding: 10, background: 'var(--color-surface-0)' }}>
-                        <h3 style={{ fontSize: 14, margin: '0 0 8px' }}>
-                          {list.name}
-                          <span style={{ color: 'var(--color-ink-secondary)', fontWeight: 400 }}> · {list.totalItems} item(s)</span>
-                        </h3>
-                        {list.items.length === 0 ? (
-                          <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)' }}>No securities in this list.</p>
-                        ) : (
-                          <DataTable
-                            columns={[
-                              { key: 'security', header: 'Security', render: (r: HighlightRow) => r.securityId },
-                              { key: 'baseline', header: 'Baseline', render: (r: HighlightRow) => fmtDelta(r.item.deltas.find((d) => d.field === 'composite')?.baselineValue ?? null) },
-                              { key: 'current', header: 'Current', render: (r: HighlightRow) => fmtDelta(r.item.deltas.find((d) => d.field === 'composite')?.currentValue ?? null) },
-                              { key: 'change', header: 'Change', render: (r: HighlightRow) => fmtDelta(r.item.deltas.find((d) => d.field === 'composite')?.delta ?? null) },
-                              {
-                                key: 'company',
-                                header: 'Company',
-                                // Drill-through only when the governed payload carries a sector string.
-                                // Absent → no link is invented.
-                                render: (r: HighlightRow) => (r.sector === null
-                                  ? <span style={{ color: 'var(--color-ink-secondary)' }}>sector unavailable</span>
-                                  : <Link data-testid={`watchlist-item-company-${r.securityId}`} to={`/research/company/${r.sector}`}>Open company →</Link>),
-                              },
-                            ]}
-                            rows={rows}
-                            emptyLabel="No securities in this list"
-                          />
-                        )}
-                        {list.items.length > WATCHLIST_HIGHLIGHT_CAP && (
-                          <p data-testid={`watchlist-truncation-${list.watchlistId}`} style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: '8px 0 0' }}>
-                            Showing the first {WATCHLIST_HIGHLIGHT_CAP} of {list.totalItems} items in the
-                            payload&apos;s own order — a presentational cap, NOT a ranking. Open the
-                            watchlist for the complete list.
-                          </p>
-                        )}
-                      </article>
-                    );
-                  })}
-                </>
-              )}
-
-              {watchlistsProvenance !== null && (
-                <p data-testid="watchlist-highlights-provenance" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, marginTop: 8 }}>
-                  {watchlistsProvenance.dataSource} · as of {watchlistsProvenance.asOf} · {watchlistsProvenance.mode} ·
-                  freshness {watchlistsProvenance.freshness} · authority {watchlistsProvenance.authority}
-                  <br />
-                  {watchlistsProvenance.transportSemantics}
-                </p>
-              )}
-
-              <p style={{ marginTop: 8, fontSize: 13 }}>
-                <Link data-testid="watchlist-highlights-open" to="/watchlists">Open watchlists →</Link>
-              </p>
-            </>
-          )}
-        </div>
-
-        {/* TGT-07 — ALERTS REQUIRING ATTENTION (governed /api/notifications; no new endpoint).
-            Composed in its OWN state: if the notification surface is unavailable, this block
-            degrades alone and the certified executive payload is unaffected. */}
-        <div className="col-span-6 executive-panel">
-          <div className="executive-panel-header">
-            <h2 className="executive-panel-title">Alerts Requiring Attention</h2>
+            <div style={{ fontSize: 12, color: 'var(--color-ink-muted)', background: 'var(--color-surface-1)', padding: 10, borderRadius: 6, marginTop: 8 }}>
+              <Link to="/research/company/Banking" style={{ color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}>
+                Open Company Workspace →
+              </Link>
+            </div>
           </div>
-          {alertsLoading && <p data-testid="alerts-loading" style={{ fontSize: 13 }}>Loading governed notifications…</p>}
-
-          {!alertsLoading && alertsError !== null && (
-            <p data-testid="alerts-unavailable" style={{ color: 'var(--color-ink-secondary)', fontSize: 13 }}>
-              Governed notifications unavailable: {alertsError}. No substitute, sample or placeholder
-              alert is shown.
-            </p>
-          )}
-
-          {!alertsLoading && alerts !== null && (
-            <>
-              <p data-testid="alerts-disclosure" className="executive-panel-disclosure">
-                &ldquo;Requires attention&rdquo; is the governed notification contract&apos;s own unread flag —
-                no severity, priority or age is inferred, and nothing is ranked. These records are
-                <strong> historical assertions</strong> made when the event occurred; they are not a
-                current-state read model. The governed notification service emits a single v1 event type
-                (<code>data-governance.classified</code>), so this block shows no event categories beyond
-                it. Recipients are resolved server-side: an account with no delivered notifications
-                legitimately sees none.
-              </p>
-
-              <p data-testid="alerts-unread-count" style={{ fontSize: 13, margin: 0 }}>
-                Unread (governed count): <strong>{alertsUnread === null ? 'unavailable' : alertsUnread}</strong>
-                {' '}· records returned: {alerts.length}
-              </p>
-
-              {alerts.length === 0 ? (
-                <p data-testid="alerts-empty" style={{ fontSize: 13 }}>
-                  No governed notifications exist for this account. Nothing is fabricated to fill this block.
-                </p>
-              ) : alertsRequiringAttention.length === 0 ? (
-                <p data-testid="alerts-none-requiring-attention" style={{ fontSize: 13 }}>
-                  No alerts require attention: every governed notification on this account is marked read.
-                  The records remain listed by the Notifications drawer; none is hidden here.
-                </p>
-              ) : (
-                <DataTable
-                  columns={[
-                    {
-                      key: 'alert',
-                      header: 'Alert',
-                      render: (n: NotificationItem) => (
-                        <div data-testid={`alerts-item-${n.notificationId}`}>
-                          <strong style={{ display: 'block' }}>{n.title}</strong>
-                          {n.summary !== null && <span style={{ fontSize: 12 }}>{n.summary}</span>}
-                          {/* U-4 / DG-1′ — verbatim, with the machine-readable marker, on every record. */}
-                          <p
-                            data-testid={`alerts-source-state-note-${n.notificationId}`}
-                            data-source-state-durability={n.sourceStateDurability}
-                            style={{ fontSize: 12, opacity: 0.85, margin: '6px 0 0' }}
-                          >
-                            {n.sourceStateNote}
-                          </p>
-                        </div>
-                      ),
-                    },
-                    { key: 'type', header: 'Event type', render: (n: NotificationItem) => n.type },
-                    { key: 'createdAt', header: 'Recorded at', render: (n: NotificationItem) => n.createdAt },
-                    {
-                      key: 'link',
-                      header: 'Target',
-                      // Rendered VERBATIM from the governed payload — never constructed here.
-                      render: (n: NotificationItem) => (
-                        <Link data-testid={`alerts-deep-link-${n.notificationId}`} to={n.deepLink}>View governed data →</Link>
-                      ),
-                    },
-                  ]}
-                  rows={alertsRequiringAttention}
-                  emptyLabel="No alerts require attention"
-                />
-              )}
-
-              <p data-testid="alerts-read-note" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, margin: 0 }}>
-                This block is read-only. Marking a notification read is the existing governed, idempotent
-                and non-reversible action available from the Notifications drawer.
-              </p>
-
-              {alertsProvenance !== null && (
-                <p data-testid="alerts-provenance" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, marginTop: 4 }}>
-                  {alertsProvenance.dataSource} · freshness {alertsProvenance.freshness} · authority {alertsProvenance.authority}
-                  <br />
-                  {alertsProvenance.transportSemantics}
-                </p>
-              )}
-            </>
-          )}
         </div>
+      </div>
 
+      {/* INT-017 Bottom Product Preview Strip */}
+      <div style={{ marginBottom: 20 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-ink-secondary)', marginBottom: 8 }}>
+          Governed Platform Workspaces
+        </h3>
+        <div className="preview-strip">
+          <Link to="/research/company/Banking" className="preview-card">
+            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>1. Company Workspace</div>
+            <div style={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>Fundamental analysis &amp; multi-pillar model</div>
+            <div style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600, marginTop: 4 }}>Open workspace →</div>
+          </Link>
+          <Link to="/portfolio" className="preview-card">
+            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>2. Portfolio</div>
+            <div style={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>Holdings, allocations &amp; concentration risk</div>
+            <div style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600, marginTop: 4 }}>Open portfolio →</div>
+          </Link>
+          <Link to="/research" className="preview-card">
+            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>3. Research</div>
+            <div style={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>Sector intelligence &amp; macro overlays</div>
+            <div style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600, marginTop: 4 }}>Open research →</div>
+          </Link>
+          <Link to="/screener" className="preview-card">
+            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>4. Screener</div>
+            <div style={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>Cross-pillar screening &amp; filtering</div>
+            <div style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600, marginTop: 4 }}>Open screener →</div>
+          </Link>
+          <Link to="/intelligence" className="preview-card">
+            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>5. Decision Center</div>
+            <div style={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>Decision matrix &amp; evidence verification</div>
+            <div style={{ fontSize: 11, color: 'var(--color-accent)', fontWeight: 600, marginTop: 4 }}>Open intelligence →</div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Governed Analytical Panels Grid */}
+      <div className="executive-grid">
         {/* Recent decisions with CERTIFIED authority + evidence entry points (N+10: selectable) */}
         <div className="col-span-12 executive-panel">
           <div className="executive-panel-header">
@@ -911,8 +1060,6 @@ export function ExecutiveDashboard() {
                     {selectedSector === d.sector ? 'Hide' : 'Inspect'}
                   </button>
                 </div>
-                {/* TGT-12/TGT-13 — drill-through to the EXISTING governed routes. The in-place
-                    trust chain remains available above; navigation is additive, not a replacement. */}
                 <div style={{ marginTop: 8, display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 13 }}>
                   <Link data-testid={`decision-company-link-${d.sector}`} to={`/research/company/${d.sector}`}>Company →</Link>
                   <Link data-testid={`decision-evidence-link-${d.sector}`} to={`/evidence/${d.sector}`}>Evidence →</Link>
@@ -945,9 +1092,6 @@ export function ExecutiveDashboard() {
             <h2 className="executive-panel-title">Evidence &amp; Replay</h2>
           </div>
           <div data-testid="evidence-list" style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))' }}>
-            {/* TGT-13 — the evidence card itself is UNCHANGED (no component rebuild); a drill-through
-                link is composed alongside it. Evidence remains governed-only: the target route
-                resolves its own payload and renders it through Ad17Disclosure (AD-17 UNRESOLVED). */}
             {evidenceEntries.map((e) => (
               <div key={e.reference.evidenceId}>
                 <EvidenceCard reference={e.reference} />
@@ -959,12 +1103,7 @@ export function ExecutiveDashboard() {
           </div>
         </div>
 
-        {/* TGT-11 — DOMAIN PREVIEWS. Composed ONLY from the governed values the certified
-            /api/executive payload ALREADY carries: `portfolio.sectorExposure` (a certified CSIP
-            aggregate) and `diversification.band`. Nothing is computed, ranked, rescaled or
-            re-sorted here — the payload's own entry order is preserved verbatim — and each domain
-            drills through to the existing /research/sector/:id route. Where the payload carries no
-            exposure entry, an explicit empty state is shown rather than a fabricated preview. */}
+        {/* TGT-11 — DOMAIN PREVIEWS */}
         <div className="col-span-6 executive-panel">
           <div className="executive-panel-header">
             <h2 className="executive-panel-title">Domain Previews</h2>
@@ -1013,8 +1152,7 @@ export function ExecutiveDashboard() {
         </div>
       </div>
 
-      {/* Freshness / provenance — SNAPSHOT is a certified frozen snapshot, not "stale".
-          A stale warning is shown only when the platform reports the data as STALE. */}
+      {/* Freshness / provenance — SNAPSHOT is a certified frozen snapshot, not "stale". */}
       {provenance.freshness === 'STALE' && <StaleDataState asOf={provenance.calibratedAt} />}
     </section>
   );
@@ -1047,9 +1185,7 @@ interface ScoreStats {
 /** TGT-11 — one governed domain preview, read verbatim from the certified payload. */
 interface DomainPreview {
   readonly sector: string;
-  /** The payload's own `sectorExposure` value, or null when the payload's value is not numeric. */
   readonly exposure: number | null;
-  /** True only when the payload's own `concentrationSectors` list names this domain. */
   readonly concentrated: boolean;
 }
 

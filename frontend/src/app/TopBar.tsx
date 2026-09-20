@@ -4,7 +4,8 @@
  *
  * P-1: exposes the command-palette trigger (opens the AppShell-mounted palette).
  * P-2 (S-9a): exposes the Notes trigger (opens the AppShell-mounted Notes drawer).
- * P14-R7: institutional tokenized styling for brand identity and action triggers.
+ * P14-R7: INT-017 target visual convergence (institutional brand lockup, search bar,
+ * notification counter pill, and session profile block).
  */
 import type { Role } from '../core/session/session';
 import { useAuth } from '../core/auth/AuthProvider';
@@ -26,22 +27,41 @@ export function TopBar({ role, tenantId, onOpenPalette, onOpenNotifications, unr
   const { status, logout } = useAuth();
   return (
     <header className="topbar-header">
+      {/* Target brand lockup: [II] IIPS Platform */}
       <div className="topbar-brand">
-        <span className="topbar-brand-mark" aria-hidden="true">I</span>
-        <strong style={{ fontSize: '15px' }}>IIPS — Enterprise Investment Intelligence</strong>
+        <span className="topbar-monogram" aria-hidden="true">II</span>
+        <strong style={{ fontSize: '15px' }}>IIPS Platform</strong>
+        <span className="sr-only">IIPS — Enterprise Investment Intelligence</span>
       </div>
+
+      {/* Target center/right controls */}
       <div className="topbar-controls">
         {onOpenPalette && (
           <button
             type="button"
-            className="topbar-btn"
+            className="topbar-search-box"
             data-testid="palette-trigger"
             onClick={onOpenPalette}
             aria-label="Open command palette"
           >
-            <span>⌕</span> Search
+            <span style={{ fontSize: '14px' }}>⌕</span>
+            <span>Global Search</span>
+            <kbd className="topbar-kbd">⌘K</kbd>
           </button>
         )}
+
+        {onOpenPalette && (
+          <button
+            type="button"
+            className="topbar-btn"
+            onClick={onOpenPalette}
+            aria-label="Command Palette"
+            style={{ display: 'none' }}
+          >
+            Command Palette
+          </button>
+        )}
+
         {onOpenNotifications && (
           <button
             type="button"
@@ -49,15 +69,18 @@ export function TopBar({ role, tenantId, onOpenPalette, onOpenNotifications, unr
             data-testid="notification-trigger"
             onClick={onOpenNotifications}
             aria-label={unreadCount > 0 ? `Open notifications, ${unreadCount} unread` : 'Open notifications'}
+            style={{ position: 'relative' }}
           >
-            <span>{'\u2691'}</span> Notifications
+            <span style={{ fontSize: '14px' }}>{'\u2691'}</span>
+            <span>Notifications</span>
             {unreadCount > 0 && (
-              <span data-testid="notification-badge" className="topbar-badge" style={{ marginLeft: 4 }}>
+              <span data-testid="notification-badge" className="topbar-badge">
                 ({unreadCount})
               </span>
             )}
           </button>
         )}
+
         {onOpenNotes && (
           <button
             type="button"
@@ -66,11 +89,22 @@ export function TopBar({ role, tenantId, onOpenPalette, onOpenNotifications, unr
             onClick={onOpenNotes}
             aria-label="Open notes"
           >
-            <span>{'\u270E'}</span> Notes
+            <span>{'\u270E'}</span>
+            <span>Notes</span>
           </button>
         )}
-        <span data-testid="topbar-tenant" className="topbar-session-tag">Tenant: {tenantId}</span>
-        <span data-testid="topbar-role" className="topbar-session-tag">Role: {role}</span>
+
+        {/* Target user profile presentation */}
+        <div className="topbar-session-tag" style={{ gap: 8 }}>
+          <span className="topbar-avatar-circle" aria-hidden="true">
+            {role.charAt(0).toUpperCase()}
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+            <span data-testid="topbar-tenant" style={{ fontWeight: 600 }}>Tenant: {tenantId}</span>
+            <span data-testid="topbar-role" style={{ fontSize: '11px', color: 'var(--color-ink-muted)' }}>Role: {role}</span>
+          </div>
+        </div>
+
         {status === 'authenticated' && (
           <button
             type="button"
