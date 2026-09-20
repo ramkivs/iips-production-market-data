@@ -441,4 +441,101 @@ INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15
     // Clean up
     fs.rmSync(tempDir, { recursive: true, force: true });
   });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 22. Legacy URL & Filename Dual-Era Construction
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-22: constructs legacy URLs and filenames for pre-2024 dates and UDiFF for contemporary dates', () => {
+    // Representative pre-2024 date
+    const legacyRes1 = HistoricalFeasibilityRunner.getArchiveUrl('2023-09-15');
+    assert.strictEqual(legacyRes1.filename, 'cm15SEP2023bhav.csv.zip');
+    assert.strictEqual(
+      legacyRes1.url,
+      'https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/SEP/cm15SEP2023bhav.csv.zip'
+    );
+
+    // 2016 boundary date
+    const legacyRes2 = HistoricalFeasibilityRunner.getArchiveUrl('2016-09-20');
+    assert.strictEqual(legacyRes2.filename, 'cm20SEP2016bhav.csv.zip');
+    assert.strictEqual(
+      legacyRes2.url,
+      'https://nsearchives.nseindia.com/content/historical/EQUITIES/2016/SEP/cm20SEP2016bhav.csv.zip'
+    );
+
+    // 2024 boundary dates: 2024-07-07 (Legacy) vs 2024-07-08 (UDiFF)
+    const cutoffLegacy = HistoricalFeasibilityRunner.getArchiveUrl('2024-07-07');
+    assert.strictEqual(cutoffLegacy.filename, 'cm07JUL2024bhav.csv.zip');
+    assert.strictEqual(
+      cutoffLegacy.url,
+      'https://nsearchives.nseindia.com/content/historical/EQUITIES/2024/JUL/cm07JUL2024bhav.csv.zip'
+    );
+
+    const cutoffUdiff = HistoricalFeasibilityRunner.getArchiveUrl('2024-07-08');
+    assert.strictEqual(cutoffUdiff.filename, 'BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv.zip');
+    assert.strictEqual(
+      cutoffUdiff.url,
+      'https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv.zip'
+    );
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 23. Legacy Archive Evaluation & Schema Conformance
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-23: evaluates valid legacy archive to ACQUIRED_VALID without SCHEMA_MISMATCH, and detects malformed legacy fixture', () => {
+    const legacyZip = createSyntheticUdiffZip('cm15SEP2023bhav.csv', sampleValidLegacyCsv);
+    const rec = HistoricalFeasibilityRunner.evaluateArchive('2023-09-15', { zipBuffer: legacyZip });
+
+    assert.strictEqual(rec.date, '2023-09-15');
+    assert.strictEqual(rec.classification, 'TRADING_DAY');
+    assert.strictEqual(rec.status, 'ACQUIRED_VALID');
+    assert.strictEqual(rec.zipValidity, true);
+    assert.strictEqual(rec.csvValidity, true);
+    assert.strictEqual(rec.schemaValidity, true);
+    assert.strictEqual(rec.validRecordCount, 2);
+    assert.strictEqual(rec.localFilename, 'cm15SEP2023bhav.csv.zip');
+
+    // Malformed legacy fixture (missing critical columns)
+    const badLegacyCsv = `SYMBOL,SERIES,OPEN\nHDFCLIFE,EQ,530.00\n`;
+    const badLegacyZip = createSyntheticUdiffZip('cm15SEP2023bhav.csv', badLegacyCsv);
+    const badRec = HistoricalFeasibilityRunner.evaluateArchive('2023-09-15', { zipBuffer: badLegacyZip });
+
+    assert.strictEqual(badRec.status, 'SCHEMA_MISMATCH');
+    assert.strictEqual(badRec.schemaValidity, false);
+    assert.ok(badRec.schemaErrors && badRec.schemaErrors.length > 0);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 24. Dual-Era PowerShell Runner Generation
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-24: generates dual-era PowerShell runner supporting 2016-2024 legacy scope and 2024-07-08 boundary', () => {
+    const script = HistoricalFeasibilityRunner.generateHardenedWindowsPowerShellRunner(
+      '2016-09-20',
+      '2024-07-07',
+      'C:\\IIPS_Data\\NSE_Legacy_Acquisition'
+    );
+
+    // Range parameters
+    assert.ok(script.includes('$StartDateStr = "2016-09-20"'));
+    assert.ok(script.includes('$EndDateStr = "2024-07-07"'));
+
+    // Boundary and dual-era checks
+    assert.ok(script.includes('2024-07-08'), 'Must include 2024-07-08 cutoff');
+    assert.ok(script.includes('content/historical/EQUITIES'), 'Must include legacy archive URL path');
+    assert.ok(script.includes('"cm" + $DayStr + $MonthStr + $YearStr + "bhav.csv.zip"'), 'Must construct cmDDMMMYYYYbhav format');
+    assert.ok(script.includes('content/cm/'), 'Must include UDiFF archive URL path');
+    assert.ok(script.includes('BhavCopy_NSE_CM_0_0_0_'), 'Must construct UDiFF filename');
+
+    // Dual-era header sets
+    assert.ok(script.includes('SYMBOL'), 'Must validate legacy SYMBOL header');
+    assert.ok(script.includes('TOTTRDQTY'), 'Must validate legacy TOTTRDQTY header');
+    assert.ok(script.includes('TradDt'), 'Must validate UDiFF TradDt header');
+
+    // 6-file evidence emission
+    assert.ok(script.includes('historical-acquisition-manifest.json'));
+    assert.ok(script.includes('historical-coverage-summary.json'));
+    assert.ok(script.includes('failure-unavailable-date-register.json'));
+    assert.ok(script.includes('archive-integrity-report.json'));
+    assert.ok(script.includes('sha256-manifest.json'));
+    assert.ok(script.includes('schema-validation-report.json'));
+  });
 });
