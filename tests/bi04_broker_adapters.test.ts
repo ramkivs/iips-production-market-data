@@ -242,4 +242,139 @@ Reliance Industries,RELIANCE,INE002A01018,80,2800.00,232000.00,8000.00,3.57,9.80
     assert.strictEqual(parseResult.metadata?.qualificationStatus, 'QUALIFICATION_BLOCKED_DEFERRED_TO_BI06');
     assert.strictEqual(parseResult.metadata?.requiresXlsx, true);
   });
+
+  // BI04-12: Governed Dhan Web UI Summary Format Detection (DHAN_WEB_UI_SUMMARY_V1)
+  it('BI04-12: Dhan Web UI summary format (DHAN_WEB_UI_SUMMARY_V1) deterministically detects exact header signature', () => {
+    const sampleDhanWebUiCsv = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+INFY, 100, 1450.50, 1520.00, 145050.00, 152000.00, 6950.00, 4.79
+TCS, 50, 3800.00, 3950.00, 190000.00, 197500.00, 7500.00, 3.95
+RELIANCE, 80, 2800.00, 2900.00, 224000.00, 232000.00, 8000.00, 3.57`;
+
+    const detection = BrokerFormatDetector.detectFormat(sampleDhanWebUiCsv, 'Portfolio(2).csv');
+
+    assert.strictEqual(detection.brokerType, 'DHAN');
+    assert.strictEqual(detection.confidence, 1.0);
+    assert.strictEqual(detection.format, 'CSV');
+    assert.strictEqual(detection.requiresXlsx, false);
+    assert.ok(detection.details.includes('DHAN_WEB_UI_SUMMARY_V1'));
+  });
+
+  // BI04-13: Governed Dhan Web UI Summary Parsing & Value Extraction
+  it('BI04-13: Dhan Web UI summary CSV parsing extracts valid FinappHolding records without fabricating ISIN or Exchange', () => {
+    const sampleDhanWebUiCsv = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+INFY, 100, 1450.50, 1520.00, 145050.00, 152000.00, 6950.00, 4.79
+TCS, 50, 3800.00, 3950.00, 190000.00, 197500.00, 7500.00, 3.95`;
+
+    const adapter = new DhanHoldingsAdapter();
+    const result = adapter.parse(sampleDhanWebUiCsv, { fileName: 'Portfolio(2).csv' });
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.brokerType, 'DHAN');
+    assert.strictEqual(result.totalHoldings, 2);
+    assert.strictEqual(result.totalValue, 349500);
+    assert.strictEqual(result.metadata?.dhanVariant, 'DHAN_WEB_UI_SUMMARY_V1');
+
+    const infy = result.holdings.find((h) => h.symbol === 'INFY')!;
+    assert.ok(infy);
+    assert.strictEqual(infy.symbol, 'INFY');
+    assert.strictEqual(infy.quantity, 100);
+    assert.strictEqual(infy.averagePrice, 1450.5);
+    assert.strictEqual(infy.currentPrice, 1520);
+    assert.strictEqual(infy.marketValue, 152000);
+    assert.strictEqual(infy.pnl, 6950);
+    assert.strictEqual(infy.pnlPercentage, 4.79);
+    // ISIN and Exchange must NOT be fabricated from thin air
+    assert.strictEqual(infy.isin, undefined);
+    assert.strictEqual(infy.exchange, undefined);
+  });
+
+  // BI04-14: Governed Dhan Web UI Integration with P04 Security Master
+  it('BI04-14: Dhan Web UI adapter output resolves canonical P04 companyId via symbol and normalizes to 100.0000%', () => {
+    const sampleDhanWebUiCsv = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+INFY, 100, 1450.50, 1520.00, 145050.00, 152000.00, 6950.00, 4.79
+TCS, 50, 3800.00, 3950.00, 190000.00, 197500.00, 7500.00, 3.95`;
+
+    const sm = new SecurityMaster();
+    sm.registerEntity({
+      companyId: 'INFOSYS_LTD',
+      isin: 'INE009A01021',
+      companyName: 'Infosys Limited',
+      industry: 'IT Services',
+      sector: 'IT',
+      listings: [{ exchange: 'NSE', symbol: 'INFY', lotSize: 1, tickSize: 0.05, status: 'ACTIVE' }],
+      effectiveFrom: '2020-01-01T00:00:00.000Z',
+    });
+    sm.registerEntity({
+      companyId: 'TCS_LTD',
+      isin: 'INE467B01029',
+      companyName: 'Tata Consultancy Services Limited',
+      industry: 'IT Services',
+      sector: 'IT',
+      listings: [{ exchange: 'NSE', symbol: 'TCS', lotSize: 1, tickSize: 0.05, status: 'ACTIVE' }],
+      effectiveFrom: '2020-01-01T00:00:00.000Z',
+    });
+
+    const adapter = new DhanHoldingsAdapter();
+    const parseResult = adapter.parse(sampleDhanWebUiCsv);
+    const mapped = mapBrokerOutputToUserHoldings(parseResult, {
+      securityMaster: sm,
+      failOnUnmappedIdentity: true,
+    });
+
+    assert.strictEqual(mapped.success, true);
+    assert.strictEqual(mapped.validHoldingsCount, 2);
+    assert.strictEqual(mapped.weightSumPercentage, 100.0);
+    assert.strictEqual(mapped.userHoldings[0].companyId, 'INFOSYS_LTD');
+    assert.strictEqual(mapped.userHoldings[1].companyId, 'TCS_LTD');
+    assert.strictEqual(mapped.provenance.sourceBroker, 'DHAN');
+  });
+
+  // BI04-15: Governed Dhan Web UI Unmapped Identity Fail-Closed
+  it('BI04-15: Dhan Web UI format fails closed with error when Name cannot be resolved by SecurityMaster', () => {
+    const unmappedCsv = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+UNMAPPED_STOCK, 100, 500.00, 550.00, 50000.00, 55000.00, 5000.00, 10.00`;
+
+    const sm = new SecurityMaster();
+    const adapter = new DhanHoldingsAdapter();
+    const parseResult = adapter.parse(unmappedCsv);
+
+    assert.throws(
+      () => {
+        mapBrokerOutputToUserHoldings(parseResult, {
+          securityMaster: sm,
+          failOnUnmappedIdentity: true,
+        });
+      },
+      (err: any) => {
+        return err.message.includes('UNMAPPED_STOCK') || err.quarantineRecord?.reason === 'UNMAPPED_IDENTIFIER';
+      }
+    );
+  });
+
+  // BI04-16: Missing mandatory column in Dhan Web UI fails closed
+  it('BI04-16: Dhan Web UI with missing mandatory column (e.g. Current Value) fails closed as UNKNOWN', () => {
+    const incompleteCsv = `Name, Quantity, Avg Price, Last Traded, Investment, P&L\nINFY,100,1450,1520,145000,7000`;
+    const detection = BrokerFormatDetector.detectFormat(incompleteCsv);
+
+    assert.strictEqual(detection.brokerType, 'UNKNOWN');
+    assert.strictEqual(detection.confidence, 0.0);
+    assert.ok(detection.details.includes('Fail closed'));
+  });
+
+  // BI04-17: Order-invariance and extra columns in Dhan Web UI format
+  it('BI04-17: Dhan Web UI summary handles rearranged column order and extra columns deterministically', () => {
+    const permutedCsv = `Investment, Name, Last Traded, Quantity, Avg Price, Current Value, P&L %, P&L, ExtraCol
+145050.00, INFY, 1520.00, 100, 1450.50, 152000.00, 4.79, 6950.00, ExtraData`;
+
+    const detection = BrokerFormatDetector.detectFormat(permutedCsv);
+    assert.strictEqual(detection.brokerType, 'DHAN');
+    assert.ok(detection.details.includes('DHAN_WEB_UI_SUMMARY_V1'));
+
+    const adapter = new DhanHoldingsAdapter();
+    const result = adapter.parse(permutedCsv);
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.holdings[0].symbol, 'INFY');
+    assert.strictEqual(result.holdings[0].quantity, 100);
+    assert.strictEqual(result.holdings[0].marketValue, 152000);
+  });
 });

@@ -419,4 +419,99 @@ C,10,0,0,0,0,0,0`;
     assert.strictEqual(result.validHoldingsCount, 100);
     assert.strictEqual(result.weightSumPercentage, 100.0);
   });
+
+  // BI05-19: Governed Dhan Web UI Ingress End-to-End
+  it('BI05-19: valid Dhan Web UI summary CSV (DHAN_WEB_UI_SUMMARY_V1) end-to-end reaches READY_FOR_PORTFOLIO_SAVE', () => {
+    const dhanWebUiCsv = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+INFY, 100, 1450.50, 1520.00, 145050.00, 152000.00, 6950.00, 4.79
+TCS, 50, 3800.00, 3950.00, 190000.00, 197500.00, 7500.00, 3.95
+RELIANCE, 80, 2800.00, 2900.00, 224000.00, 232000.00, 8000.00, 3.57`;
+
+    const sm = createGovernedSecurityMaster();
+    const result = BrokerImportIngressOrchestrator.executeIngress({
+      content: dhanWebUiCsv,
+      fileName: 'Portfolio(2).csv',
+      securityMaster: sm,
+    });
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.disposition, 'READY_FOR_PORTFOLIO_SAVE');
+    assert.strictEqual(result.stageReached, 'COMPLETE');
+    assert.strictEqual(result.detection.brokerType, 'DHAN');
+    assert.strictEqual(result.validHoldingsCount, 3);
+    assert.strictEqual(result.weightSumPercentage, 100.0);
+    assert.strictEqual(result.userHoldings[0].companyId, 'INFOSYS_LTD');
+    assert.strictEqual(result.userHoldings[1].companyId, 'TATA_CONSULTANCY');
+    assert.strictEqual(result.userHoldings[2].companyId, 'RELIANCE_IND');
+    assert.strictEqual(result.provenance.sourceBroker, 'DHAN');
+    assert.strictEqual(result.provenance.contentDigest.length, 64);
+    assert.strictEqual(result.provenance.lineageDigest.length, 64);
+  });
+
+  // BI05-20: Dhan Web UI Ingress Unmapped Symbol Fail-Closed
+  it('BI05-20: Dhan Web UI summary CSV fails closed at NORMALIZE stage with REJECTED disposition on unmapped symbol', () => {
+    const unmappedWebUiCsv = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+INFY, 100, 1450.50, 1520.00, 145050.00, 152000.00, 6950.00, 4.79
+UNREGISTERED_CO, 50, 100.00, 110.00, 5000.00, 5500.00, 500.00, 10.00`;
+
+    const sm = createGovernedSecurityMaster();
+    const result = BrokerImportIngressOrchestrator.executeIngress({
+      content: unmappedWebUiCsv,
+      fileName: 'Portfolio(2).csv',
+      securityMaster: sm,
+      failOnUnmappedIdentity: true,
+    });
+
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.disposition, 'REJECTED');
+    assert.strictEqual(result.stageReached, 'NORMALIZE');
+    assert.strictEqual(result.rejections[0].reason, 'UNMAPPED_IDENTITY');
+    assert.strictEqual(result.userHoldings.length, 0);
+  });
+
+  // BI05-21: Dhan Web UI Ingress Duplicate Aggregation
+  it('BI05-21: Dhan Web UI summary CSV aggregates duplicate security symbols with volume-weighted average price', () => {
+    const duplicateWebUiCsv = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+INFY, 100, 1400.00, 1600.00, 140000.00, 160000.00, 20000.00, 14.28
+INFY, 200, 1550.00, 1600.00, 310000.00, 320000.00, 10000.00, 3.22`;
+
+    const sm = createGovernedSecurityMaster();
+    const result = BrokerImportIngressOrchestrator.executeIngress({
+      content: duplicateWebUiCsv,
+      fileName: 'Portfolio(2).csv',
+      securityMaster: sm,
+    });
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.validHoldingsCount, 1);
+    assert.strictEqual(result.aggregatedCount, 1);
+    assert.strictEqual(result.userHoldings[0].symbol, 'INFY');
+    assert.strictEqual(result.userHoldings[0].companyId, 'INFOSYS_LTD');
+    assert.strictEqual(result.userHoldings[0].quantity, 300);
+    assert.strictEqual(result.userHoldings[0].averageBuyPrice, 1500.0);
+    assert.strictEqual(result.userHoldings[0].marketValue, 480000);
+    assert.strictEqual(result.userHoldings[0].weightPercentage, 100.0);
+  });
+
+  // BI05-22: Dhan Web UI Ingress Edge Cases (Negative quantity / zero price)
+  it('BI05-22: Dhan Web UI summary CSV isolates invalid rows and normalizes valid subset to 100.0000%', () => {
+    const mixedWebUiCsv = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+INFY, 100, 1450.50, 1520.00, 145050.00, 152000.00, 6950.00, 4.79
+TCS, -10, 3800.00, 3950.00, -38000.00, -39500.00, -1500.00, 3.95
+RELIANCE, 80, 2800.00, 2900.00, 224000.00, 232000.00, 8000.00, 3.57`;
+
+    const sm = createGovernedSecurityMaster();
+    const result = BrokerImportIngressOrchestrator.executeIngress({
+      content: mixedWebUiCsv,
+      fileName: 'Portfolio(2).csv',
+      securityMaster: sm,
+    });
+
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.disposition, 'READY_FOR_PORTFOLIO_SAVE');
+    assert.strictEqual(result.validHoldingsCount, 2);
+    assert.strictEqual(result.rejectedCount, 1);
+    assert.strictEqual(result.weightSumPercentage, 100.0);
+    assert.strictEqual(result.rejections[0].reason, 'NON_POSITIVE_QTY');
+  });
 });

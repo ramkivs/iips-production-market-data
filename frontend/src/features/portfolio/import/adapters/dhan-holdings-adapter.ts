@@ -15,6 +15,7 @@ import {
   FinappBrokerParseResult,
   FinappHolding,
   BrokerAdapterParseOptions,
+  DhanFormatVariant,
 } from '../types.js';
 import {
   parseCsvToObjects,
@@ -29,6 +30,9 @@ export class DhanHoldingsAdapter implements FinappBrokerAdapter {
 
   /**
    * Parses Dhan holdings CSV export.
+   * Supports governed variants:
+   * - DHAN_DETAILED_HOLDINGS_V1 (Trading Symbol, ISIN, Exchange, Total Qty, ...)
+   * - DHAN_WEB_UI_SUMMARY_V1 (Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %)
    * Note: Dhan XLSX format is deferred to BI-06 under zero-dependency governance.
    */
   public parse(
@@ -108,16 +112,23 @@ export class DhanHoldingsAdapter implements FinappBrokerAdapter {
       headerMap.set(h.toLowerCase().trim(), h);
     }
 
-    // Locate Dhan specific columns
-    const symbolCol = headerMap.get('trading symbol') || headerMap.get('symbol') || headerMap.get('stock name');
+    // Locate Dhan specific columns across governed variants:
+    // DHAN_DETAILED_HOLDINGS_V1: Trading Symbol, ISIN, Exchange, Total Qty, DP Qty, Available Qty, Average Buy Price, Last Traded Price, Current Value, Profit / Loss, P&L %
+    // DHAN_WEB_UI_SUMMARY_V1: Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+    const symbolCol = headerMap.get('trading symbol') || headerMap.get('symbol') || headerMap.get('stock name') || headerMap.get('name');
     const isinCol = headerMap.get('isin');
     const exchangeCol = headerMap.get('exchange');
     const qtyCol = headerMap.get('total qty') || headerMap.get('quantity') || headerMap.get('available qty') || headerMap.get('dp qty') || headerMap.get('total quantity');
     const avgBuyPriceCol = headerMap.get('average buy price') || headerMap.get('average price') || headerMap.get('avg buy price') || headerMap.get('avg price');
-    const ltpCol = headerMap.get('last traded price') || headerMap.get('ltp') || headerMap.get('current price');
+    const ltpCol = headerMap.get('last traded price') || headerMap.get('last traded') || headerMap.get('ltp') || headerMap.get('current price');
+    const investmentCol = headerMap.get('investment') || headerMap.get('invested') || headerMap.get('invested value');
     const curValCol = headerMap.get('current value') || headerMap.get('market value');
     const pnlCol = headerMap.get('profit / loss') || headerMap.get('profit/loss') || headerMap.get('p&l');
     const pnlPctCol = headerMap.get('p&l %') || headerMap.get('profit / loss %') || headerMap.get('p&l(%)');
+
+    // Variant determination
+    const isWebUiVariant = !headerMap.has('trading symbol') && headerMap.has('name') && (headerMap.has('last traded') || headerMap.has('investment'));
+    const dhanVariant: DhanFormatVariant = isWebUiVariant ? 'DHAN_WEB_UI_SUMMARY_V1' : 'DHAN_DETAILED_HOLDINGS_V1';
 
     if (!symbolCol || (!qtyCol && !avgBuyPriceCol && !ltpCol)) {
       return {
@@ -126,10 +137,11 @@ export class DhanHoldingsAdapter implements FinappBrokerAdapter {
         holdings: [],
         totalHoldings: 0,
         totalValue: 0,
-        errors: [`Invalid Dhan CSV schema: missing mandatory 'Trading Symbol' or 'Total Qty' columns. Found headers: ${headers.join(', ')}`],
+        errors: [`Invalid Dhan CSV schema: missing mandatory symbol ('Trading Symbol' or 'Name') or quantity/price columns. Found headers: ${headers.join(', ')}`],
         warnings,
         metadata: {
           fileFormat: 'csv',
+          dhanVariant,
           parsedAt: asOf,
           sourceFileName,
         },
@@ -143,13 +155,13 @@ export class DhanHoldingsAdapter implements FinappBrokerAdapter {
       const row = rows[i];
       const rawSymbol = parseStringCell(row[symbolCol]);
       if (!rawSymbol) {
-        warnings.push(`Row ${i + 1}: Skipped row with empty Symbol.`);
+        warnings.push(`Row ${i + 1}: Skipped row with empty Symbol/Name.`);
         continue;
       }
 
       const isin = isinCol ? parseStringCell(row[isinCol]) : undefined;
-      const rawExchange = exchangeCol ? parseStringCell(row[exchangeCol]).toUpperCase() : 'NSE';
-      const exchange: 'NSE' | 'BSE' = rawExchange.includes('BSE') ? 'BSE' : 'NSE';
+      const rawExchange = exchangeCol ? parseStringCell(row[exchangeCol]).toUpperCase() : undefined;
+      const exchange: 'NSE' | 'BSE' | undefined = rawExchange ? (rawExchange.includes('BSE') ? 'BSE' : 'NSE') : undefined;
 
       const quantity = qtyCol ? parseNumericCell(row[qtyCol], 0) : 0;
       const averagePrice = avgBuyPriceCol ? parseNumericCell(row[avgBuyPriceCol], 0) : 0;
@@ -170,7 +182,7 @@ export class DhanHoldingsAdapter implements FinappBrokerAdapter {
         exchange,
         assetClass: 'EQUITY',
         marketValue: curVal,
-        raw: { ...row, rowIndex: i + 1 },
+        raw: { ...row, rowIndex: i + 1, dhanVariant },
       };
 
       holdings.push(holding);
@@ -187,6 +199,7 @@ export class DhanHoldingsAdapter implements FinappBrokerAdapter {
       warnings,
       metadata: {
         fileFormat: 'csv',
+        dhanVariant,
         parsedAt: asOf,
         sourceFileName,
       },

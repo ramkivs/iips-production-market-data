@@ -115,16 +115,33 @@ export class BrokerFormatDetector {
         break;
       }
 
-      // 2. Check Dhan Signature
-      // Key columns: ('trading symbol' or 'dp qty' or 'available qty') and ('isin' or 'average buy price')
-      const hasDhanSymbol = candidateHeaders.includes('trading symbol') || candidateHeaders.includes('dp qty') || candidateHeaders.includes('available qty');
-      const hasDhanBuyPrice = candidateHeaders.includes('average buy price') || candidateHeaders.includes('last traded price');
+      // 2. Check Dhan Signatures
+      // Variant A: DHAN_DETAILED_HOLDINGS_V1
+      // Key columns: ('trading symbol' or 'dp qty' or 'available qty') and ('isin' or 'average buy price' or 'last traded price')
+      const hasDhanDetailedSymbol = candidateHeaders.includes('trading symbol') || candidateHeaders.includes('dp qty') || candidateHeaders.includes('available qty');
+      const hasDhanDetailedPrice = candidateHeaders.includes('average buy price') || candidateHeaders.includes('last traded price');
 
-      if (hasDhanSymbol || hasDhanBuyPrice) {
+      // Variant B: DHAN_WEB_UI_SUMMARY_V1 (Governed under BI-04 Amendment / BI-07 Acceptance)
+      // Governed canonical layout: 'Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %'
+      // Distinctive signature requirement: must contain 'name', 'quantity' (or 'qty'), 'avg price' (or 'avg. price'), 'last traded' (or 'last traded price'), 'investment' (or 'invested'), 'current value' (or 'market value')
+      const hasDhanWebUi = candidateHeaders.includes('name') &&
+        (candidateHeaders.includes('quantity') || candidateHeaders.includes('qty')) &&
+        (candidateHeaders.includes('avg price') || candidateHeaders.includes('avg. price')) &&
+        (candidateHeaders.includes('last traded') || candidateHeaders.includes('last traded price')) &&
+        (candidateHeaders.includes('investment') || candidateHeaders.includes('invested')) &&
+        (candidateHeaders.includes('current value') || candidateHeaders.includes('market value'));
+
+      if (hasDhanDetailedSymbol || hasDhanDetailedPrice) {
         headerRow = rawHeaders;
         detectedBroker = 'DHAN';
         confidence = 1.0;
-        details = 'Exact match for Dhan Holdings CSV schema.';
+        details = 'Exact match for Dhan Holdings CSV schema (DHAN_DETAILED_HOLDINGS_V1).';
+        break;
+      } else if (hasDhanWebUi) {
+        headerRow = rawHeaders;
+        detectedBroker = 'DHAN';
+        confidence = 1.0;
+        details = 'Exact match for Dhan Web UI Summary CSV schema (DHAN_WEB_UI_SUMMARY_V1).';
         break;
       }
 

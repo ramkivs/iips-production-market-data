@@ -75,6 +75,10 @@ const GROWW_CSV_3 = `Stock Name,Symbol,ISIN,Shares,Average Price,Current Value,T
 Reliance Industries,RELIANCE,INE002A01018,10,2500.00,26000.00,1000.00,4.00,12.50
 Tata Consultancy,TCS,INE467B01029,15,3400.00,52500.00,1500.00,2.94,10.00`;
 
+const DHAN_WEB_UI_CSV = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+TCS, 15, 3400.00, 3500.00, 51000.00, 52500.00, 1500.00, 2.94
+HDFCBANK, 25, 1600.00, 1650.00, 40000.00, 41250.00, 1250.00, 3.12`;
+
 const INVALID_CSV = `SomeBadHeader,WrongCol
 UNKNOWN,100`;
 
@@ -437,5 +441,74 @@ describe('BI-07: Post-Save Repeat Import & Refresh Lifecycle Suite', () => {
     assert.strictEqual(blockedVm.state, 'BLOCKED');
     assert.strictEqual(blockedVm.saveGuard.isSaveEnabled, false);
     assert.strictEqual(blockedVm.saveGuard.disabledReason, 'Import blocked: Unsupported binary format (requires BI-06 qualification).');
+  });
+
+  it('BI07-REPEAT-13: Repeat import specifically accepts actual Portfolio(2).csv DHAN_WEB_UI_SUMMARY_V1 format as second import', () => {
+    const store = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+
+    // 1st Import & Save (Zerodha)
+    controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha_1.csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: store });
+    assert.strictEqual(controller.getState(), 'SAVE_SUCCESS');
+
+    // 2nd Import using exact DHAN_WEB_UI_SUMMARY_V1 format (Portfolio(2).csv)
+    controller.reset();
+    const vm2 = controller.selectAndProcessFile({
+      content: DHAN_WEB_UI_CSV,
+      fileName: 'Portfolio(2).csv',
+      securityMaster: sm,
+    });
+
+    assert.strictEqual(vm2.state, 'READY_TO_SAVE');
+    assert.strictEqual(vm2.brokerName, 'Dhan');
+    assert.strictEqual(vm2.sourceBroker, 'DHAN');
+    assert.strictEqual(vm2.acceptedHoldingsCount, 2);
+    assert.strictEqual(vm2.totalNormalizedWeight, 100.0);
+    assert.strictEqual(vm2.identityResolutionStatus, 'ALL_IDENTITIES_RESOLVED_P04');
+    assert.strictEqual(vm2.saveGuard.isSaveEnabled, true);
+
+    const tcs = vm2.acceptedHoldings.find((h) => h.symbol === 'TCS')!;
+    assert.ok(tcs);
+    assert.strictEqual(tcs.companyId, 'EQ_TCS_IN');
+    assert.strictEqual(tcs.companyName, 'Tata Consultancy Services Limited');
+
+    const hdfc = vm2.acceptedHoldings.find((h) => h.symbol === 'HDFCBANK')!;
+    assert.ok(hdfc);
+    assert.strictEqual(hdfc.companyId, 'EQ_HDFCBANK_IN');
+    assert.strictEqual(hdfc.companyName, 'HDFC Bank Limited');
+  });
+
+  it('BI07-REPEAT-14: Second import with DHAN_WEB_UI_SUMMARY_V1 executes atomic replacement and preserves exact 100.0000% weight sum', () => {
+    const store = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+
+    // 1st Save (Zerodha)
+    controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha_1.csv', securityMaster: sm });
+    const save1 = controller.confirmAndSave({ portfolioStore: store });
+    assert.strictEqual(save1.state, 'SAVE_SUCCESS');
+    const digest1 = store.getPortfolio('DEFAULT_PORTFOLIO')?.provenanceDigest;
+
+    // 2nd Save (Dhan Web UI Portfolio(2).csv)
+    controller.reset();
+    controller.selectAndProcessFile({ content: DHAN_WEB_UI_CSV, fileName: 'Portfolio(2).csv', securityMaster: sm });
+    const save2 = controller.confirmAndSave({ portfolioStore: store });
+    assert.strictEqual(save2.state, 'SAVE_SUCCESS');
+    assert.strictEqual(save2.saveResult?.holdingsSavedCount, 2);
+
+    const portfolio2 = store.getPortfolio('DEFAULT_PORTFOLIO');
+    assert.ok(portfolio2);
+    assert.strictEqual(portfolio2.isSaved, true);
+    assert.strictEqual(portfolio2.holdings.length, 2);
+    assert.strictEqual(portfolio2.weightSumPercentage, 100.0);
+    assert.strictEqual(portfolio2.totalMarketValue, 93750); // 52500 + 41250
+    assert.notStrictEqual(portfolio2.provenanceDigest, digest1);
+
+    // Verify analytics reflects the second Dhan portfolio
+    const analytics = store.getAnalytics('DEFAULT_PORTFOLIO');
+    assert.strictEqual(analytics.holdingsCount, 2);
+    assert.strictEqual(analytics.totalMarketValue, 93750);
   });
 });

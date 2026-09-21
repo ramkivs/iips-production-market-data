@@ -36,7 +36,10 @@ interface RawHoldingGroup {
  * 1. Accepts FINAPP parse results or raw FINAPP holding arrays.
  * 2. Excludes inactive, zero/negative-quantity, or non-positive value holdings.
  * 3. Aggregates duplicate securities with volume-weighted average buy price calculation.
- * 4. Resolves security identity via P04/P12 Security Master with strict fail-closed option.
+ * 4. Resolves security identity via P04/P12 Security Master with strict fail-closed option:
+ *    - For detailed formats with ISIN (e.g. DHAN_DETAILED_HOLDINGS_V1): queries primary ISIN.
+ *    - For summary formats without ISIN/Exchange (e.g. DHAN_WEB_UI_SUMMARY_V1): queries NSE_SYMBOL, then BSE_SYMBOL.
+ *    - Fails closed on unmapped identity or ambiguous collision (never fabricates or guesses identity).
  * 5. Derives portfolio market values and normalizes weights to sum to exactly 100.0%.
  * 6. Attaches cryptographic lineage digests for tamper-proof auditability.
  */

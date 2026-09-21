@@ -18,6 +18,13 @@ import { SecurityMaster } from '../../../../../src/identity/security_master.js';
 export type FinappBrokerType = 'ZERODHA' | 'DHAN' | 'GROWW' | 'GENERIC' | 'UNKNOWN';
 
 /**
+ * Governed Dhan Export Format Variants (BI-04 / BI-07 Amendment)
+ * - DHAN_DETAILED_HOLDINGS_V1: Full Dhan backoffice report with Trading Symbol, ISIN, Exchange, Total Qty, etc.
+ * - DHAN_WEB_UI_SUMMARY_V1: Dhan Web UI portfolio export with Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+ */
+export type DhanFormatVariant = 'DHAN_DETAILED_HOLDINGS_V1' | 'DHAN_WEB_UI_SUMMARY_V1';
+
+/**
  * Supported File Formats for Broker Exports
  */
 export type BrokerFileFormat = 'CSV' | 'XLSX' | 'JSON' | 'UNKNOWN';
