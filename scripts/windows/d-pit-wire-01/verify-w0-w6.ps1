@@ -15,7 +15,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$RequiredImplementationCommit = '2a682ef6ec2b7eddd4c13563dc746b0d1d6ba557'
+$RequiredImplementationCommit = 'b57098cfbf1f74289957dd997694038f925d0318'
 $RequiredBranch = 'arena/01a0c440-iips-production-market-data'
 $CorpusId = 'windows-d114-bounded-two-era-2024-boundary'
 $ManifestPath = Join-Path $CorpusDir 'pit-corpus-manifest.json'
@@ -171,9 +171,11 @@ try {
       -Headers $headers -ContentType 'application/json' -Body $body | Out-Null
   }
 
-  function Get-Company([string]$AsOf) {
-    $encoded = [uri]::EscapeDataString($AsOf)
-    return Invoke-RestMethod -Headers $headers -Uri "$TransportUrl/api/company/RELIANCE?asOf=$encoded"
+  function Get-Company([string]$AsOf, [string]$SecurityAlias = 'RELIANCE') {
+    $encodedAsOf = [uri]::EscapeDataString($AsOf)
+    $encodedSecurityAlias = [uri]::EscapeDataString($SecurityAlias)
+    return Invoke-RestMethod -Headers $headers `
+      -Uri "$TransportUrl/api/company/${encodedSecurityAlias}?asOf=${encodedAsOf}"
   }
 
   Set-Mode 'PIT'
@@ -200,7 +202,27 @@ try {
   Assert-True ($Udiff.vintage.resolvedAsOf -eq '2024-07-08T09:15:00.000Z') 'W2 CM-UDiFF resolvedAsOf FAIL.'
   Assert-True ($Udiff.vintage.record.symbol -eq 'RELIANCE') 'W2 CM-UDiFF canonical record FAIL.'
 
-  foreach ($response in @($Legacy, $Udiff)) {
+  # Physical regression for the exact legacy collision: both source securities must coexist at
+  # 09:15Z. The unqualified company/symbol remains 1:N and therefore fails closed.
+  $MmfinEq = Get-Company $legacyRequested 'INE774D01024'
+  $MmfinN3 = Get-Company $legacyRequested 'INE774D08MG3'
+  $MmfinAmbiguous = Get-Company $legacyRequested 'M&MFIN'
+  Assert-True ($MmfinEq.dataAvailable -eq $true) 'W2 M&MFIN EQ availability FAIL.'
+  Assert-True ($MmfinN3.dataAvailable -eq $true) 'W2 M&MFIN N3 availability FAIL.'
+  Assert-True ($MmfinEq.vintage.era -eq 'LEGACY_BHAVCOPY') 'W2 M&MFIN EQ era FAIL.'
+  Assert-True ($MmfinN3.vintage.era -eq 'LEGACY_BHAVCOPY') 'W2 M&MFIN N3 era FAIL.'
+  Assert-True ($MmfinEq.vintage.resolvedAsOf -eq '2024-07-05T09:15:00.000Z') 'W2 M&MFIN EQ asOf FAIL.'
+  Assert-True ($MmfinN3.vintage.resolvedAsOf -eq '2024-07-05T09:15:00.000Z') 'W2 M&MFIN N3 asOf FAIL.'
+  Assert-True ($MmfinEq.vintage.record.symbol -eq 'M&MFIN') 'W2 M&MFIN EQ symbol FAIL.'
+  Assert-True ($MmfinN3.vintage.record.symbol -eq 'M&MFIN') 'W2 M&MFIN N3 symbol FAIL.'
+  Assert-True ($MmfinEq.vintage.record.securityIdentity.isin -eq 'INE774D01024') 'W2 M&MFIN EQ ISIN FAIL.'
+  Assert-True ($MmfinN3.vintage.record.securityIdentity.isin -eq 'INE774D08MG3') 'W2 M&MFIN N3 ISIN FAIL.'
+  Assert-True ($MmfinEq.vintage.record.securityIdentity.series -eq 'EQ') 'W2 M&MFIN EQ SERIES FAIL.'
+  Assert-True ($MmfinN3.vintage.record.securityIdentity.series -eq 'N3') 'W2 M&MFIN N3 SERIES FAIL.'
+  Assert-True ($MmfinAmbiguous.dataAvailable -eq $false) 'W2 unqualified M&MFIN must fail closed.'
+  Assert-True ($MmfinAmbiguous.state -eq 'PIT_UNAVAILABLE') 'W2 unqualified M&MFIN state FAIL.'
+
+  foreach ($response in @($Legacy, $Udiff, $MmfinEq, $MmfinN3)) {
     Assert-True ([datetimeoffset]$response.vintage.resolvedAsOf -le [datetimeoffset]$response.vintage.requestedAsOf) 'W2 PS-9 ordering FAIL.'
     Assert-True (-not [string]::IsNullOrWhiteSpace([string]$response.vintage.snapshotId)) 'W2 snapshotId FAIL.'
     Assert-True (-not [string]::IsNullOrWhiteSpace([string]$response.provenance.archiveRef)) 'W2 archiveRef FAIL.'
@@ -211,6 +233,11 @@ try {
   }
   Write-Json (Join-Path $EvidenceOut 'legacy-response.json') $Legacy
   Write-Json (Join-Path $EvidenceOut 'cm-udiff-response.json') $Udiff
+  Write-Json (Join-Path $EvidenceOut 'legacy-mmfin-multi-series.json') ([ordered]@{
+    eq = $MmfinEq
+    n3 = $MmfinN3
+    ambiguousSymbol = $MmfinAmbiguous
+  })
 
   $uiProcess = Start-Process -FilePath $npm `
     -ArgumentList @('run', 'dev', '--', '--host', '0.0.0.0') `
@@ -235,7 +262,7 @@ try {
   Assert-True ($confirmation -eq 'W2-PASS') 'W2 operator confirmation was not supplied.'
   Assert-True (Test-Path -LiteralPath $legacyScreenshot) "W2 legacy screenshot missing: $legacyScreenshot"
   Assert-True (Test-Path -LiteralPath $udiffScreenshot) "W2 CM-UDiFF screenshot missing: $udiffScreenshot"
-  Write-Host 'W2 PASS — API and operator-confirmed UI evidence complete.' -ForegroundColor Green
+  Write-Host 'W2 PASS — both eras, physical M&MFIN EQ/N3 coexistence, and operator-confirmed UI evidence complete.' -ForegroundColor Green
 
   Write-Host 'W3 — fail-closed matrix.' -ForegroundColor Cyan
   $cases = @(
@@ -299,7 +326,7 @@ try {
     providerAccessIntroduced = $false
     snapshotFallback = $false
     w1 = 'PASS'
-    w2 = 'PASS — API + operator-confirmed UI screenshots'
+    w2 = 'PASS — both eras + physical M&MFIN EQ/N3 + operator-confirmed UI screenshots'
     w3 = 'PASS'
     w4 = 'PASS'
     w5 = 'PASS'

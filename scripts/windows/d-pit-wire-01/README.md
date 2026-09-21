@@ -11,7 +11,7 @@ and operator-confirmed UI screenshots.
 ## Fixed boundaries
 
 - Branch: `arena/01a0c440-iips-production-market-data`
-- Required implementation ancestor: `2a682ef6ec2b7eddd4c13563dc746b0d1d6ba557`
+- Required implementation ancestor: `b57098cfbf1f74289957dd997694038f925d0318` (legacy multi-series identity correction)
 - PIT store: `IN_MEMORY_ONLY`
 - Archives are read in place from two separate roots; no copy, move, merge, mutation, or persistence
   of PIT state is performed.
@@ -25,8 +25,9 @@ and operator-confirmed UI screenshots.
 - `prepare-corpus.ps1` — W0: verifies branch/prerequisites and creates a manifest-only bounded
   corpus descriptor for the 2024-07-05 legacy archive and 2024-07-08 CM-UDiFF archive.
 - `verify-w0-w6.ps1` — W1–W6: installs/typechecks, starts the transport and UI, authenticates,
-  verifies both eras, requires operator-confirmed UI screenshots, executes the fail-closed matrix,
-  runs SNAPSHOT/LIVE/Macro regressions, writes evidence, and stops the processes it started.
+  verifies both eras plus physical M&MFIN EQ/N3 coexistence, requires operator-confirmed UI
+  screenshots, executes the fail-closed matrix, runs SNAPSHOT/LIVE/Macro regressions, writes
+  evidence, and stops the processes it started.
 
 ## Preconditions
 
@@ -94,6 +95,13 @@ The response must also contain `snapshotId`, archive reference and SHA-256, the 
 manifest entry, acquisition manifest id, and intake-lineage digest. Any admission, hash, handoff,
 provenance, gap, date-bound, or store failure must remain `PIT_UNAVAILABLE`.
 
+W2 additionally queries the same physical legacy archive by `INE774D01024` and `INE774D08MG3`.
+Both must resolve at `2024-07-05T09:15:00.000Z` with symbol `M&MFIN`, SERIES `EQ` and `N3`
+respectively, and the matching ISIN metadata. An unqualified `M&MFIN` query must remain
+`PIT_UNAVAILABLE` because the company/symbol maps to two source securities; the runner never
+chooses EQ, row order, or another heuristic. This is application verification only and has not run
+in Arena.
+
 ## Evidence output
 
 The scripts write only acceptance evidence and the manifest descriptor:
@@ -105,7 +113,8 @@ The physical ZIP files remain in their original roots. A successful W6 evidence 
 
 - W0 handoff context and bounded manifest;
 - transport/UI/typecheck/regression logs;
-- both API responses;
+- both RELIANCE era responses;
+- physical M&MFIN EQ/N3 responses plus the unqualified-symbol refusal;
 - fail-closed matrix;
 - `legacy-ui.png` and `cm-udiff-ui.png`;
 - `verification-disposition.json` preserving `NONE_GRANTED`, `NOT GRANTED`,
