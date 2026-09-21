@@ -449,3 +449,20 @@ export class PortfolioStore {
     return p;
   }
 }
+
+/**
+ * Module-level singleton instance of PortfolioStore for application-lifetime continuity (Tier-B).
+ */
+let defaultPortfolioStoreInstance: PortfolioStore | null = null;
+
+export function getDefaultPortfolioStore(): PortfolioStore {
+  if (!defaultPortfolioStoreInstance) {
+    defaultPortfolioStoreInstance = new PortfolioStore();
+  }
+  return defaultPortfolioStoreInstance;
+}
+
+export function resetDefaultPortfolioStore(): void {
+  defaultPortfolioStoreInstance = null;
+}
+

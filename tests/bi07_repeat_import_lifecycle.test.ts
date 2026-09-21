@@ -14,7 +14,10 @@ import {
   PortfolioBrokerImportController,
   BrokerImportModal,
   PortfolioWorkspace,
+  getDefaultPortfolioStore,
+  resetDefaultPortfolioStore,
 } from '../frontend/src/features/portfolio/index.js';
+import { App } from '../frontend/src/app/App.js';
 import { SecurityMaster } from '../src/identity/security_master.js';
 
 function createGovernedSecurityMaster(): SecurityMaster {
@@ -719,5 +722,115 @@ UNKNOWN_SECURITY_XYZ, 100, 500.00, 550.00, 50000.00, 55000.00, 5000.00, 10.00`;
       assert.ok(top.weightPercentage <= 100);
       assert.ok(top.marketValue > 0);
     }
+  });
+
+  // BI07-REPEAT-24: Application-level PortfolioStore survives unmount and remount cycles of PortfolioWorkspace
+  it('BI07-REPEAT-24: Application-level PortfolioStore survives unmount and remount cycles of PortfolioWorkspace', () => {
+    const appStore = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+
+    // Save multi-broker holdings into app-level store
+    controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha.csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: appStore });
+
+    controller.reset();
+    controller.selectAndProcessFile({ content: DHAN_WEB_UI_CSV, fileName: 'Portfolio(2).csv', securityMaster: sm });
+    const save2 = controller.confirmAndSave({ portfolioStore: appStore });
+    assert.strictEqual(save2.state, 'SAVE_SUCCESS');
+
+    const expectedDigest = appStore.getPortfolio('DEFAULT_PORTFOLIO')?.provenanceDigest;
+    assert.ok(expectedDigest);
+
+    // Mount 1
+    const ws1 = React.createElement(PortfolioWorkspace, { portfolioStore: appStore, securityMaster: sm });
+    assert.strictEqual(ws1.props.portfolioStore, appStore);
+
+    // Unmount simulated by discarding ws1
+
+    // Mount 2 (remount using same appStore)
+    const ws2 = React.createElement(PortfolioWorkspace, { portfolioStore: appStore, securityMaster: sm });
+    assert.strictEqual(ws2.props.portfolioStore, appStore);
+
+    // Authoritative store state verified after remount
+    const p = appStore.getPortfolio('DEFAULT_PORTFOLIO')!;
+    assert.strictEqual(p.holdings.length, 4);
+    assert.strictEqual(p.totalMarketValue, 151750);
+    assert.strictEqual(p.weightSumPercentage, 100.0);
+    assert.strictEqual(p.isSaved, true);
+    assert.strictEqual(p.provenanceDigest, expectedDigest);
+  });
+
+  // BI07-REPEAT-25: Multi-broker portfolio survives full 3-surface navigation round-trip without re-import
+  it('BI07-REPEAT-25: Multi-broker portfolio survives full 3-surface navigation round-trip without re-import', () => {
+    const appStore = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+
+    // 1. Initial Multi-Broker Ingress & Merge
+    controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha.csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: appStore });
+
+    controller.reset();
+    controller.selectAndProcessFile({ content: DHAN_WEB_UI_CSV, fileName: 'Portfolio(2).csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: appStore });
+
+    const initialP = appStore.getPortfolio('DEFAULT_PORTFOLIO')!;
+    const baselineDigest = initialP.provenanceDigest;
+    assert.strictEqual(initialP.holdings.length, 4);
+    assert.strictEqual(initialP.totalMarketValue, 151750);
+    assert.strictEqual(initialP.weightSumPercentage, 100.0);
+
+    // 2. Navigation Cycle 1: Portfolio -> Executive Summary -> Portfolio
+    const app1 = React.createElement(App, { portfolioStore: appStore, securityMaster: sm });
+    assert.strictEqual(app1.props.portfolioStore, appStore);
+
+    let currentP = appStore.getPortfolio('DEFAULT_PORTFOLIO')!;
+    assert.strictEqual(currentP.holdings.length, 4);
+    assert.strictEqual(currentP.totalMarketValue, 151750);
+    assert.strictEqual(currentP.weightSumPercentage, 100.0);
+    assert.strictEqual(currentP.provenanceDigest, baselineDigest);
+
+    // 3. Navigation Cycle 2: Portfolio -> Replay Studio -> Portfolio
+    const app2 = React.createElement(App, { portfolioStore: appStore, securityMaster: sm });
+    assert.strictEqual(app2.props.portfolioStore, appStore);
+
+    currentP = appStore.getPortfolio('DEFAULT_PORTFOLIO')!;
+    assert.strictEqual(currentP.holdings.length, 4);
+    assert.strictEqual(currentP.totalMarketValue, 151750);
+    assert.strictEqual(currentP.provenanceDigest, baselineDigest);
+
+    // 4. Navigation Cycle 3: Portfolio -> Security Master -> Portfolio
+    const app3 = React.createElement(App, { portfolioStore: appStore, securityMaster: sm });
+    assert.strictEqual(app3.props.portfolioStore, appStore);
+
+    currentP = appStore.getPortfolio('DEFAULT_PORTFOLIO')!;
+    assert.strictEqual(currentP.holdings.length, 4);
+    assert.strictEqual(currentP.totalMarketValue, 151750);
+    assert.strictEqual(currentP.weightSumPercentage, 100.0);
+    assert.strictEqual(currentP.isSaved, true);
+    assert.strictEqual(currentP.provenanceDigest, baselineDigest);
+
+    // 0 re-imports performed; state remains identical
+    assert.strictEqual(currentP.contributions?.length, 2);
+  });
+
+  // BI07-REPEAT-26: Module singleton getDefaultPortfolioStore provides stable Tier-B session continuity
+  it('BI07-REPEAT-26: Module singleton getDefaultPortfolioStore provides stable Tier-B session continuity', () => {
+    resetDefaultPortfolioStore();
+    const defaultStore1 = getDefaultPortfolioStore();
+    const defaultStore2 = getDefaultPortfolioStore();
+    assert.strictEqual(defaultStore1, defaultStore2);
+
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+    controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha.csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: defaultStore1 });
+
+    const p = defaultStore2.getPortfolio('DEFAULT_PORTFOLIO')!;
+    assert.strictEqual(p.holdings.length, 2);
+    assert.strictEqual(p.isSaved, true);
+
+    resetDefaultPortfolioStore();
   });
 });

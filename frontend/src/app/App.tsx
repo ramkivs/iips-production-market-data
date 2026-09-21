@@ -6,11 +6,25 @@
  * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PortfolioWorkspace } from '../features/portfolio/PortfolioWorkspace.js';
+import { PortfolioStore, getDefaultPortfolioStore } from '../features/portfolio/index.js';
+import { SecurityMaster } from '../../../src/identity/security_master.js';
 
-export const App: React.FC = () => {
+export interface AppProps {
+  portfolioStore?: PortfolioStore;
+  securityMaster?: SecurityMaster;
+}
+
+export const App: React.FC<AppProps> = ({
+  portfolioStore: initialPortfolioStore,
+  securityMaster: initialSecurityMaster,
+}) => {
   const [activeTab, setActiveTab] = useState<'portfolio' | 'executive' | 'replay' | 'sec_master'>('portfolio');
+
+  // Application-level singletons for session lifetime continuity (Tier-B)
+  const appPortfolioStore = useMemo(() => initialPortfolioStore || getDefaultPortfolioStore(), [initialPortfolioStore]);
+  const appSecurityMaster = useMemo(() => initialSecurityMaster || new SecurityMaster(), [initialSecurityMaster]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-teal-500 selection:text-white">
@@ -43,6 +57,7 @@ export const App: React.FC = () => {
           <nav aria-label="Primary Navigation" className="flex items-center space-x-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800">
             <button
               type="button"
+              id="tab-btn-portfolio"
               onClick={() => setActiveTab('portfolio')}
               className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
                 activeTab === 'portfolio'
@@ -54,6 +69,7 @@ export const App: React.FC = () => {
             </button>
             <button
               type="button"
+              id="tab-btn-executive"
               onClick={() => setActiveTab('executive')}
               className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
                 activeTab === 'executive'
@@ -65,6 +81,7 @@ export const App: React.FC = () => {
             </button>
             <button
               type="button"
+              id="tab-btn-replay"
               onClick={() => setActiveTab('replay')}
               className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
                 activeTab === 'replay'
@@ -76,6 +93,7 @@ export const App: React.FC = () => {
             </button>
             <button
               type="button"
+              id="tab-btn-sec-master"
               onClick={() => setActiveTab('sec_master')}
               className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
                 activeTab === 'sec_master'
@@ -91,7 +109,12 @@ export const App: React.FC = () => {
 
       {/* Surface Body */}
       <main className="flex-1">
-        {activeTab === 'portfolio' && <PortfolioWorkspace />}
+        {activeTab === 'portfolio' && (
+          <PortfolioWorkspace
+            portfolioStore={appPortfolioStore}
+            securityMaster={appSecurityMaster}
+          />
+        )}
         {activeTab === 'executive' && (
           <div className="p-8 text-center text-slate-400">
             <h2 className="text-lg font-bold text-slate-200">Executive Summary Surface (UI02)</h2>
