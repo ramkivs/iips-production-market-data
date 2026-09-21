@@ -1,0 +1,139 @@
+{
+  "archivalManifestId": "ARCHIVE-IIPS-v1.0.0-rc1-2026-09-21-001",
+  "programName": "Institutional Investment Platform System (IIPS)",
+  "releaseVersion": "v1.0.0-rc1",
+  "releaseType": "NON_PRODUCTION_QUALIFIED_RELEASE",
+  "governingStandards": "AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W6-AUTH-2026-01",
+  "archivedAt": "2026-09-21T08:00:00.000Z",
+  "programMilestoneState": {
+    "certificationChain": "P13 -> P14 -> P15 -> P16 -> P17 = COMPLETE / CERTIFIED",
+    "nonProductionRelease": "QUALIFIED / SIGNED OFF",
+    "productionRelease": "NOT AUTHORIZED (STRICTLY PROHIBITED)",
+    "commercialProviderActivation": "PROHIBITED (liveProvidersActive = 0, networkSocketsBound = 0)"
+  },
+  "certifiedPackageLedger": [
+    {
+      "package": "P13 (Product UI Data Integration)",
+      "milestone": "P13-CERT",
+      "status": "CERTIFIED",
+      "commitSha": "94ad0e3",
+      "evidenceArtifact": "evidence/p13/p13-certification-report.json",
+      "lineageDigest": "fc1c5e8b886c3711e00928df4a7c2d577cc8a44d0da4aa148decacdd12e328fb"
+    },
+    {
+      "package": "P14 (Product UI/UX Accessibility & Responsive Layouts)",
+      "milestone": "P14-CERT",
+      "status": "CERTIFIED",
+      "commitSha": "e6ec2ca",
+      "evidenceArtifact": "evidence/p14/p14-certification-report.json",
+      "lineageDigest": "6b8bb82b6872d2bbacf1d6e99e9c18c86c0337c4610c79370c952f36311d0a8d"
+    },
+    {
+      "package": "P15 (End-to-End Lineage & Degradation Auditing)",
+      "milestone": "P15-CERT",
+      "status": "CERTIFIED",
+      "commitSha": "854aa08",
+      "evidenceArtifact": "evidence/p15/p15-certification-report.json",
+      "lineageDigest": "b0a79c8b3d87c969060f4ec5e4be0eb52951f1b5aac214de8fd5d0440bd66f1a"
+    },
+    {
+      "package": "P16 (Operational Qualification & Release Candidate)",
+      "milestone": "P16-CERT",
+      "status": "CERTIFIED",
+      "commitSha": "96814fd",
+      "evidenceArtifact": "evidence/p16/p16-certification-report.json",
+      "lineageDigest": "4e40e000023e39059222c5da40e417e7071cb7e99344fc2fd796625a9fc4785c"
+    },
+    {
+      "package": "P17 (Final Release Manifest Compilation & Non-Production Release Signoff)",
+      "milestone": "P17-CERT",
+      "status": "CERTIFIED",
+      "commitSha": "8697911",
+      "evidenceArtifact": "evidence/p17/p17-certification-report.json",
+      "lineageDigest": "4b0cf1f508e4037480acdd1b95ea579835c8caa923812546941a970b08cf74a2"
+    }
+  ],
+  "finalReleaseManifest": {
+    "manifestFile": "evidence/p17/p17-certification-report.json",
+    "finalReleaseIntegrityDigest": "4b0cf1f508e4037480acdd1b95ea579835c8caa923812546941a970b08cf74a2",
+    "testResults": {
+      "totalSuites": 26,
+      "totalTests": 191,
+      "passed": 191,
+      "failed": 0,
+      "passRatePct": 100,
+      "regressions": 0
+    },
+    "durabilityResults": {
+      "cpW4Passed": true,
+      "cpW5Passed": true,
+      "cpW6Passed": true,
+      "plaintextSecretsDetected": 0,
+      "methodologyDriftPct": 0
+    }
+  },
+  "steeringCommitteeDecisionRecord": {
+    "presentationSubject": "IIPS v1.0.0-rc1 Non-Production Release Manifest & Qualification Milestone Signoff",
+    "decisionRequested": "Formal record and acceptance of the IIPS v1.0.0-rc1 Non-Production Release Qualification milestone as completed, and authorization of post-qualification archival.",
+    "decisionDisposition": "ACCEPTED_AND_ARCHIVED_AS_NON_PRODUCTION_RELEASE",
+    "authoritySignoff": "Platform Executive Steering Committee (AD-CHARTER-2026-01 / AD-W6-AUTH-2026-01)",
+    "recordedTimestamp": "2026-09-21T08:00:00.000Z"
+  },
+  "productionBoundaryRecord": {
+    "operatingMode": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+    "liveProvidersActive": 0,
+    "networkSocketsBound": 0,
+    "productionCredentials": "NONE",
+    "productionIdentityResolution": "NONE (Offline Security Master mapping only)",
+    "productionAuthorization": "NOT GRANTED",
+    "commercialProviderActivation": "PROHIBITED"
+  },
+  "externalDependencyRegister": [
+    {
+      "id": "EXT-DEP-01",
+      "title": "Commercial Market Data Licensing / OI-HIST-01",
+      "status": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED",
+      "notes": "NSE commercial redistribution license and commercial vendor agreements required for live production"
+    },
+    {
+      "id": "EXT-DEP-02",
+      "title": "Master Production Deployment Gate G-034",
+      "status": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED",
+      "notes": "Final executive deployment authorization gate G-034 held pending commercial activation"
+    },
+    {
+      "id": "EXT-DEP-03",
+      "title": "Production Vault Drivers & HSM Credentials",
+      "status": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED",
+      "notes": "Production hardware security modules & live enterprise credentials required for live deployment"
+    },
+    {
+      "id": "EXT-DEP-04",
+      "title": "Live Feed Execution Equivalence / AD-17 / M-2",
+      "status": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED",
+      "notes": "Live streaming engine verification replacing offline replay simulation stubs"
+    }
+  ],
+  "residualRiskRegister": [
+    {
+      "defectId": "M-2",
+      "description": "Replay simulation stubs vs live execution feed model",
+      "status": "CONTAINED / NOT REPAIRED",
+      "containment": "AD17_CONSTRAINT mandatory disclosure text injected into all replay-derived view models"
+    },
+    {
+      "defectId": "M-5",
+      "description": "Historical lineage verification & cryptographic proof",
+      "status": "CONTAINED / NOT REPAIRED",
+      "containment": "Full 64-character SHA-256 lineage hashing enforced on all canonical DTOs and envelopes"
+    },
+    {
+      "defectId": "M-6",
+      "description": "Decommissioned UI17 surface containment",
+      "status": "CONTAINED / NOT REPAIRED",
+      "containment": "UI17 permanently blocked and rejected by UIRegistry; surface inventory strictly UI01–UI14"
+    }
+  ],
+  "archivalStorageLocation": "evidence/release-v1.0.0-rc1/",
+  "archivalIntegrityDigest": "14d93eef4ae667b1a9d2bd5c89d1594d566837f1ce13915cb6cd084386345c9e"
+}
