@@ -75,6 +75,35 @@ describe('Executable /api/company/:id request path — bounded fixture corpus', 
     );
   }
 
+  it('PIT + exact governed legacy instant → Company vintage with requested/resolved asOf and provenance', () => {
+    const requestedAsOf = '2024-07-05T15:30:00.000Z';
+    const r = request('RELIANCE', requestedAsOf, 'PIT');
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({
+      surface: 'Company',
+      dataMode: 'PIT',
+      dataAvailable: true,
+      query: { asOf: requestedAsOf, domain: 'D02', securityId: 'RELIANCE' },
+      vintage: {
+        era: 'LEGACY_BHAVCOPY',
+        requestedAsOf,
+        resolvedAsOf: '2024-07-05T09:15:00.000Z',
+        asOf: '2024-07-05T09:15:00.000Z',
+        provider: 'NSE_D114',
+        dataVersion: 'd114-dualera-v1',
+        record: { symbol: 'RELIANCE', candleStart: '2024-07-05T09:15:00.000Z' },
+      },
+      provenance: {
+        freshness: 'PIT',
+        mode: 'PIT',
+        corpusId: 'pit-fixture-corpus-v1',
+        sha256: '806b81032da9b31aaac12c2f9cc785218004b28c3cedaf32334393581e06a626',
+      },
+    });
+    const body = r.body as { vintage: { requestedAsOf: string; resolvedAsOf: string } };
+    expect(body.vintage.resolvedAsOf <= body.vintage.requestedAsOf).toBe(true);
+  });
+
   it('PIT + symbol + in-corpus date (LEGACY side) → vintage, era disclosed', () => {
     const r = request('RELIANCE', '2024-07-07T15:30:00.000Z', 'PIT');
     expect(r.status).toBe(200);

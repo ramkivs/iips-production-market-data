@@ -69,12 +69,12 @@ frozen replay baseline are never substituted.
 
 | Floor / evidence | Result |
 |---|---:|
-| Full frontend Vitest | **1095 passed / 0 failed / 32 skipped** (1127 total; baseline 1033 + 62 added) |
+| Full frontend Vitest | **1096 passed / 0 failed / 32 skipped** (1128 total; baseline 1033 + 63 added) |
 | T1 seam PIT extension | **15 / 0** |
 | Existing D89 data-mode regression (incl. 7 SNAPSHOT identity pins, LIVE, Macro) | **38 / 0**, unchanged tests |
 | T2 provider + physical handoff/archive mode | **9 / 0** |
 | T3 admission bridge | **16 / 0** |
-| Exact Company request path/wiring | **14 / 0** |
+| Exact Company request path/wiring | **15 / 0** — includes `PIT + asOf=2024-07-05T15:30:00.000Z` → governed `LEGACY_BHAVCOPY`, resolved `2024-07-05T09:15:00.000Z` |
 | Client PIT discriminant/panel/Company URL consumer | **8 / 0** |
 | Latest governed D114 suite | **24 / 0** |
 | P12 | **154 / 0** |
