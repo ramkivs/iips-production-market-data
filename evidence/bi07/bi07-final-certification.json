@@ -1,0 +1,68 @@
+{
+  "$schema": "https://iips.institutional/schemas/bi07-certification-report.json",
+  "milestoneId": "BI-07-CERT",
+  "milestoneTitle": "Institutional Broker Import Ingress, Multi-Broker Merge & Browser Lifecycle Verification",
+  "certificationStatus": "ACCEPTED / COMPLETE / BROWSER VERIFIED",
+  "timestamp": "2026-09-22T08:00:00.000Z",
+  "branch": "arena/01a0b8e8-iips-production-market-data",
+  "authoritativeLineage": {
+    "commitSha": "5c469a78f2338728de8e76ec379946d283b02c48",
+    "parentSha": "ef5612fbd1343cb02a3551e6ab8d05801d8acc44"
+  },
+  "browserAcceptance": {
+    "hostEnvironment": "Windows Host (G:\\IIPS-BI07-Windows-Host-Verify)",
+    "overallResult": "PASS",
+    "firstImportZerodha": {
+      "format": "ZERODHA_KITE_CSV_V1",
+      "constituents": 82,
+      "status": "PASS",
+      "saveStatus": "SAVE_SUCCESS",
+      "controlsResponsive": true
+    },
+    "secondImportDhanWebUi": {
+      "format": "DHAN_WEB_UI_SUMMARY_V1",
+      "fileName": "Portfolio(2).csv",
+      "headerSignature": "Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %",
+      "mergeContract": "GOVERNED_MULTI_BROKER_ATOMIC_MERGE",
+      "consolidatedConstituents": 148,
+      "totalPortfolioValue": 982769.63,
+      "normalizedWeightSumPercentage": 100.0,
+      "atomicPersistence": "PASS",
+      "provenanceSha256Lineage": "PASS"
+    },
+    "postSaveLifecycle": {
+      "refreshButtonResponsive": true,
+      "refreshToastFeedback": true,
+      "importHoldingsButtonResponsive": true,
+      "modalCleanIdleReset": true,
+      "backdropDismissal": true
+    }
+  },
+  "automatedVerification": {
+    "totalSuites": 50,
+    "passedSuites": 50,
+    "totalTests": 299,
+    "passedTests": 299,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "typeCheck": "PASS",
+    "viteBuild": "PASS",
+    "sec01Scan": "PASS",
+    "browserCompatibilityTests": 9,
+    "repeatImportLifecycleTests": 21
+  },
+  "productionBoundary": {
+    "liveProviders": 0,
+    "productionAuthorization": "NOT GRANTED",
+    "commercialProviderActivation": "PROHIBITED",
+    "operatingMode": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV"
+  },
+  "sealedWorkstreams": [
+    "BI-03",
+    "BI-04",
+    "BI-05",
+    "BI-06 (XLSX qualification-blocked/deferred)",
+    "DHAN_WEB_UI_SUMMARY_V1",
+    "GOVERNED_MULTI_BROKER_ATOMIC_MERGE"
+  ]
+}
