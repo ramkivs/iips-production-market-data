@@ -1,0 +1,158 @@
+{
+  "certificationId": "P15-CERT-2026-09-21-001",
+  "packageId": "WS-F / Package P15 — End-to-End Cryptographic Lineage & Degradation Auditing",
+  "activity": "P15-CERT Controlled Certification Activity",
+  "certificationStatus": "CERTIFIED",
+  "authority": {
+    "standards": "AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W5-AUTH-2026-01",
+    "governingGates": "G-001 -> G-033 CLOSED / ACCEPTED; P13-CERT CERTIFIED; P14-CERT CERTIFIED; G-034 HELD / PRODUCTION-DEPENDENT",
+    "targetUiProductParity": "CONVERGED / ACCEPTED / QUALIFIED",
+    "optionAStatus": "IMPLEMENTED / QUALIFIED / EVIDENCE-ANCHORED",
+    "operatingMode": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+    "productionAuthorization": "NOT GRANTED",
+    "commercialProviderActivation": "PROHIBITED",
+    "r2Status": "HELD / EXTERNALLY GATED",
+    "ad17M2Status": "UNRESOLVED / PRESERVED",
+    "actDoc01Status": "COMPLETE",
+    "actRun01Status": "PARKED",
+    "actAud01Status": "PARKED"
+  },
+  "scope": {
+    "description": "Full 7-Hop End-to-End Cryptographic Lineage Verification, SHA-256 Digest Propagation, Monotonic Quality Rollup, AD-12 Stale Concession Qualifier, AD-4 Frozen 13-Engine Revalidation, Contained Defect M-2/M-6 Verification, and Fail-Closed Ingress/Security Master Auditing",
+    "sevenHops": [
+      {
+        "hopNumber": 1,
+        "stage": "RAW_INGRESS_RESOLUTION",
+        "component": "SecurityMaster",
+        "invariant": "P04 effective-dated identity resolution; raw hash computation"
+      },
+      {
+        "hopNumber": 2,
+        "stage": "INGRESS_CANONICAL_PACKAGING",
+        "component": "IngestionPipeline",
+        "invariant": "4-stage validation; canonical D01 envelope packaging; NFR-06 provider masking"
+      },
+      {
+        "hopNumber": 3,
+        "stage": "POINT_IN_TIME_PERSISTENCE",
+        "component": "PointInTimeStore",
+        "invariant": "Append-only chronological storage; zero lookahead queryAsOf retrieval"
+      },
+      {
+        "hopNumber": 4,
+        "stage": "FROZEN_ENGINE_SCORING",
+        "component": "DataBoundExecutor / FrozenEngines",
+        "invariant": "Namespace guard; 13 sector engines; 100% golden digest parity"
+      },
+      {
+        "hopNumber": 5,
+        "stage": "PRODUCT_TRANSPORT_SERIALIZATION",
+        "component": "EngineApiAdapter",
+        "invariant": "DTO assembly; lineage digest propagation; NFR-06 vendorTier OFFLINE_BOOTSTRAP"
+      },
+      {
+        "hopNumber": 6,
+        "stage": "INTELLIGENCE_SYNTHESIS",
+        "component": "DomainIntelligenceEngine",
+        "invariant": "Cross-domain news/estimates/macro synthesis; lineage chaining"
+      },
+      {
+        "hopNumber": 7,
+        "stage": "UI_VIEWMODEL_PRESENTATION",
+        "component": "UI02ExecutiveSummaryBuilder / UIRegistry",
+        "invariant": "Pure view model generation; final UI SHA-256 lineage digest attachment"
+      }
+    ]
+  },
+  "authoritativeArtifacts": [
+    {
+      "path": "src/e2e/lineage_verifier.ts",
+      "role": "E2ELineageVerifier executing full 7-hop qualification with SHA-256 digest validation and NFR-06 masking checks"
+    },
+    {
+      "path": "src/e2e/degraded_state_qualifier.ts",
+      "role": "DegradedStateQualifier enforcing monotonic quality degradation and AD-12 stale concession suppression"
+    },
+    {
+      "path": "src/e2e/engine_revalidation.ts",
+      "role": "EngineRevalidationEngine verifying 100% invariant golden digests across 13 sector engines and CSIP composite"
+    },
+    {
+      "path": "src/e2e/e2e_evidence_manifest.ts",
+      "role": "E2EEvidenceBuilder assembling cryptographic qualification packages anchored to commit SHAs"
+    },
+    {
+      "path": "tests/wsf_p15_e2e_lineage.test.ts",
+      "role": "P15 E2E Lineage & Functional Qualification test suite (6/6 PASS)"
+    },
+    {
+      "path": "tests/wsf_durability_cp_w5.test.ts",
+      "role": "Wave 5 durability checkpoint suite (CP-W5-01 to CP-W5-10) — 10/10 PASS"
+    },
+    {
+      "path": "evidence/p13/p13-certification-report.json",
+      "role": "P13 UI data integration certification foundation (Digest: fc1c5e8b886c3711e00928df4a7c2d577cc8a44d0da4aa148decacdd12e328fb)"
+    },
+    {
+      "path": "evidence/p14/p14-certification-report.json",
+      "role": "P14 UI/UX accessibility & responsive certification foundation (Digest: 6b8bb82b6872d2bbacf1d6e99e9c18c86c0337c4610c79370c952f36311d0a8d)"
+    }
+  ],
+  "cryptographicLineageEvidence": {
+    "hopContinuity": "VERIFIED (Unbroken 7-hop SHA-256 chain from raw ingress to UI presentation)",
+    "digestDeterminism": "VERIFIED (Identical inputs generate identical 64-char SHA-256 hex digests; payload mutation alters digest)",
+    "providerMasking": "VERIFIED (All 7 hops enforce NFR-06 provider masking; vendorTier = OFFLINE_BOOTSTRAP; zero proprietary branding)",
+    "frozenEngineParity": "VERIFIED (100% invariant match against golden reference digests for all 13 sector engines and CSIP composite)"
+  },
+  "degradationAndFailClosedEvidence": {
+    "monotonicQualityRollup": "VERIFIED (GOOD -> STALE -> PARTIAL -> UNAVAILABLE strictly preserved without upward creep)",
+    "ad12StaleConcession": "VERIFIED (Age <= threshold: GOOD; threshold < age <= 2x: STALE with warning; age > 2x: UNAVAILABLE with suppressed execution)",
+    "p04IdentityResolution": "VERIFIED (Unregistered or ambiguous symbol throws IdentityAmbiguityError and routes to quarantine)",
+    "containedDefectM2": "VERIFIED (AD17_CONSTRAINT disclosure text present on all replay/simulation views)",
+    "containedDefectM6": "VERIFIED (UI17 permanently blocked and rejected by UIRegistry)"
+  },
+  "testVerificationResults": {
+    "totalSuitesExecuted": 26,
+    "totalTestsExecuted": 191,
+    "passed": 191,
+    "failed": 0,
+    "p15SpecificTests": {
+      "suite": "tests/wsf_p15_e2e_lineage.test.ts",
+      "tests": [
+        "P15-01: 7-Hop End-to-End Lineage Qualification (PASS)",
+        "P15-02: AD-4 Frozen 13-Engine & CSIP Revalidation (PASS)",
+        "P15-03: Contained Defect M-2 Verification (PASS)",
+        "P15-04: Monotonic Quality Rollup & AD-12 Stale Concession Qualifier (PASS)",
+        "P15-05: UI01–UI14 Functional & Transport Qualification (PASS)",
+        "P15-06: Deterministic E2E Evidence Manifest Generation (PASS)"
+      ]
+    },
+    "wave5DurabilityCheckpoint": {
+      "suite": "tests/wsf_durability_cp_w5.test.ts",
+      "status": "10/10 PASS (7-Hop Lineage, SHA-256 Continuity, Engine Parity, M-2/M-6, Degraded State, UI Qualification, Telemetry, SLOs, Runbooks, Release State Machine)"
+    }
+  },
+  "p13P14Preservation": {
+    "p13DataIntegrationBaseline": "VERIFIED_PRESERVED (All 14 view models, ScreenerService, ObjectResolverService remain 100% intact)",
+    "p14AccessibilityResponsiveBaseline": "VERIFIED_PRESERVED (AccessibilityEngine WCAG 2.1 AA and ResponsiveEngine 4 tiers remain 100% intact)"
+  },
+  "productionBoundaryConfirmation": {
+    "liveNseProductionDataDependency": false,
+    "commercialProviderActivationDependency": false,
+    "productionCredentialsDependency": false,
+    "liveProductionIdentityDependency": false,
+    "g034Dependency": false,
+    "productionOnlyDependencies": false,
+    "confirmationStatement": "Zero production dependencies. P15 operates strictly within non-production OFFLINE_BOOTSTRAP parameters."
+  },
+  "unresolvedGovernanceItems": {
+    "ad17M2Status": "UNRESOLVED / PRESERVED (Replay simulation stubs do not equal live execution feed)",
+    "g034Status": "HELD / PRODUCTION-DEPENDENT",
+    "r2Status": "HELD / EXTERNALLY GATED",
+    "actRun01": "PARKED",
+    "actAud01": "PARKED",
+    "commercialEntitlement": "NOT ESTABLISHED"
+  },
+  "certificationDisposition": "P15-CERT = CERTIFIED",
+  "certificationLineageDigest": "b0a79c8b3d87c969060f4ec5e4be0eb52951f1b5aac214de8fd5d0440bd66f1a"
+}
