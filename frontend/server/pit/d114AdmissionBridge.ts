@@ -5,11 +5,12 @@
  * governing scope `docs/PIT_TRANSPORT_WIRING_SCOPE_PREPARATION.md` @ `79d05d7`.
  *
  * ══ WHAT THIS MODULE IS ════════════════════════════════════════════════════════════════════
- *   The single translation point between the frozen D114 dual-era canonical family
+ *   The single translation point between the governed D114 dual-era canonical family
  *   (`d114/src/d114/unified_historical_adapter.ts` output: D01 `MarketQuotePayload` /
- *   D02 `OHLCVCandle`) and the accepted P05/P01 canonical snapshot boundary admissible by
- *   the frozen P08 PIT store (`p08/src/pitStorageModel.js` `append()`, PS-6 admission).
- *   BOTH ENDS ARE FROZEN — this bridge modifies neither. It maps, validates, and refuses.
+ *   D02 `OHLCVCandle`, including the authorized ISIN/SERIES identity correction) and the
+ *   accepted P05/P01 snapshot boundary admissible by the frozen P08 PIT store
+ *   (`p08/src/pitStorageModel.js` `append()`, PS-6 admission). P08 remains frozen and PS-E9 is
+ *   unchanged; this bridge maps, validates, and refuses.
  *
  * ══ ERA BOUNDARY (governed, from the D114 evidence packages) ═══════════════════════════════
  *   LEGACY_BHAVCOPY : 2016-09-20 → 2024-07-07   (`evidence/d114-legacy/historical-coverage-summary.json`)
@@ -193,7 +194,9 @@ export function candleToPitSnapshot(
     asOf,
     domain: PIT_DOMAIN,
     quality: 'good', // schema-validated ACQUIRED_VALID bar — the four-state vocabulary, reused
-    securityId: candle.symbol,
+    // D114 carries a typed, ISIN-backed source security key. Keep companyId/symbol as
+    // presentation/query aliases; neither is promoted to P08 series identity.
+    securityId: candle.securityIdentity.securityId,
     mode: 'PIT',
     // P01 ST-5/MD-3 — pitBoundary present IFF mode is PIT: the session end of this EOD bar.
     pitBoundary: candle.candleEnd,

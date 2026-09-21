@@ -51,6 +51,12 @@ describe('WS-H / D114: Hardened 10-Year Historical Acquisition Feasibility & Evi
 HDFCLIFE,EQ,530.00,532.00,515.00,516.10,516.10,530.00,1500000,774150000.00,15-SEP-2023,45000,INE795G01014
 INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15-SEP-2023,85000,INE009A01021`;
 
+  // Exact identity/OHLCV collision case observed in governed cm05JUL2024bhav.csv.zip. This
+  // regression excerpt is test-only and does not alter the physical archive or bounded corpus.
+  const mmfinMultiSeriesLegacyCsv = `SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN
+M&MFIN,EQ,299.80,302.10,297.75,300.50,300.70,298.20,3303110,992336000.00,05-JUL-2024,29778,INE774D01024
+M&MFIN,N3,2048.00,2048.00,2048.00,2048.00,2048.00,2050.00,91,186368.00,05-JUL-2024,2,INE774D08MG3`;
+
   // ──────────────────────────────────────────────────────────────────────────
   // 1. Valid Acquisition Record & Extraction
   // ──────────────────────────────────────────────────────────────────────────
@@ -537,5 +543,43 @@ INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15
     assert.ok(script.includes('archive-integrity-report.json'));
     assert.ok(script.includes('sha256-manifest.json'));
     assert.ok(script.includes('schema-validation-report.json'));
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 25. Legacy Multi-Series Security Identity (D-PIT-WIRE-01 correction)
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-25: preserves M&MFIN EQ/N3 SERIES and ISIN as distinct 05-Jul-2024 identities', () => {
+    const parsed = UnifiedHistoricalAdapter.parseAndNormalize(mmfinMultiSeriesLegacyCsv);
+    assert.strictEqual(parsed.format, 'LEGACY_BHAVCOPY');
+    assert.strictEqual(parsed.isValid, true);
+    assert.strictEqual(parsed.totalRecords, 2);
+
+    const eq = parsed.candles.find((c) => c.securityIdentity.series === 'EQ');
+    const n3 = parsed.candles.find((c) => c.securityIdentity.series === 'N3');
+    assert.ok(eq);
+    assert.ok(n3);
+    assert.strictEqual(eq.companyId, 'M&MFIN');
+    assert.strictEqual(n3.companyId, 'M&MFIN');
+    assert.strictEqual(eq.symbol, 'M&MFIN');
+    assert.strictEqual(n3.symbol, 'M&MFIN');
+    assert.strictEqual(eq.candleStart, '2024-07-05T09:15:00.000Z');
+    assert.strictEqual(n3.candleStart, '2024-07-05T09:15:00.000Z');
+    assert.deepStrictEqual(eq.securityIdentity, {
+      securityId: 'ISIN:INE774D01024',
+      isin: 'INE774D01024',
+      isinAuthority: 'NON_AUTHORITATIVE',
+      series: 'EQ',
+    });
+    assert.deepStrictEqual(n3.securityIdentity, {
+      securityId: 'ISIN:INE774D08MG3',
+      isin: 'INE774D08MG3',
+      isinAuthority: 'NON_AUTHORITATIVE',
+      series: 'N3',
+    });
+    assert.notStrictEqual(eq.securityIdentity.securityId, n3.securityIdentity.securityId);
+
+    // D01 and D02 carry the same security-level metadata; symbol/company compatibility remains.
+    assert.deepStrictEqual(parsed.quotes[0]?.securityIdentity, eq.securityIdentity);
+    assert.deepStrictEqual(parsed.quotes[1]?.securityIdentity, n3.securityIdentity);
   });
 });

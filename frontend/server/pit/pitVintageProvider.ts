@@ -13,13 +13,13 @@
  *     `HistoricalEvidenceHandoff.validateAndLoadEvidencePackage()` intake contract;
  *   • reads selected archives in-place from the TWO separate configured archive roots (never
  *     merges or modifies them), verifies each archive against the D114 SHA-256 manifest, then
- *     extracts through the frozen D114 archive extractor and normalizes through the frozen
- *     dual-era adapter;
+ *     extracts through the frozen D114 archive extractor and normalizes through the governed
+ *     dual-era adapter (including the authorized ISIN/SERIES identity correction);
  *   • carries acquisition-manifest + SHA-entry + handoff-lineage provenance into every vintage;
  *   • derives non-trading/failure dates from the evidence manifests and refuses them.
  *
  * FIXTURE MODE (`corpusKind: FIXTURE_CSV`) is an explicit repository-test path only. It hashes
- * fixture CSVs, admits both eras through the same frozen adapter/bridge/store path, and can
+ * fixture CSVs, admits both eras through the same governed adapter/bridge/frozen-store path, and can
  * declare synthetic unavailable dates. Fixture success is NOT actual NSE verification.
  *
  * FAIL-CLOSED: unconfigured, rejected evidence, sha mismatch, archive/admission error, empty
@@ -96,6 +96,8 @@ interface UnavailableDate {
   readonly evidenceRef: string;
 }
 
+type SecurityAliasIndex = ReadonlyMap<string, readonly string[]>;
+
 interface QueryPolicy {
   readonly corpusId: string;
   readonly corpusKind: PitCorpusKind;
@@ -103,6 +105,10 @@ interface QueryPolicy {
   readonly coverageEnd: string;
   readonly loadedDates: ReadonlySet<string>;
   readonly unavailableDates: ReadonlyMap<string, UnavailableDate>;
+  /** Candidate source-security keys for company/symbol/ISIN/series-qualified queries. */
+  readonly securityAliases: SecurityAliasIndex;
+  /** Same candidate relation scoped to the requested trading date (P04 1:N stays explicit). */
+  readonly datedSecurityAliases: SecurityAliasIndex;
   readonly enforceLoadedDates: boolean;
   readonly requireProvenance: boolean;
   readonly evidenceValidated: boolean;
@@ -110,6 +116,100 @@ interface QueryPolicy {
 
 /** Loader-side policy registry (kept off the public provider/store interface). */
 const policies = new WeakMap<object, QueryPolicy | null>();
+
+const aliasKey = (domain: string, alias: string): string => JSON.stringify([domain, alias]);
+const datedAliasKey = (date: string, domain: string, alias: string): string =>
+  JSON.stringify([date, domain, alias]);
+
+function freezeAliasIndex(source: Map<string, Set<string>>): SecurityAliasIndex {
+  const frozen = new Map<string, readonly string[]>();
+  for (const [key, candidates] of source) {
+    frozen.set(key, Object.freeze([...candidates].sort()));
+  }
+  return frozen;
+}
+
+/**
+ * Build a SET-valued company/symbol query relation from already-admitted canonical records.
+ *
+ * This is deliberately not a P04 canonical-security mapping: D114's ISIN remains explicitly
+ * non-authoritative. A company/symbol may point to 0..N source securities; only a singleton may
+ * be queried as one D02 series. Multi-series aliases (for example M&MFIN) fail closed rather than
+ * selecting EQ, the first row, or any other heuristic. Raw ISIN, the typed source key, and
+ * SYMBOL:SERIES remain deterministic direct aliases.
+ */
+function buildSecurityAliasIndexes(snapshots: readonly PitSnapshot[]): {
+  securityAliases: SecurityAliasIndex;
+  datedSecurityAliases: SecurityAliasIndex;
+} {
+  const aliases = new Map<string, Set<string>>();
+  const datedAliases = new Map<string, Set<string>>();
+
+  const register = (map: Map<string, Set<string>>, key: string, securityId: string): void => {
+    const existing = map.get(key);
+    if (existing !== undefined) existing.add(securityId);
+    else map.set(key, new Set([securityId]));
+  };
+
+  for (const snapshot of snapshots) {
+    const securityId = snapshot.securityId;
+    if (typeof securityId !== 'string' || securityId.length === 0) continue;
+    const payload = snapshot.payload;
+    if (payload === null || typeof payload !== 'object') continue;
+    const record = payload as {
+      companyId?: unknown;
+      symbol?: unknown;
+      securityIdentity?: {
+        securityId?: unknown;
+        isin?: unknown;
+        series?: unknown;
+      };
+    };
+    if (record.securityIdentity?.securityId !== securityId) continue;
+
+    const companyId = typeof record.companyId === 'string' ? record.companyId : undefined;
+    const symbol = typeof record.symbol === 'string' ? record.symbol : undefined;
+    const isin = typeof record.securityIdentity.isin === 'string'
+      ? record.securityIdentity.isin
+      : undefined;
+    const series = typeof record.securityIdentity.series === 'string'
+      ? record.securityIdentity.series
+      : undefined;
+    const queryAliases = new Set<string>([
+      securityId,
+      ...(companyId ? [companyId] : []),
+      ...(symbol ? [symbol] : []),
+      ...(isin ? [isin] : []),
+      ...(symbol && series ? [`${symbol}:${series}`] : []),
+    ]);
+    const date = snapshot.asOf.slice(0, 10);
+    for (const alias of queryAliases) {
+      register(aliases, aliasKey(snapshot.domain, alias), securityId);
+      register(datedAliases, datedAliasKey(date, snapshot.domain, alias), securityId);
+    }
+  }
+
+  return {
+    securityAliases: freezeAliasIndex(aliases),
+    datedSecurityAliases: freezeAliasIndex(datedAliases),
+  };
+}
+
+function resolveQuerySecurityId(
+  policy: QueryPolicy,
+  domain: string,
+  requestedSecurityId: string,
+  requestedDate: string,
+): string | null {
+  const datedCandidates = policy.datedSecurityAliases.get(
+    datedAliasKey(requestedDate, domain, requestedSecurityId),
+  );
+  const candidates = datedCandidates ?? policy.securityAliases.get(
+    aliasKey(domain, requestedSecurityId),
+  );
+  if (candidates === undefined) return requestedSecurityId;
+  return candidates.length === 1 ? candidates[0]! : null;
+}
 
 function isCompleteProvenance(snapshot: PitSnapshot): boolean {
   const hp = snapshot.historicalProvenance;
@@ -138,10 +238,13 @@ export function createPitVintageProvider(options: CreatePitProviderOptions = {})
       if (policy.unavailableDates.has(requestedDate)) return null;
       if (policy.enforceLoadedDates && !policy.loadedDates.has(requestedDate)) return null;
 
+      const resolvedSecurityId = resolveQuerySecurityId(policy, domain, securityId, requestedDate);
+      if (resolvedSecurityId === null) return null; // 1:N company/symbol alias → explicit ambiguity
+
       try {
         // PS-11 — detection only. Any finding is refused; never ranked or resolved here.
-        if (store.detectVintageAmbiguity(domain, securityId).length > 0) return null;
-        const snap = store.asOfQuery(domain, securityId, asOf);
+        if (store.detectVintageAmbiguity(domain, resolvedSecurityId).length > 0) return null;
+        const snap = store.asOfQuery(domain, resolvedSecurityId, asOf);
         if (snap === null || snap === undefined) return null;
         // Belt-and-braces: preserve the frozen PS-9 contract at the transport boundary.
         if (!(snap.asOf <= asOf)) return null;
@@ -191,6 +294,8 @@ export function bindProviderCorpus(provider: PitVintageProvider, corpusId: strin
     coverageEnd: '9999-12-31',
     loadedDates: new Set<string>(),
     unavailableDates: new Map<string, UnavailableDate>(),
+    securityAliases: new Map<string, readonly string[]>(),
+    datedSecurityAliases: new Map<string, readonly string[]>(),
     enforceLoadedDates: false,
     requireProvenance: false,
     evidenceValidated: false,
@@ -509,6 +614,7 @@ export function loadCorpusIntoProvider(
   }
 
   const loadedDates = new Set(outcome.snapshots.map((s) => s.asOf.slice(0, 10)));
+  const aliasIndexes = buildSecurityAliasIndexes(outcome.snapshots);
   const sortedDates = [...loadedDates].sort();
   let coverageStart: string;
   let coverageEnd: string;
@@ -540,6 +646,8 @@ export function loadCorpusIntoProvider(
     coverageEnd,
     loadedDates,
     unavailableDates: unavailable,
+    securityAliases: aliasIndexes.securityAliases,
+    datedSecurityAliases: aliasIndexes.datedSecurityAliases,
     enforceLoadedDates: true,
     requireProvenance: true,
     evidenceValidated: kind === 'D114_ARCHIVE',

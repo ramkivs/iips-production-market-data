@@ -8,6 +8,7 @@
 
 import { MarketQuotePayload } from '../contracts/d01_quotes.js';
 import { OHLCVCandle } from '../contracts/d02_ohlcv.js';
+import { buildD114SecurityIdentity } from '../contracts/types.js';
 import { normalizeToUtcIso } from '../normalization/time_normalizer.js';
 
 export interface LegacyBhavcopyRawRecord {
@@ -145,6 +146,10 @@ export class LegacyBhavcopyParser {
         errors.push({ row: i + 1, field: 'SYMBOL', error: 'Missing symbol' });
         rowValid = false;
       }
+      if (!row.SERIES || row.SERIES.trim().length === 0) {
+        errors.push({ row: i + 1, field: 'SERIES', error: 'Missing security series' });
+        rowValid = false;
+      }
       if (!row.ISIN || row.ISIN.length !== 12) {
         errors.push({ row: i + 1, field: 'ISIN', error: `Invalid ISIN: ${row.ISIN}` });
         rowValid = false;
@@ -182,6 +187,7 @@ export class LegacyBhavcopyParser {
     return {
       companyId: row.SYMBOL,
       symbol: row.SYMBOL,
+      securityIdentity: buildD114SecurityIdentity(row.ISIN, row.SERIES),
       exchange: 'NSE',
       currency: 'INR',
       bid: ltp,
@@ -208,6 +214,7 @@ export class LegacyBhavcopyParser {
     return {
       companyId: row.SYMBOL,
       symbol: row.SYMBOL,
+      securityIdentity: buildD114SecurityIdentity(row.ISIN, row.SERIES),
       interval: '1d',
       candleStart,
       candleEnd,

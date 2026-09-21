@@ -14,8 +14,9 @@
  *   This port carries ONLY the dependency-closed D114 set (src/d114 + the contracts and
  *   normalization modules they import). The upstream test suite imports the D114 symbols
  *   from '../src/index.js'; this index preserves that import surface exactly while
- *   exporting ONLY the D114 package. Every ported module file is byte-verbatim from its
- *   governed source branch; parser/adapter files remain byte-identical to 1d57d0b (0 changes).
+ *   exporting ONLY the D114 package. The 1d57d0b parser/adapter baseline is preserved except for
+ *   the explicitly authorized D-PIT-WIRE-01 ISIN/SERIES source-identity correction; acquisition,
+ *   archive, OHLCV, volume, time, and era behavior remain unchanged.
  *
  * Operating Mode: LOCAL_FIXTURE_AND_OFFLINE_DEV.
  * NON_PRODUCTION_HOLD — OI-HIST-01 OPEN, G-004 OPEN, production eligibility NOT AUTHORIZED.

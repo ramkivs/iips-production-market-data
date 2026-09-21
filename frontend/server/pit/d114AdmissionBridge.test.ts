@@ -1,14 +1,14 @@
 /**
  * D-PIT-WIRE-01 — T3: D114 → P08 ADMISSION BRIDGE tests (bounded fixture corpus).
  *
- * Proves, against the FROZEN D114 parsers and the FROZEN P08 store:
+ * Proves, against D114 (including the authorized identity-only correction) and the FROZEN P08 store:
  *   • LEGACY_BHAVCOPY record admission;
  *   • CM_UDIFF record admission;
  *   • the 2024-07-07 → 2024-07-08 era boundary is preserved and enforced;
  *   • provenance (era / archiveRef / sha256 / corpusId) survives into the stored snapshot;
  *   • snapshotId composition (AD-6) and PS-8 idempotency / PS-E9 vintage-ambiguity refusal;
  *   • corpus admission is all-or-nothing (any failure → nothing admitted → fail-closed);
- *   • NO parser or P08 semantic modification (behavioural pins on both frozen surfaces).
+ *   • parser prices/times and every P08 semantic remain unchanged; PS-E9 stays fully active.
  */
 import { describe, it, expect } from 'vitest';
 import { UnifiedHistoricalAdapter } from '../../../d114/src/d114/unified_historical_adapter.js';
@@ -27,10 +27,14 @@ import path from 'node:path';
 const CORPUS_DIR = path.join(process.cwd(), 'server', 'pit', 'fixtures', 'corpus');
 const legacyCsv = fs.readFileSync(path.join(CORPUS_DIR, 'legacy-fixture.csv'), 'utf8');
 const udiffCsv = fs.readFileSync(path.join(CORPUS_DIR, 'udiff-fixture.csv'), 'utf8');
+const RELIANCE_SECURITY_ID = 'ISIN:INE002A01018';
+const mmfinMultiSeriesLegacyCsv = `SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN
+M&MFIN,EQ,299.80,302.10,297.75,300.50,300.70,298.20,3303110,992336000.00,05-JUL-2024,29778,INE774D01024
+M&MFIN,N3,2048.00,2048.00,2048.00,2048.00,2048.00,2050.00,91,186368.00,05-JUL-2024,2,INE774D08MG3`;
 
 const CORPUS = { corpusId: 'pit-fixture-corpus-v1', provider: 'NSE_D114', dataVersion: 'd114-dualera-v1' };
 
-describe('T3 — frozen D114 adapter surface (0 parser modification pin)', () => {
+describe('T3 — D114 adapter price/time pins plus authorized security identity metadata', () => {
   it('detects both frozen eras by header fingerprint', () => {
     expect(UnifiedHistoricalAdapter.detectFormat(['TradDt', 'TckrSymb', 'ClsPric'])).toBe('CM_UDIFF');
     expect(UnifiedHistoricalAdapter.detectFormat(['SYMBOL', 'CLOSE', 'TIMESTAMP'])).toBe('LEGACY_BHAVCOPY');
@@ -130,14 +134,14 @@ describe('T3 — admission and provenance preservation', () => {
     for (const s of r.snapshots) store.append(s);
     expect(store.size()).toBe(6);
 
-    const vintage = store.asOfQuery(PIT_DOMAIN, 'RELIANCE', '2024-07-05T23:59:59.999Z');
+    const vintage = store.asOfQuery(PIT_DOMAIN, RELIANCE_SECURITY_ID, '2024-07-05T23:59:59.999Z');
     expect(vintage).not.toBeNull();
     expect(vintage?.snapshotId).toBe('data-NSE_D114-d114-dualera-v1-2024-07-05T09:15:00.000Z');
     expect(vintage?.provider).toBe('NSE_D114');
     expect(vintage?.dataVersion).toBe('d114-dualera-v1');
     expect(vintage?.quality).toBe('good');
     expect(vintage?.domain).toBe(PIT_DOMAIN);
-    expect(vintage?.securityId).toBe('RELIANCE');
+    expect(vintage?.securityId).toBe(RELIANCE_SECURITY_ID);
     expect(vintage?.mode).toBe('PIT');
     // P01 ST-5/MD-3 — pitBoundary present under PIT, set to the record's own session end.
     expect(vintage?.pitBoundary).toBe('2024-07-05T15:30:00.000Z');
@@ -159,6 +163,47 @@ describe('T3 — admission and provenance preservation', () => {
     expect(payload.isAdjusted).toBe(false);
   });
 
+  it('admits exact 05-Jul-2024 M&MFIN EQ/N3 rows as coexisting P08 series without PS-E9', () => {
+    const admitted = admitCorpusEntry(CORPUS, {
+      archiveRef: 'cm05JUL2024bhav.csv.zip',
+      era: 'LEGACY_BHAVCOPY',
+      sha256: 'e08c8c0650e6807f8b1abd0658bc8d87cbe2d78c2fc77e05c82878f30be46665',
+      csvText: mmfinMultiSeriesLegacyCsv,
+    });
+    expect(admitted.errors).toHaveLength(0);
+    expect(admitted.snapshots).toHaveLength(2);
+    expect(admitted.snapshots.map((s) => s.asOf)).toEqual([
+      '2024-07-05T09:15:00.000Z',
+      '2024-07-05T09:15:00.000Z',
+    ]);
+    expect(admitted.snapshots.map((s) => s.securityId).sort()).toEqual([
+      'ISIN:INE774D01024',
+      'ISIN:INE774D08MG3',
+    ]);
+
+    const store = createPitStore();
+    expect(() => {
+      for (const snapshot of admitted.snapshots) store.append(snapshot);
+    }).not.toThrow();
+    expect(store.size()).toBe(2);
+
+    const eq = store.asOfQuery(PIT_DOMAIN, 'ISIN:INE774D01024', '2024-07-05T09:15:00.000Z');
+    const n3 = store.asOfQuery(PIT_DOMAIN, 'ISIN:INE774D08MG3', '2024-07-05T09:15:00.000Z');
+    expect(eq?.asOf).toBe('2024-07-05T09:15:00.000Z');
+    expect(n3?.asOf).toBe('2024-07-05T09:15:00.000Z');
+    expect(eq?.payload).toMatchObject({
+      companyId: 'M&MFIN', symbol: 'M&MFIN', close: 300.5,
+      securityIdentity: { isin: 'INE774D01024', series: 'EQ' },
+    });
+    expect(n3?.payload).toMatchObject({
+      companyId: 'M&MFIN', symbol: 'M&MFIN', close: 2048,
+      securityIdentity: { isin: 'INE774D08MG3', series: 'N3' },
+    });
+    expect(store.asOfQuery(PIT_DOMAIN, 'M&MFIN', '2024-07-05T09:15:00.000Z')).toBeNull();
+    expect(store.detectVintageAmbiguity(PIT_DOMAIN, 'ISIN:INE774D01024')).toEqual([]);
+    expect(store.detectVintageAmbiguity(PIT_DOMAIN, 'ISIN:INE774D08MG3')).toEqual([]);
+  });
+
   it('admits the CM_UDIFF fixture across the era boundary from the same series', () => {
     const store = createPitStore();
     const legacy = admitCorpusEntry(CORPUS, { archiveRef: 'legacy', era: 'LEGACY_BHAVCOPY', csvText: legacyCsv });
@@ -169,7 +214,7 @@ describe('T3 — admission and provenance preservation', () => {
     expect(store.size()).toBe(10);
 
     // Continuous series across the 2024-07-07 | 2024-07-08 format boundary.
-    const at = (asOf: string) => store.asOfQuery(PIT_DOMAIN, 'RELIANCE', asOf);
+    const at = (asOf: string) => store.asOfQuery(PIT_DOMAIN, RELIANCE_SECURITY_ID, asOf);
     expect(at('2024-07-07T23:59:59.999Z')?.asOf).toBe('2024-07-07T09:15:00.000Z');
     expect(at('2024-07-08T23:59:59.999Z')?.asOf).toBe('2024-07-08T09:15:00.000Z');
     expect((at('2024-07-08T23:59:59.999Z')?.historicalProvenance as Record<string, unknown>).era).toBe('CM_UDIFF');

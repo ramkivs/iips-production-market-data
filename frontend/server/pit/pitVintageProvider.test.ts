@@ -23,6 +23,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import * as crypto from 'node:crypto';
 
 const CORPUS_DIR = path.join(process.cwd(), 'server', 'pit', 'fixtures', 'corpus');
 
@@ -128,6 +129,8 @@ describe('T2 — corpus manifest loading is attested, era-checked and atomic', (
     expect(p.isBound()).toBe(true);
     expect(p.query('D02', 'RELIANCE', '2024-07-07T15:30:00.000Z')?.snapshot.historicalProvenance).toMatchObject({ era: 'LEGACY_BHAVCOPY' });
     expect(p.query('D02', 'RELIANCE', '2024-07-08T15:30:00.000Z')?.snapshot.historicalProvenance).toMatchObject({ era: 'CM_UDIFF' });
+    expect(p.query('D02', 'RELIANCE', '2024-07-08T15:30:00.000Z')?.snapshot.securityId).toBe('ISIN:INE002A01018');
+    expect(p.query('D02', 'TCS', '2024-07-15T15:30:00.000Z')?.snapshot.securityId).toBe('ISIN:INE467B01029');
     // Bounded corpus + D114 availability policy: a registered HTTP_404, holiday, weekend,
     // absent bounded-corpus date, or date outside coverage refuses BEFORE ordinary PS-9
     // backward resolution. No nearest-vintage substitution across a known/implicit gap.
@@ -141,6 +144,46 @@ describe('T2 — corpus manifest loading is attested, era-checked and atomic', (
       corpusKind: 'FIXTURE_CSV', loadedDates: 5, unavailableDates: 3,
       coverageStart: '2023-12-29', coverageEnd: '2024-07-15', evidenceValidated: false,
     });
+  });
+
+  it('resolves stable ISIN/series aliases and refuses ambiguous M&MFIN company-symbol selection', () => {
+    const csv = `SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN
+M&MFIN,EQ,299.80,302.10,297.75,300.50,300.70,298.20,3303110,992336000.00,05-JUL-2024,29778,INE774D01024
+M&MFIN,N3,2048.00,2048.00,2048.00,2048.00,2048.00,2050.00,91,186368.00,05-JUL-2024,2,INE774D08MG3`;
+    const sha256 = crypto.createHash('sha256').update(csv).digest('hex');
+    const manifest = {
+      corpusId: 'mmfin-multi-series-regression',
+      provider: 'NSE_D114',
+      dataVersion: 'd114-dualera-v1',
+      coverage: { start: '2024-07-05', end: '2024-07-05' },
+      entries: [{
+        file: 'cm05JUL2024bhav.csv', source: 'CSV', era: 'LEGACY_BHAVCOPY', sha256,
+      }],
+    };
+    const provider = createPitVintageProvider();
+    const loaded = loadCorpusIntoProvider(
+      provider,
+      tmpCorpusDir(manifest, { 'cm05JUL2024bhav.csv': csv }),
+    );
+    expect(loaded).toMatchObject({ ok: true, snapshotsAppended: 2 });
+
+    const asOf = '2024-07-05T15:30:00.000Z';
+    const eq = provider.query('D02', 'INE774D01024', asOf);
+    const n3 = provider.query('D02', 'M&MFIN:N3', asOf);
+    expect(eq?.snapshot.securityId).toBe('ISIN:INE774D01024');
+    expect(n3?.snapshot.securityId).toBe('ISIN:INE774D08MG3');
+    expect(eq?.resolvedAsOf).toBe('2024-07-05T09:15:00.000Z');
+    expect(n3?.resolvedAsOf).toBe('2024-07-05T09:15:00.000Z');
+    expect(eq?.snapshot.payload).toMatchObject({
+      symbol: 'M&MFIN', securityIdentity: { isin: 'INE774D01024', series: 'EQ' },
+    });
+    expect(n3?.snapshot.payload).toMatchObject({
+      symbol: 'M&MFIN', securityIdentity: { isin: 'INE774D08MG3', series: 'N3' },
+    });
+    expect(provider.query('D02', 'M&MFIN:EQ', asOf)?.snapshot.securityId).toBe('ISIN:INE774D01024');
+    expect(provider.query('D02', 'ISIN:INE774D08MG3', asOf)?.snapshot.securityId).toBe('ISIN:INE774D08MG3');
+    // Company/symbol → SET(2): no EQ preference, row-order choice, or other silent resolution.
+    expect(provider.query('D02', 'M&MFIN', asOf)).toBeNull();
   });
 
   it('refuses a corpus whose sha256 does not match the attested manifest', () => {

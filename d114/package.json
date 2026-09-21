@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "D114 — dual-era NSE historical ingestion (GOVERNED PORT under D-PIT-WIRE-01 §5/§1.6). Dependency-closed verbatim port: frozen parsers/adapter/contracts from origin/d114-windows-evidence @ 1d57d0b; latest governed handoff/runner/reconciler + 24-test suite from origin/d114-legacy-windows-evidence @ 4a95cd9 (handoff schema reconciliation commit 9a6f4c1). Parser/adapter semantics are FROZEN — 0 changes. Tree layout reconciled to repo-root d114/. Operating Mode: LOCAL_FIXTURE_AND_OFFLINE_DEV. NON_PRODUCTION_HOLD; OI-HIST-01 / G-004 remain OPEN.",
+  "description": "D114 — dual-era NSE historical ingestion (GOVERNED PORT under D-PIT-WIRE-01 §5/§1.6). Baseline: parsers/adapter/contracts from origin/d114-windows-evidence @ 1d57d0b; handoff/runner/reconciler and original 24-test suite from origin/d114-legacy-windows-evidence @ 4a95cd9 (handoff reconciliation 9a6f4c1). The authorized D-PIT-WIRE-01 identity correction adds ISIN/SERIES source identity metadata only; acquisition, price, volume, time, era, and archive behavior remain unchanged. Tree layout reconciled to repo-root d114/. Operating Mode: LOCAL_FIXTURE_AND_OFFLINE_DEV. NON_PRODUCTION_HOLD; OI-HIST-01 / G-004 remain OPEN.",
   "scripts": {
     "build": "tsc",
     "test": "node --test dist/tests/*.test.js",

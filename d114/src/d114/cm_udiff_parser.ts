@@ -10,6 +10,7 @@ import * as crypto from 'crypto';
 import * as zlib from 'zlib';
 import { MarketQuotePayload } from '../contracts/d01_quotes.js';
 import { OHLCVCandle } from '../contracts/d02_ohlcv.js';
+import { buildD114SecurityIdentity } from '../contracts/types.js';
 
 export interface CmUdiffRawRecord {
   TradDt: string;
@@ -234,6 +235,10 @@ export class CmUdiffParser {
         errors.push({ row: i + 1, field: 'TckrSymb', error: 'Missing ticker symbol' });
         rowValid = false;
       }
+      if (!row.SctySrs || row.SctySrs.trim().length === 0) {
+        errors.push({ row: i + 1, field: 'SctySrs', error: 'Missing security series' });
+        rowValid = false;
+      }
       if (isNaN(parseFloat(row.ClsPric))) {
         errors.push({ row: i + 1, field: 'ClsPric', error: `Non-numeric closing price: ${row.ClsPric}` });
         rowValid = false;
@@ -270,6 +275,7 @@ export class CmUdiffParser {
     return {
       companyId: row.TckrSymb,
       symbol: row.TckrSymb,
+      securityIdentity: buildD114SecurityIdentity(row.ISIN, row.SctySrs),
       exchange: 'NSE',
       currency: 'INR',
       bid: ltp,
@@ -301,6 +307,7 @@ export class CmUdiffParser {
     return {
       companyId: row.TckrSymb,
       symbol: row.TckrSymb,
+      securityIdentity: buildD114SecurityIdentity(row.ISIN, row.SctySrs),
       interval: '1d',
       candleStart,
       candleEnd,

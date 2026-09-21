@@ -5,13 +5,19 @@
  * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W1-AUTH-2026-01
  */
 
-import { ValidationResult, ValidationIssue } from './types.js';
+import {
+  D114SecurityIdentity,
+  ValidationResult,
+  ValidationIssue,
+  isD114SecurityIdentity,
+} from './types.js';
 
 export type CandleInterval = '1m' | '5m' | '15m' | '1h' | '1d' | '1w' | '1M';
 
 export interface OHLCVCandle {
   companyId: string;
   symbol: string;
+  securityIdentity: D114SecurityIdentity;
   interval: CandleInterval;
   candleStart: string; // ISO-8601 UTC
   candleEnd: string;   // ISO-8601 UTC
@@ -36,6 +42,15 @@ export function validateOHLCVCandle(candle: OHLCVCandle): ValidationResult {
   if (!candle.symbol) {
     errors.push({ field: 'symbol', code: 'MISSING_MANDATORY_FIELD', message: 'symbol is required', severity: 'CRITICAL' });
     anomalyCodes.push('MISSING_MANDATORY_FIELD');
+  }
+  if (!isD114SecurityIdentity(candle.securityIdentity)) {
+    errors.push({
+      field: 'securityIdentity',
+      code: 'INVALID_SECURITY_IDENTITY',
+      message: 'securityIdentity requires a namespaced ISIN key, non-authoritative ISIN metadata, and SERIES',
+      severity: 'CRITICAL',
+    });
+    anomalyCodes.push('INVALID_SECURITY_IDENTITY');
   }
 
   const startMs = Date.parse(candle.candleStart);

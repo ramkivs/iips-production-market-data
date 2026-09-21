@@ -5,11 +5,17 @@
  * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W1-AUTH-2026-01
  */
 
-import { ValidationResult, ValidationIssue } from './types.js';
+import {
+  D114SecurityIdentity,
+  ValidationResult,
+  ValidationIssue,
+  isD114SecurityIdentity,
+} from './types.js';
 
 export interface MarketQuotePayload {
   companyId: string;
   symbol: string;
+  securityIdentity: D114SecurityIdentity;
   exchange: 'NSE' | 'BSE';
   currency: 'INR' | 'USD';
   bid: number;
@@ -39,6 +45,15 @@ export function validateMarketQuotePayload(payload: MarketQuotePayload): Validat
   if (!payload.symbol) {
     errors.push({ field: 'symbol', code: 'MISSING_MANDATORY_FIELD', message: 'symbol is required', severity: 'CRITICAL' });
     anomalyCodes.push('MISSING_MANDATORY_FIELD');
+  }
+  if (!isD114SecurityIdentity(payload.securityIdentity)) {
+    errors.push({
+      field: 'securityIdentity',
+      code: 'INVALID_SECURITY_IDENTITY',
+      message: 'securityIdentity requires a namespaced ISIN key, non-authoritative ISIN metadata, and SERIES',
+      severity: 'CRITICAL',
+    });
+    anomalyCodes.push('INVALID_SECURITY_IDENTITY');
   }
   if (!['NSE', 'BSE'].includes(payload.exchange)) {
     errors.push({ field: 'exchange', code: 'UNRECOGNIZED_ENUM_OR_CODE', message: `Invalid exchange: ${payload.exchange}`, severity: 'CRITICAL' });
