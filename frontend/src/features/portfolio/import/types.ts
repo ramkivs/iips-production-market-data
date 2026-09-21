@@ -1,12 +1,12 @@
 /**
  * Institutional Investment Platform System (IIPS)
- * Broker Import Foundation Contracts & Compatibility Boundary (BI-03)
+ * Broker Import Foundation Contracts & Compatibility Boundary (BI-03 / BI-04)
  *
  * Sourced from ramkivs/finapp (WP-FB-IMPORT-BROKER-01)
  * Deposited under Governed Reuse Handoff (Commit b97b103)
- * Ported to IIPS under Program BI-02 / BI-03
+ * Ported to IIPS under Program BI-02 / BI-03 / BI-04
  *
- * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / BI-03-AUTH-2026-01
+ * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / BI-03-AUTH-2026-01 / BI-04-AUTH-2026-01
  * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
  */
 
@@ -16,6 +16,11 @@ import { SecurityMaster } from '../../../../../src/identity/security_master.js';
  * Reused FINAPP Broker Classification (WP-FB-IMPORT-BROKER-01)
  */
 export type FinappBrokerType = 'ZERODHA' | 'DHAN' | 'GROWW' | 'GENERIC' | 'UNKNOWN';
+
+/**
+ * Supported File Formats for Broker Exports
+ */
+export type BrokerFileFormat = 'CSV' | 'XLSX' | 'JSON' | 'UNKNOWN';
 
 /**
  * Reused Minimal FINAPP Holding Interface (WP-FB-IMPORT-BROKER-01)
@@ -53,8 +58,21 @@ export interface FinappBrokerParseResult {
     fileFormat?: string;
     parsedAt?: string;
     sourceFileName?: string;
+    requiresXlsx?: boolean;
+    qualificationStatus?: 'QUALIFIED' | 'QUALIFICATION_BLOCKED_DEFERRED_TO_BI06';
     [key: string]: unknown;
   };
+}
+
+/**
+ * Broker Adapter Parse Options
+ */
+export interface BrokerAdapterParseOptions {
+  fileName?: string;
+  asOf?: string;
+  skipHeaderRows?: number;
+  encoding?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -66,8 +84,20 @@ export interface FinappBrokerAdapter {
   readonly supportedFormats: readonly string[];
   parse(
     content: string | Buffer | ArrayBuffer,
-    options?: Record<string, unknown>
+    options?: BrokerAdapterParseOptions
   ): Promise<FinappBrokerParseResult> | FinappBrokerParseResult;
+}
+
+/**
+ * Result of Broker Format Detection (BrokerFormatDetector)
+ */
+export interface BrokerDetectionResult {
+  brokerType: FinappBrokerType;
+  confidence: number; // 0.0 to 1.0 (1.0 = exact deterministic match)
+  format: BrokerFileFormat;
+  detectedHeaders: string[];
+  requiresXlsx: boolean;
+  details: string;
 }
 
 /**
