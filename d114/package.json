@@ -1,0 +1,19 @@
+{
+  "name": "iips-d114-historical-ingestion",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "D114 — dual-era NSE historical ingestion (GOVERNED PORT under D-PIT-WIRE-01 §5/§1.6). Verbatim port of the frozen D114 parser/adapter/handoff modules from the governed D114 branch (origin/d114-windows-evidence @ 1d57d0b, dependency-closed subset incl. src/contracts types/d01/d02/provenance and src/normalization/time_normalizer). Parser semantics are FROZEN — 0 changes. Tree layout reconciled to the application branch (repo-root d114/ instead of root src/). Operating Mode: LOCAL_FIXTURE_AND_OFFLINE_DEV. NON_PRODUCTION_HOLD; OI-HIST-01 / G-004 remain OPEN.",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/tests/*.test.js",
+    "test:direct": "node --test --experimental-strip-types tests/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=22.6"
+  }
+}

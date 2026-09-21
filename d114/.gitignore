@@ -1,0 +1,3 @@
+# build artifacts (not committed)
+dist/
+node_modules/
