@@ -5,6 +5,7 @@
  */
 import type { Verdict } from '../components/decision/DecisionComponents';
 import type { ExecutiveProvenance } from './executive';
+import type { DegradedData, PitVintageData } from './dataMode';
 import { authFetch } from './authFetch';
 
 export interface CompanyData {
@@ -25,4 +26,22 @@ export async function fetchCompanyData(sector: string, baseUrl = ''): Promise<Co
   const res = await authFetch(`${baseUrl}/api/company/${encodeURIComponent(sector)}`);
   if (!res.ok) throw new Error(`company transport returned ${res.status}`);
   return (await res.json()) as CompanyData;
+}
+
+/**
+ * D-PIT-WIRE-01 — the mode-aware company payload, UNINTERPRETED.
+ *
+ * The caller MUST discriminate before use:
+ *   • isPitVintage(payload) → governed PIT vintage (render via PitVintagePanel);
+ *   • isDegraded(payload)   → governed degraded state (render via DataModeUnavailable);
+ *   • otherwise             → the certified SNAPSHOT CompanyData shape.
+ * Mode (and asOf selection under PIT) is resolved SERVER-SIDE; this client sends no mode
+ * and no asOf — the server derives both from the authenticated principal's request.
+ */
+export type CompanyPayload = CompanyData | DegradedData | PitVintageData;
+
+export async function fetchCompanyPayload(sector: string, baseUrl = ''): Promise<CompanyPayload> {
+  const res = await authFetch(`${baseUrl}/api/company/${encodeURIComponent(sector)}`);
+  if (!res.ok) throw new Error(`company transport returned ${res.status}`);
+  return (await res.json()) as CompanyPayload;
 }

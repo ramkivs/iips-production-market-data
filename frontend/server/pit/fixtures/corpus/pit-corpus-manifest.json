@@ -1,0 +1,19 @@
+{
+  "corpusId": "pit-fixture-corpus-v1",
+  "provider": "NSE_D114",
+  "dataVersion": "d114-dualera-v1",
+  "entries": [
+    {
+      "file": "legacy-fixture.csv",
+      "era": "LEGACY_BHAVCOPY",
+      "sha256": "806b81032da9b31aaac12c2f9cc785218004b28c3cedaf32334393581e06a626",
+      "archiveRef": "fixtures://pit/legacy-fixture.csv (repository fixture — stands in for C:\\IIPS_Data\\NSE_Legacy_Acquisition\\archives, 2016-09-20→2024-07-07)"
+    },
+    {
+      "file": "udiff-fixture.csv",
+      "era": "CM_UDIFF",
+      "sha256": "100369251f35844b5204a2cbd161a9b43e26bff1302e0b26ab139d093a27b1ef",
+      "archiveRef": "fixtures://pit/udiff-fixture.csv (repository fixture — stands in for C:\\IIPS_Data\\NSE_CM_UDiFF_10Y\\archives, 2024-07-08→2026-09-18)"
+    }
+  ]
+}

@@ -17,10 +17,11 @@
  * /api/company/:sector, /api/evidence/:sector, and /api/replay/:sector.
  */
 import { useEffect, useState } from 'react';
-import { isDegraded } from '../../api/dataMode';
+import { isDegraded, isPitVintage, type PitVintageData } from '../../api/dataMode';
 import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
+import { PitVintagePanel } from '../../components/state/PitVintagePanel';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchCompanyData, type CompanyData } from '../../api/company';
+import { fetchCompanyPayload, type CompanyData } from '../../api/company';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { fetchDecisionMatrixData, type MatrixCompany } from '../../api/decisionMatrix';
@@ -35,6 +36,8 @@ export function CompanyIntelligence() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [company, setCompany] = useState<CompanyData | null>(null);
+  // D-PIT-WIRE-01 — the governed PIT vintage family for the ONE in-scope route.
+  const [pitVintage, setPitVintage] = useState<PitVintageData | null>(null);
   const [evidence, setEvidence] = useState<EvidenceData | null>(null);
   const [replay, setReplay] = useState<ReplayData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +52,17 @@ export function CompanyIntelligence() {
     let active = true;
     setLoading(true);
     // N+5: three-call governed composition (Bearer propagated via authFetch in each client).
-    Promise.all([fetchCompanyData(id), fetchEvidenceData(id), fetchReplayData(id)])
+    Promise.all([fetchCompanyPayload(id), fetchEvidenceData(id), fetchReplayData(id)])
       .then(([c, e, r]) => {
-        if (active) { setCompany(c); setEvidence(e); setReplay(r); setError(null); }
+        if (!active) return;
+        // D-PIT-WIRE-01 — discriminate BEFORE any SNAPSHOT-shape dereference: the company
+        // route may return a governed PIT vintage (in-scope) or a degraded state; evidence
+        // and replay are OUT of PIT scope and return their existing degraded states.
+        if (isPitVintage(c)) {
+          setPitVintage(c); setCompany(null); setEvidence(null); setReplay(null); setError(null);
+        } else {
+          setPitVintage(null); setCompany(c as CompanyData); setEvidence(e as EvidenceData); setReplay(r as ReplayData); setError(null);
+        }
       })
       .catch((e) => { if (active) setError(String(e)); })
       .finally(() => { if (active) setLoading(false); });
@@ -68,6 +79,9 @@ export function CompanyIntelligence() {
   }, []);
 
   if (loading) return <LoadingState />;
+  // D-PIT-WIRE-01 — a governed PIT vintage renders the verbatim vintage panel; it is NEVER
+  // dereferenced as a SNAPSHOT shape. Evidence/Replay remain out of PIT scope by design.
+  if (pitVintage) return <PitVintagePanel data={pitVintage} title="Company Intelligence" />;
   if (error) return <ErrorState message={`Unable to load company data: ${error}`} />;
   if (!company || !evidence || !replay) return <UnavailableState />;
   // D89 — any of the three mode-aware routes may return a governed degraded state.

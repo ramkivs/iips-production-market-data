@@ -59,6 +59,8 @@ import { AuthError } from '../src/core/auth/keycloakAdapter';
 import { MoSPISourceAdapter, MacroSourceError, type MacroSourceErrorCode } from './macro/mospi-source';
 // P13-B-01 (D54) — additive P12 governed surface routing predicates.
 import { isP12Path, p12SurfaceFor } from './p12-transport';
+// D-PIT-WIRE-01 — the shared PIT vintage provider (frozen P08 store behind a governed loader).
+import { getSharedPitVintageProvider } from './pit/pitVintageProvider';
 
 const ENGINE_FACTORY: Record<string, () => unknown> = {
   [BANKING_ENGINE_ID]: () => new BankingEngine(),
@@ -627,6 +629,28 @@ function resolvePrincipalOwner(principal: { userId?: string; subject?: string } 
 }
 
 /**
+ * D-PIT-WIRE-01 — the governed PIT retrieval binding for the ONE in-scope surface
+ * (`/api/company/:id`). The `:id` is matched as a PIT series identity (NSE symbol) against
+ * the D02 historical corpus; sector ids that are not symbols simply resolve no vintage and
+ * fail closed as PIT_UNAVAILABLE. Returns UNDEFINED whenever the shared provider is unbound
+ * (no corpus configured, corpus failed to load, or empty) — the seam then serves the
+ * existing governed PIT_UNAVAILABLE degraded response, byte-identical.
+ *
+ * Identity/tenant remain server-derived; this binding carries the query shape only.
+ */
+function buildCompanyPitBinding(securityId: string, asOf: string):
+  import('./data-mode/data-mode').PitRequestBinding | undefined {
+  const provider = getSharedPitVintageProvider();
+  if (provider === null || !provider.isBound()) return undefined;
+  return {
+    asOf,
+    domain: 'D02',
+    securityId,
+    queryPit: (requestedAsOf: string) => provider.query('D02', securityId, requestedAsOf),
+  };
+}
+
+/**
  * P13-B (D54) — Governed universe provider for the additive P12 surface.
  *
  * ⚠ LINEAGE: rows are DERIVED from the CERTIFIED v2.0 decision-matrix computation that
@@ -1068,10 +1092,30 @@ const server = http.createServer((req, res) => {
         return;
       }
       if (req.url?.startsWith('/api/company/')) {
-        const id = decodeURIComponent(req.url.slice('/api/company/'.length));
+        // D-PIT-WIRE-01 — governed asOf request contract for the ONE in-scope route.
+        // asOf is DATA SELECTION, never a mode authority; mode stays server-derived from the
+        // authenticated principal's persisted UI12 preference (unchanged). SNAPSHOT/LIVE
+        // behaviour is byte-identical to pre-D-PIT: no asOf → certified payload verbatim.
+        const rawTarget = req.url.slice('/api/company/'.length);
+        const qIndex = rawTarget.indexOf('?');
+        const rawId = qIndex === -1 ? rawTarget : rawTarget.slice(0, qIndex);
+        const rawAsOf = qIndex === -1 ? undefined : new URLSearchParams(rawTarget.slice(qIndex + 1)).get('asOf') ?? undefined;
+        const companyMode = dataMode.resolveModeForPrincipal(modePrincipal);
+        const asOfCheck = dataMode.validateAsOfRequest(companyMode, rawAsOf);
+        if (!asOfCheck.ok) {
+          res.writeHead(asOfCheck.status); res.end(JSON.stringify({ error: asOfCheck.error })); return;
+        }
+        let id: string;
         try {
-          // D89 — mode dispatch; SNAPSHOT returns the certified payload verbatim.
-          const payload = dataMode.dispatchForPrincipal('Company', modePrincipal, () => computeCertifiedCompany(id));
+          id = decodeURIComponent(rawId);
+        } catch (e) {
+          res.writeHead(404); res.end(JSON.stringify({ error: String(e) })); return;
+        }
+        try {
+          // PIT binding exists ONLY for this in-scope surface. Unbound/empty/not-found ⇒
+          // forMode returns the governed PIT_UNAVAILABLE degraded response, byte-identical.
+              const pitBinding = asOfCheck.asOf !== undefined ? buildCompanyPitBinding(id, asOfCheck.asOf) : undefined;
+          const payload = dataMode.forMode('Company', companyMode, () => computeCertifiedCompany(id), pitBinding);
           res.writeHead(200); res.end(JSON.stringify(payload)); return;
         } catch (e) {
           res.writeHead(404); res.end(JSON.stringify({ error: String(e) })); return;

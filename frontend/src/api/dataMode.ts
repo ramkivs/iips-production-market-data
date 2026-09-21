@@ -49,3 +49,73 @@ export function isDegraded(d: unknown): d is DegradedData {
     (d as { dataAvailable?: unknown }).dataAvailable === false
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────────────────
+// D-PIT-WIRE-01 — the governed PIT SUCCESS response family (dataAvailable: true).
+//
+// Mirrors the server contract 1:1 (buildPitVintageResponse). A PIT vintage is NEVER a
+// SNAPSHOT shape and must never be dereferenced as one — consumers narrow with isPitVintage()
+// BEFORE any snapshot-shape access, exactly as isDegraded() established for the degraded
+// family. The degraded family above is unchanged.
+// ─────────────────────────────────────────────────────────────────────────────────────────
+
+/** The verbatim canonical snapshot served from the P08 PIT store (record field). */
+export interface PitVintageRecord {
+  readonly snapshotId: string;
+  readonly provider: string;
+  readonly dataVersion: string;
+  readonly asOf: string;
+  readonly domain: string;
+  readonly quality: string;
+  readonly securityId?: string;
+  readonly pitBoundary?: string;
+  readonly payload?: Readonly<Record<string, unknown>>;
+  readonly historicalProvenance?: Readonly<Record<string, unknown>>;
+  readonly [field: string]: unknown;
+}
+
+/** The governed PIT vintage response. Carries exactly one resolved vintage. */
+export interface PitVintageData {
+  readonly surface: string;
+  readonly dataMode: 'PIT';
+  /** Literal `true` — the discriminant (the degraded family is literal `false`). */
+  readonly dataAvailable: true;
+  readonly query: { readonly asOf: string; readonly domain: string; readonly securityId: string };
+  readonly vintage: {
+    readonly found: true;
+    /** What was ASKED for. */
+    readonly requestedAsOf: string;
+    /** What is SERVED — satisfies resolvedAsOf <= requestedAsOf (PS-9). */
+    readonly resolvedAsOf: string;
+    readonly snapshotId: string | null;
+    readonly provider: string | null;
+    readonly dataVersion: string | null;
+    readonly quality: string | null;
+    /** D114 dual-era disclosure: LEGACY_BHAVCOPY | CM_UDIFF. */
+    readonly era: string | null;
+    readonly pitBoundary: string | null;
+    readonly record: PitVintageRecord;
+  };
+  readonly provenance: {
+    readonly dataSource: string;
+    readonly freshness: 'PIT';
+    readonly mode: 'PIT';
+    readonly archiveRef: string | null;
+    readonly sha256: string | null;
+    readonly corpusId: string | null;
+    readonly certification: string;
+    readonly transportSemantics: string;
+  };
+}
+
+/** True when the server returned a governed PIT vintage rather than degraded or SNAPSHOT data. */
+export function isPitVintage(d: unknown): d is PitVintageData {
+  return (
+    typeof d === 'object' &&
+    d !== null &&
+    (d as { dataAvailable?: unknown }).dataAvailable === true &&
+    (d as { dataMode?: unknown }).dataMode === 'PIT' &&
+    typeof (d as { vintage?: unknown }).vintage === 'object' &&
+    (d as { vintage?: { found?: unknown } }).vintage?.found === true
+  );
+}
