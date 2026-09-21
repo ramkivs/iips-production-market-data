@@ -15,7 +15,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$RequiredImplementationCommit = '331dbed3bf640b34c6de526126cceb88a65067e6'
+$RequiredImplementationCommit = '1d1ddd25c3cf24897b2ceda9def157f4a5cebb22'
 $RequiredBranch = 'arena/01a0c440-iips-production-market-data'
 $CorpusId = 'windows-d114-bounded-two-era-2024-boundary'
 $ManifestPath = Join-Path $CorpusDir 'pit-corpus-manifest.json'

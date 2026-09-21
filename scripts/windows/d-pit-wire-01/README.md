@@ -11,7 +11,7 @@ and operator-confirmed UI screenshots.
 ## Fixed boundaries
 
 - Branch: `arena/01a0c440-iips-production-market-data`
-- Required implementation ancestor: `331dbed3bf640b34c6de526126cceb88a65067e6` (series-aware legacy + CM-UDiFF source-security identity correction)
+- Required implementation ancestor: `1d1ddd25c3cf24897b2ceda9def157f4a5cebb22` (series-aware source-security identity plus exact PIT JSON-string preservation for Windows W2)
 - PIT store: `IN_MEMORY_ONLY`
 - Archives are read in place from two separate roots; no copy, move, merge, mutation, or persistence
   of PIT state is performed.
@@ -29,6 +29,12 @@ and operator-confirmed UI screenshots.
   proves direct series-aware identity resolution and fail-closed shared aliases, requires
   operator-confirmed UI screenshots, executes the fail-closed matrix, runs SNAPSHOT/LIVE/Macro
   regressions, writes evidence, and stops the processes it started.
+
+For PIT Company responses, the verifier reads raw HTTP JSON and parses it with `System.Text.Json`.
+This deliberately preserves canonical ISO-8601 fields such as `vintage.requestedAsOf` as
+`System.String`: PowerShell 6+ `Invoke-RestMethod` otherwise materializes timestamp-shaped JSON
+strings as `System.DateTime`, making an exact string assertion timezone-sensitive before the
+application response can be evaluated. The W2 requested/resolved assertions remain unchanged.
 
 ## Preconditions
 
