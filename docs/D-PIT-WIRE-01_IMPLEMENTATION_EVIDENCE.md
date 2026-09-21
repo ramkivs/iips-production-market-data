@@ -120,6 +120,12 @@ source was changed. Their future scope-guard reconciliation remains program-owne
 
 This is the next phase. It has **not** been executed in Arena.
 
+**Executable handoff package:** `scripts/windows/d-pit-wire-01/README.md`,
+`prepare-corpus.ps1`, and `verify-w0-w6.ps1`. The package parameterizes and fail-closes this single
+procedure; it does not create a second acceptance contract. It cannot record PASS without both
+physical-era responses, the fail-closed matrix, preserved SNAPSHOT/LIVE/Macro tests, two operator-
+confirmed UI screenshots, and the W6 non-certification/non-production disposition.
+
 ## Preconditions
 
 1. Checkout the final governed branch on Windows and set `$Repo` below.
