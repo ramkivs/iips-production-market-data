@@ -32,7 +32,7 @@ export class GrowwHoldingsAdapter implements FinappBrokerAdapter {
    * Note: Groww XLSX export parsing is deferred to BI-06 under zero-dependency governance.
    */
   public parse(
-    content: string | Buffer | ArrayBuffer,
+    content: string | Uint8Array | ArrayBuffer | any,
     options?: BrokerAdapterParseOptions
   ): FinappBrokerParseResult {
     const asOf = options?.asOf || new Date().toISOString();
@@ -40,12 +40,24 @@ export class GrowwHoldingsAdapter implements FinappBrokerAdapter {
     const warnings: string[] = [];
     const errors: string[] = [];
 
+    const isBuffer = typeof Buffer !== 'undefined' && Buffer.isBuffer(content);
+    const isUint8Array = content instanceof Uint8Array;
+    const isArrayBuffer = content instanceof ArrayBuffer;
+
+    let binaryBytes: Uint8Array | undefined = undefined;
+    if (isBuffer) {
+      binaryBytes = new Uint8Array(content.buffer, content.byteOffset, content.byteLength);
+    } else if (isUint8Array) {
+      binaryBytes = content;
+    } else if (isArrayBuffer) {
+      binaryBytes = new Uint8Array(content);
+    }
+
+    const isZipBinary = binaryBytes !== undefined && binaryBytes.length >= 4 && binaryBytes[0] === 0x50 && binaryBytes[1] === 0x4b;
+    const isXlsxExt = sourceFileName.toLowerCase().endsWith('.xlsx') || sourceFileName.toLowerCase().endsWith('.xls');
+
     // Check if binary XLSX input is passed
-    if (
-      sourceFileName.toLowerCase().endsWith('.xlsx') ||
-      sourceFileName.toLowerCase().endsWith('.xls') ||
-      (Buffer.isBuffer(content) && content.length > 4 && content[0] === 0x50 && content[1] === 0x4b)
-    ) {
+    if (isXlsxExt || isZipBinary) {
       return {
         success: false,
         brokerType: 'GROWW',
@@ -66,9 +78,9 @@ export class GrowwHoldingsAdapter implements FinappBrokerAdapter {
 
     const textContent = typeof content === 'string'
       ? content
-      : Buffer.isBuffer(content)
-        ? content.toString('utf-8')
-        : new TextDecoder().decode(content);
+      : binaryBytes !== undefined
+        ? new TextDecoder('utf-8').decode(binaryBytes)
+        : String(content);
 
     const { headers, rows } = parseCsvToObjects(textContent, {
       skipHeaderRows: options?.skipHeaderRows ?? 0,

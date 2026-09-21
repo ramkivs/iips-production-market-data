@@ -118,7 +118,7 @@ export interface FinappBrokerAdapter {
   readonly brokerName: string;
   readonly supportedFormats: readonly string[];
   parse(
-    content: string | Buffer | ArrayBuffer,
+    content: string | Uint8Array | ArrayBuffer | any,
     options?: BrokerAdapterParseOptions
   ): Promise<FinappBrokerParseResult> | FinappBrokerParseResult;
 }
@@ -202,7 +202,7 @@ export interface BrokerIngressRejection {
  * Input Request for Broker Import Ingress Orchestrator (BI-05)
  */
 export interface BrokerIngressRequest {
-  content: string | Buffer | ArrayBuffer;
+  content: string | Uint8Array | ArrayBuffer | any;
   fileName?: string;
   asOf?: string;
   securityMaster?: SecurityMaster;

@@ -27,14 +27,26 @@ export class BrokerFormatDetector {
    * Fails closed with brokerType: 'UNKNOWN' if headers are ambiguous, corrupted, or unsupported.
    */
   public static detectFormat(
-    content: string | Buffer | ArrayBuffer,
+    content: string | Uint8Array | ArrayBuffer | any,
     fileName?: string
   ): BrokerDetectionResult {
-    const isBuffer = Buffer.isBuffer(content);
+    const isBuffer = typeof Buffer !== 'undefined' && Buffer.isBuffer(content);
+    const isUint8Array = content instanceof Uint8Array;
+    const isArrayBuffer = content instanceof ArrayBuffer;
+
+    let binaryBytes: Uint8Array | undefined = undefined;
+    if (isBuffer) {
+      binaryBytes = new Uint8Array(content.buffer, content.byteOffset, content.byteLength);
+    } else if (isUint8Array) {
+      binaryBytes = content;
+    } else if (isArrayBuffer) {
+      binaryBytes = new Uint8Array(content);
+    }
+
     const fileNameLower = (fileName || '').toLowerCase().trim();
 
     // Check for ZIP/XLSX binary magic numbers (PK\x03\x04)
-    const isZipBinary = isBuffer && content.length >= 4 && content[0] === 0x50 && content[1] === 0x4b;
+    const isZipBinary = binaryBytes !== undefined && binaryBytes.length >= 4 && binaryBytes[0] === 0x50 && binaryBytes[1] === 0x4b;
     const isXlsxExt = fileNameLower.endsWith('.xlsx') || fileNameLower.endsWith('.xls');
 
     if (isZipBinary || isXlsxExt) {
@@ -63,9 +75,9 @@ export class BrokerFormatDetector {
     // Convert text content
     const textContent = typeof content === 'string'
       ? content
-      : isBuffer
-        ? content.toString('utf-8')
-        : new TextDecoder().decode(content);
+      : binaryBytes !== undefined
+        ? new TextDecoder('utf-8').decode(binaryBytes)
+        : String(content);
 
     const rows = parseCsvRows(textContent);
     if (rows.length === 0) {
@@ -172,7 +184,7 @@ export class BrokerFormatDetector {
    * Detects format and returns paired adapter instance if supported.
    */
   public static detectAndGetAdapter(
-    content: string | Buffer | ArrayBuffer,
+    content: string | Uint8Array | ArrayBuffer | any,
     fileName?: string
   ): { detection: BrokerDetectionResult; adapter?: FinappBrokerAdapter } {
     const detection = BrokerFormatDetector.detectFormat(content, fileName);

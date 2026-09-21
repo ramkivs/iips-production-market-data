@@ -133,7 +133,7 @@ export class PortfolioBrokerImportController {
    * Processes an uploaded broker file through the governed BI-05 ingress orchestrator.
    */
   public selectAndProcessFile(params: {
-    content: string | Buffer | ArrayBuffer;
+    content: string | Uint8Array | ArrayBuffer | any;
     fileName: string;
     asOf?: string;
     viewportWidth?: number;

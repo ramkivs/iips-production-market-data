@@ -10,9 +10,8 @@
  * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
  */
 
-import * as crypto from 'crypto';
 import { IdentityAmbiguityError } from '../../../../../src/identity/quarantine.js';
-import { computeLineageHash } from '../../../../../src/contracts/provenance.js';
+import { computeLineageHash, computeSha256 } from '../../../../../src/contracts/provenance.js';
 import {
   BrokerIngressRequest,
   BrokerIngressResult,
@@ -46,16 +45,16 @@ export class BrokerImportIngressOrchestrator {
 
     // Stage 0: Compute deterministic SHA-256 digest of raw input content
     const rawContent = request.content;
-    const contentBytes = typeof rawContent === 'string'
-      ? Buffer.from(rawContent, 'utf-8')
-      : Buffer.isBuffer(rawContent)
-        ? rawContent
-        : Buffer.from(rawContent);
-
-    const contentDigest = crypto.createHash('sha256').update(contentBytes).digest('hex');
+    const contentDigest = computeSha256(rawContent);
 
     // Edge Case 1: Empty file (0 bytes)
-    if (contentBytes.length === 0) {
+    const contentLength = typeof rawContent === 'string'
+      ? rawContent.length
+      : rawContent instanceof ArrayBuffer
+        ? rawContent.byteLength
+        : (rawContent as Uint8Array).byteLength || (rawContent as Uint8Array).length || 0;
+
+    if (contentLength === 0) {
       const rej: BrokerIngressRejection = {
         reason: 'EMPTY_FILE',
         details: 'Uploaded file contains 0 bytes.',
@@ -90,7 +89,13 @@ export class BrokerImportIngressOrchestrator {
     // Edge Case 2: Blank file (only whitespace / newlines)
     const textSample = typeof rawContent === 'string'
       ? rawContent.trim()
-      : contentBytes.toString('utf-8').trim();
+      : new TextDecoder('utf-8').decode(
+          rawContent instanceof ArrayBuffer
+            ? new Uint8Array(rawContent)
+            : typeof Buffer !== 'undefined' && Buffer.isBuffer(rawContent)
+              ? new Uint8Array(rawContent.buffer, rawContent.byteOffset, rawContent.byteLength)
+              : (rawContent as Uint8Array)
+        ).trim();
 
     if (textSample.length === 0) {
       const rej: BrokerIngressRejection = {

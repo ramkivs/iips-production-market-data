@@ -31,14 +31,27 @@ export class ZerodhaHoldingsAdapter implements FinappBrokerAdapter {
    * Parses Zerodha Kite holdings CSV export.
    */
   public parse(
-    content: string | Buffer | ArrayBuffer,
+    content: string | Uint8Array | ArrayBuffer | any,
     options?: BrokerAdapterParseOptions
   ): FinappBrokerParseResult {
+    const isBuffer = typeof Buffer !== 'undefined' && Buffer.isBuffer(content);
+    const isUint8Array = content instanceof Uint8Array;
+    const isArrayBuffer = content instanceof ArrayBuffer;
+
+    let binaryBytes: Uint8Array | undefined = undefined;
+    if (isBuffer) {
+      binaryBytes = new Uint8Array(content.buffer, content.byteOffset, content.byteLength);
+    } else if (isUint8Array) {
+      binaryBytes = content;
+    } else if (isArrayBuffer) {
+      binaryBytes = new Uint8Array(content);
+    }
+
     const textContent = typeof content === 'string'
       ? content
-      : Buffer.isBuffer(content)
-        ? content.toString('utf-8')
-        : new TextDecoder().decode(content);
+      : binaryBytes !== undefined
+        ? new TextDecoder('utf-8').decode(binaryBytes)
+        : String(content);
 
     const asOf = options?.asOf || new Date().toISOString();
     const sourceFileName = options?.fileName || 'zerodha-holdings.csv';
