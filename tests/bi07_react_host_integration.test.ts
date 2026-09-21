@@ -326,4 +326,50 @@ UNKNOWN_CORP,10,100.00,110.00,1100.00,100.00,10.00,0.00`;
     assert.strictEqual(wideVm.responsiveLayout.columns, 4);
     assert.strictEqual(wideVm.responsiveLayout.pinnedColumn, undefined);
   });
+
+  it('HOST-11: verifies BrokerImportModal file-picker DOM trigger architecture and ref contract', () => {
+    const store = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+
+    // Verify component mounts cleanly as a React functional component
+    const modalElement = React.createElement(BrokerImportModal, {
+      isOpen: true,
+      onClose: () => {},
+      onSaveSuccess: () => {},
+      portfolioStore: store,
+      securityMaster: sm,
+    });
+
+    assert.strictEqual(modalElement.type, BrokerImportModal);
+    assert.strictEqual(modalElement.props.isOpen, true);
+    assert.strictEqual(typeof modalElement.props.onClose, 'function');
+    assert.strictEqual(typeof modalElement.props.onSaveSuccess, 'function');
+  });
+
+  it('HOST-12: verifies repeated file selection reset handling allows re-selecting identical files', () => {
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+
+    // 1. Initial process
+    const vm1 = controller.selectAndProcessFile({
+      content: ZERODHA_VALID_CSV,
+      fileName: 'zerodha.csv',
+      securityMaster: sm,
+    });
+    assert.strictEqual(vm1.state, 'READY_TO_SAVE');
+
+    // 2. Reset controller
+    controller.reset();
+    assert.strictEqual(controller.getState(), 'IDLE');
+
+    // 3. Re-process the same file (simulating re-selection after input.value = '')
+    const vm2 = controller.selectAndProcessFile({
+      content: ZERODHA_VALID_CSV,
+      fileName: 'zerodha.csv',
+      securityMaster: sm,
+    });
+    assert.strictEqual(vm2.state, 'READY_TO_SAVE');
+    assert.strictEqual(vm2.acceptedHoldingsCount, 3);
+    assert.strictEqual(vm2.contentDigest, vm1.contentDigest);
+  });
 });

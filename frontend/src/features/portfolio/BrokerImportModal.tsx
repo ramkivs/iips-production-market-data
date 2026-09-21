@@ -6,7 +6,7 @@
  * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   PortfolioStore,
   PortfolioSaveResult,
@@ -32,6 +32,9 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
 }) => {
   // Initialize governed controller
   const controller = useMemo(() => new PortfolioBrokerImportController(securityMaster), [securityMaster]);
+
+  // Imperative DOM ref for native file dialog invocation
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // View-model binding state
   const [viewModel, setViewModel] = useState<PortfolioBrokerImportViewModel>(() =>
@@ -70,7 +73,10 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      handleFile(files[0]);
+      const selectedFile = files[0];
+      // Reset input value to allow re-selecting the same file if user retries
+      e.target.value = '';
+      handleFile(selectedFile);
     }
   };
 
@@ -109,6 +115,9 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
   // Reset handler
   const handleReset = useCallback(() => {
     controller.reset();
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1280;
     setViewModel(controller.buildViewModel(viewportWidth, securityMaster));
   }, [controller, securityMaster]);
@@ -197,21 +206,26 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                   Kite, Dhan, Groww.
                 </p>
 
-                <label
-                  htmlFor="ui15-file-input"
+                {/* Semantic Button with Programmatic Click Dispatch to Ref */}
+                <button
+                  type="button"
                   id="ui15-btn-file-select"
-                  className="cursor-pointer inline-flex items-center space-x-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-400"
-                  tabIndex={0}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="cursor-pointer inline-flex items-center space-x-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-colors"
                 >
                   <span>Select Broker CSV</span>
-                  <input
-                    id="ui15-file-input"
-                    type="file"
-                    accept=".csv"
-                    className="sr-only"
-                    onChange={handleFileInputChange}
-                  />
-                </label>
+                </button>
+
+                {/* Hidden File Input attached to Ref */}
+                <input
+                  ref={fileInputRef}
+                  id="ui15-file-input"
+                  type="file"
+                  accept=".csv"
+                  className="sr-only"
+                  onChange={handleFileInputChange}
+                  aria-hidden="true"
+                />
 
                 <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs text-slate-400">
                   <span className="rounded bg-slate-800 px-2 py-1 border border-slate-700">✓ Zerodha Kite (.csv)</span>
