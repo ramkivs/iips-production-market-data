@@ -14,7 +14,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$RequiredImplementationCommit = 'b57098cfbf1f74289957dd997694038f925d0318'
+$RequiredImplementationCommit = '331dbed3bf640b34c6de526126cceb88a65067e6'
 $RequiredBranch = 'arena/01a0c440-iips-production-market-data'
 $RequiredEvidenceFiles = @(
   'archive-integrity-report.json',

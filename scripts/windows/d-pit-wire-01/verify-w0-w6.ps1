@@ -15,7 +15,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$RequiredImplementationCommit = 'b57098cfbf1f74289957dd997694038f925d0318'
+$RequiredImplementationCommit = '331dbed3bf640b34c6de526126cceb88a65067e6'
 $RequiredBranch = 'arena/01a0c440-iips-production-market-data'
 $CorpusId = 'windows-d114-bounded-two-era-2024-boundary'
 $ManifestPath = Join-Path $CorpusDir 'pit-corpus-manifest.json'
@@ -203,9 +203,10 @@ try {
   Assert-True ($Udiff.vintage.record.symbol -eq 'RELIANCE') 'W2 CM-UDiFF canonical record FAIL.'
 
   # Physical regression for the exact legacy collision: both source securities must coexist at
-  # 09:15Z. The unqualified company/symbol remains 1:N and therefore fails closed.
-  $MmfinEq = Get-Company $legacyRequested 'INE774D01024'
-  $MmfinN3 = Get-Company $legacyRequested 'INE774D08MG3'
+  # 09:15Z under their series-aware typed identities. The unqualified company/symbol remains 1:N
+  # and therefore fails closed.
+  $MmfinEq = Get-Company $legacyRequested 'ISIN:INE774D01024:EQ'
+  $MmfinN3 = Get-Company $legacyRequested 'ISIN:INE774D08MG3:N3'
   $MmfinAmbiguous = Get-Company $legacyRequested 'M&MFIN'
   Assert-True ($MmfinEq.dataAvailable -eq $true) 'W2 M&MFIN EQ availability FAIL.'
   Assert-True ($MmfinN3.dataAvailable -eq $true) 'W2 M&MFIN N3 availability FAIL.'
@@ -215,14 +216,53 @@ try {
   Assert-True ($MmfinN3.vintage.resolvedAsOf -eq '2024-07-05T09:15:00.000Z') 'W2 M&MFIN N3 asOf FAIL.'
   Assert-True ($MmfinEq.vintage.record.symbol -eq 'M&MFIN') 'W2 M&MFIN EQ symbol FAIL.'
   Assert-True ($MmfinN3.vintage.record.symbol -eq 'M&MFIN') 'W2 M&MFIN N3 symbol FAIL.'
+  Assert-True ($MmfinEq.vintage.record.securityIdentity.securityId -eq 'ISIN:INE774D01024:EQ') 'W2 M&MFIN EQ typed identity FAIL.'
+  Assert-True ($MmfinN3.vintage.record.securityIdentity.securityId -eq 'ISIN:INE774D08MG3:N3') 'W2 M&MFIN N3 typed identity FAIL.'
   Assert-True ($MmfinEq.vintage.record.securityIdentity.isin -eq 'INE774D01024') 'W2 M&MFIN EQ ISIN FAIL.'
   Assert-True ($MmfinN3.vintage.record.securityIdentity.isin -eq 'INE774D08MG3') 'W2 M&MFIN N3 ISIN FAIL.'
+  Assert-True ($MmfinEq.vintage.record.securityIdentity.isinAuthority -eq 'NON_AUTHORITATIVE') 'W2 M&MFIN EQ ISIN authority FAIL.'
+  Assert-True ($MmfinN3.vintage.record.securityIdentity.isinAuthority -eq 'NON_AUTHORITATIVE') 'W2 M&MFIN N3 ISIN authority FAIL.'
   Assert-True ($MmfinEq.vintage.record.securityIdentity.series -eq 'EQ') 'W2 M&MFIN EQ SERIES FAIL.'
   Assert-True ($MmfinN3.vintage.record.securityIdentity.series -eq 'N3') 'W2 M&MFIN N3 SERIES FAIL.'
   Assert-True ($MmfinAmbiguous.dataAvailable -eq $false) 'W2 unqualified M&MFIN must fail closed.'
   Assert-True ($MmfinAmbiguous.state -eq 'PIT_UNAVAILABLE') 'W2 unqualified M&MFIN state FAIL.'
 
-  foreach ($response in @($Legacy, $Udiff, $MmfinEq, $MmfinN3)) {
+  # Physical CM-UDiFF same-ISIN regression: SWANENERGY legitimately publishes BL and EQ under
+  # raw ISIN INE665A01038 at the same normalized instant. Both typed identities must resolve,
+  # while the shared symbol and raw-ISIN aliases remain set-valued and fail closed.
+  $swanAsOf = '2024-07-08T09:15:00.000Z'
+  $SwanBl = Get-Company $swanAsOf 'ISIN:INE665A01038:BL'
+  $SwanEq = Get-Company $swanAsOf 'ISIN:INE665A01038:EQ'
+  $SwanAmbiguous = Get-Company $swanAsOf 'SWANENERGY'
+  $SwanIsinAmbiguous = Get-Company $swanAsOf 'INE665A01038'
+  Assert-True ($SwanBl.dataAvailable -eq $true) 'W2 SWANENERGY BL availability FAIL.'
+  Assert-True ($SwanEq.dataAvailable -eq $true) 'W2 SWANENERGY EQ availability FAIL.'
+  Assert-True ($SwanBl.vintage.era -eq 'CM_UDIFF') 'W2 SWANENERGY BL era FAIL.'
+  Assert-True ($SwanEq.vintage.era -eq 'CM_UDIFF') 'W2 SWANENERGY EQ era FAIL.'
+  Assert-True ($SwanBl.vintage.resolvedAsOf -eq $swanAsOf) 'W2 SWANENERGY BL asOf FAIL.'
+  Assert-True ($SwanEq.vintage.resolvedAsOf -eq $swanAsOf) 'W2 SWANENERGY EQ asOf FAIL.'
+  Assert-True ($SwanBl.vintage.record.symbol -eq 'SWANENERGY') 'W2 SWANENERGY BL symbol FAIL.'
+  Assert-True ($SwanEq.vintage.record.symbol -eq 'SWANENERGY') 'W2 SWANENERGY EQ symbol FAIL.'
+  Assert-True ($SwanBl.vintage.record.companyId -eq 'SWANENERGY') 'W2 SWANENERGY BL companyId FAIL.'
+  Assert-True ($SwanEq.vintage.record.companyId -eq 'SWANENERGY') 'W2 SWANENERGY EQ companyId FAIL.'
+  Assert-True ($SwanBl.vintage.record.securityIdentity.securityId -eq 'ISIN:INE665A01038:BL') 'W2 SWANENERGY BL typed identity FAIL.'
+  Assert-True ($SwanEq.vintage.record.securityIdentity.securityId -eq 'ISIN:INE665A01038:EQ') 'W2 SWANENERGY EQ typed identity FAIL.'
+  Assert-True ($SwanBl.vintage.record.securityIdentity.isin -eq 'INE665A01038') 'W2 SWANENERGY BL ISIN FAIL.'
+  Assert-True ($SwanEq.vintage.record.securityIdentity.isin -eq 'INE665A01038') 'W2 SWANENERGY EQ ISIN FAIL.'
+  Assert-True ($SwanBl.vintage.record.securityIdentity.isinAuthority -eq 'NON_AUTHORITATIVE') 'W2 SWANENERGY BL ISIN authority FAIL.'
+  Assert-True ($SwanEq.vintage.record.securityIdentity.isinAuthority -eq 'NON_AUTHORITATIVE') 'W2 SWANENERGY EQ ISIN authority FAIL.'
+  Assert-True ($SwanBl.vintage.record.securityIdentity.series -eq 'BL') 'W2 SWANENERGY BL SERIES FAIL.'
+  Assert-True ($SwanEq.vintage.record.securityIdentity.series -eq 'EQ') 'W2 SWANENERGY EQ SERIES FAIL.'
+  Assert-True ($SwanBl.vintage.record.close -eq 668.25) 'W2 SWANENERGY BL close FAIL.'
+  Assert-True ($SwanEq.vintage.record.close -eq 692.60) 'W2 SWANENERGY EQ close FAIL.'
+  Assert-True ($SwanBl.vintage.record.volume -eq 4556633) 'W2 SWANENERGY BL volume FAIL.'
+  Assert-True ($SwanEq.vintage.record.volume -eq 381237) 'W2 SWANENERGY EQ volume FAIL.'
+  Assert-True ($SwanAmbiguous.dataAvailable -eq $false) 'W2 unqualified SWANENERGY must fail closed.'
+  Assert-True ($SwanAmbiguous.state -eq 'PIT_UNAVAILABLE') 'W2 unqualified SWANENERGY state FAIL.'
+  Assert-True ($SwanIsinAmbiguous.dataAvailable -eq $false) 'W2 shared SWANENERGY raw ISIN must fail closed.'
+  Assert-True ($SwanIsinAmbiguous.state -eq 'PIT_UNAVAILABLE') 'W2 shared SWANENERGY raw ISIN state FAIL.'
+
+  foreach ($response in @($Legacy, $Udiff, $MmfinEq, $MmfinN3, $SwanBl, $SwanEq)) {
     Assert-True ([datetimeoffset]$response.vintage.resolvedAsOf -le [datetimeoffset]$response.vintage.requestedAsOf) 'W2 PS-9 ordering FAIL.'
     Assert-True (-not [string]::IsNullOrWhiteSpace([string]$response.vintage.snapshotId)) 'W2 snapshotId FAIL.'
     Assert-True (-not [string]::IsNullOrWhiteSpace([string]$response.provenance.archiveRef)) 'W2 archiveRef FAIL.'
@@ -237,6 +277,12 @@ try {
     eq = $MmfinEq
     n3 = $MmfinN3
     ambiguousSymbol = $MmfinAmbiguous
+  })
+  Write-Json (Join-Path $EvidenceOut 'cm-udiff-swanenergy-same-isin-multi-series.json') ([ordered]@{
+    bl = $SwanBl
+    eq = $SwanEq
+    ambiguousSymbol = $SwanAmbiguous
+    ambiguousRawIsin = $SwanIsinAmbiguous
   })
 
   $uiProcess = Start-Process -FilePath $npm `
@@ -262,7 +308,7 @@ try {
   Assert-True ($confirmation -eq 'W2-PASS') 'W2 operator confirmation was not supplied.'
   Assert-True (Test-Path -LiteralPath $legacyScreenshot) "W2 legacy screenshot missing: $legacyScreenshot"
   Assert-True (Test-Path -LiteralPath $udiffScreenshot) "W2 CM-UDiFF screenshot missing: $udiffScreenshot"
-  Write-Host 'W2 PASS — both eras, physical M&MFIN EQ/N3 coexistence, and operator-confirmed UI evidence complete.' -ForegroundColor Green
+  Write-Host 'W2 PASS — both eras, physical M&MFIN EQ/N3 and SWANENERGY BL/EQ coexistence, fail-closed shared aliases, and operator-confirmed UI evidence complete.' -ForegroundColor Green
 
   Write-Host 'W3 — fail-closed matrix.' -ForegroundColor Cyan
   $cases = @(
@@ -326,7 +372,7 @@ try {
     providerAccessIntroduced = $false
     snapshotFallback = $false
     w1 = 'PASS'
-    w2 = 'PASS — both eras + physical M&MFIN EQ/N3 + operator-confirmed UI screenshots'
+    w2 = 'PASS — both eras + physical M&MFIN EQ/N3 + physical SWANENERGY BL/EQ same-ISIN separation + fail-closed shared aliases + operator-confirmed UI screenshots'
     w3 = 'PASS'
     w4 = 'PASS'
     w5 = 'PASS'

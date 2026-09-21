@@ -11,7 +11,7 @@ and operator-confirmed UI screenshots.
 ## Fixed boundaries
 
 - Branch: `arena/01a0c440-iips-production-market-data`
-- Required implementation ancestor: `b57098cfbf1f74289957dd997694038f925d0318` (legacy multi-series identity correction)
+- Required implementation ancestor: `331dbed3bf640b34c6de526126cceb88a65067e6` (series-aware legacy + CM-UDiFF source-security identity correction)
 - PIT store: `IN_MEMORY_ONLY`
 - Archives are read in place from two separate roots; no copy, move, merge, mutation, or persistence
   of PIT state is performed.
@@ -25,9 +25,10 @@ and operator-confirmed UI screenshots.
 - `prepare-corpus.ps1` — W0: verifies branch/prerequisites and creates a manifest-only bounded
   corpus descriptor for the 2024-07-05 legacy archive and 2024-07-08 CM-UDiFF archive.
 - `verify-w0-w6.ps1` — W1–W6: installs/typechecks, starts the transport and UI, authenticates,
-  verifies both eras plus physical M&MFIN EQ/N3 coexistence, requires operator-confirmed UI
-  screenshots, executes the fail-closed matrix, runs SNAPSHOT/LIVE/Macro regressions, writes
-  evidence, and stops the processes it started.
+  verifies both eras plus physical M&MFIN EQ/N3 and same-ISIN SWANENERGY BL/EQ coexistence,
+  proves direct series-aware identity resolution and fail-closed shared aliases, requires
+  operator-confirmed UI screenshots, executes the fail-closed matrix, runs SNAPSHOT/LIVE/Macro
+  regressions, writes evidence, and stops the processes it started.
 
 ## Preconditions
 
@@ -95,12 +96,22 @@ The response must also contain `snapshotId`, archive reference and SHA-256, the 
 manifest entry, acquisition manifest id, and intake-lineage digest. Any admission, hash, handoff,
 provenance, gap, date-bound, or store failure must remain `PIT_UNAVAILABLE`.
 
-W2 additionally queries the same physical legacy archive by `INE774D01024` and `INE774D08MG3`.
-Both must resolve at `2024-07-05T09:15:00.000Z` with symbol `M&MFIN`, SERIES `EQ` and `N3`
-respectively, and the matching ISIN metadata. An unqualified `M&MFIN` query must remain
+W2 additionally queries the same physical legacy archive by the typed identities
+`ISIN:INE774D01024:EQ` and `ISIN:INE774D08MG3:N3`. Both must resolve at
+`2024-07-05T09:15:00.000Z` with symbol `M&MFIN`, SERIES `EQ` and `N3` respectively, and matching
+raw-ISIN metadata marked `NON_AUTHORITATIVE`. An unqualified `M&MFIN` query must remain
 `PIT_UNAVAILABLE` because the company/symbol maps to two source securities; the runner never
-chooses EQ, row order, or another heuristic. This is application verification only and has not run
-in Arena.
+chooses EQ, row order, or another heuristic.
+
+W2 also queries the exact physical CM-UDiFF collision by `ISIN:INE665A01038:BL` and
+`ISIN:INE665A01038:EQ`. Both must coexist and resolve independently at
+`2024-07-08T09:15:00.000Z`, preserve `companyId`/symbol `SWANENERGY`, raw ISIN
+`INE665A01038`, `NON_AUTHORITATIVE` provenance, and SERIES `BL`/`EQ`, and retain the physical
+close/volume pairs `668.25 / 4556633` and `692.60 / 381237`. Both unqualified `SWANENERGY` and
+shared raw-ISIN `INE665A01038` must remain `PIT_UNAVAILABLE`. This demonstrates a source-series
+key; it does not claim or fabricate a P04 program-internal security-master mapping.
+
+These checks are application-verification instructions only and have not run in Arena.
 
 ## Evidence output
 
@@ -115,6 +126,7 @@ The physical ZIP files remain in their original roots. A successful W6 evidence 
 - transport/UI/typecheck/regression logs;
 - both RELIANCE era responses;
 - physical M&MFIN EQ/N3 responses plus the unqualified-symbol refusal;
+- physical SWANENERGY BL/EQ responses plus unqualified-symbol and shared-raw-ISIN refusals;
 - fail-closed matrix;
 - `legacy-ui.png` and `cm-udiff-ui.png`;
 - `verification-disposition.json` preserving `NONE_GRANTED`, `NOT GRANTED`,
