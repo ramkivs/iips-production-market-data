@@ -13,8 +13,18 @@
  * (Decision → Evidence → Replay → Provenance). Sector is the only variable; no
  * recomputation, no fabrication. Client-side composition only (no server changes).
  */
-import { useEffect, useMemo, useState } from 'react';
-import { fetchPortfolioData, isPortfolioUnavailable, type PortfolioData, type PortfolioHolding } from '../../api/portfolio';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import {
+  fetchPortfolioData,
+  fetchUserPortfolio,
+  listUserPortfolios,
+  saveUserPortfolio,
+  isPortfolioUnavailable,
+  type PortfolioData,
+  type PortfolioHolding,
+  type UserPortfolioSummary,
+  type UserHoldingInput,
+} from '../../api/portfolio';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
 import { ChartContainer, SimpleBarChart, LegendConventions } from '../../components/viz/ChartFoundations';
@@ -23,7 +33,7 @@ import { DecisionBadge } from '../../components/decision/DecisionComponents';
 import { EvidenceCard, type EvidenceReference } from '../../components/evidence/EvidenceComponents';
 import { Accordion } from '../../components/interaction/InteractionComponents';
 import { LoadingState, ErrorState, UnavailableState } from '../../components/state/StateComponents';
-import { CertifiedBadge, FreshnessBadge } from '../../components/ui/Badges';
+import { CertifiedBadge, FreshnessBadge, PlatformBadge } from '../../components/ui/Badges';
 import { CompanyTrustChain } from '../company/CompanyTrustChain';
 
 type SortKey = 'sector' | 'composite' | 'weight';
@@ -41,15 +51,38 @@ export function PortfolioWorkspace() {
   const [chainLoading, setChainLoading] = useState(false);
   const [chainError, setChainError] = useState<string | null>(null);
 
+  // Option A: User Intelligence Overlay state
+  const [userPortfolios, setUserPortfolios] = useState<readonly UserPortfolioSummary[]>([]);
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState<string>('');
+  const [showImport, setShowImport] = useState(false);
+  const [importName, setImportName] = useState('');
+  const [importHoldingsText, setImportHoldingsText] = useState('');
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSaving, setImportSaving] = useState(false);
+
+  // Load portfolio list on mount
+  useEffect(() => {
+    let active = true;
+    listUserPortfolios()
+      .then((lists) => { if (active) setUserPortfolios(lists); })
+      .catch(() => { /* silent fail for list on non-persisted/test fixtures */ });
+    return () => { active = false; };
+  }, []);
+
+  // Load selected portfolio or default certified reference
   useEffect(() => {
     let active = true;
     setLoading(true);
-    fetchPortfolioData()
+    const fetcher = selectedPortfolioId && selectedPortfolioId.trim() !== ''
+      ? fetchUserPortfolio(selectedPortfolioId)
+      : fetchPortfolioData();
+
+    fetcher
       .then((d) => { if (active) { setData(d); setError(null); } })
       .catch((e) => { if (active) setError(String(e)); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [selectedPortfolioId]);
 
   // N+8: compose the governed trust chain for the selected holding's actual sector.
   useEffect(() => {
@@ -75,6 +108,71 @@ export function PortfolioWorkspace() {
     });
     return copy;
   }, [data, sortKey]);
+
+  const handleImportSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setImportError(null);
+    if (!importName.trim()) {
+      setImportError('Portfolio name is required');
+      return;
+    }
+
+    let parsedHoldings: UserHoldingInput[] = [];
+    const text = importHoldingsText.trim();
+    if (!text) {
+      setImportError('Holdings cannot be empty');
+      return;
+    }
+
+    try {
+      if (text.startsWith('[') || text.startsWith('{')) {
+        const raw = JSON.parse(text) as unknown;
+        parsedHoldings = Array.isArray(raw) ? (raw as UserHoldingInput[]) : [raw as UserHoldingInput];
+      } else {
+        const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+        for (const line of lines) {
+          const parts = line.split(/[:,\s]+/).filter((p) => p.length > 0);
+          if (parts.length >= 2) {
+            const sym = parts[0].trim();
+            const wt = parseFloat(parts[1].replace('%', '').trim());
+            parsedHoldings.push({ symbol: sym, weight: wt });
+          } else {
+            throw new Error(`Invalid line format: "${line}". Expected "SYMBOL: WEIGHT"`);
+          }
+        }
+      }
+    } catch (err) {
+      setImportError(`Failed to parse holdings: ${(err as Error).message}`);
+      return;
+    }
+
+    try {
+      setImportSaving(true);
+      const saved = await saveUserPortfolio({ name: importName.trim(), holdings: parsedHoldings });
+      setData(saved);
+      const savedId = (saved as unknown as { savedPortfolioId?: string }).savedPortfolioId;
+      if (savedId) {
+        setSelectedPortfolioId(savedId);
+        setUserPortfolios((prev) => [
+          ...prev.filter((p) => p.portfolioId !== savedId),
+          {
+            portfolioId: savedId,
+            name: importName.trim(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            holdings: parsedHoldings,
+          },
+        ]);
+      }
+      setShowImport(false);
+      setImportName('');
+      setImportHoldingsText('');
+    } catch (err) {
+      setImportError((err as Error).message);
+    } finally {
+      setImportSaving(false);
+    }
+  };
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load certified portfolio data: ${error}`} />;
@@ -113,16 +211,163 @@ export function PortfolioWorkspace() {
   }
 
   const { portfolio, diversification, allocation, opportunity, correlation, evidenceRefs, provenance } = data;
+  const isUserOverlay = provenance.dataSource.toLowerCase().includes('intelligence overlay') || provenance.dataSource.toLowerCase().includes('user portfolio');
 
   return (
     <section aria-label="Portfolio workspace">
       <header style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <h1 style={{ fontSize: 24, margin: 0 }}>Portfolio</h1>
-          <CertifiedBadge />
+          {isUserOverlay ? <PlatformBadge /> : <CertifiedBadge />}
           <FreshnessBadge state={provenance.freshness === 'SNAPSHOT' ? 'snapshot' : 'live'} />
         </div>
         <p style={{ color: 'var(--color-ink-secondary)', margin: '8px 0 0', fontSize: 13 }}>{provenance.dataSource}</p>
+
+        {/* Portfolio Selection & Import Affordance (Option A) */}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 14, flexWrap: 'wrap' }}>
+          <label htmlFor="portfolio-select" style={{ fontSize: 13, fontWeight: 600 }}>
+            Active Portfolio:
+          </label>
+          <select
+            id="portfolio-select"
+            data-testid="portfolio-selector"
+            value={selectedPortfolioId}
+            onChange={(e) => setSelectedPortfolioId(e.target.value)}
+            style={{
+              padding: '4px 8px',
+              borderRadius: 4,
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-surface-1)',
+              color: 'var(--color-ink-primary)',
+              fontSize: 13,
+            }}
+          >
+            <option value="">Certified Reference Portfolio (Default)</option>
+            {userPortfolios.map((p) => (
+              <option key={p.portfolioId} value={p.portfolioId}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            data-testid="btn-import-portfolio"
+            onClick={() => setShowImport(!showImport)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 4,
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-surface-2)',
+              cursor: 'pointer',
+              fontSize: 13,
+            }}
+          >
+            {showImport ? 'Cancel Import' : 'Import Overlay'}
+          </button>
+        </div>
+
+        {/* Import Overlay Form */}
+        {showImport && (
+          <form
+            data-testid="portfolio-import-form"
+            onSubmit={handleImportSubmit}
+            style={{
+              marginTop: 12,
+              padding: 14,
+              borderRadius: 6,
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-surface-1)',
+              maxWidth: 480,
+            }}
+          >
+            <h3 style={{ margin: '0 0 8px', fontSize: 14 }}>Import Intelligence Overlay</h3>
+            {importError && (
+              <p data-testid="import-error" style={{ color: 'var(--color-status-negative)', fontSize: 12, margin: '0 0 8px' }}>
+                {importError}
+              </p>
+            )}
+            <div style={{ marginBottom: 8 }}>
+              <label htmlFor="input-portfolio-name" style={{ display: 'block', fontSize: 12, marginBottom: 2 }}>
+                Portfolio Name
+              </label>
+              <input
+                id="input-portfolio-name"
+                data-testid="input-portfolio-name"
+                type="text"
+                required
+                value={importName}
+                onChange={(e) => setImportName(e.target.value)}
+                placeholder="e.g. My Tech Allocation"
+                style={{
+                  width: '100%',
+                  padding: '4px 8px',
+                  borderRadius: 4,
+                  border: '1px solid var(--color-border)',
+                  background: 'var(--color-surface-0)',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <label htmlFor="input-portfolio-holdings" style={{ display: 'block', fontSize: 12, marginBottom: 2 }}>
+                Holdings (JSON or Symbol: Weight lines)
+              </label>
+              <textarea
+                id="input-portfolio-holdings"
+                data-testid="input-portfolio-holdings"
+                rows={3}
+                required
+                value={importHoldingsText}
+                onChange={(e) => setImportHoldingsText(e.target.value)}
+                placeholder={'TCS: 50\nINFY: 50'}
+                style={{
+                  width: '100%',
+                  padding: '4px 8px',
+                  borderRadius: 4,
+                  border: '1px solid var(--color-border)',
+                  background: 'var(--color-surface-0)',
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="submit"
+                data-testid="btn-save-portfolio"
+                disabled={importSaving}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: 4,
+                  border: 'none',
+                  background: 'var(--color-primary, #0066cc)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                {importSaving ? 'Evaluating...' : 'Save & Evaluate'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowImport(false)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: 4,
+                  border: '1px solid var(--color-border)',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
       </header>
 
       {/* Overview */}

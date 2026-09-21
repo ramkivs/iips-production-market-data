@@ -50,6 +50,7 @@ export interface PortfolioSnapshotData {
   readonly dataAvailable?: undefined;
   readonly portfolio: {
     readonly portfolioId: string;
+    readonly name?: string;
     readonly scenario: string;
     readonly holdings: number;
     readonly sectorExposure: Readonly<Record<string, number>>;
@@ -85,4 +86,61 @@ export async function fetchPortfolioData(baseUrl = ''): Promise<PortfolioData> {
   const res = await authFetch(`${baseUrl}/api/portfolio`);
   if (!res.ok) throw new Error(`portfolio transport returned ${res.status}`);
   return (await res.json()) as PortfolioData;
+}
+
+export interface UserHoldingInput {
+  readonly symbol?: string;
+  readonly canonicalSecurityId?: string;
+  readonly figi?: string;
+  readonly isin?: string;
+  readonly sector?: string;
+  readonly weight: number;
+}
+
+export interface UserPortfolioPayload {
+  readonly portfolioId?: string;
+  readonly name: string;
+  readonly holdings: readonly UserHoldingInput[];
+}
+
+export interface UserPortfolioSummary {
+  readonly portfolioId: string;
+  readonly name: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly holdings: readonly unknown[];
+}
+
+export async function fetchUserPortfolio(portfolioId: string, baseUrl = ''): Promise<PortfolioData> {
+  const res = await authFetch(`${baseUrl}/api/portfolio?portfolioId=${encodeURIComponent(portfolioId)}`);
+  if (!res.ok) throw new Error(`portfolio transport returned ${res.status}`);
+  return (await res.json()) as PortfolioData;
+}
+
+export async function listUserPortfolios(baseUrl = ''): Promise<readonly UserPortfolioSummary[]> {
+  const res = await authFetch(`${baseUrl}/api/portfolio?list=true`);
+  if (!res.ok) throw new Error(`portfolio transport returned ${res.status}`);
+  const json = (await res.json()) as { portfolios: readonly UserPortfolioSummary[] };
+  return json.portfolios ?? [];
+}
+
+export async function saveUserPortfolio(payload: UserPortfolioPayload, baseUrl = ''): Promise<PortfolioData> {
+  const res = await authFetch(`${baseUrl}/api/portfolio`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? `portfolio save returned ${res.status}`);
+  }
+  return (await res.json()) as PortfolioData;
+}
+
+export async function deleteUserPortfolio(portfolioId: string, baseUrl = ''): Promise<{ deleted: boolean }> {
+  const res = await authFetch(`${baseUrl}/api/portfolio/${encodeURIComponent(portfolioId)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(`portfolio delete returned ${res.status}`);
+  return (await res.json()) as { deleted: boolean };
 }

@@ -591,7 +591,7 @@ function readSurfaceFor(url: string | undefined): string | null {
   if (!url) return null;
   const path = url.split('?')[0];
   if (path === '/api/executive') return 'executive';
-  if (path === '/api/portfolio') return 'portfolio';
+  if (path === '/api/portfolio' || path.startsWith('/api/portfolio/')) return 'portfolio';
   if (path === '/api/decision-matrix') return 'decision-matrix';
   if (path === '/api/cross-sector') return 'cross-sector';
   if (path === '/api/macro') return 'macro';
@@ -1043,7 +1043,7 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify(dataMode.dispatchForPrincipal('Executive', modePrincipal, computeCertifiedExecutive)));
         return;
       }
-      if (req.url === '/api/portfolio') {
+      if (req.url === '/api/portfolio' && (req.method ?? 'GET') === 'GET') {
         // D85 — UI12 data-mode propagation. The mode is read SERVER-SIDE from the authenticated
         // principal's persisted UI12 settings; no client-supplied mode is accepted. SNAPSHOT
         // invokes `computeCertifiedPortfolio()` UNCHANGED; LIVE/PIT return an explicit governed
@@ -1055,6 +1055,18 @@ const server = http.createServer((req, res) => {
           : dm.resolvePortfolioDataMode(resolvePrincipalTenant(principal), owner);
         res.writeHead(200);
         res.end(JSON.stringify(dm.portfolioForMode(mode, computeCertifiedPortfolio)));
+        return;
+      }
+      if (req.url?.startsWith('/api/portfolio')) {
+        const tenantId = resolvePrincipalTenant(principal);
+        const ownerUserId = resolvePrincipalOwner(principal);
+        if (!ownerUserId) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'owner unresolved for authenticated principal — fail-closed' }));
+          return;
+        }
+        const { handlePortfolioTransportRequest } = await import('./portfolio/portfolio-service');
+        await handlePortfolioTransportRequest(req, res, tenantId, ownerUserId, computeCertifiedPlatform);
         return;
       }
       if (req.url === '/api/decision-matrix') {
@@ -1122,4 +1134,4 @@ if (process.env.NODE_ENV !== 'test') {
   void start();
 }
 
-export { computeCertifiedExecutive, computeCertifiedPortfolio, computeCertifiedCompany, computeCertifiedCrossSector, computeCertifiedDecisionMatrix, computeCertifiedEvidence, computeCertifiedReplay };
+export { computeCertifiedPlatform, computeCertifiedExecutive, computeCertifiedPortfolio, computeCertifiedCompany, computeCertifiedCrossSector, computeCertifiedDecisionMatrix, computeCertifiedEvidence, computeCertifiedReplay };
