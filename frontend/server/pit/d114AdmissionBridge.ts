@@ -33,7 +33,10 @@ import {
   UnifiedHistoricalAdapter,
   type HistoricalArchiveFormat,
 } from '../../../d114/src/d114/unified_historical_adapter.js';
-import type { OHLCVCandle } from '../../../d114/src/contracts/d02_ohlcv.js';
+import {
+  validateOHLCVCandle,
+  type OHLCVCandle,
+} from '../../../d114/src/contracts/d02_ohlcv.js';
 import type { PitSnapshot } from './pitStorageModel';
 
 /** Governed era identifiers (D114 dual-era facts, disclosed verbatim in responses). */
@@ -69,9 +72,26 @@ export interface D114CorpusEntry {
   readonly archiveRef: string;
   /** Declared era — must match the adapter's content-detected format. */
   readonly era: D114Era;
-  /** SHA-256 of the CSV content, when attested by the corpus manifest (hex, 64 chars). */
+  /**
+   * Archive trading day (YYYY-MM-DD), REQUIRED for physical D114 archives. When present,
+   * every canonical candle produced by this entry must carry this exact date; a multi-day or
+   * mislabelled physical archive is refused rather than silently split/reclassified.
+   */
+  readonly tradeDate?: string;
+  /**
+   * SHA-256 attested for the source. For physical D114 input this is the ARCHIVE hash from
+   * `sha256-manifest.json`; for repository fixtures it is the fixture CSV hash.
+   */
   readonly sha256?: string;
-  /** Raw CSV text (already extracted from its archive by the caller). */
+  /** Governed D114 handoff lineage carried verbatim into every snapshot, when available. */
+  readonly evidence?: Readonly<{
+    readonly acquisitionManifestId: string;
+    readonly sha256ManifestEntry: Readonly<Record<string, unknown>>;
+    readonly intakeLineageDigest: string;
+    readonly intakeDirectory: string;
+    readonly failureRegisterRef: string;
+  }>;
+  /** Raw CSV text, extracted through the governed D114 archive extractor by the caller. */
   readonly csvText: string;
 }
 
@@ -121,11 +141,26 @@ export function isWithinEraWindow(era: D114Era, tradeDate: string): boolean {
 export function candleToPitSnapshot(
   candle: OHLCVCandle,
   corpus: { corpusId: string; provider: string; dataVersion: string },
-  entry: { archiveRef: string; era: D114Era; sha256?: string },
+  entry: {
+    archiveRef: string;
+    era: D114Era;
+    tradeDate?: string;
+    sha256?: string;
+    evidence?: D114CorpusEntry['evidence'];
+  },
 ): { snapshot?: PitSnapshot; error?: D114AdmissionError } {
   const refuse = (code: D114AdmissionError['code'], detail: string): D114AdmissionError => ({
     code, archiveRef: entry.archiveRef, detail,
   });
+  const canonicalValidation = validateOHLCVCandle(candle);
+  if (!canonicalValidation.isValid) {
+    return {
+      error: refuse(
+        'D114-E5',
+        `D02 canonical validation refused record: ${canonicalValidation.errors.map((e) => `${e.code}:${e.field}`).join(', ')}`,
+      ),
+    };
+  }
   if (typeof candle.symbol !== 'string' || candle.symbol.length === 0) {
     return { error: refuse('D114-E5', 'canonical candle carries no symbol — no PIT series identity') };
   }
@@ -142,6 +177,14 @@ export function candleToPitSnapshot(
       ),
     };
   }
+  if (entry.tradeDate !== undefined && tradeDateOf(candle) !== entry.tradeDate) {
+    return {
+      error: refuse(
+        'D114-E4',
+        `canonical record date ${tradeDateOf(candle)} does not match the D114 evidence/manifest date ${entry.tradeDate} — mislabelled or multi-day archive refused`,
+      ),
+    };
+  }
   const snapshotId = `data-${corpus.provider}-${corpus.dataVersion}-${asOf}`;
   const snapshot: PitSnapshot = Object.freeze({
     snapshotId,
@@ -154,25 +197,24 @@ export function candleToPitSnapshot(
     mode: 'PIT',
     // P01 ST-5/MD-3 — pitBoundary present IFF mode is PIT: the session end of this EOD bar.
     pitBoundary: candle.candleEnd,
-    payload: Object.freeze({
-      symbol: candle.symbol,
-      companyId: candle.companyId,
-      interval: candle.interval,
-      candleStart: candle.candleStart,
-      candleEnd: candle.candleEnd,
-      open: candle.open,
-      high: candle.high,
-      low: candle.low,
-      close: candle.close,
-      volume: candle.volume,
-      isAdjusted: candle.isAdjusted,
-    }),
+    // Canonical D02 record VERBATIM: preserve every present contract field (including optional
+    // vwap/tradeCount) and its insertion order; never pick/rebuild/flatten the canonical record.
+    payload: Object.freeze({ ...candle }),
     historicalProvenance: Object.freeze({
       ...BRIDGE_IDENTITY,
       era: entry.era,
       tradeDate: tradeDateOf(candle),
       archiveRef: entry.archiveRef,
       ...(entry.sha256 !== undefined ? { sha256: entry.sha256 } : {}),
+      ...(entry.evidence !== undefined
+        ? {
+            acquisitionManifestId: entry.evidence.acquisitionManifestId,
+            sha256ManifestEntry: entry.evidence.sha256ManifestEntry,
+            intakeLineageDigest: entry.evidence.intakeLineageDigest,
+            intakeDirectory: entry.evidence.intakeDirectory,
+            failureRegisterRef: entry.evidence.failureRegisterRef,
+          }
+        : {}),
       corpusId: corpus.corpusId,
     }),
   });

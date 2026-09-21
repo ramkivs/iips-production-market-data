@@ -59,18 +59,8 @@ export function isDegraded(d: unknown): d is DegradedData {
 // family. The degraded family above is unchanged.
 // ─────────────────────────────────────────────────────────────────────────────────────────
 
-/** The verbatim canonical snapshot served from the P08 PIT store (record field). */
+/** The verbatim D01/D02 canonical historical record (not the P08 storage envelope). */
 export interface PitVintageRecord {
-  readonly snapshotId: string;
-  readonly provider: string;
-  readonly dataVersion: string;
-  readonly asOf: string;
-  readonly domain: string;
-  readonly quality: string;
-  readonly securityId?: string;
-  readonly pitBoundary?: string;
-  readonly payload?: Readonly<Record<string, unknown>>;
-  readonly historicalProvenance?: Readonly<Record<string, unknown>>;
   readonly [field: string]: unknown;
 }
 
@@ -87,6 +77,8 @@ export interface PitVintageData {
     readonly requestedAsOf: string;
     /** What is SERVED — satisfies resolvedAsOf <= requestedAsOf (PS-9). */
     readonly resolvedAsOf: string;
+    /** Governing scope's canonical alias for the resolved vintage. */
+    readonly asOf: string;
     readonly snapshotId: string | null;
     readonly provider: string | null;
     readonly dataVersion: string | null;
@@ -102,6 +94,10 @@ export interface PitVintageData {
     readonly mode: 'PIT';
     readonly archiveRef: string | null;
     readonly sha256: string | null;
+    readonly sha256ManifestEntry: Readonly<Record<string, unknown>> | null;
+    readonly acquisitionManifestId: string | null;
+    readonly intakeLineageDigest: string | null;
+    readonly failureRegisterRef: string | null;
     readonly corpusId: string | null;
     readonly certification: string;
     readonly transportSemantics: string;

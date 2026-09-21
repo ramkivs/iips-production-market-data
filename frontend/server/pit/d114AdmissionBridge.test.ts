@@ -103,6 +103,18 @@ describe('T3 — era windows and the 2024-07-07 → 2024-07-08 format boundary',
     expect(r.errors[0]?.code).toBe('D114-E3');
     expect(r.errors[0]?.detail).toMatch(/era ambiguity is refused, never resolved/);
   });
+
+  it('refuses a structurally invalid D02 canonical candle (bridge never repairs/coerces)', () => {
+    const candle = UnifiedHistoricalAdapter.parseAndNormalize(legacyCsv).candles[0]!;
+    const r = candleToPitSnapshot(
+      { ...candle, high: candle.low - 1 }, // contradictory high < low/open/close
+      CORPUS,
+      { archiveRef: 'invalid-canonical', era: 'LEGACY_BHAVCOPY' },
+    );
+    expect(r.snapshot).toBeUndefined();
+    expect(r.error).toMatchObject({ code: 'D114-E5' });
+    expect(r.error?.detail).toMatch(/D02 canonical validation refused/);
+  });
 });
 
 describe('T3 — admission and provenance preservation', () => {
@@ -135,8 +147,13 @@ describe('T3 — admission and provenance preservation', () => {
     expect(hp.sha256).toBe('aa'.repeat(32));
     expect(hp.corpusId).toBe('pit-fixture-corpus-v1');
     expect(hp.source).toBe('D114');
-    // Record payload is the canonical D02 bar, byte-faithful through the bridge.
+    // Record payload is the canonical D02 bar byte-faithful through the bridge — exact
+    // JSON/property order, not a selected-field reconstruction.
     const payload = vintage?.payload as Record<string, unknown>;
+    const canonical = UnifiedHistoricalAdapter.parseAndNormalize(legacyCsv).candles.find(
+      (c) => c.symbol === 'RELIANCE' && c.candleStart === '2024-07-05T09:15:00.000Z',
+    );
+    expect(JSON.stringify(payload)).toBe(JSON.stringify(canonical));
     expect(payload.close).toBeCloseTo(2931.1, 2);
     expect(payload.interval).toBe('1d');
     expect(payload.isAdjusted).toBe(false);
@@ -170,7 +187,7 @@ describe('T3 — admission and provenance preservation', () => {
     expect(store.size()).toBe(sizeBefore);
     // Conflicting payload at the SAME asOf: vintage ambiguity → refused, never overwritten.
     const conflicting = candleToPitSnapshot(
-      { ...UnifiedHistoricalAdapter.parseAndNormalize(legacyCsv).candles[0]!, close: 1.23 },
+      { ...UnifiedHistoricalAdapter.parseAndNormalize(legacyCsv).candles[0]!, volume: 999_999 },
       CORPUS,
       { archiveRef: 'conflict', era: 'LEGACY_BHAVCOPY' },
     );

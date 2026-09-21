@@ -25,7 +25,7 @@ function Row({ label, value, testId }: { label: string; value: unknown; testId: 
 
 export function PitVintagePanel({ data, title }: { data: PitVintageData; title: string }) {
   const v = data.vintage;
-  const payload = (v.record.payload ?? {}) as Record<string, unknown>;
+  const payload = v.record as Record<string, unknown>;
   return (
     <section aria-label={`${title} point-in-time vintage`} data-testid="pit-vintage-panel">
       <header style={{ marginBottom: 20 }}>
@@ -61,7 +61,23 @@ export function PitVintagePanel({ data, title }: { data: PitVintageData; title: 
           <Row label="Archive reference" value={data.provenance.archiveRef} testId="pit-vintage-archive-ref" />
         )}
         {data.provenance.sha256 !== null && (
-          <Row label="SHA-256" value={data.provenance.sha256} testId="pit-vintage-sha256" />
+          <Row label="Archive SHA-256" value={data.provenance.sha256} testId="pit-vintage-sha256" />
+        )}
+        {data.provenance.sha256ManifestEntry !== null && (
+          <Row
+            label="D114 SHA manifest entry"
+            value={JSON.stringify(data.provenance.sha256ManifestEntry)}
+            testId="pit-vintage-sha-manifest-entry"
+          />
+        )}
+        {data.provenance.acquisitionManifestId !== null && (
+          <Row label="D114 acquisition manifest" value={data.provenance.acquisitionManifestId} testId="pit-vintage-acquisition-manifest" />
+        )}
+        {data.provenance.intakeLineageDigest !== null && (
+          <Row label="D114 intake lineage" value={data.provenance.intakeLineageDigest} testId="pit-vintage-intake-lineage" />
+        )}
+        {data.provenance.failureRegisterRef !== null && (
+          <Row label="D114 failure register" value={data.provenance.failureRegisterRef} testId="pit-vintage-failure-register" />
         )}
         {data.provenance.corpusId !== null && (
           <Row label="Corpus" value={data.provenance.corpusId} testId="pit-vintage-corpus" />

@@ -22,6 +22,7 @@ import type { PitSnapshot, PitStore } from './pitStorageModel';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import zlib from 'node:zlib';
 
 const CORPUS_DIR = path.join(process.cwd(), 'server', 'pit', 'fixtures', 'corpus');
 
@@ -46,6 +47,22 @@ function tmpCorpusDir(manifest: unknown, files: Record<string, string>): string 
   fs.writeFileSync(path.join(dir, 'pit-corpus-manifest.json'), JSON.stringify(manifest));
   for (const [name, content] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), content);
   return dir;
+}
+
+/** Minimal single-file PKZIP accepted by the FROZEN D114 extractor (test-only bytes). */
+function syntheticZip(filename: string, csv: string): Buffer {
+  const content = Buffer.from(csv, 'utf8');
+  const compressed = zlib.deflateRawSync(content);
+  const name = Buffer.from(filename, 'utf8');
+  const header = Buffer.alloc(30);
+  header.writeUInt32LE(0x04034b50, 0);
+  header.writeUInt16LE(20, 4);
+  header.writeUInt16LE(0, 6);
+  header.writeUInt16LE(8, 8);
+  header.writeUInt32LE(compressed.length, 18);
+  header.writeUInt32LE(content.length, 22);
+  header.writeUInt16LE(name.length, 26);
+  return Buffer.concat([header, name, compressed]);
 }
 
 describe('T2 — strict PS-9 asOf <= retrieval at the transport boundary', () => {
@@ -109,14 +126,21 @@ describe('T2 — corpus manifest loading is attested, era-checked and atomic', (
     expect(r.corpusId).toBe('pit-fixture-corpus-v1');
     expect(r.snapshotsAppended).toBe(10);
     expect(p.isBound()).toBe(true);
-    expect(p.query('D02', 'RELIANCE', '2024-07-07T00:00:00.000Z')?.snapshot.historicalProvenance).toMatchObject({ era: 'LEGACY_BHAVCOPY' });
-    expect(p.query('D02', 'RELIANCE', '2024-07-09T00:00:00.000Z')?.snapshot.historicalProvenance).toMatchObject({ era: 'CM_UDIFF' });
-    // PS-9 truth: a requested date carrying no bar resolves BACKWARD to the latest earlier
-    // vintage (disclosed via resolvedAsOf) — never interpolated, never substituted with a
-    // different series. Fail-closed applies when NO vintage exists at or below the instant.
-    const backward = p.query('D02', 'RELIANCE', '2024-07-10T00:00:00.000Z');
-    expect(backward?.resolvedAsOf).toBe('2024-07-08T09:15:00.000Z');
-    expect(p.query('D02', 'RELIANCE', '2016-09-19T00:00:00.000Z')).toBeNull();
+    expect(p.query('D02', 'RELIANCE', '2024-07-07T15:30:00.000Z')?.snapshot.historicalProvenance).toMatchObject({ era: 'LEGACY_BHAVCOPY' });
+    expect(p.query('D02', 'RELIANCE', '2024-07-08T15:30:00.000Z')?.snapshot.historicalProvenance).toMatchObject({ era: 'CM_UDIFF' });
+    // Bounded corpus + D114 availability policy: a registered HTTP_404, holiday, weekend,
+    // absent bounded-corpus date, or date outside coverage refuses BEFORE ordinary PS-9
+    // backward resolution. No nearest-vintage substitution across a known/implicit gap.
+    expect(p.query('D02', 'RELIANCE', '2024-07-10T15:30:00.000Z')).toBeNull();
+    expect(p.query('D02', 'RELIANCE', '2024-07-11T15:30:00.000Z')).toBeNull();
+    expect(p.query('D02', 'RELIANCE', '2024-07-13T15:30:00.000Z')).toBeNull();
+    expect(p.query('D02', 'RELIANCE', '2024-07-09T15:30:00.000Z')).toBeNull();
+    expect(p.query('D02', 'RELIANCE', '2024-07-16T15:30:00.000Z')).toBeNull();
+    expect(p.query('D02', 'RELIANCE', '2023-12-28T15:30:00.000Z')).toBeNull();
+    expect(p.corpusInfo()).toMatchObject({
+      corpusKind: 'FIXTURE_CSV', loadedDates: 5, unavailableDates: 3,
+      coverageStart: '2023-12-29', coverageEnd: '2024-07-15', evidenceValidated: false,
+    });
   });
 
   it('refuses a corpus whose sha256 does not match the attested manifest', () => {
@@ -158,6 +182,107 @@ describe('T2 — corpus manifest loading is attested, era-checked and atomic', (
     expect(r.ok).toBe(false);
     expect(r.errors[0]).toMatch(/bounded-corpus cap/);
     expect(p.isBound()).toBe(false);
+  });
+});
+
+describe('T2/W1 preparation — physical D114 archive mode uses the governed handoff', () => {
+  const legacyFile = 'cm05JUL2024bhav.csv.zip';
+  const udiffFile = 'BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv.zip';
+  const legacyHash = 'e08c8c0650e6807f8b1abd0658bc8d87cbe2d78c2fc77e05c82878f30be46665';
+  const udiffHash = '0ef55b77c30c8a57d5451cd371424242ad515f708630736ea6dc44c38d6e1e85';
+  const legacyCsv = `SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN\nRELIANCE,EQ,2912.00,2935.75,2906.40,2931.10,2930.50,2869.35,4810200,14083412760.00,05-JUL-2024,131570,INE002A01018`;
+  const udiffCsv = `TradDt,BizDt,Sgmt,Src,ISIN,TckrSymb,SctySrs,ClsPric,LastPric,PrvsClsgPric,SttlmPric,OpnPric,HghPric,LwPric,TtlTradgVol\n2024-07-08,2024-07-08,CM,NSE,INE002A01018,RELIANCE,EQ,2951.20,2951.00,2940.85,2950.75,2944.00,2962.00,2938.10,4398120`;
+
+  function physicalManifest() {
+    return {
+      corpusId: 'windows-d114-bounded-two-era',
+      corpusKind: 'D114_ARCHIVE',
+      provider: 'NSE_D114',
+      dataVersion: 'd114-dualera-v1',
+      archiveRoots: {
+        LEGACY_BHAVCOPY: 'C:\\IIPS_Data\\NSE_Legacy_Acquisition\\archives',
+        CM_UDIFF: 'C:\\IIPS_Data\\NSE_CM_UDiFF_10Y\\archives',
+      },
+      evidenceIntakes: [
+        { era: 'LEGACY_BHAVCOPY', directory: path.resolve(process.cwd(), '..', 'evidence', 'd114-legacy') },
+        { era: 'CM_UDIFF', directory: path.resolve(process.cwd(), '..', 'evidence', 'd114') },
+      ],
+      entries: [
+        { file: legacyFile, source: 'ZIP', era: 'LEGACY_BHAVCOPY', tradeDate: '2024-07-05' },
+        { file: udiffFile, source: 'ZIP', era: 'CM_UDIFF', tradeDate: '2024-07-08' },
+      ],
+    };
+  }
+
+  const archives: Record<string, Buffer> = {
+    [legacyFile]: syntheticZip('cm05JUL2024bhav.csv', legacyCsv),
+    [udiffFile]: syntheticZip('BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv', udiffCsv),
+  };
+  const governedHashes: Record<string, string> = { [legacyFile]: legacyHash, [udiffFile]: udiffHash };
+
+  it('accepts BOTH evidence packages, verifies their SHA entries, and admits both archive eras', () => {
+    const dir = tmpCorpusDir(physicalManifest(), {});
+    const p = createPitVintageProvider();
+    const r = loadCorpusIntoProvider(p, dir, {
+      // Test injection supplies tiny ZIP bytes while the SHA callback supplies the matching
+      // deposited D114 archive hash. Default production paths read/hash the real files.
+      readBuffer: (archivePath) => archives[path.basename(archivePath)]!,
+      sha256OfFile: (archivePath) => governedHashes[path.basename(archivePath)]!,
+    });
+    expect(r).toMatchObject({ ok: true, snapshotsAppended: 2, corpusId: 'windows-d114-bounded-two-era' });
+    expect(p.corpusInfo()).toMatchObject({
+      corpusKind: 'D114_ARCHIVE', evidenceValidated: true, loadedDates: 2,
+      coverageStart: '2016-09-20', coverageEnd: '2026-09-18',
+    });
+    expect(p.corpusInfo().unavailableDates).toBeGreaterThan(100); // 94+34 failures + weekends/holidays in era windows
+
+    const legacy = p.query('D02', 'RELIANCE', '2024-07-05T15:30:00.000Z');
+    const udiff = p.query('D02', 'RELIANCE', '2024-07-08T15:30:00.000Z');
+    expect(legacy?.snapshot.historicalProvenance).toMatchObject({
+      era: 'LEGACY_BHAVCOPY', sha256: legacyHash,
+      acquisitionManifestId: expect.stringMatching(/^d114-manifest-/),
+      intakeLineageDigest: expect.stringMatching(/^[0-9a-f]{64}$/),
+    });
+    expect(udiff?.snapshot.historicalProvenance).toMatchObject({
+      era: 'CM_UDIFF', sha256: udiffHash,
+      acquisitionManifestId: expect.stringMatching(/^d114-manifest-/),
+      intakeLineageDigest: expect.stringMatching(/^[0-9a-f]{64}$/),
+    });
+    const hp = udiff?.snapshot.historicalProvenance as Record<string, unknown>;
+    expect(hp.sha256ManifestEntry).toMatchObject({ date: '2024-07-08', filename: udiffFile, sha256: udiffHash });
+
+    // Bounded means bounded: a real acquired date omitted from this boot corpus is unavailable,
+    // as are a deposited HTTP_404 day, weekend, pre-range and post-range instants.
+    expect(p.query('D02', 'RELIANCE', '2024-07-09T15:30:00.000Z')).toBeNull();
+    expect(p.query('D02', 'RELIANCE', '2023-04-07T15:30:00.000Z')).toBeNull();
+    expect(p.query('D02', 'RELIANCE', '2024-07-13T15:30:00.000Z')).toBeNull();
+    expect(p.query('D02', 'RELIANCE', '2016-09-19T15:30:00.000Z')).toBeNull();
+    expect(p.query('D02', 'RELIANCE', '2026-09-19T15:30:00.000Z')).toBeNull();
+  });
+
+  it('refuses physical mode when evidence intake, archive SHA, one era, or record date is wrong', () => {
+    const noIntake = physicalManifest();
+    noIntake.evidenceIntakes = [];
+    expect(loadCorpusIntoProvider(createPitVintageProvider(), tmpCorpusDir(noIntake, {})).errors[0]).toMatch(/evidence intake/);
+
+    const oneEra = physicalManifest();
+    oneEra.entries = oneEra.entries.slice(0, 1);
+    expect(loadCorpusIntoProvider(createPitVintageProvider(), tmpCorpusDir(oneEra, {})).errors[0]).toMatch(/BOTH physical eras/);
+
+    const dir = tmpCorpusDir(physicalManifest(), {});
+    const hashFail = loadCorpusIntoProvider(createPitVintageProvider(), dir, {
+      readBuffer: (archivePath) => archives[path.basename(archivePath)]!,
+      sha256OfFile: () => '00'.repeat(32),
+    });
+    expect(hashFail.ok).toBe(false);
+    expect(hashFail.errors[0]).toMatch(/sha256 mismatch/);
+
+    const badDate = physicalManifest();
+    badDate.entries[0] = { ...badDate.entries[0]!, tradeDate: '2024-07-08' };
+    expect(loadCorpusIntoProvider(createPitVintageProvider(), tmpCorpusDir(badDate, {}), {
+      readBuffer: (archivePath) => archives[path.basename(archivePath)]!,
+      sha256OfFile: (archivePath) => governedHashes[path.basename(archivePath)]!,
+    }).errors[0]).toMatch(/outside LEGACY_BHAVCOPY window/);
   });
 });
 

@@ -1,0 +1,37 @@
+{
+  "decisionId": "d114-stage4-auth-2026-09-20-001",
+  "decisionAuthority": "Lead Enterprise Architect & Market Data Governance Lead (AD-CHARTER-2026-01 / AD-W1-AUTH-2026-01)",
+  "decisionTimestamp": "2026-09-20T12:45:00.000Z",
+  "governingPackage": "WS-H / Package D114",
+  "precedingFeasibilityReport": {
+    "reconciliationId": "d114-recon-1789907868308",
+    "feasibilityDetermination": "PARTIALLY_FEASIBLE_CONTEMPORARY_ONLY",
+    "reconciliationLineageDigest": "221ab1036a6a1cf6a5c4cd71e3315cb936e523fc78fd33dbd8d77859253ae410"
+  },
+  "selectedPathway": "OPTION_A",
+  "pathwayDescription": "OPTION A — Controlled Legacy Historical Acquisition (2016-09-20 to 2024-07-07 under OFFLINE_BOOTSTRAP / Non-Production mode)",
+  "scopeAuthorized": {
+    "dateRange": "2016-09-20 through 2024-07-07",
+    "targetEra": "HISTORICAL_PRE_UDIFF_ERA",
+    "archivePattern": "cmDDMMMYYYYbhav.csv.zip",
+    "parserModule": "LegacyBhavcopyParser / UnifiedHistoricalAdapter"
+  },
+  "operatingMode": "OFFLINE_BOOTSTRAP",
+  "legalLicensingPrerequisiteStatus": "UNMET_COMMERCIAL_ENTITLEMENT_PRESERVED (Public HTTP archive access authorized strictly for offline development & structural validation; production redistribution rights NOT granted)",
+  "architectureDisposition": "DUAL_ERA_PARSING_ACTIVE (CM-UDiFF + LegacyBhavcopyParser unified into canonical D01/D02 schemas)",
+  "governanceDispositions": {
+    "oiHist01Status": "OPEN / EXTERNAL / HISTORICAL ACQUISITION BLOCKED",
+    "masterGateG004": "OPEN / PRESERVED",
+    "productionHistoricalEligibility": "NOT AUTHORIZED",
+    "programOperatingDisposition": "NON_PRODUCTION_HOLD"
+  },
+  "conditionsPrecedent": [
+    "Execution restricted to operator-assisted Windows host under OFFLINE_BOOTSTRAP mode; Arena cannot execute Windows network requests",
+    "Materialization of 6-file evidence package matching D114 standard upon acquisition completion",
+    "Passage of 100% cryptographic SHA-256 audit and legacy schema validation upon governed handoff",
+    "Zero live production writes or external commercial sockets bound",
+    "OI-HIST-01 and Gate G-004 remain strictly OPEN and preserved"
+  ],
+  "nextAuthorizedExecutionGate": "GATE-D114-STAGE4-LEGACY-ACQUISITION",
+  "decisionLineageDigest": "2340667ece5edbeedbfa3199a4b79806433e8074f27b7037a35132df942677ce"
+}

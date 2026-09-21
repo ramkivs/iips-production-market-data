@@ -1,6 +1,6 @@
 /**
  * Institutional Investment Platform System (IIPS)
- * Workstream WS-H / Package D114: Hardened 10-Year NSE CM-UDiFF Historical Acquisition Feasibility Runner
+ * Workstream WS-H / Package D114: Hardened 10-Year NSE CM-UDiFF & Dual-Era Historical Acquisition Feasibility Runner
  *
  * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W1-AUTH-2026-01 / D114 / OI-HIST-01
  * Operating Mode: LOCAL_FIXTURE_AND_OFFLINE_DEV
@@ -8,6 +8,8 @@
 
 import * as crypto from 'crypto';
 import { CmUdiffParser, CmUdiffValidationResult, ExtractedZipResult } from './cm_udiff_parser.js';
+import { LegacyBhavcopyParser, LegacyBhavcopyValidationResult } from './legacy_bhavcopy_parser.js';
+import { UnifiedHistoricalAdapter } from './unified_historical_adapter.js';
 import { computeLineageHash } from '../contracts/provenance.js';
 
 export type DayClassification = 'TRADING_DAY' | 'WEEKEND' | 'HOLIDAY';
@@ -153,6 +155,9 @@ export interface RunnerConfig {
 }
 
 export class HistoricalFeasibilityRunner {
+  // Authoritative Cutoff Date for CM-UDiFF format introduction by NSE
+  public static readonly UDIFF_MIGRATION_CUTOFF_DATE = '2024-07-08';
+
   // Canonical NSE CM-UDiFF Archive URL template
   public static readonly ARCHIVE_BASE_URL = 'https://nsearchives.nseindia.com/content/cm';
 
@@ -172,9 +177,14 @@ export class HistoricalFeasibilityRunner {
   ];
 
   /**
-   * Constructs the canonical CM-UDiFF Bhavcopy filename and archive URL for a date.
+   * Constructs the canonical archive filename and URL for a date based on dual-era routing:
+   * - dateIso >= 2024-07-08: CM-UDiFF Bhavcopy URL
+   * - dateIso < 2024-07-08: Pre-UDiFF Legacy Bhavcopy URL (cmDDMMMYYYYbhav.csv.zip)
    */
   public static getArchiveUrl(dateIso: string): { filename: string; url: string } {
+    if (dateIso < HistoricalFeasibilityRunner.UDIFF_MIGRATION_CUTOFF_DATE) {
+      return LegacyBhavcopyParser.getLegacyArchiveUrl(dateIso);
+    }
     const yyyymmdd = dateIso.replace(/-/g, '');
     const filename = `BhavCopy_NSE_CM_0_0_0_${yyyymmdd}_F_0000.csv.zip`;
     const url = `${HistoricalFeasibilityRunner.ARCHIVE_BASE_URL}/${filename}`;
@@ -217,7 +227,7 @@ export class HistoricalFeasibilityRunner {
   }
 
   /**
-   * Evaluates a synthetic or downloaded archive buffer against feasibility criteria.
+   * Evaluates a synthetic or downloaded archive buffer against dual-era feasibility criteria.
    */
   public static evaluateArchive(
     dateIso: string,
@@ -411,8 +421,9 @@ export class HistoricalFeasibilityRunner {
       };
     }
 
-    const { headers, records } = CmUdiffParser.parseCsv(extraction.rawCsvContent);
-    if (headers.length === 0 || records.length === 0) {
+    const firstLine = extraction.rawCsvContent.split(/\r?\n/)[0] || '';
+    const headers = firstLine.split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
+    if (headers.length === 0 || !extraction.rawCsvContent.trim()) {
       return {
         date: dateIso,
         classification: 'TRADING_DAY',
@@ -436,8 +447,90 @@ export class HistoricalFeasibilityRunner {
       };
     }
 
-    const schemaVal: CmUdiffValidationResult = CmUdiffParser.validateSchema(headers, records);
-    if (!schemaVal.isValid) {
+    const detectedFormat = UnifiedHistoricalAdapter.detectFormat(headers);
+
+    let schemaValidity = false;
+    let totalRows = 0;
+    let validRows = 0;
+    let invalidRows = 0;
+    let schemaErrors: string[] = [];
+    let failureReason: string | undefined;
+
+    if (detectedFormat === 'CM_UDIFF') {
+      const { headers: h, records } = CmUdiffParser.parseCsv(extraction.rawCsvContent);
+      if (records.length === 0) {
+        return {
+          date: dateIso,
+          classification: 'TRADING_DAY',
+          acquisitionUrl: url,
+          status: 'CSV_INVALID',
+          httpStatusCode: 200,
+          localFilename: filename,
+          localPath: options?.localPath,
+          fileSizeBytes,
+          sha256Hex,
+          zipValidity: true,
+          csvValidity: false,
+          schemaValidity: false,
+          recordCount: 0,
+          validRecordCount: 0,
+          invalidRecordCount: 0,
+          failureReason: 'CSV extraction produced 0 rows',
+          evaluatedAt,
+          priorSha256Hex,
+          hashChangedFromPrior,
+        };
+      }
+      const schemaVal: CmUdiffValidationResult = CmUdiffParser.validateSchema(h, records);
+      schemaValidity = schemaVal.isValid;
+      totalRows = schemaVal.totalRows;
+      validRows = schemaVal.validRows;
+      invalidRows = schemaVal.invalidRows;
+      schemaErrors = schemaVal.errors.map((e) => e.error);
+      if (!schemaValidity) {
+        failureReason = `CM-UDiFF schema validation failed (${schemaVal.invalidRows} invalid rows, missing: ${schemaVal.missingRequiredHeaders.join(', ')})`;
+      }
+    } else if (detectedFormat === 'LEGACY_BHAVCOPY') {
+      const { headers: h, records } = LegacyBhavcopyParser.parseCsv(extraction.rawCsvContent);
+      if (records.length === 0) {
+        return {
+          date: dateIso,
+          classification: 'TRADING_DAY',
+          acquisitionUrl: url,
+          status: 'CSV_INVALID',
+          httpStatusCode: 200,
+          localFilename: filename,
+          localPath: options?.localPath,
+          fileSizeBytes,
+          sha256Hex,
+          zipValidity: true,
+          csvValidity: false,
+          schemaValidity: false,
+          recordCount: 0,
+          validRecordCount: 0,
+          invalidRecordCount: 0,
+          failureReason: 'CSV extraction produced 0 rows',
+          evaluatedAt,
+          priorSha256Hex,
+          hashChangedFromPrior,
+        };
+      }
+      const schemaVal: LegacyBhavcopyValidationResult = LegacyBhavcopyParser.validateSchema(h, records);
+      schemaValidity = schemaVal.isValid;
+      totalRows = schemaVal.totalRows;
+      validRows = schemaVal.validRows;
+      invalidRows = schemaVal.invalidRows;
+      schemaErrors = schemaVal.errors.map((e) => e.error);
+      if (!schemaValidity) {
+        failureReason = `Legacy Bhavcopy schema validation failed (${schemaVal.invalidRows} invalid rows, missing: ${schemaVal.missingRequiredHeaders.join(', ')})`;
+      }
+    } else {
+      schemaValidity = false;
+      failureReason = `Unrecognized header structure for date ${dateIso}: ${headers.slice(0, 5).join(', ')}`;
+      schemaErrors = [failureReason];
+    }
+
+    if (!schemaValidity) {
       return {
         date: dateIso,
         classification: 'TRADING_DAY',
@@ -451,11 +544,11 @@ export class HistoricalFeasibilityRunner {
         zipValidity: true,
         csvValidity: true,
         schemaValidity: false,
-        recordCount: schemaVal.totalRows,
-        validRecordCount: schemaVal.validRows,
-        invalidRecordCount: schemaVal.invalidRows,
-        schemaErrors: schemaVal.errors.map((e) => e.error),
-        failureReason: `Schema validation failed (${schemaVal.invalidRows} invalid rows, missing: ${schemaVal.missingRequiredHeaders.join(', ')})`,
+        recordCount: totalRows,
+        validRecordCount: validRows,
+        invalidRecordCount: invalidRows,
+        schemaErrors,
+        failureReason,
         evaluatedAt,
         priorSha256Hex,
         hashChangedFromPrior,
@@ -475,8 +568,8 @@ export class HistoricalFeasibilityRunner {
       zipValidity: true,
       csvValidity: true,
       schemaValidity: true,
-      recordCount: schemaVal.totalRows,
-      validRecordCount: schemaVal.validRows,
+      recordCount: totalRows,
+      validRecordCount: validRows,
       invalidRecordCount: 0,
       evaluatedAt,
       priorSha256Hex,
@@ -586,6 +679,12 @@ export class HistoricalFeasibilityRunner {
       evaluatedAt: new Date().toISOString(),
     };
 
+    const sanitizedRecords: Record<string, Record<string, unknown>> = {};
+    for (const [d, r] of Object.entries(records)) {
+      const { evaluatedAt: _evaluatedAt, ...rest } = r;
+      sanitizedRecords[d] = rest;
+    }
+
     const deterministicDigestPayload = {
       releaseVersion: 'v1.0.0-rc1' as const,
       targetRange: {
@@ -608,7 +707,7 @@ export class HistoricalFeasibilityRunner {
         schemaMismatchCount,
         pendingExecutionCount,
       },
-      records,
+      records: sanitizedRecords,
     };
 
     const manifestIntegrityDigest = computeLineageHash(deterministicDigestPayload, {
@@ -688,6 +787,10 @@ export class HistoricalFeasibilityRunner {
       }
 
       if (rec.recordCount > 0 || rec.status === 'SCHEMA_MISMATCH') {
+        const requiredHeaders = date < HistoricalFeasibilityRunner.UDIFF_MIGRATION_CUTOFF_DATE
+          ? LegacyBhavcopyParser.REQUIRED_HEADERS
+          : CmUdiffParser.REQUIRED_HEADERS;
+
         schemaValidationReport.push({
           date,
           localFilename: rec.localFilename,
@@ -695,7 +798,7 @@ export class HistoricalFeasibilityRunner {
           totalRows: rec.recordCount,
           validRows: rec.validRecordCount,
           invalidRows: rec.invalidRecordCount,
-          discoveredHeaders: CmUdiffParser.REQUIRED_HEADERS,
+          discoveredHeaders: requiredHeaders,
           missingHeaders: rec.schemaErrors?.filter((e) => e.includes('Missing')) || [],
           sampleErrors: rec.schemaErrors?.slice(0, 5) || [],
         });
@@ -732,12 +835,14 @@ export class HistoricalFeasibilityRunner {
 
   /**
    * Generates the complete, hardened operator PowerShell execution runner for Windows host.
+   * Incorporates dual-era routing: CM-UDiFF (>= 2024-07-08) and Legacy Bhavcopy (< 2024-07-08).
    */
   public static generateHardenedWindowsPowerShellRunner(startDate: string, endDate: string, targetDir: string): string {
     return `# ==============================================================================
-# IIPS D114: Hardened 10-Year NSE CM-UDiFF Historical Acquisition & Evidence Runner
+# IIPS D114: Hardened Dual-Era NSE Historical Acquisition & Evidence Runner
 # Target Range: ${startDate} to ${endDate}
 # Evidence Output Directory: ${targetDir}
+# Architecture: Dual-Era (CM-UDiFF [>= 2024-07-08] + Legacy Bhavcopy [< 2024-07-08])
 # ==============================================================================
 
 param(
@@ -793,30 +898,32 @@ $KnownHolidays = @(
     "2026-01-26","2026-08-15","2026-10-02"
 )
 
-$RequiredHeaders = @("TradDt","BizDt","Sgmt","Src","ISIN","TckrSymb","SctySrs","ClsPric","LastPric","PrvsClsgPric","SttlmPric")
-
 $Records = @{}
 $CurrentDate = $StartDate
 
-Write-Host "Starting Hardened D114 CM-UDiFF Feasibility Execution ($StartDateStr to $EndDateStr)..."
+Write-Host "Starting Hardened D114 Dual-Era Historical Acquisition ($StartDateStr to $EndDateStr)..."
 
 while ($CurrentDate -le $EndDate) {
     $DateIso = $CurrentDate.ToString("yyyy-MM-dd")
-    $DateYMD = $CurrentDate.ToString("yyyyMMdd")
     $DayOfWeek = $CurrentDate.DayOfWeek
-    $FileName = "BhavCopy_NSE_CM_0_0_0_" + $DateYMD + "_F_0000.csv.zip"
-    $Url = "https://nsearchives.nseindia.com/content/cm/" + $FileName
-    $FilePath = Join-Path $ArchivesDir $FileName
 
-    # 1. Classification
-    $Classification = "TRADING_DAY"
+    # 1. Weekend Guard Clause
     if ($DayOfWeek -eq "Saturday" -or $DayOfWeek -eq "Sunday") {
-        $Classification = "WEEKEND"
-    } elseif ($KnownHolidays -contains $DateIso) {
-        $Classification = "HOLIDAY"
-    }
-
-    if ($Classification -eq "WEEKEND") {
+        $FileName = ""
+        $Url = ""
+        if ($DateIso -ge "2024-07-08") {
+            $DateYMD = $CurrentDate.ToString("yyyyMMdd")
+            $FileName = "BhavCopy_NSE_CM_0_0_0_" + $DateYMD + "_F_0000.csv.zip"
+            $Url = "https://nsearchives.nseindia.com/content/cm/" + $FileName
+        }
+        if ($DateIso -lt "2024-07-08") {
+            $MonthNames = @("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC")
+            $MonthStr = $MonthNames[$CurrentDate.Month - 1]
+            $YearStr = $CurrentDate.ToString("yyyy")
+            $DayStr = $CurrentDate.ToString("dd")
+            $FileName = "cm" + $DayStr + $MonthStr + $YearStr + "bhav.csv.zip"
+            $Url = "https://nsearchives.nseindia.com/content/historical/EQUITIES/" + $YearStr + "/" + $MonthStr + "/" + $FileName
+        }
         $Records[$DateIso] = [PSCustomObject]@{
             date = $DateIso
             classification = "WEEKEND"
@@ -833,7 +940,27 @@ while ($CurrentDate -le $EndDate) {
             invalidRecordCount = 0
             evaluatedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         }
-    } elseif ($Classification -eq "HOLIDAY") {
+        $CurrentDate = $CurrentDate.AddDays(1)
+        continue
+    }
+
+    # 2. Holiday Guard Clause
+    if ($KnownHolidays -contains $DateIso) {
+        $FileName = ""
+        $Url = ""
+        if ($DateIso -ge "2024-07-08") {
+            $DateYMD = $CurrentDate.ToString("yyyyMMdd")
+            $FileName = "BhavCopy_NSE_CM_0_0_0_" + $DateYMD + "_F_0000.csv.zip"
+            $Url = "https://nsearchives.nseindia.com/content/cm/" + $FileName
+        }
+        if ($DateIso -lt "2024-07-08") {
+            $MonthNames = @("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC")
+            $MonthStr = $MonthNames[$CurrentDate.Month - 1]
+            $YearStr = $CurrentDate.ToString("yyyy")
+            $DayStr = $CurrentDate.ToString("dd")
+            $FileName = "cm" + $DayStr + $MonthStr + $YearStr + "bhav.csv.zip"
+            $Url = "https://nsearchives.nseindia.com/content/historical/EQUITIES/" + $YearStr + "/" + $MonthStr + "/" + $FileName
+        }
         $Records[$DateIso] = [PSCustomObject]@{
             date = $DateIso
             classification = "HOLIDAY"
@@ -850,144 +977,184 @@ while ($CurrentDate -le $EndDate) {
             invalidRecordCount = 0
             evaluatedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         }
-    } else {
-        # Trading day evaluation with resume check
-        $Existing = $ExistingRecords[$DateIso]
-        if ($Existing -and $Existing.status -eq "ACQUIRED_VALID" -and (Test-Path -Path $FilePath)) {
-            $Records[$DateIso] = $Existing
-            Write-Host "[REUSED] $DateIso : Already ACQUIRED_VALID"
-        } else {
-            $Status = "PENDING_WINDOWS_EXECUTION"
-            $FailureReason = $null
-            $HttpStatusCode = 0
-            $FileSizeBytes = 0
-            $Sha256Hex = ""
-            $ZipValid = $false
-            $CsvValid = $false
-            $SchemaValid = $false
-            $RecordCount = 0
-            $ValidRecordCount = 0
-            $InvalidRecordCount = 0
-            $SchemaErrors = @()
+        $CurrentDate = $CurrentDate.AddDays(1)
+        continue
+    }
 
-            # Attempt Download if not on disk
-            if (!(Test-Path -Path $FilePath)) {
-                try {
-                    $Headers = @{
-                        "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                        "Accept" = "*/*"
-                    }
-                    $Resp = Invoke-WebRequest -Uri $Url -OutFile $FilePath -Headers $Headers -TimeoutSec 15 -PassThru
-                    $HttpStatusCode = $Resp.StatusCode
-                } catch {
-                    if ($_.Exception.Response) {
-                        $HttpStatusCode = [int]$_.Exception.Response.StatusCode
-                    }
-                    $FailureReason = $_.Exception.Message
-                }
+    # 3. Dual-Era URL & Schema Resolution for Trading Day
+    $FileName = ""
+    $Url = ""
+    $RequiredHeaders = @()
+
+    if ($DateIso -ge "2024-07-08") {
+        $DateYMD = $CurrentDate.ToString("yyyyMMdd")
+        $FileName = "BhavCopy_NSE_CM_0_0_0_" + $DateYMD + "_F_0000.csv.zip"
+        $Url = "https://nsearchives.nseindia.com/content/cm/" + $FileName
+        $RequiredHeaders = @("TradDt","BizDt","Sgmt","Src","ISIN","TckrSymb","SctySrs","ClsPric","LastPric","PrvsClsgPric","SttlmPric")
+    }
+
+    if ($DateIso -lt "2024-07-08") {
+        $MonthNames = @("JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC")
+        $MonthStr = $MonthNames[$CurrentDate.Month - 1]
+        $YearStr = $CurrentDate.ToString("yyyy")
+        $DayStr = $CurrentDate.ToString("dd")
+        $FileName = "cm" + $DayStr + $MonthStr + $YearStr + "bhav.csv.zip"
+        $Url = "https://nsearchives.nseindia.com/content/historical/EQUITIES/" + $YearStr + "/" + $MonthStr + "/" + $FileName
+        $RequiredHeaders = @("SYMBOL","SERIES","OPEN","HIGH","LOW","CLOSE","LAST","PREVCLOSE","TOTTRDQTY","TOTTRDVAL","TIMESTAMP","ISIN")
+    }
+
+    $FilePath = Join-Path $ArchivesDir $FileName
+
+    # Resume Guard Clause
+    $Existing = $ExistingRecords[$DateIso]
+    if ($Existing -and $Existing.status -eq "ACQUIRED_VALID" -and (Test-Path -Path $FilePath)) {
+        $Records[$DateIso] = $Existing
+        Write-Host "[REUSED] $DateIso : Already ACQUIRED_VALID ($FileName)"
+        $CurrentDate = $CurrentDate.AddDays(1)
+        continue
+    }
+
+    $Status = "PENDING_WINDOWS_EXECUTION"
+    $FailureReason = $null
+    $HttpStatusCode = 0
+    $FileSizeBytes = 0
+    $Sha256Hex = ""
+    $ZipValid = $false
+    $CsvValid = $false
+    $SchemaValid = $false
+    $RecordCount = 0
+    $ValidRecordCount = 0
+    $InvalidRecordCount = 0
+    $SchemaErrors = @()
+
+    # Attempt Download if not on disk
+    if (!(Test-Path -Path $FilePath)) {
+        try {
+            $Headers = @{
+                "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                "Accept" = "*/*"
             }
-
-            if (Test-Path -Path $FilePath) {
-                $Item = Get-Item $FilePath
-                $FileSizeBytes = $Item.Length
-
-                if ($FileSizeBytes -eq 0) {
-                    $Status = "EMPTY_RESPONSE"
-                    $FailureReason = "Downloaded file has 0 bytes"
-                    Remove-Item $FilePath -Force
-                } else {
-                    # Compute SHA-256
-                    $Sha256Hex = (Get-FileHash -Path $FilePath -Algorithm SHA256).Hash.ToLower()
-
-                    # Test PKZIP integrity using .NET ZipArchive
-                    try {
-                        Add-Type -AssemblyName System.IO.Compression.FileSystem
-                        $ZipArchive = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
-                        $CsvEntry = $ZipArchive.Entries | Where-Object { $_.Name.EndsWith(".csv") } | Select-Object -First 1
-
-                        if ($CsvEntry) {
-                            $ZipValid = $true
-                            $Stream = $CsvEntry.Open()
-                            $Reader = New-Object System.IO.StreamReader($Stream)
-                            $CsvText = $Reader.ReadToEnd()
-                            $Reader.Close()
-                            $Stream.Close()
-                            $ZipArchive.Dispose()
-
-                            if ($CsvText.Length -gt 0) {
-                                $CsvValid = $true
-                                $Lines = $CsvText -split "(\r?\n)" | Where-Object { $_.Trim().Length -gt 0 }
-                                if ($Lines.Count -gt 1) {
-                                    $HeadersLine = $Lines[0]
-                                    $ParsedHeaders = $HeadersLine -split "," | ForEach-Object { $_.Trim().Trim('"') }
-                                    
-                                    $MissingHeaders = @($RequiredHeaders | Where-Object { $ParsedHeaders -notcontains $_ })
-                                    if ($MissingHeaders.Count -eq 0) {
-                                        $SchemaValid = $true
-                                        $Status = "ACQUIRED_VALID"
-                                        $RecordCount = $Lines.Count - 1
-                                        $ValidRecordCount = $Lines.Count - 1
-                                        Write-Host "[ACQUIRED_VALID] $DateIso : $RecordCount records ($FileSizeBytes bytes)"
-                                    } else {
-                                        $Status = "SCHEMA_MISMATCH"
-                                        $SchemaErrors += "Missing required headers: " + ($MissingHeaders -join ", ")
-                                        $FailureReason = $SchemaErrors[0]
-                                        Write-Host "[SCHEMA_MISMATCH] $DateIso : $($MissingHeaders -join ', ')"
-                                    }
-                                } else {
-                                    $Status = "CSV_INVALID"
-                                    $FailureReason = "CSV contains no data rows"
-                                }
-                            } else {
-                                $Status = "CSV_INVALID"
-                                $FailureReason = "Extracted CSV is empty"
-                            }
-                        } else {
-                            $ZipArchive.Dispose()
-                            $Status = "CORRUPT_ARCHIVE"
-                            $FailureReason = "No .csv file found in ZIP archive"
-                        }
-                    } catch {
-                        $Status = "CORRUPT_ARCHIVE"
-                        $FailureReason = "ZIP read failed: " + $_.Exception.Message
-                    }
-                }
-            } else {
-                if ($HttpStatusCode -eq 404) {
-                    $Status = "HTTP_404"
-                    $FailureReason = "Archive not found (404) - likely pre-UDiFF or holiday"
-                    Write-Host "[HTTP_404] $DateIso : Not found on archive server"
-                } elseif ($HttpStatusCode -gt 0) {
-                    $Status = "HTTP_OTHER_ERROR"
-                    $FailureReason = "HTTP $HttpStatusCode error"
-                } else {
-                    $Status = "NETWORK_ERROR"
-                    if (!$FailureReason) { $FailureReason = "Network connection failed" }
-                }
+            $Resp = Invoke-WebRequest -Uri $Url -OutFile $FilePath -Headers $Headers -TimeoutSec 15 -PassThru
+            $HttpStatusCode = $Resp.StatusCode
+        } catch {
+            if ($_.Exception.Response) {
+                $HttpStatusCode = [int]$_.Exception.Response.StatusCode
             }
-
-            $Records[$DateIso] = [PSCustomObject]@{
-                date = $DateIso
-                classification = "TRADING_DAY"
-                acquisitionUrl = $Url
-                status = $Status
-                httpStatusCode = $HttpStatusCode
-                failureReason = $FailureReason
-                localFilename = $FileName
-                fileSizeBytes = $FileSizeBytes
-                sha256Hex = $Sha256Hex
-                zipValidity = $ZipValid
-                csvValidity = $CsvValid
-                schemaValidity = $SchemaValid
-                recordCount = $RecordCount
-                validRecordCount = $ValidRecordCount
-                invalidRecordCount = $InvalidRecordCount
-                schemaErrors = $SchemaErrors
-                evaluatedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+            if (!$FailureReason) {
+                $FailureReason = $_.Exception.Message
             }
-            Start-Sleep -Milliseconds 150
         }
     }
+
+    if (Test-Path -Path $FilePath) {
+        $Item = Get-Item $FilePath
+        $FileSizeBytes = $Item.Length
+
+        if ($FileSizeBytes -eq 0) {
+            $Status = "EMPTY_RESPONSE"
+            $FailureReason = "Downloaded file has 0 bytes"
+            Remove-Item $FilePath -Force
+        }
+
+        if ($FileSizeBytes -gt 0) {
+            # Compute SHA-256
+            $Sha256Hex = (Get-FileHash -Path $FilePath -Algorithm SHA256).Hash.ToLower()
+
+            # Test PKZIP integrity using .NET ZipArchive
+            try {
+                Add-Type -AssemblyName System.IO.Compression.FileSystem
+                $ZipArchive = [System.IO.Compression.ZipFile]::OpenRead($FilePath)
+                $CsvEntry = $ZipArchive.Entries | Where-Object { $_.Name.EndsWith(".csv") } | Select-Object -First 1
+
+                if ($CsvEntry) {
+                    $ZipValid = $true
+                    $Stream = $CsvEntry.Open()
+                    $Reader = New-Object System.IO.StreamReader($Stream)
+                    $CsvText = $Reader.ReadToEnd()
+                    $Reader.Close()
+                    $Stream.Close()
+                    $ZipArchive.Dispose()
+
+                    if ($CsvText.Length -gt 0) {
+                        $CsvValid = $true
+                        $Lines = $CsvText -split "(\r?\n)" | Where-Object { $_.Trim().Length -gt 0 }
+                        if ($Lines.Count -gt 1) {
+                            $HeadersLine = $Lines[0]
+                            $ParsedHeaders = $HeadersLine -split "," | ForEach-Object { $_.Trim().Trim('"') }
+                            
+                            $MissingHeaders = @($RequiredHeaders | Where-Object { $ParsedHeaders -notcontains $_ })
+                            if ($MissingHeaders.Count -eq 0) {
+                                $SchemaValid = $true
+                                $Status = "ACQUIRED_VALID"
+                                $RecordCount = $Lines.Count - 1
+                                $ValidRecordCount = $Lines.Count - 1
+                                Write-Host "[ACQUIRED_VALID] $DateIso : $RecordCount records ($FileSizeBytes bytes) -> $FileName"
+                            }
+                            if ($MissingHeaders.Count -gt 0) {
+                                $Status = "SCHEMA_MISMATCH"
+                                $SchemaErrors += "Missing required headers: " + ($MissingHeaders -join ", ")
+                                $FailureReason = $SchemaErrors[0]
+                                Write-Host "[SCHEMA_MISMATCH] $DateIso : $($MissingHeaders -join ', ')"
+                            }
+                        }
+                        if ($Lines.Count -le 1) {
+                            $Status = "CSV_INVALID"
+                            $FailureReason = "CSV contains no data rows"
+                        }
+                    }
+                    if ($CsvText.Length -eq 0) {
+                        $Status = "CSV_INVALID"
+                        $FailureReason = "Extracted CSV is empty"
+                    }
+                }
+                if (!$CsvEntry) {
+                    $ZipArchive.Dispose()
+                    $Status = "CORRUPT_ARCHIVE"
+                    $FailureReason = "No .csv file found in ZIP archive"
+                }
+            } catch {
+                $Status = "CORRUPT_ARCHIVE"
+                $FailureReason = "ZIP read failed: " + $_.Exception.Message
+            }
+        }
+    }
+
+    if (!(Test-Path -Path $FilePath)) {
+        if ($HttpStatusCode -eq 404) {
+            $Status = "HTTP_404"
+            $FailureReason = "Archive not found on server (HTTP 404)"
+            Write-Host "[HTTP_404] $DateIso : Not found on archive server ($Url)"
+        }
+        if ($HttpStatusCode -gt 0 -and $HttpStatusCode -ne 404) {
+            $Status = "HTTP_OTHER_ERROR"
+            $FailureReason = "HTTP $HttpStatusCode error"
+        }
+        if ($HttpStatusCode -eq 0) {
+            $Status = "NETWORK_ERROR"
+            if (!$FailureReason) { $FailureReason = "Network connection failed" }
+        }
+    }
+
+    $Records[$DateIso] = [PSCustomObject]@{
+        date = $DateIso
+        classification = "TRADING_DAY"
+        acquisitionUrl = $Url
+        status = $Status
+        httpStatusCode = $HttpStatusCode
+        failureReason = $FailureReason
+        localFilename = $FileName
+        fileSizeBytes = $FileSizeBytes
+        sha256Hex = $Sha256Hex
+        zipValidity = $ZipValid
+        csvValidity = $CsvValid
+        schemaValidity = $SchemaValid
+        recordCount = $RecordCount
+        validRecordCount = $ValidRecordCount
+        invalidRecordCount = $InvalidRecordCount
+        schemaErrors = $SchemaErrors
+        evaluatedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+    }
+    Start-Sleep -Milliseconds 150
     $CurrentDate = $CurrentDate.AddDays(1)
 }
 
@@ -1073,6 +1240,10 @@ $IntegrityReports | ConvertTo-Json -Depth 5 | Set-Content -Path $IntegrityPath
 $SchemaReports = @()
 foreach ($rec in $Records.Values) {
     if ($rec.recordCount -gt 0 -or $rec.status -eq "SCHEMA_MISMATCH") {
+        $ReqH = @("TradDt","BizDt","Sgmt","Src","ISIN","TckrSymb","SctySrs","ClsPric","LastPric","PrvsClsgPric","SttlmPric")
+        if ($rec.date -lt "2024-07-08") {
+            $ReqH = @("SYMBOL","SERIES","OPEN","HIGH","LOW","CLOSE","LAST","PREVCLOSE","TOTTRDQTY","TOTTRDVAL","TIMESTAMP","ISIN")
+        }
         $SchemaReports += [PSCustomObject]@{
             date = $rec.date
             localFilename = $rec.localFilename
@@ -1080,7 +1251,7 @@ foreach ($rec in $Records.Values) {
             totalRows = $rec.recordCount
             validRows = $rec.validRecordCount
             invalidRows = $rec.invalidRecordCount
-            discoveredHeaders = $RequiredHeaders
+            discoveredHeaders = $ReqH
             missingHeaders = @($rec.schemaErrors | Where-Object { $_ -like "Missing*" })
             sampleErrors = @($rec.schemaErrors)
         }
@@ -1089,7 +1260,7 @@ foreach ($rec in $Records.Values) {
 $SchemaReports | ConvertTo-Json -Depth 5 | Set-Content -Path $SchemaPath
 
 Write-Host "=============================================================================="
-Write-Host "D114 Evidence Runner Complete (6/6 Artifacts Emitted)."
+Write-Host "D114 Dual-Era Evidence Runner Complete (6/6 Artifacts Emitted)."
 Write-Host "Manifest:          $ManifestPath"
 Write-Host "Coverage Summary:  $CoveragePath"
 Write-Host "Failure Register:  $FailurePath"

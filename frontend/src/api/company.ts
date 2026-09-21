@@ -40,8 +40,16 @@ export async function fetchCompanyData(sector: string, baseUrl = ''): Promise<Co
  */
 export type CompanyPayload = CompanyData | DegradedData | PitVintageData;
 
-export async function fetchCompanyPayload(sector: string, baseUrl = ''): Promise<CompanyPayload> {
-  const res = await authFetch(`${baseUrl}/api/company/${encodeURIComponent(sector)}`);
+export async function fetchCompanyPayload(
+  sector: string,
+  asOf?: string,
+  baseUrl = '',
+): Promise<CompanyPayload> {
+  // D-PIT-WIRE-01: asOf is forwarded ONLY as a data-selection instant. No client-supplied
+  // mode exists; the server still resolves UI12 mode from the authenticated principal and
+  // refuses asOf under SNAPSHOT/LIVE. `URLSearchParams` performs the only encoding.
+  const query = asOf === undefined ? '' : `?${new URLSearchParams({ asOf }).toString()}`;
+  const res = await authFetch(`${baseUrl}/api/company/${encodeURIComponent(sector)}${query}`);
   if (!res.ok) throw new Error(`company transport returned ${res.status}`);
   return (await res.json()) as CompanyPayload;
 }

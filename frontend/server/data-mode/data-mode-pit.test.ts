@@ -79,8 +79,9 @@ describe('T1 — the governed PIT success family (dataAvailable: true)', () => {
     expect(vintage.found).toBe(true);
     // the record IS the stored snapshot, verbatim
     const record = vintage.record as Record<string, unknown>;
-    expect(record.snapshotId).toBe(vintage.snapshotId);
-    expect((record.payload as Record<string, unknown>).close).toBeCloseTo(2951.2, 2);
+    expect(record.symbol).toBe('RELIANCE');
+    expect(record.close).toBeCloseTo(2951.2, 2);
+    expect(record).not.toHaveProperty('snapshotId'); // storage envelope is not relabelled as record
     const provenance = out.provenance as Record<string, unknown>;
     expect(provenance.freshness).toBe('PIT');
     expect(provenance.mode).toBe('PIT');
@@ -91,13 +92,14 @@ describe('T1 — the governed PIT success family (dataAvailable: true)', () => {
   it('a LEGACY-era query discloses era LEGACY_BHAVCOPY with the resolved vintage', () => {
     const p = boundProvider();
     const out = forMode('Company', 'PIT', () => ({}), {
-      asOf: '2024-07-06T00:00:00.000Z',
+      asOf: '2024-07-05T15:30:00.000Z',
       domain: 'D02',
       securityId: 'RELIANCE',
       queryPit: (a) => p.query('D02', 'RELIANCE', a),
     }) as Record<string, unknown>;
     const vintage = out.vintage as Record<string, unknown>;
     expect(vintage.era).toBe('LEGACY_BHAVCOPY');
+    expect(vintage.requestedAsOf).toBe('2024-07-05T15:30:00.000Z');
     expect(vintage.resolvedAsOf).toBe('2024-07-05T09:15:00.000Z');
   });
 });
@@ -207,6 +209,8 @@ describe('T1 — the governed asOf request contract (server-enforced 400 matrix)
     expect(validateAsOfRequest('SNAPSHOT', '2024-07-08T09:15:00.000Z')).toMatchObject({ ok: false, status: 400 });
     expect(validateAsOfRequest('LIVE', '2024-07-08T09:15:00.000Z')).toMatchObject({ ok: false, status: 400 });
     expect(validateAsOfRequest('SNAPSHOT', '2024-07-08')).toMatchObject({ ok: false, status: 400 });
+    expect(validateAsOfRequest('SNAPSHOT', '')).toMatchObject({ ok: false, status: 400 });
+    expect(validateAsOfRequest('LIVE', '')).toMatchObject({ ok: false, status: 400 });
   });
 
   it('SNAPSHOT/LIVE + no asOf → ok (pre-D-PIT behaviour unchanged)', () => {

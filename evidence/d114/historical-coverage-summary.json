@@ -1,0 +1,14 @@
+{
+    "targetRange":  {
+                        "startDate":  "2024-01-01",
+                        "endDate":  "2026-09-20",
+                        "totalCalendarDays":  994
+                    },
+    "countsByStatus":  {
+                           "NON_TRADING_HOLIDAY":  8,
+                           "ACQUIRED_VALID":  668,
+                           "HTTP_404":  34,
+                           "NON_TRADING_WEEKEND":  284
+                       },
+    "generatedAt":  "2026-09-20T11:33:31.121Z"
+}

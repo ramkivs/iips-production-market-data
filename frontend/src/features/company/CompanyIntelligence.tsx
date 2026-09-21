@@ -20,7 +20,7 @@ import { useEffect, useState } from 'react';
 import { isDegraded, isPitVintage, type PitVintageData } from '../../api/dataMode';
 import { DataModeUnavailable } from '../../components/state/DataModeUnavailable';
 import { PitVintagePanel } from '../../components/state/PitVintagePanel';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { fetchCompanyPayload, type CompanyData } from '../../api/company';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence';
 import { fetchReplayData, type ReplayData } from '../../api/replay';
@@ -35,6 +35,10 @@ import { AiExplanation } from '../../components/ai/AiExplanation';
 export function CompanyIntelligence() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  // D-PIT-WIRE-01 — explicit data-selection instant from the Company page URL. It is merely
+  // forwarded to the server; it NEVER selects or overrides mode (UI12 remains authority).
+  const selectedAsOf = searchParams.get('asOf') ?? undefined;
   const [company, setCompany] = useState<CompanyData | null>(null);
   // D-PIT-WIRE-01 — the governed PIT vintage family for the ONE in-scope route.
   const [pitVintage, setPitVintage] = useState<PitVintageData | null>(null);
@@ -52,7 +56,7 @@ export function CompanyIntelligence() {
     let active = true;
     setLoading(true);
     // N+5: three-call governed composition (Bearer propagated via authFetch in each client).
-    Promise.all([fetchCompanyPayload(id), fetchEvidenceData(id), fetchReplayData(id)])
+    Promise.all([fetchCompanyPayload(id, selectedAsOf), fetchEvidenceData(id), fetchReplayData(id)])
       .then(([c, e, r]) => {
         if (!active) return;
         // D-PIT-WIRE-01 — discriminate BEFORE any SNAPSHOT-shape dereference: the company
@@ -67,7 +71,7 @@ export function CompanyIntelligence() {
       .catch((e) => { if (active) setError(String(e)); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [id]);
+  }, [id, selectedAsOf]);
 
   // N+12: fetch the governed sector universe once (independent of the selected company).
   useEffect(() => {

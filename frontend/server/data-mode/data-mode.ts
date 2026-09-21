@@ -211,7 +211,7 @@ export function validateAsOfRequest(mode: DataMode, rawAsOf: string | undefined 
     }
     return { ok: true, asOf: rawAsOf };
   }
-  if (typeof rawAsOf === 'string' && rawAsOf !== '') {
+  if (typeof rawAsOf === 'string') {
     return {
       ok: false,
       status: 400,
@@ -234,7 +234,8 @@ export function buildPitVintageResponse(
 ): unknown {
   const s = result.snapshot as {
     snapshotId?: string; provider?: string; dataVersion?: string; quality?: string;
-    pitBoundary?: string; historicalProvenance?: Record<string, unknown>;
+    pitBoundary?: string; payload?: Readonly<Record<string, unknown>>;
+    historicalProvenance?: Record<string, unknown>;
   };
   const hp = s.historicalProvenance ?? {};
   return Object.freeze({
@@ -252,6 +253,8 @@ export function buildPitVintageResponse(
       requestedAsOf: result.requestedAsOf,
       /** RESOLVED vintage instant — what is served; satisfies resolvedAsOf <= requestedAsOf. */
       resolvedAsOf: result.resolvedAsOf,
+      /** Governing scope's canonical field name for the resolved vintage (same value). */
+      asOf: result.resolvedAsOf,
       snapshotId: s.snapshotId ?? null,
       provider: s.provider ?? null,
       dataVersion: s.dataVersion ?? null,
@@ -260,8 +263,8 @@ export function buildPitVintageResponse(
       era: (hp.era as string) ?? null,
       /** P01 ST-5/MD-3 — pitBoundary present IFF the snapshot's mode is PIT. */
       pitBoundary: s.pitBoundary ?? null,
-      /** The stored canonical snapshot VERBATIM (byte-identity through the admission bridge). */
-      record: result.snapshot,
+      /** The historical D01/D02 canonical RECORD verbatim (not the P08 envelope). */
+      record: s.payload ?? result.snapshot,
     }),
     provenance: Object.freeze({
       dataSource:
@@ -270,6 +273,12 @@ export function buildPitVintageResponse(
       mode: 'PIT' as const,
       archiveRef: (hp.archiveRef as string) ?? null,
       sha256: (hp.sha256 as string) ?? null,
+      /** Verbatim D114 `sha256-manifest.json` entry (physical archive mode). */
+      sha256ManifestEntry: (hp.sha256ManifestEntry as Record<string, unknown>) ?? null,
+      /** D114 acquisition + governed handoff lineage (physical archive mode). */
+      acquisitionManifestId: (hp.acquisitionManifestId as string) ?? null,
+      intakeLineageDigest: (hp.intakeLineageDigest as string) ?? null,
+      failureRegisterRef: (hp.failureRegisterRef as string) ?? null,
       corpusId: (hp.corpusId as string) ?? null,
       certification: 'NONE — application verification only; NOT a certification claim (c7 NOT CERTIFIED, certification NONE_GRANTED)',
       transportSemantics:

@@ -192,8 +192,44 @@ export class HistoricalEvidenceHandoff {
       coverageSummary = JSON.parse(
         fs.readFileSync(path.join(resolvedDir, HistoricalEvidenceHandoff.COVERAGE_SUMMARY_FILE), 'utf-8')
       );
-      if (!coverageSummary.targetRange || !coverageSummary.metrics || !coverageSummary.countsByStatus) {
-        errors.push('Coverage summary missing required schema sections');
+      if (!coverageSummary.targetRange || !coverageSummary.countsByStatus) {
+        errors.push('Coverage summary missing required schema sections (targetRange, countsByStatus)');
+      } else {
+        const counts = coverageSummary.countsByStatus;
+        const acquiredValid = counts.ACQUIRED_VALID || 0;
+        const weekendDays = counts.NON_TRADING_WEEKEND || 0;
+        const holidayDays = counts.NON_TRADING_HOLIDAY || 0;
+        const expectedTrading = (coverageSummary.targetRange.totalCalendarDays || 0) - weekendDays - holidayDays;
+        const unavailable =
+          (counts.HTTP_404 || 0) +
+          (counts.HTTP_OTHER_ERROR || 0) +
+          (counts.NETWORK_ERROR || 0) +
+          (counts.EMPTY_RESPONSE || 0);
+        const corruptOrInvalid =
+          (counts.CORRUPT_ARCHIVE || 0) +
+          (counts.CSV_INVALID || 0) +
+          (counts.SCHEMA_MISMATCH || 0) +
+          (counts.OTHER_FAILURE || 0);
+
+        if (!coverageSummary.metrics) {
+          coverageSummary.metrics = {
+            tradingDaysAttempted: expectedTrading,
+            acquiredValidCount: acquiredValid,
+            unavailableCount: unavailable,
+            corruptOrInvalidCount: corruptOrInvalid,
+            coveragePctOfTradingDays:
+              expectedTrading > 0 ? Number(((acquiredValid / expectedTrading) * 100).toFixed(2)) : 0,
+            dataIntegrityPct:
+              acquiredValid + corruptOrInvalid > 0
+                ? Number(((acquiredValid / (acquiredValid + corruptOrInvalid)) * 100).toFixed(2))
+                : 0,
+          };
+        }
+        if (coverageSummary.targetRange.expectedTradingDays === undefined) {
+          coverageSummary.targetRange.expectedTradingDays = expectedTrading;
+          coverageSummary.targetRange.weekendDays = weekendDays;
+          coverageSummary.targetRange.knownHolidays = holidayDays;
+        }
       }
     } catch (err: unknown) {
       errors.push(`JSON parse error in ${HistoricalEvidenceHandoff.COVERAGE_SUMMARY_FILE}: ${(err as Error).message}`);

@@ -1,31 +1,19 @@
 /**
- * D-PIT-WIRE-01 — transport wiring pins for /api/company/:id (the ONE in-scope route).
+ * D-PIT-WIRE-01 — executable transport contract for `/api/company/:id` (ONE in-scope route).
  *
- * Source-level pins (the D89 macro-exemption test pattern) prove:
- *   • the company block validates asOf via the governed seam contract and binds the PIT
- *     hook ONLY there;
- *   • every OUT-OF-SCOPE mode-aware route still dispatches WITHOUT a PIT binding — their
- *     PIT behaviour is unchanged (PIT_UNAVAILABLE);
- *   • the Macro exemption block is untouched;
- *   • SNAPSHOT/LIVE certified computations are invoked unchanged.
- * Plus a composed request-contract test that exercises EXACTLY the handler's logic
- * (resolveModeForPrincipal → validateAsOfRequest → forMode with the fixture corpus).
+ * Source pins prove only Company delegates to the PIT request function and Macro/out-of-scope
+ * routes remain untouched. Behavioral tests invoke THE SAME `executeCompanyTransportRequest`
+ * function used by executive-transport — not copied/composed lookalike logic.
  */
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import {
-  forMode,
-  resolveModeForPrincipal,
-  validateAsOfRequest,
-  buildDegradedResponse,
-} from '../data-mode/data-mode';
+import { buildDegradedResponse, resolveModeForPrincipal } from '../data-mode/data-mode';
 import { createPitVintageProvider, loadCorpusIntoProvider } from './pitVintageProvider';
+import { executeCompanyTransportRequest } from './companyPitTransport';
 
-const TRANSPORT = fs.readFileSync(
-  path.join(process.cwd(), 'server', 'executive-transport.ts'),
-  'utf8',
-);
+const TRANSPORT = fs.readFileSync(path.join(process.cwd(), 'server', 'executive-transport.ts'), 'utf8');
+const COMPANY_HANDLER = fs.readFileSync(path.join(process.cwd(), 'server', 'pit', 'companyPitTransport.ts'), 'utf8');
 
 function companyBlock(): string {
   const start = TRANSPORT.indexOf("req.url?.startsWith('/api/company/')");
@@ -34,18 +22,19 @@ function companyBlock(): string {
 }
 
 describe('Wiring — /api/company/:id is the ONLY PIT-bound route', () => {
-  it('the company block uses the governed asOf contract and the PIT binding', () => {
+  it('derives mode from the authenticated principal, then delegates to the executable request path', () => {
     const block = companyBlock();
-    expect(block).toMatch(/resolveModeForPrincipal/);
-    expect(block).toMatch(/validateAsOfRequest/);
-    expect(block).toMatch(/buildCompanyPitBinding/);
-    expect(block).toMatch(/forMode\('Company', companyMode/);
+    expect(block).toMatch(/resolveModeForPrincipal\(modePrincipal\)/);
+    expect(block).toMatch(/executeCompanyTransportRequest/);
+    expect(block).toMatch(/getSharedPitVintageProvider\(\)/);
+    expect(block).not.toMatch(/new URLSearchParams|validateAsOfRequest|rawAsOf/); // parsing lives in the tested helper
   });
 
-  it('asOf is data selection only: the transport never reads a mode from the request', () => {
-    const block = companyBlock();
-    expect(block).not.toMatch(/dataMode.*=.*asOf|asOf.*as\s+DataMode|mode\s*=\s*rawAsOf/);
-    expect(block).toMatch(/asOf is DATA SELECTION, never a mode authority/);
+  it('asOf is data selection only: neither transport nor helper reads a mode from the request', () => {
+    const code = `${companyBlock()}\n${COMPANY_HANDLER}`;
+    expect(code).not.toMatch(/dataMode.*=.*asOf|asOf.*as\s+DataMode|mode\s*=\s*rawAsOf|params\.get\(['"]mode/);
+    expect(COMPANY_HANDLER).toMatch(/asOf` is only data\s*selection|asOf` is only data/);
+    expect(COMPANY_HANDLER).toMatch(/serverDerivedMode/);
   });
 
   it('out-of-scope routes keep dispatching WITHOUT the PIT binding', () => {
@@ -53,89 +42,116 @@ describe('Wiring — /api/company/:id is the ONLY PIT-bound route', () => {
       const re = new RegExp(`dispatchForPrincipal\\('${surface.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}', modePrincipal, [^)]*\\)`);
       expect(TRANSPORT).toMatch(re);
     }
-    // Portfolio keeps the D85 seam; neither gains a PIT binding.
     expect(TRANSPORT).toMatch(/dispatchForPrincipal\('Portfolio'|portfolioForMode\(/);
-    const pitBoundCalls = TRANSPORT.match(/forMode\('[^']*',\s*\w+,\s*[^,]+,\s*pitBinding\)/g) ?? [];
-    expect(pitBoundCalls).toHaveLength(1);
-    expect(pitBoundCalls[0]).toContain("'Company'");
+    // Exactly one route delegates to the PIT-capable helper.
+    expect(TRANSPORT.match(/executeCompanyTransportRequest\(/g)).toHaveLength(1);
   });
 
   it('the Macro exemption block is untouched (D89 pin preserved)', () => {
     const macroBlock = TRANSPORT.slice(TRANSPORT.indexOf("surface === 'macro'"), TRANSPORT.indexOf("surface === 'macro'") + 400);
     expect(macroBlock).toMatch(/handleMacroReadRequest/);
-    expect(macroBlock).not.toMatch(/dispatchForPrincipal/);
+    expect(macroBlock).not.toMatch(/dispatchForPrincipal|executeCompanyTransportRequest/);
   });
 
-  it('the shared PIT provider is fail-closed: unbound → no binding object at all', () => {
-    expect(TRANSPORT).toMatch(/getSharedPitVintageProvider\(\)/);
-    expect(TRANSPORT).toMatch(/if \(provider === null \|\| !provider\.isBound\(\)\) return undefined;/);
+  it('the helper leaves PIT unbound when the shared provider is null/unbound', () => {
+    expect(COMPANY_HANDLER).toMatch(/provider === null \|\| !provider\.isBound\(\)/);
+    expect(COMPANY_HANDLER).toMatch(/return undefined/);
   });
 });
 
-describe('Wiring — composed request contract (exactly the handler logic, fixture corpus)', () => {
-  const p = createPitVintageProvider();
-  const loaded = loadCorpusIntoProvider(p, path.join(process.cwd(), 'server', 'pit', 'fixtures', 'corpus'));
+describe('Executable /api/company/:id request path — bounded fixture corpus', () => {
+  const provider = createPitVintageProvider();
+  const loaded = loadCorpusIntoProvider(provider, path.join(process.cwd(), 'server', 'pit', 'fixtures', 'corpus'));
   expect(loaded.ok).toBe(true);
 
-  function handle(companyId: string, rawAsOf: string | undefined, mode: 'SNAPSHOT' | 'PIT' | 'LIVE'): { status: number; body: unknown } {
-    const asOfCheck = validateAsOfRequest(mode, rawAsOf);
-    if (!asOfCheck.ok) return { status: asOfCheck.status, body: { error: asOfCheck.error } };
-    const provider = p.isBound() ? p : null;
-    const pitBinding = asOfCheck.asOf !== undefined && provider !== null
-      ? {
-          asOf: asOfCheck.asOf,
-          domain: 'D02',
-          securityId: companyId,
-          queryPit: (a: string) => provider.query('D02', companyId, a),
-        }
-      : undefined;
-    let payload: unknown;
-    try {
-      payload = forMode('Company', mode, () => ({ certified: true, companyId }), pitBinding);
-    } catch (e) {
-      return { status: 404, body: { error: String(e) } };
-    }
-    return { status: 200, body: payload };
+  function request(companyId: string, rawAsOf: string | undefined, mode: 'SNAPSHOT' | 'PIT' | 'LIVE') {
+    const query = rawAsOf === undefined ? '' : `?${new URLSearchParams({ asOf: rawAsOf })}`;
+    return executeCompanyTransportRequest(
+      `/api/company/${encodeURIComponent(companyId)}${query}`,
+      'GET',
+      mode,
+      (securityId) => ({ certified: true, companyId: securityId }),
+      provider,
+    );
   }
 
   it('PIT + symbol + in-corpus date (LEGACY side) → vintage, era disclosed', () => {
-    const r = handle('RELIANCE', '2024-07-07T00:00:00.000Z', 'PIT');
+    const r = request('RELIANCE', '2024-07-07T15:30:00.000Z', 'PIT');
     expect(r.status).toBe(200);
     expect((r.body as { vintage?: { era?: string } }).vintage?.era).toBe('LEGACY_BHAVCOPY');
   });
 
   it('PIT + symbol + in-corpus date (CM-UDiFF side) → vintage, era disclosed', () => {
-    const r = handle('RELIANCE', '2024-07-09T00:00:00.000Z', 'PIT');
+    const r = request('RELIANCE', '2024-07-08T15:30:00.000Z', 'PIT');
     expect(r.status).toBe(200);
-    expect((r.body as { vintage?: { era?: string } }).vintage?.era).toBe('CM_UDIFF');
+    expect((r.body as { vintage?: { era?: string; asOf?: string } }).vintage).toMatchObject({
+      era: 'CM_UDIFF', asOf: '2024-07-08T09:15:00.000Z',
+    });
   });
 
-  it('PIT + pre-corpus instant (no vintage ≤ asOf) → PIT_UNAVAILABLE byte-identical', () => {
-    const r = handle('RELIANCE', '2016-09-19T00:00:00.000Z', 'PIT');
+  it('PIT + pre-corpus instant (no vintage <= asOf) → PIT_UNAVAILABLE byte-identical', () => {
+    const r = request('RELIANCE', '2016-09-19T00:00:00.000Z', 'PIT');
     expect(r.status).toBe(200);
     expect(JSON.stringify(r.body)).toBe(JSON.stringify(buildDegradedResponse('Company', 'PIT')));
   });
 
-  it('PIT + gap date resolves BACKWARD under PS-9 with the resolved instant disclosed', () => {
-    const r = handle('RELIANCE', '2024-07-10T00:00:00.000Z', 'PIT');
-    expect(r.status).toBe(200);
-    const vintage = (r.body as { vintage?: { requestedAsOf?: string; resolvedAsOf?: string } }).vintage;
-    expect(vintage?.requestedAsOf).toBe('2024-07-10T00:00:00.000Z');
-    expect(vintage?.resolvedAsOf).toBe('2024-07-08T09:15:00.000Z');
+  it('registered HTTP_404 / holiday / weekend / unloaded bounded date / post-range → PIT_UNAVAILABLE', () => {
+    for (const asOf of [
+      '2024-07-10T15:30:00.000Z', // HTTP_404 fixture register
+      '2024-07-11T15:30:00.000Z', // holiday fixture manifest
+      '2024-07-13T15:30:00.000Z', // weekend fixture manifest
+      '2024-07-09T15:30:00.000Z', // within range but not loaded in bounded corpus
+      '2024-07-16T15:30:00.000Z', // after fixture coverage
+    ]) {
+      const r = request('RELIANCE', asOf, 'PIT');
+      expect(r.status).toBe(200);
+      expect(JSON.stringify(r.body)).toBe(JSON.stringify(buildDegradedResponse('Company', 'PIT')));
+    }
   });
 
-  it('PIT + absent asOf → 400; PIT + malformed asOf → 400', () => {
-    expect(handle('RELIANCE', undefined, 'PIT').status).toBe(400);
-    expect(handle('RELIANCE', '2024-07-10', 'PIT').status).toBe(400);
+  it('PIT + absent/malformed/duplicate asOf → 400 (ambiguity never resolved)', () => {
+    expect(request('RELIANCE', undefined, 'PIT').status).toBe(400);
+    expect(request('RELIANCE', '2024-07-10', 'PIT').status).toBe(400);
+    const duplicate = executeCompanyTransportRequest(
+      '/api/company/RELIANCE?asOf=2024-07-08T15%3A30%3A00.000Z&asOf=2024-07-05T15%3A30%3A00.000Z',
+      'GET',
+      'PIT',
+      () => ({}),
+      provider,
+    );
+    expect(duplicate.status).toBe(400);
   });
 
-  it('SNAPSHOT + asOf → 400; SNAPSHOT without asOf → certified payload verbatim (unchanged)', () => {
-    expect(handle('RELIANCE', '2024-07-08T00:00:00.000Z', 'SNAPSHOT').status).toBe(400);
-    const r = handle('RELIANCE', undefined, 'SNAPSHOT');
+  it('SNAPSHOT + asOf → 400; SNAPSHOT without asOf → certified payload verbatim', () => {
+    expect(request('RELIANCE', '2024-07-08T00:00:00.000Z', 'SNAPSHOT').status).toBe(400);
+    const r = request('RELIANCE', undefined, 'SNAPSHOT');
     expect(r.body).toEqual({ certified: true, companyId: 'RELIANCE' });
   });
 
-  it('mode resolution stays server-derived: no owner → SNAPSHOT (no PIT binding possible)', () => {
+  it('LIVE remains LIVE_UNAVAILABLE and never calls the SNAPSHOT compute', () => {
+    let computeCalls = 0;
+    const r = executeCompanyTransportRequest(
+      '/api/company/RELIANCE',
+      'GET',
+      'LIVE',
+      () => { computeCalls += 1; return {}; },
+      provider,
+    );
+    expect(computeCalls).toBe(0);
+    expect(r.body).toMatchObject({ state: 'LIVE_UNAVAILABLE', dataAvailable: false });
+  });
+
+  it('unbound provider / unknown security / malformed route fail closed', () => {
+    const unbound = executeCompanyTransportRequest(
+      '/api/company/RELIANCE?asOf=2024-07-08T15%3A30%3A00.000Z', 'GET', 'PIT', () => ({}), null,
+    );
+    expect(JSON.stringify(unbound.body)).toBe(JSON.stringify(buildDegradedResponse('Company', 'PIT')));
+    expect(request('UNKNOWN', '2024-07-08T15:30:00.000Z', 'PIT').body).toMatchObject({ state: 'PIT_UNAVAILABLE' });
+    expect(executeCompanyTransportRequest('/api/portfolio', 'GET', 'PIT', () => ({}), provider).status).toBe(404);
+    expect(executeCompanyTransportRequest('/api/company/RELIANCE', 'POST', 'PIT', () => ({}), provider).status).toBe(405);
+  });
+
+  it('mode resolution remains server-derived: no owner → SNAPSHOT', () => {
     expect(resolveModeForPrincipal({ tenantId: 't', ownerUserId: undefined })).toBe('SNAPSHOT');
   });
 });
