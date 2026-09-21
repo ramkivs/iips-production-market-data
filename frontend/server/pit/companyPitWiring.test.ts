@@ -22,6 +22,10 @@ import {
 
 const TRANSPORT = fs.readFileSync(path.join(process.cwd(), 'server', 'executive-transport.ts'), 'utf8');
 const COMPANY_HANDLER = fs.readFileSync(path.join(process.cwd(), 'server', 'pit', 'companyPitTransport.ts'), 'utf8');
+const WINDOWS_VERIFY = fs.readFileSync(
+  path.join(process.cwd(), '..', 'scripts', 'windows', 'd-pit-wire-01', 'verify-w0-w6.ps1'),
+  'utf8',
+);
 
 function companyBlock(): string {
   const start = TRANSPORT.indexOf("req.url?.startsWith('/api/company/')");
@@ -121,6 +125,59 @@ describe('Executable /api/company/:id request path — bounded fixture corpus', 
     });
     const body = r.body as { vintage: { requestedAsOf: string; resolvedAsOf: string } };
     expect(body.vintage.resolvedAsOf <= body.vintage.requestedAsOf).toBe(true);
+  });
+
+  it('W2 exact encoded request preserves requestedAsOf as a JSON string through final wire serialization', () => {
+    const requestedAsOf = '2024-07-05T15:30:00.000Z';
+    const encodedAsOf = encodeURIComponent(requestedAsOf);
+    expect(encodedAsOf).toBe('2024-07-05T15%3A30%3A00.000Z');
+
+    const reply = executeCompanyTransportRequest(
+      `/api/company/RELIANCE?asOf=${encodedAsOf}`,
+      'GET',
+      'PIT',
+      () => ({ shouldNotRun: true }),
+      provider,
+    );
+    expect(reply.status).toBe(200);
+
+    // This is the exact final operation used by executive-transport before res.end(). No Date,
+    // timezone conversion, field rename, or custom JSON replacer exists in the application path.
+    const wireJson = JSON.stringify(reply.body);
+    expect(wireJson).toContain(`"requestedAsOf":"${requestedAsOf}"`);
+    const wireBody = JSON.parse(wireJson) as {
+      query: { asOf: unknown };
+      vintage: { requestedAsOf: unknown; resolvedAsOf: unknown };
+    };
+    expect(typeof wireBody.query.asOf).toBe('string');
+    expect(wireBody.query.asOf).toBe(requestedAsOf);
+    expect(typeof wireBody.vintage.requestedAsOf).toBe('string');
+    expect(wireBody.vintage.requestedAsOf).toBe(requestedAsOf);
+    expect(wireBody.vintage.resolvedAsOf).toBe('2024-07-05T09:15:00.000Z');
+
+    // Invoke-RestMethod/ConvertFrom-Json in PowerShell 6+ eagerly converts ISO strings to
+    // System.DateTime. The governed Windows reader must consume raw JSON and preserve strings;
+    // the original exact W2 assertion remains present and unmodified.
+    const getCompanyStart = WINDOWS_VERIFY.indexOf('  function Get-Company(');
+    const getCompanyEnd = WINDOWS_VERIFY.indexOf("  Set-Mode 'PIT'", getCompanyStart);
+    expect(getCompanyStart).toBeGreaterThanOrEqual(0);
+    expect(getCompanyEnd).toBeGreaterThan(getCompanyStart);
+    const getCompanyBlock = WINDOWS_VERIFY.slice(getCompanyStart, getCompanyEnd);
+    expect(getCompanyBlock).toMatch(/Invoke-WebRequest/);
+    expect(getCompanyBlock).toMatch(/ConvertFrom-IipsJsonPreservingStrings/);
+    expect(getCompanyBlock).not.toMatch(/Invoke-RestMethod/);
+    expect(WINDOWS_VERIFY).toMatch(
+      /'String'\s*\{\s*return \[string\]\$Element\.GetString\(\)\s*\}/,
+    );
+    expect(WINDOWS_VERIFY).toContain(
+      'Assert-True ($jsonStringProbe.vintage.requestedAsOf -is [string])',
+    );
+    expect(WINDOWS_VERIFY).toContain(
+      "Assert-True ($jsonStringProbe.vintage.requestedAsOf -ceq '2024-07-05T15:30:00.000Z')",
+    );
+    expect(WINDOWS_VERIFY).toContain(
+      "Assert-True ($Legacy.vintage.requestedAsOf -eq $legacyRequested) 'W2 LEGACY requestedAsOf FAIL.'",
+    );
   });
 
   it('PIT + symbol + in-corpus date (LEGACY side) → vintage, era disclosed', () => {

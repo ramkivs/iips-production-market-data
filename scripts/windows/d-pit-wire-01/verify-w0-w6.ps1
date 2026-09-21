@@ -37,6 +37,54 @@ function Assert-True([bool]$Condition, [string]$Message) {
   if (-not $Condition) { throw $Message }
 }
 
+# PowerShell 6+ automatically materializes ISO-8601 JSON strings as System.DateTime when
+# Invoke-RestMethod parses a response. That changes the response contract before W2 can compare
+# the exact wire value (and a DateTime-to-string -eq comparison is timezone-sensitive). Parse the
+# raw HTTP JSON with System.Text.Json instead so every JSON string remains a System.String on every
+# supported PowerShell 7 version; numbers, booleans, arrays, objects, and null retain JSON types.
+function Convert-IipsJsonElement([System.Text.Json.JsonElement]$Element) {
+  switch ($Element.ValueKind.ToString()) {
+    'Object' {
+      $value = [ordered]@{}
+      foreach ($property in $Element.EnumerateObject()) {
+        $value[$property.Name] = Convert-IipsJsonElement $property.Value
+      }
+      return [pscustomobject]$value
+    }
+    'Array' {
+      $items = [System.Collections.Generic.List[object]]::new()
+      foreach ($item in $Element.EnumerateArray()) {
+        $items.Add((Convert-IipsJsonElement $item)) | Out-Null
+      }
+      return ,$items.ToArray()
+    }
+    'String' {
+      return [string]$Element.GetString()
+    }
+    'Number' {
+      [long]$integerValue = 0
+      if ($Element.TryGetInt64([ref]$integerValue)) { return $integerValue }
+      [decimal]$decimalValue = 0
+      if ($Element.TryGetDecimal([ref]$decimalValue)) { return $decimalValue }
+      return $Element.GetDouble()
+    }
+    'True' { return $true }
+    'False' { return $false }
+    'Null' { return $null }
+    'Undefined' { return $null }
+    default { throw "Unsupported JSON value kind: $($Element.ValueKind)" }
+  }
+}
+
+function ConvertFrom-IipsJsonPreservingStrings([string]$Json) {
+  $document = [System.Text.Json.JsonDocument]::Parse($Json)
+  try {
+    return Convert-IipsJsonElement $document.RootElement
+  } finally {
+    $document.Dispose()
+  }
+}
+
 function Invoke-NativeLogged(
   [string]$Command,
   [string[]]$Arguments,
@@ -119,6 +167,13 @@ try {
   Assert-True ($LASTEXITCODE -eq 0) "Required D-PIT-WIRE-01 commit is not an ancestor: $RequiredImplementationCommit"
   $commit = (& git -C $Repo rev-parse HEAD).Trim()
 
+  $jsonStringProbe = ConvertFrom-IipsJsonPreservingStrings `
+    '{"vintage":{"requestedAsOf":"2024-07-05T15:30:00.000Z"}}'
+  Assert-True ($jsonStringProbe.vintage.requestedAsOf -is [string]) `
+    'JSON reader converted requestedAsOf away from System.String.'
+  Assert-True ($jsonStringProbe.vintage.requestedAsOf -ceq '2024-07-05T15:30:00.000Z') `
+    'JSON reader did not preserve requestedAsOf byte-for-byte.'
+
   Assert-True (Test-Path -LiteralPath $ManifestPath) "W0 manifest is missing: $ManifestPath"
   $manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
   Assert-True ($manifest.corpusId -eq $CorpusId) 'W0 corpusId mismatch.'
@@ -174,8 +229,10 @@ try {
   function Get-Company([string]$AsOf, [string]$SecurityAlias = 'RELIANCE') {
     $encodedAsOf = [uri]::EscapeDataString($AsOf)
     $encodedSecurityAlias = [uri]::EscapeDataString($SecurityAlias)
-    return Invoke-RestMethod -Headers $headers `
+    $wireResponse = Invoke-WebRequest -Headers $headers `
       -Uri "$TransportUrl/api/company/${encodedSecurityAlias}?asOf=${encodedAsOf}"
+    Assert-True ([int]$wireResponse.StatusCode -eq 200) 'Company PIT request did not return HTTP 200.'
+    return ConvertFrom-IipsJsonPreservingStrings ([string]$wireResponse.Content)
   }
 
   Set-Mode 'PIT'
