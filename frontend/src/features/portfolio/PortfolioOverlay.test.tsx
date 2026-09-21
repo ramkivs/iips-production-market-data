@@ -176,4 +176,162 @@ describe('Portfolio Overlay — Provenance & Badge Boundary (DEC-PORTFOLIO-PROVE
     });
     expect(screen.queryByTestId('badge-certified')).not.toBeInTheDocument();
   });
+
+  describe('Temporary Operator Qualification Cleanup Control', () => {
+    const TARGET_1 = 'pf-1789967765977-r6rdy';
+    const TARGET_2 = 'pf-1789967781145-zc6tt';
+    const KEEP_ID = 'pf-1789974643348-qpydt';
+
+    it('enforces safety stop and refuses deletion when current state does not match expected 3 records', async () => {
+      const user = userEvent.setup();
+      const deleteCalls: string[] = [];
+
+      globalThis.fetch = vi.fn((input: unknown, init?: RequestInit) => {
+        const url = String(input);
+        if (url.includes('/api/portfolio?list=true')) {
+          // Returns only 1 record (wrong state)
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              portfolios: [{ portfolioId: KEEP_ID, name: 'Windows OA Qualification', holdings: [] }],
+            }),
+          }) as never;
+        }
+        if (init?.method === 'DELETE') {
+          deleteCalls.push(url);
+          return Promise.resolve({ ok: true, json: async () => ({ success: true }) }) as never;
+        }
+        if (url.includes('/api/portfolio')) {
+          return Promise.resolve({ ok: true, json: async () => CERTIFIED_FIXTURE }) as never;
+        }
+        return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+      }) as never;
+
+      render(<PortfolioWorkspace />);
+      const cleanupBtn = await screen.findByTestId('btn-operator-cleanup');
+      await user.click(cleanupBtn);
+
+      const errorMsg = await screen.findByTestId('operator-cleanup-error');
+      expect(errorMsg).toHaveTextContent(/Safety stop: Expected exactly 3 portfolio records, but found 1/);
+      expect(deleteCalls.length).toBe(0);
+    });
+
+    it('executes exact two DELETE calls and verifies single retained portfolio upon success', async () => {
+      const user = userEvent.setup();
+      const deleteCalls: string[] = [];
+      let listCallCount = 0;
+
+      globalThis.fetch = vi.fn((input: unknown, init?: RequestInit) => {
+        const url = String(input);
+        if (url.includes('/api/portfolio?list=true')) {
+          listCallCount++;
+          if (listCallCount <= 2) {
+            // Initial mount (1) and pre-delete check (2): return all 3 qualification records
+            return Promise.resolve({
+              ok: true,
+              json: async () => ({
+                portfolios: [
+                  { portfolioId: TARGET_1, name: 'Windows OA Qualification', holdings: [] },
+                  { portfolioId: TARGET_2, name: 'Windows OA Qualification', holdings: [] },
+                  { portfolioId: KEEP_ID, name: 'Windows OA Qualification', holdings: [] },
+                ],
+              }),
+            }) as never;
+          }
+          // Post-delete verification call (3): exactly 1 portfolio remaining
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              portfolios: [{ portfolioId: KEEP_ID, name: 'Windows OA Qualification', holdings: [] }],
+            }),
+          }) as never;
+        }
+
+        if (init?.method === 'DELETE') {
+          deleteCalls.push(url);
+          return Promise.resolve({ ok: true, json: async () => ({ success: true }) }) as never;
+        }
+
+        if (url.includes(`/api/portfolio?portfolioId=${KEEP_ID}`)) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              ...USER_OVERLAY_FIXTURE,
+              portfolio: { ...USER_OVERLAY_FIXTURE.portfolio, portfolioId: KEEP_ID, name: 'Windows OA Qualification' },
+              provenance: {
+                ...USER_OVERLAY_FIXTURE.provenance,
+                dataSource: 'User Portfolio: Windows OA Qualification — IIPS Intelligence Overlay',
+              },
+            }),
+          }) as never;
+        }
+
+        if (url.includes('/api/portfolio')) {
+          return Promise.resolve({ ok: true, json: async () => CERTIFIED_FIXTURE }) as never;
+        }
+        return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+      }) as never;
+
+      render(<PortfolioWorkspace />);
+      const cleanupBtn = await screen.findByTestId('btn-operator-cleanup');
+      await user.click(cleanupBtn);
+
+      const statusMsg = await screen.findByTestId('operator-cleanup-status');
+      expect(statusMsg).toHaveTextContent(/Cleanup successful: Removed 2 duplicates/);
+      expect(statusMsg).toHaveTextContent(KEEP_ID);
+
+      // Verify exact 2 DELETE calls were issued to the expected portfolio IDs
+      expect(deleteCalls).toEqual([
+        `/api/portfolio/${TARGET_1}`,
+        `/api/portfolio/${TARGET_2}`,
+      ]);
+      // Verify retain ID was NEVER passed to DELETE
+      expect(deleteCalls.some((c) => c.includes(KEEP_ID))).toBe(false);
+    });
+
+    it('stops safely and displays error if a DELETE call fails', async () => {
+      const user = userEvent.setup();
+      const deleteCalls: string[] = [];
+
+      globalThis.fetch = vi.fn((input: unknown, init?: RequestInit) => {
+        const url = String(input);
+        if (url.includes('/api/portfolio?list=true')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              portfolios: [
+                { portfolioId: TARGET_1, name: 'Windows OA Qualification', holdings: [] },
+                { portfolioId: TARGET_2, name: 'Windows OA Qualification', holdings: [] },
+                { portfolioId: KEEP_ID, name: 'Windows OA Qualification', holdings: [] },
+              ],
+            }),
+          }) as never;
+        }
+        if (init?.method === 'DELETE') {
+          deleteCalls.push(url);
+          // First delete fails with HTTP 500 error
+          return Promise.resolve({
+            ok: false,
+            status: 500,
+            json: async () => ({ error: 'Simulated backend error' }),
+          }) as never;
+        }
+        if (url.includes('/api/portfolio')) {
+          return Promise.resolve({ ok: true, json: async () => CERTIFIED_FIXTURE }) as never;
+        }
+        return Promise.resolve({ ok: false, status: 404, json: async () => ({}) }) as never;
+      }) as never;
+
+      render(<PortfolioWorkspace />);
+      const cleanupBtn = await screen.findByTestId('btn-operator-cleanup');
+      await user.click(cleanupBtn);
+
+      const errorMsg = await screen.findByTestId('operator-cleanup-error');
+      expect(errorMsg).toHaveTextContent(/portfolio delete returned 500/);
+
+      // Stopped immediately after first failure, did not attempt second
+      expect(deleteCalls).toEqual([`/api/portfolio/${TARGET_1}`]);
+      expect(screen.queryByTestId('operator-cleanup-status')).not.toBeInTheDocument();
+    });
+  });
 });

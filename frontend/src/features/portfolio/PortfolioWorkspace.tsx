@@ -19,6 +19,7 @@ import {
   fetchUserPortfolio,
   listUserPortfolios,
   saveUserPortfolio,
+  deleteUserPortfolio,
   isPortfolioUnavailable,
   type PortfolioData,
   type PortfolioHolding,
@@ -59,6 +60,11 @@ export function PortfolioWorkspace() {
   const [importHoldingsText, setImportHoldingsText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
   const [importSaving, setImportSaving] = useState(false);
+
+  // Temporary Qualification Operator Cleanup state (non-production)
+  const [operatorCleanupStatus, setOperatorCleanupStatus] = useState<string | null>(null);
+  const [operatorCleanupError, setOperatorCleanupError] = useState<string | null>(null);
+  const [operatorCleanupRunning, setOperatorCleanupRunning] = useState(false);
 
   // Load portfolio list on mount
   useEffect(() => {
@@ -174,6 +180,83 @@ export function PortfolioWorkspace() {
     }
   };
 
+  /**
+   * Temporary Non-Production Qualification Operator Cleanup
+   * Authoritative target IDs:
+   *   DELETE: pf-1789967765977-r6rdy, pf-1789967781145-zc6tt
+   *   KEEP:   pf-1789974643348-qpydt
+   */
+  const handleOperatorCleanup = async () => {
+    const TARGET_DELETE_1 = 'pf-1789967765977-r6rdy';
+    const TARGET_DELETE_2 = 'pf-1789967781145-zc6tt';
+    const TARGET_KEEP = 'pf-1789974643348-qpydt';
+
+    setOperatorCleanupStatus(null);
+    setOperatorCleanupError(null);
+    setOperatorCleanupRunning(true);
+
+    try {
+      // 1. Call listUserPortfolios()
+      const currentList = await listUserPortfolios();
+      const currentIds = currentList.map((p) => p.portfolioId);
+
+      // 2. Require exactly these three portfolio IDs
+      const requiredIds = [TARGET_DELETE_1, TARGET_DELETE_2, TARGET_KEEP];
+      if (currentIds.length !== 3) {
+        throw new Error(
+          `Safety stop: Expected exactly 3 portfolio records, but found ${currentIds.length}. Refusing deletion.`,
+        );
+      }
+      for (const reqId of requiredIds) {
+        if (!currentIds.includes(reqId)) {
+          throw new Error(
+            `Safety stop: Required portfolio ID "${reqId}" not found in current list. Refusing deletion.`,
+          );
+        }
+      }
+
+      // 3. Require that the retained portfolio is pf-1789974643348-qpydt
+      if (!currentIds.includes(TARGET_KEEP)) {
+        throw new Error(
+          `Safety stop: Retained portfolio ID "${TARGET_KEEP}" not found. Refusing deletion.`,
+        );
+      }
+
+      // 4. Deletion: Call the EXISTING deleteUserPortfolio (reuses authFetch/in-memory token)
+      await deleteUserPortfolio(TARGET_DELETE_1);
+      await deleteUserPortfolio(TARGET_DELETE_2);
+
+      // Post-delete verification:
+      // 1. Call listUserPortfolios()
+      const afterList = await listUserPortfolios();
+
+      // 2. Require exactly one remaining portfolio
+      if (afterList.length !== 1) {
+        throw new Error(
+          `Post-delete verification failed: Expected 1 remaining portfolio, but found ${afterList.length}.`,
+        );
+      }
+
+      // 3. Require its ID to be pf-1789974643348-qpydt
+      if (afterList[0].portfolioId !== TARGET_KEEP) {
+        throw new Error(
+          `Post-delete verification failed: Remaining ID "${afterList[0].portfolioId}" does not match "${TARGET_KEEP}".`,
+        );
+      }
+
+      // 4. Update UI state and display explicit success message
+      setUserPortfolios(afterList);
+      setSelectedPortfolioId(TARGET_KEEP);
+      setOperatorCleanupStatus(
+        `Cleanup successful: Removed 2 duplicates (${TARGET_DELETE_1}, ${TARGET_DELETE_2}). Verified exactly 1 remaining portfolio: ${TARGET_KEEP}.`,
+      );
+    } catch (err) {
+      setOperatorCleanupError((err as Error).message);
+    } finally {
+      setOperatorCleanupRunning(false);
+    }
+  };
+
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={`Unable to load certified portfolio data: ${error}`} />;
   if (!data) return <UnavailableState />;
@@ -265,6 +348,77 @@ export function PortfolioWorkspace() {
           >
             {showImport ? 'Cancel Import' : 'Import Overlay'}
           </button>
+        </div>
+
+        {/* Temporary Operator-Only Qualification Cleanup Control */}
+        <div
+          data-testid="operator-cleanup-control"
+          style={{
+            marginTop: 12,
+            padding: '10px 14px',
+            border: '2px dashed var(--color-status-warning, #D97706)',
+            borderRadius: 6,
+            background: 'rgba(217, 119, 6, 0.06)',
+            maxWidth: 640,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: 'var(--color-status-warning, #D97706)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
+            >
+              Operator Only (Temporary Qualification Cleanup):
+            </span>
+            <button
+              type="button"
+              data-testid="btn-operator-cleanup"
+              disabled={operatorCleanupRunning}
+              onClick={handleOperatorCleanup}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 4,
+                border: '1px solid var(--color-status-warning, #D97706)',
+                background: 'var(--color-status-warning, #D97706)',
+                color: '#FFFFFF',
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: operatorCleanupRunning ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {operatorCleanupRunning ? 'Cleaning up...' : 'QUALIFICATION CLEANUP — DELETE 2 DUPLICATES'}
+            </button>
+          </div>
+          {operatorCleanupStatus && (
+            <p
+              data-testid="operator-cleanup-status"
+              style={{
+                margin: '8px 0 0',
+                fontSize: 12,
+                color: 'var(--color-status-success, #059669)',
+                fontWeight: 600,
+              }}
+            >
+              {operatorCleanupStatus}
+            </p>
+          )}
+          {operatorCleanupError && (
+            <p
+              data-testid="operator-cleanup-error"
+              style={{
+                margin: '8px 0 0',
+                fontSize: 12,
+                color: 'var(--color-status-danger, #DC2626)',
+                fontWeight: 600,
+              }}
+            >
+              {operatorCleanupError}
+            </p>
+          )}
         </div>
 
         {/* Import Overlay Form */}
