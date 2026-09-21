@@ -1,8 +1,8 @@
 /**
  * Institutional Investment Platform System (IIPS)
- * Broker Import React Modal Component (BI-07 React DOM Host Integration)
+ * Broker Import React Modal Component (BI-07 React DOM Host Integration & Visual Parity)
  *
- * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / BI-07-AUTH-2026-01
+ * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / P13-CERT / P14-CERT / BI-07-VISUAL
  * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
  */
 
@@ -159,16 +159,16 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
         </div>
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4 bg-slate-900/90">
           <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-900/50 text-teal-400 font-bold border border-teal-700">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-950 text-teal-300 font-bold border border-teal-700 shadow-sm">
               UI15
             </div>
             <div>
               <h2 id="ui15-modal-title" className="text-xl font-bold tracking-tight text-white">
                 Import Broker Holdings
               </h2>
-              <p id="ui15-modal-description" className="text-xs text-slate-400">
+              <p id="ui15-modal-description" className="text-xs text-slate-400 mt-0.5">
                 Institutional Broker Ingress &amp; Atomic Portfolio Persistence Boundary (BI-07)
               </p>
             </div>
@@ -177,7 +177,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
           <div className="flex items-center space-x-3">
             {/* WCAG Dual-Coded Quality Badge */}
             <span
-              className="inline-flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+              className="inline-flex items-center space-x-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-sm"
               style={{
                 backgroundColor: `${viewModel.qualityIndicator.colorHex}22`,
                 color: viewModel.qualityIndicator.colorHex,
@@ -193,7 +193,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
               type="button"
               id="ui15-btn-modal-header-close"
               onClick={handleClose}
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer transition-colors"
               aria-label="Close dialog"
             >
               ✕
@@ -210,19 +210,19 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-12 text-center transition-all ${
+                className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition-all ${
                   isDragging
-                    ? 'border-teal-500 bg-teal-950/20'
-                    : 'border-slate-700 bg-slate-950/50 hover:border-slate-500'
+                    ? 'border-teal-400 bg-teal-950/30'
+                    : 'border-slate-700 bg-slate-950/60 hover:border-slate-500'
                 }`}
               >
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-800 text-teal-400 text-3xl">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-800/80 text-teal-400 text-3xl border border-slate-700 shadow-sm">
                   📁
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-1">Select Broker Holdings Export File</h3>
-                <p className="text-sm text-slate-400 max-w-md mb-6">
+                <p className="text-sm text-slate-400 max-w-md mb-6 leading-relaxed">
                   Drag and drop your broker holding statement CSV here, or click to browse. Supported formats: Zerodha
-                  Kite, Dhan, Groww.
+                  Kite, Dhan (Detailed &amp; Web UI), and Groww Stocks.
                 </p>
 
                 {/* Semantic Button with Programmatic Click Dispatch to Ref */}
@@ -230,7 +230,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                   type="button"
                   id="ui15-btn-file-select"
                   onClick={() => fileInputRef.current?.click()}
-                  className="cursor-pointer inline-flex items-center space-x-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-colors"
+                  className="cursor-pointer inline-flex items-center space-x-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-colors pointer-events-auto"
                 >
                   <span>Select Broker CSV</span>
                 </button>
@@ -247,23 +247,36 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                 />
 
                 <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs text-slate-400">
-                  <span className="rounded bg-slate-800 px-2 py-1 border border-slate-700">✓ Zerodha Kite (.csv)</span>
-                  <span className="rounded bg-slate-800 px-2 py-1 border border-slate-700">✓ Dhan Holdings (.csv)</span>
-                  <span className="rounded bg-slate-800 px-2 py-1 border border-slate-700">✓ Groww Stocks (.csv)</span>
-                  <span className="rounded bg-slate-900 px-2 py-1 border border-amber-800 text-amber-400">
+                  <span className="rounded-md bg-slate-800/80 px-2.5 py-1 border border-slate-700 text-slate-300">
+                    ✓ Zerodha Kite (.csv)
+                  </span>
+                  <span className="rounded-md bg-slate-800/80 px-2.5 py-1 border border-slate-700 text-slate-300">
+                    ✓ Dhan Detailed (.csv)
+                  </span>
+                  <span className="rounded-md bg-slate-800/80 px-2.5 py-1 border border-slate-700 text-slate-300">
+                    ✓ Dhan Web UI (.csv)
+                  </span>
+                  <span className="rounded-md bg-slate-800/80 px-2.5 py-1 border border-slate-700 text-slate-300">
+                    ✓ Groww Stocks (.csv)
+                  </span>
+                  <span className="rounded-md bg-slate-900 px-2.5 py-1 border border-amber-800 text-amber-400">
                     ⚠ XLSX Blocked (BI-06)
                   </span>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-4 text-xs text-slate-400 space-y-2">
-                <div className="font-semibold text-slate-300">Governed Ingress Pipeline Rules:</div>
-                <ul className="list-disc list-inside space-y-1 text-slate-400">
-                  <li>Automated schema format detection without guessing or fabrication.</li>
-                  <li>Security Master (P04) canonical identity resolution with strict fail-closed enforcement.</li>
-                  <li>Volume-weighted average buy cost calculation across duplicate security lots.</li>
-                  <li>Exact 100.0000% weight sum invariance across all accepted portfolio constituents.</li>
-                  <li>Cryptographic lineage digest computed over ingress and persistence payload.</li>
+              {/* Governed Ingress Pipeline Rules Panel */}
+              <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-4 text-xs text-slate-400 space-y-2 shadow-sm">
+                <div className="font-semibold text-slate-200 flex items-center space-x-2">
+                  <span className="h-2 w-2 rounded-full bg-teal-400"></span>
+                  <span>Governed Ingress &amp; Multi-Broker Consolidation Rules:</span>
+                </div>
+                <ul className="list-disc list-inside space-y-1.5 text-slate-400 pl-1">
+                  <li>Automated schema format detection without guessing or ISIN fabrication.</li>
+                  <li>P04/P12 Security Master canonical identity resolution with fail-closed quarantine.</li>
+                  <li>Multi-broker atomic merge consolidates duplicate securities by volume-weighted buy price.</li>
+                  <li>Exact 100.0000% weight sum invariance across the complete combined portfolio vector.</li>
+                  <li>Full FIPS 180-4 SHA-256 cryptographic provenance digest attached on commit.</li>
                 </ul>
               </div>
             </div>
@@ -287,133 +300,98 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
             <div className="space-y-6">
               {/* Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-                  <div className="text-xs font-medium text-slate-400">Detected Broker</div>
-                  <div className="text-base font-bold text-teal-400">{viewModel.brokerName}</div>
-                  <div className="text-xs text-slate-400 truncate" title={viewModel.fileName}>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3.5 shadow-sm">
+                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Detected Broker</div>
+                  <div className="text-base font-bold text-teal-400 mt-1">{viewModel.brokerName}</div>
+                  <div className="text-xs text-slate-400 truncate mt-0.5" title={viewModel.fileName}>
                     {viewModel.fileName}
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-                  <div className="text-xs font-medium text-slate-400">Total Market Value</div>
-                  <div className="text-base font-bold text-white">
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3.5 shadow-sm">
+                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Market Value</div>
+                  <div className="text-base font-bold text-white font-mono tabular-nums mt-1">
                     ₹{viewModel.totalMarketValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
-                  <div className="text-xs text-slate-400">{viewModel.acceptedHoldingsCount} valid holdings</div>
+                  <div className="text-xs text-slate-400 mt-0.5">{viewModel.acceptedHoldingsCount} valid holdings</div>
                 </div>
 
-                <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-                  <div className="text-xs font-medium text-slate-400">Normalized Weight Sum</div>
-                  <div className="text-base font-bold text-teal-300">
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3.5 shadow-sm">
+                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Normalized Weight Sum</div>
+                  <div className="text-base font-bold text-teal-300 font-mono tabular-nums mt-1">
                     {viewModel.totalNormalizedWeight.toFixed(4)}%
                   </div>
-                  <div className="text-xs text-emerald-400">Exact 100.0000% Invariant</div>
+                  <div className="text-xs text-emerald-400 mt-0.5">Exact 100.0000% Invariant</div>
                 </div>
 
-                <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-                  <div className="text-xs font-medium text-slate-400">Excluded Records</div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3.5 shadow-sm">
+                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Excluded Records</div>
                   <div
-                    className={`text-base font-bold ${
+                    className={`text-base font-bold mt-1 ${
                       viewModel.rejectedRowsCount > 0 ? 'text-amber-400' : 'text-slate-400'
                     }`}
                   >
-                    {viewModel.rejectedRowsCount} rows
+                    {viewModel.rejectedRowsCount} records
                   </div>
-                  <div className="text-xs text-slate-400">
-                    {viewModel.rejectedRowsCount > 0 ? 'Filtered per governance' : 'All records valid'}
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    {viewModel.rejectedRowsCount > 0 ? 'Filtered / Quarantined' : '0 exclusions'}
                   </div>
                 </div>
               </div>
 
-              {/* Save Guard Status Banner */}
-              <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-4 space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold">
-                  <span className="text-slate-300">Save Guard Verification Checklist (BI-07):</span>
-                  <span
-                    className={`px-2 py-0.5 rounded ${
-                      viewModel.saveGuard.isSaveEnabled
-                        ? 'bg-emerald-950 border border-emerald-700 text-emerald-300'
-                        : 'bg-amber-950 border border-amber-700 text-amber-300'
-                    }`}
-                  >
-                    {viewModel.saveGuard.isSaveEnabled ? 'PASSED — READY TO SAVE' : 'GUARD BLOCKED'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                  <div className="flex items-center space-x-1.5">
-                    <span className={viewModel.saveGuard.isReadyDisposition ? 'text-emerald-400' : 'text-rose-400'}>
-                      {viewModel.saveGuard.isReadyDisposition ? '✓' : '✗'}
+              {/* Save Guard Checklist */}
+              <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-2">
+                <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Persistence Pre-Condition Checks</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="flex items-center space-x-2">
+                    <span className={`h-2 w-2 rounded-full ${viewModel.saveGuard.hasValidHoldings ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                    <span className={viewModel.saveGuard.hasValidHoldings ? 'text-slate-300' : 'text-slate-500'}>
+                      Holdings Present ({viewModel.acceptedHoldingsCount})
                     </span>
-                    <span className="text-slate-300">Ingress Ready</span>
                   </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className={viewModel.saveGuard.hasValidHoldings ? 'text-emerald-400' : 'text-rose-400'}>
-                      {viewModel.saveGuard.hasValidHoldings ? '✓' : '✗'}
+                  <div className="flex items-center space-x-2">
+                    <span className={`h-2 w-2 rounded-full ${viewModel.saveGuard.isExact100Weight ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                    <span className={viewModel.saveGuard.isExact100Weight ? 'text-slate-300' : 'text-slate-500'}>
+                      Weights Sum to 100.0000%
                     </span>
-                    <span className="text-slate-300">&gt; 0 Valid Holdings</span>
                   </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className={viewModel.saveGuard.isExact100Weight ? 'text-emerald-400' : 'text-rose-400'}>
-                      {viewModel.saveGuard.isExact100Weight ? '✓' : '✗'}
+                  <div className="flex items-center space-x-2">
+                    <span className={`h-2 w-2 rounded-full ${viewModel.saveGuard.allHoldingsHaveCompanyId ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                    <span className={viewModel.saveGuard.allHoldingsHaveCompanyId ? 'text-slate-300' : 'text-slate-500'}>
+                      P04 Identity Verified
                     </span>
-                    <span className="text-slate-300">100.0000% Weight</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className={viewModel.saveGuard.allHoldingsHaveCompanyId ? 'text-emerald-400' : 'text-rose-400'}>
-                      {viewModel.saveGuard.allHoldingsHaveCompanyId ? '✓' : '✗'}
-                    </span>
-                    <span className="text-slate-300">P04 Identities</span>
                   </div>
                 </div>
-
-                {viewModel.saveGuard.disabledReason && (
-                  <div className="text-xs text-amber-400 pt-1 font-mono">
-                    ⚠ {viewModel.saveGuard.disabledReason}
-                  </div>
-                )}
               </div>
 
-              {/* Warnings Banner */}
-              {viewModel.warnings.length > 0 && (
-                <div className="rounded-lg border border-amber-800/60 bg-amber-950/30 p-3 text-xs text-amber-300 space-y-1">
-                  <div className="font-semibold">Ingress Warnings:</div>
-                  <ul className="list-disc list-inside space-y-0.5">
-                    {viewModel.warnings.map((w, idx) => (
-                      <li key={idx}>{w}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Accepted Holdings Preview Table */}
+              {/* Accepted Holdings Preview Table with Bounded Scrolling & Sticky Header */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-slate-200">
-                    Accepted Holdings ({viewModel.acceptedHoldings.length})
+                  <h4 className="text-sm font-bold text-slate-200">
+                    Parsed Constituent Holdings ({viewModel.acceptedHoldingsCount})
                   </h4>
-                  <span className="text-xs font-mono text-slate-400">
-                    Digest: {viewModel.lineageDigest.slice(0, 16)}...
+                  <span className="text-xs text-slate-400">
+                    Consolidated &amp; Normalized Ingress Preview
                   </span>
                 </div>
-
-                <div className="overflow-x-auto rounded-lg border border-slate-800">
-                  <table className="w-full text-left text-xs">
-                    <caption className="sr-only">{viewModel.accessibility.tableCaption}</caption>
-                    <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+                <div className="overflow-x-auto max-h-80 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/60 shadow-inner">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-slate-950 text-slate-400 border-b border-slate-800 sticky top-0 z-10">
                       <tr>
-                        <th className="px-3 py-2 font-medium">Symbol</th>
-                        <th className="px-3 py-2 font-medium">Company Name</th>
-                        <th className="px-3 py-2 font-medium">Company ID (P04)</th>
-                        <th className="px-3 py-2 font-medium text-right">Quantity</th>
-                        <th className="px-3 py-2 font-medium text-right">Avg Buy Price</th>
-                        <th className="px-3 py-2 font-medium text-right">Market Value (₹)</th>
-                        <th className="px-3 py-2 font-medium text-right">Weight (%)</th>
+                        <th className="px-3 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-slate-400">#</th>
+                        <th className="px-3 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-slate-400">Symbol</th>
+                        <th className="px-3 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-slate-400">Company Name</th>
+                        <th className="px-3 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-slate-400">Company ID (P04)</th>
+                        <th className="px-3 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-slate-400 text-right">Quantity</th>
+                        <th className="px-3 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-slate-400 text-right">Avg Price (₹)</th>
+                        <th className="px-3 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-slate-400 text-right">Market Value (₹)</th>
+                        <th className="px-3 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-slate-400 text-right">Weight (%)</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 bg-slate-900/50">
+                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
                       {viewModel.acceptedHoldings.map((h, idx) => (
-                        <tr key={idx} className="hover:bg-slate-800/40">
+                        <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                          <td className="px-3 py-2 font-mono text-slate-400">{idx + 1}</td>
                           <td className="px-3 py-2 font-mono font-bold text-teal-400">{h.symbol}</td>
                           <td className="px-3 py-2 text-slate-300">{h.companyName}</td>
                           <td className="px-3 py-2 font-mono text-slate-400">{h.companyId}</td>
@@ -423,10 +401,10 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                           <td className="px-3 py-2 font-mono text-right text-slate-200">
                             ₹{h.averageBuyPrice.toFixed(2)}
                           </td>
-                          <td className="px-3 py-2 font-mono text-right text-white">
+                          <td className="px-3 py-2 font-mono text-right text-white font-semibold">
                             ₹{h.marketValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td className="px-3 py-2 font-mono text-right font-semibold text-teal-300">
+                          <td className="px-3 py-2 font-mono text-right font-bold text-teal-300">
                             {h.weightPercentage.toFixed(4)}%
                           </td>
                         </tr>
@@ -436,28 +414,28 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                 </div>
               </div>
 
-              {/* Rejected / Excluded Rows (if any) */}
+              {/* Rejected / Excluded Rows (if any) with Bounded Scrolling */}
               {viewModel.rejectedRows.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold text-amber-400">
                     Excluded / Rejected Records ({viewModel.rejectedRows.length})
                   </h4>
-                  <div className="overflow-x-auto rounded-lg border border-amber-900/50 bg-amber-950/20">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-amber-950/40 text-amber-300 border-b border-amber-900/50">
+                  <div className="overflow-x-auto max-h-48 overflow-y-auto rounded-xl border border-amber-900/50 bg-amber-950/20">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="bg-amber-950/60 text-amber-300 border-b border-amber-900/50 sticky top-0 z-10">
                         <tr>
-                          <th className="px-3 py-2 font-medium">Record #</th>
-                          <th className="px-3 py-2 font-medium">Raw Identifier</th>
-                          <th className="px-3 py-2 font-medium">Rejection Reason</th>
-                          <th className="px-3 py-2 font-medium">Details</th>
+                          <th className="px-3 py-2 font-semibold text-[11px] uppercase tracking-wider text-amber-400">Record #</th>
+                          <th className="px-3 py-2 font-semibold text-[11px] uppercase tracking-wider text-amber-400">Raw Identifier</th>
+                          <th className="px-3 py-2 font-semibold text-[11px] uppercase tracking-wider text-amber-400">Rejection Reason</th>
+                          <th className="px-3 py-2 font-semibold text-[11px] uppercase tracking-wider text-amber-400">Details</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-amber-900/30 text-slate-300">
                         {viewModel.rejectedRows.map((r, idx) => (
-                          <tr key={idx}>
+                          <tr key={idx} className="hover:bg-amber-950/40 transition-colors">
                             <td className="px-3 py-2 font-mono text-amber-400">{r.row ?? idx + 1}</td>
                             <td className="px-3 py-2 font-mono text-slate-300">{r.identifier || 'N/A'}</td>
-                            <td className="px-3 py-2 text-rose-300">{r.reason}</td>
+                            <td className="px-3 py-2 text-rose-300 font-medium">{r.reason}</td>
                             <td className="px-3 py-2 text-slate-400">{r.details}</td>
                           </tr>
                         ))}
@@ -472,7 +450,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
           {/* REJECTED / BLOCKED States */}
           {(viewModel.state === 'REJECTED' || viewModel.state === 'BLOCKED') && (
             <div className="rounded-xl border border-rose-900/70 bg-rose-950/30 p-6 space-y-4 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-900/50 text-rose-400 text-2xl font-bold border border-rose-700">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-900/50 text-rose-400 text-2xl font-bold border border-rose-700">
                 ✗
               </div>
               <div>
@@ -485,7 +463,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
               </div>
 
               {viewModel.errors.length > 0 && (
-                <div className="rounded-lg border border-rose-900/50 bg-slate-950/60 p-4 text-left text-xs font-mono text-rose-300 space-y-1">
+                <div className="rounded-lg border border-rose-900/50 bg-slate-950/80 p-4 text-left text-xs font-mono text-rose-300 space-y-1">
                   <div className="font-semibold text-rose-400">Error Diagnostics:</div>
                   <ul className="list-disc list-inside space-y-1">
                     {viewModel.errors.map((err, idx) => (
@@ -507,7 +485,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
           {/* SAVE_SUCCESS State */}
           {viewModel.state === 'SAVE_SUCCESS' && (
             <div className="rounded-xl border border-emerald-900/70 bg-emerald-950/30 p-8 space-y-5 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-900/50 text-emerald-300 text-3xl font-bold border border-emerald-600">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-900/50 text-emerald-300 text-3xl font-bold border border-emerald-500 shadow-sm">
                 ✓
               </div>
               <div>
@@ -521,24 +499,30 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                 </p>
               </div>
 
-              <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 text-left text-xs space-y-2">
-                <div className="flex justify-between text-slate-400">
-                  <span>Persistence Status:</span>
-                  <span className="text-emerald-400 font-semibold">COMMITTED (Multi-Broker Atomic Merge)</span>
+              <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-5 text-left text-xs space-y-3 shadow-inner">
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="font-medium">Persistence Mode:</span>
+                  <span className="text-emerald-400 font-semibold bg-emerald-950/80 px-2.5 py-1 rounded border border-emerald-700">
+                    COMMITTED (Multi-Broker Atomic Merge)
+                  </span>
                 </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Total Market Value:</span>
-                  <span className="text-white font-mono">
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="font-medium">Total Portfolio Value:</span>
+                  <span className="text-white font-mono text-sm font-bold">
                     ₹{(viewModel.saveResult?.totalMarketValue ?? viewModel.totalMarketValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Allocation Weight:</span>
-                  <span className="text-teal-300 font-mono">{(viewModel.saveResult?.weightSumPercentage ?? viewModel.totalNormalizedWeight).toFixed(4)}%</span>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="font-medium">Total Allocation Weight:</span>
+                  <span className="text-teal-300 font-mono text-sm font-bold">
+                    {(viewModel.saveResult?.weightSumPercentage ?? viewModel.totalNormalizedWeight).toFixed(4)}%
+                  </span>
                 </div>
-                <div className="flex flex-col text-slate-400 pt-1 border-t border-slate-800">
-                  <span className="text-[10px] text-slate-400">Cryptographic Provenance Digest (SHA-256):</span>
-                  <span className="font-mono text-[11px] text-teal-400 break-all select-all">
+                <div className="flex flex-col text-slate-400 pt-2 border-t border-slate-800 space-y-1">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+                    Cryptographic Provenance Digest (FIPS 180-4 SHA-256):
+                  </span>
+                  <span className="font-mono text-[11px] text-teal-400 break-all select-all bg-slate-900 p-2 rounded border border-slate-800">
                     {viewModel.saveResult?.provenanceDigest || viewModel.lineageDigest}
                   </span>
                 </div>
@@ -548,7 +532,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between border-t border-slate-800 px-6 py-4 bg-slate-950/40">
+        <div className="flex items-center justify-between border-t border-slate-800 px-6 py-4 bg-slate-950/80">
           <div>
             {/* Select another file when previewing or rejected */}
             {viewModel.state !== 'IDLE' && viewModel.state !== 'SAVE_SUCCESS' && (
@@ -556,7 +540,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                 type="button"
                 id="ui15-btn-select-another"
                 onClick={resetToIdle}
-                className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer"
+                className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer transition-colors shadow-sm"
               >
                 Select Another File
               </button>
@@ -568,7 +552,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                 type="button"
                 id="ui15-btn-import-another"
                 onClick={resetToIdle}
-                className="inline-flex items-center space-x-1.5 rounded-lg border border-teal-700 bg-teal-950/80 px-4 py-2 text-xs font-semibold text-teal-300 hover:bg-teal-900 hover:text-white cursor-pointer transition-colors"
+                className="inline-flex items-center space-x-1.5 rounded-lg border border-teal-700 bg-teal-950/80 px-4 py-2 text-xs font-semibold text-teal-300 hover:bg-teal-900 hover:text-white cursor-pointer transition-colors shadow-sm pointer-events-auto"
               >
                 <span>+ Import Another Statement</span>
               </button>
@@ -580,7 +564,11 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
               type="button"
               id="ui15-btn-modal-close"
               onClick={handleClose}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer"
+              className={`rounded-lg px-4 py-2 text-xs font-semibold cursor-pointer transition-colors shadow-sm ${
+                viewModel.state === 'SAVE_SUCCESS'
+                  ? 'bg-teal-600 text-white hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-400'
+                  : 'border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
             >
               {viewModel.state === 'SAVE_SUCCESS' ? 'Done & Close' : 'Cancel'}
             </button>
@@ -594,8 +582,8 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                 title={viewModel.saveGuard.disabledReason || 'Commit atomic holding vector to portfolio store'}
                 className={`inline-flex items-center space-x-2 rounded-lg px-5 py-2 text-xs font-bold text-white shadow transition-all ${
                   viewModel.saveGuard.isSaveEnabled
-                    ? 'bg-teal-600 hover:bg-teal-500 cursor-pointer focus:ring-2 focus:ring-teal-400'
-                    : 'bg-slate-800 text-slate-400 cursor-not-allowed opacity-60'
+                    ? 'bg-teal-600 hover:bg-teal-500 cursor-pointer focus:ring-2 focus:ring-teal-400 pointer-events-auto'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60'
                 }`}
               >
                 <span>Confirm &amp; Save Holdings</span>

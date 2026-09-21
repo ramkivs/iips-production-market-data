@@ -688,4 +688,36 @@ UNKNOWN_SECURITY_XYZ, 100, 500.00, 550.00, 50000.00, 55000.00, 5000.00, 10.00`;
     });
     assert.strictEqual(ws.type, PortfolioWorkspace);
   });
+
+  // BI07-REPEAT-22: Visual parity check - View model includes all required accessibility and quality indicator tokens
+  it('BI07-REPEAT-22: View model and save guard provide required visual indicators and pre-condition checks', () => {
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+    const vm = controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha.csv', securityMaster: sm });
+
+    assert.strictEqual(vm.state, 'READY_TO_SAVE');
+    assert.strictEqual(vm.saveGuard.hasValidHoldings, true);
+    assert.strictEqual(vm.saveGuard.isExact100Weight, true);
+    assert.strictEqual(vm.saveGuard.allHoldingsHaveCompanyId, true);
+    assert.strictEqual(vm.qualityIndicator.state, 'GOOD');
+    assert.strictEqual(vm.qualityIndicator.icon, '✓');
+    assert.ok(vm.acceptedHoldings.length > 0);
+  });
+
+  // BI07-REPEAT-23: Visual parity check - Top constituent allocations analytics summary generates positive weight proportions
+  it('BI07-REPEAT-23: Top constituent allocations analytics summary generates positive weight proportions for meters', () => {
+    const store = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+    controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha.csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: store });
+
+    const analytics = store.getAnalytics('DEFAULT_PORTFOLIO');
+    assert.ok(analytics.topHoldings.length > 0);
+    for (const top of analytics.topHoldings) {
+      assert.ok(top.weightPercentage > 0);
+      assert.ok(top.weightPercentage <= 100);
+      assert.ok(top.marketValue > 0);
+    }
+  });
 });
