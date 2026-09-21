@@ -24,6 +24,12 @@ import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import * as crypto from 'node:crypto';
+import {
+  SWAN_ENERGY_AS_OF,
+  SWAN_ENERGY_BL_SECURITY_ID,
+  SWAN_ENERGY_EQ_SECURITY_ID,
+  SWAN_ENERGY_SAME_ISIN_UDIFF_CSV,
+} from './testSupport/swanEnergySameIsinUdiff';
 
 const CORPUS_DIR = path.join(process.cwd(), 'server', 'pit', 'fixtures', 'corpus');
 
@@ -129,8 +135,8 @@ describe('T2 — corpus manifest loading is attested, era-checked and atomic', (
     expect(p.isBound()).toBe(true);
     expect(p.query('D02', 'RELIANCE', '2024-07-07T15:30:00.000Z')?.snapshot.historicalProvenance).toMatchObject({ era: 'LEGACY_BHAVCOPY' });
     expect(p.query('D02', 'RELIANCE', '2024-07-08T15:30:00.000Z')?.snapshot.historicalProvenance).toMatchObject({ era: 'CM_UDIFF' });
-    expect(p.query('D02', 'RELIANCE', '2024-07-08T15:30:00.000Z')?.snapshot.securityId).toBe('ISIN:INE002A01018');
-    expect(p.query('D02', 'TCS', '2024-07-15T15:30:00.000Z')?.snapshot.securityId).toBe('ISIN:INE467B01029');
+    expect(p.query('D02', 'RELIANCE', '2024-07-08T15:30:00.000Z')?.snapshot.securityId).toBe('ISIN:INE002A01018:EQ');
+    expect(p.query('D02', 'TCS', '2024-07-15T15:30:00.000Z')?.snapshot.securityId).toBe('ISIN:INE467B01029:EQ');
     // Bounded corpus + D114 availability policy: a registered HTTP_404, holiday, weekend,
     // absent bounded-corpus date, or date outside coverage refuses BEFORE ordinary PS-9
     // backward resolution. No nearest-vintage substitution across a known/implicit gap.
@@ -170,8 +176,8 @@ M&MFIN,N3,2048.00,2048.00,2048.00,2048.00,2048.00,2050.00,91,186368.00,05-JUL-20
     const asOf = '2024-07-05T15:30:00.000Z';
     const eq = provider.query('D02', 'INE774D01024', asOf);
     const n3 = provider.query('D02', 'M&MFIN:N3', asOf);
-    expect(eq?.snapshot.securityId).toBe('ISIN:INE774D01024');
-    expect(n3?.snapshot.securityId).toBe('ISIN:INE774D08MG3');
+    expect(eq?.snapshot.securityId).toBe('ISIN:INE774D01024:EQ');
+    expect(n3?.snapshot.securityId).toBe('ISIN:INE774D08MG3:N3');
     expect(eq?.resolvedAsOf).toBe('2024-07-05T09:15:00.000Z');
     expect(n3?.resolvedAsOf).toBe('2024-07-05T09:15:00.000Z');
     expect(eq?.snapshot.payload).toMatchObject({
@@ -180,10 +186,66 @@ M&MFIN,N3,2048.00,2048.00,2048.00,2048.00,2048.00,2050.00,91,186368.00,05-JUL-20
     expect(n3?.snapshot.payload).toMatchObject({
       symbol: 'M&MFIN', securityIdentity: { isin: 'INE774D08MG3', series: 'N3' },
     });
-    expect(provider.query('D02', 'M&MFIN:EQ', asOf)?.snapshot.securityId).toBe('ISIN:INE774D01024');
-    expect(provider.query('D02', 'ISIN:INE774D08MG3', asOf)?.snapshot.securityId).toBe('ISIN:INE774D08MG3');
+    expect(provider.query('D02', 'M&MFIN:EQ', asOf)?.snapshot.securityId).toBe('ISIN:INE774D01024:EQ');
+    expect(provider.query('D02', 'ISIN:INE774D08MG3:N3', asOf)?.snapshot.securityId).toBe('ISIN:INE774D08MG3:N3');
     // Company/symbol → SET(2): no EQ preference, row-order choice, or other silent resolution.
     expect(provider.query('D02', 'M&MFIN', asOf)).toBeNull();
+  });
+
+  it('resolves SWANENERGY BL/EQ typed identities independently and refuses shared aliases', () => {
+    const sha256 = crypto.createHash('sha256').update(SWAN_ENERGY_SAME_ISIN_UDIFF_CSV).digest('hex');
+    const manifest = {
+      corpusId: 'swanenergy-same-isin-multi-series-regression',
+      provider: 'NSE_D114',
+      dataVersion: 'd114-dualera-v1',
+      coverage: { start: '2024-07-08', end: '2024-07-08' },
+      entries: [{
+        file: 'BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv',
+        source: 'CSV',
+        era: 'CM_UDIFF',
+        sha256,
+      }],
+    };
+    const provider = createPitVintageProvider();
+    const loaded = loadCorpusIntoProvider(provider, tmpCorpusDir(manifest, {
+      'BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv': SWAN_ENERGY_SAME_ISIN_UDIFF_CSV,
+    }));
+    expect(loaded).toMatchObject({ ok: true, snapshotsAppended: 2 });
+
+    const bl = provider.query('D02', SWAN_ENERGY_BL_SECURITY_ID, SWAN_ENERGY_AS_OF);
+    const eq = provider.query('D02', SWAN_ENERGY_EQ_SECURITY_ID, SWAN_ENERGY_AS_OF);
+    expect(bl?.resolvedAsOf).toBe(SWAN_ENERGY_AS_OF);
+    expect(eq?.resolvedAsOf).toBe(SWAN_ENERGY_AS_OF);
+    expect(bl?.snapshot.securityId).toBe(SWAN_ENERGY_BL_SECURITY_ID);
+    expect(eq?.snapshot.securityId).toBe(SWAN_ENERGY_EQ_SECURITY_ID);
+    expect(bl?.snapshot.payload).toMatchObject({
+      companyId: 'SWANENERGY', symbol: 'SWANENERGY',
+      securityIdentity: {
+        securityId: SWAN_ENERGY_BL_SECURITY_ID,
+        isin: 'INE665A01038',
+        isinAuthority: 'NON_AUTHORITATIVE',
+        series: 'BL',
+      },
+    });
+    expect(eq?.snapshot.payload).toMatchObject({
+      companyId: 'SWANENERGY', symbol: 'SWANENERGY',
+      securityIdentity: {
+        securityId: SWAN_ENERGY_EQ_SECURITY_ID,
+        isin: 'INE665A01038',
+        isinAuthority: 'NON_AUTHORITATIVE',
+        series: 'EQ',
+      },
+    });
+    expect(provider.store.detectVintageAmbiguity('D02', SWAN_ENERGY_BL_SECURITY_ID)).toEqual([]);
+    expect(provider.store.detectVintageAmbiguity('D02', SWAN_ENERGY_EQ_SECURITY_ID)).toEqual([]);
+    expect(provider.query('D02', 'SWANENERGY:BL', SWAN_ENERGY_AS_OF)?.snapshot.securityId)
+      .toBe(SWAN_ENERGY_BL_SECURITY_ID);
+    expect(provider.query('D02', 'SWANENERGY:EQ', SWAN_ENERGY_AS_OF)?.snapshot.securityId)
+      .toBe(SWAN_ENERGY_EQ_SECURITY_ID);
+
+    // Both the company/symbol and raw-ISIN aliases map to SET(2); no preferred series exists.
+    expect(provider.query('D02', 'SWANENERGY', SWAN_ENERGY_AS_OF)).toBeNull();
+    expect(provider.query('D02', 'INE665A01038', SWAN_ENERGY_AS_OF)).toBeNull();
   });
 
   it('refuses a corpus whose sha256 does not match the attested manifest', () => {

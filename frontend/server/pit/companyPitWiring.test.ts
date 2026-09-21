@@ -7,10 +7,18 @@
  */
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import * as crypto from 'node:crypto';
 import { buildDegradedResponse, resolveModeForPrincipal } from '../data-mode/data-mode';
 import { createPitVintageProvider, loadCorpusIntoProvider } from './pitVintageProvider';
 import { executeCompanyTransportRequest } from './companyPitTransport';
+import {
+  SWAN_ENERGY_AS_OF,
+  SWAN_ENERGY_BL_SECURITY_ID,
+  SWAN_ENERGY_EQ_SECURITY_ID,
+  SWAN_ENERGY_SAME_ISIN_UDIFF_CSV,
+} from './testSupport/swanEnergySameIsinUdiff';
 
 const TRANSPORT = fs.readFileSync(path.join(process.cwd(), 'server', 'executive-transport.ts'), 'utf8');
 const COMPANY_HANDLER = fs.readFileSync(path.join(process.cwd(), 'server', 'pit', 'companyPitTransport.ts'), 'utf8');
@@ -97,7 +105,7 @@ describe('Executable /api/company/:id request path — bounded fixture corpus', 
           close: 2931.1,
           candleStart: '2024-07-05T09:15:00.000Z',
           securityIdentity: {
-            securityId: 'ISIN:INE002A01018',
+            securityId: 'ISIN:INE002A01018:EQ',
             isin: 'INE002A01018',
             isinAuthority: 'NON_AUTHORITATIVE',
             series: 'EQ',
@@ -127,6 +135,76 @@ describe('Executable /api/company/:id request path — bounded fixture corpus', 
     expect((r.body as { vintage?: { era?: string; asOf?: string } }).vintage).toMatchObject({
       era: 'CM_UDIFF', asOf: '2024-07-08T09:15:00.000Z',
     });
+  });
+
+  it('SWANENERGY Company lookup fails closed while direct BL/EQ identities resolve independently', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pit-swanenergy-company-'));
+    const file = 'BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv';
+    const sha256 = crypto.createHash('sha256').update(SWAN_ENERGY_SAME_ISIN_UDIFF_CSV).digest('hex');
+    fs.writeFileSync(path.join(dir, file), SWAN_ENERGY_SAME_ISIN_UDIFF_CSV);
+    fs.writeFileSync(path.join(dir, 'pit-corpus-manifest.json'), JSON.stringify({
+      corpusId: 'swanenergy-company-same-isin-regression',
+      provider: 'NSE_D114',
+      dataVersion: 'd114-dualera-v1',
+      coverage: { start: '2024-07-08', end: '2024-07-08' },
+      entries: [{ file, source: 'CSV', era: 'CM_UDIFF', sha256 }],
+    }));
+
+    try {
+      const swanProvider = createPitVintageProvider();
+      expect(loadCorpusIntoProvider(swanProvider, dir)).toMatchObject({
+        ok: true, snapshotsAppended: 2,
+      });
+      const swanRequest = (securityId: string) => executeCompanyTransportRequest(
+        `/api/company/${encodeURIComponent(securityId)}?${new URLSearchParams({ asOf: SWAN_ENERGY_AS_OF })}`,
+        'GET',
+        'PIT',
+        () => ({ shouldNotRun: true }),
+        swanProvider,
+      );
+
+      const unqualified = swanRequest('SWANENERGY');
+      expect(unqualified.status).toBe(200);
+      expect(JSON.stringify(unqualified.body)).toBe(
+        JSON.stringify(buildDegradedResponse('Company', 'PIT')),
+      );
+      expect(JSON.stringify(swanRequest('INE665A01038').body)).toBe(
+        JSON.stringify(buildDegradedResponse('Company', 'PIT')),
+      );
+
+      for (const [securityId, series, close] of [
+        [SWAN_ENERGY_BL_SECURITY_ID, 'BL', 668.25],
+        [SWAN_ENERGY_EQ_SECURITY_ID, 'EQ', 692.6],
+      ] as const) {
+        const direct = swanRequest(securityId);
+        expect(direct.status).toBe(200);
+        expect(direct.body).toMatchObject({
+          surface: 'Company',
+          dataMode: 'PIT',
+          dataAvailable: true,
+          query: { asOf: SWAN_ENERGY_AS_OF, domain: 'D02', securityId },
+          vintage: {
+            requestedAsOf: SWAN_ENERGY_AS_OF,
+            resolvedAsOf: SWAN_ENERGY_AS_OF,
+            asOf: SWAN_ENERGY_AS_OF,
+            era: 'CM_UDIFF',
+            record: {
+              companyId: 'SWANENERGY',
+              symbol: 'SWANENERGY',
+              close,
+              securityIdentity: {
+                securityId,
+                isin: 'INE665A01038',
+                isinAuthority: 'NON_AUTHORITATIVE',
+                series,
+              },
+            },
+          },
+        });
+      }
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('PIT + pre-corpus instant (no vintage <= asOf) → PIT_UNAVAILABLE byte-identical', () => {

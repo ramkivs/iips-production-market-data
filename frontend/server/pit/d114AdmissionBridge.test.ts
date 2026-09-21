@@ -23,11 +23,17 @@ import {
 } from './d114AdmissionBridge';
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  SWAN_ENERGY_AS_OF,
+  SWAN_ENERGY_BL_SECURITY_ID,
+  SWAN_ENERGY_EQ_SECURITY_ID,
+  SWAN_ENERGY_SAME_ISIN_UDIFF_CSV,
+} from './testSupport/swanEnergySameIsinUdiff';
 
 const CORPUS_DIR = path.join(process.cwd(), 'server', 'pit', 'fixtures', 'corpus');
 const legacyCsv = fs.readFileSync(path.join(CORPUS_DIR, 'legacy-fixture.csv'), 'utf8');
 const udiffCsv = fs.readFileSync(path.join(CORPUS_DIR, 'udiff-fixture.csv'), 'utf8');
-const RELIANCE_SECURITY_ID = 'ISIN:INE002A01018';
+const RELIANCE_SECURITY_ID = 'ISIN:INE002A01018:EQ';
 const mmfinMultiSeriesLegacyCsv = `SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN
 M&MFIN,EQ,299.80,302.10,297.75,300.50,300.70,298.20,3303110,992336000.00,05-JUL-2024,29778,INE774D01024
 M&MFIN,N3,2048.00,2048.00,2048.00,2048.00,2048.00,2050.00,91,186368.00,05-JUL-2024,2,INE774D08MG3`;
@@ -177,8 +183,8 @@ describe('T3 — admission and provenance preservation', () => {
       '2024-07-05T09:15:00.000Z',
     ]);
     expect(admitted.snapshots.map((s) => s.securityId).sort()).toEqual([
-      'ISIN:INE774D01024',
-      'ISIN:INE774D08MG3',
+      'ISIN:INE774D01024:EQ',
+      'ISIN:INE774D08MG3:N3',
     ]);
 
     const store = createPitStore();
@@ -187,8 +193,8 @@ describe('T3 — admission and provenance preservation', () => {
     }).not.toThrow();
     expect(store.size()).toBe(2);
 
-    const eq = store.asOfQuery(PIT_DOMAIN, 'ISIN:INE774D01024', '2024-07-05T09:15:00.000Z');
-    const n3 = store.asOfQuery(PIT_DOMAIN, 'ISIN:INE774D08MG3', '2024-07-05T09:15:00.000Z');
+    const eq = store.asOfQuery(PIT_DOMAIN, 'ISIN:INE774D01024:EQ', '2024-07-05T09:15:00.000Z');
+    const n3 = store.asOfQuery(PIT_DOMAIN, 'ISIN:INE774D08MG3:N3', '2024-07-05T09:15:00.000Z');
     expect(eq?.asOf).toBe('2024-07-05T09:15:00.000Z');
     expect(n3?.asOf).toBe('2024-07-05T09:15:00.000Z');
     expect(eq?.payload).toMatchObject({
@@ -200,8 +206,60 @@ describe('T3 — admission and provenance preservation', () => {
       securityIdentity: { isin: 'INE774D08MG3', series: 'N3' },
     });
     expect(store.asOfQuery(PIT_DOMAIN, 'M&MFIN', '2024-07-05T09:15:00.000Z')).toBeNull();
-    expect(store.detectVintageAmbiguity(PIT_DOMAIN, 'ISIN:INE774D01024')).toEqual([]);
-    expect(store.detectVintageAmbiguity(PIT_DOMAIN, 'ISIN:INE774D08MG3')).toEqual([]);
+    expect(store.detectVintageAmbiguity(PIT_DOMAIN, 'ISIN:INE774D01024:EQ')).toEqual([]);
+    expect(store.detectVintageAmbiguity(PIT_DOMAIN, 'ISIN:INE774D08MG3:N3')).toEqual([]);
+  });
+
+  it('admits exact 08-Jul-2024 SWANENERGY BL/EQ rows under distinct series-aware identities without PS-E9', () => {
+    const admitted = admitCorpusEntry(CORPUS, {
+      archiveRef: 'BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv.zip',
+      era: 'CM_UDIFF',
+      sha256: '0ef55b77c30c8a57d5451cd371424242ad515f708630736ea6dc44c38d6e1e85',
+      csvText: SWAN_ENERGY_SAME_ISIN_UDIFF_CSV,
+    });
+    expect(admitted.errors).toHaveLength(0);
+    expect(admitted.snapshots).toHaveLength(2);
+    expect(admitted.snapshots.map((s) => s.asOf)).toEqual([
+      SWAN_ENERGY_AS_OF,
+      SWAN_ENERGY_AS_OF,
+    ]);
+    expect(admitted.snapshots.map((s) => s.securityId).sort()).toEqual([
+      SWAN_ENERGY_BL_SECURITY_ID,
+      SWAN_ENERGY_EQ_SECURITY_ID,
+    ]);
+
+    const store = createPitStore();
+    expect(() => {
+      for (const snapshot of admitted.snapshots) store.append(snapshot);
+    }).not.toThrow();
+    expect(store.size()).toBe(2);
+
+    const bl = store.asOfQuery(PIT_DOMAIN, SWAN_ENERGY_BL_SECURITY_ID, SWAN_ENERGY_AS_OF);
+    const eq = store.asOfQuery(PIT_DOMAIN, SWAN_ENERGY_EQ_SECURITY_ID, SWAN_ENERGY_AS_OF);
+    expect(bl?.asOf).toBe(SWAN_ENERGY_AS_OF);
+    expect(eq?.asOf).toBe(SWAN_ENERGY_AS_OF);
+    expect(bl?.payload).toMatchObject({
+      companyId: 'SWANENERGY', symbol: 'SWANENERGY', close: 668.25,
+      securityIdentity: {
+        securityId: SWAN_ENERGY_BL_SECURITY_ID,
+        isin: 'INE665A01038',
+        isinAuthority: 'NON_AUTHORITATIVE',
+        series: 'BL',
+      },
+    });
+    expect(eq?.payload).toMatchObject({
+      companyId: 'SWANENERGY', symbol: 'SWANENERGY', close: 692.6,
+      securityIdentity: {
+        securityId: SWAN_ENERGY_EQ_SECURITY_ID,
+        isin: 'INE665A01038',
+        isinAuthority: 'NON_AUTHORITATIVE',
+        series: 'EQ',
+      },
+    });
+    expect(store.asOfQuery(PIT_DOMAIN, 'SWANENERGY', SWAN_ENERGY_AS_OF)).toBeNull();
+    expect(store.asOfQuery(PIT_DOMAIN, 'INE665A01038', SWAN_ENERGY_AS_OF)).toBeNull();
+    expect(store.detectVintageAmbiguity(PIT_DOMAIN, SWAN_ENERGY_BL_SECURITY_ID)).toEqual([]);
+    expect(store.detectVintageAmbiguity(PIT_DOMAIN, SWAN_ENERGY_EQ_SECURITY_ID)).toEqual([]);
   });
 
   it('admits the CM_UDIFF fixture across the era boundary from the same series', () => {

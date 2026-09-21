@@ -135,8 +135,10 @@ function freezeAliasIndex(source: Map<string, Set<string>>): SecurityAliasIndex 
  * This is deliberately not a P04 canonical-security mapping: D114's ISIN remains explicitly
  * non-authoritative. A company/symbol may point to 0..N source securities; only a singleton may
  * be queried as one D02 series. Multi-series aliases (for example M&MFIN) fail closed rather than
- * selecting EQ, the first row, or any other heuristic. Raw ISIN, the typed source key, and
- * SYMBOL:SERIES remain deterministic direct aliases.
+ * selecting EQ, the first row, or any other heuristic. Raw ISIN, typed source key, and
+ * SYMBOL:SERIES are all registered in the same set-valued relation: typed ISIN+SERIES and
+ * series-qualified aliases are singleton lookups, while a raw ISIN reused by multiple series
+ * fails closed exactly like an ambiguous company/symbol alias.
  */
 function buildSecurityAliasIndexes(snapshots: readonly PitSnapshot[]): {
   securityAliases: SecurityAliasIndex;

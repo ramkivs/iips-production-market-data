@@ -45,11 +45,11 @@ export type CurrencyCode = 'INR' | 'USD';
 /**
  * Source-level security identity carried by D114's canonical D01/D02 records.
  *
- * The PIT series key is namespaced so an exchange symbol is never promoted to identity. ISIN is
- * retained as the stable source identifier and is explicitly NON_AUTHORITATIVE, as required by
- * the P04 external-identifier contract; this block is not a P04 program-internal IdentityRef and
- * does not invent a canonical-security-master mapping. SERIES remains explicit metadata rather
- * than being discarded during normalization.
+ * The PIT series key is namespaced by ISIN + SERIES so an exchange symbol is never promoted to
+ * identity and legitimate same-ISIN exchange series remain distinct. Raw ISIN is retained and is
+ * explicitly NON_AUTHORITATIVE, as required by the P04 external-identifier contract; this block
+ * is not a P04 program-internal IdentityRef and does not invent a canonical-security-master
+ * mapping. SERIES remains explicit identity metadata rather than being discarded.
  */
 export interface D114SecurityIdentity {
   readonly securityId: string;
@@ -61,7 +61,7 @@ export interface D114SecurityIdentity {
 /** Construct the one governed source-identity shape used by both D114 archive eras. */
 export function buildD114SecurityIdentity(isin: string, series: string): D114SecurityIdentity {
   return {
-    securityId: `ISIN:${isin}`,
+    securityId: `ISIN:${isin}:${series}`,
     isin,
     isinAuthority: 'NON_AUTHORITATIVE',
     series,
@@ -78,7 +78,7 @@ export function isD114SecurityIdentity(value: unknown): value is D114SecurityIde
     typeof identity.series === 'string' && identity.series.length > 0 &&
     identity.series === identity.series.trim() &&
     identity.isinAuthority === 'NON_AUTHORITATIVE' &&
-    identity.securityId === `ISIN:${identity.isin}`
+    identity.securityId === `ISIN:${identity.isin}:${identity.series}`
   );
 }
 

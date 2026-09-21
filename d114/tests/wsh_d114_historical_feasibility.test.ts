@@ -57,6 +57,12 @@ INFY,EQ,1450.00,1475.00,1440.00,1460.00,1462.00,1445.00,3200000,4672000000.00,15
 M&MFIN,EQ,299.80,302.10,297.75,300.50,300.70,298.20,3303110,992336000.00,05-JUL-2024,29778,INE774D01024
 M&MFIN,N3,2048.00,2048.00,2048.00,2048.00,2048.00,2050.00,91,186368.00,05-JUL-2024,2,INE774D08MG3`;
 
+  // Exact BL/EQ rows observed in governed BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv.zip.
+  // This regression excerpt is test-only and does not alter the physical archive or corpus.
+  const swanEnergySameIsinUdiffCsv = `TradDt,BizDt,Sgmt,Src,FinInstrmTp,FinInstrmId,ISIN,TckrSymb,SctySrs,XpryDt,FininstrmActlXpryDt,StrkPric,OptnTp,FinInstrmNm,OpnPric,HghPric,LwPric,ClsPric,LastPric,PrvsClsgPric,UndrlygPric,SttlmPric,OpnIntrst,ChngInOpnIntrst,TtlTradgVol,TtlTrfVal,TtlNbOfTxsExctd,SsnId,NewBrdLotQty,Rmks,Rsvd1,Rsvd2,Rsvd3,Rsvd4
+2024-07-08,2024-07-08,CM,NSE,STK,27098,INE665A01038,SWANENERGY,BL,,,,,SWAN ENERGY LIMITED,666.20,692.60,666.20,668.25,692.60,519.90,,692.60,,,4556633,3045044015.80,6,F1,999999999,,,,,
+2024-07-08,2024-07-08,CM,NSE,STK,27095,INE665A01038,SWANENERGY,EQ,,,,,SWAN ENERGY LIMITED,692.60,692.60,692.60,692.60,692.60,659.65,,692.60,,,381237,264044746.20,3011,F1,1,,,,,`;
+
   // ──────────────────────────────────────────────────────────────────────────
   // 1. Valid Acquisition Record & Extraction
   // ──────────────────────────────────────────────────────────────────────────
@@ -565,13 +571,13 @@ M&MFIN,N3,2048.00,2048.00,2048.00,2048.00,2048.00,2050.00,91,186368.00,05-JUL-20
     assert.strictEqual(eq.candleStart, '2024-07-05T09:15:00.000Z');
     assert.strictEqual(n3.candleStart, '2024-07-05T09:15:00.000Z');
     assert.deepStrictEqual(eq.securityIdentity, {
-      securityId: 'ISIN:INE774D01024',
+      securityId: 'ISIN:INE774D01024:EQ',
       isin: 'INE774D01024',
       isinAuthority: 'NON_AUTHORITATIVE',
       series: 'EQ',
     });
     assert.deepStrictEqual(n3.securityIdentity, {
-      securityId: 'ISIN:INE774D08MG3',
+      securityId: 'ISIN:INE774D08MG3:N3',
       isin: 'INE774D08MG3',
       isinAuthority: 'NON_AUTHORITATIVE',
       series: 'N3',
@@ -581,5 +587,48 @@ M&MFIN,N3,2048.00,2048.00,2048.00,2048.00,2048.00,2050.00,91,186368.00,05-JUL-20
     // D01 and D02 carry the same security-level metadata; symbol/company compatibility remains.
     assert.deepStrictEqual(parsed.quotes[0]?.securityIdentity, eq.securityIdentity);
     assert.deepStrictEqual(parsed.quotes[1]?.securityIdentity, n3.securityIdentity);
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 26. CM-UDiFF Same-ISIN Multi-Series Security Identity
+  // ──────────────────────────────────────────────────────────────────────────
+  it('D114-26: preserves SWANENERGY BL/EQ as distinct 08-Jul-2024 identities despite a shared raw ISIN', () => {
+    const parsed = UnifiedHistoricalAdapter.parseAndNormalize(swanEnergySameIsinUdiffCsv);
+    assert.strictEqual(parsed.format, 'CM_UDIFF');
+    assert.strictEqual(parsed.isValid, true);
+    assert.strictEqual(parsed.totalRecords, 2);
+
+    const bl = parsed.candles.find((c) => c.securityIdentity.series === 'BL');
+    const eq = parsed.candles.find((c) => c.securityIdentity.series === 'EQ');
+    assert.ok(bl);
+    assert.ok(eq);
+    assert.strictEqual(bl.companyId, 'SWANENERGY');
+    assert.strictEqual(eq.companyId, 'SWANENERGY');
+    assert.strictEqual(bl.symbol, 'SWANENERGY');
+    assert.strictEqual(eq.symbol, 'SWANENERGY');
+    assert.strictEqual(bl.candleStart, '2024-07-08T09:15:00.000Z');
+    assert.strictEqual(eq.candleStart, '2024-07-08T09:15:00.000Z');
+    assert.strictEqual(bl.close, 668.25);
+    assert.strictEqual(eq.close, 692.60);
+    assert.strictEqual(bl.volume, 4556633);
+    assert.strictEqual(eq.volume, 381237);
+    assert.deepStrictEqual(bl.securityIdentity, {
+      securityId: 'ISIN:INE665A01038:BL',
+      isin: 'INE665A01038',
+      isinAuthority: 'NON_AUTHORITATIVE',
+      series: 'BL',
+    });
+    assert.deepStrictEqual(eq.securityIdentity, {
+      securityId: 'ISIN:INE665A01038:EQ',
+      isin: 'INE665A01038',
+      isinAuthority: 'NON_AUTHORITATIVE',
+      series: 'EQ',
+    });
+    assert.notStrictEqual(bl.securityIdentity.securityId, eq.securityIdentity.securityId);
+
+    const blQuote = parsed.quotes.find((q) => q.securityIdentity.series === 'BL');
+    const eqQuote = parsed.quotes.find((q) => q.securityIdentity.series === 'EQ');
+    assert.deepStrictEqual(blQuote?.securityIdentity, bl.securityIdentity);
+    assert.deepStrictEqual(eqQuote?.securityIdentity, eq.securityIdentity);
   });
 });

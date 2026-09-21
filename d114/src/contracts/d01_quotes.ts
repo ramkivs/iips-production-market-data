@@ -50,7 +50,7 @@ export function validateMarketQuotePayload(payload: MarketQuotePayload): Validat
     errors.push({
       field: 'securityIdentity',
       code: 'INVALID_SECURITY_IDENTITY',
-      message: 'securityIdentity requires a namespaced ISIN key, non-authoritative ISIN metadata, and SERIES',
+      message: 'securityIdentity requires a series-aware namespaced ISIN key, non-authoritative raw ISIN, and SERIES',
       severity: 'CRITICAL',
     });
     anomalyCodes.push('INVALID_SECURITY_IDENTITY');

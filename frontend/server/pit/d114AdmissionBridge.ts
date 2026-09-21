@@ -194,8 +194,8 @@ export function candleToPitSnapshot(
     asOf,
     domain: PIT_DOMAIN,
     quality: 'good', // schema-validated ACQUIRED_VALID bar — the four-state vocabulary, reused
-    // D114 carries a typed, ISIN-backed source security key. Keep companyId/symbol as
-    // presentation/query aliases; neither is promoted to P08 series identity.
+    // D114 carries a typed, series-aware ISIN+SERIES source-security key. Keep the raw ISIN,
+    // companyId, and symbol as metadata/query aliases; none is promoted to P08 series identity.
     securityId: candle.securityIdentity.securityId,
     mode: 'PIT',
     // P01 ST-5/MD-3 — pitBoundary present IFF mode is PIT: the session end of this EOD bar.
