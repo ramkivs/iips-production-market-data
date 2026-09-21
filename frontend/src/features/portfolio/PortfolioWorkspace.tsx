@@ -79,18 +79,19 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 space-y-6">
-      {/* Toast Notification */}
+      {/* Toast Notification (Positioned at bottom-right to prevent obscuring workspace header controls) */}
       {successToast && (
         <div
           role="status"
           aria-live="polite"
-          className="fixed top-5 right-5 z-50 flex items-center space-x-3 rounded-lg border border-emerald-600 bg-emerald-950 px-4 py-3 text-sm text-emerald-200 shadow-xl"
+          className="fixed bottom-6 right-6 z-40 flex items-center space-x-3 rounded-lg border border-emerald-600 bg-emerald-950/95 px-4 py-3 text-sm text-emerald-200 shadow-2xl backdrop-blur-md"
         >
           <span className="text-emerald-400 font-bold text-base">✓</span>
           <span>{successToast}</span>
           <button
+            type="button"
             onClick={() => setSuccessToast(null)}
-            className="ml-2 text-emerald-400 hover:text-white cursor-pointer"
+            className="ml-2 rounded p-1 text-emerald-400 hover:bg-emerald-900 hover:text-white cursor-pointer"
             aria-label="Dismiss notification"
           >
             ✕

@@ -300,34 +300,37 @@ describe('BI-07: Post-Save Repeat Import & Refresh Lifecycle Suite', () => {
     assert.strictEqual(previewVm.saveGuard.isSaveEnabled, true);
   });
 
-  it('BI07-REPEAT-08: Second save remains atomic', () => {
+  it('BI07-REPEAT-08: Second broker save executes Governed Multi-Broker Atomic Merge', () => {
     const store = new PortfolioStore();
     const sm = createGovernedSecurityMaster();
     const controller = new PortfolioBrokerImportController(sm);
 
-    // 1st Save
+    // 1st Save (Zerodha: 2 holdings - RELIANCE, INFY)
     controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha.csv', securityMaster: sm });
     const save1 = controller.confirmAndSave({ portfolioStore: store });
     assert.strictEqual(save1.state, 'SAVE_SUCCESS');
     const digest1 = store.getPortfolio('DEFAULT_PORTFOLIO')?.provenanceDigest;
 
-    // 2nd Save
+    // 2nd Save (Dhan: 2 holdings - TCS, HDFCBANK)
     controller.reset();
     controller.selectAndProcessFile({ content: DHAN_CSV_2, fileName: 'dhan.csv', securityMaster: sm });
     const save2 = controller.confirmAndSave({ portfolioStore: store });
     assert.strictEqual(save2.state, 'SAVE_SUCCESS');
-    assert.strictEqual(save2.saveResult?.holdingsSavedCount, 2);
+    // Multi-Broker merge combines 2 Zerodha + 2 Dhan = 4 consolidated holdings
+    assert.strictEqual(save2.saveResult?.holdingsSavedCount, 4);
 
     const portfolio2 = store.getPortfolio('DEFAULT_PORTFOLIO');
     assert.ok(portfolio2);
     assert.strictEqual(portfolio2.isSaved, true);
-    assert.strictEqual(portfolio2.holdings.length, 2);
+    assert.strictEqual(portfolio2.holdings.length, 4);
+    assert.strictEqual(portfolio2.totalMarketValue, 151750); // 58000 + 93750
     assert.strictEqual(portfolio2.weightSumPercentage, 100.0);
-    // Provenance digest must be distinct for the new holdings batch
+    // Provenance digest must be distinct for the merged holdings batch
     assert.notStrictEqual(portfolio2.provenanceDigest, digest1);
+    assert.strictEqual(portfolio2.contributions?.length, 2);
   });
 
-  it('BI07-REPEAT-09: First persisted portfolio data is preserved until governed atomic replacement', () => {
+  it('BI07-REPEAT-09: First persisted portfolio data is preserved until governed atomic merge confirmation', () => {
     const store = new PortfolioStore();
     const sm = createGovernedSecurityMaster();
     const controller = new PortfolioBrokerImportController(sm);
@@ -401,7 +404,7 @@ describe('BI-07: Post-Save Repeat Import & Refresh Lifecycle Suite', () => {
       securityMaster: sm,
     });
     assert.strictEqual(vm1.state, 'READY_TO_SAVE');
-    controller.confirmAndSave({ portfolioStore: store });
+    controller.confirmAndSave({ portfolioStore: store, mode: 'REPLACE' });
 
     // Reset
     controller.reset();
@@ -480,35 +483,166 @@ describe('BI-07: Post-Save Repeat Import & Refresh Lifecycle Suite', () => {
     assert.strictEqual(hdfc.companyName, 'HDFC Bank Limited');
   });
 
-  it('BI07-REPEAT-14: Second import with DHAN_WEB_UI_SUMMARY_V1 executes atomic replacement and preserves exact 100.0000% weight sum', () => {
+  it('BI07-REPEAT-14: Second import with DHAN_WEB_UI_SUMMARY_V1 executes multi-broker merge and preserves exact 100.0000% weight sum', () => {
     const store = new PortfolioStore();
     const sm = createGovernedSecurityMaster();
     const controller = new PortfolioBrokerImportController(sm);
 
-    // 1st Save (Zerodha)
+    // 1st Save (Zerodha: RELIANCE 26000, INFY 32000 -> 58000)
     controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha_1.csv', securityMaster: sm });
     const save1 = controller.confirmAndSave({ portfolioStore: store });
     assert.strictEqual(save1.state, 'SAVE_SUCCESS');
     const digest1 = store.getPortfolio('DEFAULT_PORTFOLIO')?.provenanceDigest;
 
-    // 2nd Save (Dhan Web UI Portfolio(2).csv)
+    // 2nd Save (Dhan Web UI Portfolio(2).csv: TCS 52500, HDFCBANK 41250 -> 93750)
     controller.reset();
     controller.selectAndProcessFile({ content: DHAN_WEB_UI_CSV, fileName: 'Portfolio(2).csv', securityMaster: sm });
     const save2 = controller.confirmAndSave({ portfolioStore: store });
     assert.strictEqual(save2.state, 'SAVE_SUCCESS');
-    assert.strictEqual(save2.saveResult?.holdingsSavedCount, 2);
+    assert.strictEqual(save2.saveResult?.holdingsSavedCount, 4);
 
     const portfolio2 = store.getPortfolio('DEFAULT_PORTFOLIO');
     assert.ok(portfolio2);
     assert.strictEqual(portfolio2.isSaved, true);
-    assert.strictEqual(portfolio2.holdings.length, 2);
+    assert.strictEqual(portfolio2.holdings.length, 4);
     assert.strictEqual(portfolio2.weightSumPercentage, 100.0);
-    assert.strictEqual(portfolio2.totalMarketValue, 93750); // 52500 + 41250
+    assert.strictEqual(portfolio2.totalMarketValue, 151750); // 58000 + 93750
     assert.notStrictEqual(portfolio2.provenanceDigest, digest1);
 
-    // Verify analytics reflects the second Dhan portfolio
+    // Verify analytics reflects the combined 4-constituent portfolio
     const analytics = store.getAnalytics('DEFAULT_PORTFOLIO');
-    assert.strictEqual(analytics.holdingsCount, 2);
-    assert.strictEqual(analytics.totalMarketValue, 93750);
+    assert.strictEqual(analytics.holdingsCount, 4);
+    assert.strictEqual(analytics.totalMarketValue, 151750);
+  });
+
+  // BI07-REPEAT-15: Multi-Broker Same-Security Consolidation
+  it('BI07-REPEAT-15: Consolidates overlapping securities across brokers with volume-weighted price and single companyId', () => {
+    const store = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+
+    // Broker 1 (Zerodha): INFY 20 shares @ 1500 (LTP 1600) -> MV 32000
+    controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha.csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: store });
+
+    // Broker 2 (Dhan): INFY 30 shares @ 1400 (LTP 1600) -> MV 48000
+    const dhanInfyCsv = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+INFY, 30, 1400.00, 1600.00, 42000.00, 48000.00, 6000.00, 14.28`;
+
+    controller.reset();
+    controller.selectAndProcessFile({ content: dhanInfyCsv, fileName: 'dhan_infy.csv', securityMaster: sm });
+    const saveRes = controller.confirmAndSave({ portfolioStore: store });
+    assert.strictEqual(saveRes.state, 'SAVE_SUCCESS');
+
+    const p = store.getPortfolio('DEFAULT_PORTFOLIO')!;
+    // Existing RELIANCE (10 shares) + Consolidated INFY (20 + 30 = 50 shares) = 2 holdings
+    assert.strictEqual(p.holdings.length, 2);
+
+    const consolidatedInfy = p.holdings.find((h) => h.companyId === 'EQ_INFY_IN')!;
+    assert.ok(consolidatedInfy);
+    assert.strictEqual(consolidatedInfy.quantity, 50); // 20 + 30
+    // Weighted Avg Cost: (20*1500 + 30*1400)/50 = (30000 + 42000)/50 = 72000/50 = 1440.00
+    assert.strictEqual(consolidatedInfy.averageBuyPrice, 1440.00);
+    assert.strictEqual(consolidatedInfy.currentPrice, 1600.00);
+    assert.strictEqual(consolidatedInfy.marketValue, 80000.00); // 50 * 1600
+    assert.strictEqual(p.weightSumPercentage, 100.00);
+  });
+
+  // BI07-REPEAT-16: Failed second import does not mutate first persisted portfolio (Transactional Atomicity)
+  it('BI07-REPEAT-16: Failed second broker import preserves first persisted portfolio 100% untouched', () => {
+    const store = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+
+    // 1st Save
+    controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha.csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: store });
+    const p1State = JSON.stringify(store.getPortfolio('DEFAULT_PORTFOLIO'));
+
+    // 2nd import fails closed (unmapped identity)
+    const unmappedCsv = `Name, Quantity, Avg Price, Last Traded, Investment, Current Value, P&L, P&L %
+UNKNOWN_SECURITY_XYZ, 100, 500.00, 550.00, 50000.00, 55000.00, 5000.00, 10.00`;
+
+    controller.reset();
+    const rejVm = controller.selectAndProcessFile({
+      content: unmappedCsv,
+      fileName: 'unmapped.csv',
+      securityMaster: sm,
+    });
+    assert.strictEqual(rejVm.state, 'REJECTED');
+
+    // Attempting confirm on rejected state fails closed
+    const rejSave = controller.confirmAndSave({ portfolioStore: store });
+    assert.strictEqual(rejSave.state, 'REJECTED');
+
+    // Store state must be 100% identical to p1State
+    assert.strictEqual(JSON.stringify(store.getPortfolio('DEFAULT_PORTFOLIO')), p1State);
+  });
+
+  // BI07-REPEAT-17: UI Controls remain fully responsive across multiple saves
+  it('BI07-REPEAT-17: Workspace Refresh and Import Holdings controls remain active and responsive after multi-broker saves', () => {
+    const store = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+
+    // Save 1 (Zerodha)
+    controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha.csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: store });
+
+    // Verify Refresh reads store
+    let p = store.getPortfolio('DEFAULT_PORTFOLIO');
+    assert.strictEqual(p?.holdings.length, 2);
+
+    // Save 2 (Dhan Web UI Portfolio(2).csv)
+    controller.reset();
+    controller.selectAndProcessFile({ content: DHAN_WEB_UI_CSV, fileName: 'Portfolio(2).csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: store });
+
+    // Refresh after second save
+    p = store.getPortfolio('DEFAULT_PORTFOLIO');
+    assert.strictEqual(p?.holdings.length, 4);
+    assert.strictEqual(p?.totalMarketValue, 151750);
+    assert.strictEqual(p?.weightSumPercentage, 100.0);
+
+    // Reopen Import Holdings after second save
+    controller.reset();
+    const idleVm = controller.buildViewModel(1280, sm);
+    assert.strictEqual(idleVm.state, 'IDLE');
+    assert.strictEqual(idleVm.acceptedHoldingsCount, 0);
+    assert.strictEqual(idleVm.saveGuard.isSaveEnabled, false);
+  });
+
+  // BI07-REPEAT-18: 3-Broker Accumulation (Zerodha + Dhan + Groww)
+  it('BI07-REPEAT-18: Multi-broker accumulation across 3 brokers consolidates cleanly with 100.0000% weight sum', () => {
+    const store = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+
+    // 1. Zerodha (RELIANCE 10 @ 2500, INFY 20 @ 1500 -> 58000)
+    controller.selectAndProcessFile({ content: ZERODHA_CSV_1, fileName: 'zerodha.csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: store });
+
+    // 2. Dhan (TCS 15 @ 3400, HDFCBANK 25 @ 1600 -> 93750)
+    controller.reset();
+    controller.selectAndProcessFile({ content: DHAN_WEB_UI_CSV, fileName: 'Portfolio(2).csv', securityMaster: sm });
+    controller.confirmAndSave({ portfolioStore: store });
+
+    // 3. Groww (RELIANCE 10 @ 2500, TCS 15 @ 3400 -> 78500)
+    controller.reset();
+    controller.selectAndProcessFile({ content: GROWW_CSV_3, fileName: 'groww.csv', securityMaster: sm });
+    const save3 = controller.confirmAndSave({ portfolioStore: store });
+    assert.strictEqual(save3.state, 'SAVE_SUCCESS');
+
+    const p3 = store.getPortfolio('DEFAULT_PORTFOLIO')!;
+    // 4 unique securities: RELIANCE (20 shares), INFY (20 shares), TCS (30 shares), HDFCBANK (25 shares)
+    assert.strictEqual(p3.holdings.length, 4);
+    assert.strictEqual(p3.contributions?.length, 3);
+    assert.strictEqual(p3.weightSumPercentage, 100.0);
+
+    const reliance = p3.holdings.find((h) => h.companyId === 'EQ_RELIANCE_IN')!;
+    assert.strictEqual(reliance.quantity, 20); // 10 from Zerodha + 10 from Groww
+
+    const tcs = p3.holdings.find((h) => h.companyId === 'EQ_TCS_IN')!;
+    assert.strictEqual(tcs.quantity, 30); // 15 from Dhan + 15 from Groww
   });
 });

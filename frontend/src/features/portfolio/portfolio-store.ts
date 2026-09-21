@@ -19,6 +19,26 @@ export interface PortfolioRecord {
   lastUpdated: string;
   provenanceDigest: string;
   isSaved: boolean;
+  contributions?: BrokerContributionRecord[];
+}
+
+export interface BrokerContributionRecord {
+  sourceBroker: string;
+  fileName: string;
+  contentDigest: string;
+  lineageDigest: string;
+  importedAt: string;
+  holdingsCount: number;
+  totalMarketValue: number;
+}
+
+export interface PortfolioSaveOptions {
+  mode?: 'MERGE' | 'REPLACE'; // Default: 'MERGE' (Governed Multi-Broker Atomic Merge)
+  sourceBroker?: string;
+  fileName?: string;
+  contentDigest?: string;
+  lineageDigest?: string;
+  [key: string]: unknown;
 }
 
 export interface PortfolioSaveResult {
@@ -72,13 +92,24 @@ export class PortfolioStore {
   }
 
   /**
-   * Atomic batch persistence boundary: Receives the full validated UserHoldingInput vector
-   * in one governed atomic operation. Disallows individual partial writes.
+   * Atomic batch persistence boundary: Receives a validated UserHoldingInput vector
+   * and executes governed multi-broker atomic merge (or replacement if explicitly requested).
+   *
+   * Consolidation Rules:
+   * 1. Merges incoming holdings with existing portfolio holdings keyed by canonical P04/P12 companyId.
+   * 2. Where companyId overlaps across brokers:
+   *    - Quantity is summed.
+   *    - Cost basis is aggregated ((Q1*P1) + (Q2*P2)) and volume-weighted average price derived.
+   *    - Market valuation updated (Q_total * P_latest).
+   * 3. Where companyId is unique: position is preserved/added.
+   * 4. Recalculates final portfolio allocation weights to sum to exactly 100.0000%.
+   * 5. Computes a new deterministic SHA-256 lineage digest over the entire consolidated portfolio.
+   * 6. Preserves broker contribution audit records.
    */
   public saveHoldings(
     portfolioId: string = 'DEFAULT_PORTFOLIO',
     holdings: UserHoldingInput[],
-    provenanceMetadata?: Record<string, unknown>
+    options?: PortfolioSaveOptions | Record<string, unknown>
   ): PortfolioSaveResult {
     // Save Guard 1: Empty holding write check
     if (!holdings || holdings.length === 0) {
@@ -94,22 +125,7 @@ export class PortfolioStore {
       };
     }
 
-    // Save Guard 2: Strict weight sum validation (must equal 100.0000%)
-    const weightSum = Math.round(holdings.reduce((sum, h) => sum + h.weightPercentage, 0) * 10000) / 10000;
-    if (Math.abs(weightSum - 100.0) > 0.001) {
-      return {
-        success: false,
-        portfolio: this.getOrCreatePortfolio(portfolioId),
-        holdingsSavedCount: 0,
-        totalMarketValue: 0,
-        weightSumPercentage: weightSum,
-        savedAt: new Date().toISOString(),
-        provenanceDigest: '',
-        error: `Save Guard Violation: Total holding weights (${weightSum}%) do not sum to 100.0%.`,
-      };
-    }
-
-    // Save Guard 3: Strict entity authority check (every holding must have resolved companyId)
+    // Save Guard 2: Strict entity authority check (every holding must have resolved companyId)
     for (const h of holdings) {
       if (!h.companyId || !h.symbol || h.quantity <= 0 || h.marketValue <= 0) {
         return {
@@ -117,7 +133,7 @@ export class PortfolioStore {
           portfolio: this.getOrCreatePortfolio(portfolioId),
           holdingsSavedCount: 0,
           totalMarketValue: 0,
-          weightSumPercentage: weightSum,
+          weightSumPercentage: 0.0,
           savedAt: new Date().toISOString(),
           provenanceDigest: '',
           error: `Save Guard Violation: Holding '${h.symbol}' missing companyId or has invalid quantity/marketValue.`,
@@ -126,12 +142,214 @@ export class PortfolioStore {
     }
 
     const savedAt = new Date().toISOString();
-    const totalMarketValue = holdings.reduce((sum, h) => sum + h.marketValue, 0);
+    const existingPortfolio = this.portfolios.get(portfolioId);
+    const saveMode = (options as PortfolioSaveOptions)?.mode || 'MERGE';
+    const shouldMerge = saveMode === 'MERGE' && existingPortfolio && existingPortfolio.isSaved && existingPortfolio.holdings.length > 0;
+
+    let finalHoldings: UserHoldingInput[] = [];
+
+    if (!shouldMerge) {
+      // Save Guard 2b: Strict weight sum check for initial/standalone batch
+      const weightSum = Math.round(holdings.reduce((sum, h) => sum + h.weightPercentage, 0) * 10000) / 10000;
+      if (Math.abs(weightSum - 100.0) > 0.001) {
+        return {
+          success: false,
+          portfolio: this.getOrCreatePortfolio(portfolioId),
+          holdingsSavedCount: 0,
+          totalMarketValue: 0,
+          weightSumPercentage: weightSum,
+          savedAt,
+          provenanceDigest: '',
+          error: `Save Guard Violation: Total holding weights (${weightSum}%) do not sum to 100.0%.`,
+        };
+      }
+      finalHoldings = [...holdings];
+    } else {
+      // Governed Multi-Broker Atomic Merge by canonical P04/P12 companyId
+      const consolidationMap = new Map<string, {
+        symbol: string;
+        companyId: string;
+        isin?: string;
+        exchange?: 'NSE' | 'BSE';
+        quantity: number;
+        totalCostBasis: number;
+        currentPrice: number;
+        sourceBrokers: Set<string>;
+        lineageDigests: string[];
+      }>();
+
+      // 1. Populate with existing holdings
+      for (const h of existingPortfolio!.holdings) {
+        const key = h.companyId || `SYM:${h.symbol}`;
+        consolidationMap.set(key, {
+          symbol: h.symbol,
+          companyId: h.companyId,
+          isin: h.isin,
+          exchange: h.exchange,
+          quantity: Number(h.quantity),
+          totalCostBasis: Number(h.quantity) * Number(h.averageBuyPrice),
+          currentPrice: Number(h.currentPrice),
+          sourceBrokers: new Set([h.sourceBroker]),
+          lineageDigests: [h.lineageDigest],
+        });
+      }
+
+      // 2. Merge incoming broker holdings
+      for (const h of holdings) {
+        const key = h.companyId || `SYM:${h.symbol}`;
+        const existing = consolidationMap.get(key);
+
+        if (existing) {
+          const addedQty = Number(h.quantity);
+          const addedCostBasis = addedQty * Number(h.averageBuyPrice);
+          const newQty = existing.quantity + addedQty;
+          const newCostBasis = existing.totalCostBasis + addedCostBasis;
+          const latestPrice = Number(h.currentPrice) > 0 ? Number(h.currentPrice) : existing.currentPrice;
+
+          existing.quantity = newQty;
+          existing.totalCostBasis = newCostBasis;
+          existing.currentPrice = latestPrice;
+          if (h.isin && !existing.isin) existing.isin = h.isin;
+          if (h.exchange && !existing.exchange) existing.exchange = h.exchange;
+          existing.sourceBrokers.add(h.sourceBroker);
+          existing.lineageDigests.push(h.lineageDigest);
+        } else {
+          consolidationMap.set(key, {
+            symbol: h.symbol,
+            companyId: h.companyId,
+            isin: h.isin,
+            exchange: h.exchange,
+            quantity: Number(h.quantity),
+            totalCostBasis: Number(h.quantity) * Number(h.averageBuyPrice),
+            currentPrice: Number(h.currentPrice),
+            sourceBrokers: new Set([h.sourceBroker]),
+            lineageDigests: [h.lineageDigest],
+          });
+        }
+      }
+
+      // 3. Form intermediate consolidated holding records
+      const intermediate: Array<{
+        symbol: string;
+        companyId: string;
+        isin?: string;
+        exchange?: 'NSE' | 'BSE';
+        quantity: number;
+        averageBuyPrice: number;
+        currentPrice: number;
+        marketValue: number;
+        sourceBroker: any;
+        lineageDigests: string[];
+      }> = [];
+
+      for (const item of consolidationMap.values()) {
+        const avgBuyPrice = item.quantity > 0 ? (item.totalCostBasis / item.quantity) : 0;
+        const marketValue = item.quantity * item.currentPrice;
+        const sourceBroker = item.sourceBrokers.size === 1
+          ? Array.from(item.sourceBrokers)[0]
+          : 'GENERIC';
+
+        intermediate.push({
+          symbol: item.symbol,
+          companyId: item.companyId,
+          isin: item.isin,
+          exchange: item.exchange,
+          quantity: item.quantity,
+          averageBuyPrice: avgBuyPrice,
+          currentPrice: item.currentPrice,
+          marketValue,
+          sourceBroker,
+          lineageDigests: item.lineageDigests,
+        });
+      }
+
+      // 4. Calculate total merged portfolio market value
+      const mergedTotalMarketValue = intermediate.reduce((sum, h) => sum + h.marketValue, 0);
+
+      // 5. Derive and normalize portfolio weights to sum to exactly 100.0000%
+      const precision = 4;
+      const scale = Math.pow(10, precision);
+      let weightSum = 0;
+      let maxWeightIndex = 0;
+      let maxWeightVal = -1;
+      const rawWeights: number[] = [];
+
+      for (let i = 0; i < intermediate.length; i++) {
+        const h = intermediate[i];
+        const rawW = mergedTotalMarketValue > 0 ? (h.marketValue / mergedTotalMarketValue) * 100 : 0;
+        const roundedW = Math.round(rawW * scale) / scale;
+        rawWeights.push(roundedW);
+        weightSum += roundedW;
+
+        if (h.marketValue > maxWeightVal) {
+          maxWeightVal = h.marketValue;
+          maxWeightIndex = i;
+        }
+      }
+
+      // Apply rounding residual to the largest constituent
+      const residual = Math.round((100.0 - weightSum) * scale) / scale;
+      if (residual !== 0 && intermediate.length > 0) {
+        rawWeights[maxWeightIndex] = Math.round((rawWeights[maxWeightIndex] + residual) * scale) / scale;
+      }
+
+      // 6. Construct final UserHoldingInput records with updated lineage digests
+      for (let i = 0; i < intermediate.length; i++) {
+        const base = intermediate[i];
+        const weight = rawWeights[i];
+
+        const holdingLineage = computeLineageHash(
+          {
+            symbol: base.symbol,
+            companyId: base.companyId,
+            quantity: base.quantity,
+            averageBuyPrice: base.averageBuyPrice,
+            currentPrice: base.currentPrice,
+            marketValue: base.marketValue,
+            weightPercentage: weight,
+            priorDigests: base.lineageDigests,
+          },
+          { sourceClassification: 'REAL', asOf: savedAt, dataVersion: 'v1.0.0-bi07' }
+        );
+
+        finalHoldings.push({
+          symbol: base.symbol,
+          companyId: base.companyId,
+          isin: base.isin,
+          exchange: base.exchange,
+          quantity: base.quantity,
+          averageBuyPrice: base.averageBuyPrice,
+          currentPrice: base.currentPrice,
+          marketValue: base.marketValue,
+          weightPercentage: weight,
+          active: true,
+          sourceBroker: base.sourceBroker,
+          lineageDigest: holdingLineage,
+        });
+      }
+    }
+
+    const totalMarketValue = finalHoldings.reduce((sum, h) => sum + h.marketValue, 0);
+    const finalWeightSum = Math.round(finalHoldings.reduce((sum, h) => sum + h.weightPercentage, 0) * 10000) / 10000;
+
+    // Track contributions
+    const optObj = (options as PortfolioSaveOptions) || {};
+    const existingContributions = shouldMerge ? (existingPortfolio?.contributions || []) : [];
+    const newContribution: BrokerContributionRecord = {
+      sourceBroker: optObj.sourceBroker || 'GENERIC',
+      fileName: optObj.fileName || 'unknown.csv',
+      contentDigest: optObj.contentDigest || '',
+      lineageDigest: optObj.lineageDigest || '',
+      importedAt: savedAt,
+      holdingsCount: holdings.length,
+      totalMarketValue: holdings.reduce((sum, h) => sum + h.marketValue, 0),
+    };
+    const contributions = [...existingContributions, newContribution];
 
     const provenanceDigest = computeLineageHash(
       {
         portfolioId,
-        holdings: holdings.map((h) => ({
+        holdings: finalHoldings.map((h) => ({
           companyId: h.companyId,
           symbol: h.symbol,
           quantity: h.quantity,
@@ -141,7 +359,12 @@ export class PortfolioStore {
         })),
         totalMarketValue,
         savedAt,
-        provenanceMetadata,
+        contributions: contributions.map((c) => ({
+          sourceBroker: c.sourceBroker,
+          contentDigest: c.contentDigest,
+          importedAt: c.importedAt,
+        })),
+        options,
       },
       { sourceClassification: 'REAL', asOf: savedAt, dataVersion: 'v1.0.0-bi07' }
     );
@@ -149,13 +372,14 @@ export class PortfolioStore {
     const updatedPortfolio: PortfolioRecord = {
       portfolioId,
       portfolioName: this.portfolios.get(portfolioId)?.portfolioName || 'Institutional Flagship Portfolio',
-      holdings: [...holdings], // Atomic snapshot copy
+      holdings: [...finalHoldings],
       totalMarketValue,
-      totalHoldingsCount: holdings.length,
-      weightSumPercentage: weightSum,
+      totalHoldingsCount: finalHoldings.length,
+      weightSumPercentage: finalWeightSum,
       lastUpdated: savedAt,
       provenanceDigest,
       isSaved: true,
+      contributions,
     };
 
     this.portfolios.set(portfolioId, updatedPortfolio);
@@ -163,9 +387,9 @@ export class PortfolioStore {
     return {
       success: true,
       portfolio: updatedPortfolio,
-      holdingsSavedCount: holdings.length,
+      holdingsSavedCount: finalHoldings.length,
       totalMarketValue,
-      weightSumPercentage: weightSum,
+      weightSumPercentage: finalWeightSum,
       savedAt,
       provenanceDigest,
     };

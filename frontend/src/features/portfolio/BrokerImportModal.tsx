@@ -509,7 +509,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
               <div>
                 <h3 className="text-xl font-bold text-emerald-200">Holdings Successfully Persisted</h3>
                 <p className="text-sm text-slate-300 mt-1">
-                  {viewModel.acceptedHoldingsCount} holdings committed atomically to{' '}
+                  {viewModel.saveResult?.holdingsSavedCount ?? viewModel.acceptedHoldingsCount} holdings committed atomically to{' '}
                   <span className="font-semibold text-white">
                     {viewModel.saveResult?.portfolio.portfolioName || 'Institutional Flagship Portfolio'}
                   </span>
@@ -520,17 +520,17 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
               <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 text-left text-xs space-y-2">
                 <div className="flex justify-between text-slate-400">
                   <span>Persistence Status:</span>
-                  <span className="text-emerald-400 font-semibold">COMMITTED (Atomic Batch)</span>
+                  <span className="text-emerald-400 font-semibold">COMMITTED (Multi-Broker Atomic Merge)</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Total Market Value:</span>
                   <span className="text-white font-mono">
-                    ₹{viewModel.totalMarketValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ₹{(viewModel.saveResult?.totalMarketValue ?? viewModel.totalMarketValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>Allocation Weight:</span>
-                  <span className="text-teal-300 font-mono">{viewModel.totalNormalizedWeight.toFixed(4)}%</span>
+                  <span className="text-teal-300 font-mono">{(viewModel.saveResult?.weightSumPercentage ?? viewModel.totalNormalizedWeight).toFixed(4)}%</span>
                 </div>
                 <div className="flex flex-col text-slate-400 pt-1 border-t border-slate-800">
                   <span className="text-[10px] text-slate-400">Cryptographic Provenance Digest (SHA-256):</span>

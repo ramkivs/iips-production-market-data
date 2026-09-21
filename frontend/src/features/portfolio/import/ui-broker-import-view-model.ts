@@ -177,13 +177,16 @@ export class PortfolioBrokerImportController {
 
   /**
    * Confirms and persists the validated holding vector into the governed PortfolioStore.
+   * Supports governed multi-broker atomic merge (default) or explicit replacement.
    */
   public confirmAndSave(params: {
     portfolioStore: PortfolioStore;
     portfolioId?: string;
     viewportWidth?: number;
+    mode?: 'MERGE' | 'REPLACE';
   }): PortfolioBrokerImportViewModel {
     const portfolioId = params.portfolioId || 'DEFAULT_PORTFOLIO';
+    const mode = params.mode || 'MERGE';
 
     if (!this.lastIngressResult || this.lastIngressResult.disposition !== 'READY_FOR_PORTFOLIO_SAVE') {
       this.currentState = 'REJECTED';
@@ -200,11 +203,12 @@ export class PortfolioBrokerImportController {
       return this.buildViewModel(params.viewportWidth ?? 1280);
     }
 
-    // Execute atomic batch save
+    // Execute atomic batch save (merge or replace)
     const saveRes = params.portfolioStore.saveHoldings(
       portfolioId,
       this.lastIngressResult.userHoldings,
       {
+        mode,
         sourceBroker: this.lastIngressResult.provenance.sourceBroker,
         fileName: this.lastIngressResult.provenance.fileName,
         contentDigest: this.lastIngressResult.provenance.contentDigest,
