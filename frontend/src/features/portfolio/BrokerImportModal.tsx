@@ -141,15 +141,17 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
 
   return (
     <div
-      className="iips-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      className="iips-modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm cursor-pointer"
       role="dialog"
       aria-modal="true"
       aria-labelledby="ui15-modal-title"
       aria-describedby="ui15-modal-description"
       aria-live={viewModel.accessibility.ariaLive}
+      onClick={handleClose}
     >
       <div
-        className={`iips-modal-container relative flex max-h-[90vh] w-full max-w-5xl flex-col rounded-xl border border-slate-700 bg-slate-900 text-slate-100 shadow-2xl ${viewModel.responsiveLayout.containerClass}`}
+        className={`iips-modal-container relative flex max-h-[90vh] w-full max-w-5xl flex-col rounded-xl border border-slate-700 bg-slate-900 text-slate-100 shadow-2xl cursor-default ${viewModel.responsiveLayout.containerClass}`}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Live Region for Screen Readers */}
         <div aria-live={viewModel.accessibility.ariaLive} className="sr-only">
@@ -188,6 +190,8 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
             </span>
 
             <button
+              type="button"
+              id="ui15-btn-modal-header-close"
               onClick={handleClose}
               className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
               aria-label="Close dialog"

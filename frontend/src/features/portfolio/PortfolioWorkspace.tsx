@@ -61,6 +61,10 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
       setPortfolio({ ...updated, holdings: [...updated.holdings] });
     }
     setAnalytics(store.getAnalytics(portfolioId));
+    setSuccessToast('Portfolio refreshed from authoritative store.');
+    setTimeout(() => {
+      setSuccessToast(null);
+    }, 3000);
   }, [store, portfolioId]);
 
   // Handle successful save from modal: updates workspace and displays toast
@@ -113,13 +117,13 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 relative z-20">
           <button
             type="button"
             id="btn-refresh-portfolio"
             onClick={refreshPortfolio}
             aria-label="Refresh portfolio data"
-            className="rounded-lg border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer transition-colors"
+            className="cursor-pointer rounded-lg border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors pointer-events-auto"
           >
             Refresh
           </button>
@@ -129,7 +133,7 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
             id="btn-open-import"
             onClick={() => setIsImportModalOpen(true)}
             aria-label="Import broker holdings"
-            className="inline-flex items-center space-x-2 rounded-lg bg-teal-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-400 cursor-pointer transition-colors"
+            className="cursor-pointer inline-flex items-center space-x-2 rounded-lg bg-teal-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-colors pointer-events-auto"
           >
             <span>+ Import Holdings</span>
           </button>
@@ -200,7 +204,7 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
             type="button"
             id="btn-empty-open-import"
             onClick={() => setIsImportModalOpen(true)}
-            className="inline-flex items-center space-x-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-400 cursor-pointer"
+            className="relative z-20 cursor-pointer inline-flex items-center space-x-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-400 pointer-events-auto"
           >
             <span>+ Import Broker Holdings</span>
           </button>
