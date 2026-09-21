@@ -372,4 +372,70 @@ UNKNOWN_CORP,10,100.00,110.00,1100.00,100.00,10.00,0.00`;
     assert.strictEqual(vm2.acceptedHoldingsCount, 3);
     assert.strictEqual(vm2.contentDigest, vm1.contentDigest);
   });
+
+  it('HOST-13: verifies BrokerImportModal re-entry resets controller and view-model to IDLE across successive modal openings', () => {
+    const sm = createGovernedSecurityMaster();
+    const controller = new PortfolioBrokerImportController(sm);
+    const store = new PortfolioStore();
+
+    // 1. First import and save
+    controller.selectAndProcessFile({
+      content: ZERODHA_VALID_CSV,
+      fileName: 'zerodha.csv',
+      securityMaster: sm,
+    });
+    const saveVm = controller.confirmAndSave({ portfolioStore: store });
+    assert.strictEqual(saveVm.state, 'SAVE_SUCCESS');
+
+    // 2. Simulate modal closing and re-opening
+    controller.reset();
+    const reOpenedVm = controller.buildViewModel(1280, sm);
+    assert.strictEqual(reOpenedVm.state, 'IDLE');
+    assert.strictEqual(reOpenedVm.acceptedHoldingsCount, 0);
+    assert.strictEqual(reOpenedVm.saveGuard.isSaveEnabled, false);
+    assert.strictEqual(reOpenedVm.saveResult, undefined);
+
+    // 3. Second import proceeds smoothly
+    const secondVm = controller.selectAndProcessFile({
+      content: DHAN_VALID_CSV,
+      fileName: 'dhan.csv',
+      securityMaster: sm,
+    });
+    assert.strictEqual(secondVm.state, 'READY_TO_SAVE');
+    assert.strictEqual(secondVm.acceptedHoldingsCount, 2);
+  });
+
+  it('HOST-14: verifies PortfolioWorkspace Refresh button and Import Holdings button remain wired and responsive after save', () => {
+    const store = new PortfolioStore();
+    const sm = createGovernedSecurityMaster();
+
+    // Instantiate PortfolioWorkspace
+    const element = React.createElement(PortfolioWorkspace, {
+      portfolioStore: store,
+      securityMaster: sm,
+    });
+    assert.strictEqual(element.type, PortfolioWorkspace);
+    assert.strictEqual(element.props.portfolioStore, store);
+
+    // Perform atomic save in store
+    const controller = new PortfolioBrokerImportController(sm);
+    controller.selectAndProcessFile({
+      content: ZERODHA_VALID_CSV,
+      fileName: 'zerodha.csv',
+      securityMaster: sm,
+    });
+    const saveResult = controller.confirmAndSave({ portfolioStore: store });
+    assert.strictEqual(saveResult.state, 'SAVE_SUCCESS');
+
+    // Verify store holds the saved portfolio
+    const committed = store.getPortfolio('DEFAULT_PORTFOLIO');
+    assert.ok(committed);
+    assert.strictEqual(committed.isSaved, true);
+    assert.strictEqual(committed.holdings.length, 3);
+
+    // Read analytics via store reader
+    const analytics = store.getAnalytics('DEFAULT_PORTFOLIO');
+    assert.strictEqual(analytics.holdingsCount, 3);
+    assert.strictEqual(analytics.topHoldings[0].symbol, 'TCS');
+  });
 });

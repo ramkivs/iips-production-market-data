@@ -120,7 +120,7 @@ export class PortfolioBrokerImportController {
   }
 
   /**
-   * Resets import state to IDLE.
+   * Resets import state to IDLE and clears previous ingress and save results.
    */
   public reset(): void {
     this.currentState = 'IDLE';
@@ -131,6 +131,7 @@ export class PortfolioBrokerImportController {
 
   /**
    * Processes an uploaded broker file through the governed BI-05 ingress orchestrator.
+   * Clears any previous save results so new file processing begins in clean state.
    */
   public selectAndProcessFile(params: {
     content: string | Uint8Array | ArrayBuffer | any;
@@ -143,6 +144,7 @@ export class PortfolioBrokerImportController {
   }): PortfolioBrokerImportViewModel {
     this.selectedFileName = params.fileName;
     this.currentState = 'PROCESSING';
+    this.lastSaveResult = undefined; // Clear previous save result
     const sm = params.securityMaster || this.securityMaster;
 
     const request: BrokerIngressRequest = {

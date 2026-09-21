@@ -6,7 +6,7 @@
  * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
  */
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   PortfolioStore,
   PortfolioSaveResult,
@@ -42,6 +42,25 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
   );
   const [isProcessingFile, setIsProcessingFile] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+
+  // Reset helper that synchronizes controller, input ref, and view-model back to IDLE
+  const resetToIdle = useCallback(() => {
+    controller.reset();
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1280;
+    setViewModel(controller.buildViewModel(viewportWidth, securityMaster));
+    setIsProcessingFile(false);
+    setIsDragging(false);
+  }, [controller, securityMaster]);
+
+  // Synchronize and reset state whenever modal is opened
+  useEffect(() => {
+    if (isOpen) {
+      resetToIdle();
+    }
+  }, [isOpen, resetToIdle]);
 
   // File selection handler
   const handleFile = useCallback(
@@ -112,15 +131,11 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
     }
   }, [controller, portfolioStore, onSaveSuccess]);
 
-  // Reset handler
-  const handleReset = useCallback(() => {
-    controller.reset();
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1280;
-    setViewModel(controller.buildViewModel(viewportWidth, securityMaster));
-  }, [controller, securityMaster]);
+  // Clean close handler
+  const handleClose = useCallback(() => {
+    resetToIdle();
+    onClose();
+  }, [resetToIdle, onClose]);
 
   if (!isOpen) return null;
 
@@ -152,7 +167,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                 Import Broker Holdings
               </h2>
               <p id="ui15-modal-description" className="text-xs text-slate-400">
-                Institutional Broker Ingress & Atomic Portfolio Persistence Boundary (BI-07)
+                Institutional Broker Ingress &amp; Atomic Portfolio Persistence Boundary (BI-07)
               </p>
             </div>
           </div>
@@ -173,8 +188,8 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
             </span>
 
             <button
-              onClick={onClose}
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              onClick={handleClose}
+              className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
               aria-label="Close dialog"
             >
               ✕
@@ -531,13 +546,27 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
         {/* Modal Footer */}
         <div className="flex items-center justify-between border-t border-slate-800 px-6 py-4 bg-slate-950/40">
           <div>
+            {/* Select another file when previewing or rejected */}
             {viewModel.state !== 'IDLE' && viewModel.state !== 'SAVE_SUCCESS' && (
               <button
                 type="button"
-                onClick={handleReset}
-                className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white"
+                id="ui15-btn-select-another"
+                onClick={resetToIdle}
+                className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer"
               >
                 Select Another File
+              </button>
+            )}
+
+            {/* Quick re-import button directly from SAVE_SUCCESS screen */}
+            {viewModel.state === 'SAVE_SUCCESS' && (
+              <button
+                type="button"
+                id="ui15-btn-import-another"
+                onClick={resetToIdle}
+                className="inline-flex items-center space-x-1.5 rounded-lg border border-teal-700 bg-teal-950/80 px-4 py-2 text-xs font-semibold text-teal-300 hover:bg-teal-900 hover:text-white cursor-pointer transition-colors"
+              >
+                <span>+ Import Another Statement</span>
               </button>
             )}
           </div>
@@ -545,10 +574,11 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
           <div className="flex items-center space-x-3">
             <button
               type="button"
-              onClick={onClose}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white"
+              id="ui15-btn-modal-close"
+              onClick={handleClose}
+              className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white cursor-pointer"
             >
-              {viewModel.state === 'SAVE_SUCCESS' ? 'Close' : 'Cancel'}
+              {viewModel.state === 'SAVE_SUCCESS' ? 'Done & Close' : 'Cancel'}
             </button>
 
             {viewModel.state !== 'SAVE_SUCCESS' && (
