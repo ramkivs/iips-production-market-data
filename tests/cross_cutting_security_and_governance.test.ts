@@ -27,12 +27,16 @@ describe('Cross-Cutting Security & Governance Invariants', () => {
   it('SEC-01: Workspace static AST scan must confirm zero plaintext credentials', () => {
     const srcDir = path.resolve('src');
     const testsDir = path.resolve('tests');
+    const frontendDir = path.resolve('frontend');
 
     const srcReport = scanDirectoryForSecrets(srcDir);
     assert.strictEqual(srcReport.passed, true, `Secrets detected in src: ${JSON.stringify(srcReport.violations)}`);
 
     const testsReport = scanDirectoryForSecrets(testsDir);
     assert.strictEqual(testsReport.passed, true, `Secrets detected in tests: ${JSON.stringify(testsReport.violations)}`);
+
+    const frontendReport = scanDirectoryForSecrets(frontendDir);
+    assert.strictEqual(frontendReport.passed, true, `Secrets detected in frontend: ${JSON.stringify(frontendReport.violations)}`);
   });
 
   it('GOV-01: Provider Masking (NFR-06) must sanitize internal vendor details for consumers', () => {

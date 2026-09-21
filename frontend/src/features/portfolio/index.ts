@@ -8,3 +8,5 @@
 
 export * from './portfolio-store.js';
 export * from './import/index.js';
+export * from './PortfolioWorkspace.js';
+export * from './BrokerImportModal.js';
