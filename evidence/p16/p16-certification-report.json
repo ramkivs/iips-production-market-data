@@ -1,0 +1,139 @@
+{
+  "certificationId": "P16-CERT-2026-09-21-001",
+  "packageId": "WS-G / Package P16 — Operational Qualification & Non-Production Release Candidate Verification",
+  "activity": "P16-CERT Controlled Certification Activity",
+  "certificationStatus": "CERTIFIED",
+  "authority": {
+    "standards": "AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W6-AUTH-2026-01",
+    "governingGates": "G-001 -> G-033 CLOSED / ACCEPTED; P13-CERT CERTIFIED; P14-CERT CERTIFIED; P15-CERT CERTIFIED; G-034 HELD / PRODUCTION-DEPENDENT",
+    "targetUiProductParity": "CONVERGED / ACCEPTED / QUALIFIED",
+    "optionAStatus": "IMPLEMENTED / QUALIFIED / EVIDENCE-ANCHORED",
+    "operatingMode": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+    "productionAuthorization": "NOT GRANTED",
+    "commercialProviderActivation": "PROHIBITED",
+    "r2Status": "HELD / EXTERNALLY GATED",
+    "ad17M2Status": "UNRESOLVED / PRESERVED",
+    "actDoc01Status": "COMPLETE",
+    "actRun01Status": "PARKED",
+    "actAud01Status": "PARKED"
+  },
+  "scope": {
+    "description": "Operational Qualification & Non-Production Release Candidate Verification (v1.0.0-rc1), 20-Point Deterministic OQ Suite, Runtime Readiness & Health Probes, SecretRef Enterprise Vault Simulation, Empirical Emergency Kill-Switch (<250ms), Synthetic Failover & Provider Isolation Circuits, and Wave 6 Durability Checkpoints",
+    "governedComponents": [
+      "RuntimeReadinessManager (Startup, Liveness, and Readiness health probes)",
+      "MockEnterpriseVaultDriver (SecretRef rotation, expiry, revocation, and unmapped fail-closed handling)",
+      "EmpiricalKillSwitchBenchmark (Sub-250ms emergency cutoff across N=100 trials)",
+      "SyntheticFailoverCircuits (Provider isolation, entitlement revocation, OPERATOR_DROP fallback, and rollback simulation)",
+      "OQSuiteRunner (20-Point deterministic operational qualification suite)",
+      "ReleaseCandidateManifestBuilder (Cryptographically anchored non-production v1.0.0-rc1 release candidate manifest)"
+    ]
+  },
+  "releaseCandidateIdentity": {
+    "releaseVersion": "v1.0.0-rc1",
+    "releaseType": "NON_PRODUCTION_QUALIFIED_CANDIDATE",
+    "sourceGitSha": "854aa08",
+    "operatingMode": "SNAPSHOT / OFFLINE_BOOTSTRAP",
+    "manifestDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "authoritativeArtifacts": [
+    {
+      "path": "src/oq/runtime_readiness.ts",
+      "role": "RuntimeReadinessManager evaluating Startup, Liveness, and Readiness probes"
+    },
+    {
+      "path": "src/oq/mock_vault_driver.ts",
+      "role": "MockEnterpriseVaultDriver simulating secure SecretRef resolution and rotation"
+    },
+    {
+      "path": "src/oq/empirical_kill_switch.ts",
+      "role": "EmpiricalKillSwitchBenchmark executing sub-250ms cutoff trials"
+    },
+    {
+      "path": "src/oq/synthetic_failover.ts",
+      "role": "SyntheticFailoverCircuits managing provider isolation and rollback"
+    },
+    {
+      "path": "src/oq/oq_suite_runner.ts",
+      "role": "OQSuiteRunner executing the full 20-point operational qualification suite"
+    },
+    {
+      "path": "src/oq/release_candidate_manifest.ts",
+      "role": "ReleaseCandidateManifestBuilder generating v1.0.0-rc1 manifest"
+    },
+    {
+      "path": "tests/wsg_p16_operational_qualification.test.ts",
+      "role": "P16 Operational Qualification & Release Evidence test suite (6/6 PASS)"
+    },
+    {
+      "path": "tests/wsg_durability_cp_w6.test.ts",
+      "role": "Wave 6 durability checkpoint suite (CP-W6-01 to CP-W6-12) — 12/12 PASS"
+    },
+    {
+      "path": "evidence/p13/p13-certification-report.json",
+      "role": "P13 UI data integration certification foundation (Digest: fc1c5e8b886c3711e00928df4a7c2d577cc8a44d0da4aa148decacdd12e328fb)"
+    },
+    {
+      "path": "evidence/p14/p14-certification-report.json",
+      "role": "P14 UI/UX accessibility & responsive certification foundation (Digest: 6b8bb82b6872d2bbacf1d6e99e9c18c86c0337c4610c79370c952f36311d0a8d)"
+    },
+    {
+      "path": "evidence/p15/p15-certification-report.json",
+      "role": "P15 E2E lineage & degradation certification foundation (Digest: b0a79c8b3d87c969060f4ec5e4be0eb52951f1b5aac214de8fd5d0440bd66f1a)"
+    }
+  ],
+  "operationalQualificationEvidence": {
+    "twentyPointOqSuite": "VERIFIED (20/20 checks PASSED; oqDisposition = QUALIFIED)",
+    "healthProbes": "VERIFIED (Startup = HEALTHY, Liveness = HEALTHY, Readiness = HEALTHY)",
+    "secretRefResolution": "VERIFIED (Active resolved; Expired, Revoked, Unmapped fail closed with SecretResolutionError)",
+    "killSwitchResponse": "VERIFIED (N=100 trials, max latency < 250ms, all cutoff checks met)",
+    "failoverAndIsolation": "VERIFIED (Provider isolation, entitlement revocation, OPERATOR_DROP fallback, rollback verified)"
+  },
+  "configurationSafetyEvidence": {
+    "liveProvidersActive": 0,
+    "networkSocketsBound": 0,
+    "zeroPlaintextSecrets": "VERIFIED (0 plaintext credentials detected across AST scan of entire workspace)",
+    "nfr06ProviderMasking": "VERIFIED (Proprietary vendor tokens blocked from view models; vendorTier = OFFLINE_BOOTSTRAP)"
+  },
+  "failureAndRecoveryEvidence": {
+    "malformedPayloadHandling": "VERIFIED (Diverted to DeadLetterQueue at Stage 2)",
+    "identityAmbiguityHandling": "VERIFIED (Unmapped symbols throw IdentityAmbiguityError; fail closed)",
+    "staleInputSuppression": "VERIFIED (Age > 2x threshold suppresses execution under AD-12)",
+    "emergencyPlatformRollback": "VERIFIED (EmergencyControlCircuit isolates feeds in < 250ms)"
+  },
+  "regressionAndPreservationEvidence": {
+    "p13Baseline": "VERIFIED_PRESERVED (Commit 94ad0e3)",
+    "p14Baseline": "VERIFIED_PRESERVED (Commit e6ec2ca)",
+    "p15Baseline": "VERIFIED_PRESERVED (Commit 854aa08)",
+    "globalTestSuite": "191/191 PASS across 26 test suites"
+  },
+  "evidenceClassification": {
+    "startupReadinessEvaluation": "VERIFIED",
+    "healthProbesVerification": "VERIFIED",
+    "secretRefSecurityAudit": "VERIFIED",
+    "killSwitchEmpiricalBenchmark": "VERIFIED",
+    "providerIsolationFailover": "VERIFIED",
+    "twentyPointOqQualification": "VERIFIED",
+    "releaseCandidateIntegrity": "VERIFIED",
+    "productionLiveFeedIngestion": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED (Prohibited in offline qualification)",
+    "productionCredentialsOnboarding": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED (Prohibited in offline qualification)"
+  },
+  "productionBoundaryConfirmation": {
+    "liveNseProductionDataDependency": false,
+    "commercialProviderActivationDependency": false,
+    "productionCredentialsDependency": false,
+    "liveProductionIdentityDependency": false,
+    "g034Dependency": false,
+    "productionOnlyDependencies": false,
+    "confirmationStatement": "Zero production dependencies. P16 operates strictly within non-production OFFLINE_BOOTSTRAP parameters."
+  },
+  "unresolvedGovernanceItems": {
+    "ad17M2Status": "UNRESOLVED / PRESERVED (Replay simulation stubs do not equal live execution feed)",
+    "g034Status": "HELD / PRODUCTION-DEPENDENT",
+    "r2Status": "HELD / EXTERNALLY GATED",
+    "actRun01": "PARKED",
+    "actAud01": "PARKED",
+    "commercialEntitlement": "NOT ESTABLISHED"
+  },
+  "certificationDisposition": "P16-CERT = CERTIFIED",
+  "certificationLineageDigest": "4e40e000023e39059222c5da40e417e7071cb7e99344fc2fd796625a9fc4785c"
+}
