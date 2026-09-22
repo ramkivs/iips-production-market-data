@@ -294,8 +294,22 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
                   {portfolio.holdings.map((holding, idx) => (
                     <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
                       <td className="px-4 py-2.5 font-mono text-slate-400">{idx + 1}</td>
-                      <td className="px-4 py-2.5 font-mono font-bold text-teal-400">{holding.symbol}</td>
-                      <td className="px-4 py-2.5 font-mono text-slate-400">{holding.companyId}</td>
+                      <td className="px-4 py-2.5 font-mono font-bold">
+                        {holding.identityStatus === 'UNRESOLVED' ? (
+                          <span className="text-amber-400">{holding.symbol}</span>
+                        ) : (
+                          <span className="text-teal-400">{holding.symbol}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 font-mono">
+                        {holding.identityStatus === 'UNRESOLVED' || !holding.companyId ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-950 text-amber-300 border border-amber-700">
+                            UNRESOLVED
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">{holding.companyId}</span>
+                        )}
+                      </td>
                       <td className="px-4 py-2.5 font-mono text-right text-slate-200">
                         {holding.quantity.toLocaleString('en-IN')}
                       </td>

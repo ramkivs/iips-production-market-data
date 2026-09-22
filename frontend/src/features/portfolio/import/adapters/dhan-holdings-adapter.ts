@@ -118,8 +118,8 @@ export class DhanHoldingsAdapter implements FinappBrokerAdapter {
     const symbolCol = headerMap.get('trading symbol') || headerMap.get('symbol') || headerMap.get('stock name') || headerMap.get('name');
     const isinCol = headerMap.get('isin');
     const exchangeCol = headerMap.get('exchange');
-    const qtyCol = headerMap.get('total qty') || headerMap.get('quantity') || headerMap.get('available qty') || headerMap.get('dp qty') || headerMap.get('total quantity');
-    const avgBuyPriceCol = headerMap.get('average buy price') || headerMap.get('average price') || headerMap.get('avg buy price') || headerMap.get('avg price');
+    const qtyCol = headerMap.get('total qty') || headerMap.get('quantity') || headerMap.get('available qty') || headerMap.get('dp qty') || headerMap.get('total quantity') || headerMap.get('qty') || headerMap.get('qty.');
+    const avgBuyPriceCol = headerMap.get('average buy price') || headerMap.get('average price') || headerMap.get('avg buy price') || headerMap.get('avg price') || headerMap.get('buy avg') || headerMap.get('avg. cost') || headerMap.get('buy price');
     const ltpCol = headerMap.get('last traded price') || headerMap.get('last traded') || headerMap.get('ltp') || headerMap.get('current price');
     const investmentCol = headerMap.get('investment') || headerMap.get('invested') || headerMap.get('invested value');
     const curValCol = headerMap.get('current value') || headerMap.get('market value');

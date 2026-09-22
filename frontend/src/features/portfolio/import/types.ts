@@ -148,7 +148,7 @@ export interface BrokerDetectionResult {
  */
 export interface UserHoldingInput {
   symbol: string;
-  companyId: string;
+  companyId: string; // Canonical companyId if resolved, or empty string '' if UNRESOLVED
   isin?: string;
   exchange?: 'NSE' | 'BSE';
   quantity: number;
@@ -159,6 +159,9 @@ export interface UserHoldingInput {
   active: boolean;
   sourceBroker: FinappBrokerType;
   lineageDigest: string;
+  identityStatus?: 'RESOLVED' | 'UNRESOLVED';
+  resolutionDisposition?: 'CANONICAL_P04' | 'NON_PRODUCTION_OPERATOR_BYPASS';
+  rawIdentifier?: string;
 }
 
 /**
@@ -170,6 +173,8 @@ export interface BrokerMappingOptions {
   failOnUnmappedIdentity?: boolean; // Default true (fail-closed under P04 / AD-12)
   minHoldingValueThreshold?: number; // Default 0 (exclude <= 0)
   targetWeightPrecision?: number; // Default 4 decimal places
+  allowNonProductionBypass?: boolean; // Explicit non-production operator bypass mode (Block 3M-A)
+  executionEnvironment?: 'PRODUCTION' | 'NON_PRODUCTION'; // Default 'NON_PRODUCTION'
 }
 
 /**
@@ -217,6 +222,8 @@ export interface BrokerIngressRequest {
   minHoldingValueThreshold?: number; // Default 0
   allowPartialRejection?: boolean; // Default true
   targetWeightPrecision?: number; // Default 4
+  allowNonProductionBypass?: boolean; // Block 3M-A Non-production Operator Bypass
+  executionEnvironment?: 'PRODUCTION' | 'NON_PRODUCTION';
 }
 
 /**

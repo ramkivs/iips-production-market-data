@@ -125,9 +125,12 @@ export class PortfolioStore {
       };
     }
 
-    // Save Guard 2: Strict entity authority check (every holding must have resolved companyId)
+    // Save Guard 2: Strict entity authority check (every holding must have resolved companyId OR authorized non-production bypass)
     for (const h of holdings) {
-      if (!h.companyId || !h.symbol || h.quantity <= 0 || h.marketValue <= 0) {
+      const isResolved = h.identityStatus !== 'UNRESOLVED' && !!h.companyId;
+      const isBypass = h.identityStatus === 'UNRESOLVED' && h.resolutionDisposition === 'NON_PRODUCTION_OPERATOR_BYPASS';
+
+      if (!h.symbol || (!isResolved && !isBypass) || h.quantity <= 0 || h.marketValue <= 0) {
         return {
           success: false,
           portfolio: this.getOrCreatePortfolio(portfolioId),
@@ -165,7 +168,7 @@ export class PortfolioStore {
       }
       finalHoldings = [...holdings];
     } else {
-      // Governed Multi-Broker Atomic Merge by canonical P04/P12 companyId
+      // Governed Multi-Broker Atomic Merge by canonical P04/P12 companyId (or unique unresolved key)
       const consolidationMap = new Map<string, {
         symbol: string;
         companyId: string;
@@ -176,11 +179,13 @@ export class PortfolioStore {
         currentPrice: number;
         sourceBrokers: Set<string>;
         lineageDigests: string[];
+        identityStatus?: 'RESOLVED' | 'UNRESOLVED';
+        resolutionDisposition?: 'CANONICAL_P04' | 'NON_PRODUCTION_OPERATOR_BYPASS';
       }>();
 
       // 1. Populate with existing holdings
       for (const h of existingPortfolio!.holdings) {
-        const key = h.companyId || `SYM:${h.symbol}`;
+        const key = h.companyId ? h.companyId : (h.isin ? `UNRESOLVED:ISIN:${h.isin}` : `UNRESOLVED:SYM:${h.symbol}`);
         consolidationMap.set(key, {
           symbol: h.symbol,
           companyId: h.companyId,
@@ -191,12 +196,14 @@ export class PortfolioStore {
           currentPrice: Number(h.currentPrice),
           sourceBrokers: new Set([h.sourceBroker]),
           lineageDigests: [h.lineageDigest],
+          identityStatus: h.identityStatus,
+          resolutionDisposition: h.resolutionDisposition,
         });
       }
 
       // 2. Merge incoming broker holdings
       for (const h of holdings) {
-        const key = h.companyId || `SYM:${h.symbol}`;
+        const key = h.companyId ? h.companyId : (h.isin ? `UNRESOLVED:ISIN:${h.isin}` : `UNRESOLVED:SYM:${h.symbol}`);
         const existing = consolidationMap.get(key);
 
         if (existing) {
@@ -224,6 +231,8 @@ export class PortfolioStore {
             currentPrice: Number(h.currentPrice),
             sourceBrokers: new Set([h.sourceBroker]),
             lineageDigests: [h.lineageDigest],
+            identityStatus: h.identityStatus,
+            resolutionDisposition: h.resolutionDisposition,
           });
         }
       }
@@ -240,6 +249,8 @@ export class PortfolioStore {
         marketValue: number;
         sourceBroker: any;
         lineageDigests: string[];
+        identityStatus?: 'RESOLVED' | 'UNRESOLVED';
+        resolutionDisposition?: 'CANONICAL_P04' | 'NON_PRODUCTION_OPERATOR_BYPASS';
       }> = [];
 
       for (const item of consolidationMap.values()) {
@@ -260,6 +271,8 @@ export class PortfolioStore {
           marketValue,
           sourceBroker,
           lineageDigests: item.lineageDigests,
+          identityStatus: item.identityStatus,
+          resolutionDisposition: item.resolutionDisposition,
         });
       }
 
@@ -308,6 +321,8 @@ export class PortfolioStore {
             marketValue: base.marketValue,
             weightPercentage: weight,
             priorDigests: base.lineageDigests,
+            identityStatus: base.identityStatus,
+            resolutionDisposition: base.resolutionDisposition,
           },
           { sourceClassification: 'REAL', asOf: savedAt, dataVersion: 'v1.0.0-bi07' }
         );
@@ -325,6 +340,8 @@ export class PortfolioStore {
           active: true,
           sourceBroker: base.sourceBroker,
           lineageDigest: holdingLineage,
+          identityStatus: base.identityStatus,
+          resolutionDisposition: base.resolutionDisposition,
         });
       }
     }

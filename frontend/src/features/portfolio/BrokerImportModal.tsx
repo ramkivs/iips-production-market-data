@@ -21,6 +21,8 @@ export interface BrokerImportModalProps {
   onSaveSuccess: (result: PortfolioSaveResult) => void;
   portfolioStore: PortfolioStore;
   securityMaster?: SecurityMaster;
+  allowNonProductionBypass?: boolean;
+  executionEnvironment?: 'PRODUCTION' | 'NON_PRODUCTION';
 }
 
 export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
@@ -29,6 +31,8 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
   onSaveSuccess,
   portfolioStore,
   securityMaster,
+  allowNonProductionBypass = true,
+  executionEnvironment = 'NON_PRODUCTION',
 }) => {
   // Initialize governed controller
   const controller = useMemo(() => new PortfolioBrokerImportController(securityMaster), [securityMaster]);
@@ -74,6 +78,8 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
           fileName: file.name,
           viewportWidth,
           securityMaster,
+          allowNonProductionBypass,
+          executionEnvironment,
         });
         setViewModel(vm);
       } catch (err: unknown) {
@@ -366,6 +372,14 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
 
               {/* Accepted Holdings Preview Table with Bounded Scrolling & Sticky Header */}
               <div className="space-y-2">
+                {viewModel.identityResolutionStatus === 'NON_PRODUCTION_OPERATOR_BYPASS_ACTIVE' && (
+                  <div className="rounded-lg border border-amber-800/60 bg-amber-950/30 px-3.5 py-2 text-xs text-amber-200 flex items-center space-x-2">
+                    <span className="text-sm">⚠️</span>
+                    <span>
+                      <strong>Non-Production Operator Mode:</strong> Retaining unresolved holdings under explicit authority bypass. Zero fabricated company IDs.
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-bold text-slate-200">
                     Parsed Constituent Holdings ({viewModel.acceptedHoldingsCount})
@@ -392,9 +406,23 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                       {viewModel.acceptedHoldings.map((h, idx) => (
                         <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
                           <td className="px-3 py-2 font-mono text-slate-400">{idx + 1}</td>
-                          <td className="px-3 py-2 font-mono font-bold text-teal-400">{h.symbol}</td>
+                          <td className="px-3 py-2 font-mono font-bold">
+                            {h.identityStatus === 'UNRESOLVED' ? (
+                              <span className="text-amber-400">{h.symbol}</span>
+                            ) : (
+                              <span className="text-teal-400">{h.symbol}</span>
+                            )}
+                          </td>
                           <td className="px-3 py-2 text-slate-300">{h.companyName}</td>
-                          <td className="px-3 py-2 font-mono text-slate-400">{h.companyId}</td>
+                          <td className="px-3 py-2 font-mono">
+                            {h.identityStatus === 'UNRESOLVED' ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-950/80 text-amber-300 border border-amber-700">
+                                UNRESOLVED (Bypass)
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">{h.companyId}</span>
+                            )}
+                          </td>
                           <td className="px-3 py-2 font-mono text-right text-slate-200">
                             {h.quantity.toLocaleString('en-IN')}
                           </td>

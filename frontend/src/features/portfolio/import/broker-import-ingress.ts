@@ -285,6 +285,8 @@ export class BrokerImportIngressOrchestrator {
         failOnUnmappedIdentity: request.failOnUnmappedIdentity ?? true,
         minHoldingValueThreshold: request.minHoldingValueThreshold ?? 0,
         targetWeightPrecision: request.targetWeightPrecision ?? 4,
+        allowNonProductionBypass: request.allowNonProductionBypass,
+        executionEnvironment: request.executionEnvironment,
       });
     } catch (err: unknown) {
       let rejReason: 'UNMAPPED_IDENTITY' | 'IDENTITY_AMBIGUITY' | 'SCHEMA_MISMATCH' = 'UNMAPPED_IDENTITY';
@@ -424,7 +426,10 @@ export class BrokerImportIngressOrchestrator {
 
     // Verify all UserHoldingInput records conform strictly to invariant schema
     for (const holding of mappingResult.userHoldings) {
-      if (!holding.symbol || !holding.companyId || holding.quantity <= 0 || holding.marketValue <= 0 || !holding.lineageDigest) {
+      const isResolved = holding.identityStatus !== 'UNRESOLVED' && !!holding.companyId;
+      const isBypass = holding.identityStatus === 'UNRESOLVED' && holding.resolutionDisposition === 'NON_PRODUCTION_OPERATOR_BYPASS';
+
+      if (!holding.symbol || (!isResolved && !isBypass) || holding.quantity <= 0 || holding.marketValue <= 0 || !holding.lineageDigest) {
         const rej: BrokerIngressRejection = {
           reason: 'SCHEMA_MISMATCH',
           rawIdentifier: holding.symbol,

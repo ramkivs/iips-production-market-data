@@ -152,7 +152,12 @@ export function mapBrokerOutputToUserHoldings(
     averageBuyPrice: number;
     currentPrice: number;
     marketValue: number;
+    identityStatus?: 'RESOLVED' | 'UNRESOLVED';
+    resolutionDisposition?: 'CANONICAL_P04' | 'NON_PRODUCTION_OPERATOR_BYPASS';
   }> = [];
+
+  const isProduction = options?.executionEnvironment === 'PRODUCTION';
+  const isBypassAuthorized = !isProduction && options?.allowNonProductionBypass === true;
 
   for (const [key, group] of groupedMap.entries()) {
     if (group.items.length > 1) {
@@ -183,6 +188,9 @@ export function mapBrokerOutputToUserHoldings(
 
     // Resolve Identity via SecurityMaster if provided
     let resolvedCompanyId = group.symbol;
+    let identityStatus: 'RESOLVED' | 'UNRESOLVED' = 'RESOLVED';
+    let resolutionDisposition: 'CANONICAL_P04' | 'NON_PRODUCTION_OPERATOR_BYPASS' = 'CANONICAL_P04';
+
     if (options?.securityMaster) {
       try {
         if (group.isin) {
@@ -206,8 +214,18 @@ export function mapBrokerOutputToUserHoldings(
             });
           }
         }
+        identityStatus = 'RESOLVED';
+        resolutionDisposition = 'CANONICAL_P04';
       } catch (err: unknown) {
-        if (failOnUnmapped) {
+        if (isBypassAuthorized) {
+          // Explicitly authorized non-production single-operator bypass (Block 3M-A)
+          identityStatus = 'UNRESOLVED';
+          resolutionDisposition = 'NON_PRODUCTION_OPERATOR_BYPASS';
+          resolvedCompanyId = ''; // Strictly DO NOT fabricate companyId!
+          warnings.push(
+            `Non-production operator bypass applied for '${group.symbol}': retained as UNRESOLVED holding without fabricated companyId.`
+          );
+        } else if (failOnUnmapped) {
           if (err instanceof IdentityAmbiguityError) {
             throw err;
           }
@@ -228,6 +246,8 @@ export function mapBrokerOutputToUserHoldings(
       averageBuyPrice: weightedAvgBuyPrice,
       currentPrice: finalCurrentPrice,
       marketValue,
+      identityStatus,
+      resolutionDisposition,
     });
   }
 
@@ -309,6 +329,8 @@ export function mapBrokerOutputToUserHoldings(
       weightPercentage: weight,
       active: true,
       sourceBroker,
+      identityStatus: base.identityStatus,
+      resolutionDisposition: base.resolutionDisposition,
     };
 
     const lineageDigest = computeLineageHash(holdingPayload, {

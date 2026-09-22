@@ -42,6 +42,8 @@ export interface AcceptedHoldingPreviewItem {
   marketValue: number;
   weightPercentage: number;
   lineageDigest: string;
+  identityStatus?: 'RESOLVED' | 'UNRESOLVED';
+  resolutionDisposition?: 'CANONICAL_P04' | 'NON_PRODUCTION_OPERATOR_BYPASS';
 }
 
 export interface RejectedRowPreviewItem {
@@ -141,6 +143,8 @@ export class PortfolioBrokerImportController {
     securityMaster?: SecurityMaster;
     failOnUnmappedIdentity?: boolean;
     minHoldingValueThreshold?: number;
+    allowNonProductionBypass?: boolean;
+    executionEnvironment?: 'PRODUCTION' | 'NON_PRODUCTION';
   }): PortfolioBrokerImportViewModel {
     this.selectedFileName = params.fileName;
     this.currentState = 'PROCESSING';
@@ -154,6 +158,8 @@ export class PortfolioBrokerImportController {
       securityMaster: sm,
       failOnUnmappedIdentity: params.failOnUnmappedIdentity ?? true,
       minHoldingValueThreshold: params.minHoldingValueThreshold ?? 0,
+      allowNonProductionBypass: params.allowNonProductionBypass ?? false, // Default false ensures strict fail-closed governance unless explicitly opted in
+      executionEnvironment: params.executionEnvironment ?? 'NON_PRODUCTION',
     };
 
     const ingressResult = BrokerImportIngressOrchestrator.executeIngress(request);
@@ -237,7 +243,11 @@ export class PortfolioBrokerImportController {
 
     const res = this.lastIngressResult;
     const isReady = res?.disposition === 'READY_FOR_PORTFOLIO_SAVE' && (res?.userHoldings.length ?? 0) > 0;
-    const allHaveCompanyId = (res?.userHoldings ?? []).every((h) => !!h.companyId && h.companyId !== 'UNKNOWN');
+    const allHoldingsValid = (res?.userHoldings ?? []).every(
+      (h) =>
+        (h.identityStatus !== 'UNRESOLVED' && !!h.companyId && h.companyId !== 'UNKNOWN') ||
+        (h.identityStatus === 'UNRESOLVED' && h.resolutionDisposition === 'NON_PRODUCTION_OPERATOR_BYPASS')
+    );
     const isExact100 = res ? Math.abs(res.weightSumPercentage - 100.0) < 0.001 : false;
 
     // Evaluate save guard
@@ -256,7 +266,7 @@ export class PortfolioBrokerImportController {
     } else if (this.currentState === 'IDLE' || this.currentState === 'FILE_SELECTED' || this.currentState === 'PROCESSING') {
       isSaveEnabled = false;
       disabledReason = 'Processing in progress. Preview not ready.';
-    } else if (isReady && allHaveCompanyId && isExact100) {
+    } else if (isReady && allHoldingsValid && isExact100) {
       isSaveEnabled = true;
     } else {
       isSaveEnabled = false;
@@ -266,7 +276,7 @@ export class PortfolioBrokerImportController {
     const saveGuard: BrokerImportSaveGuard = {
       isSaveEnabled,
       disabledReason,
-      allHoldingsHaveCompanyId: allHaveCompanyId,
+      allHoldingsHaveCompanyId: allHoldingsValid,
       isExact100Weight: isExact100,
       hasValidHoldings: (res?.validHoldingsCount ?? 0) > 0,
       isReadyDisposition: res?.disposition === 'READY_FOR_PORTFOLIO_SAVE',
@@ -275,7 +285,9 @@ export class PortfolioBrokerImportController {
     // Build accepted holding items
     const acceptedHoldings: AcceptedHoldingPreviewItem[] = (res?.userHoldings ?? []).map((h) => {
       let companyName = h.symbol;
-      if (sm) {
+      if (h.identityStatus === 'UNRESOLVED') {
+        companyName = `${h.symbol} (Unresolved - Operator Bypass)`;
+      } else if (sm && h.companyId) {
         const ent = sm.getEntity(h.companyId);
         if (ent) companyName = ent.companyName;
       }
@@ -290,6 +302,8 @@ export class PortfolioBrokerImportController {
         marketValue: h.marketValue,
         weightPercentage: h.weightPercentage,
         lineageDigest: h.lineageDigest,
+        identityStatus: h.identityStatus,
+        resolutionDisposition: h.resolutionDisposition,
       };
     });
 
@@ -319,6 +333,13 @@ export class PortfolioBrokerImportController {
     else if (res?.detection.brokerType === 'DHAN') brokerDisplayName = 'Dhan';
     else if (res?.detection.brokerType === 'GROWW') brokerDisplayName = 'Groww';
 
+    const hasUnresolved = (res?.userHoldings ?? []).some((h) => h.identityStatus === 'UNRESOLVED');
+    const identityResolutionStatus = hasUnresolved
+      ? 'NON_PRODUCTION_OPERATOR_BYPASS_ACTIVE'
+      : allHoldingsValid
+        ? 'ALL_IDENTITIES_RESOLVED_P04'
+        : 'UNMAPPED_IDENTITY_DETECTED';
+
     // Live region text for screen readers
     let liveRegionText = 'Portfolio Broker Import: Idle.';
     if (this.currentState === 'PROCESSING') liveRegionText = 'Parsing and normalizing broker holdings...';
@@ -345,7 +366,7 @@ export class PortfolioBrokerImportController {
       rejectedRowsCount: rejectedRows.length,
       totalMarketValue: res?.totalMarketValue ?? 0,
       totalNormalizedWeight: res?.weightSumPercentage ?? 0,
-      identityResolutionStatus: allHaveCompanyId ? 'ALL_IDENTITIES_RESOLVED_P04' : 'UNMAPPED_IDENTITY_DETECTED',
+      identityResolutionStatus,
       contentDigest: res?.provenance.contentDigest || '',
       lineageDigest: res?.provenance.lineageDigest || '',
       acceptedHoldings,
