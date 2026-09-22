@@ -12,7 +12,7 @@
 
 ### 1. Executive Summary & Context
 
-Under Workstream BI-07 and Block 3L, comprehensive auditing confirmed that the Tier-2 Security Master broad universe (`D05`) correctly hydrates and deterministically resolves 2,250 canonical entities (52 real Indian equities + 2,198 synthetic broad-universe securities), including SteerCo-mandated dual BSE scrips for `AIIL` (`543599` / `600003`) and the governed `AGI GREENPAC` alias (`AGI`).
+Under Workstream BI-07 and Block 3L, comprehensive auditing confirmed that the Tier-2 Security Master broad universe (`D05`) correctly hydrates and deterministically resolves 2,250 canonical entities (52 real Indian equities + 2,198 synthetic broad-universe securities), including SteerCo-mandated dual BSE scrips for `AIIL` (`543989` current / `539177` historical) and the governed `AGI GREENPAC` alias (`AGI`).
 
 However, during offline single-operator visual acceptance testing of live broker statements (e.g. Zerodha Kite, Dhan Web UI, Dhan Detailed, Groww), real-world retail holdings frequently include securities outside the D05 broad universe (e.g., `ASK AUTOMOTIVE`, `AMBUJACEM`, `HCLTECH`, `M&M`, `ZOMATO`, `PAYTM`, `SUZLON`, `YESBANK`, `IDEA`, `IRFC`, `RVNL`). Under production governance, these unmapped securities fail closed at Stage 4 (NORMALIZE & IDENTITY RESOLUTION), preventing the operator from visually inspecting the end-to-end portfolio UI in offline mode.
 
