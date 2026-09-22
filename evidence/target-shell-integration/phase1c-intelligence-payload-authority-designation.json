@@ -1,0 +1,132 @@
+{
+  "decisionId": "phase1c-intel-payload-auth-2026-09-22-001",
+  "decisionAuthority": "RAMKI (Designating Authority)",
+  "recordingAgent": "Arena (recording only; no implementation performed in this act)",
+  "actType": "AUTHORITY_DESIGNATION",
+  "actIsExecutable": false,
+  "recordedAtLocalDate": "2026-09-22",
+  "recordedAtLocalTimezone": "Asia/Calcutta",
+  "governingStandards": ["AD-01..AD-18", "AD-CHARTER-2026-01"],
+  "governingPackage": "Target-Shell Integration / Phase 1C — Intelligence Path-L Completion",
+  "antecedentCheckpoint": "881371e1b286315ac984a3c3d421bdec08493fc7",
+
+  "verifiedAntecedentState": {
+    "verificationPerformedBy": "Arena, independently, prior to recording the decision",
+    "preambleAccuracy": "ACCURATE_IN_EVERY_PARTICULAR",
+    "discrepanciesRecorded": 0,
+    "headSha": "881371e1b286315ac984a3c3d421bdec08493fc7",
+    "localEqualsRemote": true,
+    "worktree": "CLEAN",
+    "intelligenceNavStatus": "partial",
+    "fullRegression": "413/413 tests PASS, 65 suites, 0 failures",
+    "tsc": "PASS",
+    "viteBuild": "PASS",
+    "bi08": "10/10",
+    "shellMountAndNavigation": "33/33",
+    "d05P04E2E": "28/28",
+    "frozenTrees": {
+      "src/identity": "9080e997",
+      "src/d114": "0062ad52",
+      "frontend/src/features/portfolio": "8491efdc",
+      "src/ui": "1597ed06",
+      "allUnchanged": true
+    },
+    "mainPreserved": "94f519bf",
+    "productionLiveBoundary": "UNCHANGED"
+  },
+
+  "decisionPresented": {
+    "optionA": "AUTHORIZE GOVERNED OFFLINE INTELLIGENCE PAYLOAD SOURCE — read-only forensic + design gate",
+    "optionB": "KEEP INTELLIGENCE PARTIAL — record PARTIAL / PRESENTATIONAL ONLY / NO GOVERNED OFFLINE PAYLOAD and proceed to next surface designation",
+    "selectionRule": "EXACTLY_ONE"
+  },
+
+  "decisionRecorded": {
+    "selected": "OPTION_A",
+    "selectedBy": "RAMKI",
+    "scope": "READ_ONLY_FORENSIC_AND_DESIGN_GATE_ONLY",
+    "implementationAuthorityGranted": false
+  },
+
+  "bindingConstraints": [
+    "no API",
+    "no authFetch",
+    "no OIDC",
+    "no Keycloak",
+    "no frontend/server/**",
+    "no live network",
+    "no credentials",
+    "no fabricated intelligence data",
+    "no synthetic payload presented as governed production intelligence",
+    "no modification to BI-01..BI-08",
+    "no modification to D05/P04 identity",
+    "no modification to PortfolioWorkspace",
+    "D114 unchanged",
+    "D115 remains WITHHELD / UNRESOLVED"
+  ],
+
+  "requiredTerminalOutcomes": {
+    "ifGovernedPayloadFound": "Report exact provenance and exact contract BEFORE any implementation is proposed or performed.",
+    "ifNoGovernedPayloadFound": "FAIL CLOSED and report the exact missing authority/artifact.",
+    "fabricationToAvoidFailClosed": "PROHIBITED",
+    "eitherOutcomeAuthorizesCodeChange": false
+  },
+
+  "recordingAgentDisclosedPosition": {
+    "recommendation": "OPTION_A",
+    "grounds": "Read-only, fail-closed by construction, cannot touch frozen trees, resolves the open question in either direction, and does not foreclose Option B.",
+    "arenaDeclinedToSelect": true,
+    "reasonForDeclining": "Selecting would constitute Arena self-authorising its own next scope, contrary to the standing separation between Arena (produces decision packets) and the designating authority (selects).",
+    "selectionOriginatedWith": "RAMKI"
+  },
+
+  "preExistingSignalNotAForensicFindingOfThisAct": {
+    "observation": "During authorised Phase-1C implementation, `grep -rln IntelligenceDTO src/` matched only the type definition, the adapter, and the view-models — no committed fixture and no governed payload artifact.",
+    "limitations": [
+      "Narrow: scoped to the literal IntelligenceDTO symbol, asked incidentally during implementation, not a forensic sweep.",
+      "Did not examine src/intelligence/*_engine.ts (which currently require external inputs).",
+      "Did not examine governed D05/P04 company data as a derivation source.",
+      "Did not examine evidence/ deposits as candidate derivation sources rather than literal DTO fixtures."
+    ],
+    "preemptsGateOutcome": false,
+    "arenaDisclosedExpectation": "Gate terminates either at a governed derivation path via existing engines, or at FAIL CLOSED with an exact missing-authority report. Both are acceptable terminations."
+  },
+
+  "thisActDoesNot": [
+    "Does NOT implement a payload source",
+    "Does NOT authorize implementation of a payload source",
+    "Does NOT promote Intelligence from partial to implemented",
+    "Does NOT modify any source, test, or configuration file",
+    "Does NOT authorize any additional product surface",
+    "Does NOT authorize overlays (CommandPalette / NotificationDrawer / NotesDrawer) — remain DEFERRED",
+    "Does NOT authorize the onSignOut / authentication seam — remains DEFERRED",
+    "Does NOT alter the production / live boundary",
+    "Does NOT resolve D115"
+  ],
+
+  "retainedGovernanceInvariants": {
+    "operatingMode": "NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+    "intelligenceSurface": "PARTIAL / PRESENTATIONAL ONLY / NO GOVERNED OFFLINE PAYLOAD",
+    "bi08": "AUTHORITATIVE / UNCHANGED",
+    "d114": "UNCHANGED",
+    "d115C": "UNRESOLVED",
+    "d115D": "UNRESOLVED",
+    "runtimeCompanyId": "UNRESOLVED",
+    "implementationAuthority": "WITHHELD",
+    "productionEligible": false,
+    "d115ProductionActivation": "NOT AUTHORIZED",
+    "externalLiveSockets": 0,
+    "commercialVendorDependency": "NONE",
+    "windowsVisualAcceptance": "NOT CLAIMED BY ARENA"
+  },
+
+  "resultingGateState": {
+    "gateId": "GATE-PHASE-1C-INTELLIGENCE-PAYLOAD-FORENSIC",
+    "state": "AUTHORIZED / NOT YET EXECUTED",
+    "executionMode": "READ_ONLY",
+    "authorizedBy": "RAMKI",
+    "authorizedAtLocalDate": "2026-09-22"
+  },
+
+  "nextAuthorizedExecutableAction": "Execute GATE-PHASE-1C-INTELLIGENCE-PAYLOAD-FORENSIC as a read-only forensic + design gate; permitted activity is inspection, enumeration, contract analysis, provenance tracing, and production of a decision packet; report per requiredTerminalOutcomes and STOP for a further authority designation."
+}
