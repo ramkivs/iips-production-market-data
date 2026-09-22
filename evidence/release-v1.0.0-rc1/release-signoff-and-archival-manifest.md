@@ -1,23 +1,24 @@
 # Institutional Investment Platform System (IIPS)
 # Executive Steering Committee Signoff & Post-Qualification Archival Package (v1.0.0-rc1)
-## Workstream BI Closure & Comprehensive Release Candidate Re-Certification
+## Workstream BI Complete Closure (BI-01..BI-08) & Comprehensive Release Candidate Certification
 
 **Release Version:** `v1.0.0-rc1`  
 **Release Type:** `NON_PRODUCTION_QUALIFIED_RELEASE`  
-**Governing Charters:** `AD-01..AD-18` / `AD-CHARTER-2026-01` / `BI-03-AUTH` / `BI-04-AUTH` / `BI-05-AUTH` / `BI-07-AUTH` / `NON_PRODUCTION_SINGLE_OPERATOR_IDENTITY_BYPASS`  
-**Milestone Completion:** **`IIPS v1.0.0-rc1 Non-Production Release Qualification & BI Closure Milestone`**  
+**Governing Charters:** `AD-01..AD-18` / `AD-CHARTER-2026-01` / `BI-01..BI-08 CHARTERS` / `NON_PRODUCTION_SINGLE_OPERATOR_IDENTITY_BYPASS`  
+**Milestone Completion:** **`IIPS v1.0.0-rc1 Non-Production Release Qualification & Complete BI Workstream Closure`**  
 **Steering Committee Decision:** **`ACCEPTED AND ARCHIVED`**  
-**Gate Status:** **`GATE-BI-CLOSURE-AND-RC-PACKAGING = ACCEPTED`**  
+**Gate Status:** **`GATE-RELEASE-STEERING-COMMITTEE-FINAL-ARCHIVAL-SIGNOFF = ACCEPTED`**  
 **Production Authorization:** **`NOT GRANTED / PROHIBITED`**  
 **Operating Mode:** `OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV`  
 **Repository Working Branch:** `arena/01a0b8e8-iips-production-market-data`  
-**Authoritative Baseline Lineage SHA:** `5cfcf828adb025eed4c5439d90e6275c458a7f4d`  
+**Authoritative Implementation Lineage SHA:** `d1a813ce746656376f4b3a6f0cb7682b741efce3`  
+**BI-08 Evidence Intake Lineage SHA:** `04bc9ad15d2e42168fd8eb45b5ab08766fef671e`  
 
 ---
 
 ## 1. Executive Summary & Full Milestone Inventory
 
-Workstream **BI (Broker Import Ingress & Multi-Broker Merge Pipeline)** is formally **CLOSED**, and the **IIPS v1.0.0-rc1** Release Candidate Manifest is re-certified with 100% automated test coverage and authoritative Windows operator visual acceptance.
+Workstream **BI (Broker Import Ingress & Multi-Broker Merge Pipeline, BI-01 through BI-08)** is formally **CLOSED**, and the **IIPS v1.0.0-rc1** Release Candidate Manifest is formally certified with 100% automated test coverage (360/360 tests, 39 suites), comprehensive production build qualification, and authoritative cross-environment Windows host verification.
 
 ```
 +---------------------------------------------------------------------------------------------------------------+
@@ -32,8 +33,9 @@ Workstream **BI (Broker Import Ingress & Multi-Broker Merge Pipeline)** is forma
 | BI-05   | Ingress Orchestration & Edge Hardening (5 Stages)  | ACCEPTED & SEALED (10/10 PASS) | NONE          |
 | BI-06   | Binary Formats Governance (XLSX Blocked/Deferred)  | QUALIFICATION_BLOCKED/DEFERRED | Zero ungov pkg|
 | BI-07   | Multi-Broker Merge & Host Acceptance               | ACCEPTED / BROWSER VERIFIED    | Truncated UI  |
-| 3M-A    | Single-Operator Non-Production Identity Bypass     | AUTHORIZED / TESTED (7/7 PASS) | Zero fake IDs |
-| INTAKE  | Windows Visual Evidence Intake                     | ACCEPTED (Commit 5cfcf828)     | Gap Declared  |
+| BI-08   | Idempotent Ingress & Content-Hash Deduplication    | ACCEPTED / COMPLETE / RECONCILED| Contained Res|
+| 3M-A    | Single-Operator Non-Production Identity Bypass     | AUTHORIZED / TESTED (8/8 PASS) | Zero fake IDs |
+| INTAKE  | Windows Cross-Environment Evidence Intake          | ACCEPTED (Commit 04bc9ad1)     | Gap Declared  |
 +---------+----------------------------------------------------+--------------------------------+---------------+
 ```
 
@@ -43,7 +45,7 @@ Workstream **BI (Broker Import Ingress & Multi-Broker Merge Pipeline)** is forma
 
 All cross-workstream dependencies and canonical mappings have been verified for strict mathematical and cryptographic consistency:
 
-1. **P04/P12 Identity Lineage:** Fully preserved with deterministic cryptographic lineage hashing (`computeLineageHash`).
+1. **P04/P12 Identity Lineage:** Deterministic cryptographic lineage hashing (`computeLineageHash`) enforced across all ingress stages.
 2. **D05 Broad Universe Security Master:** 2,250 canonical entities (`7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5`) hydrated build-time via zero-FS typed provider.
 3. **AIIL Dual Effective-Dated BSE Scrips:**
    - Canonical `companyId`: `EQ_AIIL_IN`
@@ -55,7 +57,7 @@ All cross-workstream dependencies and canonical mappings have been verified for 
    - Governed BSE Scrip Code: `500187`
    - Parity Status: **PASS**
 5. **Block 3M-A Non-Production Bypass:**
-   - `companyId = ""` (zero fake IDs fabricated)
+   - `companyId = ""` (strictly 0 fabricated fake IDs)
    - `identityStatus = "UNRESOLVED"`
    - `resolutionDisposition = "NON_PRODUCTION_OPERATOR_BYPASS"`
    - Fail-closed behavior strictly enforced when `executionEnvironment === 'PRODUCTION'`.
@@ -63,9 +65,13 @@ All cross-workstream dependencies and canonical mappings have been verified for 
    - Consolidated constituents: 148 holdings
    - Total portfolio valuation: ₹9,82,769.63 INR
    - Weight allocation sum: Exact `100.0000%`
-   - Persistence status: `COMMITTED (Atomic)`
-7. **Windows Visual Acceptance & Intake Checkpoint:**
-   - Formal intake recorded in `evidence/operator_drop/windows_visual_acceptance_manifest.json` under commit `5cfcf828adb025eed4c5439d90e6275c458a7f4d`.
+   - Persistence status: `COMMITTED (Atomic / Idempotent)`
+7. **BI-08 Content-Hash Idempotency:**
+   - Re-importing exact duplicate raw CSV yields `ALREADY_IMPORTED_NO_OP` with $B - A = 0$ valuation delta and 0 quantity doubling.
+   - Contribution ledger contains exactly 2 distinct broker records.
+   - Provenance digest $D_B \equiv D_A$ verified invariant via automated test harness.
+8. **Windows Visual Acceptance & Cross-Environment Intake:**
+   - Formal intake recorded in `evidence/operator_drop/windows_bi08_visual_acceptance_manifest.json` under commit `04bc9ad15d2e42168fd8eb45b5ab08766fef671e`.
    - Truncated display prefix `92d6c6f177cf1364af3f...` formally declared under evidence-gap protocol `FULL_SHA256_PROVENANCE_DIGEST_TRUNCATED_IN_UI_VIEWPORT_DOM`.
 
 ---
@@ -78,12 +84,13 @@ All cross-workstream dependencies and canonical mappings have been verified for 
 +------------------------------------------------+-------------+------------------------------------------------+
 | Verification Domain                            | Status      | Metrics & Observations                         |
 +------------------------------------------------+-------------+------------------------------------------------+
-| Total Test Suites                              | PASS (38/38)| 100% test suites passing                       |
-| Total Individual Test Cases                    | PASS (350)  | 350 passed, 0 failed, 0 skipped                |
+| Total Test Suites                              | PASS (39/39)| 100% test suites passing                       |
+| Total Individual Test Cases                    | PASS (360)  | 360 passed, 0 failed, 0 skipped                |
 | TypeScript Typecheck (`tsc`)                   | PASS        | 0 type errors across frontend and backend      |
-| Production Bundler (`vite build`)              | PASS        | dist-frontend/ built in 375ms (0 errors)       |
+| Production Bundler (`vite build`)              | PASS        | dist-frontend/ built cleanly (0 errors)        |
 | SEC-01 Plaintext Credential Scan               | PASS        | 0 secrets detected across entire workspace     |
-| Non-Production Identity Bypass Tests           | PASS (7/7)  | Criteria A through K verified                  |
+| BI-08 Idempotency & Deduplication Suite        | PASS (10/10)| AC-01..AC-08 and Recovery verified             |
+| Non-Production Identity Bypass Tests           | PASS (8/8)  | Criteria A through K verified                  |
 | Dual-Era D114 Historical Feasibility Tests     | PASS (30/30)| Stage 1..5 ingestion invariants verified       |
 +------------------------------------------------+-------------+------------------------------------------------+
 ```
@@ -120,13 +127,16 @@ Production Identity Bypass:         STRICTLY FORBIDDEN (FAIL-CLOSED)
 - **`M-5` (Historical Provenance Integrity):** `CONTAINED` (SHA-256 lineage hashing on all canonical envelopes).
 - **`M-6` (UI17 Containment):** `CONTAINED` (Surface inventory strictly UI01–UI14).
 - **`M-7` (Visual Truncation of Digest):** `CONTAINED` (UI card displays 20-char prefix `92d6c6f177cf1364af3f...`; full digest verified via automated test suite).
+- **`M-8` (Digest Transition on Multi-Broker Merge):** `CONTAINED` (Multi-broker merge legitimately mutates state and lineage hash upon distinct statement addition).
 
 ---
 
-## 6. Gate Outcome Declaration
+## 6. Steering Committee Archival Signoff Declaration
 
 ```text
 ================================================================================
-GATE-BI-CLOSURE-AND-RC-PACKAGING = ACCEPTED
+GATE-RELEASE-STEERING-COMMITTEE-FINAL-ARCHIVAL-SIGNOFF = ACCEPTED
+RELEASE CANDIDATE DISPOSITION: QUALIFIED NON-PRODUCTION RELEASE (v1.0.0-rc1)
+PRODUCTION DEPLOYMENT DISPOSITION: NOT AUTHORIZED (SEPARATE GATE REQUIRED)
 ================================================================================
 ```
