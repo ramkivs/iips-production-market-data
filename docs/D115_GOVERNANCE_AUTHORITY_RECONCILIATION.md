@@ -198,3 +198,28 @@ role, identity binding, Company/Security mapping, environment qualification, or 
 D115 AUTHORITY = NOT ESTABLISHED
 D115 IDENTITY RESOLUTION = BLOCKED
 ```
+
+---
+
+## 7. Subsequent explicit authority act
+
+After the baseline reconciliation above, an explicit D115 authority act was supplied and the
+holder was selected as **Ramki**. The durable act is recorded at
+`docs/D115_AUTHORITY_ACT.md` (`D115-AUTHORITY-001`). This is a new authority act, not an inference
+from the earlier phase records.
+
+The act establishes Ramki as the bounded D115 identity-authority holder with authority to designate
+or approve the items listed in that act. It does **not** itself populate the organizational/service
+principal, runtime custodian, `companyId`/Company-Security mapping, environment, Stage-3 evidence
+owner, OIDC qualification result, or Dhan entitlement. Those subordinate records remain required.
+
+Accordingly, the current post-act disposition is:
+
+```text
+D115 AUTHORITY = PARTIALLY ESTABLISHED
+D115 IDENTITY RESOLUTION = BLOCKED
+```
+
+The baseline findings in Sections 3–4 remain accurate for the state before this subsequent act;
+they are not retroactively rewritten. No production, credential, Keycloak, provider, or accepted-gate
+state changed.
