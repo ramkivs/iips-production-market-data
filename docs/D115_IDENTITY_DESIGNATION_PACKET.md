@@ -478,3 +478,129 @@ D115 IDENTITY RESOLUTION   = BLOCKED
 No Keycloak modification, client/realm/tenant creation, credential generation, secret storage
 change, provider onboarding, Dhan entitlement change, NSE authorization, deployment, production
 activation, or accepted-gate modification was performed.
+
+---
+
+## 12. C/D authoritative evidence acquisition gate
+
+**Gate ID:** `D115-C-D-EVIDENCE-GATE-001`
+**Gate purpose:** Define and assess the minimum authoritative evidence required to resolve C and D
+**Gate result:** No authoritative external or authority-supplied C/D evidence is available in the inspected repository
+**Implementation status:** No implementation action authorized or performed
+
+### 12.1 Minimum acceptable evidence for C — exact D115/HDFC Life companyId
+
+C can be approved only when one traceable authoritative record establishes all of the following:
+
+1. the exact `companyId` literal;
+2. the owning or associated company, explicitly tied to HDFC Life / D115;
+3. the authoritative source system or document;
+4. source version, effective date, or current-validity status where applicable;
+5. authority/provenance and an auditable reference; and
+6. an explicit statement that the value is intended for D115 runtime identity binding in the
+   designated local qualification scope.
+
+A generic CSIP join key, synthetic sector target, fixture value, UUID-shaped string, repository
+configuration value, or application default is insufficient. Ramki's authority can approve a
+supplied authoritative company fact; it cannot manufacture the company fact.
+
+### 12.2 Minimum acceptable evidence for D — canonical Company/Security mapping
+
+D can be approved only when one traceable authoritative mapping record establishes all of the
+following relationship and metadata:
+
+```text
+D115 company
+    → exact approved companyId
+    → canonical issuer
+    → canonical security
+```
+
+The record must identify:
+
+1. company and exact approved companyId;
+2. canonical issuer and canonical security;
+3. the explicit relationship between all four values;
+4. mapping version and effective date/window where applicable;
+5. mapping method and source/provider;
+6. authority/provenance and approval reference; and
+7. audit reference and any applicable scope or boundary.
+
+The P04 contract defines the required shape, but does not supply a D115 value. `P04` requires
+explicit, provider-neutral, versioned, effective-dated, auditable mapping; confidence cannot replace
+approval. (`docs/p04/P04_IDENTITY_ADAPTER_CONTRACT.md:31-38,69-83,91-107`; `docs/d4/D4_05_SECURITY_MASTER_ADAPTER.md:85-117`.)
+
+### 12.3 Existing evidence reviewed and classification
+
+| Evidence/discovery | Classification | Finding |
+|---|---|---|
+| `docs/D115_IDENTITY_RESOLUTION_AND_BINDING_RECONCILIATION.md:30-34,95-103,120-127,364-375` | **AUTHORITATIVE ASSESSMENT OF ABSENCE** | Records that no HDFC Life/D115 company record, authoritative principal, D115 mapping, or external authority packet was found. It does not contain C or D values. |
+| `docs/d4/D4_05_SECURITY_MASTER_ADAPTER.md:85-117,199-217` | **GOVERNED CONTRACT / REQUIREMENT** | Defines companyId mapping shape, provenance, approval, versioning, effective dating, and the distinction between synthetic targets and authoritative identity. It does not establish D115 values. |
+| `docs/p04/P04_IDENTITY_ADAPTER_CONTRACT.md:31-38,59-83,91-107` | **GOVERNED CONTRACT / REQUIREMENT** | Defines explicit provider-neutral mapping and fail-closed behavior. It does not establish the D115 Company → companyId → issuer → security relationship. |
+| `docs/p04/P04_OPEN_ITEMS.md:37-45,65-70,87-102` | **GOVERNED OPEN-ITEM RECORD** | Records methodology/tenant-region and mapping-related boundaries/open work; it does not provide an authoritative D115 company or mapping. |
+| `p05/src/identity.js` and `p05/tests/*` | **SYNTHETIC / TECHNICAL FIXTURE EVIDENCE** | Contains generic P04-shaped mapping mechanics and synthetic values such as sector targets; not HDFC Life/D115 authority evidence. |
+| `frontend/src/core/auth/authContract.ts:28-36` | **TECHNICAL INTERFACE** | Defines a governed application-principal interface; does not identify a D115 company, issuer, security, or mapping. |
+| `frontend/src/core/auth/keycloakAdapter.test.ts:8-10` and `frontend/src/core/auth/oidcClient.ts:67-98` | **TEST / LOCAL REFERENCE ONLY** | Local/mock OIDC metadata; no D115 provider authority or company/mapping evidence. |
+| Exact supplied CSIP UUID, issuer UUID, security UUID, and `idmap-d115-group2-1.0.0` | **REFERENCE ONLY** | The exact-value search found these references only in the D115 packet itself. No independent authoritative source, approval, effective date, or mapping record was found. |
+| `D115_STAGE3_BOUNDED_DEVELOPMENT_REFERENCE_ONLY` | **REFERENCE ONLY** | A label in the packet; not a companyId, mapping, authority approval, or environment authorization. |
+| User-supplied single-user architecture | **AUTHORITY INPUT / ARCHITECTURAL FACT FOR LOCAL SCOPE** | Establishes owner/custodian/local qualification boundaries only. It does not establish C or D. |
+
+No `AUTHORITATIVE` or `AUTHORITY-APPROVED` value for C or D was found. No contradictory C/D
+authority record was found; the result is absence, not a silent conflict resolution.
+
+### 12.4 Existing references that remain reference-only
+
+The following remain explicitly withheld:
+
+```text
+CSIP UUID:
+5233149d-2a2d-4644-a6a7-e1ed5e133285
+
+Canonical issuer:
+008e9766-4135-4d5b-9ecf-b3fcf721ebdb
+
+Canonical security:
+7c4322d5-6f87-4dc8-a0a9-1b5f937cb0b1
+
+Mapping:
+idmap-d115-group2-1.0.0
+
+Environment:
+D115_STAGE3_BOUNDED_DEVELOPMENT_REFERENCE_ONLY
+```
+
+Classification for each: **REFERENCE ONLY**. None is promoted to `runtimeCompanyId`, a canonical
+mapping, an effective mapping version, a Stage-3 binding, or an authorized environment.
+
+### 12.5 Exact missing authority/evidence
+
+C is missing:
+
+- an authoritative HDFC Life/D115 company record;
+- the exact approved `companyId` literal;
+- source/provenance and effective/current status; and
+- explicit approval for D115 runtime identity binding.
+
+D is missing:
+
+- an authoritative Company → companyId → issuer → security relationship;
+- approved canonical issuer/security evidence tied to that company;
+- mapping version/effective date and method/source; and
+- Ramki's explicit approval with authority and audit references.
+
+### 12.6 Approval result
+
+```text
+C = UNRESOLVED — AUTHORITATIVE COMPANYID EVIDENCE REQUIRED
+D = UNRESOLVED — AUTHORITATIVE COMPANY/SECURITY MAPPING EVIDENCE REQUIRED
+```
+
+No external C/D evidence was supplied or available in the repository. The gate therefore stops at
+evidence acquisition. No placeholder companyId, placeholder mapping, Stage-3 binding artifact,
+runtime configuration, identity registration, or implementation authorization is created.
+
+```text
+D115 C/D EVIDENCE GATE = AUTHORITY-BLOCKED
+D115 AUTHORITY         = PARTIALLY ESTABLISHED
+D115 IDENTITY RESOLUTION = BLOCKED
+```
