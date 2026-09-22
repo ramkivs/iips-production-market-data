@@ -15,7 +15,7 @@ import {
   getDefaultPortfolioStore,
 } from './index.js';
 import { BrokerImportModal } from './BrokerImportModal.js';
-import { SecurityMaster } from '../../../../src/identity/security_master.js';
+import { SecurityMaster, getGovernedOfflineSecurityMaster } from '../../../../src/identity/index.js';
 
 export interface PortfolioWorkspaceProps {
   portfolioStore?: PortfolioStore;
@@ -25,11 +25,12 @@ export interface PortfolioWorkspaceProps {
 
 export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
   portfolioStore: initialPortfolioStore,
-  securityMaster,
+  securityMaster: initialSecurityMaster,
   portfolioId = 'DEFAULT_PORTFOLIO',
 }) => {
   // Store instance (uses passed application-level store or module singleton fallback for Tier-B session continuity)
   const store = useMemo(() => initialPortfolioStore || getDefaultPortfolioStore(), [initialPortfolioStore]);
+  const securityMaster = useMemo(() => initialSecurityMaster || getGovernedOfflineSecurityMaster(), [initialSecurityMaster]);
 
   // Reactive state for portfolio data
   const [portfolio, setPortfolio] = useState<PortfolioRecord>(() => {

@@ -8,3 +8,4 @@
 export * from './quarantine.js';
 export * from './mapping_store.js';
 export * from './security_master.js';
+export * from './governed_fixture_master.js';
