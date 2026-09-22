@@ -335,3 +335,54 @@ H. Evidence owner                   = UNRESOLVED — AUTHORITY DESIGNATION REQUI
 D115 AUTHORITY                       = PARTIALLY ESTABLISHED
 D115 IDENTITY RESOLUTION             = BLOCKED
 ```
+
+---
+
+## 10. Next authority act result — A–H designation completion
+
+**Act ID:** `D115-AUTHORITY-002`
+**Authority holder:** Ramki
+**Act result:** No authoritative A–H designation or approval was supplied with this act.
+
+The existing packet, the governed repository evidence, and the current authority instruction do not
+supply authoritative identity values for A–H. The following references therefore remain withheld and
+are not promoted:
+
+- the CSIP UUID is not promoted to `runtimeCompanyId`;
+- the canonical issuer UUID and security UUID are not approved;
+- `idmap-d115-group2-1.0.0` is not accepted as an authoritative mapping version; and
+- `D115_STAGE3_BOUNDED_DEVELOPMENT_REFERENCE_ONLY` is not converted into environment authorization.
+
+### Updated A–H designation record
+
+| FIELD | VALUE | AUTHORITY STATUS | SOURCE / EVIDENCE | APPROVED BY | SCOPE | EFFECTIVE VERSION/DATE |
+|---|---|---|---|---|---|---|
+| **A. Existing-IIPS organizational/service principal** | **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | Ramki's D115 authority holder status exists; subordinate principal designation is not supplied. | No authoritative principal/team record in the governed evidence; prior packet §7A remains controlling. | Not approved. | D115 identity binding / Stage-3 qualification only. | Not established. |
+| **B. Runtime identity custodian** | **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | No custodian, owner, or custody mechanism designation supplied. | Technical runtime seams do not identify an accountable custodian; prior packet §7B remains controlling. | Not approved. | D115 qualification boundary only. | Not established. |
+| **C. Exact D115/HDFC Life companyId** | **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | No exact authoritative companyId approval supplied. | The supplied CSIP UUID remains reference-only and is not `runtimeCompanyId`. | Not approved. | Exact D115/HDFC Life identity only. | Not established. |
+| **D. Approved Company/Security canonical mapping** | **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | No mapping approval, mapping version, or audit reference supplied. | The supplied issuer UUID, security UUID, and `idmap-d115-group2-1.0.0` remain verification references only. | Not approved. | D115 Company → issuer → security relationship only. | Not established. |
+| **E. Authorized initial qualification environment** | **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | No environment designation supplied. | The development reference remains reference-only and is not an authorization. | Not approved. | Initial D115 Stage-3 qualification only. | Not established. |
+| **F. Tenant/region/environment boundary** | **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | No tenant, region, or boundary validation supplied. | No authoritative D115 boundary evidence; generic/default/historical environments remain excluded. | Not approved. | Designated qualification boundary only. | Not established. |
+| **G. Exact governed Stage-3 identity artifact** | **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | No artifact type, identifier, governed path, version, or hash designated. | Generic P11 Stage 3 is not a D115 identity artifact; no D115 artifact is supplied. | Not approved. | D115 Stage-3 identity qualification only. | Not established. |
+| **H. Evidence owner** | **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | No evidence owner, role, retention location, or audit responsibility designated. | No authoritative D115 evidence-owner record supplied. | Not approved. | A–G evidence production, retention, audit, and presentation. | Not established. |
+
+### Authority-blocked result
+
+Because no authoritative designation was supplied for any A–H field, this act updates the packet
+status only; it does not populate an identity value or authorize implementation.
+
+```text
+A–H DESIGNATION COMPLETION       = AUTHORITY-BLOCKED
+runtimeCompanyId                 = UNRESOLVED
+implementationAuthority         = WITHHELD
+productionEligible              = false
+D115 production activation      = NOT AUTHORIZED
+Dhan commercial entitlement     = NOT AUTHORIZED
+NSE                             = DEFERRED
+D115 AUTHORITY                  = PARTIALLY ESTABLISHED
+D115 IDENTITY RESOLUTION        = BLOCKED
+```
+
+No identity implementation, mapping creation, registration, loading, activation, Keycloak change,
+credential handling, provider onboarding, production operation, or accepted-gate modification was
+performed.
