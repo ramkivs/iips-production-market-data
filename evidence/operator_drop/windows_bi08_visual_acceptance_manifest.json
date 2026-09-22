@@ -1,0 +1,120 @@
+{
+  "$schema": "https://iips.institutional/schemas/windows-bi08-visual-acceptance-manifest.json",
+  "gate": "GATE-WINDOWS-BI08-OPERATOR-EVIDENCE-INTAKE-AND-RECONCILIATION",
+  "baselineCommitSha": "d1a813ce746656376f4b3a6f0cb7682b741efce3",
+  "charterCommitSha": "7feb0e0c60e2871e30b67fcf9e6e2a6b2123f297",
+  "timestamp": "2026-09-22T12:25:00.000Z",
+  "operatorId": "HUMAN_OPERATOR",
+  "executionEnvironment": "NON_PRODUCTION / OFFLINE_FIXTURE_AND_WINDOWS_HOST",
+  "windowsCheckout": {
+    "hostPath": "G:\\IIPS-BI07-Windows-Host-Verify",
+    "headCommit": "d1a813ce746656376f4b3a6f0cb7682b741efce3",
+    "gitStatus": "Detached HEAD at d1a813ce (intentional)",
+    "buildResult": "PASS (Exit code 0)"
+  },
+  "evidenceSequence": {
+    "W01_FirstZerodhaImport": {
+      "action": "Initial Zerodha CSV import",
+      "disposition": "SAVED_NEW_BATCH",
+      "holdingsCount": 82,
+      "status": "PASS"
+    },
+    "W02_DuplicateZerodhaImport": {
+      "action": "Exact same Zerodha CSV re-import",
+      "disposition": "ALREADY_IMPORTED_NO_OP",
+      "isDuplicate": true,
+      "marketValueDeltaINR": 0.00,
+      "holdingsCountDelta": 0,
+      "constituentQuantityDelta": 0,
+      "contributionsLedgerCount": 1,
+      "provenanceDigestStability": "INVARIANT",
+      "status": "PASS"
+    },
+    "W03_DistinctDhanImport": {
+      "action": "Distinct Dhan Web UI summary CSV import",
+      "disposition": "MERGED_INTO_EXISTING",
+      "incomingHoldingsCount": 66,
+      "consolidatedHoldingsCount": 148,
+      "totalPortfolioValueINR": 982769.63,
+      "weightAllocationSum": "100.0000%",
+      "contributionsLedgerCount": 2,
+      "status": "PASS"
+    },
+    "W04_FinalVisualAcceptance": {
+      "action": "Final visual inspection of institutional portfolio workspace",
+      "totalConstituents": 148,
+      "totalPortfolioValueINR": 982769.63,
+      "weightAllocationSum": "100.0000%",
+      "persistenceStatus": "COMMITTED (Atomic)",
+      "status": "PASS"
+    }
+  },
+  "acceptanceCriteriaEvaluation": {
+    "AC_01_ExactDuplicateIdempotency": {
+      "status": "PASS",
+      "verifiedDelta": {
+        "marketValueDelta": 0.00,
+        "holdingsCountDelta": 0,
+        "constituentQuantityDelta": 0
+      },
+      "evidence": "Operator re-import of exact same Zerodha CSV produced zero valuation inflation and zero holding quantity doubling."
+    },
+    "AC_02_ProvenanceDigestStability": {
+      "status": "PASS",
+      "evidence": "Authoritative runtime integration tests verify byte-level SHA-256 digest invariance. DOM viewport string truncation is recorded under evidence residuals."
+    },
+    "AC_03_ContributionLedgerUniqueness": {
+      "status": "PASS",
+      "contributionsLedgerCount": 2,
+      "evidence": "Contribution ledger contains exactly 2 distinct broker audit records (Zerodha + Dhan) with zero duplicate entries for repeated ingestion."
+    },
+    "AC_04_DistinctBrokerConsolidation": {
+      "status": "PASS",
+      "consolidatedCount": 148,
+      "weightAllocationSum": "100.0000%",
+      "evidence": "Zerodha (82 holdings) + Dhan Web UI (66 holdings) consolidated atomically into 148 holdings summing to exactly 100.0000% weight."
+    },
+    "AC_05_UiDuplicateFeedbackAndNoOp": {
+      "status": "PASS",
+      "disposition": "ALREADY_IMPORTED_NO_OP",
+      "evidence": "Portfolio store and import controller suppress duplicate save operations without performing additive double-save."
+    },
+    "AC_06_ExplicitReplaceModeOverride": {
+      "status": "PASS",
+      "evidence": "Governed runtime suite tests/bi08_idempotent_ingress.test.ts (AC-06) proves mode: 'REPLACE' overrides deduplication."
+    },
+    "AC_07_BoundedIdentityBypass": {
+      "status": "PASS",
+      "fabricatedCompanyIdsCount": 0,
+      "unresolvedSecuritiesPreserved": [
+        "AMBUJACEM",
+        "ASK AUTOMOTIVE"
+      ],
+      "canonicalSecuritiesResolved": [
+        { "symbol": "AIIL", "companyId": "EQ_AIIL_IN" },
+        { "symbol": "AGI GREENPAC", "companyId": "EQ_AGI_IN" }
+      ],
+      "evidence": "All canonical securities resolved to P04 IDs; unmapped securities retained with empty companyId = '' and amber visual badges."
+    },
+    "AC_08_ProductionFailClosedBoundary": {
+      "status": "PASS",
+      "liveProviders": 0,
+      "productionAuthorization": "NOT GRANTED",
+      "evidence": "Production mode execution fails closed with REJECTED disposition on unmapped securities."
+    }
+  },
+  "residualsAndEvidenceGaps": [
+    {
+      "gapId": "FULL_SHA256_PROVENANCE_DIGEST_TRUNCATED_IN_UI_VIEWPORT_DOM",
+      "classification": "COSMETIC_DOM_TRUNCATION",
+      "description": "The PortfolioWorkspace UI visually truncates the 64-character SHA-256 provenance digest to a 20-character prefix with ellipsis in DOM text. Full cryptographic digest invariance is verified via automated runtime test suite."
+    },
+    {
+      "gapId": "VISUAL_SCREENSHOT_DIGEST_DIFFERENCE_ACROSS_IMPORT_STAGES",
+      "classification": "EXPECTED_STATE_TRANSITION",
+      "description": "The displayed digest at W01 (Zerodha only) differs from W03/W04 (Zerodha + Dhan merge), correctly reflecting state mutation upon distinct file ingestion."
+    }
+  ],
+  "preBi08QuarantineReference": "evidence/operator_drop/windows_visual_acceptance_manifest.json (Commit c2aeb5f)",
+  "gateDisposition": "ACCEPTED"
+}
