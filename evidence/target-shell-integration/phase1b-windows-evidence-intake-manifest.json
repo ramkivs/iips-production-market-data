@@ -1,0 +1,111 @@
+{
+  "gateIdentifier": "GATE-WINDOWS-PHASE-1B-VISUAL-EVIDENCE-INTAKE",
+  "gateDisposition": "BLOCKED_FAIL_CLOSED",
+  "gateType": "FORENSIC_EVIDENCE_INTAKE_ONLY",
+  "date": "2026-09-22",
+  "executionMode": "NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+  "governedUnder": "AD-01..AD-18 / AD-CHARTER-2026-01",
+
+  "commitUnderVisualAcceptance": "144e8edf8d126a129ba4ed87dbd077765bd4051c",
+  "arenaHeadAtGate": "144e8edf8d126a129ba4ed87dbd077765bd4051c",
+  "windowsCheckoutPath": "G:\\IIPS-BI07-Windows-Host-Verify",
+  "windowsCheckoutArenaAccessible": false,
+
+  "failureClassification": "EVIDENCE_TRANSPORT_FAILURE_NOT_IMPLEMENTATION_FAILURE",
+
+  "expectedEvidencePackage": {
+    "path": "evidence/operator_drop/phase1b_windows_visual_acceptance_20260922/",
+    "present": false,
+    "artifacts": [
+      { "id": "E-1", "file": "git-head.txt", "status": "MISSING", "requiredContent": "Windows HEAD == 144e8edf8d126a129ba4ed87dbd077765bd4051c", "gateTask": 2, "taskSatisfied": false },
+      { "id": "E-2", "file": "git-status.txt", "status": "MISSING", "requiredContent": "Windows checkout git status; whether any source change was present", "gateTask": 3, "taskSatisfied": false },
+      { "id": "E-3", "file": "phase1b-visual-acceptance-result.txt", "status": "MISSING", "requiredContent": "Itemised operator result set backing claimed PASS dispositions", "gateTask": 4, "taskSatisfied": false }
+    ]
+  },
+
+  "searchProbes": [
+    { "probe": 1, "scope": "working tree expected path", "result": "NOT_FOUND" },
+    { "probe": 2, "scope": "evidence/ directory inventory", "result": "NO_PHASE1B_DIR" },
+    { "probe": 3, "scope": "any operator_drop* dir on disk", "result": "NO_MATCH" },
+    { "probe": 4, "scope": "three named files anywhere on disk", "result": "ZERO_RESULTS" },
+    { "probe": 5, "scope": "git ls-files at HEAD", "result": "ONLY_PREEXISTING_ARTIFACTS" },
+    { "probe": 6, "scope": "git fetch all remote refs + tags", "result": "18_REMOTE_HEADS_FETCHED" },
+    { "probe": 7, "scope": "git ls-tree over every local/remote/tag ref", "result": "NO_MATCH_ON_ANY_REF" },
+    { "probe": 8, "scope": "git log --all --diff-filter=A (complete history)", "result": "NEVER_ADDED" },
+    { "probe": 9, "scope": "git fsck --lost-found (dangling objects)", "result": "NO_DANGLING_OBJECTS" },
+    { "probe": 10, "scope": "git stash list / git worktree list", "result": "NO_STASH_SINGLE_WORKTREE" },
+    { "probe": 11, "scope": "git status --porcelain --ignored", "result": "NO_IGNORED_COPY" },
+    { "probe": 12, "scope": "remote branch tree ls-tree", "result": "PACKAGE_ABSENT" },
+    { "probe": 13, "scope": "any *.txt under evidence/operator_drop on any ref", "result": "ZERO_TXT_ARTIFACTS_EVER" },
+    { "probe": 14, "scope": "GitHub Contents API on session branch", "result": "HTTP_404_NOT_FOUND" }
+  ],
+  "searchConclusive": true,
+
+  "operatorClaimsStatus": "ASSERTED_BUT_NOT_INTAKEN",
+  "operatorClaimsRatified": false,
+  "uiFactsInferred": false,
+  "screenshotsInferred": false,
+  "windowsAccessedDirectly": false,
+
+  "reportedOperatorClaims": [
+    { "claim": "Target IIPS shell", "reported": "PASS", "arenaCorroboration": "CONSISTENT_NOT_VISUAL_PROOF" },
+    { "claim": "Governance chrome", "reported": "PASS", "arenaCorroboration": "CONSISTENT_NOT_VISUAL_PROOF" },
+    { "claim": "Portfolio route", "reported": "PASS", "arenaCorroboration": "CONSISTENT_NOT_VISUAL_PROOF" },
+    { "claim": "Existing BI-08 Portfolio Workspace", "reported": "PASS", "arenaCorroboration": "CONSISTENT_NOT_VISUAL_PROOF" },
+    { "claim": "W01 Zerodha", "reported": "PASS", "arenaCorroboration": "OPERATOR_ONLY" },
+    { "claim": "W02 exact duplicate import/idempotency", "reported": "PASS", "arenaCorroboration": "CONTRACT_COVERED_BI08_10_OF_10" },
+    { "claim": "W03 distinct Dhan import", "reported": "PASS", "arenaCorroboration": "CONTRACT_COVERED_ADDITIVE_MERGE" },
+    { "claim": "W04 final consolidated state", "reported": "PASS", "arenaCorroboration": "OPERATOR_ONLY" },
+    { "claim": "AIIL -> EQ_AIIL_IN", "reported": "PASS", "arenaCorroboration": "CONSISTENT_E2E_13_OF_13" },
+    { "claim": "AGI GREENPAC -> EQ_AGI_IN", "reported": "PASS", "arenaCorroboration": "CONSISTENT_E2E_13_OF_13" },
+    { "claim": "unresolved retention", "reported": "PASS", "arenaCorroboration": "PARTIAL_OPERATOR_ONLY_INSTANCE" },
+    { "claim": "future surfaces honestly marked Future", "reported": "PASS", "arenaCorroboration": "CONSISTENT_2_IMPLEMENTED_11_FUTURE" },
+    { "claim": "final consolidated state = 148 constituents", "reported": "148", "arenaCorroboration": "NOT_REPRODUCIBLE_FROM_REPO_FIXTURES" },
+    { "claim": "weight allocation = 100.0000%", "reported": "100.0000%", "arenaCorroboration": "PARTIAL_148_SCALE_OPERATOR_ONLY" },
+    { "claim": "environment = NON_PRODUCTION / OFFLINE_FIXTURE", "reported": "PASS", "arenaCorroboration": "CONSISTENT_BUNDLE_VERIFIED" }
+  ],
+
+  "frozenTreesAtGate": {
+    "src/identity": "9080e997ee7da977d0066431737e329e88b3c0b7",
+    "src/d114": "0062ad520dce647f3d02ed9a27739598d457faaa",
+    "frontend/src/features/portfolio": "8491efdc44ae449eedf1aaf93fbc7415c428fcb9",
+    "verdict": "UNCHANGED"
+  },
+
+  "gateChecks": {
+    "npmTest": { "tests": 392, "suites": 61, "pass": 392, "fail": 0, "result": "PASS" },
+    "tscNoEmit": "PASS",
+    "viteBuild": "PASS",
+    "bi08IdempotentIngress": { "tests": 10, "pass": 10, "result": "PASS" },
+    "d05IdentityE2E": { "tests": 13, "pass": 13, "result": "PASS" }
+  },
+
+  "constraintsHonoured": {
+    "task6_noInferredUiFacts": true,
+    "task7_noDirectWindowsAccess": true,
+    "task8_noApplicationSourceModified": true,
+    "task9_noContractAltered": true,
+    "task11_failClosedOnInsufficientEvidence": true
+  },
+
+  "residuals": [
+    { "id": "R-1", "item": "Phase-1B Windows visual acceptance", "status": "NOT_INTAKEN_EVIDENCE_ABSENT" },
+    { "id": "R-2", "item": "Windows checkout cleanliness during acceptance", "status": "UNKNOWN_GIT_STATUS_ABSENT" },
+    { "id": "R-3", "item": "148 constituents / valuation / 100.0000% at 148 scale", "status": "WINDOWS_OPERATOR_EVIDENCE_ONLY_ARENA_NOT_CLAIMABLE" },
+    { "id": "R-4", "item": "Unresolved-identity retention at Windows fixture scale", "status": "OPERATOR_ONLY" },
+    { "id": "R-5", "item": "798bc548", "status": "NOT_RECOVERED_NOT_AUTHORITATIVE" },
+    { "id": "R-6", "item": "D115", "status": "C_UNRESOLVED_D_UNRESOLVED_AUTHORITY_WITHHELD_PRODUCTION_NOT_AUTHORIZED" }
+  ],
+
+  "d115Boundary": {
+    "D115_C": "UNRESOLVED",
+    "D115_D": "UNRESOLVED",
+    "runtimeCompanyId": "UNRESOLVED",
+    "implementationAuthority": "WITHHELD",
+    "productionEligible": false,
+    "productionActivation": "NOT_AUTHORIZED"
+  },
+
+  "phase1bBaselineStatus": "GREEN_AND_DURABLE_UNAFFECTED_BY_THIS_DETERMINATION",
+  "nextExecutableGate": "RE-RUN GATE-WINDOWS-PHASE-1B-VISUAL-EVIDENCE-INTAKE after the Windows operator commits and pushes the three artifacts to branch arena/01a0c960-iips-production-market-data"
+}
