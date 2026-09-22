@@ -9,7 +9,7 @@
 import React, { useState, useMemo } from 'react';
 import { PortfolioWorkspace } from '../features/portfolio/PortfolioWorkspace.js';
 import { PortfolioStore, getDefaultPortfolioStore } from '../features/portfolio/index.js';
-import { SecurityMaster, getGovernedOfflineSecurityMaster } from '../../../src/identity/index.js';
+import { SecurityMaster, getGovernedBroadSecurityMaster } from '../../../src/identity/index.js';
 
 export interface AppProps {
   portfolioStore?: PortfolioStore;
@@ -22,9 +22,9 @@ export const App: React.FC<AppProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'portfolio' | 'executive' | 'replay' | 'sec_master'>('portfolio');
 
-  // Application-level singletons for session lifetime continuity (Tier-B) and governed offline master data
+  // Application-level singletons for session lifetime continuity (Tier-B) and governed broad master data
   const appPortfolioStore = useMemo(() => initialPortfolioStore || getDefaultPortfolioStore(), [initialPortfolioStore]);
-  const appSecurityMaster = useMemo(() => initialSecurityMaster || getGovernedOfflineSecurityMaster(), [initialSecurityMaster]);
+  const appSecurityMaster = useMemo(() => initialSecurityMaster || getGovernedBroadSecurityMaster(), [initialSecurityMaster]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-teal-500 selection:text-white">
