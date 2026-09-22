@@ -625,3 +625,76 @@ html, body {
 .app-root > .app-shell {
   flex: 1 1 auto;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+ * IIPS PHASE-1C — INTELLIGENCE SURFACE (scoped, append-only)
+ *
+ * `.app-surface` styles routed feature surfaces rendered inside the shell outlet. All rules
+ * are scoped beneath `.app-shell`; no existing BI rule is modified or removed.
+ *
+ * CSS BOUNDARY (unchanged since Phase 1A): no bare `*` / `html` / `body` / `a` selectors,
+ * no `:root` token declarations, no import of the historical global.css reset.
+ *
+ * Governed under: AD-01..AD-18 / Phase-1C Authority Designation (Intelligence, Path L)
+ * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
+ * ═══════════════════════════════════════════════════════════════════════════════════════ */
+
+.app-shell .app-surface {
+  padding: 24px 32px;
+  max-width: 1200px;
+  color: var(--color-ink);
+}
+
+.app-shell .app-surface__header {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.app-shell .app-surface__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--color-ink);
+}
+
+.app-shell .app-surface__subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-secondary);
+  margin: 0 0 8px;
+}
+
+.app-shell .app-surface__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--color-ink-secondary);
+}
+
+.app-shell .app-surface__block { margin-top: 24px; }
+
+.app-shell .app-surface__note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
+  border-left: 2px solid var(--color-border);
+  padding-left: 10px;
+  margin: 12px 0;
+}
+
+.app-shell .app-surface__provenance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 28px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--color-ink-muted);
+}

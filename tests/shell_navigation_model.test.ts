@@ -43,8 +43,8 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
     );
   });
 
-  it('NAV-02: Research, Intelligence and Administration are NOT fabricated as implemented', () => {
-    for (const label of ['Research', 'Intelligence', 'Administration']) {
+  it('NAV-02: Research and Administration are NOT fabricated as implemented', () => {
+    for (const label of ['Research', 'Administration']) {
       assert.ok(byLabel[label], `${label} must exist in the navigation model`);
       assert.strictEqual(
         byLabel[label].status,
@@ -60,7 +60,6 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
       'Replay Studio',
       'Security Master',
       'Research',
-      'Intelligence',
       'Evidence',
       'Administration',
       'Collaboration',
@@ -71,7 +70,23 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
     for (const label of mustBeFuture) {
       assert.strictEqual(byLabel[label]?.status, 'future', `${label} must be 'future'`);
     }
-    assert.strictEqual(mustBeFuture.length, 11, 'Exactly 11 declared-but-unimplemented surfaces');
+    assert.strictEqual(mustBeFuture.length, 10, 'Exactly 10 declared-but-unimplemented surfaces');
+  });
+
+  it('NAV-02b: Intelligence is PARTIAL — implemented component, no governed offline payload', () => {
+    // Phase-1C (Path L): the surface is real and bound to the local UI04 view-model, but the
+    // route currently has no governed IntelligenceDTO wired, so it renders its empty state.
+    // 'partial' is navigable AND honest; 'implemented' would overstate delivered capability.
+    assert.strictEqual(
+      byLabel['Intelligence']?.status,
+      'partial',
+      "Intelligence must be 'partial' until a governed offline payload source is authorized"
+    );
+    assert.notStrictEqual(
+      byLabel['Intelligence']?.status,
+      'implemented',
+      'Intelligence must NOT claim full implementation without a governed payload'
+    );
   });
 
   it('NAV-04: no navigation entry carries an undefined status (honesty marker mandatory)', () => {

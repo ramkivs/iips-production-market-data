@@ -48,6 +48,7 @@ import React, { useMemo } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './AppShell.js';
 import { FeaturePlaceholder } from './FeaturePlaceholder.js';
+import { IntelligenceSurface } from '../features/intelligence/IntelligenceSurface.js';
 import { ROUTES } from './routes.js';
 import { PortfolioWorkspace } from '../features/portfolio/PortfolioWorkspace.js';
 import { PortfolioStore, getDefaultPortfolioStore } from '../features/portfolio/index.js';
@@ -166,7 +167,8 @@ export const App: React.FC<AppProps> = ({
         <Route path={ROUTES.replay} element={<FeaturePlaceholder surface="Replay Studio" />} />
         <Route path={ROUTES.securityMaster} element={<FeaturePlaceholder surface="Security Master" />} />
         <Route path={ROUTES.research} element={<FeaturePlaceholder surface="Research" />} />
-        <Route path={ROUTES.intelligence} element={<FeaturePlaceholder surface="Intelligence" />} />
+        {/* ── IMPLEMENTED (Phase 1C, PATH L): local offline view-model, no network ──── */}
+        <Route path={ROUTES.intelligence} element={<IntelligenceSurface />} />
         <Route path={ROUTES.evidence} element={<FeaturePlaceholder surface="Evidence" />} />
         <Route path={ROUTES.admin} element={<FeaturePlaceholder surface="Administration" />} />
         <Route path={ROUTES.collaboration} element={<FeaturePlaceholder surface="Collaboration" />} />

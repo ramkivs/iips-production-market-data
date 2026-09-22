@@ -48,7 +48,7 @@ export interface NavItem {
 }
 
 export const NAV: NavItem[] = [
-  // ── IMPLEMENTED (Phase 1A) ───────────────────────────────────────────────────────────
+  // ── IMPLEMENTED (Phase 1B) ───────────────────────────────────────────────────────────
   // Portfolio is the ONLY surface backed by a real, certified implementation on the
   // BI-authoritative base: the BI-07/BI-08 PortfolioWorkspace (broker ingestion,
   // multi-broker consolidation, content-hash idempotency). It is mounted in Phase 1B.
@@ -75,7 +75,19 @@ export const NAV: NavItem[] = [
   { label: 'Replay Studio', path: '/replay', minRole: 'viewer', status: 'future' },
   { label: 'Security Master', path: '/security-master', minRole: 'viewer', status: 'future' },
   { label: 'Research', path: '/research', minRole: 'viewer', status: 'future' },
-  { label: 'Intelligence', path: '/intelligence', minRole: 'viewer', status: 'future' },
+  // ── PARTIAL (Phase 1C, PATH L) ───────────────────────────────────────────────────────
+  // Intelligence is implemented as a real presentation surface bound to the existing,
+  // already-tested LOCAL view-model `UI04DomainIntelligenceBuilder` (no network, no api/*,
+  // no authFetch, no OIDC/Keycloak, no frontend/server).
+  //
+  // It is deliberately declared `partial`, NOT `implemented`. The component renders genuine
+  // governed intelligence whenever an IntelligenceDTO is supplied, but the offline execution
+  // mode currently has NO governed intelligence payload wired to the route, so the mounted
+  // surface renders its explicit empty state. Declaring it `implemented` would overstate the
+  // product capability a user actually receives; `partial` is navigable AND honest, and it
+  // carries a visible "Partial" badge. Promotion to `implemented` requires a governed
+  // offline payload source under a later authority gate.
+  { label: 'Intelligence', path: '/intelligence', minRole: 'viewer', status: 'partial' },
   { label: 'Evidence', path: '/evidence', minRole: 'viewer', status: 'future' },
   { label: 'Administration', path: '/admin', minRole: 'admin', status: 'future' },
   { label: 'Collaboration', path: '/collaboration', minRole: 'viewer', status: 'future' },
