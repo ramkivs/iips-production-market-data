@@ -597,3 +597,31 @@ html, body {
     border-bottom: 1px solid var(--color-border);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+ * IIPS PHASE-1B — SHELL MOUNT WRAPPER (scoped, append-only)
+ *
+ * `.app-root` hosts the routed shell plus the preserved BI-07 governance footer. It is a
+ * NEW scoped class introduced by the mount; no existing BI rule is modified or removed.
+ *
+ * The shell grid uses `min-height: 100vh`, so the footer is pushed below the viewport fold
+ * rather than overlapping the routed surface. Column layout keeps the fail-closed
+ * disclosure visible at the end of the document on every route.
+ *
+ * CSS BOUNDARY (unchanged from Phase 1A): no bare `*` / `html` / `body` / `a` selectors,
+ * no `:root` token declarations, no import of the historical global.css reset.
+ *
+ * Governed under: AD-01..AD-18 / Phase-1B Authority Decision
+ * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
+ * ═══════════════════════════════════════════════════════════════════════════════════════ */
+
+.app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #020617;
+}
+
+.app-root > .app-shell {
+  flex: 1 1 auto;
+}
