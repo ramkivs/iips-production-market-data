@@ -1,0 +1,11 @@
+{
+  "disposition": "WINDOWS APPLICATION VERIFICATION — FAILED OR INCOMPLETE; NOT CERTIFICATION",
+  "windowsAcceptance": "FAIL",
+  "error": "W2 legacy screenshot missing: G:\\IIPS-Windows-UI-Qualification-DPIT\\evidence\\d-pit-wire-01-windows\\legacy-ui.png",
+  "certification": "NONE_GRANTED",
+  "productionAuthorization": "NOT GRANTED",
+  "d114": "NON_PRODUCTION_HOLD",
+  "oiHist01": "OPEN",
+  "g004": "OPEN",
+  "recordedAt": "2026-09-22T04:26:38.2133511Z"
+}

@@ -1,0 +1,152 @@
+{
+  "bl": {
+    "surface": "Company",
+    "dataMode": "PIT",
+    "dataAvailable": true,
+    "query": {
+      "asOf": "2024-07-08T09:15:00.000Z",
+      "domain": "D02",
+      "securityId": "ISIN:INE665A01038:BL"
+    },
+    "vintage": {
+      "found": true,
+      "requestedAsOf": "2024-07-08T09:15:00.000Z",
+      "resolvedAsOf": "2024-07-08T09:15:00.000Z",
+      "asOf": "2024-07-08T09:15:00.000Z",
+      "snapshotId": "data-NSE_D114-d114-dualera-v1-2024-07-08T09:15:00.000Z",
+      "provider": "NSE_D114",
+      "dataVersion": "d114-dualera-v1",
+      "quality": "good",
+      "era": "CM_UDIFF",
+      "pitBoundary": "2024-07-08T15:30:00.000Z",
+      "record": {
+        "companyId": "SWANENERGY",
+        "symbol": "SWANENERGY",
+        "securityIdentity": {
+          "securityId": "ISIN:INE665A01038:BL",
+          "isin": "INE665A01038",
+          "isinAuthority": "NON_AUTHORITATIVE",
+          "series": "BL"
+        },
+        "interval": "1d",
+        "candleStart": "2024-07-08T09:15:00.000Z",
+        "candleEnd": "2024-07-08T15:30:00.000Z",
+        "open": 666.2,
+        "high": 692.6,
+        "low": 666.2,
+        "close": 668.25,
+        "volume": 4556633,
+        "isAdjusted": false
+      }
+    },
+    "provenance": {
+      "dataSource": "NSE historical archives via governed D114 dual-era ingestion (LEGACY_BHAVCOPY 2016-09-20→2024-07-07; CM_UDIFF 2024-07-08→2026-09-18) served from the frozen P08 PIT store (IN_MEMORY_ONLY)",
+      "freshness": "PIT",
+      "mode": "PIT",
+      "archiveRef": "C:\\IIPS_Data\\NSE_CM_UDiFF_10Y\\archives\\BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv.zip",
+      "sha256": "0ef55b77c30c8a57d5451cd371424242ad515f708630736ea6dc44c38d6e1e85",
+      "sha256ManifestEntry": {
+        "date": "2024-07-08",
+        "filename": "BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv.zip",
+        "bytes": 166236,
+        "sha256": "0ef55b77c30c8a57d5451cd371424242ad515f708630736ea6dc44c38d6e1e85",
+        "status": "ACQUIRED_VALID"
+      },
+      "acquisitionManifestId": "d114-manifest-1789904010860",
+      "intakeLineageDigest": "4dc931886b6d9efd9d44f1f8782993f5a0ac443927d778958c61e999c22773d3",
+      "failureRegisterRef": "G:\\IIPS-Windows-UI-Qualification-DPIT\\evidence\\d114\\failure-unavailable-date-register.json",
+      "corpusId": "windows-d114-bounded-two-era-2024-boundary",
+      "certification": "NONE — application verification only; NOT a certification claim (c7 NOT CERTIFIED, certification NONE_GRANTED)",
+      "transportSemantics": "Resolved vintage satisfies resolved asOf <= requested asOf. Missing vintages fail closed as PIT_UNAVAILABLE. No fallback to SNAPSHOT or LIVE; the frozen replay baseline is never substituted."
+    }
+  },
+  "eq": {
+    "surface": "Company",
+    "dataMode": "PIT",
+    "dataAvailable": true,
+    "query": {
+      "asOf": "2024-07-08T09:15:00.000Z",
+      "domain": "D02",
+      "securityId": "ISIN:INE665A01038:EQ"
+    },
+    "vintage": {
+      "found": true,
+      "requestedAsOf": "2024-07-08T09:15:00.000Z",
+      "resolvedAsOf": "2024-07-08T09:15:00.000Z",
+      "asOf": "2024-07-08T09:15:00.000Z",
+      "snapshotId": "data-NSE_D114-d114-dualera-v1-2024-07-08T09:15:00.000Z",
+      "provider": "NSE_D114",
+      "dataVersion": "d114-dualera-v1",
+      "quality": "good",
+      "era": "CM_UDIFF",
+      "pitBoundary": "2024-07-08T15:30:00.000Z",
+      "record": {
+        "companyId": "SWANENERGY",
+        "symbol": "SWANENERGY",
+        "securityIdentity": {
+          "securityId": "ISIN:INE665A01038:EQ",
+          "isin": "INE665A01038",
+          "isinAuthority": "NON_AUTHORITATIVE",
+          "series": "EQ"
+        },
+        "interval": "1d",
+        "candleStart": "2024-07-08T09:15:00.000Z",
+        "candleEnd": "2024-07-08T15:30:00.000Z",
+        "open": 692.6,
+        "high": 692.6,
+        "low": 692.6,
+        "close": 692.6,
+        "volume": 381237,
+        "isAdjusted": false
+      }
+    },
+    "provenance": {
+      "dataSource": "NSE historical archives via governed D114 dual-era ingestion (LEGACY_BHAVCOPY 2016-09-20→2024-07-07; CM_UDIFF 2024-07-08→2026-09-18) served from the frozen P08 PIT store (IN_MEMORY_ONLY)",
+      "freshness": "PIT",
+      "mode": "PIT",
+      "archiveRef": "C:\\IIPS_Data\\NSE_CM_UDiFF_10Y\\archives\\BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv.zip",
+      "sha256": "0ef55b77c30c8a57d5451cd371424242ad515f708630736ea6dc44c38d6e1e85",
+      "sha256ManifestEntry": {
+        "date": "2024-07-08",
+        "filename": "BhavCopy_NSE_CM_0_0_0_20240708_F_0000.csv.zip",
+        "bytes": 166236,
+        "sha256": "0ef55b77c30c8a57d5451cd371424242ad515f708630736ea6dc44c38d6e1e85",
+        "status": "ACQUIRED_VALID"
+      },
+      "acquisitionManifestId": "d114-manifest-1789904010860",
+      "intakeLineageDigest": "4dc931886b6d9efd9d44f1f8782993f5a0ac443927d778958c61e999c22773d3",
+      "failureRegisterRef": "G:\\IIPS-Windows-UI-Qualification-DPIT\\evidence\\d114\\failure-unavailable-date-register.json",
+      "corpusId": "windows-d114-bounded-two-era-2024-boundary",
+      "certification": "NONE — application verification only; NOT a certification claim (c7 NOT CERTIFIED, certification NONE_GRANTED)",
+      "transportSemantics": "Resolved vintage satisfies resolved asOf <= requested asOf. Missing vintages fail closed as PIT_UNAVAILABLE. No fallback to SNAPSHOT or LIVE; the frozen replay baseline is never substituted."
+    }
+  },
+  "ambiguousSymbol": {
+    "surface": "Company",
+    "dataMode": "PIT",
+    "state": "PIT_UNAVAILABLE",
+    "dataAvailable": false,
+    "reason": "PIT data is UNAVAILABLE for Company. No point-in-time capability is wired to this transport, so no as-of values exist to return.",
+    "dependency": "PIT capability exists in p08 but is NOT wired to transport; wiring it is a separate authorized act.",
+    "provenance": {
+      "dataSource": "none — no governed data source is available for this data mode",
+      "freshness": "UNAVAILABLE",
+      "mode": "PIT",
+      "transportSemantics": "This response deliberately contains NO market data. The request is NOT silently served from the frozen v1.1 Replay Baseline, and no provider value is substituted or fabricated. Select SNAPSHOT to receive the certified baseline data."
+    }
+  },
+  "ambiguousRawIsin": {
+    "surface": "Company",
+    "dataMode": "PIT",
+    "state": "PIT_UNAVAILABLE",
+    "dataAvailable": false,
+    "reason": "PIT data is UNAVAILABLE for Company. No point-in-time capability is wired to this transport, so no as-of values exist to return.",
+    "dependency": "PIT capability exists in p08 but is NOT wired to transport; wiring it is a separate authorized act.",
+    "provenance": {
+      "dataSource": "none — no governed data source is available for this data mode",
+      "freshness": "UNAVAILABLE",
+      "mode": "PIT",
+      "transportSemantics": "This response deliberately contains NO market data. The request is NOT silently served from the frozen v1.1 Replay Baseline, and no provider value is substituted or fabricated. Select SNAPSHOT to receive the certified baseline data."
+    }
+  }
+}

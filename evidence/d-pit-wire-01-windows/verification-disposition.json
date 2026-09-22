@@ -1,0 +1,22 @@
+{
+  "disposition": "WINDOWS APPLICATION VERIFICATION — NOT CERTIFICATION",
+  "windowsAcceptance": "PASS",
+  "branch": "arena/01a0c440-iips-production-market-data",
+  "commit": "2fcdb2023cc604c1bc190d83180257cc11c22825",
+  "corpusId": "windows-d114-bounded-two-era-2024-boundary",
+  "certification": "NONE_GRANTED",
+  "productionAuthorization": "NOT GRANTED",
+  "d114": "NON_PRODUCTION_HOLD",
+  "oiHist01": "OPEN",
+  "g004": "OPEN",
+  "persistence": "IN_MEMORY_ONLY",
+  "providerAccessIntroduced": false,
+  "snapshotFallback": false,
+  "w1": "PASS",
+  "w2": "PASS — both eras + physical M&MFIN EQ/N3 + physical SWANENERGY BL/EQ same-ISIN separation + fail-closed shared aliases + operator-confirmed UI screenshots",
+  "w3": "PASS",
+  "w4": "PASS",
+  "w5": "PASS",
+  "w6": "PASS",
+  "executedAt": "2026-09-22T04:34:44.7608829Z"
+}

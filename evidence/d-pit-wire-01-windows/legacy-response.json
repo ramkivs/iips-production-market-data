@@ -1,0 +1,61 @@
+{
+  "surface": "Company",
+  "dataMode": "PIT",
+  "dataAvailable": true,
+  "query": {
+    "asOf": "2024-07-05T15:30:00.000Z",
+    "domain": "D02",
+    "securityId": "RELIANCE"
+  },
+  "vintage": {
+    "found": true,
+    "requestedAsOf": "2024-07-05T15:30:00.000Z",
+    "resolvedAsOf": "2024-07-05T09:15:00.000Z",
+    "asOf": "2024-07-05T09:15:00.000Z",
+    "snapshotId": "data-NSE_D114-d114-dualera-v1-2024-07-05T09:15:00.000Z",
+    "provider": "NSE_D114",
+    "dataVersion": "d114-dualera-v1",
+    "quality": "good",
+    "era": "LEGACY_BHAVCOPY",
+    "pitBoundary": "2024-07-05T15:30:00.000Z",
+    "record": {
+      "companyId": "RELIANCE",
+      "symbol": "RELIANCE",
+      "securityIdentity": {
+        "securityId": "ISIN:INE002A01018:EQ",
+        "isin": "INE002A01018",
+        "isinAuthority": "NON_AUTHORITATIVE",
+        "series": "EQ"
+      },
+      "interval": "1d",
+      "candleStart": "2024-07-05T09:15:00.000Z",
+      "candleEnd": "2024-07-05T15:30:00.000Z",
+      "open": 3107.65,
+      "high": 3197,
+      "low": 3096,
+      "close": 3177.25,
+      "volume": 6134855,
+      "isAdjusted": false
+    }
+  },
+  "provenance": {
+    "dataSource": "NSE historical archives via governed D114 dual-era ingestion (LEGACY_BHAVCOPY 2016-09-20→2024-07-07; CM_UDIFF 2024-07-08→2026-09-18) served from the frozen P08 PIT store (IN_MEMORY_ONLY)",
+    "freshness": "PIT",
+    "mode": "PIT",
+    "archiveRef": "C:\\IIPS_Data\\NSE_Legacy_Acquisition\\archives\\cm05JUL2024bhav.csv.zip",
+    "sha256": "e08c8c0650e6807f8b1abd0658bc8d87cbe2d78c2fc77e05c82878f30be46665",
+    "sha256ManifestEntry": {
+      "date": "2024-07-05",
+      "filename": "cm05JUL2024bhav.csv.zip",
+      "bytes": 109203,
+      "sha256": "e08c8c0650e6807f8b1abd0658bc8d87cbe2d78c2fc77e05c82878f30be46665",
+      "status": "ACQUIRED_VALID"
+    },
+    "acquisitionManifestId": "d114-manifest-1789911614763",
+    "intakeLineageDigest": "e71463f226b43177379344cd2a6535a3d366fd233a7adabdc3e5034627a6c6e1",
+    "failureRegisterRef": "G:\\IIPS-Windows-UI-Qualification-DPIT\\evidence\\d114-legacy\\failure-unavailable-date-register.json",
+    "corpusId": "windows-d114-bounded-two-era-2024-boundary",
+    "certification": "NONE — application verification only; NOT a certification claim (c7 NOT CERTIFIED, certification NONE_GRANTED)",
+    "transportSemantics": "Resolved vintage satisfies resolved asOf <= requested asOf. Missing vintages fail closed as PIT_UNAVAILABLE. No fallback to SNAPSHOT or LIVE; the frozen replay baseline is never substituted."
+  }
+}

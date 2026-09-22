@@ -1,0 +1,37 @@
+[
+  {
+    "asOf": "2023-04-07T15:30:00.000Z",
+    "state": "PIT_UNAVAILABLE",
+    "dataAvailable": false
+  },
+  {
+    "asOf": "2025-03-14T15:30:00.000Z",
+    "state": "PIT_UNAVAILABLE",
+    "dataAvailable": false
+  },
+  {
+    "asOf": "2024-07-13T15:30:00.000Z",
+    "state": "PIT_UNAVAILABLE",
+    "dataAvailable": false
+  },
+  {
+    "asOf": "2024-08-15T15:30:00.000Z",
+    "state": "PIT_UNAVAILABLE",
+    "dataAvailable": false
+  },
+  {
+    "asOf": "2016-09-19T15:30:00.000Z",
+    "state": "PIT_UNAVAILABLE",
+    "dataAvailable": false
+  },
+  {
+    "asOf": "2026-09-19T15:30:00.000Z",
+    "state": "PIT_UNAVAILABLE",
+    "dataAvailable": false
+  },
+  {
+    "asOf": "2024-07-09T15:30:00.000Z",
+    "state": "PIT_UNAVAILABLE",
+    "dataAvailable": false
+  }
+]
