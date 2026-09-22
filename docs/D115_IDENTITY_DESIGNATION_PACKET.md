@@ -115,3 +115,223 @@ D115 IDENTITY RESOLUTION             = BLOCKED
 ```
 
 No actual identity value is asserted by this packet.
+
+---
+
+## 7. A–H designation / approval record
+
+This section records the requested A–H completion form. The reference identifiers supplied with the
+request are retained only as **references requiring verification**; they are not promoted into
+identity values or approvals. No A–H subordinate designation has been completed by this packet.
+
+### A. Existing-IIPS organizational / service principal
+
+**VALUE:**
+
+UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+
+**AUTHORITY STATUS:** Ramki is the bounded D115 authority holder; the exact Existing-IIPS principal
+and owning organization/team have not been designated.
+
+**SOURCE / EVIDENCE:** No authoritative principal identifier/name or Existing-IIPS source record is
+present in the governed evidence. `docs/D115_IDENTITY_RESOLUTION_AND_BINDING_RECONCILIATION.md:30-34,95,242-243`
+and `docs/p03/P03_AUTHENTICATION_MODEL.md:34-37,50` preserve this absence.
+
+**APPROVED BY:** Not approved. Ramki must explicitly designate the exact principal and owning
+organization/team.
+
+**SCOPE:** D115 identity binding / Stage-3 qualification only unless Ramki separately records a
+broader scope.
+
+**EFFECTIVE VERSION/DATE:** Not established.
+
+### B. Runtime identity custodian
+
+**VALUE:**
+
+UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+
+**AUTHORITY STATUS:** Runtime identity custody and lifecycle ownership have not been designated.
+
+**SOURCE / EVIDENCE:** The repository contains technical identity-enforcement seams, not a named
+custodian or service-principal owner. `docs/D115_IDENTITY_RESOLUTION_AND_BINDING_RECONCILIATION.md:97,121,164-173,242,288-302`
+and `docs/p03/P03_OPEN_ITEMS.md:20-23`.
+
+**APPROVED BY:** Not approved. Ramki must designate the team, person, or system and the approved
+custody/lifecycle mechanism. No secret value may be recorded.
+
+**SCOPE:** Runtime identity custody for the designated D115 qualification boundary only.
+
+**EFFECTIVE VERSION/DATE:** Not established.
+
+### C. D115 companyId
+
+**VALUE:**
+
+UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+
+**AUTHORITY STATUS:** No exact authoritative HDFC Life/D115 `companyId` has been approved.
+
+**SOURCE / EVIDENCE:** The supplied CSIP reference
+`5233149d-2a2d-4644-a6a7-e1ed5e133285` is retained as **REFERENCE ONLY — NOT APPROVED as
+`runtimeCompanyId`**. The governed report records no HDFC Life/D115 business value and prohibits
+synthetic or guessed substitutions. `docs/D115_IDENTITY_RESOLUTION_AND_BINDING_RECONCILIATION.md:30-34,98`
+and `docs/d4/D4_05_SECURITY_MASTER_ADAPTER.md:13-25,121-144`.
+
+**APPROVED BY:** Not approved. Ramki must approve the exact value from authoritative source evidence.
+
+**SCOPE:** Exact D115/HDFC Life company identity for the designated qualification boundary.
+
+**EFFECTIVE VERSION/DATE:** Not established.
+
+### D. Company / Security mapping
+
+**VALUE:**
+
+UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+
+**AUTHORITY STATUS:** No D115 Company → canonical issuer → security mapping has been approved.
+
+**SOURCE / EVIDENCE:** The following supplied identifiers are retained as **REFERENCES REQUIRING
+VERIFICATION**, not as authoritative values:
+
+- canonical issuer: `008e9766-4135-4d5b-9ecf-b3fcf721ebdb`;
+- security: `7c4322d5-6f87-4dc8-a0a9-1b5f937cb0b1`; and
+- mapping reference: `idmap-d115-group2-1.0.0`.
+
+The P04 contract requires an explicit, provider-neutral, versioned, effective-dated, auditable
+mapping with approval and audit references. `docs/p04/P04_IDENTITY_ADAPTER_CONTRACT.md:31-38,69-83,91-107`
+and `docs/d4/D4_05_SECURITY_MASTER_ADAPTER.md:85-117`.
+
+**APPROVED BY:** Not approved. Ramki must explicitly verify and approve the canonical relationship
+and mapping artifact/version.
+
+**SCOPE:** D115 Company → issuer → security relationship for identity binding / Stage-3
+qualification only.
+
+**EFFECTIVE VERSION/DATE:** Not established. `idmap-d115-group2-1.0.0` is not accepted as a
+mapping version merely because it was supplied.
+
+### E. Target environment
+
+**VALUE:**
+
+UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+
+**AUTHORITY STATUS:** No D115 qualification environment has been designated.
+
+**SOURCE / EVIDENCE:** `D115_STAGE3_BOUNDED_DEVELOPMENT_REFERENCE_ONLY` is retained as
+**REFERENCE ONLY — NOT an authorization**. Local OIDC defaults and conditional live-discovery code
+do not select an environment. `docs/D115_IDENTITY_RESOLUTION_AND_BINDING_RECONCILIATION.md:99,126,199-207,319-322,433-434`
+and `docs/D115_AUTHORITY_ACT.md:32,42-48`.
+
+**APPROVED BY:** Not approved. Ramki must designate the exact qualification environment. Production
+activation and production promotion remain outside scope.
+
+**SCOPE:** Initial D115 Stage-3 identity qualification only.
+
+**EFFECTIVE VERSION/DATE:** Not established.
+
+### F. Tenant / region / environment boundary
+
+**VALUE:**
+
+UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+
+**AUTHORITY STATUS:** No D115 tenant, region, or environment boundary has been designated or
+validated.
+
+**SOURCE / EVIDENCE:** No authoritative D115 boundary record exists. Generic test tenants, source
+defaults, local configuration, unrelated Keycloak instances, and historical environments are not
+D115 evidence. `docs/D115_IDENTITY_RESOLUTION_AND_BINDING_RECONCILIATION.md:30-34,121,197-207,242-249,433-434`
+and `docs/p03/P03_SECURITY_AUTH_CONTRACT.md:64-70`.
+
+**APPROVED BY:** Not approved. Ramki must designate or explicitly validate the tenant, region, and
+environment boundary, including an explicit `NOT APPLICABLE` decision if appropriate.
+
+**SCOPE:** The designated non-production qualification boundary, if applicable.
+
+**EFFECTIVE VERSION/DATE:** Not established.
+
+### G. Stage-3 identity artifact
+
+**VALUE:**
+
+UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+
+**AUTHORITY STATUS:** No governed D115 Stage-3 identity artifact, type, identifier, path, or version
+has been designated.
+
+**SOURCE / EVIDENCE:** Generic P11 Stage 3 is an execution/data-ingress result and is not a D115
+identity-binding artifact. `docs/D115_IDENTITY_RESOLUTION_AND_BINDING_RECONCILIATION.md:101,227-250,304-315,436`
+and `p11/src/engineIngressPath.js:184-226`. No artifact may be created, modified, registered,
+loaded, or activated from this packet.
+
+**APPROVED BY:** Not approved. Ramki must explicitly designate the artifact type, identifier,
+governed location, version/hash, and approval reference.
+
+**SCOPE:** D115 Stage-3 identity binding qualification only.
+
+**EFFECTIVE VERSION/DATE:** Not established.
+
+### H. Evidence owner
+
+**VALUE:**
+
+UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+
+**AUTHORITY STATUS:** No D115 Stage-3 evidence owner or accountable evidence team has been
+designated.
+
+**SOURCE / EVIDENCE:** The required owner and retention/audit location are absent from the governed
+evidence. `docs/D115_IDENTITY_RESOLUTION_AND_BINDING_RECONCILIATION.md:101,227-250,368-375,436`
+and `docs/D115_AUTHORITY_ACT.md:33-38,65`.
+
+**APPROVED BY:** Not approved. Ramki must designate the owner role and responsibility for maintaining
+authoritative evidence proving A–G.
+
+**SCOPE:** Evidence production, retention, audit, and presentation for the D115 Stage-3
+qualification packet.
+
+**EFFECTIVE VERSION/DATE:** Not established.
+
+---
+
+## 8. Authority decision record
+
+Ramki's authority to complete the bounded A–H decisions is established by
+`D115-AUTHORITY-001`. This packet does **not** impersonate Ramki, complete a subordinate designation,
+or convert any supplied reference into an approved identity value.
+
+Until every required field has an authoritative value:
+
+```text
+runtimeCompanyId          = UNRESOLVED
+implementationAuthority  = WITHHELD
+productionEligible       = false
+D115 production activation = NOT AUTHORIZED
+```
+
+No D115 mapping creation, registration, loading, activation, or production operation may proceed
+solely from inferred or repository-derived values.
+
+Dhan remains the active Level-1 route as a supplied operational constraint; the repository contains
+no Dhan entitlement evidence. NSE remains **DEFERRED** and is not authorized by this packet.
+
+---
+
+## 9. A–H record disposition
+
+```text
+A. Organizational/service principal = UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+B. Runtime identity custodian       = UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+C. D115 companyId                   = UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+D. Company/Security mapping          = UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+E. Target environment               = UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+F. Tenant/region boundary            = UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+G. Stage-3 identity artifact         = UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+H. Evidence owner                   = UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+
+D115 AUTHORITY                       = PARTIALLY ESTABLISHED
+D115 IDENTITY RESOLUTION             = BLOCKED
+```
