@@ -1,0 +1,26 @@
+{
+  "validAltData": [
+    {
+      "companyId": "INFY",
+      "datasetName": "IT_HIRING_INDEX",
+      "signalType": "TALENT_DEMAND_VELOCITY",
+      "observedAt": "2026-09-15T00:00:00.000Z",
+      "value": 118.4,
+      "unit": "Index (100 = Baseline)",
+      "confidenceScore": 0.92,
+      "coverage": "PAN_INDIA_TIER1_TECH"
+    }
+  ],
+  "invalidAltData": [
+    {
+      "companyId": "INFY",
+      "datasetName": "",
+      "signalType": "",
+      "observedAt": "INVALID_DATE",
+      "value": 100.0,
+      "unit": "Index",
+      "confidenceScore": 2.5,
+      "coverage": "ALL"
+    }
+  ]
+}

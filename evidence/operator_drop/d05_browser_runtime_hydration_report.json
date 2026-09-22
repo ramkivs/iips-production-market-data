@@ -1,0 +1,20 @@
+{
+  "reportId": "REPORT-D05-BROWSER-RUNTIME-HYDRATION-2026-09-22-001",
+  "domain": "D05_SECURITY_MASTER",
+  "governingAuthority": "AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001",
+  "sourceArtifact": "evidence/operator_drop/d05_security_master_broad_universe.json",
+  "manifestArtifact": "evidence/operator_drop/d05_security_master_manifest.json",
+  "fileChecksumSha256": "7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5",
+  "recordCount": 2250,
+  "browserHydrationMechanism": "BUILD_TIME_IMPORTED_TYPED_DATASET_MODULE",
+  "zeroFsDependencies": true,
+  "failClosedOnCorruption": true,
+  "totalTestSuites": 54,
+  "testSuitesPassed": 54,
+  "totalTests": 342,
+  "testsPassed": 342,
+  "typecheck": "PASS",
+  "viteBuild": "PASS",
+  "classification": "D05_BROWSER_HYDRATION_IMPLEMENTED_AUTOMATED_QUALIFIED",
+  "windowsVisualAcceptance": "PENDING_OPERATOR_EVIDENCE"
+}

@@ -1,0 +1,7 @@
+# Institutional Investment Platform System (IIPS) - Governed Line-Ending Policy
+* text=auto eol=lf
+*.json text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.md text eol=lf
+*.csv text eol=lf

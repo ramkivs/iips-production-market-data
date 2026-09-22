@@ -1,0 +1,141 @@
+{
+  "certificationId": "P17-CERT-2026-09-21-001",
+  "packageId": "WS-G / Package P17 — Final Program Release Manifest Compilation & Non-Production Release Signoff",
+  "activity": "P17-CERT Final Controlled Certification Activity",
+  "certificationStatus": "CERTIFIED",
+  "authority": {
+    "standards": "AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W6-AUTH-2026-01",
+    "governingGates": "G-001 -> G-033 CLOSED / ACCEPTED; P13-CERT CERTIFIED; P14-CERT CERTIFIED; P15-CERT CERTIFIED; P16-CERT CERTIFIED; G-034 HELD / PRODUCTION-DEPENDENT",
+    "targetUiProductParity": "CONVERGED / ACCEPTED / QUALIFIED",
+    "optionAStatus": "IMPLEMENTED / QUALIFIED / EVIDENCE-ANCHORED",
+    "operatingMode": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+    "productionAuthorization": "NOT GRANTED",
+    "commercialProviderActivation": "PROHIBITED",
+    "r2Status": "HELD / EXTERNALLY GATED",
+    "ad17M2Status": "UNRESOLVED / PRESERVED",
+    "actDoc01Status": "COMPLETE",
+    "actRun01Status": "PARKED",
+    "actAud01Status": "PARKED"
+  },
+  "scope": {
+    "description": "Final Program Release Manifest Compilation, Non-Production Release Signoff (v1.0.0-rc1), Reconciliation of Certified Baselines P13–P16, Governance Boundary Preservation, and External Dependency Register Isolation",
+    "releaseVersion": "v1.0.0-rc1",
+    "releaseType": "NON_PRODUCTION_QUALIFIED_RELEASE",
+    "sourceGitSha": "96814fd"
+  },
+  "certifiedBaselinesReconciliation": [
+    {
+      "package": "P13 (Product UI Data Integration)",
+      "certificationMilestone": "P13-CERT",
+      "status": "CERTIFIED",
+      "authoritativeCommit": "94ad0e3",
+      "evidenceArtifact": "evidence/p13/p13-certification-report.json",
+      "lineageDigest": "fc1c5e8b886c3711e00928df4a7c2d577cc8a44d0da4aa148decacdd12e328fb",
+      "reconciliationStatus": "RECONCILED_EXACT"
+    },
+    {
+      "package": "P14 (Product UI/UX Accessibility & Responsive Layouts)",
+      "certificationMilestone": "P14-CERT",
+      "status": "CERTIFIED",
+      "authoritativeCommit": "e6ec2ca",
+      "evidenceArtifact": "evidence/p14/p14-certification-report.json",
+      "lineageDigest": "6b8bb82b6872d2bbacf1d6e99e9c18c86c0337c4610c79370c952f36311d0a8d",
+      "reconciliationStatus": "RECONCILED_EXACT"
+    },
+    {
+      "package": "P15 (End-to-End Lineage & Degradation Auditing)",
+      "certificationMilestone": "P15-CERT",
+      "status": "CERTIFIED",
+      "authoritativeCommit": "854aa08",
+      "evidenceArtifact": "evidence/p15/p15-certification-report.json",
+      "lineageDigest": "b0a79c8b3d87c969060f4ec5e4be0eb52951f1b5aac214de8fd5d0440bd66f1a",
+      "reconciliationStatus": "RECONCILED_EXACT"
+    },
+    {
+      "package": "P16 (Operational Qualification & Release Candidate)",
+      "certificationMilestone": "P16-CERT",
+      "status": "CERTIFIED",
+      "authoritativeCommit": "96814fd",
+      "evidenceArtifact": "evidence/p16/p16-certification-report.json",
+      "lineageDigest": "4e40e000023e39059222c5da40e417e7071cb7e99344fc2fd796625a9fc4785c",
+      "reconciliationStatus": "RECONCILED_EXACT"
+    }
+  ],
+  "programStateReconciliation": {
+    "closedGates": "G-001 through G-033 CLOSED / ACCEPTED",
+    "heldGates": "G-034 HELD / PRODUCTION-DEPENDENT",
+    "externalGates": "R-2 HELD / EXTERNALLY GATED",
+    "unresolvedResiduals": "AD-17 / M-2 UNRESOLVED / PRESERVED (Replay stub model != live feed)",
+    "parkedActivities": "ACT-RUN-01 PARKED; ACT-AUD-01 PARKED",
+    "documentationStatus": "ACT-DOC-01 COMPLETE",
+    "productionAuthorization": "NOT GRANTED",
+    "commercialProviderActivation": "PROHIBITED"
+  },
+  "externalDependencyRegister": [
+    {
+      "dependencyId": "EXT-DEP-01",
+      "category": "COMMERCIAL_DATA_LICENSING",
+      "governingItem": "OI-HIST-01",
+      "status": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED",
+      "description": "Exchange commercial market data redistribution license & commercial vendor feed agreements"
+    },
+    {
+      "dependencyId": "EXT-DEP-02",
+      "category": "PRODUCTION_DEPLOYMENT_GATE",
+      "governingItem": "G-034",
+      "status": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED",
+      "description": "Master live production deployment authorization gate G-034"
+    },
+    {
+      "dependencyId": "EXT-DEP-03",
+      "category": "PRODUCTION_CREDENTIALS",
+      "governingItem": "SecretRef Production Vault",
+      "status": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED",
+      "description": "Production HSM/Vault drivers and live enterprise credentials"
+    },
+    {
+      "dependencyId": "EXT-DEP-04",
+      "category": "LIVE_EXECUTION_EQUIVALENCE",
+      "governingItem": "AD-17 / M-2",
+      "status": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED",
+      "description": "Live execution feed verification replacing offline replay simulation stub model"
+    }
+  ],
+  "nonProductionSignoff": {
+    "disposition": "NON_PRODUCTION_RELEASE_SIGNOFF_GRANTED",
+    "scopeQualified": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+    "productionSignoff": "EXPLICITLY_DISCLAIMED_AND_NOT_GRANTED",
+    "signoffAuthority": "Lead Enterprise Architect & Market Data Governance Lead (AD-CHARTER-2026-01 / AD-W6-AUTH-2026-01)",
+    "signoffTimestamp": "2026-09-21T07:45:00.000Z"
+  },
+  "testVerificationSummary": {
+    "totalSuitesExecuted": 26,
+    "totalTestsExecuted": 191,
+    "passed": 191,
+    "failed": 0,
+    "regressions": 0,
+    "plaintextSecretsDetected": 0,
+    "methodologyDriftPct": 0
+  },
+  "productionBoundaryConfirmation": {
+    "liveProvidersActive": 0,
+    "networkSocketsBound": 0,
+    "productionCredentials": "NONE",
+    "productionRuntimeCompanyId": "NONE (Offline Security Master mapping only)",
+    "productionAuthorization": "NOT GRANTED",
+    "commercialProviderActivation": "PROHIBITED",
+    "confirmationStatement": "Zero production dependencies. Release package is strictly bounded to non-production OFFLINE_BOOTSTRAP operations."
+  },
+  "evidenceClassification": {
+    "p13DataIntegrationCertification": "VERIFIED",
+    "p14AccessibilityResponsiveCertification": "VERIFIED",
+    "p15LineageDegradationCertification": "VERIFIED",
+    "p16OperationalQualificationCertification": "VERIFIED",
+    "finalReleaseManifestCompilation": "VERIFIED",
+    "nonProductionReleaseSignoff": "VERIFIED",
+    "productionLiveDeployment": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED",
+    "commercialVendorActivation": "EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED"
+  },
+  "certificationDisposition": "P17-CERT = CERTIFIED",
+  "finalReleaseIntegrityDigest": "4b0cf1f508e4037480acdd1b95ea579835c8caa923812546941a970b08cf74a2"
+}

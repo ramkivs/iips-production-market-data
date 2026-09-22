@@ -1,0 +1,660 @@
+[
+    {
+        "date":  "2018-03-29",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/MAR/cm29MAR2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-04-07",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/APR/cm07APR2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-08-22",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/AUG/cm22AUG2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-11-14",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/NOV/cm14NOV2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-11-30",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/NOV/cm30NOV2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-02-13",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/FEB/cm13FEB2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2017-08-25",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2017/AUG/cm25AUG2017bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-03-30",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/MAR/cm30MAR2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2016-11-14",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2016/NOV/cm14NOV2016bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2024-04-17",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2024/APR/cm17APR2024bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-07-21",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/JUL/cm21JUL2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-10-28",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/OCT/cm28OCT2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-03-02",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/MAR/cm02MAR2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2017-06-26",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2017/JUN/cm26JUN2017bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2022-04-14",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2022/APR/cm14APR2022bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2017-04-14",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2017/APR/cm14APR2017bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-11-27",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/NOV/cm27NOV2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-05-01",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/MAY/cm01MAY2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-09-10",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/SEP/cm10SEP2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-08-19",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/AUG/cm19AUG2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2022-04-15",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2022/APR/cm15APR2022bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-06-29",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/JUN/cm29JUN2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-11-12",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/NOV/cm12NOV2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-05-13",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/MAY/cm13MAY2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-09-10",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/SEP/cm10SEP2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-04-10",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/APR/cm10APR2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-09-19",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/SEP/cm19SEP2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2022-08-09",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2022/AUG/cm09AUG2022bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-03-21",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/MAR/cm21MAR2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2016-10-11",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2016/OCT/cm11OCT2016bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-08-12",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/AUG/cm12AUG2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2017-05-01",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2017/MAY/cm01MAY2017bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2024-05-20",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2024/MAY/cm20MAY2024bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2022-11-08",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2022/NOV/cm08NOV2022bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-04-06",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/APR/cm06APR2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2017-12-25",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2017/DEC/cm25DEC2017bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-11-16",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/NOV/cm16NOV2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-04-21",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/APR/cm21APR2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-03-30",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/MAR/cm30MAR2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-04-29",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/APR/cm29APR2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2024-03-25",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2024/MAR/cm25MAR2024bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2022-03-18",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2022/MAR/cm18MAR2022bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2024-01-22",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2024/JAN/cm22JAN2024bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-09-02",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/SEP/cm02SEP2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-12-25",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/DEC/cm25DEC2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-03-04",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/MAR/cm04MAR2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-03-07",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/MAR/cm07MAR2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2017-02-24",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2017/FEB/cm24FEB2017bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-06-05",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/JUN/cm05JUN2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-05-01",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/MAY/cm01MAY2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-09-20",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/SEP/cm20SEP2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2017-03-13",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2017/MAR/cm13MAR2017bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-04-02",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/APR/cm02APR2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-05-01",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/MAY/cm01MAY2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-04-02",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/APR/cm02APR2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2024-04-11",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2024/APR/cm11APR2024bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2022-10-05",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2022/OCT/cm05OCT2022bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-09-13",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/SEP/cm13SEP2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-10-24",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/OCT/cm24OCT2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2016-10-31",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2016/OCT/cm31OCT2016bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-11-19",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/NOV/cm19NOV2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2024-06-17",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2024/JUN/cm17JUN2024bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2024-05-01",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2024/MAY/cm01MAY2024bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-10-15",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/OCT/cm15OCT2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-04-14",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/APR/cm14APR2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-10-21",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/OCT/cm21OCT2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-04-19",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/APR/cm19APR2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-03-11",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/MAR/cm11MAR2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-05-01",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/MAY/cm01MAY2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-04-14",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/APR/cm14APR2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2022-03-01",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2022/MAR/cm01MAR2022bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2022-10-26",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2022/OCT/cm26OCT2022bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2017-10-20",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2017/OCT/cm20OCT2017bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-04-04",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/APR/cm04APR2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2023-12-25",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2023/DEC/cm25DEC2023bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2022-05-03",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2022/MAY/cm03MAY2022bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-11-08",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/NOV/cm08NOV2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-11-05",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/NOV/cm05NOV2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-03-29",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/MAR/cm29MAR2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-05-25",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/MAY/cm25MAY2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-04-17",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/APR/cm17APR2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-11-23",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/NOV/cm23NOV2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2019-10-08",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2019/OCT/cm08OCT2019bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-12-25",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/DEC/cm25DEC2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2016-10-12",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2016/OCT/cm12OCT2016bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-02-21",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/FEB/cm21FEB2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2017-04-04",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2017/APR/cm04APR2017bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-03-10",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/MAR/cm10MAR2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2024-03-29",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2024/MAR/cm29MAR2024bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2022-08-31",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2022/AUG/cm31AUG2022bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2020-12-25",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2020/DEC/cm25DEC2020bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2021-04-14",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2021/APR/cm14APR2021bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2018-10-18",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2018/OCT/cm18OCT2018bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    },
+    {
+        "date":  "2024-03-08",
+        "url":  "https://nsearchives.nseindia.com/content/historical/EQUITIES/2024/MAR/cm08MAR2024bhav.csv.zip",
+        "status":  "HTTP_404",
+        "httpStatusCode":  404,
+        "failureReason":  "Archive not found on server (HTTP 404)"
+    }
+]

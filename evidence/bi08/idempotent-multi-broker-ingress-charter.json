@@ -1,0 +1,34 @@
+{
+  "$schema": "https://iips.institutional/schemas/bi08-idempotent-multi-broker-ingress-charter.json",
+  "charterId": "BI-08-IDEMPOTENT-MULTI-BROKER-INGRESS-CHARTER",
+  "authorityDecision": "OPTION_A_CONTENT_HASH_IDEMPOTENCY",
+  "governingStandards": "AD-01..AD-18 / AD-CHARTER-2026-01 / BI-08-AUTH-2026-01",
+  "effectiveDate": "2026-09-22",
+  "executionMode": "NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+  "targetRelease": "v1.0.0-rc2",
+  "problemStatement": {
+    "defect": "DUPLICATE_CSV_REINGESTION_ADDITIVE_DOUBLING",
+    "rootCause": "PortfolioStore.saveHoldings executes default MERGE consolidation without checking contentDigest uniqueness in contributions[] ledger",
+    "observedDelta": "Exact doubling (2.0x) of constituent quantities and total portfolio valuation on identical CSV re-upload"
+  },
+  "remediationSpecification": {
+    "strategy": "CONTENT_HASH_IDEMPOTENCY",
+    "deduplicationKey": "options.contentDigest (SHA-256 of raw CSV payload)",
+    "duplicateHandling": "NO_OP_ALREADY_IMPORTED",
+    "stateMutationOnDuplicate": false,
+    "auditContributionAppendedOnDuplicate": false,
+    "provenanceDigestPreservedOnDuplicate": true,
+    "distinctBrokerFileMergePreserved": true
+  },
+  "acceptanceCriteria": [
+    "AC-01: Exact-file idempotency (B - A = 0 on identical CSV re-upload)",
+    "AC-02: Provenance digest stability on duplicate re-upload",
+    "AC-03: Audit contribution ledger uniqueness (zero duplicate contribution records)",
+    "AC-04: Distinct broker file multi-broker merge preserved",
+    "AC-05: Informative UI view-model feedback on duplicate file detection",
+    "AC-06: Explicit mode: 'REPLACE' overrides deduplication",
+    "AC-07: Non-production operator bypass contracts preserved (zero fake company IDs)",
+    "AC-08: Strict production boundary fail-closed preservation"
+  ],
+  "nextExecutableGate": "GATE-BI08-IMPLEMENTATION-AND-VERIFICATION"
+}

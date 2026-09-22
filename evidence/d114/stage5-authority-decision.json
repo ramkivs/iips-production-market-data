@@ -1,0 +1,67 @@
+{
+  "decisionId": "d114-stage5-auth-2026-09-20-001",
+  "decisionAuthority": "Lead Enterprise Architect & Market Data Governance Lead (AD-CHARTER-2026-01 / AD-W1-AUTH-2026-01)",
+  "decisionTimestamp": "2026-09-20T15:00:00.000Z",
+  "governingPackage": "WS-H / Package D114 — Stage-5 PIT Ingestion and UI Qualification",
+  "targetGate": "GATE-D114-STAGE5-PIT-INGESTION-AND-UI-QUALIFICATION",
+  "gateAction": "FORMALLY_CLOSED",
+  "packageMilestoneStatus": "WS-H / D114 Stage-5 = COMPLETED",
+  "operatingDisposition": "NON_PRODUCTION / OFFLINE_BOOTSTRAP",
+  "authoritativeBasis": {
+    "reconciliationBasis": "D114 Stage-5 Formal Consolidated Read-Only Reconciliation dated 2026-09-20T14:45:00.000Z",
+    "stage5PitIngestionValidationReport": "evidence/d114/stage5-pit-ingestion-validation-report.json",
+    "stage5PitIngestionDigest": "e4c28a411d78ea5d156492376e9eac700e3f3a59eb364a222c35fc198a21f194",
+    "stage5UiQualificationReport": "evidence/d114/stage5-ui-read-only-qualification-report.json",
+    "stage5UiQualificationDigest": "afbdd04fcdc32c3710b016475a56b847d50c562a38366e7deb7f94cb4e72bbe2",
+    "dualEraReconciliationReport": "evidence/d114/historical-reconciliation-report-dual-era.json",
+    "dualEraReconciliationDigest": "378a7c6daec678a54316a0e192f7fcb0999d1bf6ad07a3a5d6643686687b1552",
+    "windowsEvidenceCheckpoint": {
+      "remoteBranch": "windows/d114-stage5-banking-replay-observation",
+      "durableHead": "d771e6a28514a6c529742d318dd9f3f08ed205f6",
+      "worktree": "CLEAN",
+      "readOnlyReconciliation": "PASS",
+      "uiObservationArtifact": "evidence/d114-stage5-ui/D114-STAGE5-REPLAY-UI-OBSERVATIONS-EXTENDED.md",
+      "detailSurfacesObserved": "13/13",
+      "replayExplorerSurfacesObserved": "13/13"
+    }
+  },
+  "verifiedPrerequisites": {
+    "stage5ImplementationPrerequisites": "SATISFIED",
+    "automatedTestSuitePassRate": "191/191 (100% PASS across 26 test suites)",
+    "windowsUiQualification": "COMPLETE (13/13 detail surfaces + 13/13 Replay Explorer surfaces observed)",
+    "stage5EvidenceGaps": "NONE IDENTIFIED",
+    "crossEnvironmentContradictions": "NONE IDENTIFIED"
+  },
+  "explicitGovernanceNonAuthorizations": [
+    "Does NOT authorize production historical acquisition",
+    "Does NOT close OI-HIST-01 (remains OPEN / EXTERNAL / ACQUISITION BLOCKED)",
+    "Does NOT close Master Gate G-004 (remains OPEN / PRESERVED)",
+    "Does NOT resolve AD-17 / M-2 (remains OPEN / UNRESOLVED)",
+    "Does NOT certify ReplayService runtime equivalence (remains NOT VERIFIED)",
+    "Does NOT certify runtime byte identity (remains NOT VERIFIED)",
+    "Does NOT establish NSE commercial entitlement/licensing (remains NOT ESTABLISHED)",
+    "Does NOT authorize production deployment or live network execution"
+  ],
+  "retainedGovernanceInvariants": {
+    "operatingMode": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+    "oiHist01Status": "OPEN / EXTERNAL / ACQUISITION BLOCKED",
+    "masterGateG004": "OPEN / PRESERVED",
+    "productionHistoricalEligibility": "NOT AUTHORIZED",
+    "programOperatingDisposition": "NON_PRODUCTION_HOLD",
+    "ad17M2Status": "OPEN / UNRESOLVED",
+    "replayServiceRuntimeEquivalence": "NOT VERIFIED",
+    "runtimeByteIdentity": "NOT VERIFIED",
+    "commercialNseEntitlementLicensing": "NOT ESTABLISHED",
+    "productionCertificationStatus": "PROHIBITED",
+    "externalLiveSockets": 0,
+    "commercialVendorDependency": "NONE"
+  },
+  "resultingGateState": {
+    "gateId": "GATE-D114-STAGE5-PIT-INGESTION-AND-UI-QUALIFICATION",
+    "state": "CLOSED",
+    "closedAt": "2026-09-20T15:00:00.000Z",
+    "closedByAuthority": "Lead Enterprise Architect & Market Data Governance Lead (AD-CHARTER-2026-01 / AD-W1-AUTH-2026-01)"
+  },
+  "nextAuthorizedExecutableAction": "Conclude Package D114 under Workstream WS-H; deposit formal closing milestone register in project governance archives.",
+  "decisionLineageDigest": "aa31ffd68a0e10f0264f02ea6aacbcb7d38e105aa2ede02e95f2e1184c13c6b4"
+}

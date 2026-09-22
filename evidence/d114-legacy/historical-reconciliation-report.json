@@ -1,0 +1,45 @@
+{
+  "reconciliationId": "d114-recon-1789912184762",
+  "sourceManifestId": "d114-manifest-1789911614763",
+  "evaluatedAt": "2026-09-20T13:49:44.762Z",
+  "feasibilityDetermination": "PARTIALLY_FEASIBLE_CONTEMPORARY_ONLY",
+  "statistics": {
+    "totalCalendarDays": 2848,
+    "expectedTradingDays": 2013,
+    "weekendDays": 814,
+    "holidays": 21,
+    "acquiredValidDays": 1919,
+    "http404Days": 94,
+    "networkErrorDays": 0,
+    "corruptArchiveDays": 0,
+    "schemaMismatchDays": 0,
+    "coveragePct": 95.33,
+    "integrityPct": 100
+  },
+  "eraBreakdown": {
+    "contemporaryEraUdiff": {
+      "dateRange": "2024-07-08 to 2024-07-07",
+      "tradingDays": 0,
+      "acquiredValid": 0,
+      "coveragePct": 0
+    },
+    "historicalEraLegacy": {
+      "dateRange": "2016-09-20 to 2024-07-07",
+      "tradingDays": 2013,
+      "acquiredUdiff": 1919,
+      "requiresLegacyAdapter": true
+    }
+  },
+  "hashAudit": {
+    "totalHashesChecked": 1919,
+    "mismatchesDetected": 0,
+    "isCryptographicallyConsistent": true
+  },
+  "governanceDisposition": {
+    "oiHist01Status": "OPEN / EXTERNAL / HISTORICAL ACQUISITION BLOCKED",
+    "productionEligibility": "NOT AUTHORIZED",
+    "programDisposition": "NON_PRODUCTION_HOLD",
+    "recommendedNextStep": "Proceed with operator-assisted historical archive population under OFFLINE_BOOTSTRAP mode"
+  },
+  "reconciliationLineageDigest": "c9da2047aedcc64a0e21eff6e3bb3d5beefdac7a56367b7552c849cb5f37906d"
+}

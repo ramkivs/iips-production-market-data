@@ -1,0 +1,51 @@
+{
+  "$schema": "https://iips.institutional/schemas/windows-visual-acceptance-manifest.json",
+  "gate": "GATE-WINDOWS-OPERATOR-VISUAL-EVIDENCE-INTAKE",
+  "baselineCommitSha": "c2aeb5ff821da26ebc9aa8840269bdeba101f8b7",
+  "timestamp": "2026-09-22T10:15:00.000Z",
+  "operatorId": "HUMAN_OPERATOR",
+  "executionEnvironment": "NON_PRODUCTION / OFFLINE_FIXTURE",
+  "portfolioMetrics": {
+    "totalConstituents": 148,
+    "totalPortfolioValueINR": 982769.63,
+    "weightAllocationSum": "100.0000%",
+    "persistenceStatus": "COMMITTED (Atomic)",
+    "provenanceDigestEvidence": {
+      "displayedPrefix": "92d6c6f177cf1364af3f...",
+      "fullDigestVerifiedFromVisualDom": false,
+      "evidenceGap": "FULL_SHA256_PROVENANCE_DIGEST_TRUNCATED_IN_UI_VIEWPORT_DOM",
+      "evidenceGapNotes": "The PortfolioWorkspace UI visually truncates the 64-character SHA-256 provenance digest to a 20-character prefix with ellipsis ('92d6c6f177cf1364af3f...') in DOM text. Full cryptographic digest is verified via automated runtime tests, not claimed from visual DOM text inspection."
+    }
+  },
+  "identityResolutionSummary": {
+    "canonicalResolved": [
+      {
+        "symbol": "AIIL",
+        "resolvedCompanyId": "EQ_AIIL_IN",
+        "resolutionStatus": "CANONICAL_P04"
+      },
+      {
+        "symbol": "AGI GREENPAC",
+        "resolvedCompanyId": "EQ_AGI_IN",
+        "resolutionStatus": "CANONICAL_P04"
+      }
+    ],
+    "unresolvedBypass": [
+      {
+        "symbol": "AMBUJACEM",
+        "companyId": "",
+        "status": "UNRESOLVED",
+        "disposition": "NON_PRODUCTION_OPERATOR_BYPASS"
+      },
+      {
+        "symbol": "ASK AUTOMOTIVE",
+        "companyId": "",
+        "status": "UNRESOLVED",
+        "disposition": "NON_PRODUCTION_OPERATOR_BYPASS"
+      }
+    ],
+    "fabricatedCompanyIdsCount": 0,
+    "bypassGovernanceContract": "NON_PRODUCTION_SINGLE_OPERATOR_IDENTITY_BYPASS"
+  },
+  "visualAcceptanceDisposition": "PASS"
+}

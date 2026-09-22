@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GovernedMultiBrokerAtomicMergeCharter",
+  "specification": "GOVERNED_MULTI_BROKER_ATOMIC_MERGE",
+  "governanceAuthority": "AD-01..AD-18 / AD-CHARTER-2026-01 / BI-03-AUTH-2026-01 / BI-04-AUTH-2026-01 / BI-05-AUTH-2026-01 / BI-07-AUTH-2026-01",
+  "effectiveDate": "2026-09-21",
+  "consolidationKey": "companyId",
+  "aggregationRules": {
+    "quantity": "SUM(Q1, Q2)",
+    "costBasis": "SUM(Q1*P1, Q2*P2)",
+    "averageBuyPrice": "costBasis / quantity",
+    "currentPrice": "latestPriceFromBatch || priorPrice",
+    "marketValue": "quantity * currentPrice",
+    "weightPercentage": "derived from consolidated market value, normalized to exact 100.0000%"
+  },
+  "atomicity": "TRANSACTIONAL_FAIL_CLOSED",
+  "provenance": {
+    "type": "CUMULATIVE_DETERMINISTIC_SHA256",
+    "sourceAttribution": "RECORDED_IN_CONTRIBUTIONS"
+  },
+  "uiControls": {
+    "refresh": "AUTHORITATIVE_STORE_READ",
+    "importHoldings": "REOPEN_IDLE_STATE",
+    "toastPlacement": "BOTTOM_RIGHT_NON_BLOCKING"
+  }
+}

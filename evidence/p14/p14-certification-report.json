@@ -1,0 +1,142 @@
+{
+  "certificationId": "P14-CERT-2026-09-21-001",
+  "packageId": "WS-E / Package P14 — Product UI/UX Accessibility, Responsive Layouts, and Theme Tokens",
+  "activity": "P14-CERT Controlled Certification Activity",
+  "certificationStatus": "CERTIFIED",
+  "authority": {
+    "standards": "AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W4-AUTH-2026-01",
+    "governingGates": "G-001 -> G-033 CLOSED / ACCEPTED; P13-CERT CERTIFIED; G-034 HELD / PRODUCTION-DEPENDENT",
+    "targetUiProductParity": "CONVERGED / ACCEPTED / QUALIFIED",
+    "optionAStatus": "IMPLEMENTED / QUALIFIED / EVIDENCE-ANCHORED",
+    "operatingMode": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+    "productionAuthorization": "NOT GRANTED",
+    "commercialProviderActivation": "PROHIBITED",
+    "r2Status": "HELD / EXTERNALLY GATED",
+    "ad17M2Status": "UNRESOLVED / PRESERVED",
+    "actDoc01Status": "COMPLETE",
+    "actRun01Status": "PARKED",
+    "actAud01Status": "PARKED"
+  },
+  "scope": {
+    "description": "Product UI/UX Accessibility (WCAG 2.1 AA), Four-Tier Responsive Layouts (Mobile, Tablet, Desktop, Wide), Institutional Precision Formatter, Theme Token Compliance, and Desktop/Tablet/Mobile Visual Parity",
+    "governedEngines": [
+      "AccessibilityEngine (WCAG 2.1 AA contrast checker, dual-coded quality indicators, focus trap, roving tabindex, semantic table renderer, live-region messages)",
+      "ResponsiveEngine (Viewport tier resolver, container classes, institutional currency/percent formatting, lossless lineage hash formatting, responsive table with pinned primary column)"
+    ],
+    "governedSurfaces": [
+      "UI01_REPLAY_STUDIO",
+      "UI02_EXECUTIVE_SUMMARY",
+      "UI03_FUNDAMENTAL_ANALYSIS",
+      "UI04_DOMAIN_INTELLIGENCE",
+      "UI05_SECTOR_SCORING_RADAR",
+      "UI06_MULTIFACTOR_SCREENER",
+      "UI07_PIT_CORPORATE_ACTIONS",
+      "UI08_SECURITY_MASTER_MODAL",
+      "UI09_RESTATEMENT_TIMELINE",
+      "UI10_ANOMALY_MONITOR",
+      "UI11_PROVENANCE_AUDITOR",
+      "UI12_ESTIMATES_DISTRIBUTION",
+      "UI13_MACRO_VINTAGE_TRACKER",
+      "UI14_ALTDATA_AUDITOR"
+    ]
+  },
+  "authoritativeArtifacts": [
+    {
+      "path": "src/ui/accessibility_engine.ts",
+      "role": "WCAG 2.1 AA contrast calculation, dual-coding indicators, focus trap, roving tabindex, ARIA live regions"
+    },
+    {
+      "path": "src/ui/responsive_engine.ts",
+      "role": "4-tier responsive breakpoint resolution, mobile pinned column tables, institutional precision formatting"
+    },
+    {
+      "path": "src/ui/types.ts",
+      "role": "Viewport tier definitions, responsive breakpoint constants, quality indicator models"
+    },
+    {
+      "path": "tests/wse_p14_accessibility_responsive.test.ts",
+      "role": "P14 accessibility and responsive layout test suite (7/7 PASS)"
+    },
+    {
+      "path": "tests/wse_durability_cp_w4.test.ts",
+      "role": "Wave 4 durability checkpoint suite (CP-W4-01 to CP-W4-10) — 10/10 PASS"
+    },
+    {
+      "path": "evidence/p13/p13-certification-report.json",
+      "role": "P13 certification foundation (Digest: fc1c5e8b886c3711e00928df4a7c2d577cc8a44d0da4aa148decacdd12e328fb)"
+    },
+    {
+      "path": "evidence/d114-stage5-ui/D114-STAGE5-REPLAY-UI-OBSERVATIONS-EXTENDED.md",
+      "role": "Windows host physical browser observation checkpoint across 13/13 detail and 13/13 explorer surfaces"
+    }
+  ],
+  "accessibilityEvidence": {
+    "wcagCompliance": "WCAG 2.1 AA (SC 1.4.1 Non-color-only, SC 1.4.3 Contrast Minimum >= 4.5:1, SC 2.1.1 Keyboard Navigation)",
+    "contrastRatios": {
+      "goodQualityTeal": "Passes (>= 4.5:1 on #FFFFFF)",
+      "staleQualityAmber": "Passes (>= 4.5:1 on #FFFFFF)",
+      "partialQualityOrange": "Passes (>= 4.5:1 on #FFFFFF)",
+      "unavailableQualityRed": "Passes (>= 4.5:1 on #FFFFFF)"
+    },
+    "dualCoding": "Every status indicator pairs color with unique icon (✓, ⏳, ⚠, ✕), text label, and full screen-reader ariaText",
+    "keyboardNavigation": "Simulated modal focus trap and roving tabindex validated for dense grids and modals",
+    "ariaLiveRegions": "Polite and assertive live-region emitters for real-time state and anomaly notifications"
+  },
+  "responsiveEvidence": {
+    "viewportTiers": {
+      "mobile": "320px–767px (1 column, pinned left primary identifier column, horizontal scroll, badge lineage hash)",
+      "tablet": "768px–1023px (2 columns, adaptive split layout)",
+      "desktop": "1024px–1439px (3 columns, institutional standard multi-panel)",
+      "wide": ">=1440px (4 columns, dense institutional 4K multi-panel)"
+    },
+    "zeroSilentClipping": "Lineage hashes and financial figures use copyable/inspectable badges or full code blocks without lossy truncation"
+  },
+  "themeTokenEvidence": {
+    "colorTokens": "Standardized institutional palette (#0f766e, #b45309, #c2410c, #b91c1c) with zero ad-hoc styling divergence",
+    "semanticTableStyles": "Scoped row/col headers (th[scope=\"col\"], th[scope=\"row\"]) with institutional border and padding classes"
+  },
+  "testVerificationResults": {
+    "totalSuitesExecuted": 26,
+    "totalTestsExecuted": 191,
+    "passed": 191,
+    "failed": 0,
+    "p14SpecificTests": {
+      "suite": "tests/wse_p14_accessibility_responsive.test.ts",
+      "tests": [
+        "P14-01: AccessibilityEngine should calculate contrast ratios compliant with WCAG 2.1 AA (PASS)",
+        "P14-02: AccessibilityEngine should generate dual-coded status indicators (non-color-only) (PASS)",
+        "P14-03: AccessibilityEngine should manage modal focus trap and roving tabindex (PASS)",
+        "P14-04: AccessibilityEngine should generate semantic HTML tables with captions and scoped headers (PASS)",
+        "P14-05: ResponsiveEngine should resolve all 4 breakpoint tiers accurately (PASS)",
+        "P14-06: ResponsiveEngine should format currency, percentages, and lineage hashes without silent truncation (PASS)",
+        "P14-07: ResponsiveEngine should render responsive tables with pinned left identifier column on mobile (PASS)"
+      ]
+    }
+  },
+  "windowsBrowserEvidence": {
+    "status": "VERIFIED",
+    "checkpointBranch": "windows/d114-stage5-banking-replay-observation",
+    "durableCommit": "d771e6a28514a6c529742d318dd9f3f08ed205f6",
+    "observationScope": "13/13 detail surfaces + 13/13 Replay Explorer surfaces observed in physical browser",
+    "visualParity": "UI layout rendering, typography, responsive structure, and governance notices confirmed in browser"
+  },
+  "productionBoundaryConfirmation": {
+    "liveNseProductionDataDependency": false,
+    "commercialProviderActivationDependency": false,
+    "productionCredentialsDependency": false,
+    "liveProductionIdentityDependency": false,
+    "g034Dependency": false,
+    "productionOnlyDependencies": false,
+    "confirmationStatement": "Zero production dependencies. P14 operates strictly within non-production OFFLINE_BOOTSTRAP parameters."
+  },
+  "unresolvedGovernanceItems": {
+    "ad17M2Status": "UNRESOLVED / PRESERVED (Replay simulation stubs do not equal live execution feed)",
+    "g034Status": "HELD / PRODUCTION-DEPENDENT",
+    "r2Status": "HELD / EXTERNALLY GATED",
+    "actRun01": "PARKED",
+    "actAud01": "PARKED",
+    "commercialEntitlement": "NOT ESTABLISHED"
+  },
+  "certificationDisposition": "P14-CERT = CERTIFIED",
+  "certificationLineageDigest": "6b8bb82b6872d2bbacf1d6e99e9c18c86c0337c4610c79370c952f36311d0a8d"
+}

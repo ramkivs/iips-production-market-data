@@ -1,0 +1,39 @@
+{
+  "validMacro": [
+    {
+      "seriesId": "CPI",
+      "seriesName": "Consumer Price Index (Combined)",
+      "vintageDate": "2026-09-12T12:00:00.000Z",
+      "releaseDate": "2026-09-12T12:00:00.000Z",
+      "period": "2026-08",
+      "value": 4.85,
+      "unit": "% YoY",
+      "frequency": "MONTHLY",
+      "sourceAgency": "MoSPI"
+    },
+    {
+      "seriesId": "REPO_RATE",
+      "seriesName": "RBI Policy Repo Rate",
+      "vintageDate": "2026-08-08T05:00:00.000Z",
+      "releaseDate": "2026-08-08T05:00:00.000Z",
+      "period": "2026-08",
+      "value": 6.50,
+      "unit": "%",
+      "frequency": "DAILY",
+      "sourceAgency": "RBI"
+    }
+  ],
+  "invalidMacro": [
+    {
+      "seriesId": "",
+      "seriesName": "Invalid Series",
+      "vintageDate": "INVALID_DATE",
+      "releaseDate": "INVALID_DATE",
+      "period": "2026-08",
+      "value": "NOT_A_NUMBER",
+      "unit": "%",
+      "frequency": "MONTHLY",
+      "sourceAgency": "MoSPI"
+    }
+  ]
+}

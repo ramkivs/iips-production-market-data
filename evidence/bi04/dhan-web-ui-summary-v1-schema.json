@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DhanWebUiSummaryV1Schema",
+  "description": "Governed schema contract for Dhan Web UI Portfolio Summary CSV Export (DHAN_WEB_UI_SUMMARY_V1)",
+  "variant": "DHAN_WEB_UI_SUMMARY_V1",
+  "sourceBroker": "DHAN",
+  "effectiveDate": "2026-09-21",
+  "governanceAuthority": "AD-01..AD-18 / AD-CHARTER-2026-01 / BI-04-AUTH-2026-01 / BI-07-ACCEPTANCE-2026-01",
+  "canonicalHeaderSignature": [
+    "Name",
+    "Quantity",
+    "Avg Price",
+    "Last Traded",
+    "Investment",
+    "Current Value",
+    "P&L",
+    "P&L %"
+  ],
+  "requiredHeaders": [
+    "name",
+    "quantity",
+    "avg price",
+    "last traded",
+    "investment",
+    "current value"
+  ],
+  "fieldMappings": {
+    "Name": {
+      "targetField": "symbol",
+      "type": "string",
+      "identityResolution": "NSE_SYMBOL -> BSE_SYMBOL -> FAIL_CLOSED"
+    },
+    "Quantity": {
+      "targetField": "quantity",
+      "type": "number",
+      "validation": "gt 0"
+    },
+    "Avg Price": {
+      "targetField": "averageBuyPrice",
+      "type": "number",
+      "validation": "gte 0"
+    },
+    "Last Traded": {
+      "targetField": "currentPrice",
+      "type": "number",
+      "validation": "gt 0"
+    },
+    "Investment": {
+      "targetField": "investedValue",
+      "type": "number",
+      "validation": "gte 0"
+    },
+    "Current Value": {
+      "targetField": "marketValue",
+      "type": "number",
+      "validation": "gt 0"
+    },
+    "P&L": {
+      "targetField": "pnl",
+      "type": "number"
+    },
+    "P&L %": {
+      "targetField": "pnlPercentage",
+      "type": "number"
+    }
+  },
+  "omittedFields": [
+    "isin",
+    "exchange"
+  ],
+  "failClosedRules": {
+    "unmappedIdentity": "FAIL_CLOSED_REJECT",
+    "ambiguousIdentity": "FAIL_CLOSED_REJECT",
+    "corruptedNumbers": "ISOLATE_OR_REJECT",
+    "emptyFile": "FAIL_CLOSED_REJECT",
+    "missingHeader": "FAIL_CLOSED_REJECT"
+  }
+}

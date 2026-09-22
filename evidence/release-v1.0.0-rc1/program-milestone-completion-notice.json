@@ -1,0 +1,64 @@
+{
+  "$schema": "https://iips.institutional/schemas/program-milestone-completion-notice.json",
+  "noticeIdentifier": "NOTICE-IIPS-v1.0.0-rc1-MILESTONE-COMPLETION-2026-09-22",
+  "programName": "Institutional Investment Platform System (IIPS)",
+  "releaseCandidateVersion": "v1.0.0-rc1",
+  "releaseCandidateDisposition": "QUALIFIED_NON_PRODUCTION_RELEASE",
+  "issuedAt": "2026-09-22T12:45:00.000Z",
+  "authoritativeArchivalCheckpointSha": "8a058f6e63fd26a1a9deff33cbb1373e2822d931",
+  "governingBranch": "arena/01a0b8e8-iips-production-market-data",
+  "formalDeclarations": {
+    "biWorkstreamStatus": {
+      "scope": "BI-01 through BI-08",
+      "status": "FORMALLY_CLOSED_AND_SEALED",
+      "summary": "All 8 workstream gates (BI-01 Scoping, BI-02 Reuse, BI-03 Mapper, BI-04 Offline Adapters, BI-05 Ingress Orchestration, BI-06 XLSX Governance, BI-07 Multi-Broker Integration, BI-08 Content-Hash Idempotency) are 100% verified and sealed."
+    },
+    "block3mNonProductionBypass": {
+      "charter": "evidence/operator_drop/NON_PRODUCTION_SINGLE_OPERATOR_IDENTITY_BYPASS.md",
+      "scope": "BOUNDED_NON_PRODUCTION_ONLY",
+      "status": "AUTHORIZED_AND_TESTED",
+      "fabricatedCompanyIdsCount": 0,
+      "productionFailClosed": true,
+      "summary": "Block 3M-A single-operator identity bypass is strictly bounded to non-production execution; production mode fails closed against unmapped securities."
+    },
+    "windowsCrossEnvironmentIntake": {
+      "status": "ACCEPTED_AND_RECONCILED",
+      "intakeCommitSha": "04bc9ad15d2e42168fd8eb45b5ab08766fef671e",
+      "evidenceManifest": "evidence/operator_drop/windows_bi08_visual_acceptance_manifest.json",
+      "summary": "Empirical Windows host verification across sequences W01..W04 reconciled with zero valuation inflation, zero quantity doubling, and 148 constituents."
+    },
+    "steeringCommitteeSignoff": {
+      "gate": "GATE-RELEASE-STEERING-COMMITTEE-FINAL-ARCHIVAL-SIGNOFF",
+      "status": "ACCEPTED_AND_ARCHIVED",
+      "decisionTimestamp": "2026-09-22T12:35:00.000Z",
+      "summary": "Executive Steering Committee archival signoff accepted and sealed in release candidate manifest."
+    },
+    "releaseClassification": {
+      "version": "v1.0.0-rc1",
+      "classification": "QUALIFIED_NON_PRODUCTION_RELEASE",
+      "productionAuthorization": "NOT_AUTHORIZED (STRICTLY_PROHIBITED)"
+    }
+  },
+  "productionBoundaryAndProhibitions": {
+    "productionDeploymentAuthorized": false,
+    "liveMarketProvidersActive": 0,
+    "networkSocketsBound": 0,
+    "commercialProviderActivation": "PROHIBITED",
+    "productionCredentialsVaultHsm": "GATED / EXTERNAL-PRODUCTION-EVIDENCE-REQUIRED",
+    "masterDeploymentGate": "GATE-PRODUCTION-DEPLOYMENT-CLEARANCE (G-034) HELD AS SEPARATE AUTHORITY GATE"
+  },
+  "engineeringBoundaryNotice": {
+    "mainApplicationIntegration": "SEPARATE_GOVERNED_INTEGRATION_ACTIVITY",
+    "notes": "Any remaining engineering integration into the main application must be treated as a separate governed integration activity (GATE-MAIN-APPLICATION-INTEGRATION) and is not implied by release candidate archival."
+  },
+  "automatedVerificationMetrics": {
+    "totalSuites": 39,
+    "totalTests": 360,
+    "passedTests": 360,
+    "failedTests": 0,
+    "typecheck": "PASS",
+    "viteBuild": "PASS",
+    "sec01Scan": "PASS"
+  },
+  "nextGovernedEngineeringAction": "GATE-MAIN-APPLICATION-INTEGRATION"
+}

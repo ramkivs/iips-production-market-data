@@ -1,0 +1,136 @@
+{
+  "certificationId": "P13-CERT-2026-09-21-001",
+  "packageId": "WS-E / Package P13 — Product UI Data Integration",
+  "activity": "P13-CERT Controlled Certification Activity",
+  "certificationStatus": "CERTIFIED",
+  "authority": {
+    "standards": "AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W4-AUTH-2026-01",
+    "governingGates": "G-001 -> G-033 CLOSED / ACCEPTED; G-034 HELD / PRODUCTION-DEPENDENT",
+    "targetUiProductParity": "CONVERGED / ACCEPTED / QUALIFIED",
+    "optionAStatus": "IMPLEMENTED / QUALIFIED / EVIDENCE-ANCHORED",
+    "operatingMode": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+    "productionAuthorization": "NOT GRANTED",
+    "commercialProviderActivation": "PROHIBITED",
+    "r2Status": "HELD / EXTERNALLY GATED",
+    "ad17M2Status": "UNRESOLVED / PRESERVED",
+    "actDoc01Status": "COMPLETE",
+    "actRun01Status": "PARKED",
+    "actAud01Status": "PARKED"
+  },
+  "scope": {
+    "description": "Product UI Data Integration across all 14 governed surfaces (UI01–UI14), canonical transport DTOs, ScreenerService, ObjectResolverService, UIRegistry, and quality/provenance propagation",
+    "governedSurfaces": [
+      "UI01_REPLAY_STUDIO",
+      "UI02_EXECUTIVE_SUMMARY",
+      "UI03_FUNDAMENTAL_ANALYSIS",
+      "UI04_DOMAIN_INTELLIGENCE",
+      "UI05_SECTOR_SCORING_RADAR",
+      "UI06_MULTIFACTOR_SCREENER",
+      "UI07_PIT_CORPORATE_ACTIONS",
+      "UI08_SECURITY_MASTER_MODAL",
+      "UI09_RESTATEMENT_TIMELINE",
+      "UI10_ANOMALY_MONITOR",
+      "UI11_PROVENANCE_AUDITOR",
+      "UI12_ESTIMATES_DISTRIBUTION",
+      "UI13_MACRO_VINTAGE_TRACKER",
+      "UI14_ALTDATA_AUDITOR"
+    ],
+    "decommissionedSurfacesBlocked": [
+      "UI17",
+      "UI17_DECOMMISSIONED"
+    ]
+  },
+  "evidenceArtifacts": [
+    {
+      "path": "src/ui/types.ts",
+      "role": "UI types, BaseViewModel contract, UISurfaceId definitions, ViewportTier, Accessibility contracts"
+    },
+    {
+      "path": "src/ui/ui_registry.ts",
+      "role": "UIRegistry enforcing authorized surfaces, NFR-06 provider masking, and UI17 containment"
+    },
+    {
+      "path": "src/ui/view_models/",
+      "role": "Deterministic View Model Builders UI01 through UI14"
+    },
+    {
+      "path": "src/transports/engine_api_adapter.ts",
+      "role": "Canonical DTO adapter synthesizing domain envelopes into UI transport models"
+    },
+    {
+      "path": "src/transports/screener_service.ts",
+      "role": "Contract C6 server-side screening service with zero client re-filtering"
+    },
+    {
+      "path": "src/transports/object_resolver.ts",
+      "role": "Contract C7 identity resolution with fail-closed ambiguity handling"
+    },
+    {
+      "path": "tests/wse_p13_ui_integration.test.ts",
+      "role": "P13 UI Data Integration test suite (P13-01 to P13-06) — 6/6 PASS"
+    },
+    {
+      "path": "tests/wse_surfaces_ui01_ui14.test.ts",
+      "role": "Comprehensive 14-surface qualification test suite — 14/14 PASS"
+    },
+    {
+      "path": "tests/wse_durability_cp_w4.test.ts",
+      "role": "Wave 4 durability checkpoint suite (CP-W4-01 to CP-W4-10) — 10/10 PASS"
+    },
+    {
+      "path": "evidence/d114/stage5-ui-read-only-qualification-report.json",
+      "role": "Stage-5 UI read-only qualification report across dual-era historical data"
+    },
+    {
+      "path": "evidence/d114-stage5-ui/D114-STAGE5-REPLAY-UI-OBSERVATIONS-EXTENDED.md",
+      "role": "Windows host interactive browser observation log (13/13 detail + 13/13 explorer surfaces)"
+    }
+  ],
+  "testVerificationResults": {
+    "totalSuitesExecuted": 26,
+    "totalTestsExecuted": 191,
+    "passed": 191,
+    "failed": 0,
+    "p13SpecificTests": {
+      "suite": "tests/wse_p13_ui_integration.test.ts",
+      "tests": [
+        "P13-01: UI01 should inject mandatory AD17_CONSTRAINT replay disclosure (PASS)",
+        "P13-02: UI02 should synthesize cross-domain inputs and preserve worst-case quality floor (PASS)",
+        "P13-03: UI03 should expose pinned report vintage and normalized ratios without client calculation (PASS)",
+        "P13-04: UI06 should execute server-side screening (Contract C6) with zero client re-filtering (PASS)",
+        "P13-05: UI08 should resolve object via P04 Security Master (Contract C7) and fail closed on unmapped identity (PASS)",
+        "P13-06: UIRegistry should verify NFR-06 provider masking and reject decommissioned UI17 (PASS)"
+      ]
+    },
+    "wave4DurabilityCheckpoint": {
+      "suite": "tests/wse_durability_cp_w4.test.ts",
+      "status": "10/10 PASS (Regression, Engines, Masking, AD-17, Accessibility, Responsive, Zero-Secrets, Determinism)"
+    }
+  },
+  "windowsBrowserEvidenceStatus": {
+    "checkpointBranch": "windows/d114-stage5-banking-replay-observation",
+    "durableCommit": "d771e6a28514a6c529742d318dd9f3f08ed205f6",
+    "status": "VERIFIED_OBSERVED_ON_WINDOWS_HOST",
+    "scope": "13/13 detail surfaces + 13/13 Replay Explorer surfaces observed in physical browser",
+    "disclosuresVerified": "AD17 notice and NFR-06 provider masking verified visible in render"
+  },
+  "productionBoundaryConfirmation": {
+    "liveNseProductionDataDependency": false,
+    "commercialProviderActivationDependency": false,
+    "productionCredentialsDependency": false,
+    "liveProductionIdentityDependency": false,
+    "g034Dependency": false,
+    "productionOnlyDependencies": false,
+    "confirmationStatement": "Zero production dependencies. P13 operates strictly within non-production OFFLINE_BOOTSTRAP parameters."
+  },
+  "unresolvedGovernanceItems": {
+    "ad17M2Status": "OPEN / UNRESOLVED / PRESERVED (Replay simulation stubs do not equal live execution feed)",
+    "g034Status": "HELD / PRODUCTION-DEPENDENT",
+    "r2Status": "HELD / EXTERNALLY GATED",
+    "actRun01": "PARKED",
+    "actAud01": "PARKED",
+    "commercialEntitlement": "NOT ESTABLISHED"
+  },
+  "certificationDisposition": "P13-CERT = CERTIFIED",
+  "certificationLineageDigest": "fc1c5e8b886c3711e00928df4a7c2d577cc8a44d0da4aa148decacdd12e328fb"
+}
