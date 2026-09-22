@@ -53,6 +53,9 @@ import { IntelligenceSurface } from '../features/intelligence/IntelligenceSurfac
 import { EvidenceSurface } from '../features/evidence/EvidenceSurface.js';
 // Phase-3 Path-L: Executive presentation-only surface (authority act phase3-executive-presentation-only-2026-09-22-001).
 import { ExecutiveSurface } from '../features/executive/ExecutiveSurface.js';
+// Phase-4 Path-L: Research (UI03 Fundamental Analysis) presentation-only surface
+// (authority acts phase4-research-identity-designation-2026-09-23-001 + phase4-research-ui03-presentation-only-2026-09-23-001).
+import { ResearchSurface } from '../features/research/ResearchSurface.js';
 import { ROUTES } from './routes.js';
 import { PortfolioWorkspace } from '../features/portfolio/PortfolioWorkspace.js';
 import { PortfolioStore, getDefaultPortfolioStore } from '../features/portfolio/index.js';
@@ -173,7 +176,11 @@ export const App: React.FC<AppProps> = ({
         <Route path={ROUTES.executive} element={<ExecutiveSurface />} />
         <Route path={ROUTES.replay} element={<FeaturePlaceholder surface="Replay Studio" />} />
         <Route path={ROUTES.securityMaster} element={<FeaturePlaceholder surface="Security Master" />} />
-        <Route path={ROUTES.research} element={<FeaturePlaceholder surface="Research" />} />
+        {/* Phase-4 Path-L: real Research surface (UI03_FUNDAMENTAL_ANALYSIS, presentation-only;
+            single route, zero child routes; no governed FundamentalsDTO exists offline (R-1),
+            so it renders its governed unavailable state unconditionally). Authority acts
+            phase4-research-identity-designation-2026-09-23-001 + phase4-research-ui03-presentation-only-2026-09-23-001. */}
+        <Route path={ROUTES.research} element={<ResearchSurface />} />
         {/* ── IMPLEMENTED (Phase 1C, PATH L): local offline view-model, no network ──── */}
         <Route path={ROUTES.intelligence} element={<IntelligenceSurface />} />
         {/* Phase-2 Path-L: real Evidence surface (presentation-only; renders governed unavailable state). */}

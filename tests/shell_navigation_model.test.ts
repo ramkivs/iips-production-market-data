@@ -44,21 +44,28 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
   });
 
   it('NAV-02: Research and Administration are NOT fabricated as implemented', () => {
+    // Phase-4 (Path L): Research graduated to a real presentation-only surface ('partial',
+    // covered by NAV-02e); it must still never claim 'implemented' without governed payloads.
+    // Administration remains future-only.
     for (const label of ['Research', 'Administration']) {
       assert.ok(byLabel[label], `${label} must exist in the navigation model`);
-      assert.strictEqual(
+      assert.notStrictEqual(
         byLabel[label].status,
-        'future',
-        `${label} MUST remain 'future' — it has no implementation on the BI-authoritative base`
+        'implemented',
+        `${label} must NOT be 'implemented' — no full implementation on the BI-authoritative base`
       );
     }
+    assert.strictEqual(
+      byLabel['Administration']?.status,
+      'future',
+      "Administration must remain 'future'"
+    );
   });
 
   it('NAV-03: every API-coupled historical surface is declared future', () => {
     const mustBeFuture = [
       'Replay Studio',
       'Security Master',
-      'Research',
       'Administration',
       'Collaboration',
       'Reports',
@@ -68,10 +75,13 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
     for (const label of mustBeFuture) {
       assert.strictEqual(byLabel[label]?.status, 'future', `${label} must be 'future'`);
     }
-    assert.strictEqual(mustBeFuture.length, 8, 'Exactly 8 declared-but-unimplemented surfaces');
+    assert.strictEqual(mustBeFuture.length, 7, 'Exactly 7 declared-but-unimplemented surfaces');
     // Phase-3 (Path L): Executive graduated to a real presentation-only surface and is
     // therefore covered by NAV-02d below, not by this future-only list.
     assert.ok(!mustBeFuture.includes('Executive'), 'Executive is Phase-3 partial, not future');
+    // Phase-4 (Path L): Research graduated to a real presentation-only surface and is
+    // therefore covered by NAV-02e below, not by this future-only list.
+    assert.ok(!mustBeFuture.includes('Research'), 'Research is Phase-4 partial, not future');
   });
 
   it('NAV-02b: Intelligence is PARTIAL — implemented component, no governed offline payload', () => {
@@ -126,6 +136,30 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
       byLabel['Executive']?.status,
       'future',
       'Executive is a real Phase-3 presentation surface — demotion to future would be false'
+    );
+  });
+
+  it('NAV-02e: Research is PARTIAL — implemented UI03 component, no governed fundamentals payload', () => {
+    // Phase-4 (Path L): /research = UI03_FUNDAMENTAL_ANALYSIS (identity designated by
+    // phase4-research-identity-designation-2026-09-23-001), bound to the local UI03
+    // view-model. GATE-PHASE-4-RESEARCH-SURFACE-FORENSIC (bc6d8ae) gap R-1: zero governed
+    // FundamentalsDTO payloads exist, and the builder has no partial-render path, so the
+    // route renders its explicit unavailable state UNCONDITIONALLY. 'partial' is navigable
+    // AND honest.
+    assert.strictEqual(
+      byLabel['Research']?.status,
+      'partial',
+      "Research must be 'partial' until a governed FundamentalsDTO source is authorized (R-1/R-5/R-6)"
+    );
+    assert.notStrictEqual(
+      byLabel['Research']?.status,
+      'implemented',
+      'Research must NOT claim full implementation without a governed fundamentals payload'
+    );
+    assert.notStrictEqual(
+      byLabel['Research']?.status,
+      'future',
+      'Research is a real Phase-4 presentation surface — demotion to future would be false'
     );
   });
 

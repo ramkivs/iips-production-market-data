@@ -162,9 +162,14 @@ describe('Phase-1B: application shell chrome renders', () => {
   it('SHELL-04: implemented surfaces are links; future surfaces are NOT links', () => {
     assert.ok(html.includes('href="/portfolio"'), 'Portfolio must be a navigable link');
     // Future surfaces render as non-navigable text with a Future badge (N+17 contract).
-    assert.ok(html.includes('nav-future-Research'), 'Research must render as a future marker');
+    // Phase-4 (Path L): Research is now a real partial surface and a link (see
+    // shell_research_surface.test.ts), so the future-marker assertion uses Replay Studio.
     assert.ok(
-      !html.includes('href="/research"'),
+      html.includes('nav-future-Replay Studio'),
+      'Replay Studio must render as a future marker'
+    );
+    assert.ok(
+      !html.includes('href="/replay"'),
       'Future surfaces must never be links to placeholder surfaces'
     );
   });
@@ -229,10 +234,10 @@ describe('Phase-1B: BI-07 non-regression and production boundary', () => {
     // Executive is intentionally excluded as of Phase 3: it is a real Path-L surface
     // (navigable, 'partial', renders its governed unavailable state). See
     // shell_executive_surface.test.ts.
-    for (const [surface, path] of [
-      ['Research', ROUTES.research],
-      ['Administration', ROUTES.admin],
-    ] as const) {
+    // Research is intentionally excluded as of Phase 4: it is a real Path-L surface
+    // (navigable, 'partial', UI03 binding, renders its governed unavailable state). See
+    // shell_research_surface.test.ts.
+    for (const [surface, path] of [['Administration', ROUTES.admin]] as const) {
       const out = renderAt(path);
       assert.ok(out.includes('Not implemented'), `${surface} must declare itself unimplemented`);
       assert.ok(

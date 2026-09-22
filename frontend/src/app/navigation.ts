@@ -87,7 +87,24 @@ export const NAV: NavItem[] = [
   { label: 'Executive', path: '/executive', minRole: 'viewer', status: 'partial' },
   { label: 'Replay Studio', path: '/replay', minRole: 'viewer', status: 'future' },
   { label: 'Security Master', path: '/security-master', minRole: 'viewer', status: 'future' },
-  { label: 'Research', path: '/research', minRole: 'viewer', status: 'future' },
+  // ── PARTIAL (Phase 4, PATH L, presentation-only) ──────────────────────────────────────
+  // Research is implemented as a real presentation surface bound to the existing,
+  // already-tested LOCAL view-model `UI03FundamentalAnalysisBuilder` (no network, no api/*,
+  // no authFetch, no OIDC/Keycloak, no frontend/server).
+  //
+  // IDENTITY DESIGNATION (phase4-research-identity-designation-2026-09-23-001):
+  // /research = UI03_FUNDAMENTAL_ANALYSIS — exactly ONE registered surface. UI05/UI06/UI12
+  // are NOT designated; UI13 (macro) is EXCLUDED (D91/D88: /api/macro is LIVE-only, no
+  // relief granted); the six historical Research child routes remain pruned — single route,
+  // zero children.
+  //
+  // Declared `partial`, NOT `implemented`. GATE-PHASE-4-RESEARCH-SURFACE-FORENSIC (bc6d8ae)
+  // gap R-1: zero governed FundamentalsDTO payloads exist repo-wide, and the UI03 builder
+  // has no partial-render path, so the mounted route renders its explicit unavailable state
+  // UNCONDITIONALLY. No synthetic payload, fixture promotion, or invented provenance is ever
+  // substituted. Promotion to `implemented` requires governed payload sources (R-1/R-5/R-6)
+  // under a later authority gate.
+  { label: 'Research', path: '/research', minRole: 'viewer', status: 'partial' },
   // ── PARTIAL (Phase 1C, PATH L) ───────────────────────────────────────────────────────
   // Intelligence is implemented as a real presentation surface bound to the existing,
   // already-tested LOCAL view-model `UI04DomainIntelligenceBuilder` (no network, no api/*,
