@@ -1,0 +1,40 @@
+PHASE 1B WINDOWS VISUAL ACCEPTANCE
+
+Commit under test:
+144e8edf8d126a129ba4ed87dbd077765bd4051c
+
+Result:
+ACCEPTED
+
+Technical validation:
+360/360 tests PASS
+54 suites PASS
+TypeScript PASS
+Vite production build PASS
+
+Visual validation:
+Target IIPS shell PASS
+Governance chrome PASS
+Portfolio route PASS
+BI08 Portfolio Workspace PASS
+W01 Zerodha PASS
+W02 exact duplicate import idempotency PASS
+W03 distinct Dhan import PASS
+W04 final consolidated state PASS
+AIIL -> EQ_AIIL_IN PASS
+AGI GREENPAC -> EQ_AGI_IN PASS
+Unresolved retention PASS
+Future surfaces honestly marked Future PASS
+
+Final consolidated state:
+148 constituents
+100.0000% weight allocation
+
+Environment:
+NON_PRODUCTION / OFFLINE_FIXTURE
+
+Production boundary:
+No live provider
+No live trading/execution
+No production authentication
+No production entitlement
