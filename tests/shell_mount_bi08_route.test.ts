@@ -226,6 +226,9 @@ describe('Phase-1B: BI-07 non-regression and production boundary', () => {
     // (navigable, 'partial'), no longer a FeaturePlaceholder. See shell_intelligence_surface.
     // Evidence is intentionally excluded as of Phase 2: it is a real Path-L surface
     // (navigable, 'partial'), no longer a FeaturePlaceholder. See shell_evidence_surface.
+    // Executive is intentionally excluded as of Phase 3: it is a real Path-L surface
+    // (navigable, 'partial', renders its governed unavailable state). See
+    // shell_executive_surface.test.ts.
     for (const [surface, path] of [
       ['Research', ROUTES.research],
       ['Administration', ROUTES.admin],

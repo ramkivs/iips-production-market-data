@@ -51,6 +51,8 @@ import { FeaturePlaceholder } from './FeaturePlaceholder.js';
 import { IntelligenceSurface } from '../features/intelligence/IntelligenceSurface.js';
 // Phase-2 Path-L: Evidence presentation-only surface (authority act phase2-evidence-presentation-only-2026-09-22-001).
 import { EvidenceSurface } from '../features/evidence/EvidenceSurface.js';
+// Phase-3 Path-L: Executive presentation-only surface (authority act phase3-executive-presentation-only-2026-09-22-001).
+import { ExecutiveSurface } from '../features/executive/ExecutiveSurface.js';
 import { ROUTES } from './routes.js';
 import { PortfolioWorkspace } from '../features/portfolio/PortfolioWorkspace.js';
 import { PortfolioStore, getDefaultPortfolioStore } from '../features/portfolio/index.js';
@@ -165,7 +167,10 @@ export const App: React.FC<AppProps> = ({
         />
 
         {/* ── FUTURE: declared in the navigation model, honestly not implemented ─────── */}
-        <Route path={ROUTES.executive} element={<FeaturePlaceholder surface="Executive Summary" />} />
+        {/* Phase-3 Path-L: real Executive surface (presentation-only; all three mandatory
+            payload domains are forensically unavailable offline, so it renders its governed
+            unavailable state unconditionally). Authority act phase3-executive-presentation-only-2026-09-22-001. */}
+        <Route path={ROUTES.executive} element={<ExecutiveSurface />} />
         <Route path={ROUTES.replay} element={<FeaturePlaceholder surface="Replay Studio" />} />
         <Route path={ROUTES.securityMaster} element={<FeaturePlaceholder surface="Security Master" />} />
         <Route path={ROUTES.research} element={<FeaturePlaceholder surface="Research" />} />

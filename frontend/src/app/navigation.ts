@@ -68,10 +68,23 @@ export const NAV: NavItem[] = [
   // non-navigable text with a Future badge. A navigation entry is NOT a claim that a
   // product module exists.
   //
-  // Executive / Replay / Security Master additionally exist as placeholder-only surfaces on
-  // the current BI base (App.tsx renders "Surface available via IIPS UI View-Model
-  // Registry"), so they are honestly `future` here too — no implementation is claimed.
-  { label: 'Executive', path: '/executive', minRole: 'viewer', status: 'future' },
+  // Replay / Security Master additionally exist as placeholder-only surfaces on the current
+  // BI base (App.tsx renders "Surface available via IIPS UI View-Model Registry"), so they
+  // are honestly `future` here too — no implementation is claimed.
+  //
+  // ── PARTIAL (Phase 3, PATH L, presentation-only) ──────────────────────────────────────
+  // Executive is implemented as a real presentation surface bound to the existing,
+  // already-tested LOCAL view-model `UI02ExecutiveSummaryBuilder` (no network, no api/*,
+  // no authFetch, no OIDC/Keycloak, no frontend/server).
+  //
+  // Declared `partial`, NOT `implemented`. GATE-PHASE-3-EXECUTIVE-PAYLOAD-FORENSIC
+  // (checkpoint 5ef8960) returned classification B across ALL THREE mandatory payload
+  // domains (MarketDataDTO, EngineScoreOutput, IntelligenceDTO): no governed offline
+  // executive payload exists, and the builder has no partial-render path, so the mounted
+  // route renders its explicit unavailable state UNCONDITIONALLY. No synthetic payload,
+  // fabricated score, or derived provenance is ever substituted. Promotion to
+  // `implemented` requires governed payload sources under a later authority gate.
+  { label: 'Executive', path: '/executive', minRole: 'viewer', status: 'partial' },
   { label: 'Replay Studio', path: '/replay', minRole: 'viewer', status: 'future' },
   { label: 'Security Master', path: '/security-master', minRole: 'viewer', status: 'future' },
   { label: 'Research', path: '/research', minRole: 'viewer', status: 'future' },

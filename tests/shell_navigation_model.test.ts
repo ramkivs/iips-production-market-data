@@ -56,7 +56,6 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
 
   it('NAV-03: every API-coupled historical surface is declared future', () => {
     const mustBeFuture = [
-      'Executive',
       'Replay Studio',
       'Security Master',
       'Research',
@@ -69,7 +68,10 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
     for (const label of mustBeFuture) {
       assert.strictEqual(byLabel[label]?.status, 'future', `${label} must be 'future'`);
     }
-    assert.strictEqual(mustBeFuture.length, 9, 'Exactly 9 declared-but-unimplemented surfaces');
+    assert.strictEqual(mustBeFuture.length, 8, 'Exactly 8 declared-but-unimplemented surfaces');
+    // Phase-3 (Path L): Executive graduated to a real presentation-only surface and is
+    // therefore covered by NAV-02d below, not by this future-only list.
+    assert.ok(!mustBeFuture.includes('Executive'), 'Executive is Phase-3 partial, not future');
   });
 
   it('NAV-02b: Intelligence is PARTIAL — implemented component, no governed offline payload', () => {
@@ -101,6 +103,29 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
       byLabel['Evidence']?.status,
       'implemented',
       'Evidence must NOT claim full implementation without governed provenance'
+    );
+  });
+
+  it('NAV-02d: Executive is PARTIAL — implemented component, all three governed payloads absent', () => {
+    // Phase-3 (Path L): bound to the local UI02 view-model, but GATE-PHASE-3-EXECUTIVE-
+    // PAYLOAD-FORENSIC (checkpoint 5ef8960) returned classification B across ALL THREE
+    // mandatory payload domains (MarketDataDTO, EngineScoreOutput, IntelligenceDTO), and the
+    // builder has no partial-render path, so the route renders its explicit unavailable
+    // state UNCONDITIONALLY. 'partial' is navigable AND honest.
+    assert.strictEqual(
+      byLabel['Executive']?.status,
+      'partial',
+      "Executive must be 'partial' until all three governed payload sources are authorized"
+    );
+    assert.notStrictEqual(
+      byLabel['Executive']?.status,
+      'implemented',
+      'Executive must NOT claim full implementation without all three governed payloads'
+    );
+    assert.notStrictEqual(
+      byLabel['Executive']?.status,
+      'future',
+      'Executive is a real Phase-3 presentation surface — demotion to future would be false'
     );
   });
 
