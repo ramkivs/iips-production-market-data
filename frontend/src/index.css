@@ -441,3 +441,159 @@ html, body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════
+ * IIPS PHASE-1A — FULL-IIPS APPLICATION SHELL (scoped)
+ *
+ * Recovered from full-IIPS baseline tree 682f4e6029818c839f23211ae5067eed862c5037
+ * (ref origin/arena/01a0c440, frontend/src/core/theme/global.css).
+ *
+ * ══ CSS BOUNDARY — GOVERNED MITIGATION ═════════════════════════════════════════════════
+ *  The historical global.css opens with a global reset that styles bare `*`, `html`,
+ *  `body` and `a`, and sets a LIGHT institutional theme. The BI-authoritative application
+ *  uses a DARK utility-class system (hand-authored below; Tailwind is NOT installed) and
+ *  defines its own `*` / `html, body` rules.
+ *
+ *  Concatenating the two would let the later reset win and could regress the certified
+ *  BI-07 visual parity surface.
+ *
+ *  THEREFORE, per the approved mitigation, ONLY the following are imported:
+ *    · the `.app-*` grid/layout rules
+ *    · the `.skip-link` accessibility rule
+ *    · the semantic design tokens, scoped to `.app-shell` (NOT to `:root`)
+ *
+ *  NOT imported: the `*` / `html` / `body` / `a` reset block, `color-scheme`, the body
+ *  font/colour/background declarations, or any `:root` token declaration. Tokens are
+ *  confined to the shell subtree so BI surfaces are unaffected.
+ *
+ * Governed under: AD-01..AD-18 / Phase-1A Authority Decision (OQ-1 = Option A, OQ-2 = c440)
+ * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
+ * ═══════════════════════════════════════════════════════════════════════════════════════ */
+
+/* Semantic tokens — SCOPED to the shell subtree (never :root). Dark-aligned so the shell
+   chrome is visually coherent with the certified BI-07 dark workspace. */
+.app-shell {
+  --color-ink: #E2E8F0;
+  --color-ink-secondary: #94A3B8;
+  --color-ink-muted: #64748B;
+  --color-surface-0: #020617;
+  --color-surface-1: #0F172A;
+  --color-surface-2: #1E293B;
+  --color-border: #1E293B;
+  --color-focus: #2DD4BF;
+  --color-accent: #0D9488;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+}
+
+/* Shell layout grid (recovered verbatim). */
+.app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: 56px 1fr;
+  grid-template-areas:
+    'topbar topbar'
+    'sidebar content';
+  min-height: 100vh;
+  background: var(--color-surface-0);
+  color: var(--color-ink);
+}
+
+.app-shell .app-topbar { grid-area: topbar; }
+.app-shell .app-sidebar { grid-area: sidebar; }
+.app-shell .app-main {
+  grid-area: content;
+  overflow: auto;
+}
+
+.app-shell .app-nav {
+  list-style: none;
+  margin: 0;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+  background: var(--color-surface-1);
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+}
+
+/* Skip link — off-screen until focused (accessibility, recovered). */
+.app-shell .skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 300;
+  padding: 8px 12px;
+  background: var(--color-surface-0);
+  color: var(--color-ink);
+  border: 2px solid var(--color-focus);
+  border-radius: var(--radius-md);
+}
+
+.app-shell .skip-link:focus {
+  left: 8px;
+  top: 8px;
+}
+
+/* Honest placeholder surface (AC-12). */
+.app-shell .app-placeholder {
+  padding: 48px 32px;
+  max-width: 720px;
+}
+
+.app-shell .app-placeholder__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--color-ink);
+}
+
+.app-shell .app-placeholder__status { margin: 0 0 16px; }
+
+.app-shell .app-placeholder__badge {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  color: var(--color-ink-secondary);
+}
+
+.app-shell .app-placeholder__body {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+  color: var(--color-ink-secondary);
+}
+
+.app-shell .app-placeholder__body--muted { color: var(--color-ink-muted); }
+
+/* Responsive collapse below 960px (recovered). */
+@media (max-width: 959px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 56px auto 1fr;
+    grid-template-areas:
+      'topbar'
+      'sidebar'
+      'content';
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .app-shell .app-nav {
+    flex-direction: row;
+    height: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+}

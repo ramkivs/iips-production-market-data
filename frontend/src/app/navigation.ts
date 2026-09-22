@@ -1,0 +1,98 @@
+/**
+ * IIPS — Global navigation model (Phase-1A recovery).
+ *
+ * Recovered from full-IIPS baseline tree 682f4e6029818c839f23211ae5067eed862c5037
+ * (ref origin/arena/01a0c440, blob f72e3809f6) and PRUNED to the surfaces that actually
+ * exist on the BI-authoritative base.
+ *
+ * Role-aware navigation (admin-only surfaces hidden for non-admins). The frontend reflects
+ * platform RBAC; it does NOT decide permissions.
+ *
+ * ══ HONESTY CONTRACT (preserved from the historical model, AC-12) ════════════════════════
+ *  Each surface carries a presentation-only `status` so the UI honestly distinguishes
+ *  implemented from future surfaces. A navigation entry existing does NOT mean its module
+ *  is implemented — the status field is the honest marker, and it is display-only (never a
+ *  route, permission, or authorization decision).
+ *
+ *  PHASE-1A PRUNING RATIONALE:
+ *    The historical model declared Executive, Research, Intelligence, Evidence,
+ *    Administration, Collaboration, Reports, Watchlists and Settings as `implemented` or
+ *    `partial`. That was true of the historical application, which was served by
+ *    frontend/server/** over authFetch -> /api/*. On the BI-authoritative base that server
+ *    tier does not exist and is excluded by authority decision, so NONE of those surfaces
+ *    has a working implementation here.
+ *
+ *    Re-declaring them as `implemented` would fabricate functionality. They are therefore
+ *    demoted to `future`. Only Portfolio — backed by the certified BI-07/BI-08
+ *    PortfolioWorkspace — is `implemented`.
+ *
+ *    Historical child entries (concrete Banking routes, 8 Administration tabs, etc.) are
+ *    removed rather than demoted: retaining deep links to surfaces that cannot render would
+ *    be a dead-link regression the historical model itself worked to eliminate (N+1, N+16,
+ *    N+17).
+ *
+ * Governed under: AD-01..AD-18 / Phase-1A Authority Decision (OQ-1 = Option A, OQ-2 = c440)
+ * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
+ */
+import type { Role } from '../core/session/session.js';
+
+/** Presentation-only honesty marker. `partial` = some sub-surfaces implemented, module-level scope future. */
+export type NavStatus = 'implemented' | 'partial' | 'future';
+
+export interface NavItem {
+  label: string;
+  path: string;
+  minRole: Role;
+  status?: NavStatus;
+  children?: NavItem[];
+}
+
+export const NAV: NavItem[] = [
+  // ── IMPLEMENTED (Phase 1A) ───────────────────────────────────────────────────────────
+  // Portfolio is the ONLY surface backed by a real, certified implementation on the
+  // BI-authoritative base: the BI-07/BI-08 PortfolioWorkspace (broker ingestion,
+  // multi-broker consolidation, content-hash idempotency). It is mounted in Phase 1B.
+  {
+    label: 'Portfolio',
+    path: '/portfolio',
+    minRole: 'viewer',
+    status: 'implemented',
+    children: [
+      { label: 'Overview', path: '/portfolio', minRole: 'viewer', status: 'implemented' },
+    ],
+  },
+
+  // ── FUTURE — declared, NOT implemented (AC-12) ───────────────────────────────────────
+  // Every surface below is API-coupled in the historical lineage (authFetch -> /api/* ->
+  // frontend/server/**), which Phase 1A excludes. They are rendered by the Sidebar as
+  // non-navigable text with a Future badge. A navigation entry is NOT a claim that a
+  // product module exists.
+  //
+  // Executive / Replay / Security Master additionally exist as placeholder-only surfaces on
+  // the current BI base (App.tsx renders "Surface available via IIPS UI View-Model
+  // Registry"), so they are honestly `future` here too — no implementation is claimed.
+  { label: 'Executive', path: '/executive', minRole: 'viewer', status: 'future' },
+  { label: 'Replay Studio', path: '/replay', minRole: 'viewer', status: 'future' },
+  { label: 'Security Master', path: '/security-master', minRole: 'viewer', status: 'future' },
+  { label: 'Research', path: '/research', minRole: 'viewer', status: 'future' },
+  { label: 'Intelligence', path: '/intelligence', minRole: 'viewer', status: 'future' },
+  { label: 'Evidence', path: '/evidence', minRole: 'viewer', status: 'future' },
+  { label: 'Administration', path: '/admin', minRole: 'admin', status: 'future' },
+  { label: 'Collaboration', path: '/collaboration', minRole: 'viewer', status: 'future' },
+  { label: 'Reports', path: '/reports', minRole: 'viewer', status: 'future' },
+  { label: 'Watchlists', path: '/watchlists', minRole: 'viewer', status: 'future' },
+  { label: 'Settings', path: '/settings', minRole: 'viewer', status: 'future' },
+];
+
+/** Human-facing label for a nav status (presentation only). */
+export const NAV_STATUS_LABEL: Record<NavStatus, string> = {
+  implemented: 'Implemented',
+  partial: 'Partial',
+  future: 'Future',
+};
+
+/** Filter nav items visible to a given role. */
+export function visibleNav(role: Role): NavItem[] {
+  const rank: Record<Role, number> = { viewer: 0, analyst: 1, admin: 2 };
+  return NAV.filter((item) => rank[role] >= rank[item.minRole]);
+}
