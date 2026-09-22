@@ -1,0 +1,135 @@
+{
+  "decisionId": "phase1c-intel-deferred-completion-2026-09-22-001",
+  "decisionAuthority": "RAMKI (Designating Authority)",
+  "recordingAgent": "Arena (recording only; no implementation, no surface selection)",
+  "actType": "AUTHORITY_DECISION_RECORD",
+  "actIsExecutable": false,
+  "recordedAtLocalDate": "2026-09-22",
+  "recordedAtLocalTimezone": "Asia/Calcutta",
+  "governingStandards": ["AD-01..AD-18", "AD-CHARTER-2026-01"],
+  "governingPackage": "Target-Shell Integration / Phase 1C — Intelligence Deferred Completion",
+  "antecedentCheckpoint": "a647213650aa2a1442a33aec7e89e931219be2bf",
+
+  "verifiedAntecedentState": {
+    "headSha": "a647213650aa2a1442a33aec7e89e931219be2bf",
+    "matchesStatedForensicReport": true,
+    "localEqualsRemote": true,
+    "worktree": "CLEAN",
+    "intelligenceNavStatus": "partial",
+    "intelligenceSurfaceFile": "PRESENT",
+    "routeWiredInAppTsx": true,
+    "frozenTrees": {
+      "src/identity": "9080e997",
+      "src/d114": "0062ad52",
+      "frontend/src/features/portfolio": "8491efdc",
+      "src/ui": "1597ed06",
+      "allUnchanged": true
+    }
+  },
+
+  "decisionRecorded": {
+    "selected": "OPTION_B",
+    "title": "KEEP INTELLIGENCE PARTIAL AND CONTINUE PRODUCT CONVERGENCE",
+    "selectedBy": "RAMKI",
+    "intelligenceRecordedAs": "PARTIAL / PRESENTATIONAL ONLY / NO GOVERNED OFFLINE PAYLOAD",
+    "stateKind": "DEFERRED_COMPLETION_STATE",
+    "isAbandonment": false,
+    "basis": "GATE-PHASE-1C-INTELLIGENCE-PAYLOAD-FORENSIC returned classification B — NO GOVERNED OFFLINE PAYLOAD SOURCE FOUND — FAIL CLOSED (report a647213650aa2a1442a33aec7e89e931219be2bf)."
+  },
+
+  "intelligenceFutureCompletion": {
+    "timing": "POST_CONVERGENCE",
+    "mechanism": "A separate governed Intelligence data-supply authority gate equivalent to Option A, to be reopened after the broader IIPS product/application convergence is completed.",
+    "futureAuthorityGrantedByThisAct": false,
+    "deferredItems": {
+      "M-1": "Governed Intelligence dataset",
+      "M-2": "Intelligence authorizing act",
+      "M-3": "Governed provenance (lineageDigest SHA-256, sourceClassification, dataVersion, evaluatedAt)",
+      "M-4": "Governed D05/P04 identity binding (EQ_INFY_IN form, never INFY)",
+      "M-5": "D91 macro relief, if macro remains within Intelligence scope"
+    }
+  },
+
+  "convergenceDirection": {
+    "intelligencePathLImplementation": "REMAINS_IN_PLACE",
+    "intelligenceNavigationState": "PARTIAL",
+    "removeIntelligenceSurface": false,
+    "removalProhibitionNote": "The Intelligence surface must NOT be removed merely because its governed payload is deferred.",
+    "broaderConvergence": "CONTINUE",
+    "continuationMechanism": "Separate authority designation for the next eligible product surface."
+  },
+
+  "standingProhibitionsReaffirmed": [
+    "create an Intelligence payload",
+    "fabricate or synthesize governed Intelligence data",
+    "promote Intelligence to IMPLEMENTED",
+    "introduce API/server transport",
+    "introduce authFetch",
+    "introduce OIDC",
+    "introduce Keycloak",
+    "introduce live network access",
+    "introduce credentials",
+    "reopen the production authentication boundary",
+    "modify BI-01..BI-08",
+    "modify D05/P04 identity",
+    "modify PortfolioWorkspace",
+    "modify D114",
+    "authorize D115"
+  ],
+
+  "overlays": {
+    "commandPalette": "DEFERRED",
+    "notificationDrawer": "DEFERRED",
+    "notesDrawer": "DEFERRED"
+  },
+
+  "authSeam": {
+    "status": "DEFERRED",
+    "executableAuthenticationAuthorized": false
+  },
+
+  "thisActDoesNot": [
+    "Does NOT select the next product surface",
+    "Does NOT begin the next implementation gate",
+    "Does NOT grant the future Intelligence data-supply authority",
+    "Does NOT modify any source, test, or configuration file",
+    "Does NOT alter the Intelligence navigation status (remains partial)",
+    "Does NOT remove or degrade the Intelligence Path-L surface",
+    "Does NOT change production eligibility",
+    "Does NOT resolve D115"
+  ],
+
+  "retainedGovernanceInvariants": {
+    "operatingMode": "NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+    "intelligenceSurface": "PARTIAL / PRESENTATIONAL ONLY / NO GOVERNED OFFLINE PAYLOAD",
+    "intelligenceDataCompletion": "POST_CONVERGENCE / DEFERRED",
+    "fullProductConvergence": "CONTINUE",
+    "bi08": "AUTHORITATIVE / UNCHANGED",
+    "d05P04Identity": "UNCHANGED",
+    "portfolioWorkspace": "UNCHANGED",
+    "d114": "UNCHANGED",
+    "d115C": "UNRESOLVED",
+    "d115D": "UNRESOLVED",
+    "runtimeCompanyId": "UNRESOLVED",
+    "implementationAuthority": "WITHHELD",
+    "productionEligible": false,
+    "d115ProductionActivation": "NOT AUTHORIZED",
+    "externalLiveSockets": 0,
+    "windowsVisualAcceptance": "NOT CLAIMED BY ARENA"
+  },
+
+  "resultingState": {
+    "intelligence": "PARTIAL / DEFERRED DATA COMPLETION",
+    "fullProductConvergence": "CONTINUE",
+    "intelligenceGovernedDataCompletion": "POST-CONVERGENCE"
+  },
+
+  "nextAction": "Await the separate authority designation for the next product surface. Arena must NOT autonomously select that surface and must NOT begin the next implementation gate.",
+
+  "phase1cArcLineage": [
+    { "sha": "881371e1b286315ac984a3c3d421bdec08493fc7", "act": "PHASE 1C: Intelligence surface via PATH L (implementation)" },
+    { "sha": "848d8f9f92e58722182e731ac1fd47f782eba781", "act": "Authority designation — OPTION A authorized (read-only forensic gate)" },
+    { "sha": "a647213650aa2a1442a33aec7e89e931219be2bf", "act": "GATE-PHASE-1C-INTELLIGENCE-PAYLOAD-FORENSIC = B / FAIL CLOSED" },
+    { "sha": "THIS_ACT", "act": "Authority decision — OPTION B: Intelligence deferred completion, convergence continues" }
+  ]
+}
