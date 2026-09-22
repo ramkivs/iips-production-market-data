@@ -49,6 +49,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './AppShell.js';
 import { FeaturePlaceholder } from './FeaturePlaceholder.js';
 import { IntelligenceSurface } from '../features/intelligence/IntelligenceSurface.js';
+// Phase-2 Path-L: Evidence presentation-only surface (authority act phase2-evidence-presentation-only-2026-09-22-001).
+import { EvidenceSurface } from '../features/evidence/EvidenceSurface.js';
 import { ROUTES } from './routes.js';
 import { PortfolioWorkspace } from '../features/portfolio/PortfolioWorkspace.js';
 import { PortfolioStore, getDefaultPortfolioStore } from '../features/portfolio/index.js';
@@ -169,7 +171,8 @@ export const App: React.FC<AppProps> = ({
         <Route path={ROUTES.research} element={<FeaturePlaceholder surface="Research" />} />
         {/* ── IMPLEMENTED (Phase 1C, PATH L): local offline view-model, no network ──── */}
         <Route path={ROUTES.intelligence} element={<IntelligenceSurface />} />
-        <Route path={ROUTES.evidence} element={<FeaturePlaceholder surface="Evidence" />} />
+        {/* Phase-2 Path-L: real Evidence surface (presentation-only; renders governed unavailable state). */}
+        <Route path={ROUTES.evidence} element={<EvidenceSurface />} />
         <Route path={ROUTES.admin} element={<FeaturePlaceholder surface="Administration" />} />
         <Route path={ROUTES.collaboration} element={<FeaturePlaceholder surface="Collaboration" />} />
         <Route path={ROUTES.reports} element={<FeaturePlaceholder surface="Reports" />} />

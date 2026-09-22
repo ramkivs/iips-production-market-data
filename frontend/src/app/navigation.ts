@@ -88,7 +88,17 @@ export const NAV: NavItem[] = [
   // carries a visible "Partial" badge. Promotion to `implemented` requires a governed
   // offline payload source under a later authority gate.
   { label: 'Intelligence', path: '/intelligence', minRole: 'viewer', status: 'partial' },
-  { label: 'Evidence', path: '/evidence', minRole: 'viewer', status: 'future' },
+  // ── PARTIAL (Phase 2, PATH L, presentation-only) ─────────────────────────────────────
+  // Evidence is implemented as a real presentation surface bound to the existing, already
+  // tested LOCAL view-model `UI11ProvenanceAuditorBuilder` (no network, no api/*, no
+  // authFetch, no OIDC/Keycloak, no frontend/server).
+  //
+  // Declared `partial`, NOT `implemented`. GATE-PHASE-2-EVIDENCE-PAYLOAD-FORENSIC
+  // (8dfd8ec) returned classification B: no governed per-company provenance payload exists
+  // (zero artifacts carry BOTH a lineageDigest AND a companyId), so the mounted route
+  // renders its explicit unavailable state. No lineage digest is generated. Promotion to
+  // `implemented` requires a governed provenance source under a later authority gate.
+  { label: 'Evidence', path: '/evidence', minRole: 'viewer', status: 'partial' },
   { label: 'Administration', path: '/admin', minRole: 'admin', status: 'future' },
   { label: 'Collaboration', path: '/collaboration', minRole: 'viewer', status: 'future' },
   { label: 'Reports', path: '/reports', minRole: 'viewer', status: 'future' },

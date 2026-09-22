@@ -224,9 +224,10 @@ describe('Phase-1B: BI-07 non-regression and production boundary', () => {
   it('REG-04: future surfaces render an honest placeholder, never fabricated data', () => {
     // Intelligence is intentionally excluded: as of Phase 1C it is a real Path-L surface
     // (navigable, 'partial'), no longer a FeaturePlaceholder. See shell_intelligence_surface.
+    // Evidence is intentionally excluded as of Phase 2: it is a real Path-L surface
+    // (navigable, 'partial'), no longer a FeaturePlaceholder. See shell_evidence_surface.
     for (const [surface, path] of [
       ['Research', ROUTES.research],
-      ['Evidence', ROUTES.evidence],
       ['Administration', ROUTES.admin],
     ] as const) {
       const out = renderAt(path);

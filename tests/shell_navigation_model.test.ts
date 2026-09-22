@@ -60,7 +60,6 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
       'Replay Studio',
       'Security Master',
       'Research',
-      'Evidence',
       'Administration',
       'Collaboration',
       'Reports',
@@ -70,7 +69,7 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
     for (const label of mustBeFuture) {
       assert.strictEqual(byLabel[label]?.status, 'future', `${label} must be 'future'`);
     }
-    assert.strictEqual(mustBeFuture.length, 10, 'Exactly 10 declared-but-unimplemented surfaces');
+    assert.strictEqual(mustBeFuture.length, 9, 'Exactly 9 declared-but-unimplemented surfaces');
   });
 
   it('NAV-02b: Intelligence is PARTIAL — implemented component, no governed offline payload', () => {
@@ -86,6 +85,22 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
       byLabel['Intelligence']?.status,
       'implemented',
       'Intelligence must NOT claim full implementation without a governed payload'
+    );
+  });
+
+  it('NAV-02c: Evidence is PARTIAL — implemented component, no governed provenance payload', () => {
+    // Phase-2 (Path L): bound to the local UI11 view-model, but GATE-PHASE-2-EVIDENCE-
+    // PAYLOAD-FORENSIC (8dfd8ec) found no governed per-company provenance, so the route
+    // renders its explicit unavailable state. 'partial' is navigable AND honest.
+    assert.strictEqual(
+      byLabel['Evidence']?.status,
+      'partial',
+      "Evidence must be 'partial' until a governed provenance source is authorized"
+    );
+    assert.notStrictEqual(
+      byLabel['Evidence']?.status,
+      'implemented',
+      'Evidence must NOT claim full implementation without governed provenance'
     );
   });
 
