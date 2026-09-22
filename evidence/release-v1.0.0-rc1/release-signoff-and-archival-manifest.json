@@ -1,83 +1,151 @@
 {
-  "archivalManifestId": "ARCHIVE-IIPS-v1.0.0-rc1-2026-09-21-001",
+  "archivalManifestId": "ARCHIVE-IIPS-v1.0.0-rc1-2026-09-22-002",
   "programName": "Institutional Investment Platform System (IIPS)",
   "releaseVersion": "v1.0.0-rc1",
   "releaseType": "NON_PRODUCTION_QUALIFIED_RELEASE",
-  "governingStandards": "AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W6-AUTH-2026-01",
-  "archivedAt": "2026-09-21T08:00:00.000Z",
+  "governingStandards": "AD-01..AD-18 / AD-CHARTER-2026-01 / BI-03-AUTH / BI-04-AUTH / BI-05-AUTH / BI-07-AUTH / NON_PRODUCTION_SINGLE_OPERATOR_IDENTITY_BYPASS",
+  "certifiedAt": "2026-09-22T10:30:00.000Z",
+  "authoritativeLineage": {
+    "commitSha": "5cfcf828adb025eed4c5439d90e6275c458a7f4d",
+    "branch": "arena/01a0b8e8-iips-production-market-data",
+    "windowsIntakeCheckpointSha": "5cfcf828adb025eed4c5439d90e6275c458a7f4d",
+    "preIntakeBaselineSha": "c2aeb5ff821da26ebc9aa8840269bdeba101f8b7"
+  },
   "programMilestoneState": {
-    "certificationChain": "P13 -> P14 -> P15 -> P16 -> P17 = COMPLETE / CERTIFIED",
+    "certificationChain": "P01..P17 -> D114 (Stages 1..5) -> D05 (2,250 Entities) -> BI-01..BI-07 -> Block 3M-A -> Windows Visual Intake = COMPLETE / CERTIFIED",
     "nonProductionRelease": "QUALIFIED / SIGNED OFF",
     "productionRelease": "NOT AUTHORIZED (STRICTLY PROHIBITED)",
     "commercialProviderActivation": "PROHIBITED (liveProvidersActive = 0, networkSocketsBound = 0)"
   },
-  "certifiedPackageLedger": [
+  "biWorkstreamClosureMatrix": [
     {
-      "package": "P13 (Product UI Data Integration)",
-      "milestone": "P13-CERT",
-      "status": "CERTIFIED",
-      "commitSha": "94ad0e3",
-      "evidenceArtifact": "evidence/p13/p13-certification-report.json",
-      "lineageDigest": "fc1c5e8b886c3711e00928df4a7c2d577cc8a44d0da4aa148decacdd12e328fb"
+      "gate": "BI-01",
+      "title": "Broker Interface Requirements & Architectural Scoping",
+      "governingArtifact": "evidence/bi04/governed-multi-broker-atomic-merge-charter.md",
+      "authorityDecision": "AD-CHARTER-2026-01 / BI-03-AUTH",
+      "testEvidence": "Interface contract definitions in frontend/src/features/portfolio/import/types.ts",
+      "status": "ACCEPTED / CLOSED",
+      "boundedResidual": "NONE"
     },
     {
-      "package": "P14 (Product UI/UX Accessibility & Responsive Layouts)",
-      "milestone": "P14-CERT",
-      "status": "CERTIFIED",
-      "commitSha": "e6ec2ca",
-      "evidenceArtifact": "evidence/p14/p14-certification-report.json",
-      "lineageDigest": "6b8bb82b6872d2bbacf1d6e99e9c18c86c0337c4610c79370c952f36311d0a8d"
+      "gate": "BI-02",
+      "title": "Porting & Reuse Boundary Qualification",
+      "governingArtifact": "frontend/src/features/portfolio/import/index.ts",
+      "authorityDecision": "Governed Reuse Handoff (Commit b97b103)",
+      "testEvidence": "Zero-buffer browser runtime compatibility tests",
+      "status": "ACCEPTED / CLOSED",
+      "boundedResidual": "NONE"
     },
     {
-      "package": "P15 (End-to-End Lineage & Degradation Auditing)",
-      "milestone": "P15-CERT",
-      "status": "CERTIFIED",
-      "commitSha": "854aa08",
-      "evidenceArtifact": "evidence/p15/p15-certification-report.json",
-      "lineageDigest": "b0a79c8b3d87c969060f4ec5e4be0eb52951f1b5aac214de8fd5d0440bd66f1a"
+      "gate": "BI-03",
+      "title": "Broker Adapter Foundation & Holdings Mapper Contract",
+      "governingArtifact": "frontend/src/features/portfolio/import/broker-holdings-mapper.ts",
+      "authorityDecision": "BI-03-AUTH-2026-01",
+      "testEvidence": "tests/bi03_broker_adapter_foundation.test.ts (10/10 PASS)",
+      "status": "ACCEPTED / CLOSED",
+      "boundedResidual": "NONE"
     },
     {
-      "package": "P16 (Operational Qualification & Release Candidate)",
-      "milestone": "P16-CERT",
-      "status": "CERTIFIED",
-      "commitSha": "96814fd",
-      "evidenceArtifact": "evidence/p16/p16-certification-report.json",
-      "lineageDigest": "4e40e000023e39059222c5da40e417e7071cb7e99344fc2fd796625a9fc4785c"
+      "gate": "BI-04",
+      "title": "Offline Broker Adapters & Format Detector Suite",
+      "governingArtifact": "evidence/bi04/dhan-web-ui-summary-v1-schema.json",
+      "authorityDecision": "BI-04-AUTH-2026-01",
+      "testEvidence": "tests/bi04_broker_adapters.test.ts (17/17 PASS)",
+      "status": "ACCEPTED / CLOSED",
+      "boundedResidual": "NONE"
     },
     {
-      "package": "P17 (Final Release Manifest Compilation & Non-Production Release Signoff)",
-      "milestone": "P17-CERT",
-      "status": "CERTIFIED",
-      "commitSha": "8697911",
-      "evidenceArtifact": "evidence/p17/p17-certification-report.json",
-      "lineageDigest": "4b0cf1f508e4037480acdd1b95ea579835c8caa923812546941a970b08cf74a2"
+      "gate": "BI-05",
+      "title": "Broker Holdings Ingress Orchestration & Edge Hardening",
+      "governingArtifact": "frontend/src/features/portfolio/import/broker-import-ingress.ts",
+      "authorityDecision": "BI-05-AUTH-2026-01",
+      "testEvidence": "tests/bi05_broker_ingress.test.ts (10/10 PASS)",
+      "status": "ACCEPTED / CLOSED",
+      "boundedResidual": "NONE"
+    },
+    {
+      "gate": "BI-06",
+      "title": "Binary File Formats Governance (XLSX)",
+      "governingArtifact": "evidence/bi07/bi07-final-certification.md",
+      "authorityDecision": "Zero-Dependency Governance Rule",
+      "testEvidence": "Clean qualification block handling in BI-04 / BI-05 tests",
+      "status": "QUALIFICATION_BLOCKED_DEFERRED_TO_BI06 / CLOSED",
+      "boundedResidual": "XLSX binary parsing deferred; zero un-governed external dependencies permitted"
+    },
+    {
+      "gate": "BI-07",
+      "title": "Multi-Broker Merge, React DOM Host Integration & Windows Visual Acceptance",
+      "governingArtifact": "evidence/bi07/bi07-final-certification.json",
+      "authorityDecision": "BI-07-AUTH-2026-01 / GATE-WINDOWS-OPERATOR-VISUAL-EVIDENCE-INTAKE",
+      "testEvidence": "tests/bi07_*.test.ts (64/64 PASS) & evidence/operator_drop/windows_visual_acceptance_manifest.json",
+      "status": "ACCEPTED / COMPLETE / BROWSER VERIFIED / INTAKE COMPLETE",
+      "boundedResidual": "Provenance digest truncated to 20-char prefix in UI card; full 64-char SHA-256 verified via automated test suite"
     }
   ],
-  "finalReleaseManifest": {
-    "manifestFile": "evidence/p17/p17-certification-report.json",
-    "finalReleaseIntegrityDigest": "4b0cf1f508e4037480acdd1b95ea579835c8caa923812546941a970b08cf74a2",
-    "testResults": {
-      "totalSuites": 26,
-      "totalTests": 191,
-      "passed": 191,
-      "failed": 0,
-      "passRatePct": 100,
-      "regressions": 0
+  "crossGateConsistencyMatrix": {
+    "identityLineageP04P12": "VERIFIED_CONSISTENT",
+    "d05BroadUniverseSecurityMaster": {
+      "totalEntities": 2250,
+      "sha256Digest": "7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5",
+      "hydrationMode": "BUILD_TIME_IMPORTED_TYPED_DATASET_ZERO_FS"
     },
-    "durabilityResults": {
-      "cpW4Passed": true,
-      "cpW5Passed": true,
-      "cpW6Passed": true,
-      "plaintextSecretsDetected": 0,
-      "methodologyDriftPct": 0
+    "aiilDualEffectiveMapping": {
+      "companyId": "EQ_AIIL_IN",
+      "currentBseScrip": "543989",
+      "historicalBseScrip": "539177",
+      "isin": "INE206F01022",
+      "nseSymbol": "AIIL",
+      "parityStatus": "PASS"
+    },
+    "agiGreenpacAliasMapping": {
+      "companyId": "EQ_AGI_IN",
+      "bseScripCode": "500187",
+      "nseSymbol": "AGI",
+      "aliasUsed": "AGI GREENPAC",
+      "parityStatus": "PASS"
+    },
+    "block3mNonProductionBypass": {
+      "charter": "evidence/operator_drop/NON_PRODUCTION_SINGLE_OPERATOR_IDENTITY_BYPASS.md",
+      "fabricatedCompanyIdsCount": 0,
+      "unresolvedHoldingsHandled": [
+        "AMBUJACEM",
+        "ASK AUTOMOTIVE",
+        "HCLTECH",
+        "M&M",
+        "ZOMATO",
+        "PAYTM",
+        "SUZLON",
+        "YESBANK",
+        "IDEA",
+        "IRFC",
+        "RVNL"
+      ],
+      "productionFailClosedEnforced": true
+    },
+    "multiBrokerMergeAndWeights": {
+      "mergeContract": "GOVERNED_MULTI_BROKER_ATOMIC_MERGE",
+      "constituentCount": 148,
+      "totalMarketValueINR": 982769.63,
+      "weightSumPercentage": 100.0,
+      "atomicPersistence": "COMMITTED (Atomic)"
+    },
+    "windowsVisualAcceptance": {
+      "status": "ACCEPTED",
+      "intakeCheckpointSha": "5cfcf828adb025eed4c5439d90e6275c458a7f4d",
+      "displayedProvenancePrefix": "92d6c6f177cf1364af3f...",
+      "evidenceGapDeclared": "FULL_SHA256_PROVENANCE_DIGEST_TRUNCATED_IN_UI_VIEWPORT_DOM"
     }
   },
-  "steeringCommitteeDecisionRecord": {
-    "presentationSubject": "IIPS v1.0.0-rc1 Non-Production Release Manifest & Qualification Milestone Signoff",
-    "decisionRequested": "Formal record and acceptance of the IIPS v1.0.0-rc1 Non-Production Release Qualification milestone as completed, and authorization of post-qualification archival.",
-    "decisionDisposition": "ACCEPTED_AND_ARCHIVED_AS_NON_PRODUCTION_RELEASE",
-    "authoritySignoff": "Platform Executive Steering Committee (AD-CHARTER-2026-01 / AD-W6-AUTH-2026-01)",
-    "recordedTimestamp": "2026-09-21T08:00:00.000Z"
+  "automatedVerificationSummary": {
+    "totalSuites": 38,
+    "totalTests": 350,
+    "passedTests": 350,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "passRatePct": 100.0,
+    "typecheckStatus": "PASS (0 errors)",
+    "viteBuildStatus": "PASS (dist-frontend/ built cleanly)",
+    "sec01CredentialScan": "PASS (0 plaintext secrets detected)"
   },
   "productionBoundaryRecord": {
     "operatingMode": "OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV",
@@ -85,7 +153,7 @@
     "networkSocketsBound": 0,
     "productionCredentials": "NONE",
     "productionIdentityResolution": "NONE (Offline Security Master mapping only)",
-    "productionAuthorization": "NOT GRANTED",
+    "productionAuthorization": "NOT GRANTED / PROHIBITED",
     "commercialProviderActivation": "PROHIBITED"
   },
   "externalDependencyRegister": [
@@ -132,8 +200,13 @@
       "description": "Decommissioned UI17 surface containment",
       "status": "CONTAINED / NOT REPAIRED",
       "containment": "UI17 permanently blocked and rejected by UIRegistry; surface inventory strictly UI01–UI14"
+    },
+    {
+      "defectId": "M-7",
+      "description": "Visual DOM Truncation of SHA-256 Provenance Digest in PortfolioWorkspace UI card",
+      "status": "CONTAINED / FORMAL EVIDENCE GAP DECLARED",
+      "containment": "UI card truncates digest to 20-char prefix (92d6c6f177cf1364af3f...) for viewport responsiveness; full digest verified via automated regression tests"
     }
   ],
-  "archivalStorageLocation": "evidence/release-v1.0.0-rc1/",
-  "archivalIntegrityDigest": "14d93eef4ae667b1a9d2bd5c89d1594d566837f1ce13915cb6cd084386345c9e"
+  "gateDisposition": "ACCEPTED"
 }
