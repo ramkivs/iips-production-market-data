@@ -348,7 +348,11 @@ export class PortfolioBrokerImportController {
     } else if (this.currentState === 'PARTIAL_REJECTIONS') {
       liveRegionText = `Preview Ready with Warnings: ${acceptedHoldings.length} holdings accepted, ${rejectedRows.length} rows excluded. Ready to save valid subset.`;
     } else if (this.currentState === 'SAVE_SUCCESS') {
-      liveRegionText = `Import Success: ${acceptedHoldings.length} holdings saved atomically to portfolio.`;
+      if (this.lastSaveResult?.isDuplicate) {
+        liveRegionText = `Duplicate File Ignored: ${this.lastSaveResult.message || 'Source file already committed to this portfolio. State preserved without duplication.'}`;
+      } else {
+        liveRegionText = `Import Success: ${acceptedHoldings.length} holdings saved atomically to portfolio.`;
+      }
     } else if (this.currentState === 'BLOCKED') {
       liveRegionText = `Import Blocked: ${res?.errors[0] || 'Unsupported format'}`;
     } else if (this.currentState === 'REJECTED') {

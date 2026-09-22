@@ -43,6 +43,9 @@ export interface PortfolioSaveOptions {
 
 export interface PortfolioSaveResult {
   success: boolean;
+  isDuplicate?: boolean;
+  disposition?: 'SAVED_NEW_BATCH' | 'MERGED_INTO_EXISTING' | 'ALREADY_IMPORTED_NO_OP';
+  message?: string;
   portfolio: PortfolioRecord;
   holdingsSavedCount: number;
   totalMarketValue: number;
@@ -92,6 +95,26 @@ export class PortfolioStore {
   }
 
   /**
+   * Resets portfolio to clean uncommitted initial state.
+   */
+  public resetPortfolio(portfolioId: string = 'DEFAULT_PORTFOLIO'): PortfolioRecord {
+    const initialRecord: PortfolioRecord = {
+      portfolioId,
+      portfolioName: portfolioId === 'DEFAULT_PORTFOLIO' ? 'Institutional Flagship Portfolio' : 'Institutional Portfolio',
+      holdings: [],
+      totalMarketValue: 0,
+      totalHoldingsCount: 0,
+      weightSumPercentage: 0.0,
+      lastUpdated: new Date().toISOString(),
+      provenanceDigest: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', // SHA-256 of empty
+      isSaved: false,
+      contributions: [],
+    };
+    this.portfolios.set(portfolioId, initialRecord);
+    return initialRecord;
+  }
+
+  /**
    * Atomic batch persistence boundary: Receives a validated UserHoldingInput vector
    * and executes governed multi-broker atomic merge (or replacement if explicitly requested).
    *
@@ -105,6 +128,8 @@ export class PortfolioStore {
    * 4. Recalculates final portfolio allocation weights to sum to exactly 100.0000%.
    * 5. Computes a new deterministic SHA-256 lineage digest over the entire consolidated portfolio.
    * 6. Preserves broker contribution audit records.
+   * 7. (BI-08): Enforces Content-Hash Idempotency (Option A). Re-uploading an identical source file
+   *    (matching contentDigest) returns ALREADY_IMPORTED_NO_OP without mutating portfolio state.
    */
   public saveHoldings(
     portfolioId: string = 'DEFAULT_PORTFOLIO',
@@ -147,6 +172,33 @@ export class PortfolioStore {
     const savedAt = new Date().toISOString();
     const existingPortfolio = this.portfolios.get(portfolioId);
     const saveMode = (options as PortfolioSaveOptions)?.mode || 'MERGE';
+    const incomingContentDigest = (options as PortfolioSaveOptions)?.contentDigest;
+
+    // BI-08: Content-Hash Idempotency Guard (Option A)
+    // If incoming contentDigest matches an already committed contribution and mode is not 'REPLACE',
+    // return idempotent ALREADY_IMPORTED_NO_OP without mutating portfolio state or appending duplicate contributions.
+    if (
+      saveMode !== 'REPLACE' &&
+      existingPortfolio &&
+      existingPortfolio.isSaved &&
+      incomingContentDigest &&
+      existingPortfolio.contributions &&
+      existingPortfolio.contributions.some((c) => c.contentDigest === incomingContentDigest)
+    ) {
+      return {
+        success: true,
+        isDuplicate: true,
+        disposition: 'ALREADY_IMPORTED_NO_OP',
+        message: 'Source file already committed to this portfolio. State preserved without duplication.',
+        portfolio: existingPortfolio,
+        holdingsSavedCount: existingPortfolio.holdings.length,
+        totalMarketValue: existingPortfolio.totalMarketValue,
+        weightSumPercentage: existingPortfolio.weightSumPercentage,
+        savedAt: existingPortfolio.lastUpdated,
+        provenanceDigest: existingPortfolio.provenanceDigest,
+      };
+    }
+
     const shouldMerge = saveMode === 'MERGE' && existingPortfolio && existingPortfolio.isSaved && existingPortfolio.holdings.length > 0;
 
     let finalHoldings: UserHoldingInput[] = [];
