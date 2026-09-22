@@ -386,3 +386,95 @@ D115 IDENTITY RESOLUTION        = BLOCKED
 No identity implementation, mapping creation, registration, loading, activation, Keycloak change,
 credential handling, provider onboarding, production operation, or accepted-gate modification was
 performed.
+
+---
+
+## 11. Personal / single-user identity designation update
+
+**Act ID:** `D115-AUTHORITY-003`
+**Act type:** Personal/single-user D115 designation preparation and recording
+**Authority holder:** Ramki
+**Authority input:** Explicit current governance instruction supplied for this update
+**Repository investigation:** Completed before this update
+
+### 11.1 Repository investigation result
+
+The repository does not contain an authoritative D115 organizational/service-principal record,
+D115-specific Stage-3 identity artifact, D115/HDFC Life `companyId`, approved D115
+Company/Security mapping, or authoritative D115 OIDC tenant/realm/client record.
+
+The following discoveries are technical or test references only and are not promoted:
+
+- `frontend/src/core/auth/authContract.ts:28-36` defines a technical governed-application-principal
+  interface; it does not identify a D115 principal or owner.
+- `frontend/src/core/auth/keycloakAdapter.test.ts:8-10` contains mocked/local Keycloak metadata;
+  it is test evidence, not an authoritative D115 provider record.
+- `frontend/src/core/auth/oidcClient.ts:67-98` contains local default OIDC configuration; it is not
+  an environment designation or D115 qualification evidence.
+- `p11/src/engineIngressPath.js:204-219` contains generic execution Stage 3; it is not a D115
+  identity-binding artifact.
+- The only D115-named files are governance/assessment documents; no pre-existing governed D115
+  Stage-3 identity artifact was found.
+
+The personal/single-user architecture below is recorded as an explicit current governance input,
+not as a repository discovery. It does not create a new identity-provider principal or environment.
+
+### 11.2 Updated personal/single-user A–H designation record
+
+| FIELD | VALUE | CLASSIFICATION / AUTHORITY STATUS | SOURCE / EVIDENCE | APPROVED BY | SCOPE | EFFECTIVE VERSION/DATE |
+|---|---|---|---|---|---|---|
+| **A. Existing-IIPS application principal** | **PERSONAL APPLICATION PRINCIPAL** — IIPS personal/local application principal owned by Ramki. **Exact principal identifier: UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | **CLASSIFICATION DESIGNATED; exact identity unresolved.** This is not called a service principal without an authoritative IdP definition. | Explicit current governance instruction designates the personal-application classification. Repository search found no authoritative D115 principal; `frontend/src/core/auth/authContract.ts:28-36` is only a technical interface. | Ramki designates the classification and owner; no exact identifier approved. | D115 local qualification only. | Classification effective 2026-09-22; exact identity/version not established. |
+| **B. Runtime identity custodian** | **RAMKI** — person / sole application owner. Credential values remain excluded. Custody mechanism: **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | **CUSTODIAN DESIGNATED; mechanism/evidence unresolved.** No fictional IAM, security, or platform team is introduced. | Explicit current governance instruction. `docs/D115_AUTHORITY_ACT.md:27-38` authorizes the bounded custodian designation; `docs/p03/P03_OPEN_ITEMS.md:20-23` records the prior mechanism gap. | Ramki designated by the current governance instruction; the specific approved local secure-storage mechanism is not approved. | Local personal runtime identity lifecycle, custody, rotation/replacement where applicable, authorization evidence, and revocation/decommissioning. | Custodian designation effective 2026-09-22; mechanism version/date not established. |
+| **C. Exact D115/HDFC Life `companyId`** | **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | **UNRESOLVED.** The CSIP UUID `5233149d-2a2d-4644-a6a7-e1ed5e133285` remains `REFERENCE ONLY` and is not promoted to `runtimeCompanyId`. | `docs/D115_IDENTITY_RESOLUTION_AND_BINDING_RECONCILIATION.md:30-34,98`; `docs/d4/D4_05_SECURITY_MASTER_ADAPTER.md:13-25,121-144`; the supplied CSIP reference has no authoritative D115 proof. | Not approved. Ramki must approve the exact value from authoritative HDFC Life/D115 evidence. | Exact D115/HDFC Life company identity for local qualification. | Not established. |
+| **D. Company/Security canonical mapping** | **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED** | **UNRESOLVED.** The issuer `008e9766-4135-4d5b-9ecf-b3fcf721ebdb`, security `7c4322d5-6f87-4dc8-a0a9-1b5f937cb0b1`, and `idmap-d115-group2-1.0.0` remain `REFERENCE ONLY` pending proof and approval. | `docs/p04/P04_IDENTITY_ADAPTER_CONTRACT.md:31-38,69-83,91-107`; `docs/d4/D4_05_SECURITY_MASTER_ADAPTER.md:85-117`; no evidence explicitly establishes D115 Company → companyId → issuer → security. | Not approved. Ramki must approve an authoritative canonical relationship and mapping artifact/version. | D115 local qualification mapping only. | Not established. |
+| **E. Authorized initial qualification environment** | **LOCAL / PERSONAL DEVELOPMENT-QUALIFICATION**; single-user, non-shared, non-deployed. | **DESIGNATED by current governance instruction; no deployment authorization.** This is not staging, cloud, or production. | Explicit current governance instruction. `D115_STAGE3_BOUNDED_DEVELOPMENT_REFERENCE_ONLY` remains `REFERENCE ONLY` and is not itself the authorization. | Ramki designates the initial qualification environment; no production authority is included. | Local IIPS execution and D115 Stage-3 identity qualification only. | Designation effective 2026-09-22; no deployment/version/hash applicable. |
+| **F. Tenant/region/environment boundary** | **LOCAL / PERSONAL / SINGLE-USER / NON-DEPLOYED** application boundary. Tenant/provider details: **UNRESOLVED — AUTHORITY DESIGNATION REQUIRED**. Region: **NOT APPLICABLE to the local application boundary unless an authoritative provider region exists**. | **LOCAL APPLICATION BOUNDARY DESIGNATED; provider boundary unresolved.** No shared tenant, production realm, cloud region, or historical environment is inferred. | Explicit current governance instruction. `frontend/src/core/auth/keycloakAdapter.test.ts:8-10` and `frontend/src/core/auth/oidcClient.ts:67-98` are local/test references only, not authoritative D115 tenant/realm evidence. | Ramki designates the local boundary; actual OIDC tenant/realm/region remains unapproved pending authoritative provider evidence. | Single-user local qualification boundary. | Boundary designation effective 2026-09-22; provider tenant/realm/region version/date not established. |
+| **G. Governed Stage-3 identity artifact** | **PROPOSED ONLY — D115 Stage-3 Identity Binding Manifest**, containing non-secret metadata. No exact existing artifact, path, version, or hash was found. | **PROPOSAL ONLY; not an approved artifact and not created by this activity.** The generic P11 Stage 3 is not substituted. | Repository investigation: no pre-existing governed D115 Stage-3 artifact. Generic `p11/src/engineIngressPath.js:204-219` is not a D115 identity artifact. | Not approved. Ramki must designate the exact governed artifact before creation, modification, registration, loading, or activation. | D115 Stage-3 identity qualification only. | Not established; proposed artifact has no version/hash. |
+| **H. Evidence owner** | **RAMKI** — D115 authority / personal application owner / evidence custodian. | **DESIGNATED by current governance instruction.** Scope is evidence for A–G; no evidence values are thereby approved. | Explicit current governance instruction; `docs/D115_AUTHORITY_ACT.md:33-38,65` permits designation of the Stage-3 evidence owner. | Ramki designated as owner; subordinate evidence remains to be supplied and maintained. | A–G identity qualification evidence, retention, audit, and presentation. | Evidence-owner designation effective 2026-09-22; evidence package version/date not established. |
+
+### 11.3 Designation classification summary
+
+```text
+A = DESIGNATED CLASSIFICATION / EXACT PRINCIPAL IDENTIFIER UNRESOLVED
+B = DESIGNATED — RAMKI / CUSTODY MECHANISM UNRESOLVED
+C = UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+D = UNRESOLVED — AUTHORITY DESIGNATION REQUIRED
+E = DESIGNATED — LOCAL / PERSONAL DEVELOPMENT-QUALIFICATION
+F = DESIGNATED LOCAL BOUNDARY / PROVIDER TENANT-REALM-REGION UNRESOLVED
+G = PROPOSED GOVERNED ARTIFACT ONLY / NOT YET APPROVED OR CREATED
+H = DESIGNATED — RAMKI
+```
+
+The personal/single-user designation does not convert the application principal into a service
+principal, does not create a shared tenant, and does not establish a D115 companyId or
+Company/Security mapping. C and D remain the authoritative blocking boundary.
+
+### 11.4 Control separation and non-implementation result
+
+The current update establishes or records only the bounded classifications/designations above:
+
+- **Authority designation:** Ramki remains the D115 authority holder; B, E, the local application
+  boundary in F, and H are designated by the current governance instruction; A is classified as a
+  personal application principal; G is proposal-only.
+- **Identity value:** C and D remain unresolved; A's exact identifier and F's provider details also
+  remain unresolved.
+- **Evidence of identity:** No principal identifier, companyId, canonical mapping, provider tenant,
+  realm, or Stage-3 artifact evidence is approved by this update.
+- **Implementation authorization:** withheld. No artifact was created, no mapping was created or
+  loaded, and no runtime identity was registered or activated.
+
+```text
+runtimeCompanyId          = UNRESOLVED
+implementationAuthority  = WITHHELD
+productionEligible       = false
+D115 production activation = NOT AUTHORIZED
+Dhan commercial entitlement = NOT AUTHORIZED
+NSE                         = DEFERRED
+
+D115 AUTHORITY             = PARTIALLY ESTABLISHED
+D115 IDENTITY RESOLUTION   = BLOCKED
+```
+
+No Keycloak modification, client/realm/tenant creation, credential generation, secret storage
+change, provider onboarding, Dhan entitlement change, NSE authorization, deployment, production
+activation, or accepted-gate modification was performed.
