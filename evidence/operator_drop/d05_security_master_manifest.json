@@ -1,0 +1,12 @@
+{
+  "batchId": "BATCH-D05-TIER2-BROAD-UNIVERSE-2026-09-22-001",
+  "domain": "D05_SECURITY_MASTER",
+  "fileChecksumSha256": "7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5",
+  "recordCount": 2250,
+  "droppedAt": "2026-09-22T06:00:00.000Z",
+  "operatorId": "OPERATOR_ADMIN_GOVERNED_01",
+  "authorizationRef": "AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001",
+  "operatingMode": "OFFLINE_BOOTSTRAP",
+  "selectedTier": "TIER_2_ACTIVE_NSE_CM",
+  "aiilRuling": "RULING_3_DUAL_EFFECTIVE_DATED_MAPPING"
+}
