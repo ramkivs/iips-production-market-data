@@ -26,6 +26,15 @@ export interface SecurityMasterEntity {
   listings: ExchangeListing[];
   effectiveFrom: string;
   effectiveTo?: string;
+  nseSymbol?: string;
+  bseSymbol?: string;
+  bseScripCode?: string;
+  listingStatus?: string;
+  lotSize?: number;
+  tickSize?: number;
+  faceValue?: number;
+  currency?: string;
+  [key: string]: unknown;
 }
 
 export class SecurityMaster {

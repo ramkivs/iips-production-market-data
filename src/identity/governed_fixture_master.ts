@@ -3,7 +3,7 @@
  * Governed Offline Fixture & Broad Universe Security Master Provider (P04 / P12)
  *
  * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W1-AUTH-2026-01 / BI-07-AUTH-2026-01 / AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001
- * Execution Mode: NON_PRODUCTION / OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV
+ * Execution Mode: NON_PRODUCTION / OFFLINE_BOOTSTRAP / BROWSER_AND_NODE_SAFE
  *
  * Provides canonical, deterministic offline reference and Tier-2 expanded broad-universe
  * Security Master providers populated exclusively with governed, verified entities.
@@ -12,11 +12,13 @@
  * - Real-world broker securities not present in this authoritative master
  *   are deliberately LEFT UNMAPPED and fail closed with IdentityAmbiguityError(UNMAPPED_IDENTIFIER).
  * - Under NO circumstances are identifiers fabricated or inferred via fuzzy matching.
+ * - Browser runtime uses build-time imported canonical D05 dataset with zero dynamic Node fs/path dependencies.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
 import { SecurityMaster, SecurityMasterEntity } from './security_master.js';
+import { D05_BROAD_UNIVERSE_ENTITIES } from './d05_broad_universe_data.js';
+
+export { D05_BROAD_UNIVERSE_ENTITIES };
 
 /**
  * Governed baseline reference entities authorized for offline non-production development
@@ -118,36 +120,26 @@ let cachedBroadMaster: SecurityMaster | null = null;
  * Instantiates and returns the governed Tier-2 expanded broad-universe SecurityMaster
  * pre-populated with all 2,250 canonical active NSE CM equity instruments, multi-exchange listings,
  * governed alias mappings (AGI GREENPAC), and historical effective-dated entries.
+ *
+ * Isomorphic & Browser-Safe:
+ * - Operates identically in browser and Node runtimes with zero dynamic fs/path dependencies.
+ * - Fails closed if the canonical dataset is missing or corrupt (does not silently fall back).
  */
 export function getGovernedBroadSecurityMaster(): SecurityMaster {
   if (cachedBroadMaster) {
     return cachedBroadMaster;
   }
 
-  const sm = new SecurityMaster();
-  let loadedFromPackage = false;
-
-  try {
-    if (typeof process !== 'undefined' && process.cwd) {
-      const pkgPath = path.resolve(process.cwd(), 'evidence/operator_drop/d05_security_master_broad_universe.json');
-      if (fs.existsSync(pkgPath)) {
-        const raw = fs.readFileSync(pkgPath, 'utf8');
-        const records = JSON.parse(raw) as SecurityMasterEntity[];
-        for (const record of records) {
-          sm.registerEntity(record);
-        }
-        loadedFromPackage = sm.listAllCompanyIds().length > 0;
-      }
-    }
-  } catch {
-    // Non-blocking fallback
+  if (!D05_BROAD_UNIVERSE_ENTITIES || !Array.isArray(D05_BROAD_UNIVERSE_ENTITIES) || D05_BROAD_UNIVERSE_ENTITIES.length !== 2250) {
+    throw new Error(
+      `Bootstrap Error: Governed D05 Broad Universe dataset missing or invalid. Expected 2,250 records, found ${D05_BROAD_UNIVERSE_ENTITIES?.length ?? 0}. Application failed closed under P04 governance.`
+    );
   }
 
-  // Fallback to reference entities if package was not loaded
-  if (!loadedFromPackage) {
-    for (const entity of GOVERNED_OFFLINE_REFERENCE_ENTITIES) {
-      sm.registerEntity(entity);
-    }
+  const sm = new SecurityMaster();
+
+  for (const record of D05_BROAD_UNIVERSE_ENTITIES) {
+    sm.registerEntity(record);
   }
 
   // Governed Alias Mapping: AGI GREENPAC -> EQ_AGI_IN
@@ -169,4 +161,8 @@ export function getGovernedBroadSecurityMaster(): SecurityMaster {
 
   cachedBroadMaster = sm;
   return sm;
+}
+
+export function resetGovernedBroadSecurityMasterCache(): void {
+  cachedBroadMaster = null;
 }
