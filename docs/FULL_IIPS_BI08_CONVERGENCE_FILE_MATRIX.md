@@ -209,3 +209,66 @@ Companion to `docs/FULL_IIPS_BI08_CONVERGENCE_PLAN.md`.
 | `typescript` | ^5.8.2 | ^5.6.3 | KEEP 5.8 | — |
 | `vitest`, `jsdom`, `@testing-library/*` | absent | present | DEFER | 6 |
 | `tsx` | absent | ^4.23.15 | EXCLUDE (server runner) | — |
+
+---
+
+# 12. HARDENING ADDENDUM (Phase-1 Authorization Preparation, 2026-09-22)
+
+Required by the Phase-1 Authorization Preparation gate §4. Supersedes earlier aggregate
+counts in this file where they conflict. Full detail: `docs/PHASE1_AUTHORIZATION_PREPARATION.md`.
+
+## 12.1 Corrections to this matrix
+
+| # | Earlier statement | Corrected statement | Evidence |
+|---|---|---|---|
+| C1 | "shell blobs identical across siblings" | **8 of 9 identical.** `TopBar.tsx` differs on `a438` (`41904b84cc` vs `99100762e7`) — adds `MarketDataFreshnessBadge` (live-data dependency) | per-file `git rev-parse` |
+| C2 | "33 of 34 API-coupled" | **33 direct, 34 transitively.** `Administration.tsx` is direct-pure but all 8 children are API-coupled | per-child scan |
+| C3 | API scan pattern `../../api/` | Missed `p12Screener` / `p12Search`. Correct pattern `(\.\./)+api/` | re-scan |
+| C4 | Baseline "8b10968 content / 42f91fa ref" | **Tree `682f4e6029818c839f23211ae5067eed862c5037` (`frontend/src`)** — identical at both SHAs. `frontend/` (incl. `server/pit`) **does** differ | tree-hash equality |
+| C5 | — (not previously stated) | **CSS system collision**: donor = light + CSS vars; BI = dark + hand-authored utilities (**no Tailwind**). Both define bare `*`/`html`/`body` | stylesheet inspection |
+
+## 12.2 Presentation-pure vs presentation-compatible
+
+**PRESENTATION-PURE** — none of: auth import · API-client import · fetch/authFetch ·
+server import · live-runtime dependency · identity-resolution dependency · mutation side effect.
+
+**PRESENTATION-COMPATIBLE** — presentation-pure **and** mountable without router/provider/
+context change.
+
+All 11 pure components are token-driven (`var(--color-*)`): **pure = 11/15**,
+**compatible as-is = 0/15**, **compatible after token provisioning = 11/15**.
+
+## 12.3 Phase-1 shell scope — exact blobs (tree `682f4e60`)
+
+| path | blob | action |
+|---|---|---|
+| `frontend/src/app/AppShell.tsx` | `e05b823faf` | PORT (drop 3 overlays) |
+| `frontend/src/app/TopBar.tsx` | `99100762e7` | PORT-MODIFIED — auth reconciliation F-a |
+| `frontend/src/app/Sidebar.tsx` | `f1d22d3d05` | PORT |
+| `frontend/src/app/navigation.ts` | `f72e3809f6` | PORT-MODIFIED (prune) |
+| `frontend/src/app/routes.ts` | — | PORT if OQ-1 = Option A |
+| `frontend/src/core/session/SessionContext.tsx` | `d3ce08ea3d` | PORT (inert) |
+| `frontend/src/core/session/session.ts` | `f119f7fc15` | PORT |
+| `frontend/src/core/theme/theme.ts` | `92061264c5` | PORT-MODIFIED |
+| `frontend/src/core/tokens/index.ts` | `ff80280332` | PORT |
+| `frontend/src/core/theme/global.css` | — | **PARTIAL ONLY** — `.app-*` rules + tokens; **exclude** `*`/`html`/`body`/`a` reset |
+
+## 12.4 Auth collision — exact scope
+
+`TopBar.tsx` couples to auth in exactly two places: `import { useAuth }` (line 9) and
+`const { status, logout } = useAuth()` (line 25), gating **only** the Sign-out button.
+`role` and `tenantId` are props. Resolution **F-a** (drop Sign-out; record explicit
+auth-model statement) — **not** a silent deletion.
+
+`CommandPalette.tsx` is the only *feature* importing `core/auth` → excluded from Phase 1.
+
+## 12.5 BI-08 closure
+
+Zero context/provider/router/CSS-module dependencies; injection interface already present.
+**DIRECT ROUTE-LEVEL INTEGRATION CONFIRMED**, conditional on §12.1-C5 CSS scoping.
+
+## 12.6 D115 boundary
+
+`grep -rnE '\bD115\b|D-115' src/ frontend/src/ tests/` → **0 hits**. (Earlier broad grep
+matched `IND1159` in D05 data — substring false positive, discounted.) No Phase-1 file
+participates in identity resolution; D115 C/D remain UNRESOLVED and cannot be bypassed.
