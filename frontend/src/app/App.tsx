@@ -4,6 +4,7 @@
  *
  * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / BI-07-AUTH-2026-01
  *                 Phase-1B Authority Decision (shell mount + BI-08 portfolio route)
+ *                 phase5-offline-full-shell-restoration-2026-09-23-001 (Option A)
  * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
  *
  * ══ PHASE-1B: CONTROLLED INTEGRATION, NOT REPLACEMENT ════════════════════════════════════
@@ -17,6 +18,38 @@
  *  current implementation. The import below resolves to the current BI-authoritative file,
  *  whose tree hash is unchanged by this phase.
  *
+ * ══ PHASE 5 / OPTION A — DONOR ROUTE STRUCTURE RESTORED (OFFLINE) ════════════════════════
+ *  Authority act phase5-offline-full-shell-restoration-2026-09-23-001 restores the donor
+ *  Master IIPS route STRUCTURE (26 donor paths) around the accepted BI-08 integration.
+ *  The donor route tree (ref origin/arena/01a0c440 App.tsx) is reproduced path-for-path,
+ *  with ONE governed substitution: every donor surface whose implementation is
+ *  API/auth-coupled (authFetch -> /api/* -> frontend/server/** -> Keycloak) renders the
+ *  honest fail-closed UnavailableSurface instead of the donor component. The excluded
+ *  runtime dependencies are NOT activated. Specifically:
+ *
+ *    · /callback          — donor OIDC callback route structure. The identity layer is NOT
+ *                           active (D115 DEFERRED): no code exchange, no session, no redirect.
+ *    · /search, /screener(+/governed), research :id children + cross-sector + macro,
+ *      /intelligence/decision-matrix, /evidence/:id + /evidence/replay/:id,
+ *      /collaboration, /reports, /watchlists, /settings — structural fail-closed surfaces.
+ *    · /admin + the 8 donor tabs — structure only; every tab renders the honest
+ *      authorization-required state (D115 DEFERRED). The donor Administration component
+ *      (api/Keycloak-coupled) is NOT imported.
+ *    · /research/macro    — EXCLUDED by D91/D88 (LIVE-only, no relief): structural route
+ *                           renders the excluded-by-authority state. No macro endpoint.
+ *
+ *  PRESERVED EXACTLY (no downgrade, no promotion, no donor substitution):
+ *    · /portfolio -> the current BI-08 PortfolioWorkspace (BI-08 authoritative);
+ *    · /executive -> ExecutiveSurface (UI02 company-level partial; the donor
+ *      portfolio-level ExecutiveDashboard is NOT mounted — the granularity/identity
+ *      conflict is NOT resolved by Option A);
+ *    · /research  -> ResearchSurface (UI03_FUNDAMENTAL_ANALYSIS — the restored research
+ *      child routes are structural surfaces WITHOUT UISurfaceIds; UI05/UI06/UI12/UI13 are
+ *      NOT designated and NOT claimed implemented under UI03);
+ *    · /intelligence -> IntelligenceSurface (UI04 partial);
+ *    · /evidence  -> EvidenceSurface (UI11 partial);
+ *    · /replay, /security-master -> current-base declared surfaces (no donor lineage).
+ *
  * ══ WHAT THE PREVIOUS CHROME DID, AND WHERE IT WENT ══════════════════════════════════════
  *  The prior App.tsx was a self-contained shell: a sticky header with four `useState` tabs
  *  (Portfolio / Executive / Replay / Security Master), a body switch, and a governance
@@ -27,14 +60,9 @@
  *                             addressable surfaces governed by the honest navigation model.
  *    · Portfolio tab       -> route `/portfolio` (and `/`), SAME BI-08 component, SAME
  *                             application-level singletons, SAME props. No behaviour change.
- *    · Executive / Replay / -> these were placeholder-only in the prior chrome ("Surface
- *      Security Master        available via IIPS UI View-Model Registry"). They remain
- *                             honestly unimplemented: `future` in the navigation model,
- *                             rendered by FeaturePlaceholder. NO functionality is lost,
- *                             because none existed — and none is fabricated.
  *    · Governance footer   -> PRESERVED VERBATIM (see GovernanceFooter below). It carries
- *                             the fail-closed production disclosure; removing it would be a
- *                             regression of the production boundary, not a cosmetic change.
+ *                             the fail-closed production disclosure; removing it would be
+ *                             a regression of the production boundary, not a cosmetic change.
  *
  * ══ SESSION-LIFETIME CONTINUITY (Tier-B) — LOAD-BEARING ══════════════════════════════════
  *  The application-level `useMemo` singletons are retained EXACTLY as before. BI-07's repeat-
@@ -48,6 +76,7 @@ import React, { useMemo } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './AppShell.js';
 import { FeaturePlaceholder } from './FeaturePlaceholder.js';
+import { UnavailableSurface } from './UnavailableSurface.js';
 import { IntelligenceSurface } from '../features/intelligence/IntelligenceSurface.js';
 // Phase-2 Path-L: Evidence presentation-only surface (authority act phase2-evidence-presentation-only-2026-09-22-001).
 import { EvidenceSurface } from '../features/evidence/EvidenceSurface.js';
@@ -133,7 +162,8 @@ const GovernanceFooter: React.FC = () => (
 
 /**
  * Layout route element: the recovered AppShell plus the preserved governance footer.
- * AppShell itself is NOT modified by Phase 1B — it remains the Phase-1A recovered artifact.
+ * AppShell mounts the offline structural overlays (Option A); its recovered layout is
+ * otherwise unchanged.
  */
 const ShellLayout: React.FC = () => (
   <div className="app-root">
@@ -141,6 +171,135 @@ const ShellLayout: React.FC = () => (
     <AppShell />
     <GovernanceFooter />
   </div>
+);
+
+/* ══ OPTION A — OFFLINE STRUCTURAL SURFACE FACTORIES ═════════════════════════════════════
+ * One factory per restored donor surface family. Each returns the honest fail-closed page.
+ * No donor feature component is imported anywhere below — the excluded server/auth tier is
+ * never activated, and no data is fabricated.
+ */
+
+const structural = (surface: string, reason: string, note?: string): React.FC => {
+  const C: React.FC = () => (
+    <UnavailableSurface surface={surface} state="offline" reason={reason} note={note} />
+  );
+  return C;
+};
+
+const authorization = (surface: string, note?: string): React.FC => {
+  const C: React.FC = () => (
+    <UnavailableSurface
+      surface={surface}
+      state="authorization"
+      reason="Authorization required — the identity and access tier is deferred"
+      note={note}
+    />
+  );
+  return C;
+};
+
+// Donor research children (structure only — no UISurfaceId, no UI03 identity claim).
+const CompanyIntelligenceStructural = structural(
+  'Research — Company',
+  'Company Intelligence requires the platform research services, which are not active offline',
+  'Donor structure: features/company/CompanyIntelligence (API-coupled in the donor lineage). No company data is fabricated.'
+);
+const SectorIntelligenceStructural = structural(
+  'Research — Sector',
+  'Sector Intelligence requires the platform research services, which are not active offline',
+  'Donor structure: features/research/SectorIntelligence (API-coupled in the donor lineage). No sector data is fabricated.'
+);
+const ResearchEventsStructural = structural(
+  'Research — Events',
+  'Research Events requires the platform research services, which are not active offline',
+  'Donor structure: features/research/ResearchEvents (API-coupled in the donor lineage). No event data is fabricated.'
+);
+const CrossSectorStructural = structural(
+  'Research — Cross-Sector',
+  'Cross-Sector Intelligence requires the platform research services, which are not active offline',
+  'Donor structure: features/cross-sector/CrossSectorIntelligence (API-coupled in the donor lineage). No cross-sector data is fabricated.'
+);
+const MacroStructural: React.FC = () => (
+  <UnavailableSurface
+    surface="Research — Macro"
+    state="excluded"
+    reason="Excluded by standing authority — macro is LIVE-only governance (no relief granted)"
+    note="D91/D88: the macro surface is excluded and no macro live endpoint exists. This route is donor structure only; no macro data, endpoint, or service is activated."
+  />
+);
+const ScreenerStructural = structural(
+  'Screener',
+  'The Screener requires the platform screener services, which are not active offline',
+  'Donor structure: features/screener/Screener (API-coupled in the donor lineage). No screening results are fabricated.'
+);
+const GovernedScreenerStructural = structural(
+  'Screener — Governed',
+  'The governed screener requires the certified platform screener services, which are not active offline',
+  'Donor structure: features/screener/GovernedScreener (API-coupled in the donor lineage). No screening results are fabricated.'
+);
+const SearchStructural = structural(
+  'Global Search',
+  'Global Search requires the governed search service, which is not active offline',
+  'Donor structure: features/search/GovernedSearch (API-coupled in the donor lineage). No results exist and none are simulated.'
+);
+const DecisionMatrixStructural = structural(
+  'Intelligence — Decision Matrix',
+  'The Decision Matrix requires the platform decision-matrix services, which are not active offline',
+  'Donor structure: features/decision-matrix/DecisionMatrix (API-coupled in the donor lineage). No matrix, scores, or weights are fabricated.'
+);
+const EvidenceDetailStructural = structural(
+  'Evidence — Detail',
+  'Per-company decision evidence has no governed offline provenance payload',
+  'Donor structure: features/evidence/EvidenceExplorer (API-coupled in the donor lineage). No per-company provenance or lineage digest is fabricated; see GATE-PHASE-2-EVIDENCE-PAYLOAD-FORENSIC (classification B).'
+);
+const EvidenceReplayStructural = structural(
+  'Evidence — Replay',
+  'Evidence replay has no governed offline provenance payload',
+  'Donor structure: features/replay/ReplayExplorer (API-coupled in the donor lineage). No replay verdict is fabricated; see AD-17 / M-2 (UNRESOLVED).'
+);
+const CollaborationStructural = structural(
+  'Collaboration',
+  'Collaboration requires the platform collaboration services, which are not active offline',
+  'Donor structure: features/collaboration/Collaboration (server-coupled in the donor lineage). No threads or activity are fabricated.'
+);
+const ReportsStructural = structural(
+  'Reports',
+  'Reports require the platform reporting services, which are not active offline',
+  'Donor structure: features/reports/Reports (server-coupled in the donor lineage). No reports or templates are fabricated.'
+);
+const WatchlistsStructural = structural(
+  'Watchlists',
+  'Watchlists require the platform watchlist services, which are not active offline',
+  'Donor structure: features/watchlists/Watchlists (server-coupled in the donor lineage). No watchlists or triggers are fabricated.'
+);
+const SettingsStructural = structural(
+  'Settings',
+  'Settings require the platform settings services, which are not active offline',
+  'Donor structure: features/settings/Settings (server-coupled in the donor lineage). No preferences are fabricated.'
+);
+
+// Donor administration: 8 governed tabs — STRUCTURE ONLY, D115 DEFERRED.
+const adminNote =
+  'Donor structure: the 8 governed read-only Administration tabs. D115 remains DEFERRED / WITHHELD / UNRESOLVED / NOT AUTHORIZED — no identity, tenancy, engine, audit, live-data or operations runtime is activated, and no administrative results are fabricated.';
+const AdminOverviewStructural = authorization('Administration — Overview', adminNote);
+const AdminIdentityStructural = authorization('Administration — Identity & Access', adminNote);
+const AdminTenancyStructural = authorization('Administration — Tenants', adminNote);
+const AdminEnginesStructural = authorization('Administration — Engines & Certification', adminNote);
+const AdminPlatformStructural = authorization('Administration — Platform Operations', adminNote);
+const AdminAuditStructural = authorization('Administration — Audit', adminNote);
+const AdminDataStructural = authorization('Administration — Live Data & Governance', adminNote);
+const AdminOperationsStructural = authorization('Administration — Migration / Workflow / Marketplace', adminNote);
+const AdminStructural = authorization('Administration', adminNote);
+
+// Donor OIDC callback route STRUCTURE (outside the shell layout, as in the donor route
+// tree). The identity layer is NOT active: no code exchange, no session, no redirect.
+const CallbackStructural: React.FC = () => (
+  <UnavailableSurface
+    surface="Identity Callback"
+    state="authorization"
+    reason="Identity callback structure — the identity layer is not active"
+    note="Donor route structure only. No code exchange, token, session, or redirect is performed; D115 remains DEFERRED. This route activates nothing."
+  />
 );
 
 export const App: React.FC<AppProps> = ({
@@ -154,6 +313,9 @@ export const App: React.FC<AppProps> = ({
 
   return (
     <Routes>
+      {/* Donor route structure: the callback route sits OUTSIDE the shell (donor contract). */}
+      <Route path={ROUTES.callback} element={<CallbackStructural />} />
+
       <Route element={<ShellLayout />}>
         {/* Default surface remains the certified BI-08 portfolio experience. */}
         <Route index element={<Navigate to={DEFAULT_SURFACE_ROUTE} replace />} />
@@ -168,28 +330,76 @@ export const App: React.FC<AppProps> = ({
             />
           }
         />
+        {/* Donor structure: the workspace renders for any /portfolio/* path (N+18). */}
+        <Route
+          path={`${ROUTES.portfolio}/*`}
+          element={
+            <PortfolioWorkspace
+              portfolioStore={appPortfolioStore}
+              securityMaster={appSecurityMaster}
+            />
+          }
+        />
 
-        {/* ── FUTURE: declared in the navigation model, honestly not implemented ─────── */}
-        {/* Phase-3 Path-L: real Executive surface (presentation-only; all three mandatory
-            payload domains are forensically unavailable offline, so it renders its governed
-            unavailable state unconditionally). Authority act phase3-executive-presentation-only-2026-09-22-001. */}
+        {/* ── PARTIAL (preserved exactly): Executive = UI02 company-level ─────────────── */}
+        {/* The donor portfolio-level ExecutiveDashboard is NOT mounted; the granularity
+            conflict is NOT resolved by Option A and no portfolio-level data is fabricated. */}
         <Route path={ROUTES.executive} element={<ExecutiveSurface />} />
+
+        {/* ── Current-base declared surfaces (no donor lineage) ───────────────────────── */}
         <Route path={ROUTES.replay} element={<FeaturePlaceholder surface="Replay Studio" />} />
         <Route path={ROUTES.securityMaster} element={<FeaturePlaceholder surface="Security Master" />} />
-        {/* Phase-4 Path-L: real Research surface (UI03_FUNDAMENTAL_ANALYSIS, presentation-only;
-            single route, zero child routes; no governed FundamentalsDTO exists offline (R-1),
-            so it renders its governed unavailable state unconditionally). Authority acts
-            phase4-research-identity-designation-2026-09-23-001 + phase4-research-ui03-presentation-only-2026-09-23-001. */}
+
+        {/* ── PARTIAL (preserved exactly): Research = UI03 at /research ───────────────── */}
         <Route path={ROUTES.research} element={<ResearchSurface />} />
-        {/* ── IMPLEMENTED (Phase 1C, PATH L): local offline view-model, no network ──── */}
+
+        {/* ── OPTION A — donor research children (structural, fail-closed) ────────────── */}
+        <Route path={ROUTES.researchCompany} element={<CompanyIntelligenceStructural />} />
+        <Route path={ROUTES.researchSector} element={<SectorIntelligenceStructural />} />
+        <Route path={ROUTES.researchEvents} element={<ResearchEventsStructural />} />
+        <Route path={ROUTES.researchCrossSector} element={<CrossSectorStructural />} />
+        {/* D91/D88: macro EXCLUDED — structural route renders the excluded state. */}
+        <Route path={ROUTES.researchMacro} element={<MacroStructural />} />
+
+        {/* ── OPTION A — donor screener routes (structural, fail-closed) ──────────────── */}
+        <Route path={ROUTES.screener} element={<ScreenerStructural />} />
+        <Route path={ROUTES.screenerGoverned} element={<GovernedScreenerStructural />} />
+
+        {/* ── OPTION A — donor governed search route (structural, fail-closed) ────────── */}
+        <Route path={ROUTES.search} element={<SearchStructural />} />
+
+        {/* ── PARTIAL (preserved exactly): Intelligence = UI04 at /intelligence ───────── */}
         <Route path={ROUTES.intelligence} element={<IntelligenceSurface />} />
-        {/* Phase-2 Path-L: real Evidence surface (presentation-only; renders governed unavailable state). */}
+
+        {/* ── OPTION A — donor intelligence children ──────────────────────────────────── */}
+        <Route path={ROUTES.intelligenceDecisionMatrix} element={<DecisionMatrixStructural />} />
+        {/* Donor contract: remaining intelligence paths are placeholders (O/R/R = future). */}
+        <Route path="/intelligence/*" element={<FeaturePlaceholder surface="Intelligence" />} />
+
+        {/* ── PARTIAL (preserved exactly): Evidence = UI11 at /evidence ───────────────── */}
         <Route path={ROUTES.evidence} element={<EvidenceSurface />} />
-        <Route path={ROUTES.admin} element={<FeaturePlaceholder surface="Administration" />} />
-        <Route path={ROUTES.collaboration} element={<FeaturePlaceholder surface="Collaboration" />} />
-        <Route path={ROUTES.reports} element={<FeaturePlaceholder surface="Reports" />} />
-        <Route path={ROUTES.watchlists} element={<FeaturePlaceholder surface="Watchlists" />} />
-        <Route path={ROUTES.settings} element={<FeaturePlaceholder surface="Settings" />} />
+
+        {/* ── OPTION A — donor evidence child templates (structural, fail-closed) ─────── */}
+        <Route path={ROUTES.evidenceReplay} element={<EvidenceReplayStructural />} />
+        <Route path={ROUTES.evidenceDetail} element={<EvidenceDetailStructural />} />
+
+        {/* ── OPTION A — donor administration: 8 governed tabs (structure only, D115) ── */}
+        <Route path={ROUTES.adminOverview} element={<AdminOverviewStructural />} />
+        <Route path={ROUTES.adminIdentity} element={<AdminIdentityStructural />} />
+        <Route path={ROUTES.adminTenancy} element={<AdminTenancyStructural />} />
+        <Route path={ROUTES.adminEngines} element={<AdminEnginesStructural />} />
+        <Route path={ROUTES.adminPlatform} element={<AdminPlatformStructural />} />
+        <Route path={ROUTES.adminAudit} element={<AdminAuditStructural />} />
+        <Route path={ROUTES.adminData} element={<AdminDataStructural />} />
+        <Route path={ROUTES.adminOperations} element={<AdminOperationsStructural />} />
+        <Route path={ROUTES.admin} element={<AdminStructural />} />
+        <Route path="/admin/*" element={<AdminStructural />} />
+
+        {/* ── OPTION A — donor governed workspace surfaces (structural, fail-closed) ──── */}
+        <Route path={ROUTES.collaboration} element={<CollaborationStructural />} />
+        <Route path={ROUTES.reports} element={<ReportsStructural />} />
+        <Route path={ROUTES.watchlists} element={<WatchlistsStructural />} />
+        <Route path={ROUTES.settings} element={<SettingsStructural />} />
 
         {/* Unknown paths fall back to the default surface — never a fabricated one. */}
         <Route path="*" element={<Navigate to={DEFAULT_SURFACE_ROUTE} replace />} />

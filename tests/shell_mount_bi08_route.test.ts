@@ -222,11 +222,22 @@ describe('Phase-1B: BI-07 non-regression and production boundary', () => {
   });
 
   it('REG-03: no client-side authentication is reintroduced (Phase-1A F-a preserved)', () => {
-    assert.ok(!html.includes('data-testid="sign-out"'), 'Sign-out must not render without onSignOut');
+    // Phase 5 / Option A amendment (authority-recorded): the Sign-out STRUCTURAL entry now
+    // renders — AppShell wires the preserved onSignOut seam to the offline SignOutNotice,
+    // which discloses that no identity layer is active (D115 DEFERRED). This is structure,
+    // NOT authentication: no auth provider, no session, no logout transport exists.
+    assert.ok(
+      html.includes('data-testid="sign-out"'),
+      'The donor Sign-out structural entry must render (offline notice, no auth)'
+    );
     assert.ok(!/keycloak|oidc/i.test(html), 'no OIDC/Keycloak surface may appear');
+    assert.ok(
+      !html.includes('authFetch'),
+      'no authenticated transport may appear in the rendered chrome'
+    );
   });
 
-  it('REG-04: future surfaces render an honest placeholder, never fabricated data', () => {
+  it('REG-04: unavailable surfaces render honest fail-closed states, never fabricated data', () => {
     // Intelligence is intentionally excluded: as of Phase 1C it is a real Path-L surface
     // (navigable, 'partial'), no longer a FeaturePlaceholder. See shell_intelligence_surface.
     // Evidence is intentionally excluded as of Phase 2: it is a real Path-L surface
@@ -237,12 +248,27 @@ describe('Phase-1B: BI-07 non-regression and production boundary', () => {
     // Research is intentionally excluded as of Phase 4: it is a real Path-L surface
     // (navigable, 'partial', UI03 binding, renders its governed unavailable state). See
     // shell_research_surface.test.ts.
+    //
+    // Phase 5 / Option A: Administration is STRUCTURALLY RESTORED (8 donor tabs, D115
+    // DEFERRED), so /admin renders the honest AUTHORIZATION-REQUIRED fail-closed state
+    // (UnavailableSurface) instead of the Phase-1A "Not implemented" placeholder.
     for (const [surface, path] of [['Administration', ROUTES.admin]] as const) {
       const out = renderAt(path);
-      assert.ok(out.includes('Not implemented'), `${surface} must declare itself unimplemented`);
+      assert.ok(
+        out.includes('structural-surface-unavailable'),
+        `${surface} must render the structural fail-closed state`
+      );
+      assert.ok(
+        out.includes('AUTHORIZATION REQUIRED — D115 DEFERRED'),
+        `${surface} must disclose the deferred authorization tier`
+      );
       assert.ok(
         !out.includes(BI08_ROOT_CLASS),
         `${surface} must not render portfolio data it does not own`
+      );
+      assert.ok(
+        !/[₹]|Live Providers: [1-9]/.test(out),
+        `${surface} must not fabricate data or activity`
       );
     }
   });
