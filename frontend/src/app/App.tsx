@@ -85,6 +85,9 @@ import { ExecutiveSurface } from '../features/executive/ExecutiveSurface.js';
 // Phase-4 Path-L: Research (UI03 Fundamental Analysis) presentation-only surface
 // (authority acts phase4-research-identity-designation-2026-09-23-001 + phase4-research-ui03-presentation-only-2026-09-23-001).
 import { ResearchSurface } from '../features/research/ResearchSurface.js';
+// F-3: UI08 Security Master FUNCTIONAL surface (authority act
+// f3-ui08-security-master-functional-2026-09-23-001) — governed D05 identity resolution.
+import { SecurityMasterSurface } from '../features/security-master/SecurityMasterSurface.js';
 import { ROUTES } from './routes.js';
 import { PortfolioWorkspace } from '../features/portfolio/PortfolioWorkspace.js';
 import { PortfolioStore, getDefaultPortfolioStore } from '../features/portfolio/index.js';
@@ -348,7 +351,15 @@ export const App: React.FC<AppProps> = ({
 
         {/* ── Current-base declared surfaces (no donor lineage) ───────────────────────── */}
         <Route path={ROUTES.replay} element={<FeaturePlaceholder surface="Replay Studio" />} />
-        <Route path={ROUTES.securityMaster} element={<FeaturePlaceholder surface="Security Master" />} />
+        {/* ── IMPLEMENTED (F-3): UI08 Security Master — functional governed D05 resolution ──
+            Authority act f3-ui08-security-master-functional-2026-09-23-001. Binds the
+            EXISTING UI08SecurityMasterModalBuilder + in-process ObjectResolverService to
+            the governed D05 broad master (App-injected singleton). Fail-closed on unmapped
+            and ambiguous identities; no API, no auth, no provider, no D115. */}
+        <Route
+          path={ROUTES.securityMaster}
+          element={<SecurityMasterSurface securityMaster={appSecurityMaster} />}
+        />
 
         {/* ── PARTIAL (preserved exactly): Research = UI03 at /research ───────────────── */}
         <Route path={ROUTES.research} element={<ResearchSurface />} />

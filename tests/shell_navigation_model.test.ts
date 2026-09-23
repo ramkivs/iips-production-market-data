@@ -71,12 +71,16 @@ function resolvesToDeclaredRoute(path: string): boolean {
 }
 
 describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
-  it('NAV-01: Portfolio is the ONLY top-level surface declared implemented', () => {
+  it('NAV-01: only Portfolio and Security Master are declared implemented', () => {
+    // F-3 amendment (authority act f3-ui08-security-master-functional-2026-09-23-001):
+    // Security Master graduated from `future` to `implemented` — it is the only surface
+    // besides Portfolio backed by a genuinely functional local data source (the governed
+    // D05 broad master + UI08 builder + in-process resolver). Nothing else may claim it.
     const implemented = NAV.filter((n) => n.status === 'implemented').map((n) => n.label);
     assert.deepStrictEqual(
       implemented,
-      ['Portfolio'],
-      'Only Portfolio (BI-07/BI-08 PortfolioWorkspace) has a real implementation'
+      ['Portfolio', 'Security Master'],
+      'Only Portfolio (BI-07/BI-08) and Security Master (UI08/governed D05, F-3) are implemented'
     );
   });
 
@@ -102,12 +106,18 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
 
   it('NAV-03: declared-but-unimplemented surfaces are honestly future or unavailable', () => {
     // Phase 5 / Option A: the donor server-coupled surfaces are structurally restored and
-    // therefore `unavailable` (fail-closed), NOT `future`. Only the two current-base
-    // surfaces with no donor lineage remain `future`.
-    const mustBeFuture = ['Replay Studio', 'Security Master'];
+    // therefore `unavailable` (fail-closed), NOT `future`. F-3 graduated Security Master
+    // to `implemented` (governed D05 functional surface), leaving Replay Studio as the
+    // only current-base future surface.
+    const mustBeFuture = ['Replay Studio'];
     for (const label of mustBeFuture) {
       assert.strictEqual(byLabel[label]?.status, 'future', `${label} must be 'future'`);
     }
+    assert.strictEqual(
+      byLabel['Security Master']?.status,
+      'implemented',
+      "Security Master must be 'implemented' (F-3: governed D05 + UI08 builder)"
+    );
     const mustBeUnavailable = [
       'Administration',
       'Collaboration',
@@ -122,7 +132,7 @@ describe('Phase-1A shell navigation model — honesty contract (AC-12)', () => {
         `${label} must be 'unavailable' — donor structure restored, fail-closed offline`
       );
     }
-    assert.strictEqual(mustBeFuture.length, 2, 'Exactly 2 future top-level surfaces');
+    assert.strictEqual(mustBeFuture.length, 1, 'Exactly 1 future top-level surface');
     assert.strictEqual(
       mustBeUnavailable.length,
       5,

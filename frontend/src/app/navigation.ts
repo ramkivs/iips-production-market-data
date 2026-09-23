@@ -88,9 +88,16 @@ export const NAV: NavItem[] = [
   // resolved by Option A; no portfolio-level executive data is fabricated.
   { label: 'Executive', path: '/executive', minRole: 'viewer', status: 'partial' },
 
-  // ── Current-base declared surfaces (no donor lineage; honest placeholders) ───────────
+  // ── Current-base declared surfaces (no donor lineage) ───────────────────────────────
   { label: 'Replay Studio', path: '/replay', minRole: 'viewer', status: 'future' },
-  { label: 'Security Master', path: '/security-master', minRole: 'viewer', status: 'future' },
+
+  // ── IMPLEMENTED (F-3) — UI08 Security Master: FUNCTIONAL governed D05 resolution ────
+  // Authority act f3-ui08-security-master-functional-2026-09-23-001 (designation F-2 = A).
+  // The ONLY top-level surface besides Portfolio with a genuinely functional local data
+  // source: the governed D05 broad security master (2,250 canonical entities) via the
+  // existing UI08 builder + in-process resolver. Fail-closed identity resolution — no API,
+  // no auth, no provider, no D115. Promoted from `future` by that act and by nothing else.
+  { label: 'Security Master', path: '/security-master', minRole: 'viewer', status: 'implemented' },
 
   // ── PARTIAL (Phase 4, PATH L) + donor children restored (Option A) ───────────────────
   // /research = UI03_FUNDAMENTAL_ANALYSIS (phase4-research-identity-designation-2026-09-23-001)

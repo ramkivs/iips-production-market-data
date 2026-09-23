@@ -137,14 +137,16 @@ describe('Option A: donor route structure restored (inventory)', () => {
     const admin = NAV.find((n) => n.label === 'Administration');
     assert.strictEqual(admin?.children?.length, 8, 'Administration 8 donor tabs restored');
 
-    // Status census across all 32 items: 2 implemented, 5 partial, 20 unavailable, 5 future.
+    // Status census across all 32 items: 3 implemented, 5 partial, 20 unavailable, 4 future.
+    // F-3 amendment (f3-ui08-security-master-functional-2026-09-23-001): Security Master
+    // graduated future -> implemented (governed D05 functional surface).
     const all = NAV.flatMap((n) => [n, ...(n.children ?? [])]);
     assert.strictEqual(all.length, 32, 'total nav items');
     const census = (s: string): number => all.filter((i) => i.status === s).length;
-    assert.strictEqual(census('implemented'), 2, 'implemented: Portfolio + Overview only');
+    assert.strictEqual(census('implemented'), 3, 'implemented: Portfolio + Overview + Security Master (F-3)');
     assert.strictEqual(census('partial'), 5, 'partial: Executive/Research/Intelligence/Evidence + Decision Evidence');
     assert.strictEqual(census('unavailable'), 20, 'unavailable: 5 top + 6 research + 1 decision-matrix + 8 admin tabs');
-    assert.strictEqual(census('future'), 5, 'future: Replay/SecurityMaster + Opportunities/Risks/Rankings');
+    assert.strictEqual(census('future'), 4, 'future: Replay + Opportunities/Risks/Rankings');
   });
 });
 
