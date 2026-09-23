@@ -48,3 +48,31 @@ Operator screenshots were captured during this acceptance session showing:
 ## Boundary
 
 This evidence certifies operator observation of the rendered offline shell and fail-closed states only. It does not certify production service availability, authentication, D115, Dhan, NSE, or other externally gated dependencies.
+
+## Windows Technical Acceptance
+
+Certified on 2026-09-23 from acceptance commit:
+
+`ccab1cd11c0539497b0c31ed76d0d76dca9fe964`
+
+### Compiled Test Suite
+
+- Command: `npm.cmd test`
+- Exit code: 0
+- Tests: 516
+- Passed: 516
+- Failed: 0
+- Cancelled: 0
+- Skipped: 0
+- Todo: 0
+- Suites: 81
+- Duration: approximately 8.0 seconds
+
+### Result
+
+WINDOWS TECHNICAL ACCEPTANCE: PASS
+
+The complete compiled test suite executed successfully on the isolated Windows acceptance worktree.
+
+The test output was captured separately during execution. The raw verbose log is intentionally not included in the acceptance commit; the authoritative result above records the exit code and complete test summary.
+
