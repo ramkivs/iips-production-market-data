@@ -29,9 +29,12 @@
  *
  *    · /callback          — donor OIDC callback route structure. The identity layer is NOT
  *                           active (D115 DEFERRED): no code exchange, no session, no redirect.
- *    · /search, /screener(+/governed), research :id children + cross-sector + macro,
+ *    · /search, /screener/governed, research :id children + cross-sector + macro,
  *      /intelligence/decision-matrix, /evidence/:id + /evidence/replay/:id,
  *      /collaboration, /reports, /watchlists, /settings — structural fail-closed surfaces.
+ *    · /screener — F-9 UI06 restoration: the existing qualified builder and in-process
+ *      service contract are bound; absent a commissioned candidate universe it renders
+ *      the honest OFFLINE / UNAVAILABLE / PAYLOAD NOT COMMISSIONED state.
  *    · /admin + the 8 donor tabs — structure only; every tab renders the honest
  *      authorization-required state (D115 DEFERRED). The donor Administration component
  *      (api/Keycloak-coupled) is NOT imported.
@@ -44,8 +47,8 @@
  *      portfolio-level ExecutiveDashboard is NOT mounted — the granularity/identity
  *      conflict is NOT resolved by Option A);
  *    · /research  -> ResearchSurface (UI03_FUNDAMENTAL_ANALYSIS — the restored research
- *      child routes are structural surfaces WITHOUT UISurfaceIds; UI05/UI06/UI12/UI13 are
- *      NOT designated and NOT claimed implemented under UI03);
+ *      child routes remain separate from UI03; F-9 designates UI06 only at /screener,
+ *      while UI05/UI12/UI13 remain undesignated);
  *    · /intelligence -> IntelligenceSurface (UI04 partial);
  *    · /evidence  -> EvidenceSurface (UI11 partial);
  *    · /replay, /security-master -> current-base declared surfaces (no donor lineage).
@@ -85,6 +88,9 @@ import { ExecutiveSurface } from '../features/executive/ExecutiveSurface.js';
 // Phase-4 Path-L: Research (UI03 Fundamental Analysis) presentation-only surface
 // (authority acts phase4-research-identity-designation-2026-09-23-001 + phase4-research-ui03-presentation-only-2026-09-23-001).
 import { ResearchSurface } from '../features/research/ResearchSurface.js';
+// F-9: UI06 Multi-Factor Screener restoration-only binding (F-8 authority act
+// f8-ui06-screener-restoration-2026-09-23-001); payload remains uncommissioned.
+import { MultiFactorScreenerSurface } from '../features/screener/MultiFactorScreenerSurface.js';
 // F-3: UI08 Security Master FUNCTIONAL surface (authority act
 // f3-ui08-security-master-functional-2026-09-23-001) — governed D05 identity resolution.
 import { SecurityMasterSurface } from '../features/security-master/SecurityMasterSurface.js';
@@ -230,11 +236,6 @@ const MacroStructural: React.FC = () => (
     note="D91/D88: the macro surface is excluded and no macro live endpoint exists. This route is donor structure only; no macro data, endpoint, or service is activated."
   />
 );
-const ScreenerStructural = structural(
-  'Screener',
-  'The Screener requires the platform screener services, which are not active offline',
-  'Donor structure: features/screener/Screener (API-coupled in the donor lineage). No screening results are fabricated.'
-);
 const GovernedScreenerStructural = structural(
   'Screener — Governed',
   'The governed screener requires the certified platform screener services, which are not active offline',
@@ -372,8 +373,12 @@ export const App: React.FC<AppProps> = ({
         {/* D91/D88: macro EXCLUDED — structural route renders the excluded state. */}
         <Route path={ROUTES.researchMacro} element={<MacroStructural />} />
 
-        {/* ── OPTION A — donor screener routes (structural, fail-closed) ──────────────── */}
-        <Route path={ROUTES.screener} element={<ScreenerStructural />} />
+        {/* ── F-9 UI06 restoration + preserved governed donor boundary ─────────────────
+            /screener binds the EXISTING qualified UI06 builder and service contract. The
+            mounted route intentionally receives no candidate universe, so it fails closed
+            as PAYLOAD NOT COMMISSIONED. /screener/governed preserves its donor structural
+            behavior; no governed candidate payload is implied or fabricated. */}
+        <Route path={ROUTES.screener} element={<MultiFactorScreenerSurface />} />
         <Route path={ROUTES.screenerGoverned} element={<GovernedScreenerStructural />} />
 
         {/* ── OPTION A — donor governed search route (structural, fail-closed) ────────── */}

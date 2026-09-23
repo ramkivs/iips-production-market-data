@@ -43,8 +43,9 @@
  *  The four PARTIAL presentation-only surfaces (Executive/UI02, Research/UI03,
  *  Intelligence/UI04, Evidence/UI11) are PRESERVED EXACTLY — not downgraded, not promoted,
  *  not replaced by donor components. /research remains UI03_FUNDAMENTAL_ANALYSIS; the
- *  restored research child routes are structural surfaces WITHOUT UISurfaceIds — UI05/
- *  UI06/UI12/UI13 are NOT designated and are NOT claimed implemented under UI03.
+ *  restored research child routes remain separate from UI03. F-9 designates UI06 only at
+ *  `/screener` as a restored, fail-closed `partial` surface; UI05/UI12/UI13 remain
+ *  undesignated and are not claimed implemented under UI03.
  *
  * Governed under: AD-01..AD-18 / Phase-1A Authority Decision (OQ-1 = Option A, OQ-2 = c440)
  *                 + phase5-offline-full-shell-restoration-2026-09-23-001 (Option A)
@@ -101,9 +102,9 @@ export const NAV: NavItem[] = [
 
   // ── PARTIAL (Phase 4, PATH L) + donor children restored (Option A) ───────────────────
   // /research = UI03_FUNDAMENTAL_ANALYSIS (phase4-research-identity-designation-2026-09-23-001)
-  // — exactly ONE registered surface. The restored donor children below are STRUCTURAL
-  // routes WITHOUT UISurfaceIds (UI05/UI06/UI12/UI13 not designated, not claimed under
-  // UI03); each renders an honest fail-closed state. Concrete "Banking" paths are the
+  // — exactly ONE registered surface at /research. The restored donor children remain
+  // separate surfaces. F-9 restores UI06 only at /screener as a bound but payload-unavailable
+  // `partial` surface; UI05/UI12/UI13 remain undesignated. Concrete "Banking" paths are the
   // donor's frozen reference-sector deep links (N+7/P-4 contract) — carried verbatim.
   {
     label: 'Research',
@@ -115,7 +116,9 @@ export const NAV: NavItem[] = [
       { label: 'Sector', path: '/research/sector/Banking', minRole: 'viewer', status: 'unavailable' },
       { label: 'Events', path: '/research/events/Banking', minRole: 'viewer', status: 'unavailable' },
       { label: 'Cross-Sector', path: '/research/cross-sector', minRole: 'viewer', status: 'unavailable' },
-      { label: 'Screener', path: '/screener', minRole: 'viewer', status: 'unavailable' },
+      // F-9: UI06 builder/service binding is restored; the absent governed candidate
+      // universe keeps the navigable surface honestly `partial`, never `implemented`.
+      { label: 'Screener', path: '/screener', minRole: 'viewer', status: 'partial' },
       // D91/D88: macro is EXCLUDED (LIVE-only governance, no relief) — structural route only.
       { label: 'Macro', path: '/research/macro', minRole: 'viewer', status: 'unavailable' },
     ],
