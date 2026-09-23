@@ -1,0 +1,4 @@
+## HEAD (no branch)
+?? evidence/archive/
+?? evidence/operator_drop/phase1b_windows_visual_acceptance_20260922/
+?? evidence/operator_drop/target_application_forensic_20260922/

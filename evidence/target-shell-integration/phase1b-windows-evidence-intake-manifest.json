@@ -1,0 +1,180 @@
+{
+  "gateIdentifier": "GATE-WINDOWS-PHASE-1B-VISUAL-EVIDENCE-INTAKE",
+  "gateDisposition": "ACCEPTED_WITH_RECORDED_DISCREPANCY",
+  "gateType": "FORENSIC_EVIDENCE_INTAKE",
+  "date": "2026-09-22",
+  "executionMode": "NON_PRODUCTION / OFFLINE_FIXTURE",
+  "governedUnder": "AD-01..AD-18 / AD-CHARTER-2026-01",
+  "supersedes": {
+    "report": "evidence/target-shell-integration/PHASE1B-WINDOWS-EVIDENCE-INTAKE-BLOCKED-REPORT.md",
+    "checkpoint": "2714ffa1609eb5077e325699cce51e1da6bb343b",
+    "priorDisposition": "BLOCKED_FAIL_CLOSED",
+    "resolution": "EVIDENCE_NOW_TRANSPORTED_AND_VERIFIED"
+  },
+
+  "implementationBaselineUnderAcceptance": "144e8edf8d126a129ba4ed87dbd077765bd4051c",
+  "evidenceTransportCommit": "ce7062aaf98793406926afd4ddc59758e51a9f19",
+  "evidenceTransportAuthor": "Ramaki",
+  "evidenceTransportDate": "2026-09-22T22:24:28+05:30",
+  "evidenceTransportTouchedSource": false,
+  "windowsCheckoutPath": "G:\\IIPS-BI07-Windows-Host-Verify",
+  "windowsCheckoutArenaAccessible": false,
+  "windowsAccessedDirectly": false,
+  "visualFactsInferredBeyondEvidence": false,
+
+  "evidencePackage": {
+    "path": "evidence/operator_drop/phase1b_windows_visual_acceptance_20260922/",
+    "present": true,
+    "artifacts": [
+      {
+        "id": "E-1",
+        "file": "git-head.txt",
+        "blobSha1": "6a16aac89d7e2742219028b0c82371dad7c5cf48",
+        "bytes": 41,
+        "gateTask": 2,
+        "content": "144e8edf8d126a129ba4ed87dbd077765bd4051c",
+        "expected": "144e8edf8d126a129ba4ed87dbd077765bd4051c",
+        "match": "BYTE_EXACT",
+        "status": "VERIFIED_PASS"
+      },
+      {
+        "id": "E-2",
+        "file": "git-status.txt",
+        "blobSha1": "a1cde64cd3fed1070664cbfefcb5266ff84b8b89",
+        "bytes": 175,
+        "gateTask": 3,
+        "detachedHead": true,
+        "modifiedTrackedFiles": 0,
+        "stagedFiles": 0,
+        "untrackedEntries": [
+          "evidence/archive/",
+          "evidence/operator_drop/phase1b_windows_visual_acceptance_20260922/",
+          "evidence/operator_drop/target_application_forensic_20260922/"
+        ],
+        "sourceChangesPresent": false,
+        "determination": "NO_SOURCE_CHANGES_TRACKED_TREE_CLEAN",
+        "status": "VERIFIED_PASS"
+      },
+      {
+        "id": "E-3",
+        "file": "phase1b-visual-acceptance-result.txt",
+        "blobSha1": "a99bfe44ff00c7f80728570a54d8b1c78c75e135",
+        "bytes": 820,
+        "gateTask": 4,
+        "commitUnderTestStated": "144e8edf8d126a129ba4ed87dbd077765bd4051c",
+        "internallyConsistentWithE1": true,
+        "operatorResult": "ACCEPTED",
+        "status": "VERIFIED_WITH_DISCREPANCY"
+      }
+    ]
+  },
+
+  "visualClaimReconciliation": [
+    { "claim": "Target IIPS shell", "attested": "PASS", "arenaBasis": "SHELL-01..SHELL-06", "disposition": "RECONCILED" },
+    { "claim": "Governance chrome", "attested": "PASS", "arenaBasis": "REG-01, REG-01b, REG-02", "disposition": "RECONCILED" },
+    { "claim": "Portfolio route", "attested": "PASS", "arenaBasis": "MOUNT-01, MOUNT-04", "disposition": "RECONCILED" },
+    { "claim": "BI08 Portfolio Workspace", "attested": "PASS", "arenaBasis": "MOUNT-02 byte-identical; tree 8491efdc UNCHANGED", "disposition": "RECONCILED" },
+    { "claim": "W01 Zerodha", "attested": "PASS", "arenaBasis": "BI-07/BI-08 suites", "disposition": "RECONCILED_CONTRACT_LEVEL" },
+    { "claim": "W02 exact duplicate import idempotency", "attested": "PASS", "arenaBasis": "ALREADY_IMPORTED_NO_OP, bi08 10/10", "disposition": "RECONCILED" },
+    { "claim": "W03 distinct Dhan import", "attested": "PASS", "arenaBasis": "additive consolidation verified", "disposition": "RECONCILED_CONTRACT_LEVEL" },
+    { "claim": "W04 final consolidated state", "attested": "PASS", "arenaBasis": "weight-sum + provenance invariants", "disposition": "RECONCILED_CONTRACT_LEVEL" },
+    { "claim": "AIIL -> EQ_AIIL_IN", "attested": "PASS", "arenaBasis": "E2E 13/13, BSE 543989 + 539177", "disposition": "RECONCILED" },
+    { "claim": "AGI GREENPAC -> EQ_AGI_IN", "attested": "PASS", "arenaBasis": "governed exact alias", "disposition": "RECONCILED" },
+    { "claim": "Unresolved retention", "attested": "PASS", "arenaBasis": "non-production bypass suites", "disposition": "RECONCILED_CONTRACT_LEVEL" },
+    { "claim": "Future surfaces honestly marked Future", "attested": "PASS", "arenaBasis": "2 implemented / 11 future; SHELL-04", "disposition": "RECONCILED" },
+    { "claim": "148 constituents", "attested": "148", "arenaBasis": "no 148-constituent fixture in repository", "disposition": "OPERATOR_ONLY_ARENA_NOT_CLAIMABLE" },
+    { "claim": "100.0000% weight allocation", "attested": "100.0000%", "arenaBasis": "invariant holds on repo fixtures; 148-scale not reproducible", "disposition": "PARTIAL_148_SCALE_OPERATOR_ONLY" },
+    { "claim": "Environment NON_PRODUCTION / OFFLINE_FIXTURE", "attested": "PASS", "arenaBasis": "minified bundle: applyTheme/AuthProvider/keycloak/oidc/authFetch//api/ all 0", "disposition": "RECONCILED" },
+    { "claim": "Production boundary (no live provider/execution/auth/entitlement)", "attested": "PASS", "arenaBasis": "no frontend/server, no /api call site, no credentials/providers/sockets", "disposition": "RECONCILED" }
+  ],
+
+  "materialDiscrepancy": {
+    "id": "R-1",
+    "field": "E-3 technical validation block",
+    "operatorAsserted": { "tests": "360/360 PASS", "suites": "54 PASS", "typescript": "PASS", "viteBuild": "PASS" },
+    "arenaMeasuredAtSameTree": { "tests": "392/392 PASS", "suites": "61 PASS", "typescript": "PASS", "viteBuild": "PASS" },
+    "delta": { "tests": -32, "suites": -7 },
+    "rootCause": "STALE_PRECOMPILED_DIST",
+    "rootCauseDetail": "npm test runs 'node --test dist/tests/*.test.js' without rebuilding; dist/ is gitignored (.gitignore:2) so it survives git checkout. The Windows host executed a dist/ compiled before Phase 1A.",
+    "fingerprintMatch": {
+      "signature": "360 tests / 54 suites",
+      "matchesCommit": "1eb9c84a42c637eb0f3f9c3c934910c16f47c2ec",
+      "matchesPhase": "PRE_PHASE_1A_TASK_4_CHECKPOINT"
+    },
+    "testFileCountsByCommit": {
+      "1eb9c84": { "testFiles": 39, "signature": "360 tests / 54 suites" },
+      "f13002e": { "testFiles": 40, "signature": "374 tests / 58 suites" },
+      "144e8ed": { "testFiles": 41, "signature": "392 tests / 61 suites" }
+    },
+    "reproducedByArena": true,
+    "reproductionMethod": "Detached worktree at 1eb9c84 in /tmp, compiled with tsc, suite executed -> 360 tests / 54 suites / 0 fail. Worktree removed and pruned; repository left clean.",
+    "materiality": {
+      "implementationDefect": false,
+      "visualAcceptanceInvalidated": false,
+      "wrongSourceTested": false,
+      "reason": "The browser surface is served by Vite from source (index.html -> frontend/src/main.tsx) and does not load dist/tests; visual observations are independent of the compiled test bundle. E-2 proves the tracked tree was clean.",
+      "affectsFrozenContracts": false
+    },
+    "disposition": "OPERATOR_TECHNICAL_NUMBERS_REJECTED_AS_STALE_SUPERSEDED_BY_ARENA_REEXECUTION",
+    "correctiveAction": "On the Windows host: git checkout <commit> && rmdir /s /q dist && npm run build:tsc && npm test. Expected signature at 144e8edf and later: 392/392 tests / 61 suites."
+  },
+
+  "sourceTreeEquivalence": {
+    "comparison": "144e8ed vs ce7062a",
+    "src": "IDENTICAL",
+    "frontend": "IDENTICAL",
+    "tests": "IDENTICAL",
+    "package.json": "IDENTICAL",
+    "vite.config.ts": "IDENTICAL",
+    "tsconfig.json": "IDENTICAL",
+    "index.html": "IDENTICAL"
+  },
+
+  "arenaAuthoritativeReExecution": {
+    "executedAt": "ce7062aaf98793406926afd4ddc59758e51a9f19",
+    "npmTest": { "tests": 392, "suites": 61, "pass": 392, "fail": 0, "result": "PASS" },
+    "tscNoEmit": "PASS",
+    "viteBuild": "PASS",
+    "bi08IdempotentIngress": { "tests": 10, "pass": 10, "result": "PASS" },
+    "d05IdentityE2E": { "tests": 13, "pass": 13, "result": "PASS" }
+  },
+
+  "frozenTrees": {
+    "src/identity": "9080e997ee7da977d0066431737e329e88b3c0b7",
+    "src/d114": "0062ad520dce647f3d02ed9a27739598d457faaa",
+    "frontend/src/features/portfolio": "8491efdc44ae449eedf1aaf93fbc7415c428fcb9",
+    "verdict": "UNCHANGED"
+  },
+
+  "constraintsHonoured": {
+    "noDirectWindowsAccess": true,
+    "noVisualFactInference": true,
+    "evidenceCommitAndContentsVerified": true,
+    "headReconciledWithBaseline": true,
+    "regressionTypecheckBuildRun": true,
+    "noApplicationSourceModified": true,
+    "noContractAltered": true
+  },
+
+  "residuals": [
+    { "id": "R-1", "item": "Operator technical-validation numbers (360/360, 54 suites)", "status": "REJECTED_AS_STALE_ROOT_CAUSED_AND_REPRODUCED" },
+    { "id": "R-2", "item": "148 constituents / 100.0000% at 148 scale", "status": "WINDOWS_OPERATOR_EVIDENCE_ONLY_ARENA_NOT_CLAIMABLE" },
+    { "id": "R-3", "item": "Unresolved-identity retention at Windows fixture scale", "status": "OPERATOR_ONLY" },
+    { "id": "R-4", "item": "evidence/operator_drop/target_application_forensic_20260922/", "status": "STILL_NOT_TRANSPORTED_ABSENT_FROM_REPOSITORY" },
+    { "id": "R-5", "item": "No screenshots deposited", "status": "ACCEPTED_AS_IS_TEXTUAL_ATTESTATION_ONLY_NO_VISUAL_INFERENCE" },
+    { "id": "R-6", "item": "798bc548", "status": "NOT_RECOVERED_NOT_AUTHORITATIVE" },
+    { "id": "R-7", "item": "D115", "status": "C_UNRESOLVED_D_UNRESOLVED_AUTHORITY_WITHHELD_PRODUCTION_NOT_AUTHORIZED" }
+  ],
+
+  "d115Boundary": {
+    "D115_C": "UNRESOLVED",
+    "D115_D": "UNRESOLVED",
+    "runtimeCompanyId": "UNRESOLVED",
+    "implementationAuthority": "WITHHELD",
+    "productionEligible": false,
+    "productionActivation": "NOT_AUTHORIZED"
+  },
+
+  "phase1bBaselineStatus": "VISUALLY_ACCEPTED_ON_WINDOWS_HOST_GREEN_AND_DURABLE",
+  "nextExecutableGate": "PHASE-2 / PHASE-1C CONVERGENCE AUTHORIZATION — requires explicit authority decision; NOT started by this gate"
+}

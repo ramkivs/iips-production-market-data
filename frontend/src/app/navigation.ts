@@ -1,0 +1,190 @@
+/**
+ * IIPS — Global navigation model (Phase-1A recovery; donor structure restored by Phase 5
+ * Option A).
+ *
+ * Recovered from full-IIPS baseline tree 682f4e6029818c839f23211ae5067eed862c5037
+ * (ref origin/arena/01a0c440, blob f72e3809f6) and PRUNED in Phase 1A to the surfaces
+ * that actually exist on the BI-authoritative base.
+ *
+ * Role-aware navigation (admin-only surfaces hidden for non-admins). The frontend reflects
+ * platform RBAC; it does NOT decide permissions.
+ *
+ * ══ HONESTY CONTRACT (preserved from the historical model, AC-12) ════════════════════════
+ *  Each surface carries a presentation-only `status` so the UI honestly distinguishes
+ *  implemented from partial/future surfaces. A navigation entry existing does NOT mean its
+ *  module is implemented — the status field is the honest marker, and it is display-only
+ *  (never a route, permission, or authorization decision).
+ *
+ * ══ PHASE 5 / OPTION A — DONOR STRUCTURAL NAVIGATION RESTORED ═══════════════════════════
+ *  Authority act phase5-offline-full-shell-restoration-2026-09-23-001 explicitly restores
+ *  the donor Master IIPS navigation hierarchy (the Phase-1A pruning of routes/nav is
+ *  superseded for STRUCTURE, not for functionality):
+ *
+ *    · Research regains its six donor children (Company / Sector / Events / Cross-Sector /
+ *      Screener / Macro) as concrete deep links — the donor's frozen reference sector
+ *      "Banking" is used exactly as in the donor model (N+7/P-4 concrete-route contract).
+ *    · Intelligence regains its four donor children (Decision Matrix navigable structure;
+ *      Opportunities / Risks / Rankings remain `future` — they were future-markers in the
+ *      donor model too and have no routes).
+ *    · Evidence regains its donor child (Decision Evidence -> the Evidence Hub).
+ *    · Administration regains its 8 donor deep-linkable tabs (admin-only, D115 DEFERRED).
+ *
+ *  NEW STATUS — `unavailable`: STRUCTURALLY PRESENT, FAIL-CLOSED. The donor route exists
+ *  and renders an honest offline/unavailable/authorization-required state, but the surface
+ *  is NOT functionally available (its donor implementation is API-coupled: authFetch ->
+ *  /api/* -> frontend/server/** -> Keycloak, all excluded by authority). This keeps the
+ *  distinction the Option A act mandates: STRUCTURALLY PRESENT vs FUNCTIONALLY AVAILABLE.
+ *  `unavailable` entries ARE navigable links (unlike `future` markers) because they resolve
+ *  to a real route that renders an honest fail-closed state — never a dead link.
+ *
+ *  Macro is additionally EXCLUDED by D91/D88 (no relief granted): its route renders the
+ *  excluded-by-authority state and no macro live endpoint exists.
+ *
+ *  The four PARTIAL presentation-only surfaces (Executive/UI02, Research/UI03,
+ *  Intelligence/UI04, Evidence/UI11) are PRESERVED EXACTLY — not downgraded, not promoted,
+ *  not replaced by donor components. /research remains UI03_FUNDAMENTAL_ANALYSIS; the
+ *  restored research child routes are structural surfaces WITHOUT UISurfaceIds — UI05/
+ *  UI06/UI12/UI13 are NOT designated and are NOT claimed implemented under UI03.
+ *
+ * Governed under: AD-01..AD-18 / Phase-1A Authority Decision (OQ-1 = Option A, OQ-2 = c440)
+ *                 + phase5-offline-full-shell-restoration-2026-09-23-001 (Option A)
+ * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
+ */
+import type { Role } from '../core/session/session.js';
+
+/**
+ * Presentation-only honesty marker.
+ * `partial` = some sub-surfaces implemented, module-level scope future.
+ * `unavailable` = structurally present (donor route restored), fail-closed — NOT
+ * functionally available offline (Option A).
+ */
+export type NavStatus = 'implemented' | 'partial' | 'unavailable' | 'future';
+
+export interface NavItem {
+  label: string;
+  path: string;
+  minRole: Role;
+  status?: NavStatus;
+  children?: NavItem[];
+}
+
+export const NAV: NavItem[] = [
+  // ── IMPLEMENTED (Phase 1B) ───────────────────────────────────────────────────────────
+  // The ONLY fully implemented surface: the certified BI-07/BI-08 PortfolioWorkspace
+  // (broker ingestion, multi-broker consolidation, content-hash idempotency).
+  {
+    label: 'Portfolio',
+    path: '/portfolio',
+    minRole: 'viewer',
+    status: 'implemented',
+    children: [
+      { label: 'Overview', path: '/portfolio', minRole: 'viewer', status: 'implemented' },
+    ],
+  },
+
+  // ── PARTIAL (Phase 3, PATH L, presentation-only) ──────────────────────────────────────
+  // Executive = UI02 company-level summary, bound to the local UI02ExecutiveSummaryBuilder.
+  // The donor portfolio-level ExecutiveDashboard granularity/identity conflict is NOT
+  // resolved by Option A; no portfolio-level executive data is fabricated.
+  { label: 'Executive', path: '/executive', minRole: 'viewer', status: 'partial' },
+
+  // ── Current-base declared surfaces (no donor lineage; honest placeholders) ───────────
+  { label: 'Replay Studio', path: '/replay', minRole: 'viewer', status: 'future' },
+  { label: 'Security Master', path: '/security-master', minRole: 'viewer', status: 'future' },
+
+  // ── PARTIAL (Phase 4, PATH L) + donor children restored (Option A) ───────────────────
+  // /research = UI03_FUNDAMENTAL_ANALYSIS (phase4-research-identity-designation-2026-09-23-001)
+  // — exactly ONE registered surface. The restored donor children below are STRUCTURAL
+  // routes WITHOUT UISurfaceIds (UI05/UI06/UI12/UI13 not designated, not claimed under
+  // UI03); each renders an honest fail-closed state. Concrete "Banking" paths are the
+  // donor's frozen reference-sector deep links (N+7/P-4 contract) — carried verbatim.
+  {
+    label: 'Research',
+    path: '/research',
+    minRole: 'viewer',
+    status: 'partial',
+    children: [
+      { label: 'Company', path: '/research/company/Banking', minRole: 'viewer', status: 'unavailable' },
+      { label: 'Sector', path: '/research/sector/Banking', minRole: 'viewer', status: 'unavailable' },
+      { label: 'Events', path: '/research/events/Banking', minRole: 'viewer', status: 'unavailable' },
+      { label: 'Cross-Sector', path: '/research/cross-sector', minRole: 'viewer', status: 'unavailable' },
+      { label: 'Screener', path: '/screener', minRole: 'viewer', status: 'unavailable' },
+      // D91/D88: macro is EXCLUDED (LIVE-only governance, no relief) — structural route only.
+      { label: 'Macro', path: '/research/macro', minRole: 'viewer', status: 'unavailable' },
+    ],
+  },
+
+  // ── PARTIAL (Phase 1C, PATH L) + donor children restored (Option A) ──────────────────
+  // Intelligence = UI04, bound to the local UI04DomainIntelligenceBuilder (preserved).
+  {
+    label: 'Intelligence',
+    path: '/intelligence',
+    minRole: 'viewer',
+    status: 'partial',
+    children: [
+      // Donor structural route; the donor DecisionMatrix is api/decisionMatrix-coupled —
+      // NOT mounted. Renders the honest offline state.
+      { label: 'Decision Matrix', path: '/intelligence/decision-matrix', minRole: 'viewer', status: 'unavailable' },
+      // Future markers in the DONOR model too — no routes, no implementation anywhere.
+      { label: 'Opportunities', path: '/intelligence/opportunities', minRole: 'viewer', status: 'future' },
+      { label: 'Risks', path: '/intelligence/risks', minRole: 'viewer', status: 'future' },
+      { label: 'Rankings', path: '/intelligence/rankings', minRole: 'viewer', status: 'future' },
+    ],
+  },
+
+  // ── PARTIAL (Phase 2, PATH L) + donor child restored (Option A) ──────────────────────
+  // Evidence = UI11, bound to the local UI11ProvenanceAuditorBuilder (preserved). The donor
+  // child (Decision Evidence -> the Evidence Hub) points at the SAME /evidence route.
+  {
+    label: 'Evidence',
+    path: '/evidence',
+    minRole: 'viewer',
+    status: 'partial',
+    children: [
+      { label: 'Decision Evidence', path: '/evidence', minRole: 'viewer', status: 'partial' },
+    ],
+  },
+
+  // ── Donor administration structure (Option A; D115 DEFERRED) ─────────────────────────
+  // The 8 donor tabs are restored as deep-linkable STRUCTURE. Every tab renders the honest
+  // authorization-required state. No Identity & Access, no Tenants runtime, no Keycloak,
+  // no runtime identity binding — D115 remains WITHHELD/UNRESOLVED/NOT AUTHORIZED.
+  {
+    label: 'Administration',
+    path: '/admin',
+    minRole: 'admin',
+    status: 'unavailable',
+    children: [
+      { label: 'Overview', path: '/admin/overview', minRole: 'admin', status: 'unavailable' },
+      { label: 'Identity & Access', path: '/admin/identity', minRole: 'admin', status: 'unavailable' },
+      { label: 'Tenants', path: '/admin/tenancy', minRole: 'admin', status: 'unavailable' },
+      { label: 'Engines & Certification', path: '/admin/engines', minRole: 'admin', status: 'unavailable' },
+      { label: 'Platform Operations', path: '/admin/platform', minRole: 'admin', status: 'unavailable' },
+      { label: 'Audit', path: '/admin/audit', minRole: 'admin', status: 'unavailable' },
+      { label: 'Live Data & Governance', path: '/admin/data', minRole: 'admin', status: 'unavailable' },
+      { label: 'Migration / Workflow / Marketplace', path: '/admin/operations', minRole: 'admin', status: 'unavailable' },
+    ],
+  },
+
+  // ── Donor governed workspace surfaces (Option A; structure only, fail-closed) ────────
+  // UI10 Collaboration / UI08 Reports / UI07 Watchlists / UI12 Settings in the donor
+  // lineage — all server-coupled; restored as honest structural routes.
+  { label: 'Collaboration', path: '/collaboration', minRole: 'viewer', status: 'unavailable' },
+  { label: 'Reports', path: '/reports', minRole: 'viewer', status: 'unavailable' },
+  { label: 'Watchlists', path: '/watchlists', minRole: 'viewer', status: 'unavailable' },
+  { label: 'Settings', path: '/settings', minRole: 'viewer', status: 'unavailable' },
+];
+
+/** Human-facing label for a nav status (presentation only). */
+export const NAV_STATUS_LABEL: Record<NavStatus, string> = {
+  implemented: 'Implemented',
+  partial: 'Partial',
+  unavailable: 'Unavailable',
+  future: 'Future',
+};
+
+/** Filter nav items visible to a given role. */
+export function visibleNav(role: Role): NavItem[] {
+  const rank: Record<Role, number> = { viewer: 0, analyst: 1, admin: 2 };
+  return NAV.filter((item) => rank[role] >= rank[item.minRole]);
+}
