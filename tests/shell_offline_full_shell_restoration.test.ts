@@ -21,7 +21,10 @@
  *    · a dead link exists (a navigable nav entry whose route does not render);
  *    · the four preserved partial surfaces (UI02/UI03/UI04/UI11) are replaced or degraded;
  *    · BI-08 stops rendering at /portfolio;
- *    · a restored research child claims a UISurfaceId identity (UI05/UI06/UI12/UI13).
+ *    · an undesignated research child claims a UISurfaceId identity (UI05/UI12/UI13).
+ *
+ *  F-9 bounded amendment: /screener is now the separately authorized UI06 partial surface;
+ *  /screener/governed preserves the original structural fail-closed boundary.
  *
  *  Rendering is server-side (renderToString) — same pattern as shell_mount_bi08_route.
  */
@@ -137,15 +140,15 @@ describe('Option A: donor route structure restored (inventory)', () => {
     const admin = NAV.find((n) => n.label === 'Administration');
     assert.strictEqual(admin?.children?.length, 8, 'Administration 8 donor tabs restored');
 
-    // Status census across all 32 items: 3 implemented, 5 partial, 20 unavailable, 4 future.
-    // F-3 amendment (f3-ui08-security-master-functional-2026-09-23-001): Security Master
-    // graduated future -> implemented (governed D05 functional surface).
+    // Status census across all 32 items after the bounded F-9 UI06 amendment:
+    // 3 implemented, 6 partial, 19 unavailable, 4 future. Only Screener changes
+    // unavailable -> partial; totals and every unrelated entry remain unchanged.
     const all = NAV.flatMap((n) => [n, ...(n.children ?? [])]);
     assert.strictEqual(all.length, 32, 'total nav items');
     const census = (s: string): number => all.filter((i) => i.status === s).length;
     assert.strictEqual(census('implemented'), 3, 'implemented: Portfolio + Overview + Security Master (F-3)');
-    assert.strictEqual(census('partial'), 5, 'partial: Executive/Research/Intelligence/Evidence + Decision Evidence');
-    assert.strictEqual(census('unavailable'), 20, 'unavailable: 5 top + 6 research + 1 decision-matrix + 8 admin tabs');
+    assert.strictEqual(census('partial'), 6, 'partial: existing 5 + Screener (F-9 UI06 binding)');
+    assert.strictEqual(census('unavailable'), 19, 'unavailable: prior 20 less Screener only');
     assert.strictEqual(census('future'), 4, 'future: Replay + Opportunities/Risks/Rankings');
   });
 });
@@ -177,7 +180,7 @@ function assertNoFabricatedValues(out: string, name: string): void {
 describe('Option A: restored structural surfaces render honest fail-closed states', () => {
   const offlineRoutes: ReadonlyArray<readonly [string, string]> = [
     ['/search', 'Global Search'],
-    ['/screener', 'Screener'],
+    // /screener is the separately tested F-9 UI06 partial surface.
     ['/screener/governed', 'Screener — Governed'],
     ['/research/company/Banking', 'Company'],
     ['/research/sector/Banking', 'Sector'],
@@ -345,10 +348,10 @@ describe('Option A: preservation of BI-08 and the partial surfaces', () => {
     }
   });
 
-  it('OPTA-08: restored research children claim NO UISurfaceId (no identity merging)', () => {
-    // /research stays UI03_FUNDAMENTAL_ANALYSIS (single designated surface). The restored
-    // child routes are structural and must not claim UI05/UI06/UI12/UI13 identities.
-    for (const p of ['/research/company/Banking', '/research/sector/Banking', '/research/events/Banking', '/research/cross-sector', '/research/macro', '/screener', '/screener/governed']) {
+  it('OPTA-08: undesignated research children claim NO UISurfaceId (no identity merging)', () => {
+    // /research stays UI03_FUNDAMENTAL_ANALYSIS. F-9 separately designates /screener as
+    // UI06, so only the remaining structural children are covered by this identity guard.
+    for (const p of ['/research/company/Banking', '/research/sector/Banking', '/research/events/Banking', '/research/cross-sector', '/research/macro', '/screener/governed']) {
       const out = renderAt(p);
       for (const id of ['UI05', 'UI06', 'UI12', 'UI13', 'UI03']) {
         assert.ok(!out.includes(id), `${p} must not claim the ${id} surface identity`);

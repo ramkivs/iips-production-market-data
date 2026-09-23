@@ -44,7 +44,7 @@ export const ROUTES = {
   researchCrossSector: '/research/cross-sector',
   // Macro: donor route structure restored; D91/D88 keep it EXCLUDED — no live endpoint.
   researchMacro: '/research/macro',
-  // ── Donor screener + governed screener + governed search (structure only) ────────────
+  // ── Screener routes (UI06 /screener restored F-9; governed/search structural) ─────────
   screener: '/screener',
   screenerGoverned: '/screener/governed',
   search: '/search',
