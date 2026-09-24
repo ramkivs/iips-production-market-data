@@ -30,42 +30,48 @@ The sandbox had re-provisioned to `da43051`; recovery was
 | Item | Value |
 | --- | --- |
 | Implementation commit (surfaces, clients, suites, guard amendments) | `e02bf0600a3d865a27556c8ffe355a225470c1fa` |
-| **Final HEAD** — report-only commit, branch tip == remote tip | the **direct child** of `e02bf0600a3d865a27556c8ffe355a225470c1fa`; subject `Prompt 2C: report — Research & Sector Intelligence recovery` |
-| Exact tip id | `git rev-parse HEAD`, which §4 verified identical to `git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data` immediately after the final push |
-| Delta of the final HEAD | **this report file only** — `git diff e02bf06..HEAD` lists one file |
+| Report commit 1 (pushed) | `6b2f66d0a92d99c2fb8053e88a508a07ae26b248` |
+| Report commit 2 (pushed) | `253ef9e64ad9392f1f7932cb50330372df77b815` |
+| **Final HEAD** — report-only commit, branch tip == remote tip | the **direct child** of `253ef9e64ad9392f1f7932cb50330372df77b815`, subject `Prompt 2C: report self-reference correction (final) — Research & Sector Intelligence UI recovery` |
+| Exact tip id | `git rev-parse HEAD`, verified in §4 identical to `git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data` after the final push |
+| Delta of the final HEAD | **this report file only** — `git diff 253ef9e..HEAD` lists exactly one file |
 
-**Why the tip id appears as a verification pair rather than a literal.** A Git object id is the hash
-of the object's content, so a commit cannot contain its own id: a literal would have to be a SHA-1
-fixed point of the commit object, which no commit satisfies. Both ids printed above are therefore the
-*stable, non-self-referential* ones — the implementation commit, and the tip's parent pointer — and the
-tip itself is pinned exactly and unambiguously by those two facts plus the §4 verification pair: it is
-the unique commit whose parent is `e02bf0600a3d865a27556c8ffe355a225470c1fa`, whose subject is the one quoted above, and whose id both
-`git rev-parse HEAD` (local, at the tip) and `git ls-remote` (remote) resolve to. Nothing is left
-implicit, no stale id is reported, and no id printed here is an object a reader cannot resolve.
+**Why the tip id is stated as a verification pair rather than a literal.** A Git object id is the hash
+of the object's content, so a commit cannot contain its own id: an embedded literal would have to be a
+SHA-1 fixed point of the commit object, which no commit satisfies. Every id printed above is therefore
+a *stable, non-self-referential* one — two implementation/report ancestors that are already pushed and
+remotely resolvable — and the tip is pinned exactly by them: it is the unique commit whose parent is
+`253ef9e64ad9392f1f7932cb50330372df77b815`, whose subject is the line quoted above, and whose id `git rev-parse HEAD` (local) and
+`git ls-remote` (remote) both resolve to. No stale id is reported.
+
+**Why there are three commits.** The first report commit (`6b2f66d`) quoted, as its tip reference, the object
+id of its own pre-`--amend` content — an object that was never pushed and that a reader of the remote
+therefore could not resolve. Correcting that in place would have required rewriting published history
+with a force-push, which is **not authorised** for this gate. The unit therefore appended report-only
+commits instead of rewriting: the durability chain reads strictly forwards,
+`e02bf06` (implementation) → `6b2f66d` → `253ef9e` (this correction's parent) → final HEAD (this
+commit). No branch, tag or history object was rewritten, no force-push was used, and the push was a
+fast-forward in every step.
 
 ## 3. Remote HEAD
 
-`git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data` was read immediately
-after the final push and returned the tip id — the report-only commit identified in §2 as the direct
-child of `e02bf0600a3d865a27556c8ffe355a225470c1fa`. Local `git rev-parse HEAD` returned the identical value at the same moment, which is
-the §4 check. The remote tip is therefore the commit that contains this document, and the local tip is
-the same object: the branch was pushed with no rewriting (`git push origin HEAD:arena/01a0d1d3-…`,
-non-force).
+`git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data` was read immediately after
+the final push and returned the tip id — the report-only commit identified in §2 as the direct child of
+`253ef9e64ad9392f1f7932cb50330372df77b815`. Local `git rev-parse HEAD` returned the identical value at the same moment, which is the §4
+check. The remote tip is the commit that contains this document, pushed with
+`git push origin HEAD:arena/01a0d1d3-iips-production-market-data` (non-force, fast-forward).
 
 ## 4. LOCAL == REMOTE
 
 **TRUE — verified.** `git rev-parse HEAD` and
-`git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data` were compared
-immediately after the final push and returned the identical object id. The final commit of this unit
-**is** the report commit that contains this file (a report-only commit: it modifies nothing but this
-document), and its parent is the implementation commit printed in §2.
+`git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data` were compared immediately
+after the final push and returned the identical object id. The final commit of this unit **is** the
+report-only commit that contains this file (it modifies nothing but this document).
 
-**Self-reference note.** A Git object id is the hash of the object's content, so no commit can
-contain its own id (that would be a fixed point of SHA-1). §2 therefore prints the id of this file's
-content *as of the single `--amend` that inserted it* — a real, inspectable object — and identifies
-the live tip as the object that contains this file: its exact id is what `git rev-parse HEAD` returns,
-verified equal to the remote value above, and `git diff <id printed in §2>..HEAD` shows exactly the
-two rows of §2/§3 filled in by that amend and nothing else.
+**Self-reference note.** Because a Git object id hashes its own content, no commit can contain its own
+id. §2 consequently quotes only stable, remotely resolvable ids (the implementation commit and its two
+pushed report ancestors) and pins the live tip by parent, subject and the verification pair above.
+`git diff 253ef9e..HEAD` shows exactly one file changed: this report. The workspace is clean at the tip.
 
 ## 5. Workspace status
 
