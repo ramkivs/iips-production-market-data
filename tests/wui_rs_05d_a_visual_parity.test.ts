@@ -13,6 +13,9 @@
  *   · AD-17 NOT VERIFIED wording and the AI-deferred state are intact;
  *   · no status/authority/freshness colour token is defined by this gate;
  *   · index.css is not modified by this gate (no new CSS convention).
+ *   (VP-12 amended by WUI-RS-05D-D2 under WUI-RS-05D-D1 §12: exactly the 14 authorized
+ *    semantic colour variables are now permitted inside .app-shell; elevation and
+ *    applyTheme() exclusions are retained.)
  *
  * Element/testid parity (Company 43 / Sector 40 captures) is asserted by the existing
  * research_sector_parity suite and is deliberately not duplicated here.
@@ -135,11 +138,28 @@ describe('WUI-RS-05D-A — frozen semantics and exclusions', () => {
     }
   });
 
-  it('VP-12: the status-colour system is not implemented by this gate (no token defined, index.css untouched)', () => {
-    const css = readFileSync(resolve(ROOT, 'frontend/src/index.css'), 'utf8');
-    for (const family of ['--color-status-', '--color-authority-', '--color-freshness-', '--elev-']) {
-      assert.strictEqual(new RegExp(`^\\s*${family}[a-z-]+\\s*:`, 'm').test(css), false, `${family}* must not be defined in 05D-A`);
+  // VP-12 amended under WUI-RS-05D-D1 §12 (implemented by WUI-RS-05D-D2): the ONLY permitted
+  // semantic colour definitions are the 14 authorized variables, each exactly once, inside the
+  // .app-shell token block. No other status/authority/freshness name, no --elev-*, no :root,
+  // and no applyTheme() — all original safeguards retained.
+  it('VP-12: only the 14 D1-authorized semantic colour variables are defined (in .app-shell); no elevation, no theme activation', () => {
+    const css = readFileSync(resolve(ROOT, 'frontend/src/index.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const AUTHORIZED = [
+      '--color-status-positive', '--color-status-negative', '--color-status-neutral',
+      '--color-status-warning', '--color-status-critical', '--color-status-informational',
+      '--color-authority-certified', '--color-authority-ai', '--color-authority-platform',
+      '--color-freshness-live', '--color-freshness-snapshot', '--color-freshness-stale',
+      '--color-freshness-unavailable', '--color-freshness-replay',
+    ];
+    const defined = [...css.matchAll(/(--color-(?:status|authority|freshness)-[a-z-]+)\s*:/g)].map((m) => m[1]);
+    assert.deepStrictEqual([...defined].sort(), [...AUTHORIZED].sort(), 'exactly the 14 authorized variables, each defined once');
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+    for (const [, selector, body] of rules) {
+      if (/--color-(?:status|authority|freshness)-/.test(body)) {
+        assert.strictEqual(selector.trim(), '.app-shell', 'semantic colours may only be defined in the .app-shell token block');
+      }
     }
+    assert.strictEqual(/^\s*--elev-[a-z0-9-]+\s*:/m.test(css), false, '--elev-* must not be defined (D1 §11)');
     const main = readFileSync(resolve(ROOT, 'frontend/src/main.tsx'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
     assert.strictEqual(/applyTheme\(/.test(main), false, 'theme activation remains excluded');
   });

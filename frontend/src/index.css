@@ -485,6 +485,26 @@ html, body {
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 10px;
+
+  /* WUI-RS-05D-D2 — dark-runtime semantic colours (authority: WUI-RS-05D-D1).
+     Historical IIPS meanings retained; historical LIGHT hex values NOT used.
+     Every value ≥ 4.5:1 on #020617 / #0F172A / #1E293B. Still scoped to .app-shell
+     (never :root); applyTheme() stays inactive; --elev-* intentionally NOT defined.
+     Derivation + contrast matrix: docs/WUI_RS_05D_D2_DARK_SEMANTIC_COLOUR_IMPLEMENTATION.md */
+  --color-status-positive: #4CBB7A;
+  --color-status-negative: #E86A60;
+  --color-status-neutral: #8A97A3;
+  --color-status-warning: #D89B3F;
+  --color-status-critical: #E86A60;
+  --color-status-informational: #6BA6F5;
+  --color-authority-certified: #4CBB7A;
+  --color-authority-ai: #B4C1CD;
+  --color-authority-platform: #6BA6F5;
+  --color-freshness-live: #4CBB7A;
+  --color-freshness-snapshot: #6BA6F5;
+  --color-freshness-stale: #D89B3F;
+  --color-freshness-unavailable: #E86A60;
+  --color-freshness-replay: #B4C1CD;
 }
 
 /* Shell layout grid (recovered verbatim). */
