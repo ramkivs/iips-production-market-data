@@ -148,8 +148,11 @@ describe('Option A: donor route structure restored (inventory)', () => {
     assert.strictEqual(all.length, 32, 'total nav items');
     const census = (s: string): number => all.filter((i) => i.status === s).length;
     assert.strictEqual(census('implemented'), 3, 'implemented: Portfolio + Overview + Security Master (F-3)');
-    assert.strictEqual(census('partial'), 8, 'partial: prior 6 + Company + Sector (Prompt 2C)');
-    assert.strictEqual(census('unavailable'), 17, 'unavailable: prior 19 less Company and Sector');
+    // DECISION MATRIX work item (governed update): moved ONLY Decision Matrix from
+    // unavailable -> partial (restored donor surface on the existing /api/decision-matrix
+    // authority; AI Advisory deferred). Total and every other entry UNCHANGED.
+    assert.strictEqual(census('partial'), 9, 'partial: prior 6 + Company + Sector (Prompt 2C) + Decision Matrix');
+    assert.strictEqual(census('unavailable'), 16, 'unavailable: prior 19 less Company, Sector and Decision Matrix');
     assert.strictEqual(census('future'), 4, 'future: Replay + Opportunities/Risks/Rankings');
   });
 });
@@ -192,7 +195,9 @@ describe('Option A: restored structural surfaces render honest fail-closed state
     // research_sector_parity.test.ts. The remaining entries below are unchanged.
     ['/research/events/Banking', 'Events'],
     ['/research/cross-sector', 'Cross-Sector'],
-    ['/intelligence/decision-matrix', 'Decision Matrix'],
+    // DECISION MATRIX work item (governed update): /intelligence/decision-matrix is NO LONGER a
+    // structural route — the donor Decision Matrix is restored and mounted (covered by
+    // decision_matrix_restoration.test.ts). Every other entry is unchanged.
     ['/evidence/EQ_INFY_IN', 'Evidence detail'],
     ['/evidence/replay/EQ_INFY_IN', 'Evidence replay'],
     ['/collaboration', 'Collaboration'],
@@ -419,8 +424,12 @@ describe('Option A: offline boundary (no server / auth / api / network in the sh
     // SNAPSHOT read authorities over HTTP and import no server module into the browser graph
     // (asserted in research_sector_ui_recovery.test.ts). Every other donor component below
     // remains forbidden — this gate recovered nothing else.
+    // DECISION MATRIX work item (governed update): 'DecisionMatrix' removed from this list — it
+    // IS recovered and mounted at /intelligence/decision-matrix, reading the existing
+    // /api/decision-matrix authority over HTTP with no server import (asserted in
+    // decision_matrix_restoration.test.ts). Every other donor component remains forbidden.
     const donorComponents = [
-      'DecisionMatrix', 'Administration', 'GovernedSearch',
+      'Administration', 'GovernedSearch',
       'Screener', 'MacroContext', 'Collaboration', 'Reports', 'Watchlists', 'Settings',
       'EvidenceExplorer', 'ReplayExplorer',
       'ResearchEvents', 'CrossSectorIntelligence', 'ResearchHub', 'IntelligenceHub',

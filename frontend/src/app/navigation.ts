@@ -137,9 +137,10 @@ export const NAV: NavItem[] = [
     minRole: 'viewer',
     status: 'partial',
     children: [
-      // Donor structural route; the donor DecisionMatrix is api/decisionMatrix-coupled —
-      // NOT mounted. Renders the honest offline state.
-      { label: 'Decision Matrix', path: '/intelligence/decision-matrix', minRole: 'viewer', status: 'unavailable' },
+      // DECISION MATRIX work item: the donor DecisionMatrix is restored onto the existing
+      // /api/decision-matrix SNAPSHOT authority -> 'partial' (never 'implemented': AI Advisory
+      // remains deferred — the same rule as Company/Sector Intelligence).
+      { label: 'Decision Matrix', path: '/intelligence/decision-matrix', minRole: 'viewer', status: 'partial' },
       // Future markers in the DONOR model too — no routes, no implementation anywhere.
       { label: 'Opportunities', path: '/intelligence/opportunities', minRole: 'viewer', status: 'future' },
       { label: 'Risks', path: '/intelligence/risks', minRole: 'viewer', status: 'future' },

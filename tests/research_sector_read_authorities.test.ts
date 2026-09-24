@@ -466,12 +466,15 @@ describe('Read authorities — boundaries (browser graph, network, donor infrast
     }
     // The restored donor structures that remain OUT of scope must still be untouched.
     const app = readFileSync(resolve(ROOT, 'frontend/src/app/App.tsx'), 'utf8');
-    assert.match(app, /No matrix, scores, or weights are fabricated\./, 'the Decision Matrix placeholder must remain non-fabricating');
+    // DECISION MATRIX work item (governed update): the Decision Matrix placeholder is replaced by
+    // the restored surface; the non-fabrication statement is retained on its route record.
+    assert.match(app, /No matrix, scores, or weights are fabricated\./, 'the Decision Matrix route record must remain non-fabricating');
     assert.match(app, /No event data is fabricated\./, 'the Events placeholder must remain non-fabricating');
     assert.match(app, /No cross-sector data is fabricated\./, 'the Cross-Sector placeholder must remain non-fabricating');
     // Out-of-scope surfaces must still not exist.
+    // DECISION MATRIX work item (governed update): DecisionMatrix.tsx is recovered by its own
+    // gate and leaves this list; the other out-of-scope surfaces are unchanged.
     for (const absent of [
-      'frontend/src/features/decision-matrix/DecisionMatrix.tsx',
       'frontend/src/features/evidence/EvidenceExplorer.tsx',
       'frontend/src/features/replay/ReplayExplorer.tsx',
       'frontend/src/features/research/ResearchEvents.tsx',

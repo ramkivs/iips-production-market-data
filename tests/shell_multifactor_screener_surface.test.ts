@@ -211,7 +211,9 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
       ['Cross-Sector', '/research/cross-sector', 'unavailable'],
       ['Macro', '/research/macro', 'unavailable'],
       ['Intelligence', '/intelligence', 'partial'],
-      ['Decision Matrix', '/intelligence/decision-matrix', 'unavailable'],
+      // DECISION MATRIX work item (governed update): restored donor surface -> 'partial'
+      // (never 'implemented': AI Advisory remains deferred).
+      ['Decision Matrix', '/intelligence/decision-matrix', 'partial'],
       ['Opportunities', '/intelligence/opportunities', 'future'],
       ['Risks', '/intelligence/risks', 'future'],
       ['Rankings', '/intelligence/rankings', 'future'],
@@ -244,7 +246,10 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
       // PROMPT 2C (governed update): Company and Sector moved `unavailable` -> `partial`
       // (two FUNCTIONAL governed SNAPSHOT read surfaces), so partial 6 -> 8 and
       // unavailable 19 -> 17. Total, implemented and future are UNCHANGED.
-      { total: 32, implemented: 3, partial: 8, unavailable: 17, future: 4 }
+      // DECISION MATRIX work item (governed update): ONLY Decision Matrix moved `unavailable` ->
+      // `partial`, so partial 8 -> 9 and unavailable 17 -> 16. Total, implemented and future
+      // are UNCHANGED.
+      { total: 32, implemented: 3, partial: 9, unavailable: 16, future: 4 }
     );
   });
 

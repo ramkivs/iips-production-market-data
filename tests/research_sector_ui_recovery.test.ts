@@ -426,9 +426,11 @@ describe('Prompt 2C — exclusions held', () => {
     }
   });
 
-  it('PU-21: Decision Matrix / Evidence / Replay UI, Events, Cross-Sector and Macro stay unrecovered', () => {
+  it('PU-21: Evidence / Replay UI, Events, Cross-Sector and Macro stay unrecovered (Decision Matrix: restored by its own gate)', () => {
+    // DECISION MATRIX work item (governed update): DecisionMatrix.tsx is now recovered by its
+    // own gate, so it leaves this absent list and the route assertion below moves to the
+    // restored surface. Every other exclusion is unchanged.
     for (const absent of [
-      'frontend/src/features/decision-matrix/DecisionMatrix.tsx',
       'frontend/src/features/evidence/EvidenceExplorer.tsx',
       'frontend/src/features/replay/ReplayExplorer.tsx',
       'frontend/src/features/research/ResearchEvents.tsx',
@@ -437,10 +439,11 @@ describe('Prompt 2C — exclusions held', () => {
     ]) {
       assert.strictEqual(existsSync(resolve(ROOT, absent)), false, `${absent} must not exist (out of scope)`);
     }
-    // The Decision Matrix ROUTE stays structural — the read authority is consumed, its UI is not.
+    // The Decision Matrix ROUTE now mounts the restored surface (structural factory removed).
     const app = strip(read('frontend/src/app/App.tsx'));
-    assert.match(app, /ROUTES\.intelligenceDecisionMatrix\} element=\{<DecisionMatrixStructural \/>\}/,
-      'the Decision Matrix surface must remain the structural fail-closed page');
+    assert.match(app, /ROUTES\.intelligenceDecisionMatrix\} element=\{<DecisionMatrix \/>\}/,
+      'the Decision Matrix route must mount the restored surface');
+    assert.strictEqual(app.includes('DecisionMatrixStructural'), false, 'no stale structural factory remains');
   });
 
   it('PU-22: no test framework was added and no dependency changed', () => {

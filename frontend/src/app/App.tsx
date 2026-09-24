@@ -30,8 +30,11 @@
  *    · /callback          — donor OIDC callback route structure. The identity layer is NOT
  *                           active (D115 DEFERRED): no code exchange, no session, no redirect.
  *    · /search, /screener/governed, research :id children + cross-sector + macro,
- *      /intelligence/decision-matrix, /evidence/:id + /evidence/replay/:id,
+ *      /evidence/:id + /evidence/replay/:id,
  *      /collaboration, /reports, /watchlists, /settings — structural fail-closed surfaces.
+ *    · /intelligence/decision-matrix — DECISION MATRIX work item: the donor Decision Matrix is
+ *      restored onto the existing /api/decision-matrix SNAPSHOT authority (fails closed;
+ *      AI Advisory deferred).
  *    · /screener — F-9 UI06 restoration: the existing qualified builder and in-process
  *      service contract are bound; absent a commissioned candidate universe it renders
  *      the honest OFFLINE / UNAVAILABLE / PAYLOAD NOT COMMISSIONED state.
@@ -96,6 +99,9 @@ import { MultiFactorScreenerSurface } from '../features/screener/MultiFactorScre
 // /research/sector/:id. No UISurfaceId claimed; AI Advisory remains deferred (not recovered).
 import { CompanyIntelligence } from '../features/company/CompanyIntelligence.js';
 import { SectorIntelligence } from '../features/research/SectorIntelligence.js';
+// DECISION MATRIX work item: the donor Decision Matrix (c3b6e947) restored onto the existing
+// /api/decision-matrix read authority + current-lineage client. HTTP only; no server import.
+import { DecisionMatrix } from '../features/decision-matrix/DecisionMatrix.js';
 // F-3: UI08 Security Master FUNCTIONAL surface (authority act
 // f3-ui08-security-master-functional-2026-09-23-001) — governed D05 identity resolution.
 import { SecurityMasterSurface } from '../features/security-master/SecurityMasterSurface.js';
@@ -260,11 +266,13 @@ const SearchStructural = structural(
   'Global Search requires the governed search service, which is not active offline',
   'Donor structure: features/search/GovernedSearch (API-coupled in the donor lineage). No results exist and none are simulated.'
 );
-const DecisionMatrixStructural = structural(
-  'Intelligence — Decision Matrix',
-  'The Decision Matrix requires the platform decision-matrix services, which are not active offline',
-  'Donor structure: features/decision-matrix/DecisionMatrix (API-coupled in the donor lineage). No matrix, scores, or weights are fabricated.'
-);
+/* DECISION MATRIX work item — the former `DecisionMatrixStructural` fail-closed factory is
+ * REMOVED: the donor Decision Matrix is now restored and mounted at
+ * /intelligence/decision-matrix (a route rendering "unavailable" while its real surface exists
+ * would be a false statement — the Prompt 2C precedent). The restored surface reads the
+ * EXISTING /api/decision-matrix SNAPSHOT authority over HTTP and fails closed (Loading / Error
+ * / Unavailable) on every non-success path. No matrix, scores, or weights are fabricated.
+ * AI Advisory stays DEFERRED (`AdvisoryDeferred`), so the surface is `partial`. */
 const EvidenceDetailStructural = structural(
   'Evidence — Detail',
   'Per-company decision evidence has no governed offline provenance payload',
@@ -404,8 +412,9 @@ export const App: React.FC<AppProps> = ({
         {/* ── PARTIAL (preserved exactly): Intelligence = UI04 at /intelligence ───────── */}
         <Route path={ROUTES.intelligence} element={<IntelligenceSurface />} />
 
-        {/* ── OPTION A — donor intelligence children ──────────────────────────────────── */}
-        <Route path={ROUTES.intelligenceDecisionMatrix} element={<DecisionMatrixStructural />} />
+        {/* ── DECISION MATRIX work item — restored donor surface (FUNCTIONAL governed SNAPSHOT) ──
+            Reads the existing /api/decision-matrix authority; fails closed; AI Advisory deferred. */}
+        <Route path={ROUTES.intelligenceDecisionMatrix} element={<DecisionMatrix />} />
         {/* Donor contract: remaining intelligence paths are placeholders (O/R/R = future). */}
         <Route path="/intelligence/*" element={<FeaturePlaceholder surface="Intelligence" />} />
 
