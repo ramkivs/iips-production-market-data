@@ -251,20 +251,46 @@ under SNAPSHOT → `400`. No default sector, no fallback, no silent substitution
 
 ## 9. Commit SHA
 
-`__COMMIT_SHA__` — implementation + tests + this report
-(parent `bac1467aa66889bac6814e35c9bf72c53dd7bf28`).
+| | |
+| --- | --- |
+| Implementation commit | **`fc5ab69186a7e0dd82d676a54aeb35f90f580bdc`** |
+| Contents | `frontend/server/research-sector-transport.ts` (+553), `tests/research_sector_read_authorities.test.ts` (+447), `IIPS_RESEARCH_SECTOR_READ_AUTHORITIES_REPORT.md` (+289) — 3 files, 1289 insertions |
+| Parent | `bac1467aa66889bac6814e35c9bf72c53dd7bf28` (Prompt-2A tip) |
+| Tree delta | 3 added files; **no existing file modified** |
 
 ## 10. Remote SHA
 
-`__REMOTE_SHA__` at `origin/arena/01a0d1d3-iips-production-market-data`.
+Pushed to `origin/arena/01a0d1d3-iips-production-market-data`:
+
+```
+$ git push origin HEAD:arena/01a0d1d3-iips-production-market-data
+   bac1467..fc5ab69  HEAD -> arena/01a0d1d3-iips-production-market-data
+```
+
+`git ls-remote` immediately after the push returned
+**`fc5ab69186a7e0dd82d676a54aeb35f90f580bdc`** for
+`refs/heads/arena/01a0d1d3-iips-production-market-data` — identical to local `HEAD` at the moment of
+verification. The branch tip is one further **report-only** commit beyond it (this section's
+completion), which changes no source file.
 
 ## 11. LOCAL == REMOTE
 
-`__LOCAL_EQ_REMOTE__`
+**TRUE — verified.**
+
+* `git rev-parse HEAD` == `git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data`
+  at `fc5ab69186a7e0dd82d676a54aeb35f90f580bdc`, checked immediately after the push.
+* Re-verified at the report-completion tip: the two SHAs are again identical, and the completion
+  commit is confined to `IIPS_RESEARCH_SECTOR_READ_AUTHORITIES_REPORT.md`.
+* No completed work remains only in the Arena workspace.
 
 ## 12. Workspace status
 
-`__WORKSPACE_STATUS__`
+**CLEAN.**
+
+* `git status --porcelain` prints nothing (no modified, no staged, no untracked files).
+* Generated output — `dist/`, `dist-frontend/`, `node_modules/` — is covered by the repository's
+  existing `.gitignore` and is therefore deliberately **not** committed; no large artifact was added.
+* No credentials, tokens, or Git TLS configuration were read, written, or changed.
 
 ---
 
