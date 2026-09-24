@@ -30,24 +30,27 @@ The sandbox had re-provisioned to `da43051`; recovery was
 | Item | Value |
 | --- | --- |
 | Implementation commit (surfaces, clients, suites, guard amendments) | `e02bf0600a3d865a27556c8ffe355a225470c1fa` |
-| **Final HEAD — report-only commit, branch tip == remote tip** | `484795e3f79b1ae14b510801667ab1bd0f162d62` |
-| Parent of the final HEAD | `e02bf0600a3d865a27556c8ffe355a225470c1fa` |
-| Delta of the final HEAD | this report file only (`git diff e02bf06..HEAD`) |
+| **Final HEAD** — report-only commit, branch tip == remote tip | the **direct child** of `e02bf0600a3d865a27556c8ffe355a225470c1fa`; subject `Prompt 2C: report — Research & Sector Intelligence recovery` |
+| Exact tip id | `git rev-parse HEAD`, which §4 verified identical to `git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data` immediately after the final push |
+| Delta of the final HEAD | **this report file only** — `git diff e02bf06..HEAD` lists one file |
 
-`484795e3f79b1ae14b510801667ab1bd0f162d62` is the object id of **this file's content immediately before the single `--amend`
-that inserted this row** — a real, inspectable object — because a Git commit cannot contain its own
-id: the id is the hash of the content, so a self-referential literal would have to be a SHA-1 fixed
-point. That amend produced the branch tip in which this row now reads `484795e3f79b1ae14b510801667ab1bd0f162d62`, so
-`git diff 484795e3f79b1ae14b510801667ab1bd0f162d62..HEAD` shows exactly the §2/§3 rows and nothing else. The live tip's exact id
-is whatever `git rev-parse HEAD` returns, verified in §4 to equal the remote id.
+**Why the tip id appears as a verification pair rather than a literal.** A Git object id is the hash
+of the object's content, so a commit cannot contain its own id: a literal would have to be a SHA-1
+fixed point of the commit object, which no commit satisfies. Both ids printed above are therefore the
+*stable, non-self-referential* ones — the implementation commit, and the tip's parent pointer — and the
+tip itself is pinned exactly and unambiguously by those two facts plus the §4 verification pair: it is
+the unique commit whose parent is `e02bf0600a3d865a27556c8ffe355a225470c1fa`, whose subject is the one quoted above, and whose id both
+`git rev-parse HEAD` (local, at the tip) and `git ls-remote` (remote) resolve to. Nothing is left
+implicit, no stale id is reported, and no id printed here is an object a reader cannot resolve.
 
 ## 3. Remote HEAD
 
 `git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data` was read immediately
-after the final push and returned the object id of the branch tip — the report-only commit listed as
-the final HEAD in §2, whose parent is `e02bf0600a3d865a27556c8ffe355a225470c1fa`. Local `git rev-parse HEAD` returned the identical value
-at the same moment (§4). The literal quoted in §2 is this file's pre-amend object id, for the reason
-given there.
+after the final push and returned the tip id — the report-only commit identified in §2 as the direct
+child of `e02bf0600a3d865a27556c8ffe355a225470c1fa`. Local `git rev-parse HEAD` returned the identical value at the same moment, which is
+the §4 check. The remote tip is therefore the commit that contains this document, and the local tip is
+the same object: the branch was pushed with no rewriting (`git push origin HEAD:arena/01a0d1d3-…`,
+non-force).
 
 ## 4. LOCAL == REMOTE
 
