@@ -16,6 +16,6 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["src/**/*", "tests/**/*", "frontend/**/*"],
+  "include": ["src/**/*", "tests/**/*", "frontend/**/*", "iips-platform/src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
