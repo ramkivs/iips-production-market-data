@@ -8,6 +8,7 @@
     "build:tsc": "tsc && cp iips-platform/package.json dist/iips-platform/package.json",
     "build:vite": "vite build",
     "dev": "vite",
+    "dev:research-sector": "tsc && node -e \"require('node:fs').copyFileSync('iips-platform/package.json','dist/iips-platform/package.json')\" && node dist/frontend/server/research-sector-dev-server.js",
     "test": "node --test dist/tests/*.test.js",
     "test:direct": "node --test --experimental-strip-types tests/*.test.ts"
   },
