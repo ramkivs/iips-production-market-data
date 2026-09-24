@@ -390,21 +390,30 @@ describe('Read authorities — boundaries (browser graph, network, donor infrast
     return out;
   }
 
-  it('RA-24: no browser file references the authority module, and the browser graph stays node-free', () => {
+  it('RA-24: no browser file IMPORTS the server authority module, and the browser graph stays node-free', () => {
+    // PROMPT 2C REFINEMENT: this guard now inspects CODE (comments stripped), not raw text.
+    // Prompt 2C added browser API clients that legitimately NAME the server authority in their
+    // doc comments (explaining which transport serves the endpoint) without importing it. The
+    // guard's intent — no browser file may IMPORT a server or Node module — is unchanged and
+    // is asserted against code. A real import would still fail.
     const src = browserFiles('frontend/src');
     assert.ok(src.length > 0, 'the browser graph must be discoverable');
     for (const f of src) {
       const body = readFileSync(resolve(ROOT, f), 'utf8');
-      assert.strictEqual(body.includes('research-sector-transport'), false, `${f} must not reference the server authority module`);
-      assert.strictEqual(/from 'node:/.test(body), false, `${f} must not import a node: builtin`);
+      const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      assert.strictEqual(/from\s*'[^']*research-sector-transport/.test(code), false, `${f} must not IMPORT the server authority module`);
+      assert.strictEqual(/require\([^)]*research-sector-transport/.test(code), false, `${f} must not require the server authority module`);
+      assert.strictEqual(/from 'node:/.test(code), false, `${f} must not import a node: builtin`);
     }
   });
 
-  it('RA-25: this unit adds NO browser-side client, import or node dependency', () => {
-    // The four authorities are reachable over HTTP only; no client wrapper is added in this unit,
-    // so every baseline API client stays byte-identical. (For the record, the PRE-EXISTING
-    // `executive.ts` import of the Executive transport is a baseline condition owned by the
-    // Executive surface, NOT by this unit — it is neither relied on nor extended here.)
+  it('RA-25: the Prompt-2B baseline clients stay byte-unchanged, and every API client stays node-free', () => {
+    // The four authorities are reachable over HTTP only. Prompt 2C later ADDS the two read
+    // clients these authorities require (`company.ts`, `decisionMatrix.ts`); the five baseline
+    // clients must remain byte-identical, and NO client — baseline or added — may import a
+    // Node builtin, a server module, or the certified platform.
+    // (For the record, the PRE-EXISTING `executive.ts` import of the Executive transport is a
+    // baseline condition owned by the Executive surface — neither relied on nor extended here.)
     const BASELINE_API: Record<string, string> = {
       'frontend/src/api/authFetch.ts': '64b72cce180f5ce5008a73818b0329d3624c057b089e274fb05522fe97fae66b',
       'frontend/src/api/dataMode.ts': '4d6ecf13c546eaa3f6458f21d8b93066e7bfa0acc22d3627858447c4fddf3b4f',
@@ -412,36 +421,62 @@ describe('Read authorities — boundaries (browser graph, network, donor infrast
       'frontend/src/api/executive.ts': '349fef59663e4edc5c86a04a8ab7a4c66813dcafc7668597325aedf5b08853ae',
       'frontend/src/api/replay.ts': 'bac8b56f04124ac866d2dad24a953338852fa2f52055351f8632936adff4fc9d',
     };
-    const api = browserFiles('frontend/src/api').sort();
-    assert.deepStrictEqual(api, Object.keys(BASELINE_API).sort(), 'no API client may be added or removed');
     for (const [f, expected] of Object.entries(BASELINE_API)) {
-      const body = readFileSync(resolve(ROOT, f), 'utf8');
-      assert.strictEqual(createHash('sha256').update(body).digest('hex'), expected, `${f} must be byte-unchanged`);
-      assert.strictEqual(body.includes('research-sector-transport'), false, `${f} must not reference the authority module`);
-      assert.strictEqual(/from 'node:/.test(body), false, `${f} must not import a node: builtin`);
+      assert.strictEqual(createHash('sha256').update(readFileSync(resolve(ROOT, f))).digest('hex'), expected, `${f} must be byte-unchanged`);
+    }
+    const api = browserFiles('frontend/src/api');
+    for (const f of api) {
+      const code = readFileSync(resolve(ROOT, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      assert.strictEqual(/from 'node:/.test(code), false, `${f} must not import a node: builtin`);
+      assert.strictEqual(/from\s*'[^']*research-sector-transport/.test(code), false, `${f} must not import the server authority module`);
+      // `executive.ts` is EXEMPT from the platform-import rule: it already imports the Executive
+      // transport in the Prompt-2B baseline. That is a PRE-EXISTING condition owned by the
+      // Executive surface (recorded in the Prompt-2B report) — not introduced, extended or
+      // relied upon by this authority, and deliberately not "fixed" opportunistically here.
+      if (f.endsWith('frontend/src/api/executive.ts')) continue;
+      assert.strictEqual(code.includes('iips-platform'), false, `${f} must not import the certified platform`);
+      assert.strictEqual(code.includes('src/transports'), false, `${f} must not import a platform transport`);
+      assert.strictEqual(code.includes('frontend/server'), false, `${f} must not import a server module`);
+    }
+    // The two read clients this authority set actually requires must be present.
+    for (const required of ['frontend/src/api/company.ts', 'frontend/src/api/decisionMatrix.ts']) {
+      assert.ok(api.includes(required), `${required} must exist (the authority's browser client)`);
     }
   });
 
-  it('RA-26: route/navigation wiring and the existing Stage-4 server are BYTE-UNCHANGED (no UI recovery)', () => {
-    // Recorded from the Prompt-2B baseline tree: this unit wires nothing into the UI and
-    // modifies no existing server module. Structural placeholder routes stay placeholders.
+  it('RA-26: this authority module left the route/navigation wiring and the Stage-4 server untouched', () => {
+    // PROMPT 2C RE-SCOPE. In Prompt 2B this guard also asserted that App.tsx, navigation.ts and
+    // routes.ts were byte-unchanged, and that no Company/Sector surface component existed — which
+    // was correct then, because 2B recovered no UI. Prompt 2C is the unit that legitimately wires
+    // those two surfaces, so those four assertions moved to the Prompt-2C suites. What remains
+    // here is the part that is STILL true and still matters: the Prompt-2B authority did not
+    // touch the server it must not touch, and the route map's constants are unmodified.
     const UNCHANGED: Record<string, string> = {
-      'frontend/src/app/App.tsx': 'f2d307e54c175bb4c51c7671a021d3046a9588faa3fb0df63d4f7a8397f5983b',
-      'frontend/src/app/navigation.ts': '11b253ac8cabff0db2b3422299426f1e315e884e34c26e138c61c0c703b47cb9',
-      'frontend/src/app/routes.ts': 'e3ddfc47dd40d731cfdb5e59b91ad3726db2b0953ff27e6f93afd206f53ee085',
+      // The existing Stage-4 server module is untouched by BOTH Prompt 2B and Prompt 2C. The
+      // donor dispatch was never restored.
       'frontend/server/executive-transport.ts': '79d62cea45620778ce1a1f11ff47204c7590937e5f165002af80fd8c62047fb2',
+      // The route MAP is unchanged: /research/company/:id and /research/sector/:id already
+      // existed as constants, so Prompt 2C mounted surfaces without altering any route path.
+      'frontend/src/app/routes.ts': 'e3ddfc47dd40d731cfdb5e59b91ad3726db2b0953ff27e6f93afd206f53ee085',
     };
     for (const [file, expected] of Object.entries(UNCHANGED)) {
       const actual = createHash('sha256').update(readFileSync(resolve(ROOT, file))).digest('hex');
-      assert.strictEqual(actual, expected, `${file} must be byte-unchanged by this unit`);
+      assert.strictEqual(actual, expected, `${file} must be byte-unchanged`);
     }
-    // The placeholder structural routes remain explicitly data-free (no fabrication introduced).
+    // The restored donor structures that remain OUT of scope must still be untouched.
     const app = readFileSync(resolve(ROOT, 'frontend/src/app/App.tsx'), 'utf8');
-    assert.match(app, /No company data is fabricated\./, 'the company placeholder must remain non-fabricating');
-    assert.match(app, /No matrix, scores, or weights are fabricated\./, 'the matrix placeholder must remain non-fabricating');
-    // No surface component for the two in-scope surfaces may exist in this unit.
-    for (const absent of ['frontend/src/features/company/CompanyIntelligence.tsx', 'frontend/src/features/research/SectorIntelligence.tsx']) {
-      assert.strictEqual(existsSync(resolve(ROOT, absent)), false, `${absent} must not exist in this unit (Prompt 3 scope)`);
+    assert.match(app, /No matrix, scores, or weights are fabricated\./, 'the Decision Matrix placeholder must remain non-fabricating');
+    assert.match(app, /No event data is fabricated\./, 'the Events placeholder must remain non-fabricating');
+    assert.match(app, /No cross-sector data is fabricated\./, 'the Cross-Sector placeholder must remain non-fabricating');
+    // Out-of-scope surfaces must still not exist.
+    for (const absent of [
+      'frontend/src/features/decision-matrix/DecisionMatrix.tsx',
+      'frontend/src/features/evidence/EvidenceExplorer.tsx',
+      'frontend/src/features/replay/ReplayExplorer.tsx',
+      'frontend/src/features/research/ResearchEvents.tsx',
+      'frontend/src/features/research/MacroContext.tsx',
+    ]) {
+      assert.strictEqual(existsSync(resolve(ROOT, absent)), false, `${absent} must not exist (out of scope)`);
     }
   });
 });

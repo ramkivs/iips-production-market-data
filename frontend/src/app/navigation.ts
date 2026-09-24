@@ -112,8 +112,13 @@ export const NAV: NavItem[] = [
     minRole: 'viewer',
     status: 'partial',
     children: [
-      { label: 'Company', path: '/research/company/Banking', minRole: 'viewer', status: 'unavailable' },
-      { label: 'Sector', path: '/research/sector/Banking', minRole: 'viewer', status: 'unavailable' },
+      // PROMPT 2C: Company and Sector are now FUNCTIONAL governed SNAPSHOT read surfaces
+      // (mounted at /research/company/:id and /research/sector/:id, composing the four
+      // current-lineage read authorities over HTTP). They are promoted from `unavailable` to
+      // `partial` — NOT `implemented`, because AI Advisory remains deferred (not recovered)
+      // and their E2E-018 parity is only PARTIALLY verified. Never promoted silently.
+      { label: 'Company', path: '/research/company/Banking', minRole: 'viewer', status: 'partial' },
+      { label: 'Sector', path: '/research/sector/Banking', minRole: 'viewer', status: 'partial' },
       { label: 'Events', path: '/research/events/Banking', minRole: 'viewer', status: 'unavailable' },
       { label: 'Cross-Sector', path: '/research/cross-sector', minRole: 'viewer', status: 'unavailable' },
       // F-9: UI06 builder/service binding is restored; the absent governed candidate

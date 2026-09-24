@@ -203,8 +203,10 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
       ['Replay Studio', '/replay', 'future'],
       ['Security Master', '/security-master', 'implemented'],
       ['Research', '/research', 'partial'],
-      ['Company', '/research/company/Banking', 'unavailable'],
-      ['Sector', '/research/sector/Banking', 'unavailable'],
+      // PROMPT 2C (governed update): Company/Sector Intelligence are now FUNCTIONAL governed
+      // SNAPSHOT read surfaces -> 'partial' (never 'implemented': AI Advisory remains deferred).
+      ['Company', '/research/company/Banking', 'partial'],
+      ['Sector', '/research/sector/Banking', 'partial'],
       ['Events', '/research/events/Banking', 'unavailable'],
       ['Cross-Sector', '/research/cross-sector', 'unavailable'],
       ['Macro', '/research/macro', 'unavailable'],
@@ -239,7 +241,10 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
         unavailable: census('unavailable'),
         future: census('future'),
       },
-      { total: 32, implemented: 3, partial: 6, unavailable: 19, future: 4 }
+      // PROMPT 2C (governed update): Company and Sector moved `unavailable` -> `partial`
+      // (two FUNCTIONAL governed SNAPSHOT read surfaces), so partial 6 -> 8 and
+      // unavailable 19 -> 17. Total, implemented and future are UNCHANGED.
+      { total: 32, implemented: 3, partial: 8, unavailable: 17, future: 4 }
     );
   });
 

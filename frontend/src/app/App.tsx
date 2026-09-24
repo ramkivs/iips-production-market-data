@@ -91,6 +91,11 @@ import { ResearchSurface } from '../features/research/ResearchSurface.js';
 // F-9: UI06 Multi-Factor Screener restoration-only binding (F-8 authority act
 // f8-ui06-screener-restoration-2026-09-23-001); payload remains uncommissioned.
 import { MultiFactorScreenerSurface } from '../features/screener/MultiFactorScreenerSurface.js';
+// Prompt 2C (Prompt-2B authorities consumed over HTTP): Company / Sector Intelligence are
+// now FUNCTIONAL governed SNAPSHOT read surfaces mounted at /research/company/:id and
+// /research/sector/:id. No UISurfaceId claimed; AI Advisory remains deferred (not recovered).
+import { CompanyIntelligence } from '../features/company/CompanyIntelligence.js';
+import { SectorIntelligence } from '../features/research/SectorIntelligence.js';
 // F-3: UI08 Security Master FUNCTIONAL surface (authority act
 // f3-ui08-security-master-functional-2026-09-23-001) — governed D05 identity resolution.
 import { SecurityMasterSurface } from '../features/security-master/SecurityMasterSurface.js';
@@ -207,17 +212,26 @@ const authorization = (surface: string, note?: string): React.FC => {
   return C;
 };
 
+/* PROMPT 2C — Company / Sector Intelligence are now FUNCTIONAL governed surfaces.
+ *
+ * `CompanyIntelligence` and `SectorIntelligence` are mounted directly below at
+ * /research/company/:id and /research/sector/:id. They read the four current-lineage SNAPSHOT
+ * read authorities over HTTP (/api/company/:id, /api/evidence/:id, /api/replay/:id,
+ * /api/decision-matrix) — no server module is imported into the browser graph.
+ *
+ * The former `CompanyIntelligenceStructural` / `SectorIntelligenceStructural` fail-closed
+ * factories are therefore REMOVED (a route rendering "unavailable" while its real surface
+ * exists would be a false statement). Their siblings below remain structural: Events,
+ * Cross-Sector and Macro are separate gates and are NOT recovered here.
+ *
+ * No UISurfaceId is claimed by either surface (UI03 remains /research, untouched).
+ *
+ * HONEST SCOPE NOTE: AI Advisory is NOT recovered. Both surfaces render the documented
+ * DEFERRED advisory state (`AdvisoryDeferred`) — no advisory value is fabricated, no auth
+ * tier is reconstructed. Both are navigable as `partial`, never as `implemented`.
+ */
+
 // Donor research children (structure only — no UISurfaceId, no UI03 identity claim).
-const CompanyIntelligenceStructural = structural(
-  'Research — Company',
-  'Company Intelligence requires the platform research services, which are not active offline',
-  'Donor structure: features/company/CompanyIntelligence (API-coupled in the donor lineage). No company data is fabricated.'
-);
-const SectorIntelligenceStructural = structural(
-  'Research — Sector',
-  'Sector Intelligence requires the platform research services, which are not active offline',
-  'Donor structure: features/research/SectorIntelligence (API-coupled in the donor lineage). No sector data is fabricated.'
-);
 const ResearchEventsStructural = structural(
   'Research — Events',
   'Research Events requires the platform research services, which are not active offline',
@@ -363,9 +377,14 @@ export const App: React.FC<AppProps> = ({
         {/* ── PARTIAL (preserved exactly): Research = UI03 at /research ───────────────── */}
         <Route path={ROUTES.research} element={<ResearchSurface />} />
 
-        {/* ── OPTION A — donor research children (structural, fail-closed) ────────────── */}
-        <Route path={ROUTES.researchCompany} element={<CompanyIntelligenceStructural />} />
-        <Route path={ROUTES.researchSector} element={<SectorIntelligenceStructural />} />
+        {/* ── PROMPT 2C — Company / Sector Intelligence (FUNCTIONAL governed SNAPSHOT) ──
+            Both compose the four current-lineage read authorities over HTTP. They render the
+            documented DEFERRED advisory state (AI Advisory is NOT recovered) and claim no
+            UISurfaceId. They fail closed on any transport error and never fabricate a value. */}
+        <Route path={ROUTES.researchCompany} element={<CompanyIntelligence />} />
+        <Route path={ROUTES.researchSector} element={<SectorIntelligence />} />
+
+        {/* ── OPTION A — remaining donor research children (structural, fail-closed) ──── */}
         <Route path={ROUTES.researchEvents} element={<ResearchEventsStructural />} />
         <Route path={ROUTES.researchCrossSector} element={<CrossSectorStructural />} />
         {/* D91/D88: macro EXCLUDED — structural route renders the excluded state. */}

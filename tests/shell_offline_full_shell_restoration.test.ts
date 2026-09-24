@@ -140,15 +140,16 @@ describe('Option A: donor route structure restored (inventory)', () => {
     const admin = NAV.find((n) => n.label === 'Administration');
     assert.strictEqual(admin?.children?.length, 8, 'Administration 8 donor tabs restored');
 
-    // Status census across all 32 items after the bounded F-9 UI06 amendment:
-    // 3 implemented, 6 partial, 19 unavailable, 4 future. Only Screener changes
-    // unavailable -> partial; totals and every unrelated entry remain unchanged.
+    // Status census across all 32 items after the bounded F-9 UI06 amendment and the
+    // PROMPT 2C Company/Sector recovery: 3 implemented, 8 partial, 17 unavailable, 4 future.
+    // Prompt 2C moved ONLY Company and Sector from unavailable -> partial (two FUNCTIONAL
+    // governed SNAPSHOT read surfaces). The total and every unrelated entry are UNCHANGED.
     const all = NAV.flatMap((n) => [n, ...(n.children ?? [])]);
     assert.strictEqual(all.length, 32, 'total nav items');
     const census = (s: string): number => all.filter((i) => i.status === s).length;
     assert.strictEqual(census('implemented'), 3, 'implemented: Portfolio + Overview + Security Master (F-3)');
-    assert.strictEqual(census('partial'), 6, 'partial: existing 5 + Screener (F-9 UI06 binding)');
-    assert.strictEqual(census('unavailable'), 19, 'unavailable: prior 20 less Screener only');
+    assert.strictEqual(census('partial'), 8, 'partial: prior 6 + Company + Sector (Prompt 2C)');
+    assert.strictEqual(census('unavailable'), 17, 'unavailable: prior 19 less Company and Sector');
     assert.strictEqual(census('future'), 4, 'future: Replay + Opportunities/Risks/Rankings');
   });
 });
@@ -182,8 +183,13 @@ describe('Option A: restored structural surfaces render honest fail-closed state
     ['/search', 'Global Search'],
     // /screener is the separately tested F-9 UI06 partial surface.
     ['/screener/governed', 'Screener — Governed'],
-    ['/research/company/Banking', 'Company'],
-    ['/research/sector/Banking', 'Sector'],
+    // PROMPT 2C (governed update): /research/company/:id and /research/sector/:id are NO LONGER
+    // structural fail-closed routes. Company Intelligence and Sector Intelligence are now
+    // FUNCTIONAL governed SNAPSHOT read surfaces composing the four current-lineage read
+    // authorities over HTTP, so they are removed from this list — a route still rendering
+    // "service not active" while its real surface exists would be a false statement. Their
+    // recoveries are covered by research_sector_ui_recovery.test.ts and
+    // research_sector_parity.test.ts. The remaining entries below are unchanged.
     ['/research/events/Banking', 'Events'],
     ['/research/cross-sector', 'Cross-Sector'],
     ['/intelligence/decision-matrix', 'Decision Matrix'],
@@ -404,10 +410,16 @@ describe('Option A: offline boundary (no server / auth / api / network in the sh
 
   it('OPTA-11: App.tsx does not import unrecovered donor API-coupled feature components', () => {
     const appSrc = stripComments(readFileSync(join(APP_DIR, 'App.tsx'), 'utf8'));
+    // PROMPT 2C (governed update): 'CompanyIntelligence' and 'SectorIntelligence' were removed
+    // from this exclusion list. Those two surfaces ARE recovered and ARE mounted at
+    // /research/company/:id and /research/sector/:id; they read the four current-lineage
+    // SNAPSHOT read authorities over HTTP and import no server module into the browser graph
+    // (asserted in research_sector_ui_recovery.test.ts). Every other donor component below
+    // remains forbidden — this gate recovered nothing else.
     const donorComponents = [
       'DecisionMatrix', 'Administration', 'GovernedSearch',
       'Screener', 'MacroContext', 'Collaboration', 'Reports', 'Watchlists', 'Settings',
-      'EvidenceExplorer', 'ReplayExplorer', 'CompanyIntelligence', 'SectorIntelligence',
+      'EvidenceExplorer', 'ReplayExplorer',
       'ResearchEvents', 'CrossSectorIntelligence', 'ResearchHub', 'IntelligenceHub',
       'EvidenceHub', 'CommandPalette', 'NotificationDrawer', 'NotesDrawer',
     ];
