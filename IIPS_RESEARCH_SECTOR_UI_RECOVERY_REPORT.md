@@ -30,35 +30,40 @@ The sandbox had re-provisioned to `da43051`; recovery was
 | Item | Value |
 | --- | --- |
 | Implementation commit (surfaces, clients, suites, guard amendments) | `e02bf0600a3d865a27556c8ffe355a225470c1fa` |
-| Report commit 1 (pushed) | `6b2f66d0a92d99c2fb8053e88a508a07ae26b248` |
-| Report commit 2 (pushed) | `253ef9e64ad9392f1f7932cb50330372df77b815` |
-| **Final HEAD** — report-only commit, branch tip == remote tip | the **direct child** of `253ef9e64ad9392f1f7932cb50330372df77b815`, subject `Prompt 2C: report self-reference correction (final) — Research & Sector Intelligence UI recovery` |
+| Report-only commit 1 (pushed) | `6b2f66d0a92d99c2fb8053e88a508a07ae26b248` |
+| Report-only commit 2 (pushed) | `253ef9e64ad9392f1f7932cb50330372df77b815` |
+| Report-only commit 3 (pushed) | `c95fe2dbb468f1d2303c304716463a1e885b9b4f` |
+| **Final HEAD** — report-only commit, branch tip == remote tip | the **direct child** of `c95fe2dbb468f1d2303c304716463a1e885b9b4f`, subject `Prompt 2C: report wording correction (final) — Research & Sector Intelligence UI recovery` |
 | Exact tip id | `git rev-parse HEAD`, verified in §4 identical to `git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data` after the final push |
-| Delta of the final HEAD | **this report file only** — `git diff 253ef9e..HEAD` lists exactly one file |
+| Delta of the final HEAD | **this report file only** — `git diff c95fe2d..HEAD` lists exactly one file |
 
 **Why the tip id is stated as a verification pair rather than a literal.** A Git object id is the hash
 of the object's content, so a commit cannot contain its own id: an embedded literal would have to be a
-SHA-1 fixed point of the commit object, which no commit satisfies. Every id printed above is therefore
-a *stable, non-self-referential* one — two implementation/report ancestors that are already pushed and
-remotely resolvable — and the tip is pinned exactly by them: it is the unique commit whose parent is
-`253ef9e64ad9392f1f7932cb50330372df77b815`, whose subject is the line quoted above, and whose id `git rev-parse HEAD` (local) and
-`git ls-remote` (remote) both resolve to. No stale id is reported.
+SHA-1 fixed point of the commit object, which no commit satisfies. Every id printed above is therefore a
+*stable, non-self-referential* one — the implementation commit and its three pushed report ancestors,
+all remotely resolvable — and the tip is pinned exactly by them: it is the unique commit whose parent is
+`c95fe2dbb468f1d2303c304716463a1e885b9b4f`, whose subject is the line quoted above, and whose id `git rev-parse HEAD` (local) and
+`git ls-remote` (remote) both resolve to. No stale id is reported, and no id quoted in this report
+depends on an object that a reader of the remote cannot fetch.
 
-**Why there are three commits.** The first report commit (`6b2f66d`) quoted, as its tip reference, the object
-id of its own pre-`--amend` content — an object that was never pushed and that a reader of the remote
-therefore could not resolve. Correcting that in place would have required rewriting published history
-with a force-push, which is **not authorised** for this gate. The unit therefore appended report-only
-commits instead of rewriting: the durability chain reads strictly forwards,
-`e02bf06` (implementation) → `6b2f66d` → `253ef9e` (this correction's parent) → final HEAD (this
-commit). No branch, tag or history object was rewritten, no force-push was used, and the push was a
-fast-forward in every step.
+**Why there is one implementation commit and four report-only commits — without any history rewrite.**
+The unit is one logical unit of work: all source, test and guard changes live in the single
+implementation commit `e02bf06`, and the report was then finalized in report-only commits. The first of those
+(`6b2f66d`) quoted, as its tip reference, the object id of its own pre-`--amend` content — an object never
+pushed, hence unresolvable for a reader of the remote. Correcting that in place would have required
+rewriting published history with a force-push, which is **not authorised** for this gate, so the
+correction was appended instead: `6b2f66d` → `253ef9e` replaced the unpushed reference with pushed literals, and
+`c95fe2d` corrected a wording error in that note ("three commits" → one implementation commit plus the
+report-only commits). The durability chain therefore reads strictly forwards —
+`e02bf06` (implementation) → `6b2f66d` → `253ef9e` → `c95fe2d` → final HEAD (this commit) — with a
+**fast-forward, non-force push at every step**; no branch, tag or history object was rewritten.
 
 ## 3. Remote HEAD
 
 `git ls-remote origin refs/heads/arena/01a0d1d3-iips-production-market-data` was read immediately after
 the final push and returned the tip id — the report-only commit identified in §2 as the direct child of
-`253ef9e64ad9392f1f7932cb50330372df77b815`. Local `git rev-parse HEAD` returned the identical value at the same moment, which is the §4
-check. The remote tip is the commit that contains this document, pushed with
+`c95fe2dbb468f1d2303c304716463a1e885b9b4f`. Local `git rev-parse HEAD` returned the identical value at the same moment, which is the §4 check.
+The remote tip is the commit that contains this document, pushed with
 `git push origin HEAD:arena/01a0d1d3-iips-production-market-data` (non-force, fast-forward).
 
 ## 4. LOCAL == REMOTE
@@ -69,9 +74,9 @@ after the final push and returned the identical object id. The final commit of t
 report-only commit that contains this file (it modifies nothing but this document).
 
 **Self-reference note.** Because a Git object id hashes its own content, no commit can contain its own
-id. §2 consequently quotes only stable, remotely resolvable ids (the implementation commit and its two
+id. §2 consequently quotes only stable, remotely resolvable ids (the implementation commit and its
 pushed report ancestors) and pins the live tip by parent, subject and the verification pair above.
-`git diff 253ef9e..HEAD` shows exactly one file changed: this report. The workspace is clean at the tip.
+`git diff c95fe2d..HEAD` shows exactly one file changed: this report. The workspace is clean at the tip.
 
 ## 5. Workspace status
 
