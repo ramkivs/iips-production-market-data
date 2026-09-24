@@ -119,11 +119,15 @@ describe('WUI-RS-05A — Vite dev/acceptance proxy', () => {
   const cfgCode = stripComments(cfg);
 
   it('T-04: vite.config.ts proxies /api to http://127.0.0.1:8788 under `server` only', () => {
-    assert.match(cfgCode, /server:\s*\{[\s\S]*proxy:\s*\{\s*'\/api':\s*\{\s*target:\s*'http:\/\/127\.0\.0\.1:8788',?\s*\},?\s*\}/);
+    // R-1 supersedes the single-rule shape: exactly one Executive rule (→ 8787, see
+    // tests/r1_executive_dev_topology.test.ts) may precede the generic rule; the generic
+    // `/api` → 8788 rule itself is unchanged and remains the LAST (catch-all) entry.
+    assert.match(cfgCode, /server:\s*\{[\s\S]*proxy:\s*\{[\s\S]*'\/api':\s*\{\s*target:\s*'http:\/\/127\.0\.0\.1:8788',?\s*\},?\s*\}/);
     assert.strictEqual((cfgCode.match(/proxy:/g) ?? []).length, 1, 'exactly one proxy block');
     assert.strictEqual(/preview\s*:/.test(cfgCode), false, 'no preview (production-like) proxy');
     assert.strictEqual(/rewrite|changeOrigin|Access-Control|cors/i.test(cfgCode), false, 'no rewrite/CORS semantics');
-    assert.strictEqual((cfgCode.match(/https?:\/\//g) ?? []).length, 1, 'the only target is the loopback authority');
+    assert.deepStrictEqual((cfgCode.match(/https?:\/\/[^'"]+/g) ?? []).sort(),
+      ['http://127.0.0.1:8787', 'http://127.0.0.1:8788'], 'the only targets are the two loopback authorities (R-1 Executive + 05A Research/Sector)');
     assert.match(cfg, /DEV\/ACCEPTANCE-ONLY/, 'the proxy is explicitly labelled dev/acceptance-only');
   });
 

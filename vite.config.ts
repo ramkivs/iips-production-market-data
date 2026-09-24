@@ -18,7 +18,16 @@ export default defineConfig({
     // `server.proxy` is not part of `vite build` output and is deliberately NOT mirrored into
     // `preview`: this is not a production reverse proxy, adds no CORS, rewrites no path, and
     // changes no API contract or browser base URL.
+    //
+    // R-1 — DEV/ACCEPTANCE-ONLY Executive rule (NON-PRODUCTION). `/api/executive` (exact path,
+    // optional query) is forwarded to the EXISTING Executive authority started on loopback by
+    // `npm run dev:executive` (frontend/server/executive-dev-server.ts, port 8787). Vite applies
+    // the FIRST matching key in declaration order, so this rule MUST stay above the generic
+    // `/api` rule; every other `/api/...` path (incl. `/api/executive-*`) still goes to 8788.
     proxy: {
+      '^/api/executive(?:\\?.*)?$': {
+        target: 'http://127.0.0.1:8787',
+      },
       '/api': {
         target: 'http://127.0.0.1:8788',
       },
