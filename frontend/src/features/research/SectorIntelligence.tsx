@@ -70,17 +70,17 @@ export function SectorIntelligenceView({
   const freshness = company.provenance.freshness;
 
   return (
-    <section aria-label="Sector information">
-      <header style={{ marginBottom: 20 }}>
+    <section className="app-surface" aria-label="Sector information">
+      <header className="app-surface__header">
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-          <h1 style={{ fontSize: 24, margin: 0 }}>{company.sector}</h1>
+          <h1 className="app-surface__title" style={{ margin: 0 }}>{company.sector}</h1>
           <CertifiedBadge />
           <FreshnessBadge state={freshness === 'SNAPSHOT' ? 'snapshot' : 'live'} />
         </div>
-        <p style={{ color: 'var(--color-ink-secondary)', margin: '8px 0 0', fontSize: 13 }}>
+        <p className="app-surface__meta" style={{ margin: '8px 0 0' }}>
           Engine: {evidence.evidence.engineId} · calibration {evidence.evidence.calibrationVersion}
         </p>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginTop: 8 }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
           <DecisionBadge verdict={company.decision.verdict} />
           <span data-testid="sector-composite">Composite: {company.decision.composite}</span>
           <span data-testid="sector-confidence">
@@ -107,7 +107,7 @@ export function SectorIntelligenceView({
               aria-label="Select sector"
               value={selectedSector}
               onChange={(e) => onSelectSector(e.target.value)}
-              style={{ padding: '4px 8px', border: '1px solid var(--color-border)', borderRadius: 4, background: 'var(--color-surface-0)' }}
+              style={{ padding: '4px 8px' }}
             >
               {sectors.map((s) => (
                 <option key={s.sector} value={s.sector}>{s.sector}</option>
@@ -118,7 +118,7 @@ export function SectorIntelligenceView({
       </div>
 
       {/* S1: certified pillars (company payload); null-honest where the engine lacks them */}
-      <h2 style={{ fontSize: 18, marginTop: 24 }}>Certified Pillars</h2>
+      <h2 className="app-surface__block app-surface__subtitle">Certified Pillars</h2>
       {pillarEntries ? (
         <MetricGroup label="Certified pillar scores">
           {pillarEntries.map((p) => (
@@ -126,13 +126,13 @@ export function SectorIntelligenceView({
           ))}
         </MetricGroup>
       ) : (
-        <div data-testid="sector-pillars-unavailable" style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 16, background: 'var(--color-surface-1)' }}>
+        <div data-testid="sector-pillars-unavailable" style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: 16, background: 'var(--color-surface-1)' }}>
           Pillar scores are not exposed by the certified engine for this sector. They are shown as unavailable rather than derived in the frontend.
         </div>
       )}
 
       {/* S1: universe position — decision-matrix row for this sector (null quality/valuation → unavailable) */}
-      <h2 style={{ fontSize: 18, marginTop: 24 }}>Universe Position</h2>
+      <h2 className="app-surface__block app-surface__subtitle">Universe Position</h2>
       {sectorsError ? (
         <p>Universe position unavailable: {sectorsError}</p>
       ) : !sectors ? (
@@ -157,7 +157,7 @@ export function SectorIntelligenceView({
       )}
 
       {/* S1/S2: governed evidence summary — recommendation + key metrics + supporting scores + rules (not the full chain) */}
-      <h2 style={{ fontSize: 18, marginTop: 24 }}>Governed Evidence Summary</h2>
+      <h2 className="app-surface__block app-surface__subtitle">Governed Evidence Summary</h2>
       <p data-testid="sector-recommendation">Recommendation: {evidence.evidence.recommendation}</p>
       {evidence.evidence.keyMetrics.length > 0 && (
         <DataTable
@@ -171,20 +171,20 @@ export function SectorIntelligenceView({
         />
       )}
       {evidence.evidence.supportingScores.length > 0 && (
-        <div data-testid="sector-supporting-scores" style={{ marginTop: 12 }}>
+        <div data-testid="sector-supporting-scores" className="app-surface__meta" style={{ marginTop: 12 }}>
           {evidence.evidence.supportingScores.map((s) => (
             <div key={s.id}>{s.name}: {s.value}</div>
           ))}
         </div>
       )}
       {evidence.evidence.decisionRulesApplied.length > 0 && (
-        <div data-testid="sector-rules-applied" style={{ marginTop: 12 }}>
+        <div data-testid="sector-rules-applied" className="app-surface__note">
           Rules applied: {evidence.evidence.decisionRulesApplied.join(' · ')}
         </div>
       )}
 
       {/* S2: replay-verification summary (no full trust-chain duplication) */}
-      <h2 style={{ fontSize: 18, marginTop: 24 }}>Replay Verification</h2>
+      <h2 className="app-surface__block app-surface__subtitle">Replay Verification</h2>
       {/*
         AD-17 L-5 SAFETY AMENDMENT (bounded). Authority: D57 (commit 9316b54), Decision A.
 
@@ -226,7 +226,7 @@ export function SectorIntelligenceView({
 
       {/* S3: mandatory Sector → Company link (the Company trust chain is the single full-chain authority) */}
       <p style={{ marginTop: 24 }}>
-        <Link data-testid="sector-company-link" to={`/research/company/${company.sector}`}>
+        <Link data-testid="sector-company-link" style={{ color: 'var(--color-ink-secondary)' }} to={`/research/company/${company.sector}`}>
           Open the full company trust chain for {company.sector} (Decision → Evidence → Replay → Provenance)
         </Link>
       </p>
@@ -236,7 +236,7 @@ export function SectorIntelligenceView({
       <AdvisoryDeferred sectorKey={company.sector} />
 
       {/* Provenance footer (1:1) */}
-      <p data-testid="sector-provenance" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, marginTop: 16 }}>
+      <p data-testid="sector-provenance" className="app-surface__provenance">
         {company.provenance.dataSource} · freshness {company.provenance.freshness} · {company.provenance.transportSemantics}
       </p>
     </section>
@@ -281,13 +281,19 @@ export function SectorIntelligence() {
     return () => { active = false; };
   }, []);
 
-  if (loading) return <LoadingState />;
-  if (error) return <ErrorState message={`Unable to load sector data: ${error}`} />;
-  if (!company || !evidence || !replay) return <UnavailableState />;
-  // D89 — any of the three mode-aware routes may return a governed degraded state.
-  if (isDegraded(company)) return <DataModeUnavailable data={company} title="Sector Intelligence" />;
-  if (isDegraded(evidence)) return <DataModeUnavailable data={evidence} title="Sector Intelligence" />;
-  if (isDegraded(replay)) return <DataModeUnavailable data={replay} title="Sector Intelligence" />;
+  // WUI-RS-05D-A (visual only): every loader state renders inside the established
+  // `.app-surface` page container. The fail-closed state logic below is unchanged.
+  const loaderState = ((): JSX.Element | null => {
+    if (loading) return <LoadingState />;
+    if (error) return <ErrorState message={`Unable to load sector data: ${error}`} />;
+    if (!company || !evidence || !replay) return <UnavailableState />;
+    // D89 — any of the three mode-aware routes may return a governed degraded state.
+    if (isDegraded(company)) return <DataModeUnavailable data={company} title="Sector Intelligence" />;
+    if (isDegraded(evidence)) return <DataModeUnavailable data={evidence} title="Sector Intelligence" />;
+    if (isDegraded(replay)) return <DataModeUnavailable data={replay} title="Sector Intelligence" />;
+    return null;
+  })();
+  if (loaderState || !company || !evidence || !replay) return <div className="app-surface">{loaderState}</div>;
 
   return (
     <SectorIntelligenceView

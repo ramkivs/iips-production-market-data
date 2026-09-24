@@ -67,7 +67,7 @@ export function CompanyIntelligenceView({
     : null;
 
   return (
-    <section aria-label="Company intelligence">
+    <section className="app-surface" aria-label="Company intelligence">
       <CompanyHeader
         companyName={`${company.sector} (reference)`}
         sector={company.sector}
@@ -96,7 +96,7 @@ export function CompanyIntelligenceView({
               aria-label="Select sector"
               value={selectedSector}
               onChange={(e) => onSelectSector(e.target.value)}
-              style={{ padding: '4px 8px', border: '1px solid var(--color-border)', borderRadius: 4, background: 'var(--color-surface-0)' }}
+              style={{ padding: '4px 8px' }}
             >
               {sectors.map((s) => (
                 <option key={s.sector} value={s.sector}>{s.sector}</option>
@@ -116,7 +116,7 @@ export function CompanyIntelligenceView({
       )}
 
       {/* Pillars — only where the certified engine exposes them; else unavailable (no fabrication). */}
-      <h2 style={{ fontSize: 18, marginTop: 24 }}>Business Quality / Growth / Valuation / Risk</h2>
+      <h2 className="app-surface__block app-surface__subtitle">Business Quality / Growth / Valuation / Risk</h2>
       {pillarEntries ? (
         <MetricGroup label="Certified pillar scores">
           {pillarEntries.map((p) => (
@@ -124,13 +124,13 @@ export function CompanyIntelligenceView({
           ))}
         </MetricGroup>
       ) : (
-        <div data-testid="pillars-unavailable" style={{ border: '1px solid var(--color-border)', borderRadius: 6, padding: 16, background: 'var(--color-surface-1)' }}>
+        <div data-testid="pillars-unavailable" style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: 16, background: 'var(--color-surface-1)' }}>
           Pillar scores are not exposed by the certified engine for this sector. They are shown as unavailable rather than derived in the frontend.
         </div>
       )}
 
       {/* Certified input metrics (traceable, SNAPSHOT inputs) */}
-      <h2 style={{ fontSize: 18, marginTop: 24 }}>Company Inputs (SNAPSHOT)</h2>
+      <h2 className="app-surface__block app-surface__subtitle">Company Inputs (SNAPSHOT)</h2>
       <DataTable
         columns={[
           { key: 'key', header: 'Metric', render: (r: { key: string }) => r.key },
@@ -141,14 +141,14 @@ export function CompanyIntelligenceView({
       />
 
       {/* N+5: governed trust chain — Decision → Evidence → Replay → Provenance */}
-      <CompanyTrustChain evidence={evidence} replay={replay} />
+      <CompanyTrustChain evidence={evidence} replay={replay} headingClassName="app-surface__block app-surface__subtitle" />
 
       {/* AI Advisory is DEFERRED by authority — the documented deferred state is preserved;
           no advisory value is fabricated and no auth tier is reconstructed. */}
       <AdvisoryDeferred sectorKey={company.sector} />
 
       {/* Provenance */}
-      <p data-testid="company-provenance" style={{ color: 'var(--color-ink-secondary)', fontSize: 12, marginTop: 16 }}>
+      <p data-testid="company-provenance" className="app-surface__provenance">
         {company.provenance.dataSource} · freshness {company.provenance.freshness}
       </p>
     </section>
@@ -198,13 +198,19 @@ export function CompanyIntelligence() {
     return () => { active = false; };
   }, []);
 
-  if (loading) return <LoadingState />;
-  if (error) return <ErrorState message={`Unable to load company data: ${error}`} />;
-  if (!company || !evidence || !replay) return <UnavailableState />;
-  // D89 — any of the three mode-aware routes may return a governed degraded state.
-  if (isDegraded(company)) return <DataModeUnavailable data={company} title="Company Intelligence" />;
-  if (isDegraded(evidence)) return <DataModeUnavailable data={evidence} title="Company Intelligence" />;
-  if (isDegraded(replay)) return <DataModeUnavailable data={replay} title="Company Intelligence" />;
+  // WUI-RS-05D-A (visual only): every loader state renders inside the established
+  // `.app-surface` page container. The fail-closed state logic below is unchanged.
+  const loaderState = ((): JSX.Element | null => {
+    if (loading) return <LoadingState />;
+    if (error) return <ErrorState message={`Unable to load company data: ${error}`} />;
+    if (!company || !evidence || !replay) return <UnavailableState />;
+    // D89 — any of the three mode-aware routes may return a governed degraded state.
+    if (isDegraded(company)) return <DataModeUnavailable data={company} title="Company Intelligence" />;
+    if (isDegraded(evidence)) return <DataModeUnavailable data={evidence} title="Company Intelligence" />;
+    if (isDegraded(replay)) return <DataModeUnavailable data={replay} title="Company Intelligence" />;
+    return null;
+  })();
+  if (loaderState || !company || !evidence || !replay) return <div className="app-surface">{loaderState}</div>;
 
   return (
     <CompanyIntelligenceView

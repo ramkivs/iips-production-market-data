@@ -39,10 +39,10 @@ export function AdvisoryDeferred({ sectorKey }: AdvisoryDeferredProps) {
       data-testid="advisory-deferred"
       aria-label="AI explanation deferred"
       data-sector-key={sectorKey}
-      style={{ marginTop: 24, padding: 16, border: '1px solid var(--color-border)', borderRadius: 6 }}
+      className="app-surface__block"
     >
       <header style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <h2 style={{ margin: 0, fontSize: 16 }}>AI Explanation</h2>
+        <h2 className="app-surface__subtitle" style={{ margin: 0 }}>AI Explanation</h2>
       </header>
       {/*
         The canonical unavailable state — a distinct meaning from failure. No advisory value,

@@ -19,11 +19,23 @@ import { MetricCard, MetricGroup } from '../../components/data/DataComponents.js
 import { Ad17Note } from '../../components/evidence/Ad17Disclosure.js';
 import { EvidenceRecordCard, ProvenanceChain, ReplaySummary, SnapshotMetadataPanel } from '../../components/evidence/EvidenceExplorerComponents.js';
 
-export function CompanyTrustChain({ evidence, replay }: { evidence: EvidenceData; replay: ReplayData }) {
+export function CompanyTrustChain({ evidence, replay, headingClassName }: {
+  evidence: EvidenceData;
+  replay: ReplayData;
+  /**
+   * WUI-RS-05D-A (visual only). When supplied (Company Intelligence), section headings take the
+   * established `.app-surface` subtitle treatment. When omitted (ExecutiveDashboard), the
+   * original inline heading style is rendered unchanged.
+   */
+  headingClassName?: string;
+}) {
+  const headingProps = headingClassName
+    ? { className: headingClassName }
+    : { style: { fontSize: 18, marginTop: 24 } };
   return (
     <>
       {/* --- Evidence: why the certified platform produced this result --- */}
-      <h2 style={{ fontSize: 18, marginTop: 24 }}>Evidence (governed)</h2>
+      <h2 {...headingProps}>Evidence (governed)</h2>
       <MetricGroup label="Supporting metrics (certified)">
         {evidence.evidence.supportingScores.map((s) => (
           <MetricCard key={s.id} label={s.name} value={s.value} />
@@ -31,7 +43,7 @@ export function CompanyTrustChain({ evidence, replay }: { evidence: EvidenceData
       </MetricGroup>
       <EvidenceRecordCard evidence={evidence.evidence} />
 
-      <h2 style={{ fontSize: 18, marginTop: 24 }}>Snapshot &amp; Provenance</h2>
+      <h2 {...headingProps}>Snapshot &amp; Provenance</h2>
       <SnapshotMetadataPanel snapshot={evidence.snapshot} />
       <div style={{ marginTop: 8 }}>
         <ProvenanceChain
@@ -45,7 +57,7 @@ export function CompanyTrustChain({ evidence, replay }: { evidence: EvidenceData
       </div>
 
       {/* --- Replay: can the result be reproduced and independently verified --- */}
-      <h2 style={{ fontSize: 18, marginTop: 24 }}>Replay Verification (governed)</h2>
+      <h2 {...headingProps}>Replay Verification (governed)</h2>
       <ReplaySummary replay={replay.replay} />
       {/*
         ⚠ AD-17 L-5 SAFETY AMENDMENT (bounded). Authority: D57 (commit 9316b54), Decision A.
