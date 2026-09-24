@@ -110,6 +110,10 @@ import { MultiFactorScreenerSurface } from '../features/screener/MultiFactorScre
 // /research/sector/:id. No UISurfaceId claimed; AI Advisory remains deferred (not recovered).
 import { CompanyIntelligence } from '../features/company/CompanyIntelligence.js';
 import { SectorIntelligence } from '../features/research/SectorIntelligence.js';
+// A3 RESEARCH EVENTS RECOVERY: the proven donor Research Events surface (blob d64f58a1) is
+// restored at /research/events/:id, composing ONLY the existing /api/evidence/:sector,
+// /api/replay/:sector and /api/decision-matrix clients over HTTP (no server import).
+import { ResearchEvents } from '../features/research/ResearchEvents.js';
 // DECISION MATRIX work item: the donor Decision Matrix (c3b6e947) restored onto the existing
 // /api/decision-matrix read authority + current-lineage client. HTTP only; no server import.
 import { DecisionMatrix } from '../features/decision-matrix/DecisionMatrix.js';
@@ -240,6 +244,8 @@ const authorization = (surface: string, note?: string): React.FC => {
  * factories are therefore REMOVED (a route rendering "unavailable" while its real surface
  * exists would be a false statement). Their siblings below remain structural: Events,
  * Cross-Sector and Macro are separate gates and are NOT recovered here.
+ * A3 Research Events restoration: Events has since been recovered by its own gate — the
+ * `ResearchEventsStructural` factory is removed and the route mounts the donor surface.
  *
  * No UISurfaceId is claimed by either surface (UI03 remains /research, untouched).
  *
@@ -249,11 +255,6 @@ const authorization = (surface: string, note?: string): React.FC => {
  */
 
 // Donor research children (structure only — no UISurfaceId, no UI03 identity claim).
-const ResearchEventsStructural = structural(
-  'Research — Events',
-  'Research Events requires the platform research services, which are not active offline',
-  'Donor structure: features/research/ResearchEvents (API-coupled in the donor lineage). No event data is fabricated.'
-);
 const CrossSectorStructural = structural(
   'Research — Cross-Sector',
   'Cross-Sector Intelligence requires the platform research services, which are not active offline',
@@ -402,7 +403,7 @@ export const App: React.FC<AppProps> = ({
         <Route path={ROUTES.researchSector} element={<SectorIntelligence />} />
 
         {/* ── OPTION A — remaining donor research children (structural, fail-closed) ──── */}
-        <Route path={ROUTES.researchEvents} element={<ResearchEventsStructural />} />
+        <Route path={ROUTES.researchEvents} element={<ResearchEvents />} />
         <Route path={ROUTES.researchCrossSector} element={<CrossSectorStructural />} />
         {/* D91/D88: macro EXCLUDED — structural route renders the excluded state. */}
         <Route path={ROUTES.researchMacro} element={<MacroStructural />} />

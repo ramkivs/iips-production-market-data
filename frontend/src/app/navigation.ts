@@ -119,7 +119,9 @@ export const NAV: NavItem[] = [
       // and their E2E-018 parity is only PARTIALLY verified. Never promoted silently.
       { label: 'Company', path: '/research/company/Banking', minRole: 'viewer', status: 'partial' },
       { label: 'Sector', path: '/research/sector/Banking', minRole: 'viewer', status: 'partial' },
-      { label: 'Events', path: '/research/events/Banking', minRole: 'viewer', status: 'unavailable' },
+      // A3 Research Events restoration: the donor surface is restored on the existing evidence /
+      // replay / decision-matrix authorities -> `partial` (never `implemented`).
+      { label: 'Events', path: '/research/events/Banking', minRole: 'viewer', status: 'partial' },
       { label: 'Cross-Sector', path: '/research/cross-sector', minRole: 'viewer', status: 'unavailable' },
       // F-9: UI06 builder/service binding is restored; the absent governed candidate
       // universe keeps the navigable surface honestly `partial`, never `implemented`.

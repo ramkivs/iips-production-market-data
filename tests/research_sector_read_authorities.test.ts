@@ -469,15 +469,18 @@ describe('Read authorities — boundaries (browser graph, network, donor infrast
     // DECISION MATRIX work item (governed update): the Decision Matrix placeholder is replaced by
     // the restored surface; the non-fabrication statement is retained on its route record.
     assert.match(app, /No matrix, scores, or weights are fabricated\./, 'the Decision Matrix route record must remain non-fabricating');
-    assert.match(app, /No event data is fabricated\./, 'the Events placeholder must remain non-fabricating');
+    // A3 Research Events restoration (superseded): the Events placeholder is replaced by the restored
+    // donor surface (blob d64f58a1) on the existing authorities; the route must mount it.
+    assert.match(app, /<Route path=\{ROUTES\.researchEvents\} element=\{<ResearchEvents \/>\} \/>/, 'the Events route must mount the restored surface');
     assert.match(app, /No cross-sector data is fabricated\./, 'the Cross-Sector placeholder must remain non-fabricating');
     // Out-of-scope surfaces must still not exist.
     // DECISION MATRIX work item (governed update): DecisionMatrix.tsx is recovered by its own
     // gate and leaves this list; the other out-of-scope surfaces are unchanged.
     // A2 Evidence restoration (superseded): EvidenceExplorer.tsx and ReplayExplorer.tsx are recovered by the A2 gate and
     // leave this absent list. Every other exclusion is unchanged.
+    // A3 Research Events restoration (superseded): ResearchEvents.tsx is recovered by the A3 gate and
+    // leaves this absent list. Every other exclusion is unchanged.
     for (const absent of [
-      'frontend/src/features/research/ResearchEvents.tsx',
       'frontend/src/features/research/MacroContext.tsx',
     ]) {
       assert.strictEqual(existsSync(resolve(ROOT, absent)), false, `${absent} must not exist (out of scope)`);

@@ -207,7 +207,8 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
       // SNAPSHOT read surfaces -> 'partial' (never 'implemented': AI Advisory remains deferred).
       ['Company', '/research/company/Banking', 'partial'],
       ['Sector', '/research/sector/Banking', 'partial'],
-      ['Events', '/research/events/Banking', 'unavailable'],
+      // A3 Research Events restoration (superseded): restored donor surface -> 'partial'.
+      ['Events', '/research/events/Banking', 'partial'],
       ['Cross-Sector', '/research/cross-sector', 'unavailable'],
       ['Macro', '/research/macro', 'unavailable'],
       ['Intelligence', '/intelligence', 'partial'],
@@ -249,7 +250,9 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
       // DECISION MATRIX work item (governed update): ONLY Decision Matrix moved `unavailable` ->
       // `partial`, so partial 8 -> 9 and unavailable 17 -> 16. Total, implemented and future
       // are UNCHANGED.
-      { total: 32, implemented: 3, partial: 9, unavailable: 16, future: 4 }
+      // A3 Research Events restoration (superseded): ONLY Events moved `unavailable` -> `partial`, so
+      // partial 9 -> 10 and unavailable 16 -> 15. Total, implemented and future are UNCHANGED.
+      { total: 32, implemented: 3, partial: 10, unavailable: 15, future: 4 }
     );
   });
 

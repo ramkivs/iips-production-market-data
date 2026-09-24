@@ -432,8 +432,9 @@ describe('Prompt 2C — exclusions held', () => {
     // restored surface. Every other exclusion is unchanged.
     // A2 Evidence restoration (superseded): EvidenceExplorer.tsx and ReplayExplorer.tsx are recovered by the A2 gate and
     // leave this absent list. Every other exclusion is unchanged.
+    // A3 Research Events restoration (superseded): ResearchEvents.tsx is recovered by the A3 gate and
+    // leaves this absent list. Every other exclusion is unchanged.
     for (const absent of [
-      'frontend/src/features/research/ResearchEvents.tsx',
       'frontend/src/features/research/MacroContext.tsx',
       'frontend/src/features/cross-sector/CrossSectorIntelligence.tsx',
     ]) {
