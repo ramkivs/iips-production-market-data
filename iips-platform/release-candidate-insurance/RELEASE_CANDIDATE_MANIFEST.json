@@ -1,0 +1,10 @@
+{
+  "releaseCandidate": "insurance-engine-rc-1.0.0",
+  "version": "1.0.0",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "IES-007 v1.0 (frozen)",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "testCount": 48,
+  "reusesPlatform": "iips-platform unchanged"
+}

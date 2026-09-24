@@ -1,0 +1,37 @@
+{
+  "report": "Insurance Replay Validation",
+  "version": "1.0.0",
+  "deterministic": true,
+  "rows": [
+    {
+      "insurerId": "IN-001",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "insurerId": "IN-002",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "insurerId": "IN-003",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "insurerId": "IN-004",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "insurerId": "IN-005",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    }
+  ]
+}

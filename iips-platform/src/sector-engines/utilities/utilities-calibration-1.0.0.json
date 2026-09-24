@@ -1,0 +1,34 @@
+{
+  "profile": "utilities-calibration-1.0.0",
+  "standard": "IES-012",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "bandScores": {
+    "UM-001-ebitda-margin": [["gt", 45, 90], ["range", 30, 45, 75], ["range", 20, 30, 60], ["lt", 20, 40]],
+    "UM-006-rate-base-growth": [["gt", 8, 90], ["range", 5, 8, 75], ["range", 2, 5, 60], ["lt", 2, 40]],
+    "UM-008-ffo-debt": [["gt", 20, 90], ["range", 15, 20, 75], ["range", 10, 15, 60], ["lt", 10, 40]],
+    "UM-009-om-efficiency": [["lt", 15, 90], ["range", 15, 25, 75], ["range", 25, 35, 60], ["gt", 35, 40]],
+    "UM-011-saidi": [["lt", 100, 90], ["range", 100, 200, 75], ["range", 200, 300, 60], ["gt", 300, 40]],
+    "UM-003-leverage": [["lt", 3, 90], ["range", 3, 4.5, 75], ["range", 4.5, 6, 55], ["gt", 6, 30]]
+  },
+  "segments": {
+    "regulated-electric": { "weights": { "quality": 0.30, "growth": 0.20, "risk": 0.15, "profitability": 0.20, "capitalEfficiency": 0.10, "valuation": 0.05 }, "leverageAlert": 6.0 },
+    "gas-distribution": { "weights": { "quality": 0.30, "growth": 0.15, "risk": 0.15, "profitability": 0.20, "capitalEfficiency": 0.10, "valuation": 0.10 }, "leverageAlert": 5.5 },
+    "water-utilities": { "weights": { "quality": 0.30, "growth": 0.10, "risk": 0.15, "profitability": 0.20, "capitalEfficiency": 0.15, "valuation": 0.10 }, "leverageAlert": 6.0 },
+    "ipp-merchant": { "weights": { "quality": 0.20, "growth": 0.25, "risk": 0.25, "profitability": 0.15, "capitalEfficiency": 0.10, "valuation": 0.05 }, "leverageAlert": 5.0 },
+    "multi-utility": { "weights": { "quality": 0.30, "growth": 0.15, "risk": 0.15, "profitability": 0.20, "capitalEfficiency": 0.10, "valuation": 0.10 }, "leverageAlert": 5.5 }
+  },
+  "regulatoryPostureRisk": {
+    "constructive": 0.8,
+    "neutral": 1.0,
+    "adversarial": 1.2
+  },
+  "verdictMapping": [
+    { "min": 80, "max": 100, "verdict": "Strong Buy" },
+    { "min": 70, "max": 80, "verdict": "Buy" },
+    { "min": 60, "max": 70, "verdict": "Accumulate" },
+    { "min": 50, "max": 60, "verdict": "Hold" },
+    { "min": 40, "max": 50, "verdict": "Watch" },
+    { "min": 0, "max": 40, "verdict": "Avoid" }
+  ]
+}

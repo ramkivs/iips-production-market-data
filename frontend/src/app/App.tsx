@@ -84,7 +84,7 @@ import { IntelligenceSurface } from '../features/intelligence/IntelligenceSurfac
 // Phase-2 Path-L: Evidence presentation-only surface (authority act phase2-evidence-presentation-only-2026-09-22-001).
 import { EvidenceSurface } from '../features/evidence/EvidenceSurface.js';
 // Phase-3 Path-L: Executive presentation-only surface (authority act phase3-executive-presentation-only-2026-09-22-001).
-import { ExecutiveSurface } from '../features/executive/ExecutiveSurface.js';
+import { ExecutiveSurface, ExecutiveDashboard } from '../features/executive/index.js';
 // Phase-4 Path-L: Research (UI03 Fundamental Analysis) presentation-only surface
 // (authority acts phase4-research-identity-designation-2026-09-23-001 + phase4-research-ui03-presentation-only-2026-09-23-001).
 import { ResearchSurface } from '../features/research/ResearchSurface.js';
@@ -345,10 +345,8 @@ export const App: React.FC<AppProps> = ({
           }
         />
 
-        {/* ── PARTIAL (preserved exactly): Executive = UI02 company-level ─────────────── */}
-        {/* The donor portfolio-level ExecutiveDashboard is NOT mounted; the granularity
-            conflict is NOT resolved by Option A and no portfolio-level data is fabricated. */}
-        <Route path={ROUTES.executive} element={<ExecutiveSurface />} />
+        {/* ── IMPLEMENTED (Controlled Recovery Gate): Certified Executive Dashboard ─── */}
+        <Route path={ROUTES.executive} element={<ExecutiveDashboard />} />
 
         {/* ── Current-base declared surfaces (no donor lineage) ───────────────────────── */}
         <Route path={ROUTES.replay} element={<FeaturePlaceholder surface="Replay Studio" />} />

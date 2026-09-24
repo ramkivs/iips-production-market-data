@@ -1,0 +1,38 @@
+{
+  "profile": "consumer-calibration-1.0.0",
+  "standard": "IES-013",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "bandScores": {
+    "CM-001-ebitda-margin": [["gt", 25, 90], ["range", 15, 25, 75], ["range", 8, 15, 60], ["lt", 8, 40]],
+    "CM-002-revenue-growth": [["gt", 10, 90], ["range", 5, 10, 75], ["range", 2, 5, 60], ["lt", 2, 40]],
+    "CM-006-pricing-power": [["gt", 70, 90], ["range", 50, 70, 75], ["range", 30, 50, 60], ["lt", 30, 40]],
+    "CM-007-brand-loyalty": [["gt", 80, 90], ["range", 60, 80, 75], ["range", 40, 60, 60], ["lt", 40, 40]],
+    "CM-008-margin-resilience": [["gt", 0.8, 90], ["range", 0.6, 0.8, 75], ["range", 0.4, 0.6, 60], ["lt", 0.4, 40]],
+    "CM-003-leverage": [["lt", 1.5, 90], ["range", 1.5, 2.5, 75], ["range", 2.5, 3.5, 55], ["gt", 3.5, 30]]
+  },
+  "segments": {
+    "staples": { "weights": { "quality": 0.35, "growth": 0.15, "risk": 0.15, "profitability": 0.20, "capitalEfficiency": 0.10, "valuation": 0.05 }, "leverageAlert": 3.5 },
+    "discretionary": { "weights": { "quality": 0.25, "growth": 0.25, "risk": 0.20, "profitability": 0.15, "capitalEfficiency": 0.10, "valuation": 0.05 }, "leverageAlert": 3.0 },
+    "luxury": { "weights": { "quality": 0.35, "growth": 0.15, "risk": 0.15, "profitability": 0.20, "capitalEfficiency": 0.10, "valuation": 0.05 }, "leverageAlert": 3.0 },
+    "retailer": { "weights": { "quality": 0.25, "growth": 0.20, "risk": 0.20, "profitability": 0.20, "capitalEfficiency": 0.10, "valuation": 0.05 }, "leverageAlert": 3.0 },
+    "restaurant": { "weights": { "quality": 0.25, "growth": 0.20, "risk": 0.20, "profitability": 0.20, "capitalEfficiency": 0.10, "valuation": 0.05 }, "leverageAlert": 3.5 },
+    "dtc": { "weights": { "quality": 0.30, "growth": 0.25, "risk": 0.15, "profitability": 0.15, "capitalEfficiency": 0.10, "valuation": 0.05 }, "leverageAlert": 3.5 }
+  },
+  "demandDurabilityRisk": {
+    "staples": 0.8,
+    "luxury": 1.0,
+    "discretionary": 1.2,
+    "retailer": 1.0,
+    "restaurant": 1.0,
+    "dtc": 1.0
+  },
+  "verdictMapping": [
+    { "min": 80, "max": 100, "verdict": "Strong Buy" },
+    { "min": 70, "max": 80, "verdict": "Buy" },
+    { "min": 60, "max": 70, "verdict": "Accumulate" },
+    { "min": 50, "max": 60, "verdict": "Hold" },
+    { "min": 40, "max": 50, "verdict": "Watch" },
+    { "min": 0, "max": 40, "verdict": "Avoid" }
+  ]
+}

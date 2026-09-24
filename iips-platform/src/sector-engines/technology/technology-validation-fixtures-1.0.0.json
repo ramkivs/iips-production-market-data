@@ -1,0 +1,63 @@
+{
+  "fixtures": "technology-validation-fixtures-1.0.0",
+  "standard": "IES-015",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "contractVersion": "IES-015 v1.3 (D15 normative)",
+  "note": "Expected behavior per scenario. Every subsegment, archetype, calibration path, override path, and the D15 §6a contract-hardening operators are exercised deterministically. Composites/verdicts correspond to technology-expected-outputs-1.0.0.json.",
+  "scenarios": [
+    { "id": "TEC-01", "provider": "TE-001", "scenario": "SaaS leader - calibrated TM-007 override (NRR 118 -> calibrated 75 vs baseline 90)", "subsegment": "software-saas", "archetype": "subscription", "expectedVerdict": "Buy", "composite": 76.3 },
+    { "id": "TEC-02", "provider": "TE-002", "scenario": "IT services - baseline fallback + missing primitive TM-010 (renormalization)", "subsegment": "it-services", "archetype": "services-project", "expectedVerdict": "Accumulate", "composite": 67.3 },
+    { "id": "TEC-03", "provider": "TE-003", "scenario": "Semiconductor foundry - calibrated TM-008 + TM-011 boundaries AND scores together", "subsegment": "semiconductors", "archetype": "foundry-manufacturing", "expectedVerdict": "Buy", "composite": 76.4 },
+    { "id": "TEC-04", "provider": "TE-004", "scenario": "Electronics hardware - baseline fallback, hardware risk 1.2x, no override (debt 2.4 < alert 2.5)", "subsegment": "electronics-hardware", "archetype": "hardware", "expectedVerdict": "Accumulate", "composite": 67.7 },
+    { "id": "TEC-05", "provider": "TE-005", "scenario": "Digital marketplace - calibrated TM-006 (recurring 78 -> calibrated 75 vs baseline 90)", "subsegment": "digital-platforms", "archetype": "transaction-platform", "expectedVerdict": "Strong Buy", "composite": 80.5 },
+    { "id": "TEC-06", "provider": "TE-006", "scenario": "Consumer internet - SIMULTANEOUS overrides (leverage-breach + margin-compression) -> Watch", "subsegment": "internet-consumer-tech", "archetype": "usage-based", "expectedVerdict": "Watch", "composite": 63.4 },
+    { "id": "TEC-07", "provider": "TE-007", "scenario": "Cybersecurity - TM-009 3-band terminal boundary (R&D 10 -> 75, terminal includes upper bound)", "subsegment": "cybersecurity", "archetype": "license", "expectedVerdict": "Strong Buy", "composite": 84.0 },
+    { "id": "TEC-08", "provider": "TE-008", "scenario": "Data infrastructure - missing primitives TM-008 + TM-011 (multi-pillar renormalization)", "subsegment": "data-infrastructure", "archetype": "managed-services", "expectedVerdict": "Accumulate", "composite": 67.8 },
+    { "id": "TEC-09", "provider": "TE-009", "scenario": "Tech-enabled services - HYBRID archetype resolved via hybridDominant (managed-services)", "subsegment": "tech-enabled-services", "archetype": "managed-services", "expectedVerdict": "Accumulate", "composite": 63.7 },
+    { "id": "TEC-10", "provider": "TE-010", "scenario": "MULTI-SUBSEGMENT with dominant (digital-platforms dominant over software-saas)", "subsegment": "digital-platforms", "archetype": "subscription", "expectedVerdict": "Buy", "composite": 78.0 },
+    { "id": "TEC-11", "provider": "TE-011", "scenario": "MULTI-SUBSEGMENT no dominant -> most conservative risk profile (digital-platforms, highest leverageAlert 3.5)", "subsegment": "digital-platforms", "archetype": "usage-based", "expectedVerdict": "Buy", "composite": 70.9 },
+    { "id": "TEC-12", "provider": "TE-012", "scenario": "ROUNDING - raw composite 49.25 -> round-half-to-even 49.2 (not 49.3)", "subsegment": "it-services", "archetype": "license", "expectedVerdict": "Watch", "composite": 49.2 },
+    { "id": "TEC-13", "provider": "TE-013", "scenario": "Governance override -> Avoid (min_rank over Watch base + leverage-breach)", "subsegment": "software-saas", "archetype": "subscription", "expectedVerdict": "Avoid", "composite": 40.1 },
+    {
+      "id": "TEC-14", "provider": null,
+      "scenario": "Attempted invalid band cardinality - a calibrated TM-009 table with 4 bands is a defect and is REJECTED; the 3-band baseline applies (D15 §6a.2)",
+      "check": "band_cardinality_ok('TM-009', 4-band table) == False; effective table falls back to baseline (3 bands)"
+    },
+    {
+      "id": "TEC-15", "provider": null,
+      "scenario": "Conservative conflicting band tables (higher-better) - elementwise max boundaries + min scores (D15 §6a.3.1)",
+      "check": "conservative_band_table([[(10,40),(20,60),(30,75),(inf,90)], [(15,45),(25,65),(40,85),(inf,95)]], 'TM-001') == [(15,40),(25,60),(40,75),(inf,90)]"
+    },
+    {
+      "id": "TEC-16", "provider": null,
+      "scenario": "Higher-better conservative SCORE resolution - lower score wins (composite-lowering)",
+      "check": "same boundaries, scores 75 vs 80 -> merged score 75"
+    },
+    {
+      "id": "TEC-17", "provider": null,
+      "scenario": "Lower-better conservative SCORE resolution - lower score wins (composite-lowering, NOT the metric-scaled asymmetry)",
+      "check": "Debt/EBITDA tables scores 90/75/55/30 vs 85/65/45/20 -> merged scores 85/65/45/20"
+    },
+    {
+      "id": "TEC-18", "provider": null,
+      "scenario": "Conflicting complete tables -> deterministic result (repeatable)",
+      "check": "conservative_band_table applied twice -> identical merged table"
+    },
+    {
+      "id": "TEC-19", "provider": null,
+      "scenario": "Hybrid conflict -> deterministic result",
+      "check": "conservativeBandTable() resolves conflicting Hybrid candidate tables deterministically"
+    },
+    {
+      "id": "TEC-20", "provider": null,
+      "scenario": "Multi-subsegment conflict -> deterministic result",
+      "check": "conservativeBandTable() resolves conflicting multi-subsegment candidate tables deterministically"
+    },
+    {
+      "id": "TEC-21", "provider": null,
+      "scenario": "Missing derived components - Technology defines NO named derived components in D08; the D15 §5.2 rule is exercised via missing-primitive renormalization within multi-constituent pillars (TEC-02, TEC-08)",
+      "check": "renormalization over available constituents; all-unavailable constituent -> 0 + parent renormalizes"
+    }
+  ]
+}

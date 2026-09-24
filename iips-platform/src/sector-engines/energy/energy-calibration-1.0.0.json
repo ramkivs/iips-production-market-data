@@ -1,0 +1,37 @@
+{
+  "profile": "energy-calibration-1.0.0",
+  "standard": "IES-011",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "bandScores": {
+    "EM-001-ebitda-margin": [["gt", 40, 90], ["range", 25, 40, 75], ["range", 15, 25, 60], ["lt", 15, 40]],
+    "EM-006-production-growth": [["gt", 10, 90], ["range", 5, 10, 75], ["range", 0, 5, 60], ["lt", 0, 40]],
+    "EM-007-lifting-cost": [["lt", 20, 90], ["range", 20, 35, 75], ["range", 35, 50, 60], ["gt", 50, 40]],
+    "EM-008-reserve-replacement": [["gt", 1.2, 90], ["range", 1.0, 1.2, 75], ["range", 0.8, 1.0, 60], ["lt", 0.8, 40]],
+    "EM-003-leverage": [["lt", 1.5, 90], ["range", 1.5, 2.5, 75], ["range", 2.5, 3.5, 55], ["gt", 3.5, 30]],
+    "EM-011-transition-mix": [["gt", 40, 90], ["range", 20, 40, 75], ["range", 10, 20, 60], ["lt", 10, 40]]
+  },
+  "segments": {
+    "integrated": { "weights": { "quality": 0.25, "growth": 0.15, "risk": 0.15, "profitability": 0.20, "capitalEfficiency": 0.10, "valuation": 0.15 }, "leverageAlert": 3.5 },
+    "upstream": { "weights": { "quality": 0.30, "growth": 0.15, "risk": 0.20, "profitability": 0.15, "capitalEfficiency": 0.10, "valuation": 0.10 }, "leverageAlert": 3.0 },
+    "midstream": { "weights": { "quality": 0.20, "growth": 0.15, "risk": 0.15, "profitability": 0.20, "capitalEfficiency": 0.15, "valuation": 0.15 }, "leverageAlert": 4.0 },
+    "downstream": { "weights": { "quality": 0.20, "growth": 0.15, "risk": 0.20, "profitability": 0.25, "capitalEfficiency": 0.10, "valuation": 0.10 }, "leverageAlert": 3.0 },
+    "renewables": { "weights": { "quality": 0.20, "growth": 0.30, "risk": 0.10, "profitability": 0.15, "capitalEfficiency": 0.15, "valuation": 0.10 }, "leverageAlert": 4.0 },
+    "utility": { "weights": { "quality": 0.20, "growth": 0.10, "risk": 0.10, "profitability": 0.25, "capitalEfficiency": 0.20, "valuation": 0.15 }, "leverageAlert": 4.5 }
+  },
+  "commodityExposureRisk": {
+    "price-taker": 1.2,
+    "partial-hedger": 1.0,
+    "contracted-revenue": 0.8,
+    "regulated-return": 0.7,
+    "diversified": 1.0
+  },
+  "verdictMapping": [
+    { "min": 80, "max": 100, "verdict": "Strong Buy" },
+    { "min": 70, "max": 80, "verdict": "Buy" },
+    { "min": 60, "max": 70, "verdict": "Accumulate" },
+    { "min": 50, "max": 60, "verdict": "Hold" },
+    { "min": 40, "max": 50, "verdict": "Watch" },
+    { "min": 0, "max": 40, "verdict": "Avoid" }
+  ]
+}

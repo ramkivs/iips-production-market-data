@@ -1,0 +1,18 @@
+{
+  "fixtures": "energy-validation-fixtures-1.0.0",
+  "standard": "IES-011",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "note": "Expected behavior per scenario — every segment, commodity environment, calibration and override path exercised. Deterministic.",
+  "scenarios": [
+    { "id": "ENER-01", "provider": "EN-001", "scenario": "Integrated Major", "segment": "integrated", "expectedVerdict": "Accumulate", "composite": 66.9 },
+    { "id": "ENER-02", "provider": "EN-002", "scenario": "Upstream E&P (low-cost)", "segment": "upstream", "expectedVerdict": "Buy", "composite": 76.4 },
+    { "id": "ENER-03", "provider": "EN-003", "scenario": "Midstream (contracted)", "segment": "midstream", "expectedVerdict": "Accumulate", "composite": 66.0 },
+    { "id": "ENER-04", "provider": "EN-004", "scenario": "Downstream Refiner", "segment": "downstream", "expectedVerdict": "Accumulate", "composite": 65.8 },
+    { "id": "ENER-05", "provider": "EN-005", "scenario": "Renewables Developer", "segment": "renewables", "expectedVerdict": "Buy", "composite": 73.4 },
+    { "id": "ENER-06", "provider": "EN-006", "scenario": "Regulated Utility", "segment": "utility", "expectedVerdict": "Accumulate", "composite": 62.7 },
+    { "id": "ENER-07", "provider": "EN-007", "scenario": "Oil crash", "segment": "upstream", "expectedVerdict": "Watch", "composite": 42.5, "override": ["price-collapse", "leverage-alert"] },
+    { "id": "ENER-08", "provider": "EN-008", "scenario": "Reserve write-down", "segment": "upstream", "expectedVerdict": "Watch", "composite": 50.3, "override": ["reserve-write-down", "leverage-alert"] },
+    { "id": "ENER-09", "provider": "EN-009", "scenario": "Stranded asset (utility)", "segment": "utility", "expectedVerdict": "Watch", "composite": 60.8, "override": ["stranded-asset"] }
+  ]
+}

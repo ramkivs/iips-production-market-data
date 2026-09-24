@@ -1,0 +1,33 @@
+{
+  "dataset": "materials-metals-validation-fixtures-1.0.0",
+  "standard": "IES-020",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-020 v1.0 (D20 normative)",
+  "purpose": "Contract-test fixtures: the 13 golden-reference providers plus two edge-case providers (MM-014 missing-primitive renormalization; MM-015 calibrated-band-boundary semantics). Deterministic reference providers, NOT claims about real companies. Accepted under D20 M1–M15 (recorded 2026-08-20).",
+  "edgeCases": [
+    {
+      "id": "MM-014", "name": "Missing Primitive (fcfYield null)",
+      "subsegment": "diversified-miners", "archetype": "integrated",
+      "ebitdaMargin": 32, "revenueGrowth": 9, "debtEbitda": 1.4, "reserveLife": 22,
+      "cashCostCurve": 20, "realizedPriceSpread": 106, "roic": 14,
+      "capexIntensity": 11, "inventoryDays": 40, "evEbitda": 5.5, "recyclingInputMix": 15,
+      "expected": {
+        "composite": 73.5, "verdict": "Buy", "overrides": [],
+        "note": "fcfYield omitted -> capitalEfficiency pillar renormalizes over zero available metrics -> 0.0 (never fabricated); composite falls 82.5 -> 73.5."
+      }
+    },
+    {
+      "id": "MM-015", "name": "Calibrated Band Boundary",
+      "subsegment": "precious-metals", "archetype": "royalty",
+      "ebitdaMargin": 50, "revenueGrowth": 5, "debtEbitda": 1.0, "reserveLife": 13,
+      "cashCostCurve": 20, "realizedPriceSpread": 100, "fcfYield": 5, "roic": 11,
+      "capexIntensity": 2, "inventoryDays": 25, "evEbitda": 11, "recyclingInputMix": 5,
+      "expected": {
+        "composite": 70.1, "verdict": "Buy", "overrides": [],
+        "note": "reserveLife 13.0 hits the precious-metals CALIBRATED band [8,15) -> 60, whereas the baseline table [12,20) -> 75 would apply for other subsegments. Demonstrates effective band-table resolution (calibrated ?? baseline, boundaries+scores together)."
+      }
+    }
+  ],
+  "providers": null
+}

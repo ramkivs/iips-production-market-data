@@ -1,0 +1,41 @@
+IIPS EXECUTIVE LIVE RE-EXECUTION — EXECUTION ENVIRONMENT RECORD
+generated: 2026-09-24T04:33:44Z
+
+[runtime/tool versions]
+node: v22.22.3
+npm: 10.9.8
+git: git version 2.39.5
+tsx (runner, installed in /tmp/iips-forensic/tooling, outside worktrees): tsx v4.23.15
+node v22.22.3
+typescript (frontend npm ci): Version 5.9.3
+python3 (comparison generator): Python 3.11.2
+
+[git object store used]
+disposable full-depth bare scratch store: /tmp/iips-forensic/store.git (EPHEMERAL; NOT the working repository)
+re-acquired this session via one-off fetch of +refs/heads/* +refs/tags/* into refs/forensic/* (remote reachable; donor tip 42f91fad0ff5141fce665b068b544224ac471f73 re-confirmed in advertisement)
+fsck --full: exit 0; in-pack objects: 5783
+shallow file: absent (full depth)
+
+[isolated worktrees (git worktree add --detach on scratch store)]
+7964fcc:  /tmp/iips-forensic/wt/7964fcc  HEAD=7964fccefbf95341699bf56b5833b2432981767d tree=6a171874952313d9414fc88fccbb45cc29337acb
+42f91fad: /tmp/iips-forensic/wt/42f91fad HEAD=42f91fad0ff5141fce665b068b544224ac471f73 tree=e1755b29dab6d6f52fe53424265663ef776c2f47
+
+[dependency installation]
+package manager: npm 10.9.8
+lockfiles used: frontend/package-lock.json @ each checkpoint (lockfileVersion 3), via 'npm ci --no-audit --no-fund'
+result @7964fcc/frontend:  added 183 packages, exit 0
+result @42f91fad/frontend: added 186 packages, exit 0
+runner tsx 4.23.15 installed separately in /tmp/iips-forensic/tooling (project-declared runner in iips-platform/package.json devDependencies; frontend package.json NOT modified, no --save into worktrees)
+missing native/runtime dependencies: none encountered
+
+[execution mode]
+NODE_ENV=test (the transport module's OWN declared library-mode guard: 'if (process.env.NODE_ENV !== "test") void start()'); HTTP server NOT started; no source file patched
+harness location: /tmp/iips-forensic/harness/ (OUTSIDE both worktrees); harness copies preserved in this evidence directory
+entry point: transport-exported computeCertifiedExecutive() — the historical implementation itself, unmodified
+
+[provider/network isolation]
+no NSE/Dhan/MoSPI/live provider calls: MoSPI adapter HTTP exists only behind injectable fetchImpl used on /api/macro routes (never invoked); certified pipeline imports node: builtins only
+
+[working repository untouched]
+repo: /home/user/iips-production-market-data  branch arena/01a0cf86-iips-production-market-data HEAD=da4305149bd5495789f893f530edb2526d08bb5b
+main=4d3e1cdca3a33da0ec3be8b336b17128108a502c origin/main=4d3e1cdca3a33da0ec3be8b336b17128108a502c main-tree=db853dc21d01162e69b0e1211dbea1cb5c5f72b1

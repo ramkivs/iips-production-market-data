@@ -1,0 +1,673 @@
+{
+  "checkpoint": "42f91fad",
+  "runtimeArtifactSha256": "95e15dda914fd1641832967acf3119e634e1759646c05b51aa14be4840272cd9",
+  "items": [
+    {
+      "item": "portfolio.holdings",
+      "expected": 13,
+      "runtime": 13,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.avgConviction",
+      "expected": 74.2,
+      "runtime": 74.2,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.avgQuality",
+      "expected": 71.7,
+      "runtime": 71.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.avgRisk",
+      "expected": 77.7,
+      "runtime": 77.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.concentration",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.diversificationScore",
+      "expected": 128.3,
+      "runtime": 128.3,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Banking]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Insurance]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Capital Markets]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Healthcare]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Hospitality]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Energy]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Utilities]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Consumer]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Industrials]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Technology]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Telecommunications]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Automobile]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure[Materials & Metals]",
+      "expected": 7.7,
+      "runtime": 7.7,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "portfolio.sectorExposure key count",
+      "expected": 13,
+      "runtime": 13,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "ranking order+conviction (13 rows)",
+      "expected": [
+        [
+          "Capital Markets",
+          84.6
+        ],
+        [
+          "Materials & Metals",
+          82.5
+        ],
+        [
+          "Consumer",
+          79.5
+        ],
+        [
+          "Hospitality",
+          79.0
+        ],
+        [
+          "Telecommunications",
+          77.8
+        ],
+        [
+          "Industrials",
+          77.2
+        ],
+        [
+          "Technology",
+          76.3
+        ],
+        [
+          "Healthcare",
+          75.5
+        ],
+        [
+          "Utilities",
+          74.1
+        ],
+        [
+          "Insurance",
+          72.3
+        ],
+        [
+          "Automobile",
+          71.3
+        ],
+        [
+          "Energy",
+          66.9
+        ],
+        [
+          "Banking",
+          47.1
+        ]
+      ],
+      "runtime": [
+        [
+          "Capital Markets",
+          84.6
+        ],
+        [
+          "Materials & Metals",
+          82.5
+        ],
+        [
+          "Consumer",
+          79.5
+        ],
+        [
+          "Hospitality",
+          79
+        ],
+        [
+          "Telecommunications",
+          77.8
+        ],
+        [
+          "Industrials",
+          77.2
+        ],
+        [
+          "Technology",
+          76.3
+        ],
+        [
+          "Healthcare",
+          75.5
+        ],
+        [
+          "Utilities",
+          74.1
+        ],
+        [
+          "Insurance",
+          72.3
+        ],
+        [
+          "Automobile",
+          71.3
+        ],
+        [
+          "Energy",
+          66.9
+        ],
+        [
+          "Banking",
+          47.1
+        ]
+      ],
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "ranking row count",
+      "expected": 13,
+      "runtime": 13,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "trend-up count (derivation r.index<3)",
+      "expected": 3,
+      "runtime": 3,
+      "classification": "EXACT MATCH",
+      "note": "derived by historical UI formula from runtime ranking"
+    },
+    {
+      "item": "trend-flat count",
+      "expected": 10,
+      "runtime": 10,
+      "classification": "EXACT MATCH",
+      "note": "derived by historical UI formula from runtime ranking"
+    },
+    {
+      "item": "opportunity[0].sector",
+      "expected": "Capital Markets",
+      "runtime": "Capital Markets",
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "opportunity[0].conviction",
+      "expected": 84.6,
+      "runtime": 84.6,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "opportunity == ranking prefix (top map)",
+      "expected": "[{\"companyId\":\"Capital Markets-H1\",\"conviction\":84.6,\"sector\":\"Capital Markets\"},{\"companyId\":\"Materials & Metals-H1\",\"conviction\":82.5,\"sector\":\"Materials & Metals\"},{\"companyId\":\"Consumer-H1\",\"conviction\":79.5,\"sector\":\"Consumer\"},{\"companyId\":\"Hospitality-H1\",\"conviction\":79,\"sector\":\"Hospitality\"},{\"companyId\":\"Telecommunications-H1\",\"conviction\":77.8,\"sector\":\"Telecommunications\"},{\"companyId\":\"Industrials-H1\",\"conviction\":77.2,\"sector\":\"Industrials\"},{\"companyId\":\"Technology-H1\",\"conviction\":76.3,\"sector\":\"Technology\"},{\"companyId\":\"Healthcare-H1\",\"conviction\":75.5,\"sector\":\"Healthcare\"},{\"companyId\":\"Utilities-H1\",\"conviction\":74.1,\"sector\":\"Utilities\"},{\"companyId\":\"Insurance-H1\",\"conviction\":72.3,\"sector\":\"Insurance\"}]",
+      "runtime": "[{\"companyId\":\"Capital Markets-H1\",\"conviction\":84.6,\"sector\":\"Capital Markets\"},{\"companyId\":\"Materials & Metals-H1\",\"conviction\":82.5,\"sector\":\"Materials & Metals\"},{\"companyId\":\"Consumer-H1\",\"conviction\":79.5,\"sector\":\"Consumer\"},{\"companyId\":\"Hospitality-H1\",\"conviction\":79,\"sector\":\"Hospitality\"},{\"companyId\":\"Telecommunications-H1\",\"conviction\":77.8,\"sector\":\"Telecommunications\"},{\"companyId\":\"Industrials-H1\",\"conviction\":77.2,\"sector\":\"Industrials\"},{\"companyId\":\"Technology-H1\",\"conviction\":76.3,\"sector\":\"Technology\"},{\"companyId\":\"Healthcare-H1\",\"conviction\":75.5,\"sector\":\"Healthcare\"},{\"companyId\":\"Utilities-H1\",\"conviction\":74.1,\"sector\":\"Utilities\"},{\"companyId\":\"Insurance-H1\",\"conviction\":72.3,\"sector\":\"Insurance\"}]",
+      "classification": "EXACT MATCH",
+      "note": "transport maps pr.opportunity.top; equality with ranking prefix is informational"
+    },
+    {
+      "item": "decisions[Banking].verdict vs golden fixture",
+      "expected": "Watch",
+      "runtime": "Watch",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/banking/frozen-assets/banking-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Banking].composite vs golden fixture",
+      "expected": 47.1,
+      "runtime": 47.1,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/banking/frozen-assets/banking-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Banking].confidence vs golden fixture",
+      "expected": 0.8,
+      "runtime": 0.8,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/banking/frozen-assets/banking-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Insurance].verdict vs golden fixture",
+      "expected": "Buy",
+      "runtime": "Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/insurance/insurance-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Insurance].composite vs golden fixture",
+      "expected": 72.3,
+      "runtime": 72.3,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/insurance/insurance-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Insurance].confidence vs golden fixture",
+      "expected": 0.8,
+      "runtime": 0.8,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/insurance/insurance-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Capital Markets].verdict vs golden fixture",
+      "expected": "Strong Buy",
+      "runtime": "Strong Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/capital-markets/capital-markets-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Capital Markets].composite vs golden fixture",
+      "expected": 84.6,
+      "runtime": 84.6,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/capital-markets/capital-markets-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Capital Markets].confidence vs golden fixture",
+      "expected": 0.8,
+      "runtime": 0.8,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/capital-markets/capital-markets-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Healthcare].verdict vs golden fixture",
+      "expected": "Buy",
+      "runtime": "Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/healthcare/healthcare-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Healthcare].composite vs golden fixture",
+      "expected": 75.5,
+      "runtime": 75.5,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/healthcare/healthcare-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Healthcare].confidence vs golden fixture",
+      "expected": 0.8,
+      "runtime": 0.8,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/healthcare/healthcare-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Hospitality].verdict vs golden fixture",
+      "expected": "Buy",
+      "runtime": "Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/hospitality/hospitality-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Hospitality].composite vs golden fixture",
+      "expected": 79.0,
+      "runtime": 79,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/hospitality/hospitality-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Hospitality].confidence vs golden fixture",
+      "expected": null,
+      "runtime": null,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/hospitality/hospitality-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Energy].verdict vs golden fixture",
+      "expected": "Accumulate",
+      "runtime": "Accumulate",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/energy/energy-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Energy].composite vs golden fixture",
+      "expected": 66.9,
+      "runtime": 66.9,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/energy/energy-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Energy].confidence vs golden fixture",
+      "expected": null,
+      "runtime": null,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/energy/energy-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Utilities].verdict vs golden fixture",
+      "expected": "Buy",
+      "runtime": "Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/utilities/utilities-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Utilities].composite vs golden fixture",
+      "expected": 74.1,
+      "runtime": 74.1,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/utilities/utilities-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Utilities].confidence vs golden fixture",
+      "expected": null,
+      "runtime": null,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/utilities/utilities-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Consumer].verdict vs golden fixture",
+      "expected": "Buy",
+      "runtime": "Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/consumer/consumer-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Consumer].composite vs golden fixture",
+      "expected": 79.5,
+      "runtime": 79.5,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/consumer/consumer-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Consumer].confidence vs golden fixture",
+      "expected": null,
+      "runtime": null,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/consumer/consumer-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Industrials].verdict vs golden fixture",
+      "expected": "Buy",
+      "runtime": "Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/industrials/industrials-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Industrials].composite vs golden fixture",
+      "expected": 77.2,
+      "runtime": 77.2,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/industrials/industrials-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Industrials].confidence vs golden fixture",
+      "expected": null,
+      "runtime": null,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/industrials/industrials-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Technology].verdict vs golden fixture",
+      "expected": "Buy",
+      "runtime": "Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/technology/technology-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Technology].composite vs golden fixture",
+      "expected": 76.3,
+      "runtime": 76.3,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/technology/technology-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Technology].confidence vs golden fixture",
+      "expected": null,
+      "runtime": null,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/technology/technology-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Telecommunications].verdict vs golden fixture",
+      "expected": "Buy",
+      "runtime": "Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/telecommunications/telecommunications-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Telecommunications].composite vs golden fixture",
+      "expected": 77.8,
+      "runtime": 77.8,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/telecommunications/telecommunications-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Telecommunications].confidence vs golden fixture",
+      "expected": null,
+      "runtime": null,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/telecommunications/telecommunications-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Automobile].verdict vs golden fixture",
+      "expected": "Buy",
+      "runtime": "Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/automobile/automobile-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Automobile].composite vs golden fixture",
+      "expected": 71.3,
+      "runtime": 71.3,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/automobile/automobile-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Automobile].confidence vs golden fixture",
+      "expected": null,
+      "runtime": null,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/automobile/automobile-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Materials & Metals].verdict vs golden fixture",
+      "expected": "Strong Buy",
+      "runtime": "Strong Buy",
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/materials-metals/materials-metals-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Materials & Metals].composite vs golden fixture",
+      "expected": 82.5,
+      "runtime": 82.5,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/materials-metals/materials-metals-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions[Materials & Metals].confidence vs golden fixture",
+      "expected": null,
+      "runtime": null,
+      "classification": "EXACT MATCH",
+      "note": "iips-platform/src/sector-engines/materials-metals/materials-metals-expected-outputs-1.0.0.json"
+    },
+    {
+      "item": "decisions row count",
+      "expected": 13,
+      "runtime": 13,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "verdict count [Buy]",
+      "expected": 9,
+      "runtime": 9,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "verdict count [Strong Buy]",
+      "expected": 2,
+      "runtime": 2,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "verdict count [Watch]",
+      "expected": 1,
+      "runtime": 1,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "verdict count [Accumulate]",
+      "expected": 1,
+      "runtime": 1,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "risk-list non-empty",
+      "expected": true,
+      "runtime": true,
+      "classification": "EXACT MATCH",
+      "note": "7 item(s): elevated systematic risk | interest-rate sensitivity (financials exposure) | regulatory / catastrophe sensitivity (insurance) | regulatory / healthcare-policy sensitivity | financial-sector cyclicality | elevated risk / correlated downside | single-factor exposure (growth)"
+    },
+    {
+      "item": "chart bar count (decisions->bars 1:1)",
+      "expected": 13,
+      "runtime": 13,
+      "classification": "EXACT MATCH",
+      "note": ""
+    },
+    {
+      "item": "chart bar labels == decisions sectors",
+      "expected": [
+        "Banking",
+        "Insurance",
+        "Capital Markets",
+        "Healthcare",
+        "Hospitality",
+        "Energy",
+        "Utilities",
+        "Consumer",
+        "Industrials",
+        "Technology",
+        "Telecommunications",
+        "Automobile",
+        "Materials & Metals"
+      ],
+      "runtime": [
+        "Banking",
+        "Insurance",
+        "Capital Markets",
+        "Healthcare",
+        "Hospitality",
+        "Energy",
+        "Utilities",
+        "Consumer",
+        "Industrials",
+        "Technology",
+        "Telecommunications",
+        "Automobile",
+        "Materials & Metals"
+      ],
+      "classification": "EXACT MATCH",
+      "note": ""
+    }
+  ],
+  "summary": {
+    "total": 74,
+    "EXACT MATCH": 74,
+    "NUMERIC MATCH / REPRESENTATION DIFFERENCE": 0,
+    "PARTIAL MATCH": 0,
+    "MISMATCH": 0,
+    "mismatchedItems": []
+  },
+  "crossCheckpointStructuralComparison": {
+    "byteIdentical": true,
+    "canonicalJsonIdentical": true,
+    "keyOrderIdentical": true,
+    "sha256_7964fcc": "95e15dda914fd1641832967acf3119e634e1759646c05b51aa14be4840272cd9",
+    "sha256_42f91fad": "95e15dda914fd1641832967acf3119e634e1759646c05b51aa14be4840272cd9"
+  }
+}

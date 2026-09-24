@@ -1,0 +1,53 @@
+{
+  "profile": "telecommunications-calibration-1.0.0",
+  "standard": "IES-016",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-016 v1.0 (D16 normative)",
+  "bandScores": {
+    "TC-001": [["lt", 15, 40], ["range", 15, 25, 60], ["range", 25, 35, 75], ["gte", 35, 90]],
+    "TC-002": [["lt", 0, 40], ["range", 0, 5, 60], ["range", 5, 10, 75], ["gte", 10, 90]],
+    "TC-003": [["lt", 1.5, 90], ["range", 1.5, 2.5, 75], ["range", 2.5, 3.5, 55], ["gte", 3.5, 30]],
+    "TC-004": [["lt", 15, 40], ["range", 15, 25, 60], ["range", 25, 40, 75], ["gte", 40, 90]],
+    "TC-005": [["lt", 1.0, 90], ["range", 1.0, 1.8, 75], ["range", 1.8, 2.5, 55], ["gte", 2.5, 30]],
+    "TC-006": [["lt", 40, 40], ["range", 40, 60, 60], ["range", 60, 80, 75], ["gte", 80, 90]],
+    "TC-007": [["lt", 2, 40], ["range", 2, 5, 60], ["range", 5, 8, 75], ["gte", 8, 90]],
+    "TC-008": [["lt", 6, 40], ["range", 6, 10, 60], ["range", 10, 14, 75], ["gte", 14, 90]],
+    "TC-009": [["lt", 10, 90], ["range", 10, 16, 75], ["range", 16, 24, 55], ["gte", 24, 30]],
+    "TC-010": [["lt", 0.5, 90], ["range", 0.5, 1.0, 75], ["range", 1.0, 1.75, 55], ["gte", 1.75, 30]],
+    "TC-011": [["lt", 5, 90], ["range", 5, 7, 75], ["range", 7, 9, 55], ["gte", 9, 30]],
+    "TC-012": [["lt", 10, 40], ["range", 10, 20, 60], ["range", 20, 30, 75], ["gte", 30, 90]]
+  },
+  "segments": {
+    "wireless-mno": { "w": [0.30, 0.20, 0.20, 0.15, 0.10, 0.05], "leverageAlert": 3.5 },
+    "fixed-broadband": { "w": [0.30, 0.15, 0.20, 0.20, 0.10, 0.05], "leverageAlert": 3.0 },
+    "converged-telco": { "w": [0.25, 0.20, 0.25, 0.15, 0.10, 0.05], "leverageAlert": 3.5 },
+    "cable-mso": { "w": [0.25, 0.15, 0.25, 0.20, 0.10, 0.05], "leverageAlert": 4.0 },
+    "tower-infra": { "w": [0.30, 0.10, 0.25, 0.20, 0.10, 0.05], "leverageAlert": 5.0 }
+  },
+  "archetypeRisk": {
+    "consumer": 1.0,
+    "enterprise": 0.9,
+    "wholesale": 0.9,
+    "infrastructure": 0.8,
+    "converged": 1.0,
+    "hybrid": 1.0
+  },
+  "calibratedBandTables": {
+    "fixed-broadband": {
+      "TC-004": [["lt", 25, 40], ["range", 25, 40, 60], ["range", 40, 55, 75], ["gte", 55, 90]]
+    },
+    "tower-infra": {
+      "TC-004": [["lt", 2, 40], ["range", 2, 3, 60], ["range", 3, 4, 75], ["gte", 4, 90]],
+      "TC-011": [["lt", 12, 90], ["range", 12, 16, 75], ["range", 16, 20, 55], ["gte", 20, 30]]
+    }
+  },
+  "verdictMapping": {
+    "80-100": "Strong Buy",
+    "70-80": "Buy",
+    "60-70": "Accumulate",
+    "50-60": "Hold",
+    "40-50": "Watch",
+    "0-40": "Avoid"
+  }
+}

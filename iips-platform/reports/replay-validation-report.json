@@ -1,0 +1,37 @@
+{
+  "report": "Replay Validation",
+  "version": "1.0.0",
+  "deterministic": true,
+  "rows": [
+    {
+      "bankId": "BK-001",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "bankId": "BK-002",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "bankId": "BK-003",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "bankId": "BK-004",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    },
+    {
+      "bankId": "BK-005",
+      "verdictIdentical": true,
+      "compositeIdentical": true,
+      "evidenceIdentical": true
+    }
+  ]
+}

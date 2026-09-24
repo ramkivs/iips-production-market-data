@@ -1,0 +1,104 @@
+{
+  "dataset": "telecommunications-golden-reference-1.0.0",
+  "standard": "IES-016",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-016 v1.0 (D16 normative)",
+  "purpose": "Frozen deterministic reference providers for the Telecommunications Sector Engine. These are synthetic deterministic reference providers (the frozen Replay Baseline reference dataset convention established by IES-015 TE-001..TE-013) — NOT claims about real companies. The engine must reproduce the expected outputs for every provider byte-identically.",
+  "providers": [
+    {
+      "id": "TC-001", "name": "National Wireless Leader",
+      "subsegment": "wireless-mno", "archetype": "consumer",
+      "ebitdaMargin": 42, "revenueGrowth": 6, "debtEbitda": 2.2, "arpu": 34,
+      "churnRate": 1.1, "postpaidMix": 88, "fcfYield": 6, "roic": 12,
+      "capexIntensity": 15, "spectrumCost": 0.8, "evEbitda": 6.5, "usageGrowth": 22
+    },
+    {
+      "id": "TC-002", "name": "Fixed-Line Broadband ISP",
+      "subsegment": "fixed-broadband", "archetype": "enterprise",
+      "ebitdaMargin": 38, "revenueGrowth": 4, "debtEbitda": 2.5, "arpu": 45,
+      "churnRate": 1.4, "postpaidMix": 75, "fcfYield": 5, "roic": 11,
+      "capexIntensity": 12, "spectrumCost": 0.3, "evEbitda": 7.0, "usageGrowth": 14
+    },
+    {
+      "id": "TC-003", "name": "Converged Telecom Group",
+      "subsegment": "converged-telco", "archetype": "converged",
+      "ebitdaMargin": 36, "revenueGrowth": 3, "debtEbitda": 2.8, "arpu": 38,
+      "churnRate": 1.5, "postpaidMix": 70, "fcfYield": 5.5, "roic": 10,
+      "capexIntensity": 17, "spectrumCost": 0.9, "evEbitda": 6.8, "usageGrowth": 18
+    },
+    {
+      "id": "TC-004", "name": "Cable MSO Operator",
+      "subsegment": "cable-mso", "archetype": "wholesale",
+      "ebitdaMargin": 40, "revenueGrowth": 2, "debtEbitda": 3.0, "arpu": 50,
+      "churnRate": 1.3, "postpaidMix": 80, "fcfYield": 6.5, "roic": 12,
+      "capexIntensity": 14, "spectrumCost": 0.2, "evEbitda": 6.2, "usageGrowth": 12
+    },
+    {
+      "id": "TC-005", "name": "Tower Infrastructure REIT",
+      "subsegment": "tower-infra", "archetype": "infrastructure",
+      "ebitdaMargin": 55, "revenueGrowth": 5, "debtEbitda": 4.2, "arpu": 3.2,
+      "churnRate": 1.2, "postpaidMix": 90, "fcfYield": 7, "roic": 9,
+      "capexIntensity": 8, "spectrumCost": 0.0, "evEbitda": 16, "usageGrowth": 16
+    },
+    {
+      "id": "TC-006", "name": "Challenger Mobile Operator",
+      "subsegment": "wireless-mno", "archetype": "consumer",
+      "ebitdaMargin": 28, "revenueGrowth": 9, "debtEbitda": 4.0, "arpu": 22,
+      "churnRate": 2.2, "postpaidMix": 55, "fcfYield": 2, "roic": 7,
+      "capexIntensity": 22, "spectrumCost": 1.4, "evEbitda": 7.5, "usageGrowth": 28,
+      "competitionPressure": true, "marginCompression": true
+    },
+    {
+      "id": "TC-007", "name": "Enterprise Fiber & Data Center",
+      "subsegment": "fixed-broadband", "archetype": "enterprise",
+      "ebitdaMargin": 46, "revenueGrowth": 9, "debtEbitda": 2.0, "arpu": 52,
+      "churnRate": 0.9, "postpaidMix": 85, "fcfYield": 8.5, "roic": 14,
+      "capexIntensity": 18, "spectrumCost": 0.2, "evEbitda": 8.0, "usageGrowth": 24
+    },
+    {
+      "id": "TC-008", "name": "Regional Cable MSO (sub-scale)",
+      "subsegment": "cable-mso", "archetype": "wholesale",
+      "ebitdaMargin": 30, "revenueGrowth": 1, "debtEbitda": 3.4, "arpu": 42,
+      "churnRate": 1.8, "postpaidMix": 68, "fcfYield": 4, "roic": 8,
+      "capexIntensity": 20, "spectrumCost": 0.2, "evEbitda": 7.8, "usageGrowth": 10
+    },
+    {
+      "id": "TC-009", "name": "Converged Hybrid (multi-subsegment)",
+      "subsegments": ["wireless-mno", "fixed-broadband"], "subsegmentDominant": "wireless-mno",
+      "archetype": "hybrid", "hybridDominant": "converged",
+      "ebitdaMargin": 34, "revenueGrowth": 4, "debtEbitda": 2.9, "arpu": 33,
+      "churnRate": 1.5, "postpaidMix": 72, "fcfYield": 5, "roic": 10,
+      "capexIntensity": 16, "spectrumCost": 0.85, "evEbitda": 7.2, "usageGrowth": 19
+    },
+    {
+      "id": "TC-010", "name": "Sub-scale Fixed Operator",
+      "subsegment": "fixed-broadband", "archetype": "enterprise",
+      "ebitdaMargin": 21, "revenueGrowth": 3, "debtEbitda": 2.4, "arpu": 30,
+      "churnRate": 1.6, "postpaidMix": 62, "fcfYield": 3, "roic": 7,
+      "capexIntensity": 19, "spectrumCost": 0.4, "evEbitda": 8.5, "usageGrowth": 9
+    },
+    {
+      "id": "TC-011", "name": "Governance-Risk Operator",
+      "subsegment": "wireless-mno", "archetype": "consumer",
+      "ebitdaMargin": 8, "revenueGrowth": 1, "debtEbitda": 4.5, "arpu": 14,
+      "churnRate": 3.0, "postpaidMix": 35, "fcfYield": 1, "roic": 4,
+      "capexIntensity": 30, "spectrumCost": 1.9, "evEbitda": 11, "usageGrowth": 8,
+      "governance": true
+    },
+    {
+      "id": "TC-012", "name": "Half-Even Boundary Operator",
+      "subsegment": "wireless-mno", "archetype": "consumer",
+      "ebitdaMargin": 12, "revenueGrowth": -1, "debtEbitda": 2.0, "arpu": 12,
+      "churnRate": 0.8, "postpaidMix": 35, "fcfYield": 1, "roic": 4,
+      "capexIntensity": 8, "spectrumCost": 0.3, "evEbitda": 6.0, "usageGrowth": 5
+    },
+    {
+      "id": "TC-013", "name": "Stressed Fixed Operator",
+      "subsegment": "fixed-broadband", "archetype": "enterprise",
+      "ebitdaMargin": 12, "revenueGrowth": -1, "debtEbitda": 2.0, "arpu": 20,
+      "churnRate": 0.8, "postpaidMix": 35, "fcfYield": 1, "roic": 4,
+      "capexIntensity": 20, "spectrumCost": 0.3, "evEbitda": 10, "usageGrowth": 5
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "fixtures": "insurance-validation-fixtures",
+  "version": "1.0.0",
+  "source": "IES-007 D12 (Validation & Regression) edge cases + normal paths",
+  "note": "Covers normal + edge-case scenarios. Deterministic expected outcome documented. Reference fixtures (not implementation).",
+  "scenarios": [
+    {
+      "id": "FIX-I-01",
+      "name": "Healthy Life Insurer",
+      "type": "normal",
+      "inputs": {
+        "IM-001": 90, "IM-002": 1.8, "IM-003": 1800, "IM-004": 300,
+        "IM-005": 89, "IM-006": 5000, "IM-007": 15, "IM-008": 7.0
+      },
+      "expectedOutcome": "Strong/positive verdict; deterministic"
+    },
+    {
+      "id": "FIX-I-02",
+      "name": "Combined Ratio > 105% (Critical)",
+      "type": "edge",
+      "inputs": {
+        "IM-001": 108, "IM-002": 1.8, "IM-003": 1500, "IM-004": 200,
+        "IM-005": 85, "IM-006": 4000, "IM-007": 20, "IM-008": 6.5
+      },
+      "expectedOutcome": "Override critical-combined-ratio caps recommendation at Watch despite otherwise sound metrics"
+    },
+    {
+      "id": "FIX-I-03",
+      "name": "Solvency Breach",
+      "type": "edge",
+      "inputs": {
+        "IM-001": 92, "IM-002": 1.1, "IM-003": 1400, "IM-004": 150,
+        "IM-005": 84, "IM-006": 3500, "IM-007": 18, "IM-008": 6.0
+      },
+      "expectedOutcome": "Override solvency-breach caps recommendation at Watch"
+    },
+    {
+      "id": "FIX-I-04",
+      "name": "Negative VNB (Growth without value)",
+      "type": "edge",
+      "inputs": {
+        "IM-001": 94, "IM-002": 1.6, "IM-003": 2200, "IM-004": -60,
+        "IM-005": 80, "IM-006": 3800, "IM-007": 19, "IM-008": 6.2
+      },
+      "expectedOutcome": "High APE but negative VNB → growth score penalized; recommendation tempered"
+    },
+    {
+      "id": "FIX-I-05",
+      "name": "Persistency Deterioration",
+      "type": "edge",
+      "inputs": {
+        "IM-001": 91, "IM-002": 1.7, "IM-003": 1600, "IM-004": 250,
+        "IM-005": 62, "IM-006": 4200, "IM-007": 17, "IM-008": 6.8
+      },
+      "expectedOutcome": "Override persistency-deterioration reduces recommendation"
+    },
+    {
+      "id": "FIX-I-06",
+      "name": "Missing Data",
+      "type": "edge",
+      "inputs": {
+        "IM-001": 93, "IM-002": 1.7, "IM-003": 1700, "IM-004": null,
+        "IM-005": null, "IM-006": null, "IM-007": 16, "IM-008": 6.5
+      },
+      "expectedOutcome": "Deterministic with reduced confidence; missing inputs flagged; confidence adjusted, raw metrics unchanged"
+    },
+    {
+      "id": "FIX-I-07",
+      "name": "Governance Failure",
+      "type": "edge",
+      "inputs": {
+        "IM-001": 88, "IM-002": 2.0, "IM-003": 2000, "IM-004": 400,
+        "IM-005": 90, "IM-006": 5500, "IM-007": 14, "IM-008": 7.5,
+        "governanceFlag": "SEVERE_GOVERNANCE_FAILURE"
+      },
+      "expectedOutcome": "Override governance-failure caps recommendation at Avoid despite strong metrics"
+    },
+    {
+      "id": "FIX-I-08",
+      "name": "Catastrophic Claims (P&C)",
+      "type": "edge",
+      "inputs": {
+        "IM-001": 110, "IM-002": 1.4, "IM-003": 700, "IM-004": 0,
+        "IM-005": 0, "IM-006": 0, "IM-007": 30, "IM-008": 4.5,
+        "catastropheFlag": "YES"
+      },
+      "expectedOutcome": "Override catastrophic-claims reduces recommendation; deterministic"
+    }
+  ]
+}

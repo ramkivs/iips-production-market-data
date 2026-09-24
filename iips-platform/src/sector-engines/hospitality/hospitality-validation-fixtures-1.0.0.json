@@ -1,0 +1,18 @@
+{
+  "fixtures": "hospitality-validation-fixtures-1.0.0",
+  "standard": "IES-010",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "note": "Expected behavior per scenario — every override and calibration path exercised. Deterministic.",
+  "scenarios": [
+    { "id": "HOSP-01", "provider": "HP-001", "scenario": "Luxury hotel recovery", "businessModel": "owned", "expectedVerdict": "Buy", "composite": 79.0 },
+    { "id": "HOSP-02", "provider": "HP-002", "scenario": "Business-travel recovery", "businessModel": "managed", "expectedVerdict": "Buy", "composite": 76.4 },
+    { "id": "HOSP-03", "provider": "HP-003", "scenario": "Resort seasonal strength", "businessModel": "owned", "expectedVerdict": "Buy", "composite": 76.0 },
+    { "id": "HOSP-04", "provider": "HP-004", "scenario": "Asset-light franchise expansion", "businessModel": "franchised", "expectedVerdict": "Buy", "composite": 77.9 },
+    { "id": "HOSP-05", "provider": "HP-005", "scenario": "Owned-property deleveraging", "businessModel": "owned", "expectedVerdict": "Buy", "composite": 72.9 },
+    { "id": "HOSP-06", "provider": "HP-006", "scenario": "Asset-light mixed", "businessModel": "asset-light", "expectedVerdict": "Buy", "composite": 78.6 },
+    { "id": "HOSP-07", "provider": "HP-007", "scenario": "Demand shock", "businessModel": "asset-light", "expectedVerdict": "Watch", "composite": 54.2, "override": "demand-shock" },
+    { "id": "HOSP-08", "provider": "HP-008", "scenario": "Brand deterioration", "businessModel": "franchised", "expectedVerdict": "Avoid", "composite": 73.0, "override": "brand-deterioration" },
+    { "id": "HOSP-09", "provider": "HP-009", "scenario": "Occupancy collapse", "businessModel": "owned", "expectedVerdict": "Avoid", "composite": 38.9, "override": "occupancy-collapse" }
+  ]
+}

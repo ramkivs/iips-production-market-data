@@ -1,0 +1,277 @@
+{
+  "basis": "telecommunications-golden-reference-1.0.0",
+  "standard": "IES-016",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-016 v1.0 (D16 normative)",
+  "expected": [
+    {
+      "providerId": "TC-001",
+      "subsegment": "wireless-mno",
+      "declaredSubsegments": [
+        "wireless-mno"
+      ],
+      "archetype": "consumer",
+      "composite": 77.8,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 80.2,
+        "growth": 75.0,
+        "risk": 75.0,
+        "profitability": 83.2,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-002",
+      "subsegment": "fixed-broadband",
+      "declaredSubsegments": [
+        "fixed-broadband"
+      ],
+      "archetype": "enterprise",
+      "composite": 71.4,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 60.0,
+        "risk": 72.2,
+        "profitability": 83.2,
+        "capitalEfficiency": 75.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-003",
+      "subsegment": "converged-telco",
+      "declaredSubsegments": [
+        "converged-telco"
+      ],
+      "archetype": "converged",
+      "composite": 70.0,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 60.0,
+        "risk": 62.0,
+        "profitability": 83.2,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-004",
+      "subsegment": "cable-mso",
+      "declaredSubsegments": [
+        "cable-mso"
+      ],
+      "archetype": "wholesale",
+      "composite": 74.5,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 85.5,
+        "growth": 60.0,
+        "risk": 72.2,
+        "profitability": 83.2,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-005",
+      "subsegment": "tower-infra",
+      "declaredSubsegments": [
+        "tower-infra"
+      ],
+      "archetype": "infrastructure",
+      "composite": 69.6,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 80.2,
+        "growth": 67.5,
+        "risk": 66.0,
+        "profitability": 76.5,
+        "capitalEfficiency": 75.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-006",
+      "subsegment": "wireless-mno",
+      "declaredSubsegments": [
+        "wireless-mno"
+      ],
+      "archetype": "consumer",
+      "composite": 60.5,
+      "verdict": "Watch",
+      "pillars": {
+        "quality": 58.5,
+        "growth": 75.0,
+        "risk": 45.0,
+        "profitability": 68.2,
+        "capitalEfficiency": 60.0,
+        "valuation": 55.0
+      },
+      "overrides": [
+        "leverage-breach",
+        "competition-pressure",
+        "margin-compression"
+      ],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-007",
+      "subsegment": "fixed-broadband",
+      "declaredSubsegments": [
+        "fixed-broadband"
+      ],
+      "archetype": "enterprise",
+      "composite": 80.0,
+      "verdict": "Strong Buy",
+      "pillars": {
+        "quality": 84.8,
+        "growth": 75.0,
+        "risk": 75.2,
+        "profitability": 90.0,
+        "capitalEfficiency": 90.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-008",
+      "subsegment": "cable-mso",
+      "declaredSubsegments": [
+        "cable-mso"
+      ],
+      "archetype": "wholesale",
+      "composite": 65.1,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 74.2,
+        "growth": 60.0,
+        "risk": 67.2,
+        "profitability": 68.2,
+        "capitalEfficiency": 60.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-009",
+      "subsegment": "wireless-mno",
+      "declaredSubsegments": [
+        "wireless-mno",
+        "fixed-broadband"
+      ],
+      "archetype": "converged",
+      "composite": 68.4,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 60.0,
+        "risk": 62.0,
+        "profitability": 75.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-010",
+      "subsegment": "fixed-broadband",
+      "declaredSubsegments": [
+        "fixed-broadband"
+      ],
+      "archetype": "enterprise",
+      "composite": 62.7,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 69.8,
+        "growth": 50.0,
+        "risk": 75.2,
+        "profitability": 60.0,
+        "capitalEfficiency": 60.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-011",
+      "subsegment": "wireless-mno",
+      "declaredSubsegments": [
+        "wireless-mno"
+      ],
+      "archetype": "consumer",
+      "composite": 38.6,
+      "verdict": "Avoid",
+      "pillars": {
+        "quality": 37.0,
+        "growth": 50.0,
+        "risk": 30.0,
+        "profitability": 40.0,
+        "capitalEfficiency": 40.0,
+        "valuation": 30.0
+      },
+      "overrides": [
+        "leverage-breach",
+        "governance"
+      ],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-012",
+      "subsegment": "wireless-mno",
+      "declaredSubsegments": [
+        "wireless-mno"
+      ],
+      "archetype": "consumer",
+      "composite": 55.0,
+      "verdict": "Hold",
+      "pillars": {
+        "quality": 55.0,
+        "growth": 40.0,
+        "risk": 84.0,
+        "profitability": 40.0,
+        "capitalEfficiency": 40.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "TC-013",
+      "subsegment": "fixed-broadband",
+      "declaredSubsegments": [
+        "fixed-broadband"
+      ],
+      "archetype": "enterprise",
+      "composite": 49.5,
+      "verdict": "Watch",
+      "pillars": {
+        "quality": 55.0,
+        "growth": 40.0,
+        "risk": 75.2,
+        "profitability": 40.0,
+        "capitalEfficiency": 40.0,
+        "valuation": 30.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    }
+  ]
+}

@@ -4,8 +4,8 @@
   "description": "Institutional Investment Platform System (IIPS) - Production Market Data & Intelligence Pipeline",
   "type": "module",
   "scripts": {
-    "build": "tsc && vite build",
-    "build:tsc": "tsc",
+    "build": "npm run build:tsc && vite build",
+    "build:tsc": "tsc && cp iips-platform/package.json dist/iips-platform/package.json",
     "build:vite": "vite build",
     "dev": "vite",
     "test": "node --test dist/tests/*.test.js",

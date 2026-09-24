@@ -1,0 +1,20 @@
+{
+  "releaseCandidate": "banking-engine-rc-1.0.0",
+  "version": "1.0.0",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "IES-006 v1.0 (frozen)",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "testCount": 35,
+  "builtOn": "iips-platform",
+  "specRepo": "iips-engineering-standards (frozen, tag v1.0.0)",
+  "files": [
+    "src/sector-engines/banking/",
+    "src/runtime/",
+    "src/framework/",
+    "src/plugin-loader/",
+    "src/registry/",
+    "src/snapshot/",
+    "src/replay/"
+  ]
+}

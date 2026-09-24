@@ -1,0 +1,33 @@
+{
+  "dataset": "telecommunications-validation-fixtures-1.0.0",
+  "standard": "IES-016",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-016 v1.0 (D16 normative)",
+  "purpose": "Contract-test fixtures: the 13 certified golden-reference providers plus two edge-case providers (TC-014 missing-primitive renormalization; TC-015 exact band-boundary semantics). These are deterministic reference providers, NOT claims about real companies.",
+  "edgeCases": [
+    {
+      "id": "TC-014", "name": "Missing Primitive (fcfYield null)",
+      "subsegment": "wireless-mno", "archetype": "consumer",
+      "ebitdaMargin": 42, "revenueGrowth": 6, "debtEbitda": 2.2, "arpu": 34,
+      "churnRate": 1.1, "postpaidMix": 88, "roic": 12,
+      "capexIntensity": 15, "spectrumCost": 0.8, "evEbitda": 6.5, "usageGrowth": 22,
+      "expected": {
+        "composite": 70.3, "verdict": "Buy", "overrides": [],
+        "note": "fcfYield omitted -> capitalEfficiency pillar renormalizes over zero available metrics -> 0.0 (never fabricated); composite falls 77.8 -> 70.3."
+      }
+    },
+    {
+      "id": "TC-015", "name": "Exact Band Boundaries",
+      "subsegment": "wireless-mno", "archetype": "consumer",
+      "ebitdaMargin": 25, "revenueGrowth": 5, "debtEbitda": 2.5, "arpu": 25,
+      "churnRate": 1.8, "postpaidMix": 60, "fcfYield": 5, "roic": 10,
+      "capexIntensity": 16, "spectrumCost": 1.0, "evEbitda": 7.0, "usageGrowth": 20,
+      "expected": {
+        "composite": 68.2, "verdict": "Accumulate", "overrides": [],
+        "note": "Every input sits exactly on a band boundary: lower-inclusive / upper-exclusive applies throughout (e.g. revenueGrowth 5.0 -> [5,10) not [0,5); debtEbitda 2.5 -> [2.5,3.5))."
+      }
+    }
+  ],
+  "providers": null
+}

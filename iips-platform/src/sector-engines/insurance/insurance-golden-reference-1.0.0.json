@@ -1,0 +1,84 @@
+{
+  "dataset": "insurance-golden-reference",
+  "version": "1.0.0",
+  "methodologyVersion": "IES-007 v1.0-draft",
+  "calibrationProfile": "insurance-calibration-1.0.0",
+  "purpose": "Authoritative regression benchmark for the Insurance Sector Engine. Covers life, general, health, high-growth, and distressed insurers.",
+  "insurers": [
+    {
+      "id": "IN-001",
+      "name": "Life-Insurer-Alpha",
+      "category": "Life Insurance",
+      "inputs": {
+        "IM-001": 92,
+        "IM-002": 1.7,
+        "IM-003": 1800,
+        "IM-004": 300,
+        "IM-005": 88,
+        "IM-006": 5000,
+        "IM-007": 16,
+        "IM-008": 7.2
+      }
+    },
+    {
+      "id": "IN-002",
+      "name": "General-Insurer-Beta",
+      "category": "General Insurance",
+      "inputs": {
+        "IM-001": 96,
+        "IM-002": 2.3,
+        "IM-003": 900,
+        "IM-004": 0,
+        "IM-005": 0,
+        "IM-006": 0,
+        "IM-007": 28,
+        "IM-008": 5.8
+      }
+    },
+    {
+      "id": "IN-003",
+      "name": "Health-Insurer-Gamma",
+      "category": "Health Insurance",
+      "inputs": {
+        "IM-001": 101,
+        "IM-002": 1.5,
+        "IM-003": 1200,
+        "IM-004": 0,
+        "IM-005": 82,
+        "IM-006": 0,
+        "IM-007": 20,
+        "IM-008": 6.1
+      }
+    },
+    {
+      "id": "IN-004",
+      "name": "HighGrowth-Insurer-Delta",
+      "category": "High-growth Insurer",
+      "inputs": {
+        "IM-001": 88,
+        "IM-002": 2.1,
+        "IM-003": 2600,
+        "IM-004": 520,
+        "IM-005": 91,
+        "IM-006": 6400,
+        "IM-007": 14,
+        "IM-008": 7.8
+      }
+    },
+    {
+      "id": "IN-005",
+      "name": "Distressed-Insurer-Epsilon",
+      "category": "Distressed Insurer",
+      "inputs": {
+        "IM-001": 112,
+        "IM-002": 1.1,
+        "IM-003": 600,
+        "IM-004": -40,
+        "IM-005": 64,
+        "IM-006": 2200,
+        "IM-007": 34,
+        "IM-008": 4.2
+      }
+    }
+  ]
+}

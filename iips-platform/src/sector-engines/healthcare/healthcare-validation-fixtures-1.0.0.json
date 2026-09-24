@@ -1,0 +1,29 @@
+{
+  "fixtures": "healthcare-validation-fixtures",
+  "version": "1.0.0",
+  "source": "IES-009 D12 (Validation) + D10/D15 overrides",
+  "note": "Covers normal + edge-case scenarios including all healthcare overrides.",
+  "scenarios": [
+    { "id": "FIX-HC-01", "name": "Healthy Hospital", "type": "normal",
+      "inputs": { "HC-001": 85, "HC-004": 28, "HC-005": 15, "HC-007": 45 },
+      "expectedOutcome": "Strong/positive verdict; deterministic" },
+    { "id": "FIX-HC-02", "name": "Clinical Quality Failure", "type": "edge",
+      "inputs": { "HC-001": 80, "HC-004": 26, "HC-005": 12, "HC-007": 45, "qualityFlag": "FAIL" },
+      "expectedOutcome": "Override clinical-quality-failure caps recommendation at Avoid despite strong financials" },
+    { "id": "FIX-HC-03", "name": "Regulatory Action", "type": "edge",
+      "inputs": { "HC-004": 22, "HC-005": 10, "HC-007": 50, "regulatoryFlag": "ACTION" },
+      "expectedOutcome": "Override regulatory-action caps recommendation at Watch" },
+    { "id": "FIX-HC-04", "name": "Occupancy Collapse", "type": "edge",
+      "inputs": { "HC-001": 45, "HC-004": 24, "HC-005": 6, "HC-007": 55 },
+      "expectedOutcome": "Override occupancy-collapse caps recommendation at Watch" },
+    { "id": "FIX-HC-05", "name": "Pipeline Failure", "type": "edge",
+      "inputs": { "HC-004": 26, "HC-005": 14, "HC-006": 0.4, "HC-009": 15, "pipelineFlag": "FAIL" },
+      "expectedOutcome": "Override pipeline-failure reduces recommendation" },
+    { "id": "FIX-HC-06", "name": "Reimbursement Pressure", "type": "edge",
+      "inputs": { "HC-004": 18, "HC-005": 6, "HC-007": 70, "HC-012": 40 },
+      "expectedOutcome": "Deterministic; revenue quality penalized by low-quality payer mix" },
+    { "id": "FIX-HC-07", "name": "Missing Data", "type": "edge",
+      "inputs": { "HC-004": 22, "HC-005": null, "HC-007": null },
+      "expectedOutcome": "Deterministic with reduced confidence; missing inputs flagged" }
+  ]
+}

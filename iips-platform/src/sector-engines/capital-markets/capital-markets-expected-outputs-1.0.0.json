@@ -1,0 +1,90 @@
+{
+  "basis": "Frozen expected outputs derived from IES-008 D15 Normative Calculation Appendix. Composite = weighted pillar sum.",
+  "version": "1.0.0",
+  "expected": [
+    {
+      "firmId": "CM-001",
+      "category": "Asset Management",
+      "pillars": {
+        "earnings-quality": 90,
+        "growth": 82.5,
+        "profitability": 78.0,
+        "franchise": 82.5,
+        "operating-efficiency": 90
+      },
+      "compositeScore": 84.6,
+      "verdict": "Strong Buy",
+      "confidence": 0.8
+    },
+    {
+      "firmId": "CM-002",
+      "category": "Brokerage",
+      "pillars": {
+        "earnings-quality": 70,
+        "growth": 60.0,
+        "profitability": 69.0,
+        "franchise": 50.0,
+        "operating-efficiency": 75
+      },
+      "compositeScore": 64.5,
+      "verdict": "Accumulate",
+      "confidence": 0.8
+    },
+    {
+      "firmId": "CM-003",
+      "category": "Investment Banking",
+      "pillars": {
+        "earnings-quality": 40,
+        "growth": 75.0,
+        "profitability": 69.0,
+        "franchise": 65.0,
+        "operating-efficiency": 75
+      },
+      "compositeScore": 63.0,
+      "verdict": "Accumulate",
+      "confidence": 0.8
+    },
+    {
+      "firmId": "CM-004",
+      "category": "Infrastructure",
+      "pillars": {
+        "earnings-quality": 90,
+        "growth": 75.0,
+        "profitability": 78.0,
+        "franchise": 65.0,
+        "operating-efficiency": 90
+      },
+      "compositeScore": 79.6,
+      "verdict": "Buy",
+      "confidence": 0.8
+    },
+    {
+      "firmId": "CM-005",
+      "category": "Distribution/Wealth",
+      "pillars": {
+        "earnings-quality": 90,
+        "growth": 67.5,
+        "profitability": 78.0,
+        "franchise": 82.5,
+        "operating-efficiency": 90
+      },
+      "compositeScore": 81.6,
+      "verdict": "Strong Buy",
+      "confidence": 0.8
+    },
+    {
+      "firmId": "CM-006",
+      "category": "Distressed",
+      "pillars": {
+        "earnings-quality": 40,
+        "growth": 50.0,
+        "profitability": 45.0,
+        "franchise": 40.0,
+        "operating-efficiency": 35
+      },
+      "compositeScore": 42.2,
+      "verdict": "Watch",
+      "confidence": 0.8
+    }
+  ]
+}

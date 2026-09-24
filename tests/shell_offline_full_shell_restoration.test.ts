@@ -331,9 +331,9 @@ describe('Option A: preservation of BI-08 and the partial surfaces', () => {
     assert.ok(sub.includes(BI08_ROOT_CLASS), '/portfolio/* must render the same workspace');
   });
 
-  it('OPTA-07: the four partial surfaces render THEIR OWN components, not donor substitutes', () => {
+  it('OPTA-07: the partial surfaces render their authorized components', () => {
     const cases: ReadonlyArray<readonly [string, string, string]> = [
-      ['/executive', 'executive-unavailable-reason', 'Executive (UI02)'],
+      ['/executive', 'Portfolio Health', 'Executive (Certified Dashboard)'],
       ['/research', 'research-unavailable-reason', 'Research (UI03)'],
       ['/intelligence', 'No intelligence data loaded', 'Intelligence (UI04)'],
       ['/evidence', 'Cryptographic Lineage', 'Evidence (UI11)'],
@@ -402,10 +402,10 @@ describe('Option A: offline boundary (no server / auth / api / network in the sh
     }
   });
 
-  it('OPTA-11: App.tsx does not import any donor API-coupled feature component', () => {
+  it('OPTA-11: App.tsx does not import unrecovered donor API-coupled feature components', () => {
     const appSrc = stripComments(readFileSync(join(APP_DIR, 'App.tsx'), 'utf8'));
     const donorComponents = [
-      'ExecutiveDashboard', 'DecisionMatrix', 'Administration', 'GovernedSearch',
+      'DecisionMatrix', 'Administration', 'GovernedSearch',
       'Screener', 'MacroContext', 'Collaboration', 'Reports', 'Watchlists', 'Settings',
       'EvidenceExplorer', 'ReplayExplorer', 'CompanyIntelligence', 'SectorIntelligence',
       'ResearchEvents', 'CrossSectorIntelligence', 'ResearchHub', 'IntelligenceHub',
@@ -417,9 +417,9 @@ describe('Option A: offline boundary (no server / auth / api / network in the sh
         `App.tsx must not import the donor component ${name} (API/auth-coupled)`
       );
     }
-    // The current BI-08 workspace and the four partial surfaces remain the only feature imports.
+    // The current BI-08 workspace and the authorized surfaces remain the only feature imports.
     assert.ok(appSrc.includes('features/portfolio/PortfolioWorkspace'), 'BI-08 workspace imported');
-    for (const s of ['ExecutiveSurface', 'ResearchSurface', 'IntelligenceSurface', 'EvidenceSurface']) {
+    for (const s of ['ExecutiveDashboard', 'ResearchSurface', 'IntelligenceSurface', 'EvidenceSurface']) {
       assert.ok(appSrc.includes(s), `${s} import preserved`);
     }
   });

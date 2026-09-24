@@ -1,0 +1,249 @@
+{
+  "portfolio": {
+    "portfolioId": "PF-REAL",
+    "scenario": "Balanced",
+    "holdings": 13,
+    "sectorExposure": {
+      "Banking": 7.7,
+      "Insurance": 7.7,
+      "Capital Markets": 7.7,
+      "Healthcare": 7.7,
+      "Hospitality": 7.7,
+      "Energy": 7.7,
+      "Utilities": 7.7,
+      "Consumer": 7.7,
+      "Industrials": 7.7,
+      "Technology": 7.7,
+      "Telecommunications": 7.7,
+      "Automobile": 7.7,
+      "Materials & Metals": 7.7
+    },
+    "concentration": 7.7,
+    "diversificationScore": 128.3,
+    "avgConviction": 74.2,
+    "avgQuality": 71.7,
+    "avgRisk": 77.7
+  },
+  "diversification": {
+    "band": "High",
+    "flags": [
+      "elevated risk / correlated downside",
+      "single-factor exposure (growth)"
+    ]
+  },
+  "ranking": [
+    {
+      "companyId": "Capital Markets-H1",
+      "sector": "Capital Markets",
+      "conviction": 84.6
+    },
+    {
+      "companyId": "Materials & Metals-H1",
+      "sector": "Materials & Metals",
+      "conviction": 82.5
+    },
+    {
+      "companyId": "Consumer-H1",
+      "sector": "Consumer",
+      "conviction": 79.5
+    },
+    {
+      "companyId": "Hospitality-H1",
+      "sector": "Hospitality",
+      "conviction": 79
+    },
+    {
+      "companyId": "Telecommunications-H1",
+      "sector": "Telecommunications",
+      "conviction": 77.8
+    },
+    {
+      "companyId": "Industrials-H1",
+      "sector": "Industrials",
+      "conviction": 77.2
+    },
+    {
+      "companyId": "Technology-H1",
+      "sector": "Technology",
+      "conviction": 76.3
+    },
+    {
+      "companyId": "Healthcare-H1",
+      "sector": "Healthcare",
+      "conviction": 75.5
+    },
+    {
+      "companyId": "Utilities-H1",
+      "sector": "Utilities",
+      "conviction": 74.1
+    },
+    {
+      "companyId": "Insurance-H1",
+      "sector": "Insurance",
+      "conviction": 72.3
+    },
+    {
+      "companyId": "Automobile-H1",
+      "sector": "Automobile",
+      "conviction": 71.3
+    },
+    {
+      "companyId": "Energy-H1",
+      "sector": "Energy",
+      "conviction": 66.9
+    },
+    {
+      "companyId": "Banking-H1",
+      "sector": "Banking",
+      "conviction": 47.1
+    }
+  ],
+  "opportunity": [
+    {
+      "companyId": "Capital Markets-H1",
+      "sector": "Capital Markets",
+      "conviction": 84.6
+    },
+    {
+      "companyId": "Materials & Metals-H1",
+      "sector": "Materials & Metals",
+      "conviction": 82.5
+    },
+    {
+      "companyId": "Consumer-H1",
+      "sector": "Consumer",
+      "conviction": 79.5
+    },
+    {
+      "companyId": "Hospitality-H1",
+      "sector": "Hospitality",
+      "conviction": 79
+    },
+    {
+      "companyId": "Telecommunications-H1",
+      "sector": "Telecommunications",
+      "conviction": 77.8
+    },
+    {
+      "companyId": "Industrials-H1",
+      "sector": "Industrials",
+      "conviction": 77.2
+    },
+    {
+      "companyId": "Technology-H1",
+      "sector": "Technology",
+      "conviction": 76.3
+    },
+    {
+      "companyId": "Healthcare-H1",
+      "sector": "Healthcare",
+      "conviction": 75.5
+    },
+    {
+      "companyId": "Utilities-H1",
+      "sector": "Utilities",
+      "conviction": 74.1
+    },
+    {
+      "companyId": "Insurance-H1",
+      "sector": "Insurance",
+      "conviction": 72.3
+    }
+  ],
+  "correlation": {
+    "flags": [
+      "elevated systematic risk",
+      "interest-rate sensitivity (financials exposure)",
+      "regulatory / catastrophe sensitivity (insurance)",
+      "regulatory / healthcare-policy sensitivity",
+      "financial-sector cyclicality"
+    ],
+    "concentrationSectors": []
+  },
+  "decisions": [
+    {
+      "sector": "Banking",
+      "verdict": "Watch",
+      "composite": 47.1,
+      "confidence": 0.8
+    },
+    {
+      "sector": "Insurance",
+      "verdict": "Buy",
+      "composite": 72.3,
+      "confidence": 0.8
+    },
+    {
+      "sector": "Capital Markets",
+      "verdict": "Strong Buy",
+      "composite": 84.6,
+      "confidence": 0.8
+    },
+    {
+      "sector": "Healthcare",
+      "verdict": "Buy",
+      "composite": 75.5,
+      "confidence": 0.8
+    },
+    {
+      "sector": "Hospitality",
+      "verdict": "Buy",
+      "composite": 79,
+      "confidence": null
+    },
+    {
+      "sector": "Energy",
+      "verdict": "Accumulate",
+      "composite": 66.9,
+      "confidence": null
+    },
+    {
+      "sector": "Utilities",
+      "verdict": "Buy",
+      "composite": 74.1,
+      "confidence": null
+    },
+    {
+      "sector": "Consumer",
+      "verdict": "Buy",
+      "composite": 79.5,
+      "confidence": null
+    },
+    {
+      "sector": "Industrials",
+      "verdict": "Buy",
+      "composite": 77.2,
+      "confidence": null
+    },
+    {
+      "sector": "Technology",
+      "verdict": "Buy",
+      "composite": 76.3,
+      "confidence": null
+    },
+    {
+      "sector": "Telecommunications",
+      "verdict": "Buy",
+      "composite": 77.8,
+      "confidence": null
+    },
+    {
+      "sector": "Automobile",
+      "verdict": "Buy",
+      "composite": 71.3,
+      "confidence": null
+    },
+    {
+      "sector": "Materials & Metals",
+      "verdict": "Strong Buy",
+      "composite": 82.5,
+      "confidence": null
+    }
+  ],
+  "provenance": {
+    "dataSource": "certified v2.0 platform (frozen sector engines + CSIP) over frozen v1.1 Replay Baseline inputs",
+    "freshness": "SNAPSHOT",
+    "calibratedAt": "2026-08-09T00:00:00.000Z",
+    "transportSemantics": "1:1 mapping; transport transformation != decision transformation"
+  }
+}

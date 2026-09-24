@@ -1,0 +1,18 @@
+{
+  "dataset": "hospitality-golden-reference-1.0.0",
+  "standard": "IES-010",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "purpose": "Authoritative regression benchmark for the Hospitality Sector Engine — providers across all business models and override scenarios.",
+  "providers": [
+    { "id": "HP-001", "name": "Luxury Recovery", "businessModel": "owned", "occupancy": 78, "adr": 12000, "revpar": 9360, "revparGrowth": 12, "gopMargin": 40, "ebitdaMargin": 32, "feeMix": 10, "demandQualityMix": 70, "debtEbitda": 3.0, "roic": 12, "demandShock": false, "occupancyCollapse": false, "brandDeterioration": false, "governance": false },
+    { "id": "HP-002", "name": "Business Travel Managed", "businessModel": "managed", "occupancy": 72, "adr": 9000, "revpar": 6480, "revparGrowth": 10, "gopMargin": 32, "ebitdaMargin": 26, "feeMix": 45, "demandQualityMix": 75, "debtEbitda": 2.5, "roic": 18, "demandShock": false, "occupancyCollapse": false, "brandDeterioration": false, "governance": false },
+    { "id": "HP-003", "name": "Resort Seasonal", "businessModel": "owned", "occupancy": 70, "adr": 15000, "revpar": 10500, "revparGrowth": 9, "gopMargin": 45, "ebitdaMargin": 36, "feeMix": 5, "demandQualityMix": 55, "debtEbitda": 4.5, "roic": 9, "demandShock": false, "occupancyCollapse": false, "brandDeterioration": false, "governance": false },
+    { "id": "HP-004", "name": "Franchise Expansion", "businessModel": "franchised", "occupancy": 65, "adr": 7000, "revpar": 4550, "revparGrowth": 14, "gopMargin": 40, "ebitdaMargin": 45, "feeMix": 70, "demandQualityMix": 65, "debtEbitda": 2.0, "roic": 25, "demandShock": false, "occupancyCollapse": false, "brandDeterioration": false, "governance": false },
+    { "id": "HP-005", "name": "Deleveraged Owned", "businessModel": "owned", "occupancy": 75, "adr": 8500, "revpar": 6375, "revparGrowth": 7, "gopMargin": 30, "ebitdaMargin": 24, "feeMix": 8, "demandQualityMix": 60, "debtEbitda": 3.5, "roic": 10, "demandShock": false, "occupancyCollapse": false, "brandDeterioration": false, "governance": false },
+    { "id": "HP-006", "name": "Asset-light Mixed", "businessModel": "asset-light", "occupancy": 68, "adr": 8000, "revpar": 5440, "revparGrowth": 8, "gopMargin": 28, "ebitdaMargin": 30, "feeMix": 55, "demandQualityMix": 68, "debtEbitda": 2.8, "roic": 15, "demandShock": false, "occupancyCollapse": false, "brandDeterioration": false, "governance": false },
+    { "id": "HP-007", "name": "Demand Shock", "businessModel": "asset-light", "occupancy": 45, "adr": 6000, "revpar": 2700, "revparGrowth": -20, "gopMargin": 12, "ebitdaMargin": 10, "feeMix": 50, "demandQualityMix": 50, "debtEbitda": 3.2, "roic": 5, "demandShock": true, "occupancyCollapse": false, "brandDeterioration": false, "governance": false },
+    { "id": "HP-008", "name": "Brand Deterioration", "businessModel": "franchised", "occupancy": 62, "adr": 6500, "revpar": 4030, "revparGrowth": 4, "gopMargin": 35, "ebitdaMargin": 40, "feeMix": 65, "demandQualityMix": 55, "debtEbitda": 2.5, "roic": 20, "demandShock": false, "occupancyCollapse": false, "brandDeterioration": true, "governance": false },
+    { "id": "HP-009", "name": "Occupancy Collapse", "businessModel": "owned", "occupancy": 35, "adr": 5000, "revpar": 1750, "revparGrowth": -35, "gopMargin": 5, "ebitdaMargin": 3, "feeMix": 5, "demandQualityMix": 45, "debtEbitda": 6.5, "roic": 1, "demandShock": false, "occupancyCollapse": true, "brandDeterioration": false, "governance": false }
+  ]
+}

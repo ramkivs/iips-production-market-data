@@ -1,0 +1,17 @@
+{
+  "basis": "Frozen hospitality expected outputs derived from IES-010 Normative Calculation Appendix D15 + hospitality-calibration-1.0.0.",
+  "standard": "IES-010",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "expected": [
+    { "providerId": "HP-001", "businessModel": "owned", "composite": 79.0, "verdict": "Buy", "pillars": { "occupancy": 75, "demandRevpar": 85.5, "growth": 75, "profitability": 90.0, "earningsQuality": 40, "capitalRisk": 79.5 } },
+    { "providerId": "HP-002", "businessModel": "managed", "composite": 76.4, "verdict": "Buy", "pillars": { "occupancy": 75, "demandRevpar": 75.0, "growth": 75, "profitability": 81.0, "earningsQuality": 75, "capitalRisk": 79.5 } },
+    { "providerId": "HP-003", "businessModel": "owned", "composite": 76.0, "verdict": "Buy", "pillars": { "occupancy": 75, "demandRevpar": 81.0, "growth": 75, "profitability": 90.0, "earningsQuality": 40, "capitalRisk": 65.5 } },
+    { "providerId": "HP-004", "businessModel": "franchised", "composite": 77.9, "verdict": "Buy", "pillars": { "occupancy": 60, "demandRevpar": 64.5, "growth": 75, "profitability": 90.0, "earningsQuality": 90, "capitalRisk": 79.5 } },
+    { "providerId": "HP-005", "businessModel": "owned", "composite": 72.9, "verdict": "Buy", "pillars": { "occupancy": 75, "demandRevpar": 75.0, "growth": 60, "profitability": 81.0, "earningsQuality": 40, "capitalRisk": 79.5 } },
+    { "providerId": "HP-006", "businessModel": "asset-light", "composite": 78.6, "verdict": "Buy", "pillars": { "occupancy": 60, "demandRevpar": 75.0, "growth": 75, "profitability": 81.0, "earningsQuality": 90, "capitalRisk": 79.5 } },
+    { "providerId": "HP-007", "businessModel": "asset-light", "composite": 54.2, "verdict": "Watch", "overrides": ["demand-shock"], "pillars": { "occupancy": 35, "demandRevpar": 46.0, "growth": 40, "profitability": 48.0, "earningsQuality": 75, "capitalRisk": 75.0 } },
+    { "providerId": "HP-008", "businessModel": "franchised", "composite": 73.0, "verdict": "Avoid", "overrides": ["brand-deterioration"], "pillars": { "occupancy": 60, "demandRevpar": 60.0, "growth": 60, "profitability": 81.0, "earningsQuality": 90, "capitalRisk": 79.5 } },
+    { "providerId": "HP-009", "businessModel": "owned", "composite": 38.9, "verdict": "Avoid", "overrides": ["occupancy-collapse"], "pillars": { "occupancy": 35, "demandRevpar": 46.0, "growth": 40, "profitability": 40.0, "earningsQuality": 40, "capitalRisk": 33.0 } }
+  ]
+}

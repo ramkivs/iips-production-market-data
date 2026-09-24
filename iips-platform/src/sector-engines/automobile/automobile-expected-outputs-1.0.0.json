@@ -1,0 +1,280 @@
+{
+  "basis": "automobile-golden-reference-1.0.0",
+  "standard": "IES-017",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-017 v1.0 (D17 normative) \u2014 PROPOSED, NOT AUTHORITY",
+  "expected": [
+    {
+      "providerId": "AB-001",
+      "subsegment": "mass-market-oem",
+      "declaredSubsegments": [
+        "mass-market-oem"
+      ],
+      "archetype": "full-line",
+      "composite": 71.3,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 65.2,
+        "growth": 75.0,
+        "risk": 75.0,
+        "profitability": 66.8,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-002",
+      "subsegment": "premium-oem",
+      "declaredSubsegments": [
+        "premium-oem"
+      ],
+      "archetype": "luxury",
+      "composite": 74.8,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 75.0,
+        "risk": 75.0,
+        "profitability": 81.8,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-003",
+      "subsegment": "commercial-vehicles",
+      "declaredSubsegments": [
+        "commercial-vehicles"
+      ],
+      "archetype": "commercial",
+      "composite": 69.2,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 60.0,
+        "risk": 75.0,
+        "profitability": 66.8,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-004",
+      "subsegment": "tier-1-supplier",
+      "declaredSubsegments": [
+        "tier-1-supplier"
+      ],
+      "archetype": "component-supplier",
+      "composite": 70.6,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 70.5,
+        "growth": 75.0,
+        "risk": 78.8,
+        "profitability": 66.8,
+        "capitalEfficiency": 75.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-005",
+      "subsegment": "ev-native",
+      "declaredSubsegments": [
+        "ev-native"
+      ],
+      "archetype": "ev-pure-play",
+      "composite": 66.9,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 60.0,
+        "growth": 90.0,
+        "risk": 62.0,
+        "profitability": 60.0,
+        "capitalEfficiency": 40.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-006",
+      "subsegment": "mass-market-oem",
+      "declaredSubsegments": [
+        "mass-market-oem"
+      ],
+      "archetype": "full-line",
+      "composite": 56.0,
+      "verdict": "Watch",
+      "pillars": {
+        "quality": 60.0,
+        "growth": 60.0,
+        "risk": 45.0,
+        "profitability": 60.0,
+        "capitalEfficiency": 60.0,
+        "valuation": 55.0
+      },
+      "overrides": [
+        "leverage-breach",
+        "margin-compression",
+        "competition-pressure"
+      ],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-007",
+      "subsegment": "premium-oem",
+      "declaredSubsegments": [
+        "premium-oem"
+      ],
+      "archetype": "ev-pure-play",
+      "composite": 83.6,
+      "verdict": "Strong Buy",
+      "pillars": {
+        "quality": 85.5,
+        "growth": 90.0,
+        "risk": 81.0,
+        "profitability": 81.8,
+        "capitalEfficiency": 75.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-008",
+      "subsegment": "tier-1-supplier",
+      "declaredSubsegments": [
+        "tier-1-supplier"
+      ],
+      "archetype": "component-supplier",
+      "composite": 56.6,
+      "verdict": "Hold",
+      "pillars": {
+        "quality": 60.0,
+        "growth": 60.0,
+        "risk": 60.0,
+        "profitability": 49.0,
+        "capitalEfficiency": 60.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-009",
+      "subsegment": "premium-oem",
+      "declaredSubsegments": [
+        "mass-market-oem",
+        "premium-oem"
+      ],
+      "archetype": "luxury",
+      "composite": 71.8,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 75.0,
+        "risk": 75.0,
+        "profitability": 66.8,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-010",
+      "subsegment": "mass-market-oem",
+      "declaredSubsegments": [
+        "mass-market-oem"
+      ],
+      "archetype": "full-line",
+      "composite": 56.2,
+      "verdict": "Hold",
+      "pillars": {
+        "quality": 40.0,
+        "growth": 40.0,
+        "risk": 84.0,
+        "profitability": 40.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-011",
+      "subsegment": "mass-market-oem",
+      "declaredSubsegments": [
+        "mass-market-oem"
+      ],
+      "archetype": "full-line",
+      "composite": 39.0,
+      "verdict": "Avoid",
+      "pillars": {
+        "quality": 40.0,
+        "growth": 50.0,
+        "risk": 30.0,
+        "profitability": 40.0,
+        "capitalEfficiency": 40.0,
+        "valuation": 30.0
+      },
+      "overrides": [
+        "leverage-breach",
+        "governance"
+      ],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-012",
+      "subsegment": "premium-oem",
+      "declaredSubsegments": [
+        "premium-oem"
+      ],
+      "archetype": "luxury",
+      "composite": 68.5,
+      "verdict": "Watch",
+      "pillars": {
+        "quality": 80.2,
+        "growth": 67.5,
+        "risk": 68.0,
+        "profitability": 66.8,
+        "capitalEfficiency": 60.0,
+        "valuation": 55.0
+      },
+      "overrides": [
+        "recall-risk",
+        "demand-collapse"
+      ],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "AB-013",
+      "subsegment": "commercial-vehicles",
+      "declaredSubsegments": [
+        "commercial-vehicles"
+      ],
+      "archetype": "commercial",
+      "composite": 64.8,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 67.5,
+        "risk": 55.0,
+        "profitability": 66.8,
+        "capitalEfficiency": 75.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    }
+  ]
+}

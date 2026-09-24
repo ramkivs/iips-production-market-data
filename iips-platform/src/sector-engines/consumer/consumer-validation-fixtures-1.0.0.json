@@ -1,0 +1,19 @@
+{
+  "fixtures": "consumer-validation-fixtures-1.0.0",
+  "standard": "IES-013",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "note": "Expected behavior per scenario — every segment, business model, calibration and override path exercised. Deterministic.",
+  "scenarios": [
+    { "id": "CNSR-01", "provider": "CS-001", "scenario": "Premium brand expansion", "segment": "luxury", "expectedVerdict": "Buy", "composite": 79.5 },
+    { "id": "CNSR-02", "provider": "CS-002", "scenario": "Staple resilience during slowdown", "segment": "staples", "expectedVerdict": "Buy", "composite": 74.6 },
+    { "id": "CNSR-03", "provider": "CS-003", "scenario": "Discretionary demand contraction", "segment": "discretionary", "expectedVerdict": "Watch", "composite": 48.2, "override": ["category-disruption", "leverage-alert"] },
+    { "id": "CNSR-04", "provider": "CS-004", "scenario": "Successful premiumization", "segment": "staples", "expectedVerdict": "Strong Buy", "composite": 81.0 },
+    { "id": "CNSR-05", "provider": "CS-005", "scenario": "Failed premiumization", "segment": "discretionary", "expectedVerdict": "Avoid", "composite": 53.2, "override": ["brand-erosion"] },
+    { "id": "CNSR-06", "provider": "CS-006", "scenario": "Channel disruption", "segment": "discretionary", "expectedVerdict": "Watch", "composite": 60.4, "override": ["channel-loss"] },
+    { "id": "CNSR-07", "provider": "CS-007", "scenario": "Private-label competition", "segment": "staples", "expectedVerdict": "Watch", "composite": 68.3, "override": ["input-cost-squeeze"] },
+    { "id": "CNSR-08", "provider": "CS-008", "scenario": "Margin compression (commodity inflation)", "segment": "staples", "expectedVerdict": "Watch", "composite": 64.6, "override": ["input-cost-squeeze"] },
+    { "id": "CNSR-09", "provider": "CS-009", "scenario": "Innovation-led market-share gains", "segment": "discretionary", "expectedVerdict": "Buy", "composite": 77.2 },
+    { "id": "CNSR-10", "provider": "CS-010", "scenario": "Brand erosion", "segment": "luxury", "expectedVerdict": "Avoid", "composite": 60.8, "override": ["brand-erosion", "leverage-alert"] }
+  ]
+}

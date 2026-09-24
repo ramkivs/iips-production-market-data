@@ -1,0 +1,104 @@
+{
+  "basis": "Frozen expected outputs derived from IES-009 D15 + clinical-quality constraint.",
+  "version": "1.0.0",
+  "expected": [
+    {
+      "providerId": "HC-001",
+      "category": "Hospitals",
+      "pillars": {
+        "utilization": 90,
+        "revenue-quality": 40,
+        "profitability": 90,
+        "clinical-quality": 90,
+        "efficiency": 60
+      },
+      "compositeScore": 75.5,
+      "verdict": "Buy",
+      "confidence": 0.8
+    },
+    {
+      "providerId": "HC-002",
+      "category": "Diagnostics",
+      "pillars": {
+        "utilization": 75,
+        "revenue-quality": 40,
+        "profitability": 75,
+        "clinical-quality": 90,
+        "efficiency": 60
+      },
+      "compositeScore": 68.8,
+      "verdict": "Accumulate",
+      "confidence": 0.8
+    },
+    {
+      "providerId": "HC-003",
+      "category": "Pharmaceuticals",
+      "pillars": {
+        "utilization": 75,
+        "revenue-quality": 70,
+        "profitability": 75,
+        "clinical-quality": 90,
+        "efficiency": 60
+      },
+      "compositeScore": 74.8,
+      "verdict": "Buy",
+      "confidence": 0.8
+    },
+    {
+      "providerId": "HC-004",
+      "category": "Medical Devices",
+      "pillars": {
+        "utilization": 75,
+        "revenue-quality": 70,
+        "profitability": 40,
+        "clinical-quality": 90,
+        "efficiency": 60
+      },
+      "compositeScore": 67.8,
+      "verdict": "Accumulate",
+      "confidence": 0.8
+    },
+    {
+      "providerId": "HC-005",
+      "category": "CRO/CDMO",
+      "pillars": {
+        "utilization": 75,
+        "revenue-quality": 70,
+        "profitability": 75,
+        "clinical-quality": 90,
+        "efficiency": 60
+      },
+      "compositeScore": 74.8,
+      "verdict": "Buy",
+      "confidence": 0.8
+    },
+    {
+      "providerId": "HC-006",
+      "category": "Health-tech",
+      "pillars": {
+        "utilization": 75,
+        "revenue-quality": 90,
+        "profitability": 90,
+        "clinical-quality": 90,
+        "efficiency": 60
+      },
+      "compositeScore": 81.8,
+      "verdict": "Strong Buy",
+      "confidence": 0.8
+    },
+    {
+      "providerId": "HC-007",
+      "category": "Distressed/Quality-failure",
+      "pillars": {
+        "utilization": 75,
+        "revenue-quality": 70,
+        "profitability": 75,
+        "clinical-quality": 0,
+        "efficiency": 35
+      },
+      "compositeScore": 53.0,
+      "verdict": "Avoid",
+      "confidence": 0.8
+    }
+  ]
+}

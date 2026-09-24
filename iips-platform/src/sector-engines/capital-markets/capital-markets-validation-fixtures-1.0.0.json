@@ -1,0 +1,32 @@
+{
+  "fixtures": "capital-markets-validation-fixtures",
+  "version": "1.0.0",
+  "source": "IES-008 D12 (Validation) edge cases + normal paths",
+  "note": "Covers normal + edge-case scenarios. Deterministic expected outcome documented.",
+  "scenarios": [
+    { "id": "FIX-CM-01", "name": "Healthy Asset Manager", "type": "normal",
+      "inputs": { "CM-001": 5000, "CM-002": 22, "CM-003": 0.6, "CM-004": 45, "CM-005": 85, "CM-006": 12, "CM-008": 800 },
+      "expectedOutcome": "Strong/positive verdict; deterministic" },
+    { "id": "FIX-CM-02", "name": "Severe AUM Outflow", "type": "edge",
+      "inputs": { "CM-001": 4000, "CM-002": -8, "CM-004": 50, "CM-005": 80, "CM-006": 10 },
+      "expectedOutcome": "Override severe-aum-outflow reduces recommendation" },
+    { "id": "FIX-CM-03", "name": "Cost Blowout", "type": "edge",
+      "inputs": { "CM-004": 78, "CM-005": 55, "CM-006": 8 },
+      "expectedOutcome": "Override cost-blowout caps recommendation at Watch" },
+    { "id": "FIX-CM-04", "name": "Regulatory Breach", "type": "edge",
+      "inputs": { "CM-004": 50, "CM-005": 70, "CM-006": 12, "regulatoryFlag": "BREACH" },
+      "expectedOutcome": "Override regulatory-breach caps recommendation at Avoid" },
+    { "id": "FIX-CM-05", "name": "Fee Compression", "type": "edge",
+      "inputs": { "CM-004": 60, "CM-005": 55, "CM-006": 10, "CM-007": 900 },
+      "expectedOutcome": "Deterministic; profitability tempered by fee pressure" },
+    { "id": "FIX-CM-06", "name": "Missing Data", "type": "edge",
+      "inputs": { "CM-004": 55, "CM-005": 60, "CM-006": null, "CM-007": null },
+      "expectedOutcome": "Deterministic with reduced confidence; missing inputs flagged" },
+    { "id": "FIX-CM-07", "name": "Governance Failure", "type": "edge",
+      "inputs": { "CM-004": 48, "CM-005": 75, "CM-006": 11, "governanceFlag": "SEVERE_GOVERNANCE_FAILURE" },
+      "expectedOutcome": "Override governance-failure caps recommendation at Avoid despite strong metrics" },
+    { "id": "FIX-CM-08", "name": "Market Cycle Stress", "type": "edge",
+      "inputs": { "CM-004": 58, "CM-005": 55, "CM-006": 9, "marketCycleFlag": "STRESS" },
+      "expectedOutcome": "Override market-cycle-stress reduces recommendation; deterministic" }
+  ]
+}

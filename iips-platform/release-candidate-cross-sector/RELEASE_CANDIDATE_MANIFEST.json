@@ -1,0 +1,21 @@
+{
+  "releaseCandidate": "csip-rc-1.0.0",
+  "capability": "Cross-Sector Intelligence Platform",
+  "version": "1.0.0",
+  "program": "v1.1 Track 5",
+  "frameworkVersion": "1.0",
+  "methodologyVersion": "CSIP v1.0 (frozen)",
+  "ontologyVersion": "universal-investment-ontology-1.0.0",
+  "goldenDatasetRegression": true,
+  "replayDeterminism": true,
+  "allocationFixtures": 8,
+  "diversificationFixtures": 5,
+  "testCount": 102,
+  "reusesPlatform": "iips-platform unchanged",
+  "consumedEngines": [
+    "banking-engine-v1.0.0",
+    "insurance-engine-v1.0.0",
+    "capital-markets-engine-v1.0.0",
+    "healthcare-engine-v1.0.0"
+  ]
+}

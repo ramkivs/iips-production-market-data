@@ -83,10 +83,10 @@ export const NAV: NavItem[] = [
     ],
   },
 
-  // ── PARTIAL (Phase 3, PATH L, presentation-only) ──────────────────────────────────────
-  // Executive = UI02 company-level summary, bound to the local UI02ExecutiveSummaryBuilder.
-  // The donor portfolio-level ExecutiveDashboard granularity/identity conflict is NOT
-  // resolved by Option A; no portfolio-level executive data is fabricated.
+  // ── PARTIAL (Controlled Recovery Gate) ───────────────────────────────────────────────
+  // Executive = Certified Executive Dashboard, genuinely computed by the certified
+  // v2.0 platform over frozen Replay Baseline inputs (6 Portfolio Health metrics,
+  // 13 ranking rows, 3 Up / 10 Flat trends, 13 decision bars/cards). Reference portfolio snapshot.
   { label: 'Executive', path: '/executive', minRole: 'viewer', status: 'partial' },
 
   // ── Current-base declared surfaces (no donor lineage) ───────────────────────────────

@@ -1,0 +1,17 @@
+{
+  "basis": "Frozen energy expected outputs derived from IES-011 Normative Calculation Appendix D15 + energy-calibration-1.0.0.",
+  "standard": "IES-011",
+  "version": "1.0.0",
+  "program": "v1.1 Track 6",
+  "expected": [
+    { "providerId": "EN-001", "segment": "integrated", "composite": 66.9, "verdict": "Accumulate", "pillars": { "quality": 75.0, "growth": 60.0, "risk": 75.0, "profitability": 79.5, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "EN-002", "segment": "upstream", "composite": 76.4, "verdict": "Buy", "pillars": { "quality": 90.0, "growth": 64.5, "risk": 75.0, "profitability": 90.0, "capitalEfficiency": 82.5, "valuation": 30 } },
+    { "providerId": "EN-003", "segment": "midstream", "composite": 66.0, "verdict": "Accumulate", "pillars": { "quality": 75.0, "growth": 60.0, "risk": 55.0, "profitability": 90.0, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "EN-004", "segment": "downstream", "composite": 65.8, "verdict": "Accumulate", "pillars": { "quality": 75.0, "growth": 54.0, "risk": 75.0, "profitability": 69.0, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "EN-005", "segment": "renewables", "composite": 73.4, "verdict": "Buy", "pillars": { "quality": 75.0, "growth": 90.0, "risk": 55.0, "profitability": 85.5, "capitalEfficiency": 67.5, "valuation": 30 } },
+    { "providerId": "EN-006", "segment": "utility", "composite": 62.7, "verdict": "Accumulate", "pillars": { "quality": 75.0, "growth": 64.5, "risk": 30.0, "profitability": 75.0, "capitalEfficiency": 75.0, "valuation": 30 } },
+    { "providerId": "EN-007", "segment": "upstream", "composite": 42.5, "verdict": "Watch", "overrides": ["price-collapse", "leverage-alert"], "pillars": { "quality": 52.0, "growth": 40.0, "risk": 30.0, "profitability": 46.0, "capitalEfficiency": 50.0, "valuation": 30 } },
+    { "providerId": "EN-008", "segment": "upstream", "composite": 50.3, "verdict": "Watch", "overrides": ["reserve-write-down", "leverage-alert"], "pillars": { "quality": 52.0, "growth": 40.0, "risk": 55.0, "profitability": 64.5, "capitalEfficiency": 50.0, "valuation": 30 } },
+    { "providerId": "EN-009", "segment": "utility", "composite": 60.8, "verdict": "Watch", "overrides": ["stranded-asset"], "pillars": { "quality": 75.0, "growth": 60.0, "risk": 30.0, "profitability": 75.0, "capitalEfficiency": 67.5, "valuation": 30 } }
+  ]
+}

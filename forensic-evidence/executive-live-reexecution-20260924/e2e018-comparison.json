@@ -1,0 +1,345 @@
+{
+  "evidenceSource": {
+    "commit": "2f1049d0db348733f4d4f15fb4dcc57d4f2742fa",
+    "path": "docs/v3.0/e2e-018-screenshots/CAPTURE_MANIFEST.json",
+    "capture": "executive.png",
+    "captureSha256": "6a3f10433bac366e01801b5dd6612e01cf0ec21b420f1f80fcbfee1afe914db7",
+    "productCommitRecordedInManifest": "7964fccefbf95341699bf56b5833b2432981767d"
+  },
+  "items": [
+    {
+      "observable": "testIdCounts[metric-card]",
+      "e2e018_expected": 6,
+      "runtime_7964fcc_derived": 6,
+      "runtime_42f91fad_derived": 6,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[metric-value]",
+      "e2e018_expected": 6,
+      "runtime_7964fcc_derived": 6,
+      "runtime_42f91fad_derived": 6,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[top-opportunity]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[trend-up]",
+      "e2e018_expected": 3,
+      "runtime_7964fcc_derived": 3,
+      "runtime_42f91fad_derived": 3,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[trend-flat]",
+      "e2e018_expected": 10,
+      "runtime_7964fcc_derived": 10,
+      "runtime_42f91fad_derived": 10,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[recent-decision]",
+      "e2e018_expected": 13,
+      "runtime_7964fcc_derived": 13,
+      "runtime_42f91fad_derived": 13,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[decision-badge-Buy]",
+      "e2e018_expected": 9,
+      "runtime_7964fcc_derived": 9,
+      "runtime_42f91fad_derived": 9,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[decision-badge-Strong Buy]",
+      "e2e018_expected": 2,
+      "runtime_7964fcc_derived": 2,
+      "runtime_42f91fad_derived": 2,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[decision-badge-Watch]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[decision-badge-Accumulate]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[evidence-card]",
+      "e2e018_expected": 13,
+      "runtime_7964fcc_derived": 13,
+      "runtime_42f91fad_derived": 13,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[evidence-reference]",
+      "e2e018_expected": 13,
+      "runtime_7964fcc_derived": 13,
+      "runtime_42f91fad_derived": 13,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[risk-list]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[simple-bar-chart]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Banking]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Insurance]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Capital Markets]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Healthcare]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Hospitality]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Energy]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Utilities]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Consumer]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Industrials]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Technology]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Telecommunications]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Automobile]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[bar-Materials & Metals]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Banking]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Insurance]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Capital Markets]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Healthcare]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Hospitality]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Energy]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Utilities]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Consumer]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Industrials]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Technology]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Telecommunications]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Automobile]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "testIdCounts[inspect-Materials & Metals]",
+      "e2e018_expected": 1,
+      "runtime_7964fcc_derived": 1,
+      "runtime_42f91fad_derived": 1,
+      "classification": "EXACT MATCH",
+      "mapping": "derived from runtime payload via historical ExecutiveDashboard.tsx render rules"
+    },
+    {
+      "observable": "observables.tableRows",
+      "e2e018_expected": 14,
+      "runtime_7964fcc_derived": 14,
+      "runtime_42f91fad_derived": 14,
+      "classification": "EXACT MATCH",
+      "mapping": "DataTable renders 1 header row + ranking.length body rows"
+    }
+  ],
+  "summary": {
+    "total": 41,
+    "EXACT MATCH": 41,
+    "MISMATCH": 0,
+    "mismatchedItems": []
+  }
+}

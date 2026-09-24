@@ -1,0 +1,55 @@
+{
+  "profile": "materials-metals-calibration-1.0.0",
+  "standard": "IES-020",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-020 v1.0 (D20 normative)",
+  "bandScores": {
+    "MM-001": [["lt", 10, 40], ["range", 10, 20, 60], ["range", 20, 30, 75], ["gte", 30, 90]],
+    "MM-002": [["lt", 0, 40], ["range", 0, 8, 60], ["range", 8, 15, 75], ["gte", 15, 90]],
+    "MM-003": [["lt", 1.5, 90], ["range", 1.5, 2.5, 75], ["range", 2.5, 3.5, 55], ["gte", 3.5, 30]],
+    "MM-004": [["lt", 5, 40], ["range", 5, 12, 60], ["range", 12, 20, 75], ["gte", 20, 90]],
+    "MM-005": [["lt", 25, 90], ["range", 25, 50, 75], ["range", 50, 75, 55], ["gte", 75, 30]],
+    "MM-006": [["lt", 95, 40], ["range", 95, 100, 60], ["range", 100, 105, 75], ["gte", 105, 90]],
+    "MM-007": [["lt", 2, 40], ["range", 2, 5, 60], ["range", 5, 8, 75], ["gte", 8, 90]],
+    "MM-008": [["lt", 6, 40], ["range", 6, 10, 60], ["range", 10, 14, 75], ["gte", 14, 90]],
+    "MM-009": [["lt", 10, 90], ["range", 10, 16, 75], ["range", 16, 24, 55], ["gte", 24, 30]],
+    "MM-010": [["lt", 30, 90], ["range", 30, 60, 75], ["range", 60, 90, 55], ["gte", 90, 30]],
+    "MM-011": [["lt", 4, 90], ["range", 4, 7, 75], ["range", 7, 10, 55], ["gte", 10, 30]],
+    "MM-012": [["lt", 10, 40], ["range", 10, 30, 60], ["range", 30, 60, 75], ["gte", 60, 90]]
+  },
+  "segments": {
+    "diversified-miners": { "w": [0.25, 0.20, 0.25, 0.15, 0.10, 0.05], "leverageAlert": 3.0 },
+    "base-metals": { "w": [0.25, 0.20, 0.25, 0.15, 0.10, 0.05], "leverageAlert": 3.5 },
+    "precious-metals": { "w": [0.30, 0.15, 0.20, 0.20, 0.10, 0.05], "leverageAlert": 2.5 },
+    "steel-producers": { "w": [0.25, 0.15, 0.25, 0.20, 0.10, 0.05], "leverageAlert": 3.0 },
+    "specialty-materials": { "w": [0.30, 0.20, 0.20, 0.15, 0.10, 0.05], "leverageAlert": 3.0 }
+  },
+  "archetypeRisk": {
+    "integrated": 1.0,
+    "pure-play": 1.1,
+    "processor": 0.9,
+    "recycling": 0.9,
+    "royalty": 0.8,
+    "hybrid": 1.0
+  },
+  "calibratedBandTables": {
+    "precious-metals": {
+      "MM-004": [["lt", 8, 40], ["range", 8, 15, 60], ["range", 15, 25, 75], ["gte", 25, 90]]
+    },
+    "steel-producers": {
+      "MM-005": [["lt", 40, 90], ["range", 40, 60, 75], ["range", 60, 80, 55], ["gte", 80, 30]]
+    },
+    "specialty-materials": {
+      "MM-012": [["lt", 5, 40], ["range", 5, 15, 60], ["range", 15, 40, 75], ["gte", 40, 90]]
+    }
+  },
+  "verdictMapping": {
+    "80-100": "Strong Buy",
+    "70-80": "Buy",
+    "60-70": "Accumulate",
+    "50-60": "Hold",
+    "40-50": "Watch",
+    "0-40": "Avoid"
+  }
+}

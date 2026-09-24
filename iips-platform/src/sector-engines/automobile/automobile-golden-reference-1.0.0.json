@@ -1,0 +1,105 @@
+{
+  "dataset": "automobile-golden-reference-1.0.0",
+  "standard": "IES-017",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-017 v1.0 (D17 normative) — PROPOSED, NOT AUTHORITY",
+  "purpose": "PROPOSED synthetic deterministic reference providers for the Automobile Sector Engine (the frozen Replay-Baseline reference-dataset convention established by IES-015/016). These are NOT claims about real companies and are NOT authoritative until the D17 methodology is approved by the maintainer/domain authority.",
+  "providers": [
+    {
+      "id": "AB-001", "name": "Global Volume OEM",
+      "subsegment": "mass-market-oem", "archetype": "full-line",
+      "ebitdaMargin": 12, "revenueGrowth": 8, "debtEbitda": 1.8, "vehicleMargin": 9,
+      "capacityUtilization": 85, "evMix": 30, "fcfYield": 5, "roic": 12,
+      "capexIntensity": 12, "inventoryDays": 45, "evEbitda": 5.5, "aftersalesMix": 18
+    },
+    {
+      "id": "AB-002", "name": "Premium Luxury Brand",
+      "subsegment": "premium-oem", "archetype": "luxury",
+      "ebitdaMargin": 16, "revenueGrowth": 6, "debtEbitda": 1.5, "vehicleMargin": 14,
+      "capacityUtilization": 82, "evMix": 25, "fcfYield": 6, "roic": 14,
+      "capexIntensity": 10, "inventoryDays": 40, "evEbitda": 6.0, "aftersalesMix": 22
+    },
+    {
+      "id": "AB-003", "name": "Commercial Vehicle Leader",
+      "subsegment": "commercial-vehicles", "archetype": "commercial",
+      "ebitdaMargin": 13, "revenueGrowth": 5, "debtEbitda": 1.9, "vehicleMargin": 11,
+      "capacityUtilization": 80, "evMix": 12, "fcfYield": 5.5, "roic": 11,
+      "capexIntensity": 11, "inventoryDays": 50, "evEbitda": 6.2, "aftersalesMix": 28
+    },
+    {
+      "id": "AB-004", "name": "Global Tier-1 Supplier",
+      "subsegment": "tier-1-supplier", "archetype": "component-supplier",
+      "ebitdaMargin": 10, "revenueGrowth": 7, "debtEbitda": 2.0, "vehicleMargin": 12,
+      "capacityUtilization": 88, "evMix": 20, "fcfYield": 5, "roic": 10,
+      "capexIntensity": 9, "inventoryDays": 55, "evEbitda": 7.0, "aftersalesMix": 15
+    },
+    {
+      "id": "AB-005", "name": "EV Pure-Play Challenger",
+      "subsegment": "ev-native", "archetype": "ev-pure-play",
+      "ebitdaMargin": 8, "revenueGrowth": 25, "debtEbitda": 3.2, "vehicleMargin": 7,
+      "capacityUtilization": 70, "evMix": 100, "fcfYield": 1, "roic": 6,
+      "capexIntensity": 28, "inventoryDays": 35, "evEbitda": 9.0, "aftersalesMix": 12
+    },
+    {
+      "id": "AB-006", "name": "Legacy OEM Under Pressure",
+      "subsegment": "mass-market-oem", "archetype": "full-line",
+      "ebitdaMargin": 9, "revenueGrowth": 2, "debtEbitda": 3.6, "vehicleMargin": 6,
+      "capacityUtilization": 68, "evMix": 8, "fcfYield": 3, "roic": 7,
+      "capexIntensity": 18, "inventoryDays": 75, "evEbitda": 8.5, "aftersalesMix": 15,
+      "competitionPressure": true, "marginCompression": true
+    },
+    {
+      "id": "AB-007", "name": "Premium EV Leader",
+      "subsegment": "premium-oem", "archetype": "ev-pure-play",
+      "ebitdaMargin": 18, "revenueGrowth": 20, "debtEbitda": 1.2, "vehicleMargin": 16,
+      "capacityUtilization": 90, "evMix": 95, "fcfYield": 7, "roic": 15,
+      "capexIntensity": 12, "inventoryDays": 30, "evEbitda": 7.5, "aftersalesMix": 25
+    },
+    {
+      "id": "AB-008", "name": "Sub-scale Supplier",
+      "subsegment": "tier-1-supplier", "archetype": "component-supplier",
+      "ebitdaMargin": 7, "revenueGrowth": 3, "debtEbitda": 2.6, "vehicleMargin": 8,
+      "capacityUtilization": 72, "evMix": 10, "fcfYield": 3, "roic": 7,
+      "capexIntensity": 14, "inventoryDays": 70, "evEbitda": 8.0, "aftersalesMix": 12
+    },
+    {
+      "id": "AB-009", "name": "Multi-subsegment Hybrid OEM",
+      "subsegments": ["mass-market-oem", "premium-oem"], "subsegmentDominant": "premium-oem",
+      "archetype": "hybrid", "hybridDominant": "luxury",
+      "ebitdaMargin": 14, "revenueGrowth": 9, "debtEbitda": 1.7, "vehicleMargin": 13,
+      "capacityUtilization": 84, "evMix": 35, "fcfYield": 5.5, "roic": 13,
+      "capexIntensity": 11, "inventoryDays": 42, "evEbitda": 6.4, "aftersalesMix": 20
+    },
+    {
+      "id": "AB-010", "name": "Half-Even Tie OEM",
+      "subsegment": "mass-market-oem", "archetype": "full-line",
+      "ebitdaMargin": 7, "revenueGrowth": -1, "debtEbitda": 1.8, "vehicleMargin": 4,
+      "capacityUtilization": 55, "evMix": 3, "fcfYield": 6, "roic": 5,
+      "capexIntensity": 8, "inventoryDays": 25, "evEbitda": 5, "aftersalesMix": 8
+    },
+    {
+      "id": "AB-011", "name": "Governance-Risk OEM",
+      "subsegment": "mass-market-oem", "archetype": "full-line",
+      "ebitdaMargin": 6, "revenueGrowth": 1, "debtEbitda": 4.5, "vehicleMargin": 4,
+      "capacityUtilization": 55, "evMix": 4, "fcfYield": 1, "roic": 3,
+      "capexIntensity": 30, "inventoryDays": 100, "evEbitda": 12, "aftersalesMix": 8,
+      "governance": true
+    },
+    {
+      "id": "AB-012", "name": "Recall + Demand Collapse OEM",
+      "subsegment": "premium-oem", "archetype": "luxury",
+      "ebitdaMargin": 14, "revenueGrowth": 1, "debtEbitda": 2.4, "vehicleMargin": 15,
+      "capacityUtilization": 78, "evMix": 20, "fcfYield": 4, "roic": 12,
+      "capexIntensity": 13, "inventoryDays": 65, "evEbitda": 7.0, "aftersalesMix": 20,
+      "recallRisk": true, "demandCollapse": true
+    },
+    {
+      "id": "AB-013", "name": "Exact Band Boundaries OEM",
+      "subsegment": "commercial-vehicles", "archetype": "commercial",
+      "ebitdaMargin": 8, "revenueGrowth": 0, "debtEbitda": 2.5, "vehicleMargin": 10,
+      "capacityUtilization": 75, "evMix": 20, "fcfYield": 5, "roic": 10,
+      "capexIntensity": 16, "inventoryDays": 60, "evEbitda": 7.0, "aftersalesMix": 20
+    }
+  ]
+}

@@ -1,0 +1,384 @@
+{
+  "baseline": "program-v1.1-replay-baseline",
+  "program": "v1.1",
+  "version": "1.0.0",
+  "date": "2026-08-09",
+  "standard": "Program v1.1 Final Certification",
+  "contractVersion": "Program v1.1 (10 sector engines frozen; ARM/CSIP/Performance/Observability/CI-CD certified)",
+  "purpose": "Authoritative program-level replay baseline: representative golden execution from each of the 10 released sector engines. Certifies replay identity \u2014 same input + contract version + calibration version + runtime configuration -> identical output + evidence + metadata + replay.",
+  "runtimeConfiguration": {
+    "clock": "fixed",
+    "idProvider": "deterministic",
+    "frameworkVersion": "1.0",
+    "snapshotSchema": "snapshot-1.0",
+    "rounding": "round-half-to-even at composite only",
+    "boundarySemantics": "lower-inclusive / upper-exclusive (terminal includes upper bound)"
+  },
+  "replayIdentity": [
+    "input",
+    "contractVersion",
+    "calibrationVersion",
+    "runtimeConfiguration"
+  ],
+  "replayAssertions": [
+    "identical output",
+    "identical evidence",
+    "identical metadata",
+    "identical replay"
+  ],
+  "sectors": [
+    {
+      "sector": "Banking",
+      "engineId": "sector.banking",
+      "engineVersion": "1.0.0",
+      "standard": "IES-006",
+      "contractVersion": "IES-006 v1.0",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "BM-001": 0.55,
+        "BM-002": 9.5,
+        "BM-003": 2.6,
+        "BM-004": 40.0,
+        "BM-005": 6.5,
+        "BM-006": 3.0,
+        "BM-014": 11.0,
+        "BM-015": 13.0
+      },
+      "expectedOutput": {
+        "composite": 47.1,
+        "verdict": "Watch"
+      },
+      "calibrationProfile": "banking-calibration-1.0.0"
+    },
+    {
+      "sector": "Insurance",
+      "engineId": "sector.insurance",
+      "engineVersion": "1.0.0",
+      "standard": "IES-007",
+      "contractVersion": "IES-007 v1.0",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "IM-001": 92,
+        "IM-002": 1.7,
+        "IM-003": 1800,
+        "IM-004": 300,
+        "IM-005": 88,
+        "IM-006": 5000,
+        "IM-007": 16,
+        "IM-008": 7.2
+      },
+      "expectedOutput": {
+        "composite": 72.3,
+        "verdict": "Buy"
+      },
+      "calibrationProfile": "insurance-calibration-1.0.0"
+    },
+    {
+      "sector": "Capital Markets",
+      "engineId": "sector.capital-markets",
+      "engineVersion": "1.0.0",
+      "standard": "IES-008",
+      "contractVersion": "IES-008 v1.0",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "CM-001": 5000,
+        "CM-002": 22,
+        "CM-003": 0.6,
+        "CM-004": 45,
+        "CM-005": 85,
+        "CM-006": 12,
+        "CM-008": 800
+      },
+      "expectedOutput": {
+        "composite": 84.6,
+        "verdict": "Strong Buy"
+      },
+      "calibrationProfile": "capital-markets-calibration-1.0.0"
+    },
+    {
+      "sector": "Healthcare",
+      "engineId": "sector.healthcare",
+      "engineVersion": "1.0.0",
+      "standard": "IES-009",
+      "contractVersion": "IES-009 v1.0",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "HC-001": 85,
+        "HC-002": 18000,
+        "HC-004": 28,
+        "HC-005": 15,
+        "HC-007": 45
+      },
+      "expectedOutput": {
+        "composite": 75.5,
+        "verdict": "Buy"
+      },
+      "calibrationProfile": "healthcare-calibration-1.0.0"
+    },
+    {
+      "sector": "Hospitality",
+      "engineId": "sector.hospitality",
+      "engineVersion": "1.0.0",
+      "standard": "IES-010",
+      "contractVersion": "IES-010 v1.0",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "id": "HP-001",
+        "businessModel": "owned",
+        "occupancy": 78,
+        "adr": 12000,
+        "revpar": 9360,
+        "revparGrowth": 12,
+        "gopMargin": 40,
+        "ebitdaMargin": 32,
+        "feeMix": 10,
+        "demandQualityMix": 70,
+        "debtEbitda": 3.0,
+        "roic": 12
+      },
+      "expectedOutput": {
+        "composite": 79.0,
+        "verdict": "Buy"
+      },
+      "calibrationProfile": "hospitality-calibration-1.0.0"
+    },
+    {
+      "sector": "Energy",
+      "engineId": "sector.energy",
+      "engineVersion": "1.0.0",
+      "standard": "IES-011",
+      "contractVersion": "IES-011 v1.0",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "id": "EN-001",
+        "segment": "integrated",
+        "commodityExposure": "diversified",
+        "productionGrowth": 4,
+        "liftingCost": 30,
+        "reserveReplacement": 1.1,
+        "ebitdaMargin": 32,
+        "revenueGrowth": 6,
+        "debtEbitda": 2.0,
+        "roce": 14,
+        "transitionMix": 15,
+        "fcfYield": 7,
+        "evEbitda": 5
+      },
+      "expectedOutput": {
+        "composite": 66.9,
+        "verdict": "Accumulate"
+      },
+      "calibrationProfile": "energy-calibration-1.0.0"
+    },
+    {
+      "sector": "Utilities",
+      "engineId": "sector.utilities",
+      "engineVersion": "1.0.0",
+      "standard": "IES-012",
+      "contractVersion": "IES-012 v1.0",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "id": "UT-001",
+        "segment": "regulated-electric",
+        "regulatoryPosture": "constructive",
+        "rateBaseGrowth": 7,
+        "allowedRoe": 10,
+        "ffoDebt": 18,
+        "omEfficiency": 18,
+        "demandGrowth": 2,
+        "saidi": 90,
+        "transitionCapexIntensity": 30,
+        "ebitdaMargin": 42,
+        "revenueGrowth": 4,
+        "debtEbitda": 3.5,
+        "peRatio": 18,
+        "roe": 11
+      },
+      "expectedOutput": {
+        "composite": 74.1,
+        "verdict": "Buy"
+      },
+      "calibrationProfile": "utilities-calibration-1.0.0"
+    },
+    {
+      "sector": "Consumer",
+      "engineId": "sector.consumer",
+      "engineVersion": "1.0.0",
+      "standard": "IES-013",
+      "contractVersion": "IES-013 v1.0",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "id": "CS-001",
+        "segment": "luxury",
+        "businessModel": "branded",
+        "revenueGrowth": 9,
+        "priceContribution": 75,
+        "brandLoyalty": 85,
+        "marginResilience": 0.85,
+        "dtcShare": 50,
+        "fcfYield": 4,
+        "innovationIntensity": 20,
+        "privateLabelExposure": 5,
+        "ebitdaMargin": 28,
+        "debtEbitda": 2.0,
+        "peRatio": 25,
+        "roic": 18
+      },
+      "expectedOutput": {
+        "composite": 79.5,
+        "verdict": "Buy"
+      },
+      "calibrationProfile": "consumer-calibration-1.0.0"
+    },
+    {
+      "sector": "Industrials",
+      "engineId": "sector.industrials",
+      "engineVersion": "1.0.0",
+      "standard": "IES-014",
+      "contractVersion": "IES-014 v1.2 (D15 normative)",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "id": "IN-001",
+        "subsegment": "capital-goods",
+        "archetype": "oem",
+        "ebitdaMargin": 22,
+        "revenueGrowth": 8,
+        "debtEbitda": 2.0,
+        "evEbitda": 12,
+        "roce": 20,
+        "backlog": 2.5,
+        "bookToBill": 1.05,
+        "aftermarketShare": 30,
+        "fcfYield": 8,
+        "orderGrowth": 8,
+        "operatingMargin": 22,
+        "projectRiskExposure": 20
+      },
+      "expectedOutput": {
+        "composite": 77.2,
+        "verdict": "Buy"
+      },
+      "calibrationProfile": "industrials-calibration-1.0.0"
+    },
+    {
+      "sector": "Technology",
+      "engineId": "sector.technology",
+      "engineVersion": "1.0.0",
+      "standard": "IES-015",
+      "contractVersion": "IES-015 v1.3 (D15 normative)",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "id": "TE-001",
+        "subsegment": "software-saas",
+        "archetype": "subscription",
+        "ebitdaMargin": 24,
+        "revenueGrowth": 22,
+        "debtEbitda": 1.5,
+        "evRevenue": 14,
+        "fcfYield": 6,
+        "recurringRevenuePct": 80,
+        "nrr": 118,
+        "grossMargin": 75,
+        "rdIntensity": 12,
+        "customerConcentration": 20,
+        "capexIntensity": 8,
+        "usageGrowth": 25
+      },
+      "expectedOutput": {
+        "composite": 76.3,
+        "verdict": "Buy"
+      },
+      "calibrationProfile": "technology-calibration-1.0.0"
+    },
+    {
+      "sector": "Telecommunications",
+      "engineId": "sector.telecommunications",
+      "engineVersion": "1.0.0",
+      "standard": "IES-016",
+      "contractVersion": "IES-016 v1.0 (D16 normative)",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "id": "TC-001",
+        "subsegment": "wireless-mno",
+        "archetype": "consumer",
+        "ebitdaMargin": 42,
+        "revenueGrowth": 6,
+        "debtEbitda": 2.2,
+        "arpu": 34,
+        "churnRate": 1.1,
+        "postpaidMix": 88,
+        "fcfYield": 6,
+        "roic": 12,
+        "capexIntensity": 15,
+        "spectrumCost": 0.8,
+        "evEbitda": 6.5,
+        "usageGrowth": 22
+      },
+      "expectedOutput": {
+        "composite": 77.8,
+        "verdict": "Buy"
+      },
+      "calibrationProfile": "telecommunications-calibration-1.0.0"
+    },
+    {
+      "sector": "Automobile",
+      "engineId": "sector.automobile",
+      "engineVersion": "1.0.0",
+      "standard": "IES-017",
+      "contractVersion": "IES-017 v1.0 (D17 normative)",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "id": "AB-001",
+        "subsegment": "mass-market-oem",
+        "archetype": "full-line",
+        "ebitdaMargin": 12,
+        "revenueGrowth": 8,
+        "debtEbitda": 1.8,
+        "vehicleMargin": 9,
+        "capacityUtilization": 85,
+        "evMix": 30,
+        "fcfYield": 5,
+        "roic": 12,
+        "capexIntensity": 12,
+        "inventoryDays": 45,
+        "evEbitda": 5.5,
+        "aftersalesMix": 18
+      },
+      "expectedOutput": {
+        "composite": 71.3,
+        "verdict": "Buy"
+      },
+      "calibrationProfile": "automobile-calibration-1.0.0"
+    },
+    {
+      "sector": "Materials & Metals",
+      "engineId": "sector.materials-metals",
+      "engineVersion": "1.0.0",
+      "standard": "IES-020",
+      "contractVersion": "IES-020 v1.0 (D20 normative)",
+      "calibrationVersion": "1.0.0",
+      "input": {
+        "id": "MM-001",
+        "subsegment": "diversified-miners",
+        "archetype": "integrated",
+        "ebitdaMargin": 32,
+        "revenueGrowth": 9,
+        "debtEbitda": 1.4,
+        "reserveLife": 22,
+        "cashCostCurve": 20,
+        "realizedPriceSpread": 106,
+        "fcfYield": 8,
+        "roic": 14,
+        "capexIntensity": 11,
+        "inventoryDays": 40,
+        "evEbitda": 5.5,
+        "recyclingInputMix": 15
+      },
+      "expectedOutput": {
+        "composite": 82.5,
+        "verdict": "Strong Buy"
+      },
+      "calibrationProfile": "materials-metals-calibration-1.0.0"
+    }
+  ]
+}

@@ -355,15 +355,11 @@ describe('Phase-3 Executive surface — shell integration', () => {
     );
   });
 
-  it('EXE-24: the MOUNTED route renders its governed unavailable state UNCONDITIONALLY', () => {
-    // Classification B: all three mandatory payload domains are forensically unavailable
-    // offline, and the UI02 builder has no partial-render path. The mounted route must
-    // therefore render the unavailable state — this is the honest outcome, asserted.
-    assert.ok(routed.includes('state-unavailable'), 'unavailable state must render on the route');
-    assert.ok(
-      !routed.includes('data-testid="metric-card"'),
-      'the mounted route must render NO fabricated metrics'
-    );
+  it('EXE-24: the MOUNTED route renders the genuine certified Executive Dashboard', () => {
+    assert.ok(routed.includes('Portfolio Health'), 'Portfolio Health must render on the route');
+    assert.ok(routed.includes('data-testid="metric-card"'), 'the mounted route renders certified metric cards');
+    assert.ok(routed.includes('Recent Decisions'), 'recent decisions must render');
+    assert.ok(routed.includes('data-testid="recent-decision"'), 'decision cards must render');
   });
 
   it('EXE-25: the route renders inside the shell with chrome intact', () => {

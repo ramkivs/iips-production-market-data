@@ -1,0 +1,53 @@
+{
+  "report": "Insurance Golden Dataset Regression",
+  "version": "1.0.0",
+  "total": 5,
+  "match": true,
+  "rows": [
+    {
+      "insurerId": "IN-001",
+      "category": "Life Insurance",
+      "expectedComposite": 72.3,
+      "actualComposite": 72.3,
+      "expectedVerdict": "Buy",
+      "actualVerdict": "Buy",
+      "match": true
+    },
+    {
+      "insurerId": "IN-002",
+      "category": "General Insurance",
+      "expectedComposite": 58.3,
+      "actualComposite": 58.3,
+      "expectedVerdict": "Hold",
+      "actualVerdict": "Hold",
+      "match": true
+    },
+    {
+      "insurerId": "IN-003",
+      "category": "Health Insurance",
+      "expectedComposite": 62.5,
+      "actualComposite": 62.5,
+      "expectedVerdict": "Accumulate",
+      "actualVerdict": "Accumulate",
+      "match": true
+    },
+    {
+      "insurerId": "IN-004",
+      "category": "High-growth Insurer",
+      "expectedComposite": 85.1,
+      "actualComposite": 85.1,
+      "expectedVerdict": "Strong Buy",
+      "actualVerdict": "Strong Buy",
+      "match": true
+    },
+    {
+      "insurerId": "IN-005",
+      "category": "Distressed Insurer",
+      "expectedComposite": 34.8,
+      "actualComposite": 34.8,
+      "expectedVerdict": "Avoid",
+      "actualVerdict": "Avoid",
+      "match": true
+    }
+  ]
+}

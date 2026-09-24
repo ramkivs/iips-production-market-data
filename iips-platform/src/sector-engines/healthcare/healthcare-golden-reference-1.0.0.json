@@ -1,0 +1,90 @@
+{
+  "dataset": "healthcare-golden-reference",
+  "version": "1.0.0",
+  "methodologyVersion": "IES-009 v1.0-draft",
+  "calibrationProfile": "healthcare-calibration-1.0.0",
+  "purpose": "Authoritative regression benchmark for the Healthcare Sector Engine. Covers all six sub-sectors + a distressed/quality-failure case.",
+  "providers": [
+    {
+      "id": "HC-001",
+      "name": "Hospital-Alpha",
+      "category": "Hospitals",
+      "inputs": {
+        "HC-001": 85,
+        "HC-002": 18000,
+        "HC-004": 28,
+        "HC-005": 15,
+        "HC-007": 45
+      }
+    },
+    {
+      "id": "HC-002",
+      "name": "Diagnostics-Beta",
+      "category": "Diagnostics",
+      "inputs": {
+        "HC-004": 16,
+        "HC-005": 12,
+        "HC-007": 45,
+        "HC-008": 18
+      }
+    },
+    {
+      "id": "HC-003",
+      "name": "Pharma-Gamma",
+      "category": "Pharmaceuticals",
+      "inputs": {
+        "HC-004": 18,
+        "HC-005": 8,
+        "HC-006": 0.4,
+        "HC-009": 15,
+        "HC-010": 5
+      }
+    },
+    {
+      "id": "HC-004",
+      "name": "Devices-Delta",
+      "category": "Medical Devices",
+      "inputs": {
+        "HC-004": 9,
+        "HC-005": 4,
+        "HC-006": 0.8,
+        "HC-009": 8,
+        "HC-010": 1
+      }
+    },
+    {
+      "id": "HC-005",
+      "name": "CRO-Epsilon",
+      "category": "CRO/CDMO",
+      "inputs": {
+        "HC-004": 20,
+        "HC-005": 16,
+        "HC-006": 0.4,
+        "HC-011": 1.3
+      }
+    },
+    {
+      "id": "HC-006",
+      "name": "HealthTech-Zeta",
+      "category": "Health-tech",
+      "inputs": {
+        "HC-004": 28,
+        "HC-005": 25,
+        "HC-006": 0.2,
+        "HC-012": 85
+      }
+    },
+    {
+      "id": "HC-007",
+      "name": "QualityFailure-Eta",
+      "category": "Distressed/Quality-failure",
+      "inputs": {
+        "HC-001": 70,
+        "HC-004": 20,
+        "HC-005": 8,
+        "HC-007": 60,
+        "qualityFlag": "FAIL"
+      }
+    }
+  ]
+}
