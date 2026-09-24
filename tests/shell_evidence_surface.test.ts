@@ -204,7 +204,11 @@ describe('Phase-2 Evidence surface — shell integration', () => {
   );
 
   it('EVID-21: /evidence renders the real surface, not a placeholder', () => {
-    assert.ok(routed.includes('evidence-heading'), 'Evidence surface must render');
+    // A2 Evidence restoration (superseded): /evidence now routes the restored donor Evidence Hub, which renders its honest
+    // loading state under static SSR (data arrives over HTTP). UI11 EvidenceSurface is retained
+    // unrouted and remains covered by the component tests above.
+    assert.ok(routed.includes('data-testid="state-loading"'), 'restored Evidence Hub must render');
+    assert.ok(!routed.includes('structural-surface-unavailable'), '/evidence must not render the structural page');
     assert.ok(
       !routed.includes('This surface is declared in the governed navigation model'),
       '/evidence must no longer render the FeaturePlaceholder'

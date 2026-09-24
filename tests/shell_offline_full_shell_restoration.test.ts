@@ -198,8 +198,9 @@ describe('Option A: restored structural surfaces render honest fail-closed state
     // DECISION MATRIX work item (governed update): /intelligence/decision-matrix is NO LONGER a
     // structural route — the donor Decision Matrix is restored and mounted (covered by
     // decision_matrix_restoration.test.ts). Every other entry is unchanged.
-    ['/evidence/EQ_INFY_IN', 'Evidence detail'],
-    ['/evidence/replay/EQ_INFY_IN', 'Evidence replay'],
+    // A2 Evidence restoration (superseded): /evidence/:id and /evidence/replay/:id are NO LONGER structural routes — the
+    // donor EvidenceExplorer / ReplayExplorer are restored and mounted (covered by
+    // evidence_recovery.test.ts). Every other entry is unchanged.
     ['/collaboration', 'Collaboration'],
     ['/reports', 'Reports'],
     ['/watchlists', 'Watchlists'],
@@ -350,7 +351,9 @@ describe('Option A: preservation of BI-08 and the partial surfaces', () => {
       ['/executive', 'data-testid="state-loading"', 'Executive (Certified Dashboard)'],
       ['/research', 'research-unavailable-reason', 'Research (UI03)'],
       ['/intelligence', 'No intelligence data loaded', 'Intelligence (UI04)'],
-      ['/evidence', 'Cryptographic Lineage', 'Evidence (UI11)'],
+      // A2 Evidence restoration (superseded): /evidence routes the restored donor Evidence Hub (SSR loading state); UI11 is
+      // retained unrouted. It must still never be the structural fail-closed page.
+      ['/evidence', 'data-testid="state-loading"', 'Evidence (restored Evidence Hub)'],
     ];
     for (const [path, marker, name] of cases) {
       const out = renderAt(path);
@@ -431,9 +434,11 @@ describe('Option A: offline boundary (no server / auth / api / network in the sh
     const donorComponents = [
       'Administration', 'GovernedSearch',
       'Screener', 'MacroContext', 'Collaboration', 'Reports', 'Watchlists', 'Settings',
-      'EvidenceExplorer', 'ReplayExplorer',
+      // A2 Evidence restoration (superseded): 'EvidenceExplorer', 'ReplayExplorer' and 'EvidenceHub' removed from this list —
+      // they ARE recovered and mounted, reading the existing evidence/replay/decision-matrix
+      // clients over HTTP (asserted in evidence_recovery.test.ts).
       'ResearchEvents', 'CrossSectorIntelligence', 'ResearchHub', 'IntelligenceHub',
-      'EvidenceHub', 'CommandPalette', 'NotificationDrawer', 'NotesDrawer',
+      'CommandPalette', 'NotificationDrawer', 'NotesDrawer',
     ];
     for (const name of donorComponents) {
       assert.ok(

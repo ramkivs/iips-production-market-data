@@ -474,9 +474,9 @@ describe('Read authorities — boundaries (browser graph, network, donor infrast
     // Out-of-scope surfaces must still not exist.
     // DECISION MATRIX work item (governed update): DecisionMatrix.tsx is recovered by its own
     // gate and leaves this list; the other out-of-scope surfaces are unchanged.
+    // A2 Evidence restoration (superseded): EvidenceExplorer.tsx and ReplayExplorer.tsx are recovered by the A2 gate and
+    // leave this absent list. Every other exclusion is unchanged.
     for (const absent of [
-      'frontend/src/features/evidence/EvidenceExplorer.tsx',
-      'frontend/src/features/replay/ReplayExplorer.tsx',
       'frontend/src/features/research/ResearchEvents.tsx',
       'frontend/src/features/research/MacroContext.tsx',
     ]) {

@@ -283,9 +283,10 @@ describe('Decision Matrix — donor fidelity and scope', () => {
     for (const binding of [
       /ROUTES\.researchCompany\} element=\{<CompanyIntelligence \/>\}/,
       /ROUTES\.researchSector\} element=\{<SectorIntelligence \/>\}/,
-      /ROUTES\.evidence\} element=\{<EvidenceSurface \/>\}/,
-      /ROUTES\.evidenceReplay\} element=\{<EvidenceReplayStructural \/>\}/,
-      /ROUTES\.evidenceDetail\} element=\{<EvidenceDetailStructural \/>\}/,
+      // A2 Evidence restoration (superseded): the three Evidence routes now bind the restored donor surfaces.
+      /ROUTES\.evidence\} element=\{<EvidenceHub \/>\}/,
+      /ROUTES\.evidenceReplay\} element=\{<ReplayExplorer \/>\}/,
+      /ROUTES\.evidenceDetail\} element=\{<EvidenceExplorer \/>\}/,
     ]) assert.match(app, binding, `binding unchanged: ${binding}`);
     // Vite config still carries the R-1 topology exactly (no new proxy rule for this surface).
     const vite = strip(read('vite.config.ts'));

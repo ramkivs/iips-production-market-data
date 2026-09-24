@@ -404,7 +404,8 @@ describe('Phase-3 Executive surface — shell integration', () => {
       'Intelligence must remain partial'
     );
     for (const [path, heading] of [
-      [ROUTES.evidence, 'evidence-heading'],
+      // A2 Evidence restoration (superseded): /evidence routes the restored Evidence Hub (SSR loading state).
+      [ROUTES.evidence, 'data-testid="state-loading"'],
       [ROUTES.intelligence, 'intelligence-heading'],
     ] as const) {
       const out = renderToString(

@@ -424,7 +424,8 @@ describe('Phase-4 Research surface — shell integration', () => {
     }
     for (const [path, heading] of [
       [ROUTES.intelligence, 'intelligence-heading'],
-      [ROUTES.evidence, 'evidence-heading'],
+      // A2 Evidence restoration (superseded): /evidence routes the restored Evidence Hub (SSR loading state).
+      [ROUTES.evidence, 'data-testid="state-loading"'],
       // WUI-RS-03C: /executive renders the dashboard's honest loading state under static SSR
       // (certified data is delivered over HTTP / SSR provision, never computed in-browser).
       [ROUTES.executive, 'data-testid="state-loading"'],

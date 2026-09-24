@@ -149,8 +149,9 @@ export const NAV: NavItem[] = [
   },
 
   // ── PARTIAL (Phase 2, PATH L) + donor child restored (Option A) ──────────────────────
-  // Evidence = UI11, bound to the local UI11ProvenanceAuditorBuilder (preserved). The donor
-  // child (Decision Evidence -> the Evidence Hub) points at the SAME /evidence route.
+  // A2 EVIDENCE RECOVERY: /evidence now routes the restored donor Evidence Hub (UI11 retained
+  // unrouted); the donor child (Decision Evidence -> the Evidence Hub) points at the SAME
+  // /evidence route. Status stays 'partial' — replay remains REPORTED, NOT VERIFIED (AD-17).
   {
     label: 'Evidence',
     path: '/evidence',

@@ -30,8 +30,11 @@
  *    · /callback          — donor OIDC callback route structure. The identity layer is NOT
  *                           active (D115 DEFERRED): no code exchange, no session, no redirect.
  *    · /search, /screener/governed, research :id children + cross-sector + macro,
- *      /evidence/:id + /evidence/replay/:id,
  *      /collaboration, /reports, /watchlists, /settings — structural fail-closed surfaces.
+ *    · /evidence, /evidence/:id, /evidence/replay/:id — A2 EVIDENCE RECOVERY: the donor
+ *      EvidenceHub / EvidenceExplorer / ReplayExplorer are restored onto the existing
+ *      /api/decision-matrix, /api/evidence/:id and /api/replay/:id authorities (fail closed;
+ *      replay literals reported, AD-17 NOT VERIFIED).
  *    · /intelligence/decision-matrix — DECISION MATRIX work item: the donor Decision Matrix is
  *      restored onto the existing /api/decision-matrix SNAPSHOT authority (fails closed;
  *      AI Advisory deferred).
@@ -53,7 +56,9 @@
  *      child routes remain separate from UI03; F-9 designates UI06 only at /screener,
  *      while UI05/UI12/UI13 remain undesignated);
  *    · /intelligence -> IntelligenceSurface (UI04 partial);
- *    · /evidence  -> EvidenceSurface (UI11 partial);
+ *    · /evidence  -> SUPERSEDED by A2 Evidence recovery (Executive precedent, ea70a8c): the
+ *      donor EvidenceHub is routed; the UI11 EvidenceSurface module and import are RETAINED
+ *      unrouted (file untouched, component tests unchanged);
  *    · /replay, /security-master -> current-base declared surfaces (no donor lineage).
  *
  * ══ WHAT THE PREVIOUS CHROME DID, AND WHERE IT WENT ══════════════════════════════════════
@@ -86,6 +91,12 @@ import { UnavailableSurface } from './UnavailableSurface.js';
 import { IntelligenceSurface } from '../features/intelligence/IntelligenceSurface.js';
 // Phase-2 Path-L: Evidence presentation-only surface (authority act phase2-evidence-presentation-only-2026-09-22-001).
 import { EvidenceSurface } from '../features/evidence/EvidenceSurface.js';
+// A2 EVIDENCE RECOVERY: donor Evidence surfaces (blobs fa85f2d9 / 9f5927ff / 1dfc2855) restored
+// onto the existing evidence/replay/decision-matrix clients. HTTP only; no server import.
+// EvidenceSurface (UI11) above is RETAINED unrouted — the Executive precedent (ExecutiveSurface).
+import { EvidenceHub } from '../features/evidence/EvidenceHub.js';
+import { EvidenceExplorer } from '../features/evidence/EvidenceExplorer.js';
+import { ReplayExplorer } from '../features/replay/ReplayExplorer.js';
 // Phase-3 Path-L: Executive presentation-only surface (authority act phase3-executive-presentation-only-2026-09-22-001).
 import { ExecutiveSurface, ExecutiveDashboard } from '../features/executive/index.js';
 // Phase-4 Path-L: Research (UI03 Fundamental Analysis) presentation-only surface
@@ -273,16 +284,14 @@ const SearchStructural = structural(
  * EXISTING /api/decision-matrix SNAPSHOT authority over HTTP and fails closed (Loading / Error
  * / Unavailable) on every non-success path. No matrix, scores, or weights are fabricated.
  * AI Advisory stays DEFERRED (`AdvisoryDeferred`), so the surface is `partial`. */
-const EvidenceDetailStructural = structural(
-  'Evidence — Detail',
-  'Per-company decision evidence has no governed offline provenance payload',
-  'Donor structure: features/evidence/EvidenceExplorer (API-coupled in the donor lineage). No per-company provenance or lineage digest is fabricated; see GATE-PHASE-2-EVIDENCE-PAYLOAD-FORENSIC (classification B).'
-);
-const EvidenceReplayStructural = structural(
-  'Evidence — Replay',
-  'Evidence replay has no governed offline provenance payload',
-  'Donor structure: features/replay/ReplayExplorer (API-coupled in the donor lineage). No replay verdict is fabricated; see AD-17 / M-2 (UNRESOLVED).'
-);
+/* A2 EVIDENCE RECOVERY — the former `EvidenceDetailStructural` / `EvidenceReplayStructural`
+ * fail-closed factories are REMOVED: the donor EvidenceExplorer and ReplayExplorer are now
+ * restored and mounted (a route rendering "unavailable" while its real surface exists would be
+ * a false statement — the Prompt 2C precedent). Both read the EXISTING /api/evidence/:id and
+ * /api/replay/:id authorities over HTTP and fail closed (Loading / Error / Unavailable); an
+ * unknown identifier is refused by the authority (404) and renders the ErrorState. No
+ * per-company provenance is fabricated, and no replay verdict is fabricated: replay values are
+ * REPORTED literals, NOT VERIFIED (AD-17 / M-2 UNRESOLVED). */
 const CollaborationStructural = structural(
   'Collaboration',
   'Collaboration requires the platform collaboration services, which are not active offline',
@@ -418,12 +427,12 @@ export const App: React.FC<AppProps> = ({
         {/* Donor contract: remaining intelligence paths are placeholders (O/R/R = future). */}
         <Route path="/intelligence/*" element={<FeaturePlaceholder surface="Intelligence" />} />
 
-        {/* ── PARTIAL (preserved exactly): Evidence = UI11 at /evidence ───────────────── */}
-        <Route path={ROUTES.evidence} element={<EvidenceSurface />} />
-
-        {/* ── OPTION A — donor evidence child templates (structural, fail-closed) ─────── */}
-        <Route path={ROUTES.evidenceReplay} element={<EvidenceReplayStructural />} />
-        <Route path={ROUTES.evidenceDetail} element={<EvidenceDetailStructural />} />
+        {/* ── A2 EVIDENCE RECOVERY — restored donor Evidence surfaces (partial) ─────────
+            Hub → Explorer → Replay Explorer over the existing authorities. Replay literals are
+            REPORTED, NOT VERIFIED (AD-17). UI11 EvidenceSurface is retained unrouted. */}
+        <Route path={ROUTES.evidence} element={<EvidenceHub />} />
+        <Route path={ROUTES.evidenceReplay} element={<ReplayExplorer />} />
+        <Route path={ROUTES.evidenceDetail} element={<EvidenceExplorer />} />
 
         {/* ── OPTION A — donor administration: 8 governed tabs (structure only, D115) ── */}
         <Route path={ROUTES.adminOverview} element={<AdminOverviewStructural />} />

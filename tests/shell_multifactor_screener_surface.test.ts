@@ -261,7 +261,8 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
       [ROUTES.executive, 'data-testid="state-loading"'],
       [ROUTES.research, 'research-heading'],
       [ROUTES.intelligence, 'intelligence-heading'],
-      [ROUTES.evidence, 'evidence-heading'],
+      // A2 Evidence restoration (superseded): /evidence routes the restored Evidence Hub (SSR loading state).
+      [ROUTES.evidence, 'data-testid="state-loading"'],
       [ROUTES.securityMaster, 'security-master-heading'],
     ];
     for (const [path, marker] of expected) {

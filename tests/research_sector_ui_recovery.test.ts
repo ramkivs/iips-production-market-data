@@ -430,9 +430,9 @@ describe('Prompt 2C — exclusions held', () => {
     // DECISION MATRIX work item (governed update): DecisionMatrix.tsx is now recovered by its
     // own gate, so it leaves this absent list and the route assertion below moves to the
     // restored surface. Every other exclusion is unchanged.
+    // A2 Evidence restoration (superseded): EvidenceExplorer.tsx and ReplayExplorer.tsx are recovered by the A2 gate and
+    // leave this absent list. Every other exclusion is unchanged.
     for (const absent of [
-      'frontend/src/features/evidence/EvidenceExplorer.tsx',
-      'frontend/src/features/replay/ReplayExplorer.tsx',
       'frontend/src/features/research/ResearchEvents.tsx',
       'frontend/src/features/research/MacroContext.tsx',
       'frontend/src/features/cross-sector/CrossSectorIntelligence.tsx',
