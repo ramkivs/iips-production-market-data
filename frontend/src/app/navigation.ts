@@ -46,6 +46,8 @@
  *  restored research child routes remain separate from UI03. F-9 designates UI06 only at
  *  `/screener` as a restored, fail-closed `partial` surface; UI05/UI12/UI13 remain
  *  undesignated and are not claimed implemented under UI03.
+ *  A4 SCREENER RECOVERY: F-9 no longer owns `/screener` — it mounts the restored donor Screener
+ *  (existing /api/decision-matrix universe); UI06 is retained unrouted. Status stays `partial`.
  *
  * Governed under: AD-01..AD-18 / Phase-1A Authority Decision (OQ-1 = Option A, OQ-2 = c440)
  *                 + phase5-offline-full-shell-restoration-2026-09-23-001 (Option A)
@@ -106,6 +108,7 @@ export const NAV: NavItem[] = [
   // separate surfaces. F-9 restores UI06 only at /screener as a bound but payload-unavailable
   // `partial` surface; UI05/UI12/UI13 remain undesignated. Concrete "Banking" paths are the
   // donor's frozen reference-sector deep links (N+7/P-4 contract) — carried verbatim.
+  // A4 SCREENER RECOVERY: /screener now mounts the restored donor Screener; UI06 is unrouted.
   {
     label: 'Research',
     path: '/research',

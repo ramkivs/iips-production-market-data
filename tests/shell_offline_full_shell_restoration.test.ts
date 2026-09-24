@@ -438,7 +438,10 @@ describe('Option A: offline boundary (no server / auth / api / network in the sh
     // decision_matrix_restoration.test.ts). Every other donor component remains forbidden.
     const donorComponents = [
       'Administration', 'GovernedSearch',
-      'Screener', 'MacroContext', 'Collaboration', 'Reports', 'Watchlists', 'Settings',
+      // A4 Screener restoration (superseded): 'Screener' removed from this list — it IS recovered
+      // and mounted at /screener, reading the existing /api/decision-matrix client over HTTP
+      // (asserted in screener_recovery.test.ts). UI06 is retained unrouted.
+      'MacroContext', 'Collaboration', 'Reports', 'Watchlists', 'Settings',
       // A2 Evidence restoration (superseded): 'EvidenceExplorer', 'ReplayExplorer' and 'EvidenceHub' removed from this list —
       // they ARE recovered and mounted, reading the existing evidence/replay/decision-matrix
       // clients over HTTP (asserted in evidence_recovery.test.ts).

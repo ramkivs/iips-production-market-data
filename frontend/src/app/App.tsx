@@ -41,6 +41,9 @@
  *    · /screener — F-9 UI06 restoration: the existing qualified builder and in-process
  *      service contract are bound; absent a commissioned candidate universe it renders
  *      the honest OFFLINE / UNAVAILABLE / PAYLOAD NOT COMMISSIONED state.
+ *      A4 SCREENER RECOVERY supersedes this binding: /screener now mounts the proven donor
+ *      Screener (blob 915238ac) over the existing /api/decision-matrix universe. The UI06
+ *      MultiFactorScreenerSurface module and import are RETAINED unrouted (UI02/UI11 precedent).
  *    · /admin + the 8 donor tabs — structure only; every tab renders the honest
  *      authorization-required state (D115 DEFERRED). The donor Administration component
  *      (api/Keycloak-coupled) is NOT imported.
@@ -104,7 +107,12 @@ import { ExecutiveSurface, ExecutiveDashboard } from '../features/executive/inde
 import { ResearchSurface } from '../features/research/ResearchSurface.js';
 // F-9: UI06 Multi-Factor Screener restoration-only binding (F-8 authority act
 // f8-ui06-screener-restoration-2026-09-23-001); payload remains uncommissioned.
+// A4 SCREENER RECOVERY: UI06 is RETAINED (module + import) but UNROUTED — /screener now mounts
+// the restored donor Screener. UI06 candidate fields are never fed from the decision matrix.
 import { MultiFactorScreenerSurface } from '../features/screener/MultiFactorScreenerSurface.js';
+// A4 SCREENER RECOVERY: the proven donor Screener (blob 915238ac) composes ONLY the existing
+// /api/decision-matrix client over HTTP (no server import).
+import { Screener } from '../features/screener/Screener.js';
 // Prompt 2C (Prompt-2B authorities consumed over HTTP): Company / Sector Intelligence are
 // now FUNCTIONAL governed SNAPSHOT read surfaces mounted at /research/company/:id and
 // /research/sector/:id. No UISurfaceId claimed; AI Advisory remains deferred (not recovered).
@@ -412,8 +420,10 @@ export const App: React.FC<AppProps> = ({
             /screener binds the EXISTING qualified UI06 builder and service contract. The
             mounted route intentionally receives no candidate universe, so it fails closed
             as PAYLOAD NOT COMMISSIONED. /screener/governed preserves its donor structural
-            behavior; no governed candidate payload is implied or fabricated. */}
-        <Route path={ROUTES.screener} element={<MultiFactorScreenerSurface />} />
+            behavior; no governed candidate payload is implied or fabricated.
+            A4 SCREENER RECOVERY: /screener now mounts the restored donor Screener over the
+            existing /api/decision-matrix universe; UI06 is retained unrouted. */}
+        <Route path={ROUTES.screener} element={<Screener />} />
         <Route path={ROUTES.screenerGoverned} element={<GovernedScreenerStructural />} />
 
         {/* ── OPTION A — donor governed search route (structural, fail-closed) ────────── */}

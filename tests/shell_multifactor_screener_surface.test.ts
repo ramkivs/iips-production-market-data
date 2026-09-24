@@ -82,9 +82,15 @@ class ObservedScreenerService extends ScreenerService {
 
 describe('F-9 UI06 restoration — routed binding and fail-closed payload boundary', () => {
   it('UI06-01: /screener resolves to the restored UI06 surface', () => {
+    // A4 Screener restoration (superseded): /screener now mounts the restored donor Screener
+    // (A4 authorization); UI06 is retained unrouted. The UI06 identity assertions are preserved
+    // against the UI06 component rendered directly (no-input path, as the route previously did).
+    const ui06 = renderSurface({});
+    assert.ok(ui06.includes('ui06-screener-surface'), 'the UI06 surface must render');
+    assert.ok(ui06.includes('Multi-Factor Screener'), 'the UI06 title must render');
     const out = renderAt(ROUTES.screener);
-    assert.ok(out.includes('ui06-screener-surface'), 'the UI06 surface must render');
-    assert.ok(out.includes('Multi-Factor Screener'), 'the UI06 title must render');
+    assert.ok(out.includes('data-testid="state-loading"'), '/screener mounts the restored donor Screener loader');
+    assert.ok(!out.includes('ui06-screener-surface'), 'UI06 is no longer mounted at /screener');
     assert.ok(!out.includes('structural-surface-unavailable'), 'not the donor placeholder');
     assert.ok(!out.includes(BI08_ROOT_CLASS), 'must not fall back to BI-08');
   });
@@ -136,7 +142,11 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
   });
 
   it('UI06-07: no payload renders the honest offline/unavailable state', () => {
-    const out = renderAt(ROUTES.screener);
+    // A4 Screener restoration (superseded): the UI06 no-payload disclosure is asserted on the UI06
+    // component rendered directly (it is retained unrouted); /screener mounts the donor Screener.
+    assert.match(stripComments(readFileSync(join(process.cwd(), 'frontend/src/app/App.tsx'), 'utf8')),
+      /<Route path=\{ROUTES\.screener\} element=\{<Screener \/>\} \/>/, '/screener mounts the restored donor Screener');
+    const out = renderSurface({});
     assert.ok(out.includes('state-unavailable'), 'unavailable state must render');
     assert.ok(
       out.includes('OFFLINE / UNAVAILABLE / PAYLOAD NOT COMMISSIONED'),
