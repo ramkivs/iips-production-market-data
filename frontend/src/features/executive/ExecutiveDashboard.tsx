@@ -15,7 +15,7 @@
  * Provenance). Client-side composition only (no server changes), no fabrication.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { fetchExecutiveData, getCertifiedExecutiveData, type ExecutiveData, type RankedSector } from '../../api/executive.js';
+import { fetchExecutiveData, type ExecutiveData, type RankedSector } from '../../api/executive.js';
 import { fetchEvidenceData, type EvidenceData } from '../../api/evidence.js';
 import { fetchReplayData, type ReplayData } from '../../api/replay.js';
 import { ChartContainer, SimpleBarChart } from '../../components/viz/ChartFoundations.js';
@@ -31,16 +31,12 @@ export interface ExecutiveDashboardProps {
 }
 
 export function ExecutiveDashboard({ initialData }: ExecutiveDashboardProps = {}) {
-  const [data, setData] = useState<ExecutiveData | null>(() => {
-    if (initialData) return initialData;
-    try {
-      return getCertifiedExecutiveData();
-    } catch {
-      return null;
-    }
-  });
+  // WUI-RS-03C: no in-browser certified computation. Data arrives via the `initialData` prop
+  // (SSR/server provision) or asynchronously via fetchExecutiveData; otherwise the surface
+  // renders its existing honest loading/error/unavailable states. Nothing is fabricated.
+  const [data, setData] = useState<ExecutiveData | null>(() => initialData ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(() => !initialData && !data);
+  const [loading, setLoading] = useState(() => !initialData);
 
   // N+10: decision selection + governed trust-chain state.
   const [selectedSector, setSelectedSector] = useState<string | null>(null);

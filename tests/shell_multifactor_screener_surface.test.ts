@@ -251,7 +251,9 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
   it('UI06-12: unrelated routed surfaces remain unchanged', () => {
     const expected: ReadonlyArray<readonly [string, string]> = [
       [ROUTES.portfolio, BI08_ROOT_CLASS],
-      [ROUTES.executive, 'executive-heading'],
+      // WUI-RS-03C: /executive renders the dashboard's honest loading state under static SSR
+      // (certified data is delivered over HTTP / SSR provision, never computed in-browser).
+      [ROUTES.executive, 'data-testid="state-loading"'],
       [ROUTES.research, 'research-heading'],
       [ROUTES.intelligence, 'intelligence-heading'],
       [ROUTES.evidence, 'evidence-heading'],

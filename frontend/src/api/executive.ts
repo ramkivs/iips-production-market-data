@@ -4,10 +4,16 @@
  * Mirrors the certified v2.0 transport DTO. Semantically inert: the client maps certified
  * results to the UI; it never computes scores/confidence/rankings/thresholds.
  * Presentation-only. No business logic.
+ *
+ * WUI-RS-03C REMEDIATION: the former static import of `computeCertifiedExecutive` (and the
+ * in-browser compute fallback built on it) is REMOVED. Certified Executive computation is
+ * server-side only: the browser obtains data exclusively over HTTP (`fetchExecutiveData`)
+ * or via the `initialData` prop (SSR), and renders its existing honest error/unavailable
+ * states when neither is available. No fabricated data, no server-only computation in the
+ * browser, no `node:*` import remains on the browser path.
  */
 import type { Verdict } from '../components/decision/DecisionComponents.js';
 import { authFetch } from './authFetch.js';
-import { computeCertifiedExecutive } from '../../../src/transports/executive_transport.js';
 
 export interface PortfolioSummary {
   readonly portfolioId: string;
@@ -56,19 +62,9 @@ export interface ExecutiveData {
   readonly provenance: ExecutiveProvenance;
 }
 
-/** Synchronous in-process computation helper for SSR / offline execution. */
-export function getCertifiedExecutiveData(): ExecutiveData {
-  return computeCertifiedExecutive() as unknown as ExecutiveData;
-}
-
-/** Fetch the certified executive data from the transport / API. */
+/** Fetch the certified executive data from the transport / API over HTTP. */
 export async function fetchExecutiveData(baseUrl = ''): Promise<ExecutiveData> {
-  try {
-    const res = await authFetch(`${baseUrl}/api/executive`);
-    if (!res.ok) throw new Error(`executive transport returned ${res.status}`);
-    return (await res.json()) as ExecutiveData;
-  } catch (_e) {
-    // In-process fallback when running offline or without HTTP server
-    return getCertifiedExecutiveData();
-  }
+  const res = await authFetch(`${baseUrl}/api/executive`);
+  if (!res.ok) throw new Error(`executive transport returned ${res.status}`);
+  return (await res.json()) as ExecutiveData;
 }

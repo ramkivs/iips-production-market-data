@@ -425,7 +425,9 @@ describe('Phase-4 Research surface — shell integration', () => {
     for (const [path, heading] of [
       [ROUTES.intelligence, 'intelligence-heading'],
       [ROUTES.evidence, 'evidence-heading'],
-      [ROUTES.executive, 'executive-heading'],
+      // WUI-RS-03C: /executive renders the dashboard's honest loading state under static SSR
+      // (certified data is delivered over HTTP / SSR provision, never computed in-browser).
+      [ROUTES.executive, 'data-testid="state-loading"'],
     ] as const) {
       const out = renderToString(
         React.createElement(

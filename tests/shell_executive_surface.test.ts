@@ -37,6 +37,10 @@ import { renderToString } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 
 import { ExecutiveSurface } from '../frontend/src/features/executive/ExecutiveSurface.js';
+import { ExecutiveDashboard } from '../frontend/src/features/executive/ExecutiveDashboard.js';
+import type { ExecutiveDashboardProps } from '../frontend/src/features/executive/ExecutiveDashboard.js';
+import type { ExecutiveData } from '../frontend/src/api/executive.js';
+import { computeCertifiedExecutive } from '../src/transports/executive_transport.js';
 import { App } from '../frontend/src/app/App.js';
 import { ROUTES } from '../frontend/src/app/routes.js';
 import { NAV } from '../frontend/src/app/navigation.js';
@@ -348,7 +352,9 @@ describe('Phase-3 Executive surface — shell integration', () => {
   );
 
   it('EXE-23: /executive renders the real surface, not a placeholder', () => {
-    assert.ok(routed.includes('executive-heading'), 'Executive surface must render');
+    // WUI-RS-03C: without server provision, static SSR renders the dashboard's honest loading
+    // state (certified data arrives over HTTP / via SSR provision — never in-browser compute).
+    assert.ok(routed.includes('data-testid="state-loading"'), 'Executive surface (loading state) must render');
     assert.ok(
       !routed.includes('This surface is declared in the governed navigation model'),
       '/executive must no longer render the FeaturePlaceholder'
@@ -356,10 +362,16 @@ describe('Phase-3 Executive surface — shell integration', () => {
   });
 
   it('EXE-24: the MOUNTED route renders the genuine certified Executive Dashboard', () => {
-    assert.ok(routed.includes('Portfolio Health'), 'Portfolio Health must render on the route');
-    assert.ok(routed.includes('data-testid="metric-card"'), 'the mounted route renders certified metric cards');
-    assert.ok(routed.includes('Recent Decisions'), 'recent decisions must render');
-    assert.ok(routed.includes('data-testid="recent-decision"'), 'decision cards must render');
+    // WUI-RS-03C: certified observables are asserted against the dashboard provisioned through
+    // its designed `initialData` prop (node-side test context, same certified transport) — the
+    // identical certified payload the server contract delivers.
+    const initialData = computeCertifiedExecutive() as unknown as ExecutiveData;
+    const Dashboard: React.FC<ExecutiveDashboardProps> = ExecutiveDashboard;
+    const certified = renderToString(React.createElement(Dashboard, { initialData }));
+    assert.ok(certified.includes('Portfolio Health'), 'Portfolio Health must render on the route');
+    assert.ok(certified.includes('data-testid="metric-card"'), 'the mounted route renders certified metric cards');
+    assert.ok(certified.includes('Recent Decisions'), 'recent decisions must render');
+    assert.ok(certified.includes('data-testid="recent-decision"'), 'decision cards must render');
   });
 
   it('EXE-25: the route renders inside the shell with chrome intact', () => {

@@ -409,16 +409,21 @@ describe('Read authorities — boundaries (browser graph, network, donor infrast
 
   it('RA-25: the Prompt-2B baseline clients stay byte-unchanged, and every API client stays node-free', () => {
     // The four authorities are reachable over HTTP only. Prompt 2C later ADDS the two read
-    // clients these authorities require (`company.ts`, `decisionMatrix.ts`); the five baseline
+    // clients these authorities require (`company.ts`, `decisionMatrix.ts`); the baseline
     // clients must remain byte-identical, and NO client — baseline or added — may import a
     // Node builtin, a server module, or the certified platform.
-    // (For the record, the PRE-EXISTING `executive.ts` import of the Executive transport is a
-    // baseline condition owned by the Executive surface — neither relied on nor extended here.)
+    // WUI-RS-03C AMENDMENT: `executive.ts` was RE-BASELINED. Its pre-existing import of the
+    // Executive transport (and its in-browser compute fallback) was removed in the WUI-RS-03C
+    // remediation gate, so the byte-pin below now records the remediated file and the former
+    // platform-import EXEMPTION for `executive.ts` is RETIRED — it is now held to the same
+    // node-free/platform-free rules as every other client.
     const BASELINE_API: Record<string, string> = {
       'frontend/src/api/authFetch.ts': '64b72cce180f5ce5008a73818b0329d3624c057b089e274fb05522fe97fae66b',
       'frontend/src/api/dataMode.ts': '4d6ecf13c546eaa3f6458f21d8b93066e7bfa0acc22d3627858447c4fddf3b4f',
       'frontend/src/api/evidence.ts': '3a6797e2b2d4ffb09fa504cf77bc4fd4a50345a8b97ddb6cf3f69c82771fb16f',
-      'frontend/src/api/executive.ts': '349fef59663e4edc5c86a04a8ab7a4c66813dcafc7668597325aedf5b08853ae',
+      // Re-baselined by WUI-RS-03C (browser Node-edge remediation); prior value:
+      // 349fef59663e4edc5c86a04a8ab7a4c66813dcafc7668597325aedf5b08853ae
+      'frontend/src/api/executive.ts': 'a404a58d783a4398f938336ff498cc429eb236df607ddf1ef86dc0347ab05817',
       'frontend/src/api/replay.ts': 'bac8b56f04124ac866d2dad24a953338852fa2f52055351f8632936adff4fc9d',
     };
     for (const [f, expected] of Object.entries(BASELINE_API)) {
@@ -429,11 +434,7 @@ describe('Read authorities — boundaries (browser graph, network, donor infrast
       const code = readFileSync(resolve(ROOT, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
       assert.strictEqual(/from 'node:/.test(code), false, `${f} must not import a node: builtin`);
       assert.strictEqual(/from\s*'[^']*research-sector-transport/.test(code), false, `${f} must not import the server authority module`);
-      // `executive.ts` is EXEMPT from the platform-import rule: it already imports the Executive
-      // transport in the Prompt-2B baseline. That is a PRE-EXISTING condition owned by the
-      // Executive surface (recorded in the Prompt-2B report) — not introduced, extended or
-      // relied upon by this authority, and deliberately not "fixed" opportunistically here.
-      if (f.endsWith('frontend/src/api/executive.ts')) continue;
+      // WUI-RS-03C: no client is exempt any more — `executive.ts` included.
       assert.strictEqual(code.includes('iips-platform'), false, `${f} must not import the certified platform`);
       assert.strictEqual(code.includes('src/transports'), false, `${f} must not import a platform transport`);
       assert.strictEqual(code.includes('frontend/server'), false, `${f} must not import a server module`);

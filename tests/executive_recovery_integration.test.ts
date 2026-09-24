@@ -24,6 +24,8 @@ import { MemoryRouter } from 'react-router-dom';
 
 import { computeCertifiedExecutive, computeCertifiedPlatform } from '../src/transports/executive_transport.js';
 import { ExecutiveDashboard } from '../frontend/src/features/executive/ExecutiveDashboard.js';
+import type { ExecutiveDashboardProps } from '../frontend/src/features/executive/ExecutiveDashboard.js';
+import type { ExecutiveData } from '../frontend/src/api/executive.js';
 import { App } from '../frontend/src/app/App.js';
 import { ROUTES } from '../frontend/src/app/routes.js';
 import { SessionProvider } from '../frontend/src/core/session/SessionContext.js';
@@ -136,7 +138,16 @@ describe('IIPS — Executive Recovery: Certified Pipeline & Contract Parity', ()
 });
 
 describe('IIPS — Executive Recovery: E2E-018 UI Observables Parity (41/41)', () => {
-  const html = renderToString(React.createElement(ExecutiveDashboard, {}));
+  // WUI-RS-03C: the dashboard no longer computes certified data in-process (the browser
+  // client's Node-edge fallback was removed). In SSR the certified payload is provided
+  // through the component's designed `initialData` prop, computed here in a legal
+  // node-side test context from the same certified transport. All 41 observables below
+  // are asserted against the identical certified payload, rendered by the same component.
+  const initialData = computeCertifiedExecutive() as unknown as ExecutiveData;
+  // FC annotation: the component's defaulted parameter makes plain createElement prop
+  // inference fail under React 18 types; the props type itself is unchanged.
+  const Dashboard: React.FC<ExecutiveDashboardProps> = ExecutiveDashboard;
+  const html = renderToString(React.createElement(Dashboard, { initialData }));
 
   it('OBS-01: renders main Executive heading and badges', () => {
     assert.ok(html.includes('id="executive-heading"'), 'Executive heading must render');
@@ -210,9 +221,11 @@ describe('IIPS — Executive Recovery: Shell Integration & Non-Regression', () =
   );
 
   it('INT-01: /executive mounts ExecutiveDashboard inside the AppShell with chrome intact', () => {
+    // WUI-RS-03C: the App mounts the dashboard with no props, so static SSR (where effects
+    // never run) renders the surface's honest loading state until the client fetch resolves.
+    // Certified content remains asserted observably in the OBS block via `initialData`.
     assert.ok(routed.includes('app-shell'), 'AppShell must wrap the page');
-    assert.ok(routed.includes('id="executive-heading"'), 'Executive surface must render');
-    assert.ok(routed.includes('Portfolio Health'), 'Portfolio Health must render');
+    assert.ok(routed.includes('data-testid="state-loading"'), 'Executive route must render its honest loading state under SSR');
     assert.ok(routed.includes('Live Providers: 0 (INACTIVE)'), 'Fail-closed disclosure must persist');
   });
 

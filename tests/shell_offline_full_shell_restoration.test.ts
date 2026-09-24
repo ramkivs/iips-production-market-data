@@ -339,7 +339,10 @@ describe('Option A: preservation of BI-08 and the partial surfaces', () => {
 
   it('OPTA-07: the partial surfaces render their authorized components', () => {
     const cases: ReadonlyArray<readonly [string, string, string]> = [
-      ['/executive', 'Portfolio Health', 'Executive (Certified Dashboard)'],
+      // WUI-RS-03C: /executive renders the dashboard's honest loading state under static SSR
+      // (certified data is delivered over HTTP / SSR provision, never computed in-browser);
+      // it must still be the real dashboard surface, never the structural fail-closed page.
+      ['/executive', 'data-testid="state-loading"', 'Executive (Certified Dashboard)'],
       ['/research', 'research-unavailable-reason', 'Research (UI03)'],
       ['/intelligence', 'No intelligence data loaded', 'Intelligence (UI04)'],
       ['/evidence', 'Cryptographic Lineage', 'Evidence (UI11)'],

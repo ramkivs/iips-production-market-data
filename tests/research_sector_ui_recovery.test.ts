@@ -221,13 +221,15 @@ describe('Prompt 2C — mandatory browser boundary', () => {
     const files = browserFiles('frontend/src');
     assert.ok(files.length > 0);
 
-    // RECORDED BASELINE CONDITION (not introduced by this unit, not opportunistically "fixed"):
-    // these seven pre-existing browser files import the certified platform transport(s) so their
-    // own Path-L surfaces can compute locally. They are owned by the Executive / Evidence /
-    // Intelligence / Research / Screener / Security Master gates. The set is PINNED here so no
-    // new file can join it — especially not either surface recovered by this unit.
+    // RECORDED BASELINE CONDITION, as AMENDED by WUI-RS-03C: the browser path of the Executive
+    // client (`api/executive.ts`) no longer imports the certified platform transport — its
+    // in-browser compute fallback was removed and the browser is served over HTTP/SSR only.
+    // The six remaining browser files below still import platform transport(s) (type or value)
+    // so their own Path-L surfaces can resolve types locally. They are owned by the Evidence /
+    // Executive Surface / Intelligence / Research / Screener / Security Master gates. The set
+    // is PINNED here so no new file can join it — especially not either surface recovered by
+    // this unit.
     const BASELINE_PLATFORM_IMPORTERS = [
-      'frontend/src/api/executive.ts',
       'frontend/src/features/evidence/EvidenceSurface.tsx',
       'frontend/src/features/executive/ExecutiveSurface.tsx',
       'frontend/src/features/intelligence/IntelligenceSurface.tsx',
@@ -247,6 +249,16 @@ describe('Prompt 2C — mandatory browser boundary', () => {
 
     assert.deepStrictEqual(seenImporters.sort(), [...BASELINE_PLATFORM_IMPORTERS].sort(),
       'the set of browser files importing the platform must be EXACTLY the recorded baseline set');
+
+    // WUI-RS-03C NEW INVARIANT: the Executive browser client holds no platform/transport
+    // reference of any kind — its former baseline exemption is retired, not extended.
+    const executiveClient = strip(read('frontend/src/api/executive.ts'));
+    assert.strictEqual(executiveClient.includes('src/transports'), false,
+      'api/executive.ts must not import a platform transport (WUI-RS-03C)');
+    assert.strictEqual(executiveClient.includes('iips-platform'), false,
+      'api/executive.ts must not import the certified platform (WUI-RS-03C)');
+    assert.strictEqual(executiveClient.includes('computeCertifiedExecutive'), false,
+      'api/executive.ts must not reference server-only computation (WUI-RS-03C)');
 
     // The files THIS unit authored or changed are clean — asserted explicitly.
     for (const rel of SURFACES) {
@@ -316,14 +328,14 @@ describe('Prompt 2C — mandatory browser boundary', () => {
     const authority = offenders.filter((o) => o.includes('research-sector-transport') || o.includes('frontend/server'));
     assert.deepStrictEqual(authority, [], 'the server authority must not be browser-reachable');
 
-    // RECORDED BASELINE CONDITION: the only Node-importing modules reachable from the browser are
-    // the pre-existing certified platform transport(s), reached through the seven pre-existing
-    // Path-L surfaces (Executive / Evidence / Intelligence / Research / Screener / Security
-    // Master / api/executive). That is a pre-existing architectural condition owned by those
-    // gates — pinned here so neither surface recovered by this unit adds a new one.
+    // RECORDED BASELINE CONDITION, as AMENDED by WUI-RS-03C: the pre-existing Executive→Node
+    // edge (executive_transport.ts reached through api/executive.ts) was REMOVED. The browser
+    // runtime graph must now contain ZERO node:* imports attributable to the Executive browser
+    // path — in fact ZERO Node-importing modules of any kind — while the Prompt-2B server
+    // authority remains equally unreachable.
     const nodeImporters = [...new Set(offenders.map((o) => o.split(' -> ')[0]!))].sort();
-    assert.deepStrictEqual(nodeImporters, ['src/transports/executive_transport.ts'],
-      'the set of Node-importing modules reachable from the browser must be exactly the pre-existing baseline');
+    assert.deepStrictEqual(nodeImporters, [],
+      'the browser runtime graph must contain ZERO Node-importing modules (WUI-RS-03C)');
 
     // The recovered surfaces themselves introduce no Node-importing path.
     for (const o of offenders) {
