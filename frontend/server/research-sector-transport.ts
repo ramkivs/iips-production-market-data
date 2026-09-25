@@ -71,6 +71,11 @@
  */
 import http from 'node:http';
 import { computeCertifiedPlatform } from '../../src/transports/executive_transport.js';
+// GROUP 1 / GATE 2 ENGINE REGISTRY (read-only wiring): the recovered certified 10-engine registry
+// (iips-review-recovered @ 286f3da, E2E-030 10-ENGINE LTS scope; recovered to B1 by Gate 1 e1fa323).
+// ONLY listEngines() is used. EngineApiAdapter.execute() is dormant donor code:
+// PRESENT / NOT EXPOSED / NOT ROUTED / NOT CALLED / NOT AUTHORIZED.
+import { EngineApiAdapter } from '../../iips-platform/src/integration/EngineApiAdapter.js';
 
 /** The frozen certified instant used by the certified baseline payloads. */
 const CERTIFIED_CALIBRATED_AT = '2026-08-09T00:00:00.000Z';
@@ -542,6 +547,13 @@ export function handleResearchSectorRequest(requestUrl: string, requestMethod?: 
     }
     if (path === '/api/cross-sector') {
       return Object.freeze({ status: 200 as const, body: computeCertifiedCrossSector() });
+    }
+    // GROUP 1 / GATE 2: GET /api/engines — the recovered certified registry, serialized as-is
+    // (donor semantics: `engineApi.listEngines()`). GET only: every other method is refused 405
+    // above; no /api/engines/:id/execute route exists (falls through to 404). B1 does NOT inherit
+    // E2E-030 certification — this is wiring only.
+    if (path === '/api/engines') {
+      return Object.freeze({ status: 200 as const, body: new EngineApiAdapter().listEngines() });
     }
     if (path.startsWith(COMPANY_PREFIX)) {
       const t = parseSectorTarget(path, COMPANY_PREFIX);

@@ -127,6 +127,10 @@ import { ResearchEvents } from '../features/research/ResearchEvents.js';
 // 8788 SNAPSHOT authority's /api/cross-sector plus /api/evidence/:sector and /api/replay/:sector
 // over HTTP (no server import).
 import { CrossSectorIntelligence } from '../features/cross-sector/CrossSectorIntelligence.js';
+// GROUP 1 / GATE 2: the recovered certified 10-engine Engine Registry (Gate 1 e1fa323, donor
+// 286f3da) mounted at /research/engines, reading ONLY GET /api/engines over HTTP (no server import,
+// no execution caller).
+import { EngineRegistry } from '../features/engines/EngineRegistry.js';
 // DECISION MATRIX work item: the donor Decision Matrix (c3b6e947) restored onto the existing
 // /api/decision-matrix read authority + current-lineage client. HTTP only; no server import.
 import { DecisionMatrix } from '../features/decision-matrix/DecisionMatrix.js';
@@ -416,6 +420,7 @@ export const App: React.FC<AppProps> = ({
         {/* ── OPTION A — remaining donor research children (structural, fail-closed) ──── */}
         <Route path={ROUTES.researchEvents} element={<ResearchEvents />} />
         <Route path={ROUTES.researchCrossSector} element={<CrossSectorIntelligence />} />
+        <Route path={ROUTES.researchEngines} element={<EngineRegistry />} />
         {/* D91/D88: macro EXCLUDED — structural route renders the excluded state. */}
         <Route path={ROUTES.researchMacro} element={<MacroStructural />} />
 

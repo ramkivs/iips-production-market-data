@@ -26,6 +26,9 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+// GROUP 1 / GATE 2 (superseded pins): prior pins are verified against the files with ONLY the exact
+// Gate 2 Engine Registry additions removed (the helper throws unless each block is present exactly once).
+import { preGate2Sha } from './engine_registry_gate2_baseline.js';
 import { createHash } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -277,7 +280,8 @@ describe('Decision Matrix — donor fidelity and scope', () => {
       'frontend/src/app/routes.ts': 'e3ddfc47dd40d731cfdb5e59b91ad3726db2b0953ff27e6f93afd206f53ee085',
     };
     for (const [file, expected] of Object.entries(PINNED)) {
-      assert.strictEqual(createHash('sha256').update(readFileSync(resolve(ROOT, file))).digest('hex'), expected, `${file} unchanged`);
+      // GROUP 1 / GATE 2 (superseded): compared with ONLY the exact Gate 2 additions removed (no-op for untouched files).
+      assert.strictEqual(preGate2Sha(ROOT, file), expected, `${file} unchanged (pre-Gate 2)`);
     }
     const app = strip(read('frontend/src/app/App.tsx'));
     for (const binding of [

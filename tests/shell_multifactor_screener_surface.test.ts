@@ -221,6 +221,8 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
       ['Events', '/research/events/Banking', 'partial'],
       // B1 Cross-Sector restoration (superseded): restored donor surface -> 'partial'.
       ['Cross-Sector', '/research/cross-sector', 'partial'],
+      // GROUP 1 / GATE 2 (superseded): donor nav entry for the recovered certified Engine Registry -> 'partial'.
+      ['Engines', '/research/engines', 'partial'],
       ['Macro', '/research/macro', 'unavailable'],
       ['Intelligence', '/intelligence', 'partial'],
       // DECISION MATRIX work item (governed update): restored donor surface -> 'partial'
@@ -265,7 +267,9 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
       // partial 9 -> 10 and unavailable 16 -> 15. Total, implemented and future are UNCHANGED.
       // B1 Cross-Sector restoration (superseded): ONLY Cross-Sector moved `unavailable` -> `partial`, so
       // partial 10 -> 11 and unavailable 15 -> 14. Total, implemented and future are UNCHANGED.
-      { total: 32, implemented: 3, partial: 11, unavailable: 14, future: 4 }
+      // GROUP 1 / GATE 2 (superseded): ONLY the Engines entry was ADDED as `partial`, so total 32 -> 33 and
+      // partial 11 -> 12. Implemented, unavailable and future are UNCHANGED.
+      { total: 33, implemented: 3, partial: 12, unavailable: 14, future: 4 }
     );
   });
 

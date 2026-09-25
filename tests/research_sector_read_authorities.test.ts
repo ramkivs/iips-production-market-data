@@ -24,6 +24,9 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+// GROUP 1 / GATE 2 (superseded pins): prior pins are verified against the files with ONLY the exact
+// Gate 2 Engine Registry additions removed (the helper throws unless each block is present exactly once).
+import { preGate2, preGate2Sha } from './engine_registry_gate2_baseline.js';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -348,9 +351,12 @@ describe('Read authorities — boundaries (browser graph, network, donor infrast
     .replace(/^\s*\/\/.*$/gm, '');
 
   it('RA-21: the module is server-side only and imports exactly one platform function', () => {
-    const imports = [...src.matchAll(/^import .*from '([^']+)';$/gm)].map((m) => m[1]!);
+    const imports = [...preGate2(MODULE, src).matchAll(/^import .*from '([^']+)';$/gm)].map((m) => m[1]!);
     assert.deepStrictEqual(imports, ['node:http', '../../src/transports/executive_transport.js'],
       'only the HTTP module and the already-recovered certified platform entry point');
+    // GROUP 1 / GATE 2 (superseded): the ONLY added import is the recovered Engine Registry adapter.
+    assert.deepStrictEqual([...src.matchAll(/^import .*from '([^']+)';$/gm)].map((m) => m[1]!),
+      ['node:http', '../../src/transports/executive_transport.js', '../../iips-platform/src/integration/EngineApiAdapter.js']);
     assert.match(src, /computeCertifiedPlatform/, 'must use the recovered certified platform');
   });
 
@@ -461,7 +467,8 @@ describe('Read authorities — boundaries (browser graph, network, donor infrast
       'frontend/src/app/routes.ts': 'e3ddfc47dd40d731cfdb5e59b91ad3726db2b0953ff27e6f93afd206f53ee085',
     };
     for (const [file, expected] of Object.entries(UNCHANGED)) {
-      const actual = createHash('sha256').update(readFileSync(resolve(ROOT, file))).digest('hex');
+      // GROUP 1 / GATE 2 (superseded): compared with ONLY the exact Gate 2 additions removed (no-op for untouched files).
+      const actual = preGate2Sha(ROOT, file);
       assert.strictEqual(actual, expected, `${file} must be byte-unchanged`);
     }
     // The restored donor structures that remain OUT of scope must still be untouched.

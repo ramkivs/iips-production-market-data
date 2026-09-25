@@ -101,6 +101,8 @@ describe('Option A: donor route structure restored (inventory)', () => {
         '/collaboration', '/reports', '/watchlists', '/settings',
         // Current-base declared surfaces (no donor lineage — preserved)
         '/replay', '/security-master',
+        // GROUP 1 / GATE 2 (superseded): donor route (286f3da) for the recovered certified Engine Registry
+        '/research/engines',
         // Donor ROUTES-map constants for the future-marked intelligence children
         '/intelligence/opportunities', '/intelligence/risks', '/intelligence/rankings',
       ]),
@@ -122,7 +124,8 @@ describe('Option A: donor route structure restored (inventory)', () => {
     const research = NAV.find((n) => n.label === 'Research');
     assert.deepStrictEqual(
       research?.children?.map((c) => c.label),
-      ['Company', 'Sector', 'Events', 'Cross-Sector', 'Screener', 'Macro'],
+      // GROUP 1 / GATE 2 (superseded): donor child 'Engines' (286f3da) follows Cross-Sector, as in the donor nav.
+      ['Company', 'Sector', 'Events', 'Cross-Sector', 'Engines', 'Screener', 'Macro'],
       'Research donor children restored'
     );
     const intelligence = NAV.find((n) => n.label === 'Intelligence');
@@ -145,7 +148,8 @@ describe('Option A: donor route structure restored (inventory)', () => {
     // Prompt 2C moved ONLY Company and Sector from unavailable -> partial (two FUNCTIONAL
     // governed SNAPSHOT read surfaces). The total and every unrelated entry are UNCHANGED.
     const all = NAV.flatMap((n) => [n, ...(n.children ?? [])]);
-    assert.strictEqual(all.length, 32, 'total nav items');
+    // GROUP 1 / GATE 2 (superseded): ONLY the Engines entry was ADDED (`partial`), so total 32 -> 33.
+    assert.strictEqual(all.length, 33, 'total nav items');
     const census = (s: string): number => all.filter((i) => i.status === s).length;
     assert.strictEqual(census('implemented'), 3, 'implemented: Portfolio + Overview + Security Master (F-3)');
     // DECISION MATRIX work item (governed update): moved ONLY Decision Matrix from
@@ -156,7 +160,8 @@ describe('Option A: donor route structure restored (inventory)', () => {
     // Total and every other entry UNCHANGED.
     // B1 Cross-Sector restoration (superseded): moved ONLY Cross-Sector from unavailable -> partial
     // (restored donor surface on the existing 8788 SNAPSHOT authority). Total and every other entry UNCHANGED.
-    assert.strictEqual(census('partial'), 11, 'partial: prior 6 + Company + Sector (Prompt 2C) + Decision Matrix + Events (A3) + Cross-Sector (B1)');
+    // GROUP 1 / GATE 2 (superseded): + the added Engines entry (partial 11 -> 12). Every other count UNCHANGED.
+    assert.strictEqual(census('partial'), 12, 'partial: prior 6 + Company + Sector (Prompt 2C) + Decision Matrix + Events (A3) + Cross-Sector (B1) + Engines (Gate 2)');
     assert.strictEqual(census('unavailable'), 14, 'unavailable: prior 19 less Company, Sector, Decision Matrix, Events and Cross-Sector');
     assert.strictEqual(census('future'), 4, 'future: Replay + Opportunities/Risks/Rankings');
   });

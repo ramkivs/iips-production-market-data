@@ -128,6 +128,10 @@ export const NAV: NavItem[] = [
       // B1 Cross-Sector restoration: the donor surface is restored on the existing 8788 SNAPSHOT
       // authority (/api/cross-sector + evidence / replay) -> `partial` (never `implemented`).
       { label: 'Cross-Sector', path: '/research/cross-sector', minRole: 'viewer', status: 'partial' },
+      // GROUP 1 / GATE 2: donor nav entry (286f3da, label/path verbatim) for the recovered certified
+      // 10-engine Engine Registry, read-only over GET /api/engines on 8788 -> `partial` (never
+      // `implemented`: B1 does not inherit E2E-030; Windows/browser qualification is a separate gate).
+      { label: 'Engines', path: '/research/engines', minRole: 'viewer', status: 'partial' },
       // F-9: UI06 builder/service binding is restored; the absent governed candidate
       // universe keeps the navigable surface honestly `partial`, never `implemented`.
       { label: 'Screener', path: '/screener', minRole: 'viewer', status: 'partial' },

@@ -32,6 +32,9 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+// GROUP 1 / GATE 2 (superseded pins): prior pins are verified against the files with ONLY the exact
+// Gate 2 Engine Registry additions removed (the helper throws unless each block is present exactly once).
+import { preGate2Sha } from './engine_registry_gate2_baseline.js';
 import { createHash } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -310,7 +313,8 @@ describe('A4 Screener — no new route / data authority; donor fidelity', () => 
       'frontend/src/components/state/StateComponents.tsx': '41a0cb7a9f433615dbe902259935785cc97096f2a60f4c5c7fce3878940a3986',
       'frontend/src/components/ui/Badges.tsx': '190a27fdffcc9bfe1abbeb7f64994b4783e6e7429eb97c3fc0889cbbf826f259',
     };
-    for (const [file, expected] of Object.entries(PINNED)) assert.strictEqual(sha(file), expected, `${file} unchanged`);
+    // GROUP 1 / GATE 2 (superseded): compared with ONLY the exact Gate 2 additions removed (no-op for untouched files).
+    for (const [file, expected] of Object.entries(PINNED)) assert.strictEqual(preGate2Sha(ROOT, file), expected, `${file} unchanged (pre-Gate 2)`);
   });
 
   it('SC-08b: UI06-06 is untouched (its no-fabrication invariant stands as authored)', () => {

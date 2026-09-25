@@ -69,6 +69,9 @@ import * as StateComponents from '../frontend/src/components/state/StateComponen
 import * as Badges from '../frontend/src/components/ui/Badges.js';
 import * as CompanyTrustChainMod from '../frontend/src/features/company/CompanyTrustChain.js';
 import { computeCertifiedPlatform } from '../src/transports/executive_transport.js';
+// GROUP 1 / GATE 2 (superseded pins): prior pins are verified against the files with ONLY the exact
+// Gate 2 Engine Registry additions removed (the helper throws unless each block is present exactly once).
+import { preGate2, preGate2Sha } from './engine_registry_gate2_baseline.js';
 import {
   ASOF_REFUSED_UNDER_SNAPSHOT,
   computeCertifiedCompany,
@@ -209,8 +212,11 @@ describe('B1 Cross-Sector — donor identity and server mapping fidelity', () =>
     const emit = (s: string): string => ts.transpileModule(s, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
     assert.strictEqual(emit(fn), emit(donorForm), 'emitted JavaScript identical to the donor');
     // Same CSIP source as the other four authorities: the single existing platform import.
-    const imports = [...SERVER_SRC.matchAll(/^import .*from '([^']+)';$/gm)].map((m) => m[1]!);
+    const imports = [...preGate2(SERVER, SERVER_SRC).matchAll(/^import .*from '([^']+)';$/gm)].map((m) => m[1]!);
     assert.deepStrictEqual(imports, ['node:http', '../../src/transports/executive_transport.js']);
+    // GROUP 1 / GATE 2 (superseded): the ONLY added import is the recovered Engine Registry adapter.
+    assert.deepStrictEqual([...SERVER_SRC.matchAll(/^import .*from '([^']+)';$/gm)].map((m) => m[1]!),
+      ['node:http', '../../src/transports/executive_transport.js', '../../iips-platform/src/integration/EngineApiAdapter.js']);
     assert.match(fn, /const \{ engineOutputs, csip: pr \} = computeCertifiedPlatform\(\);/);
   });
 });
@@ -438,7 +444,8 @@ describe('B1 Cross-Sector — component (shipped source, transpile-and-run)', ()
 describe('B1 Cross-Sector — route wiring and navigation', () => {
   it('CS-11: /research/cross-sector mounts the restored surface; routes.ts unchanged; placeholder removed', () => {
     assert.strictEqual(ROUTES.researchCrossSector, '/research/cross-sector');
-    assert.strictEqual(shaFile('frontend/src/app/routes.ts'), 'e3ddfc47dd40d731cfdb5e59b91ad3726db2b0953ff27e6f93afd206f53ee085', 'routes.ts byte-unchanged');
+    // GROUP 1 / GATE 2 (superseded): routes.ts gains ONLY `researchEngines`; the B1 pin holds once that is removed.
+    assert.strictEqual(preGate2Sha(ROOT, 'frontend/src/app/routes.ts'), 'e3ddfc47dd40d731cfdb5e59b91ad3726db2b0953ff27e6f93afd206f53ee085', 'routes.ts byte-unchanged (pre-Gate 2)');
     const app = strip(read('frontend/src/app/App.tsx'));
     assert.match(app, /<Route path=\{ROUTES\.researchCrossSector\} element=\{<CrossSectorIntelligence \/>\} \/>/);
     assert.match(app, /import \{ CrossSectorIntelligence \} from '\.\.\/features\/cross-sector\/CrossSectorIntelligence\.js';/);
@@ -457,9 +464,11 @@ describe('B1 Cross-Sector — route wiring and navigation', () => {
     assert.deepStrictEqual(cs, [{ label: 'Cross-Sector', path: '/research/cross-sector', minRole: 'viewer', status: 'partial' }]);
     const census = (s: string): number => all.filter((i) => i.status === s).length;
     assert.deepStrictEqual({ total: all.length, implemented: census('implemented'), partial: census('partial'), unavailable: census('unavailable'), future: census('future') },
-      { total: 32, implemented: 3, partial: 11, unavailable: 14, future: 4 }, 'only Cross-Sector moved unavailable → partial');
+      // GROUP 1 / GATE 2 (superseded): +1 `partial` entry (Engines, /research/engines); total 32 -> 33,
+      // partial 11 -> 12. Every other count is unchanged.
+      { total: 33, implemented: 3, partial: 12, unavailable: 14, future: 4 }, 'only Cross-Sector moved unavailable → partial (+ Gate 2 Engines)');
     // navigation.ts: reverting ONLY the B1 edit reproduces the A4 baseline byte-for-byte.
-    const nav = read('frontend/src/app/navigation.ts');
+    const nav = preGate2('frontend/src/app/navigation.ts', read('frontend/src/app/navigation.ts'));
     const reverted = nav.replace(
       "      // B1 Cross-Sector restoration: the donor surface is restored on the existing 8788 SNAPSHOT\n" +
       "      // authority (/api/cross-sector + evidence / replay) -> `partial` (never `implemented`).\n" +
@@ -472,6 +481,8 @@ describe('B1 Cross-Sector — route wiring and navigation', () => {
 
 describe('B1 Cross-Sector — A1–A4 unaffected', () => {
   it('CS-13a: removing ONLY the B1 additions reproduces the A4 server byte-for-byte (other authorities untouched)', () => {
+    // GROUP 1 / GATE 2 (superseded): start from the server with ONLY the exact Gate 2 additions removed.
+    const SERVER_SRC = preGate2(SERVER, read(SERVER));
     const header = slice(SERVER_SRC, ' *   GET /api/replay/:id           → computeCertifiedReplay()           FIXTURE (D79)\n *\n', ' * ══ WHAT THIS MODULE IS');
     assert.match(header, /^ \*  B1 CROSS-SECTOR RECOVERY/);
     // The B1 block runs from its section separator to the next section separator.
@@ -503,7 +514,7 @@ describe('B1 Cross-Sector — A1–A4 unaffected', () => {
       /<Route path=\{ROUTES\.researchMacro\} element=\{<MacroStructural \/>\} \/>/, // Macro stays excluded
     ]) assert.match(app, re);
     // App.tsx: reverting ONLY the B1 edits reproduces the A4 baseline byte-for-byte.
-    const raw = read('frontend/src/app/App.tsx');
+    const raw = preGate2('frontend/src/app/App.tsx', read('frontend/src/app/App.tsx'));
     const reverted = raw
       .replace(
         "// B1 CROSS-SECTOR RECOVERY: the proven donor Cross-Sector Intelligence surface (tip blob\n" +

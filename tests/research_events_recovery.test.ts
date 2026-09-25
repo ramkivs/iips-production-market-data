@@ -27,6 +27,9 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+// GROUP 1 / GATE 2 (superseded pins): prior pins are verified against the files with ONLY the exact
+// Gate 2 Engine Registry additions removed (the helper throws unless each block is present exactly once).
+import { preGate2Sha } from './engine_registry_gate2_baseline.js';
 import { createHash } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -114,6 +117,8 @@ describe('A3 Research Events — route mounting and navigation', () => {
       ['Events', '/research/events/Banking', 'partial'],
       // B1 Cross-Sector restoration (superseded): restored donor surface -> 'partial'.
       ['Cross-Sector', '/research/cross-sector', 'partial'],
+      // GROUP 1 / GATE 2 (superseded): donor nav entry for the recovered certified Engine Registry -> 'partial'.
+      ['Engines', '/research/engines', 'partial'],
       ['Screener', '/screener', 'partial'],
       ['Macro', '/research/macro', 'unavailable'],
     ]);
@@ -293,7 +298,8 @@ describe('A3 Research Events — no new route / data authority; donor fidelity',
       'vite.config.ts': 'd3bc403b0d99f70fef4cdcbd2c82f3ef3da12ce731cb392f73173d67c569d943',
       'package.json': '04d517b50d19802b1693e3afac08d7645961588d5b0693a2eff7cf221c471ce6',
     };
-    for (const [file, expected] of Object.entries(PINNED)) assert.strictEqual(sha(file), expected, `${file} unchanged`);
+    // GROUP 1 / GATE 2 (superseded): compared with ONLY the exact Gate 2 additions removed (no-op for untouched files).
+    for (const [file, expected] of Object.entries(PINNED)) assert.strictEqual(preGate2Sha(ROOT, file), expected, `${file} unchanged (pre-Gate 2)`);
   });
 
   it('RE-09b: direct imports are the donor set (NodeNext) and resolve to existing modules', () => {
