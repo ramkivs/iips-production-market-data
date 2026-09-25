@@ -1,0 +1,59 @@
+{
+  "standard": "IES-020",
+  "title": "Materials & Metals Sector Engine",
+  "status": "FROZEN",
+  "freezeDate": "2026-08-29",
+  "approver": "IIPS Engineering Standards Maintainer",
+  "methodologyVersion": "IES-020 v1.0 (D20 normative contract)",
+  "engineeringStandardVersion": "IES-020 discovery pack v1.0 + D36 documentation set (see engineeringDocs)",
+  "calibrationProfile": "materials-metals-calibration-1.0.0",
+  "goldenDataset": "materials-metals-golden-reference-1.0.0",
+  "expectedOutputs": "materials-metals-expected-outputs-1.0.0",
+  "replayDataset": "materials-metals-replay-dataset-1.0.0",
+  "validationFixtures": "materials-metals-validation-fixtures-1.0.0",
+  "ontologyMetadata": "materials-metals-ontology-metadata-1.0.0",
+  "engineeringDocs": "IES-020-D01..D19 documentation set exists: docs/IES-020_01_README.md through docs/IES-020_19_REFERENCE_DATA_SOURCES.md (19 documents), created under DEC-D36-TIER3-DOCUMENTATION-PARITY-AUTHORITY on phase13-next commit 0a8e287 dated 2026-09-01; new documentation, not recovered historical evidence. The normative calculation contract remains section 3 of MATERIALS_METALS_DISCOVERY_PACK.md.",
+  "reviewArtifacts": [
+    "MATERIALS_METALS_ENGINE_ACCEPTANCE_MATRIX.md",
+    "MATERIALS_METALS_IMPLEMENTATION_RISK_REGISTER.md",
+    "IES-020_IMPLEMENTATION_READINESS_CERTIFICATE.md",
+    "IES-020_ARCHITECTURE_REVIEW.md",
+    "D20_AUTHORITY_REVIEW.md"
+  ],
+  "documentHashes": {
+    "calibration": "sha256:bb0afb700d31b272b5e1da4b0e89ea0adcd2a01368789b940e8ccfc998c0b5d9",
+    "goldenDataset": "sha256:ec289d7701f3723ed0cd7d5c4c2dfb1288286e391c3ce7cf086e3e3a0798cd9d",
+    "expectedOutputs": "sha256:1f1414dfe313fdccd2dd90438959c2de28511ce7017b6bfd41a431f06f70b580",
+    "replayDataset": "sha256:b8c8409d06c817908b231e603f8380ed57b4a4e1d5d2b589a87a8135c6a821f3",
+    "validationFixtures": "sha256:d090b1b2e0959444c0d1211b2392b9d6d13e105dd851b95e90bf74b001554190",
+    "ontologyMetadata": "sha256:819a663498f5f7b7b8475c6135eaf8b83d9c4eac105bc83f57b7b49d50ead35e",
+    "discoveryPack": "sha256:fe4d1b4e386ad379878e5879acd2fb469388b323e25cbf9f05f7252649affbd8",
+    "acceptanceMatrix": "sha256:7fcd2d5bb57c8785fa1a9ab421e0fb63d56d02830066ab93ffed5ac58d22f3f4",
+    "riskRegister": "sha256:8cb2486f84c81d5ce18bc9d8eaabf5c336d4af6f4f6719e69a6f57cbe8ab4ae6",
+    "contractTestGenerator": "sha256:1f7ee122d8d7e3a24038dea96b644a120e101147126560da6107a57c028eb91a",
+    "architectureReview": "sha256:da37dff062853d48b65be5490c8b29e21188e5671ef181e0abac4bc7970f48c5",
+    "authorityReview": "sha256:8c309a1aa9ef35b86d24a1e79df495d70217d873d98181278e150688da605e27"
+  },
+  "hashNormalization": "architectureReview and authorityReview are SHA-256 hashes of the repository LF blob representation of the named files at phase13-next commit 100a90237d4ac3db29d10019423b67afe99e2819. The pre-existing ten documentHashes entries retain their historical CRLF-rendering convention and were not recomputed.",
+  "consumedPlatform": "iips-platform unchanged (IES-005/005.1)",
+  "consumedCapabilities": [
+    "CSIP (ontology registration, zero change)"
+  ],
+  "coexistsWith": [
+    "banking-engine-v1.0.0",
+    "insurance-engine-v1.0.0",
+    "capital-markets-engine-v1.0.0",
+    "healthcare-engine-v1.0.0",
+    "hospitality-engine-v1.0.0",
+    "energy-engine-v1.0.0",
+    "utilities-engine-v1.0.0",
+    "consumer-engine-v1.0.0",
+    "industrials-engine-v1.0.0",
+    "technology-engine-v1.0.0",
+    "telecommunications-engine-v1.0.0",
+    "automobile-engine-v1.0.0"
+  ],
+  "releaseTag": null,
+  "releaseTagRationale": "Deferred per governance decision DEC-D31-MAINTAINER-ISSUANCE-AND-RELEASETAG-RESOLUTION: a releaseTag is not mandatory for Tier-3 A1 evidence. No Git tag was created for this freeze.",
+  "postFreezeRule": "Any methodology/calibration change requires a new version, never modification of the frozen baseline. Reference assets are the authoritative test oracle; implementation disagreement is an implementation defect."
+}

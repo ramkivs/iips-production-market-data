@@ -1,0 +1,59 @@
+{
+  "standard": "IES-017",
+  "title": "Automobile Sector Engine",
+  "status": "FROZEN",
+  "freezeDate": "2026-08-29",
+  "approver": "IIPS Engineering Standards Maintainer",
+  "methodologyVersion": "IES-017 v1.0 (D17 normative contract)",
+  "engineeringStandardVersion": "IES-017 discovery pack v1.0 + D36 documentation set (see engineeringDocs)",
+  "calibrationProfile": "automobile-calibration-1.0.0",
+  "goldenDataset": "automobile-golden-reference-1.0.0",
+  "expectedOutputs": "automobile-expected-outputs-1.0.0",
+  "replayDataset": "automobile-replay-dataset-1.0.0",
+  "validationFixtures": "automobile-validation-fixtures-1.0.0",
+  "ontologyMetadata": "automobile-ontology-metadata-1.0.0",
+  "engineeringDocs": "IES-017-D01..D19 documentation set exists: docs/IES-017_01_README.md through docs/IES-017_19_REFERENCE_DATA_SOURCES.md (19 documents), created under DEC-D36-TIER3-DOCUMENTATION-PARITY-AUTHORITY on phase13-next commit 0a8e287 dated 2026-09-01; new documentation, not recovered historical evidence. The normative calculation contract remains section 3 of AUTOMOBILE_DISCOVERY_PACK.md.",
+  "reviewArtifacts": [
+    "AUTOMOBILE_ENGINE_ACCEPTANCE_MATRIX.md",
+    "AUTOMOBILE_IMPLEMENTATION_RISK_REGISTER.md",
+    "IES-017_IMPLEMENTATION_READINESS_CERTIFICATE.md",
+    "IES-017_ARCHITECTURE_REVIEW.md",
+    "D17_AUTHORITY_REVIEW.md"
+  ],
+  "documentHashes": {
+    "calibration": "sha256:64c8186debd575f61b03f3caa12709540f61bc834492fd422f00f43ae86a3799",
+    "goldenDataset": "sha256:d912224225c9364e86f4a9ed4e149928ee9ba2ae2b6487820b7cb67db41e54af",
+    "expectedOutputs": "sha256:ae532792a759b56be7a3ea3d77fde93b88e99d1dc1facec2a6d660a7c2ff5b45",
+    "replayDataset": "sha256:fce68b0af3ef09abd7e3817fc0609b172d0b02386c079d916050c45c93dab2b3",
+    "validationFixtures": "sha256:e5a3cb5267666bf51e8f948eb9732e5cb2d36eddbc92df1b7f87d8abd5fb165c",
+    "ontologyMetadata": "sha256:bbd293b130d0fd5f27c686c182f8b2b294c956402bdac17838291b50a28fa680",
+    "discoveryPack": "sha256:cd7096f23949877ec5cc47dd8053ce80c4fe4a0e0e4c43563bedee8319387f9f",
+    "acceptanceMatrix": "sha256:fb399c59244f7bc2f762cdead5a5e173c4a9d7f81c352ede2a8606cdddd0b00d",
+    "riskRegister": "sha256:f18359007c5943813e777aeafc96657651ba4c09029253075e7dc616fd83960c",
+    "contractTestGenerator": "sha256:45fe3aab3d16a7333c5042a60d466ea36a94814ce0309c3bc9eb8ac3a5c1e3a1",
+    "architectureReview": "sha256:91905ce5d0d3c2e41a5ccf25d5134c3b99c264ff59cd0431986af231607afd17",
+    "authorityReview": "sha256:1175f2a66123e396ce04f14bbc4faabb1b4fe7cbb68afb89b7eafb70bcbd40b2"
+  },
+  "hashNormalization": "architectureReview and authorityReview are SHA-256 hashes of the repository LF blob representation of the named files at phase13-next commit 100a90237d4ac3db29d10019423b67afe99e2819. The pre-existing ten documentHashes entries retain their historical CRLF-rendering convention and were not recomputed.",
+  "consumedPlatform": "iips-platform unchanged (IES-005/005.1)",
+  "consumedCapabilities": [
+    "CSIP (ontology registration, zero change)"
+  ],
+  "coexistsWith": [
+    "banking-engine-v1.0.0",
+    "insurance-engine-v1.0.0",
+    "capital-markets-engine-v1.0.0",
+    "healthcare-engine-v1.0.0",
+    "hospitality-engine-v1.0.0",
+    "energy-engine-v1.0.0",
+    "utilities-engine-v1.0.0",
+    "consumer-engine-v1.0.0",
+    "industrials-engine-v1.0.0",
+    "technology-engine-v1.0.0",
+    "telecommunications-engine-v1.0.0",
+    "materials-metals-engine-v1.0.0"
+  ],
+  "releaseTag": null,
+  "releaseTagRationale": "Deferred per governance decision DEC-D31-MAINTAINER-ISSUANCE-AND-RELEASETAG-RESOLUTION: a releaseTag is not mandatory for Tier-3 A1 evidence. No Git tag was created for this freeze.",
+  "postFreezeRule": "Any methodology/calibration change requires a new version, never modification of the frozen baseline. Reference assets are the authoritative test oracle; implementation disagreement is an implementation defect."
+}

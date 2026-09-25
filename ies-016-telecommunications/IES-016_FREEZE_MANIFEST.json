@@ -1,0 +1,59 @@
+{
+  "standard": "IES-016",
+  "title": "Telecommunications Sector Engine",
+  "status": "FROZEN",
+  "freezeDate": "2026-08-29",
+  "approver": "IIPS Engineering Standards Maintainer",
+  "methodologyVersion": "IES-016 v1.0 (D16 normative contract)",
+  "engineeringStandardVersion": "IES-016 discovery pack v1.0 + D36 documentation set (see engineeringDocs)",
+  "calibrationProfile": "telecommunications-calibration-1.0.0",
+  "goldenDataset": "telecommunications-golden-reference-1.0.0",
+  "expectedOutputs": "telecommunications-expected-outputs-1.0.0",
+  "replayDataset": "telecommunications-replay-dataset-1.0.0",
+  "validationFixtures": "telecommunications-validation-fixtures-1.0.0",
+  "ontologyMetadata": "telecommunications-ontology-metadata-1.0.0",
+  "engineeringDocs": "IES-016-D01..D19 documentation set exists: docs/IES-016_01_README.md through docs/IES-016_19_REFERENCE_DATA_SOURCES.md (19 documents), created under DEC-D36-TIER3-DOCUMENTATION-PARITY-AUTHORITY on phase13-next commit 0a8e287 dated 2026-09-01; new documentation, not recovered historical evidence. The normative calculation contract remains section 3 of TELECOMMUNICATIONS_DISCOVERY_PACK.md.",
+  "reviewArtifacts": [
+    "TELECOMMUNICATIONS_ENGINE_ACCEPTANCE_MATRIX.md",
+    "TELECOMMUNICATIONS_IMPLEMENTATION_RISK_REGISTER.md",
+    "IES-016_IMPLEMENTATION_READINESS_CERTIFICATE.md",
+    "IES-016_ARCHITECTURE_REVIEW.md",
+    "D16_AUTHORITY_REVIEW.md"
+  ],
+  "documentHashes": {
+    "calibration": "sha256:2d22256e2c13b0e5b855c0869558f9d12898ddb12a7f3d0f611f6c9b16cba7e0",
+    "goldenDataset": "sha256:feb521c8cdd55f5e404c99b3f8bb7507345593c05ce64de0e1ebc61168f530fa",
+    "expectedOutputs": "sha256:18341d76da1c7577be879a030234f1aecb095330d93f5da4b36529b9772633d6",
+    "replayDataset": "sha256:097ca980c103a19b4132d4e994cc620743f14d16117cb24cc023e876aa0d11c5",
+    "validationFixtures": "sha256:783d68ebc9d311888adc8e1fb82f4651a58f584d1e4fe38eedccc7ebe8251c4f",
+    "ontologyMetadata": "sha256:b12cf97abd1d6c6290eea57332e83c4960b685b4d357bbc8fa387d8f40a7d5d6",
+    "discoveryPack": "sha256:4f35d9f51cb29d03b60a87f6a5f3d23db9c3dc0c275fbd73d591389c04e9438a",
+    "acceptanceMatrix": "sha256:1e344fa5e65e46d633d4b3774dfd7acbd71488b464b1086bc9d672c31321c665",
+    "riskRegister": "sha256:bb45049d2d22facd5048fc3b15f7e645962dbee09a5e9b4324be4a356f2b2f07",
+    "contractTestGenerator": "sha256:807a7dafba619d01543f78bbe13cb169165bf56ae8f4939c1fb8285711e8ae48",
+    "architectureReview": "sha256:96ef579479a55aa880902384058003888b9d72d911e931bb3cb316211b3cb4c7",
+    "authorityReview": "sha256:369cadebf1953fcd3c520e7e6c5619783c3d2ac440af978c3ecf1bab8fc81802"
+  },
+  "hashNormalization": "architectureReview and authorityReview are SHA-256 hashes of the repository LF blob representation of the named files at phase13-next commit 100a90237d4ac3db29d10019423b67afe99e2819. The pre-existing ten documentHashes entries retain their historical CRLF-rendering convention and were not recomputed.",
+  "consumedPlatform": "iips-platform unchanged (IES-005/005.1)",
+  "consumedCapabilities": [
+    "CSIP (ontology registration, zero change)"
+  ],
+  "coexistsWith": [
+    "banking-engine-v1.0.0",
+    "insurance-engine-v1.0.0",
+    "capital-markets-engine-v1.0.0",
+    "healthcare-engine-v1.0.0",
+    "hospitality-engine-v1.0.0",
+    "energy-engine-v1.0.0",
+    "utilities-engine-v1.0.0",
+    "consumer-engine-v1.0.0",
+    "industrials-engine-v1.0.0",
+    "technology-engine-v1.0.0",
+    "automobile-engine-v1.0.0",
+    "materials-metals-engine-v1.0.0"
+  ],
+  "releaseTag": null,
+  "releaseTagRationale": "Deferred per governance decision DEC-D31-MAINTAINER-ISSUANCE-AND-RELEASETAG-RESOLUTION: a releaseTag is not mandatory for Tier-3 A1 evidence. No Git tag was created for this freeze.",
+  "postFreezeRule": "Any methodology/calibration change requires a new version, never modification of the frozen baseline. Reference assets are the authoritative test oracle; implementation disagreement is an implementation defect."
+}

@@ -1,0 +1,17 @@
+{
+  "engineId": "sector.materials-metals",
+  "sectorFamily": "Materials & Metals",
+  "standard": "IES-020",
+  "contractVersion": "IES-020 v1.0 (D20 normative)",
+  "ontology": {
+    "composite": "Conviction",
+    "confidence": "Confidence",
+    "qualityScore": "Quality",
+    "growthScore": "Growth",
+    "riskScore": "Risk",
+    "profitabilityScore": "Profitability",
+    "capitalEfficiency": "Capital Efficiency",
+    "valuationScore": "Valuation"
+  },
+  "purpose": "Engine-declared ontology metadata for the Universal Investment Ontology (CSIP). Registering this metadata makes the Materials & Metals engine participate in ranking + portfolio intelligence with NO CSIP logic change (the single integration contract). Accepted under D20 M1–M15 (recorded 2026-08-20)."
+}

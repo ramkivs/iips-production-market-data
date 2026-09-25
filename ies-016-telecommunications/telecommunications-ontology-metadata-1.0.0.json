@@ -1,0 +1,17 @@
+{
+  "engineId": "sector.telecommunications",
+  "sectorFamily": "Telecommunications",
+  "standard": "IES-016",
+  "contractVersion": "IES-016 v1.0 (D16 normative)",
+  "ontology": {
+    "composite": "Conviction",
+    "confidence": "Confidence",
+    "qualityScore": "Quality",
+    "growthScore": "Growth",
+    "riskScore": "Risk",
+    "profitabilityScore": "Profitability",
+    "capitalEfficiency": "Capital Efficiency",
+    "valuationScore": "Valuation"
+  },
+  "purpose": "Engine-declared ontology metadata for the Universal Investment Ontology (CSIP). Registering this metadata makes the Telecommunications engine participate in ranking + portfolio intelligence with NO CSIP logic change (Ontology Consistency Matrix, the single integration contract)."
+}

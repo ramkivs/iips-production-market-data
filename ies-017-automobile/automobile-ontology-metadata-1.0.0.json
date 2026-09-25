@@ -1,0 +1,17 @@
+{
+  "engineId": "sector.automobile",
+  "sectorFamily": "Automobile",
+  "standard": "IES-017",
+  "contractVersion": "IES-017 v1.0 (D17 normative) — PROPOSED, NOT AUTHORITY",
+  "ontology": {
+    "composite": "Conviction",
+    "confidence": "Confidence",
+    "qualityScore": "Quality",
+    "growthScore": "Growth",
+    "riskScore": "Risk",
+    "profitabilityScore": "Profitability",
+    "capitalEfficiency": "Capital Efficiency",
+    "valuationScore": "Valuation"
+  },
+  "purpose": "PROPOSED engine-declared ontology metadata for the Universal Investment Ontology (CSIP). Registering this metadata makes the Automobile engine participate in ranking + portfolio intelligence with NO CSIP logic change (the single integration contract). NOT authoritative until the D17 methodology is approved."
+}
