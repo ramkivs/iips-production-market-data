@@ -1,0 +1,105 @@
+{
+  "dataset": "materials-metals-golden-reference-1.0.0",
+  "standard": "IES-020",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-020 v1.0 (D20 normative)",
+  "purpose": "Synthetic deterministic reference providers for the Materials & Metals Sector Engine (the frozen Replay-Baseline reference-dataset convention established by IES-015/016/017). These are NOT claims about real companies. Accepted under D20 M1–M15 (recorded 2026-08-20).",
+  "providers": [
+    {
+      "id": "MM-001", "name": "Global Diversified Miner",
+      "subsegment": "diversified-miners", "archetype": "integrated",
+      "ebitdaMargin": 32, "revenueGrowth": 9, "debtEbitda": 1.4, "reserveLife": 22,
+      "cashCostCurve": 20, "realizedPriceSpread": 106, "fcfYield": 8, "roic": 14,
+      "capexIntensity": 11, "inventoryDays": 40, "evEbitda": 5.5, "recyclingInputMix": 15
+    },
+    {
+      "id": "MM-002", "name": "Copper Pure-Play",
+      "subsegment": "base-metals", "archetype": "pure-play",
+      "ebitdaMargin": 30, "revenueGrowth": 10, "debtEbitda": 1.6, "reserveLife": 14,
+      "cashCostCurve": 30, "realizedPriceSpread": 101, "fcfYield": 6, "roic": 13,
+      "capexIntensity": 14, "inventoryDays": 45, "evEbitda": 6.0, "recyclingInputMix": 10
+    },
+    {
+      "id": "MM-003", "name": "Gold Royalty Company",
+      "subsegment": "precious-metals", "archetype": "royalty",
+      "ebitdaMargin": 55, "revenueGrowth": 6, "debtEbitda": 0.8, "reserveLife": 25,
+      "cashCostCurve": 15, "realizedPriceSpread": 100, "fcfYield": 5, "roic": 12,
+      "capexIntensity": 2, "inventoryDays": 20, "evEbitda": 12, "recyclingInputMix": 5
+    },
+    {
+      "id": "MM-004", "name": "Integrated Steelmaker",
+      "subsegment": "steel-producers", "archetype": "integrated",
+      "ebitdaMargin": 18, "revenueGrowth": 5, "debtEbitda": 1.9, "reserveLife": 10,
+      "cashCostCurve": 45, "realizedPriceSpread": 98, "fcfYield": 6, "roic": 10,
+      "capexIntensity": 15, "inventoryDays": 55, "evEbitda": 5.8, "recyclingInputMix": 25
+    },
+    {
+      "id": "MM-005", "name": "Specialty Alloys Processor",
+      "subsegment": "specialty-materials", "archetype": "processor",
+      "ebitdaMargin": 24, "revenueGrowth": 11, "debtEbitda": 1.7, "reserveLife": 8,
+      "cashCostCurve": 40, "realizedPriceSpread": 104, "fcfYield": 6.5, "roic": 14,
+      "capexIntensity": 12, "inventoryDays": 50, "evEbitda": 7.5, "recyclingInputMix": 45
+    },
+    {
+      "id": "MM-006", "name": "Zinc Miner Under Pressure",
+      "subsegment": "base-metals", "archetype": "pure-play",
+      "ebitdaMargin": 22, "revenueGrowth": 3, "debtEbitda": 3.8, "reserveLife": 6,
+      "cashCostCurve": 70, "realizedPriceSpread": 96, "fcfYield": 2.5, "roic": 7,
+      "capexIntensity": 20, "inventoryDays": 70, "evEbitda": 8.5, "recyclingInputMix": 8,
+      "competitionPressure": true, "marginCompression": true
+    },
+    {
+      "id": "MM-007", "name": "Silver Streamer",
+      "subsegment": "precious-metals", "archetype": "royalty",
+      "ebitdaMargin": 60, "revenueGrowth": 7, "debtEbitda": 0.5, "reserveLife": 28,
+      "cashCostCurve": 10, "realizedPriceSpread": 102, "fcfYield": 6, "roic": 15,
+      "capexIntensity": 1, "inventoryDays": 15, "evEbitda": 11, "recyclingInputMix": 4
+    },
+    {
+      "id": "MM-008", "name": "Sub-scale Steel EAF",
+      "subsegment": "steel-producers", "archetype": "recycling",
+      "ebitdaMargin": 12, "revenueGrowth": 4, "debtEbitda": 2.6, "reserveLife": 4,
+      "cashCostCurve": 65, "realizedPriceSpread": 97, "fcfYield": 4, "roic": 8,
+      "capexIntensity": 18, "inventoryDays": 65, "evEbitda": 8.0, "recyclingInputMix": 70
+    },
+    {
+      "id": "MM-009", "name": "Multi-subsegment Hybrid Miner",
+      "subsegments": ["diversified-miners", "base-metals"], "subsegmentDominant": "base-metals",
+      "archetype": "hybrid", "hybridDominant": "integrated",
+      "ebitdaMargin": 29, "revenueGrowth": 9, "debtEbitda": 1.5, "reserveLife": 16,
+      "cashCostCurve": 28, "realizedPriceSpread": 101, "fcfYield": 6, "roic": 13,
+      "capexIntensity": 13, "inventoryDays": 44, "evEbitda": 6.2, "recyclingInputMix": 12
+    },
+    {
+      "id": "MM-010", "name": "Half-Even Tie Steelmaker",
+      "subsegment": "steel-producers", "archetype": "integrated",
+      "ebitdaMargin": 7, "revenueGrowth": -2, "debtEbitda": 2.0, "reserveLife": 4,
+      "cashCostCurve": 35, "realizedPriceSpread": 92, "fcfYield": 6, "roic": 5,
+      "capexIntensity": 8, "inventoryDays": 25, "evEbitda": 5.0, "recyclingInputMix": 40
+    },
+    {
+      "id": "MM-011", "name": "Governance-Risk Miner",
+      "subsegment": "diversified-miners", "archetype": "integrated",
+      "ebitdaMargin": 8, "revenueGrowth": 1, "debtEbitda": 4.5, "reserveLife": 5,
+      "cashCostCurve": 85, "realizedPriceSpread": 92, "fcfYield": 1, "roic": 3,
+      "capexIntensity": 28, "inventoryDays": 100, "evEbitda": 13, "recyclingInputMix": 5,
+      "governance": true
+    },
+    {
+      "id": "MM-012", "name": "Tailings + Strike Operator",
+      "subsegment": "precious-metals", "archetype": "integrated",
+      "ebitdaMargin": 35, "revenueGrowth": 2, "debtEbitda": 2.0, "reserveLife": 14,
+      "cashCostCurve": 35, "realizedPriceSpread": 99, "fcfYield": 4, "roic": 11,
+      "capexIntensity": 16, "inventoryDays": 50, "evEbitda": 7.0, "recyclingInputMix": 6,
+      "tailingsFailure": true, "strikeDisruption": true
+    },
+    {
+      "id": "MM-013", "name": "Exact Band Boundaries Miner",
+      "subsegment": "diversified-miners", "archetype": "integrated",
+      "ebitdaMargin": 20, "revenueGrowth": 8, "debtEbitda": 2.5, "reserveLife": 12,
+      "cashCostCurve": 25, "realizedPriceSpread": 100, "fcfYield": 5, "roic": 10,
+      "capexIntensity": 16, "inventoryDays": 60, "evEbitda": 7.0, "recyclingInputMix": 30
+    }
+  ]
+}

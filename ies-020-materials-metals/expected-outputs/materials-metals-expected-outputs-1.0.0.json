@@ -1,0 +1,280 @@
+{
+  "basis": "materials-metals-golden-reference-1.0.0",
+  "standard": "IES-020",
+  "version": "1.0.0",
+  "program": "v3.0 Engine Certification Program",
+  "contractVersion": "IES-020 v1.0 (D20 normative)",
+  "expected": [
+    {
+      "providerId": "MM-001",
+      "subsegment": "diversified-miners",
+      "declaredSubsegments": [
+        "diversified-miners"
+      ],
+      "archetype": "integrated",
+      "composite": 82.5,
+      "verdict": "Strong Buy",
+      "pillars": {
+        "quality": 90.0,
+        "growth": 67.5,
+        "risk": 81.0,
+        "profitability": 90.0,
+        "capitalEfficiency": 90.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-002",
+      "subsegment": "base-metals",
+      "declaredSubsegments": [
+        "base-metals"
+      ],
+      "archetype": "pure-play",
+      "composite": 76.6,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 67.5,
+        "risk": 75.0,
+        "profitability": 83.2,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-003",
+      "subsegment": "precious-metals",
+      "declaredSubsegments": [
+        "precious-metals"
+      ],
+      "archetype": "royalty",
+      "composite": 73.2,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 85.5,
+        "growth": 50.0,
+        "risk": 90.0,
+        "profitability": 83.2,
+        "capitalEfficiency": 75.0,
+        "valuation": 30.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-004",
+      "subsegment": "steel-producers",
+      "declaredSubsegments": [
+        "steel-producers"
+      ],
+      "archetype": "integrated",
+      "composite": 68.7,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 65.2,
+        "growth": 60.0,
+        "risk": 75.0,
+        "profitability": 66.8,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-005",
+      "subsegment": "specialty-materials",
+      "declaredSubsegments": [
+        "specialty-materials"
+      ],
+      "archetype": "processor",
+      "composite": 73.4,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 69.8,
+        "growth": 82.5,
+        "risk": 75.0,
+        "profitability": 81.8,
+        "capitalEfficiency": 75.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-006",
+      "subsegment": "base-metals",
+      "declaredSubsegments": [
+        "base-metals"
+      ],
+      "archetype": "pure-play",
+      "composite": 55.9,
+      "verdict": "Watch",
+      "pillars": {
+        "quality": 58.2,
+        "growth": 50.0,
+        "risk": 45.0,
+        "profitability": 68.2,
+        "capitalEfficiency": 60.0,
+        "valuation": 55.0
+      },
+      "overrides": [
+        "leverage-breach",
+        "margin-compression",
+        "competition-pressure"
+      ],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-007",
+      "subsegment": "precious-metals",
+      "declaredSubsegments": [
+        "precious-metals"
+      ],
+      "archetype": "royalty",
+      "composite": 74.6,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 85.5,
+        "growth": 50.0,
+        "risk": 90.0,
+        "profitability": 90.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 30.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-008",
+      "subsegment": "steel-producers",
+      "declaredSubsegments": [
+        "steel-producers"
+      ],
+      "archetype": "recycling",
+      "composite": 57.2,
+      "verdict": "Hold",
+      "pillars": {
+        "quality": 51.2,
+        "growth": 75.0,
+        "risk": 55.0,
+        "profitability": 60.0,
+        "capitalEfficiency": 60.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-009",
+      "subsegment": "base-metals",
+      "declaredSubsegments": [
+        "diversified-miners",
+        "base-metals"
+      ],
+      "archetype": "integrated",
+      "composite": 73.5,
+      "verdict": "Buy",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 67.5,
+        "risk": 75.0,
+        "profitability": 75.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-010",
+      "subsegment": "steel-producers",
+      "declaredSubsegments": [
+        "steel-producers"
+      ],
+      "archetype": "integrated",
+      "composite": 63.2,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 57.5,
+        "growth": 57.5,
+        "risk": 84.0,
+        "profitability": 40.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 75.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-011",
+      "subsegment": "diversified-miners",
+      "declaredSubsegments": [
+        "diversified-miners"
+      ],
+      "archetype": "integrated",
+      "composite": 39.9,
+      "verdict": "Avoid",
+      "pillars": {
+        "quality": 43.5,
+        "growth": 50.0,
+        "risk": 30.0,
+        "profitability": 40.0,
+        "capitalEfficiency": 40.0,
+        "valuation": 30.0
+      },
+      "overrides": [
+        "leverage-breach",
+        "governance"
+      ],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-012",
+      "subsegment": "precious-metals",
+      "declaredSubsegments": [
+        "precious-metals"
+      ],
+      "archetype": "integrated",
+      "composite": 66.5,
+      "verdict": "Watch",
+      "pillars": {
+        "quality": 65.2,
+        "growth": 50.0,
+        "risk": 70.0,
+        "profitability": 83.2,
+        "capitalEfficiency": 60.0,
+        "valuation": 55.0
+      },
+      "overrides": [
+        "tailings-failure",
+        "strike-disruption"
+      ],
+      "calibrationVersion": "1.0.0"
+    },
+    {
+      "providerId": "MM-013",
+      "subsegment": "diversified-miners",
+      "declaredSubsegments": [
+        "diversified-miners"
+      ],
+      "archetype": "integrated",
+      "composite": 69.0,
+      "verdict": "Accumulate",
+      "pillars": {
+        "quality": 75.0,
+        "growth": 75.0,
+        "risk": 55.0,
+        "profitability": 75.0,
+        "capitalEfficiency": 75.0,
+        "valuation": 55.0
+      },
+      "overrides": [],
+      "calibrationVersion": "1.0.0"
+    }
+  ]
+}
