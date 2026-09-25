@@ -1,0 +1,192 @@
+{
+  "gate": "DHAN-D2 INTEGRATION & QUALIFICATION HARNESS \u2014 UI demonstration",
+  "executionMode": "PRE_ACCESS / SYNTHETIC / OFFLINE",
+  "branch": "arena/01a0d943-iips-production-market-data",
+  "baselineCommit": "97f8e304cdfc1a30cee91d0f203432673340420d",
+  "preExistingMockMechanism": null,
+  "startupCommand": "npm run dev",
+  "server": {
+    "tool": "vite",
+    "version": "8.3.0",
+    "host": "0.0.0.0",
+    "port": 5173
+  },
+  "route": "/dev/dhan-d2",
+  "scenarioParameter": "?scenario=current|stale|unavailable",
+  "configurationRequired": "none (no env file, flag, token or credential)",
+  "fixture": "tests/fixtures/dhan_d2_fixtures.json",
+  "observations": {
+    "current": {
+      "url": "http://localhost:5173/dev/dhan-d2?scenario=current",
+      "mounted": true,
+      "scenarioLabel": "CURRENT \u2014 fresh synthetic quote",
+      "routeStates": {
+        "INFY": "\u25a1SNAPSHOTCURRENT",
+        "TCS": "\u25a1SNAPSHOTCURRENT",
+        "UNMAPPEDCO": "\u2715UNAVAILABLEUNAVAILABLE"
+      },
+      "routePrices": {
+        "INFY": "1,520.35",
+        "TCS": "3,850.5",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "positionLtp": {
+        "INFY": "1,520.35",
+        "TCS": "3,850.5",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "positionCurrentValue": {
+        "INFY": "152,035",
+        "TCS": "192,525",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "positionUnrealizedPnl": {
+        "INFY": "6,985",
+        "TCS": "2,525",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "portfolioState": "UNAVAILABLE",
+      "externalRequestCounterRendered": "0",
+      "networkAttempts": [],
+      "governanceStripPresent": true,
+      "consoleMessages": [
+        "[warn] \u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+        "[warn] \u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
+      ]
+    },
+    "stale": {
+      "url": "http://localhost:5173/dev/dhan-d2?scenario=stale",
+      "mounted": true,
+      "scenarioLabel": "STALE \u2014 aged synthetic quote",
+      "routeStates": {
+        "INFY": "\u25b2STALESTALE",
+        "TCS": "\u25b2STALESTALE",
+        "UNMAPPEDCO": "\u2715UNAVAILABLEUNAVAILABLE"
+      },
+      "routePrices": {
+        "INFY": "1,519",
+        "TCS": "3,845",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "positionLtp": {
+        "INFY": "1,519",
+        "TCS": "3,845",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "positionCurrentValue": {
+        "INFY": "151,900",
+        "TCS": "192,250",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "positionUnrealizedPnl": {
+        "INFY": "6,850",
+        "TCS": "2,250",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "portfolioState": "UNAVAILABLE",
+      "externalRequestCounterRendered": "0",
+      "networkAttempts": [],
+      "governanceStripPresent": true,
+      "consoleMessages": [
+        "[warn] \u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+        "[warn] \u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
+      ]
+    },
+    "unavailable": {
+      "url": "http://localhost:5173/dev/dhan-d2?scenario=unavailable",
+      "mounted": true,
+      "scenarioLabel": "UNAVAILABLE \u2014 rejected synthetic quote",
+      "routeStates": {
+        "INFY": "\u2715UNAVAILABLEUNAVAILABLE",
+        "TCS": "\u2715UNAVAILABLEUNAVAILABLE",
+        "UNMAPPEDCO": "\u2715UNAVAILABLEUNAVAILABLE"
+      },
+      "routePrices": {
+        "INFY": "not displayed",
+        "TCS": "not displayed",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "positionLtp": {
+        "INFY": "not displayed",
+        "TCS": "not displayed",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "positionCurrentValue": {
+        "INFY": "not displayed",
+        "TCS": "not displayed",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "positionUnrealizedPnl": {
+        "INFY": "not displayed",
+        "TCS": "not displayed",
+        "UNMAPPEDCO": "not displayed"
+      },
+      "portfolioState": "UNAVAILABLE",
+      "externalRequestCounterRendered": "0",
+      "networkAttempts": [],
+      "governanceStripPresent": true,
+      "consoleMessages": [
+        "[warn] \u26a0\ufe0f React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+        "[warn] \u26a0\ufe0f React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
+      ]
+    }
+  },
+  "externalDhanRequestOccurred": false,
+  "validation": {
+    "tscNoEmit": "PASS",
+    "npmTest": {
+      "tests": 596,
+      "suites": 86,
+      "pass": 596,
+      "fail": 0
+    },
+    "newSuite": {
+      "file": "tests/dhan_d2_ui_mock_demonstration.test.ts",
+      "cases": 10,
+      "pass": 10
+    },
+    "viteBuild": "PASS (pre-existing >500kB chunk advisory only)",
+    "productionBundleExclusion": {
+      "DhanD2DevSurface": 0,
+      "dev/dhan-d2": 0,
+      "dhan-d2-dev-surface": 0,
+      "SYNTH-NSE-EQ": 0,
+      "PRE_ACCESS": 0,
+      "Loading development fixture surface": 0
+    },
+    "secretScan": {
+      "filesScanned": 335,
+      "violations": 0
+    },
+    "evidenceDirScan": {
+      "filesScanned": 7,
+      "violations": 0
+    }
+  },
+  "codeChanges": [
+    "frontend/src/features/dev/dhan-d2-dev-harness.ts (added)",
+    "frontend/src/features/dev/DhanD2DevSurface.tsx (added)",
+    "frontend/src/vite-env.d.ts (added)",
+    "frontend/src/app/App.tsx (modified \u2014 dev-only route fence)",
+    "tsconfig.json (modified \u2014 resolveJsonModule)",
+    "tests/dhan_d2_ui_mock_demonstration.test.ts (added)",
+    "docs/DHAN-D2-UI-FIXTURE-DEMONSTRATION.md (added)",
+    "evidence/dhan-d2-ui/* (added)"
+  ],
+  "routesMapUnchanged": true,
+  "evidenceArtifacts": [
+    "evidence/dhan-d2-ui/dev-server-probe.txt",
+    "evidence/dhan-d2-ui/dom-current.html",
+    "evidence/dhan-d2-ui/dom-current.json",
+    "evidence/dhan-d2-ui/dom-stale.html",
+    "evidence/dhan-d2-ui/dom-stale.json",
+    "evidence/dhan-d2-ui/dom-unavailable.html",
+    "evidence/dhan-d2-ui/dom-unavailable.json",
+    "evidence/dhan-d2-ui/dhan-d2-ui-demonstration-report.md"
+  ],
+  "limitations": [
+    "No browser screenshot: no Chromium binary in the sandbox and the browser download endpoint is unreachable. Evidence is captured DOM from the real application executed in jsdom plus live dev-server HTTP probes.",
+    "The jsdom run executes a development-mode build of the same sources the dev server serves.",
+    "Synthetic fixtures only: no Dhan credential, authentication, connectivity, coverage, latency or streaming is proven; all ACCESS-PENDING items remain open."
+  ]
+}

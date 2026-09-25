@@ -1,0 +1,29 @@
+### 1. SPA shell for /dev/dhan-d2
+HTTP 200 bytes=752
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" 
+### 2. App.tsx module as served by the dev server (route registration)
+HTTP 200 bytes=84178
+105:*  `DEV_ROUTES_ENABLED` is true ONLY under the Vite development server (`npm run dev`).
+112:const DEV_ROUTES_ENABLED = import.meta.env?.DEV === true;
+117:export const DEV_DHAN_D2_ROUTE = "/dev/dhan-d2";
+118:const DhanD2DevSurfaceLazy = DEV_ROUTES_ENABLED ? React.lazy(() => import("/frontend/src/features/dev/DhanD2DevSurface.tsx")) : null;
+835:			DEV_ROUTES_ENABLED && DhanD2DevSurfaceLazy ? /* @__PURE__ */ _jsxDEV(Route, {
+843:					children: /* @__PURE__ */ _jsxDEV(DhanD2DevSurfaceLazy, {}, void 0, false, {
+### 3. dev surface module served
+HTTP 200 bytes=45885
+3
+### 4. harness + fixture module served
+HTTP 200 bytes=27552
+HTTP 200 bytes=43503
+SYNTH-NSE-EQ-0001

@@ -99,6 +99,28 @@ import { PortfolioWorkspace } from '../features/portfolio/PortfolioWorkspace.js'
 import { PortfolioStore, getDefaultPortfolioStore } from '../features/portfolio/index.js';
 import { SecurityMaster, getGovernedBroadSecurityMaster } from '../../../src/identity/index.js';
 
+/**
+ * ══ DEVELOPMENT-ONLY ROUTE FENCE ══════════════════════════════════════════════════════════
+ *  `DEV_ROUTES_ENABLED` is true ONLY under the Vite development server (`npm run dev`).
+ *  In a production build `import.meta.env.DEV` is statically false, so the guarded branch —
+ *  and the dynamic import inside it — is eliminated: the DHAN-D2 fixture demonstration
+ *  surface and the committed synthetic fixtures are never part of a production bundle.
+ *  Under Node (offline render tests) `import.meta.env` is undefined, so the route is
+ *  likewise not mounted. Production behaviour is therefore unchanged by this addition.
+ */
+const DEV_ROUTES_ENABLED: boolean =
+  typeof import.meta.env !== 'undefined' && import.meta.env.DEV === true;
+
+/**
+ * Development-only path. Deliberately NOT a member of the governed ROUTES map: the route
+ * map is the certified donor/current-base inventory (OPTA-01) and must stay exactly that.
+ */
+export const DEV_DHAN_D2_ROUTE = '/dev/dhan-d2';
+
+const DhanD2DevSurfaceLazy = DEV_ROUTES_ENABLED
+  ? React.lazy(() => import('../features/dev/DhanD2DevSurface.js'))
+  : null;
+
 export interface AppProps {
   portfolioStore?: PortfolioStore;
   securityMaster?: SecurityMaster;
@@ -416,6 +438,22 @@ export const App: React.FC<AppProps> = ({
         <Route path={ROUTES.reports} element={<ReportsStructural />} />
         <Route path={ROUTES.watchlists} element={<WatchlistsStructural />} />
         <Route path={ROUTES.settings} element={<SettingsStructural />} />
+
+        {/* ── DEVELOPMENT ONLY: DHAN-D2 synthetic fixture demonstration ─────────────────
+            Mounted exclusively under the Vite dev server (see DEV_ROUTES_ENABLED above).
+            Renders the committed PRE_ACCESS / SYNTHETIC / OFFLINE D2 fixtures through the
+            existing provider-neutral route and the existing BI-08 revaluation binding. No
+            credential, no network call and no live-provider claim is involved. */}
+        {DEV_ROUTES_ENABLED && DhanD2DevSurfaceLazy ? (
+          <Route
+            path={DEV_DHAN_D2_ROUTE}
+            element={
+              <React.Suspense fallback={<div>Loading development fixture surface…</div>}>
+                <DhanD2DevSurfaceLazy />
+              </React.Suspense>
+            }
+          />
+        ) : null}
 
         {/* Unknown paths fall back to the default surface — never a fabricated one. */}
         <Route path="*" element={<Navigate to={DEFAULT_SURFACE_ROUTE} replace />} />
