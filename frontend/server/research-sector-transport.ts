@@ -71,7 +71,7 @@
  */
 import http from 'node:http';
 import { computeCertifiedPlatform } from '../../src/transports/executive_transport.js';
-// GROUP 1 / GATE 2 ENGINE REGISTRY (read-only wiring): the recovered certified 10-engine registry
+// GROUP 1 / GATE 2 ENGINE REGISTRY (read-only wiring): 13 registered engines after Gate B adoption
 // (iips-review-recovered @ 286f3da, E2E-030 10-ENGINE LTS scope; recovered to B1 by Gate 1 e1fa323).
 // ONLY listEngines() is used. EngineApiAdapter.execute() is dormant donor code:
 // PRESENT / NOT EXPOSED / NOT ROUTED / NOT CALLED / NOT AUTHORIZED.

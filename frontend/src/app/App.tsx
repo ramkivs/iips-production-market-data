@@ -127,7 +127,7 @@ import { ResearchEvents } from '../features/research/ResearchEvents.js';
 // 8788 SNAPSHOT authority's /api/cross-sector plus /api/evidence/:sector and /api/replay/:sector
 // over HTTP (no server import).
 import { CrossSectorIntelligence } from '../features/cross-sector/CrossSectorIntelligence.js';
-// GROUP 1 / GATE 2: the recovered certified 10-engine Engine Registry (Gate 1 e1fa323, donor
+// GROUP 1 / GATE 2: the Engine Registry, 13 registered engines after Gate B adoption (Gate 1 e1fa323, donor
 // 286f3da) mounted at /research/engines, reading ONLY GET /api/engines over HTTP (no server import,
 // no execution caller).
 import { EngineRegistry } from '../features/engines/EngineRegistry.js';

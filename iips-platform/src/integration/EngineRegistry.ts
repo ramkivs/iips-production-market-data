@@ -1,15 +1,19 @@
 /**
  * IIPS v3.0 — E2E-025 Engine Integration — Certified Engine Registry (read-only, frozen)
  *
- * Governed registry mapping the 10 Program v1.1 LTS certified sector engines.
+ * Governed registry: 13 registered sector engines after Gate B adoption — the 10
+ * Program v1.1 LTS engines (IES-006…015) plus IES-016 / IES-017 / IES-020 adopted into
+ * B1 under RAMKI authority `b1-three-engine-a1-adoption-2026-09-25-001` (Gate B).
  * This file is the single source for engine ↔ IES ↔ sectorFamily ↔ capabilities
  * used by the EngineApiAdapter, the HTTP adapter, and the frontend API client.
  *
  * Frozen semantics: no engine identity is fabricated. Every entry corresponds to
  * a freeze-manifest + final-readiness-certificate + replay-baseline entry.
- * Adding a new sector (e.g. IES-016 Telecom, IES-020 Materials) requires a new
- * freeze manifest and certification — it is a governance event, never a coding
- * shortcut (see IIPS_v3.0_ENGINE_INTEGRATION_DISCOVERY.md authority block).
+ * Adding a new sector requires a new freeze manifest and certification — it is a
+ * governance event, never a coding shortcut (see IIPS_v3.0_ENGINE_INTEGRATION_DISCOVERY.md
+ * authority block). The three Gate B engines carry HISTORICAL A1 LINEAGE (phase13-next)
+ * and are B1 ADOPTION PENDING CERTIFICATION (Gate C): they are NOT B1-certified and no
+ * A1 certification is transferred. See `getCertificationLineage`.
  */
 
 import { BANKING_ENGINE_ID } from '../sector-engines/banking/BankingEngine';
@@ -22,6 +26,9 @@ import { UTILITIES_ENGINE_ID } from '../sector-engines/utilities/UtilitiesEngine
 import { CONSUMER_ENGINE_ID } from '../sector-engines/consumer/ConsumerEngine';
 import { INDUSTRIALS_ENGINE_ID } from '../sector-engines/industrials/IndustrialsEngine';
 import { TECHNOLOGY_ENGINE_ID } from '../sector-engines/technology/TechnologyEngine';
+import { TELECOMMUNICATIONS_ENGINE_ID } from '../sector-engines/telecommunications/TelecommunicationsEngine';
+import { AUTOMOBILE_ENGINE_ID } from '../sector-engines/automobile/AutomobileEngine';
+import { MATERIALS_METALS_ENGINE_ID } from '../sector-engines/materials-metals/MaterialsMetalsEngine';
 
 export interface EngineRegistryEntry {
   readonly engineId: string;
@@ -41,8 +48,11 @@ export interface EngineRegistryEntry {
 }
 
 /**
- * The 10 Program v1.1 LTS certified engines — frozen list.
- * Values mirror the freeze manifests (IES-006…015) and
+ * The 13 registered engines — frozen list: the 10 Program v1.1 LTS engines (IES-006…015,
+ * order and values unchanged) followed by the 3 Gate B adopted engines (IES-016, IES-017,
+ * IES-020). The exported name is retained for compatibility; membership is registration,
+ * not a B1 certification claim (see `getCertificationLineage`).
+ * Values mirror the freeze manifests (IES-006…015; ies-016/017/020 packs) and
  * program-v1.1-certification/PROGRAM_v1.1_REPLAY_BASELINE.json.
  */
 export const CERTIFIED_ENGINES: readonly EngineRegistryEntry[] = [
@@ -206,6 +216,57 @@ export const CERTIFIED_ENGINES: readonly EngineRegistryEntry[] = [
     freezeManifest: 'ies-015-technology/IES-015_FREEZE_MANIFEST.json',
     readinessCertificate: 'iips-platform/IES015_FINAL_READINESS_CERTIFICATE.md',
   },
+  // ── GATE B (b1-three-engine-a1-adoption-2026-09-25-001): B1 three-engine adoption.
+  // Historical A1 lineage (phase13-next) / B1 adoption pending certification — NOT B1-certified.
+  // readinessCertificate = the existing A2 readiness certificates (unmodified).
+  {
+    engineId: TELECOMMUNICATIONS_ENGINE_ID,
+    ies: 'IES-016',
+    iesTitle: 'Telecommunications Sector Engine',
+    sectorFamily: 'Telecommunications',
+    engineVersion: '1.0.0',
+    secVersion: '1.0',
+    semcVersion: '1.0',
+    calibrationProfile: 'telecommunications-calibration-1.0.0',
+    calibrationVersion: '1.0.0',
+    contractVersion: 'IES-016 v1.0 (D16)',
+    capabilities: ['metrics', 'scoring', 'calibration', 'decision', 'evidence', 'ontology'],
+    ontologyDimensions: 8,
+    freezeManifest: 'ies-016-telecommunications/IES-016_FREEZE_MANIFEST.json',
+    readinessCertificate: 'iips-platform/IES016_FINAL_READINESS_CERTIFICATE.md',
+  },
+  {
+    engineId: AUTOMOBILE_ENGINE_ID,
+    ies: 'IES-017',
+    iesTitle: 'Automobile Sector Engine',
+    sectorFamily: 'Automobile',
+    engineVersion: '1.0.0',
+    secVersion: '1.0',
+    semcVersion: '1.0',
+    calibrationProfile: 'automobile-calibration-1.0.0',
+    calibrationVersion: '1.0.0',
+    contractVersion: 'IES-017 v1.0 (D17)',
+    capabilities: ['metrics', 'scoring', 'calibration', 'decision', 'evidence', 'ontology'],
+    ontologyDimensions: 8,
+    freezeManifest: 'ies-017-automobile/IES-017_FREEZE_MANIFEST.json',
+    readinessCertificate: 'iips-platform/IES017_FINAL_READINESS_CERTIFICATE.md',
+  },
+  {
+    engineId: MATERIALS_METALS_ENGINE_ID,
+    ies: 'IES-020',
+    iesTitle: 'Materials & Metals Sector Engine',
+    sectorFamily: 'Materials & Metals',
+    engineVersion: '1.0.0',
+    secVersion: '1.0',
+    semcVersion: '1.0',
+    calibrationProfile: 'materials-metals-calibration-1.0.0',
+    calibrationVersion: '1.0.0',
+    contractVersion: 'IES-020 v1.0 (D20)',
+    capabilities: ['metrics', 'scoring', 'calibration', 'decision', 'evidence', 'ontology'],
+    ontologyDimensions: 8,
+    freezeManifest: 'ies-020-materials-metals/IES-020_FREEZE_MANIFEST.json',
+    readinessCertificate: 'iips-platform/IES020_FINAL_READINESS_CERTIFICATE.md',
+  },
 ] as const;
 
 export function isCertifiedEngine(engineId: string): boolean {
@@ -248,4 +309,32 @@ export function assertNotTaxonomyResolved(requestedSector: string): void {
         `Do not create a separate engine — see discovery authority block.`,
     );
   }
+}
+
+/**
+ * GATE B — certification-lineage distinction (RAMKI Decision 5). The registry is 13 engines,
+ * but they do NOT share one certification lineage:
+ *   - IES-006…015: 'Program v1.1 LTS' (the lineage recorded by this frozen registry);
+ *   - IES-016 / IES-017 / IES-020: 'historical A1 lineage / B1 adoption pending certification'.
+ * Historical A1 certification remains anchored to phase13-next and is NOT transferred into B1;
+ * B1 certification of the three is pending Gate C. Unknown engines fail closed (throw).
+ */
+export type CertificationLineage =
+  | 'Program v1.1 LTS'
+  | 'historical A1 lineage / B1 adoption pending certification';
+
+export const B1_ADOPTION_PENDING_CERTIFICATION: readonly string[] = Object.freeze([
+  TELECOMMUNICATIONS_ENGINE_ID,
+  AUTOMOBILE_ENGINE_ID,
+  MATERIALS_METALS_ENGINE_ID,
+]);
+
+export function getCertificationLineage(engineId: string): CertificationLineage {
+  if (!isCertifiedEngine(engineId)) {
+    throw new Error(`unregistered-engine: ${engineId} is not a registered engine`);
+  }
+  if (B1_ADOPTION_PENDING_CERTIFICATION.includes(engineId)) {
+    return 'historical A1 lineage / B1 adoption pending certification';
+  }
+  return 'Program v1.1 LTS';
 }

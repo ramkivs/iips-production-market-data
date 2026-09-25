@@ -42,7 +42,7 @@ export const ROUTES = {
   researchSector: '/research/sector/:id',
   researchEvents: '/research/events/:id',
   researchCrossSector: '/research/cross-sector',
-  // Group 1 / Gate 2: recovered certified 10-engine Engine Registry (read-only).
+  // Group 1 / Gate 2: Engine Registry (read-only), 13 registered engines after Gate B adoption.
   researchEngines: '/research/engines',
   // Macro: donor route structure restored; D91/D88 keep it EXCLUDED — no live endpoint.
   researchMacro: '/research/macro',

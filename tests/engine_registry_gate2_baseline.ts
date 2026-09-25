@@ -28,11 +28,64 @@ export const GATE2_ADDITIONS: Readonly<Record<string, readonly string[]>> = Obje
   ]),
 });
 
-/** Remove exactly the Gate 2 blocks from `content` of `rel` (no-op for files Gate 2 did not touch). */
+/**
+ * GATE B (b1-three-engine-a1-adoption-2026-09-25-001, RAMKI Decision 4 baseline re-pin): the stale
+ * present-tense "10-engine" wording inside four Gate 2 comment lines was updated to
+ * "13 registered engines after Gate B adoption". GATE2_ADDITIONS above stays VERBATIM (historical
+ * Gate 2 text). `preGate2` first reverses EXACTLY these line replacements — each Gate B line must
+ * occur exactly once or it THROWS — then removes the Gate 2 blocks, so every earlier SHA-256 pin
+ * is still compared unchanged and any other edit to these files still fails.
+ * Entries are [gateBLine, gate2Line].
+ */
+export const GATEB_COMMENT_UPDATES: Readonly<Record<string, ReadonlyArray<readonly [string, string]>>> = Object.freeze({
+  "frontend/server/research-sector-transport.ts": Object.freeze([
+    Object.freeze([
+      "// GROUP 1 / GATE 2 ENGINE REGISTRY (read-only wiring): 13 registered engines after Gate B adoption\n",
+      "// GROUP 1 / GATE 2 ENGINE REGISTRY (read-only wiring): the recovered certified 10-engine registry\n",
+    ] as const),
+  ]),
+  "frontend/src/app/routes.ts": Object.freeze([
+    Object.freeze([
+      "  // Group 1 / Gate 2: Engine Registry (read-only), 13 registered engines after Gate B adoption.\n",
+      "  // Group 1 / Gate 2: recovered certified 10-engine Engine Registry (read-only).\n",
+    ] as const),
+  ]),
+  "frontend/src/app/navigation.ts": Object.freeze([
+    Object.freeze([
+      "      // GROUP 1 / GATE 2: donor nav entry (286f3da, label/path verbatim) for the recovered\n      // Engine Registry (13 registered engines after Gate B adoption), read-only over GET /api/engines on 8788 -> `partial` (never\n",
+      "      // GROUP 1 / GATE 2: donor nav entry (286f3da, label/path verbatim) for the recovered certified\n      // 10-engine Engine Registry, read-only over GET /api/engines on 8788 -> `partial` (never\n",
+    ] as const),
+  ]),
+  "frontend/src/app/App.tsx": Object.freeze([
+    Object.freeze([
+      "// GROUP 1 / GATE 2: the Engine Registry, 13 registered engines after Gate B adoption (Gate 1 e1fa323, donor\n",
+      "// GROUP 1 / GATE 2: the recovered certified 10-engine Engine Registry (Gate 1 e1fa323, donor\n",
+    ] as const),
+  ]),
+});
+
+/** Reverse exactly the Gate B comment updates in `content` of `rel` (no-op for other files). */
+export function preGateB(rel: string, content: string): string {
+  const updates = GATEB_COMMENT_UPDATES[rel];
+  if (updates === undefined) return content;
+  let out = content;
+  for (const [gateB, gate2] of updates) {
+    const first = out.indexOf(gateB);
+    if (first === -1) throw new Error(`Gate B comment update missing from ${rel}: ${gateB.split('\n')[0]}`);
+    if (out.indexOf(gateB, first + 1) !== -1) throw new Error(`Gate B comment update duplicated in ${rel}`);
+    out = out.slice(0, first) + gate2 + out.slice(first + gateB.length);
+  }
+  return out;
+}
+
+/**
+ * Remove exactly the Gate 2 blocks from `content` of `rel` (no-op for files Gate 2 did not touch),
+ * after reversing exactly the Gate B comment updates (`preGateB`).
+ */
 export function preGate2(rel: string, content: string): string {
   const blocks = GATE2_ADDITIONS[rel];
   if (blocks === undefined) return content;
-  let out = content;
+  let out = preGateB(rel, content);
   for (const block of blocks) {
     const first = out.indexOf(block);
     if (first === -1) throw new Error(`Gate 2 addition missing from ${rel}: ${block.split('\n')[0]}`);
