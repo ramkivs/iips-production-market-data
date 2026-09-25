@@ -150,6 +150,32 @@ export class DhanApiClient {
       });
     }
 
+    const call = await this.executeJsonPost(
+      DHAN_MARKET_QUOTE_PATH,
+      DhanApiClient.buildQuoteRequestBody(instruments)
+    );
+    if (!call.ok) return call;
+
+    const parsed = parseDhanMarketQuoteResponse(call.value.json);
+    if (!parsed.ok) {
+      return {
+        ok: false,
+        failure: { ...parsed.failure, httpStatus: call.value.metrics.httpStatus },
+      };
+    }
+
+    return dhanOk({ dto: parsed.value, metrics: call.value.metrics });
+  }
+
+  /**
+   * DHAN-D2: shared credential-ready POST execution used by every Dhan endpoint.
+   * Performs credential resolution, header injection, timeout, HTTP status mapping and
+   * JSON decoding. Endpoint-specific structural validation happens in the callers.
+   */
+  public async executeJsonPost(
+    pathSuffix: string,
+    body: string
+  ): Promise<DhanResult<{ json: unknown; metrics: DhanApiCallMetrics }>> {
     let credentials;
     try {
       credentials = await this.credentialResolver.resolve(this.config);
@@ -167,7 +193,7 @@ export class DhanApiClient {
 
     const request: DhanHttpRequest = {
       method: 'POST',
-      url: `${this.config.baseUrl}${DHAN_MARKET_QUOTE_PATH}`,
+      url: `${this.config.baseUrl}${pathSuffix}`,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
@@ -175,7 +201,7 @@ export class DhanApiClient {
         'access-token': credentials.accessToken,
         'client-id': credentials.clientId,
       },
-      body: DhanApiClient.buildQuoteRequestBody(instruments),
+      body,
       timeoutMs: this.config.timeoutMs,
     };
 
@@ -208,15 +234,7 @@ export class DhanApiClient {
       });
     }
 
-    const parsed = parseDhanMarketQuoteResponse(parsedJson);
-    if (!parsed.ok) {
-      return {
-        ok: false,
-        failure: { ...parsed.failure, httpStatus: response.status },
-      };
-    }
-
-    return dhanOk({ dto: parsed.value, metrics: { latencyMs, httpStatus: response.status } });
+    return dhanOk({ json: parsedJson, metrics: { latencyMs, httpStatus: response.status } });
   }
 
   /**

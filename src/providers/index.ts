@@ -8,4 +8,5 @@
  * (src/spi/provider_spi.ts) and emits only the existing canonical contracts.
  */
 
+export * from './market_data_route.js';
 export * from './dhan/index.js';

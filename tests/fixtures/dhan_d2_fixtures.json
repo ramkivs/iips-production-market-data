@@ -1,0 +1,540 @@
+{
+  "notice": "DHAN-D2 SYNTHETIC PRE-ACCESS FIXTURES. Deterministic, locally authored test data only. Contains NO credentials, NO real Dhan security identifiers, NO observed live Dhan response and NO claim of real Dhan historical coverage. All provider identifiers are explicit SYNTH- placeholders.",
+  "gate": "DHAN-D2",
+  "label": "PRE_ACCESS / SYNTHETIC / OFFLINE",
+  "evaluationInstant": "2026-09-25T10:05:00.000Z",
+  "mappingRows": {
+    "valid": [
+      {
+        "companyId": "INFY",
+        "exchange": "NSE",
+        "symbol": "INFY",
+        "exchangeSegment": "NSE_EQ",
+        "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+        "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+      },
+      {
+        "companyId": "TCS",
+        "exchange": "NSE",
+        "symbol": "TCS",
+        "exchangeSegment": "NSE_EQ",
+        "dhanSecurityId": "SYNTH-NSE-EQ-0002",
+        "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+      }
+    ],
+    "malformed": [
+      {
+        "_case": "NOT_AN_OBJECT",
+        "row": "INFY,NSE_EQ,SYNTH-NSE-EQ-0001",
+        "expectedField": null
+      },
+      {
+        "_case": "MISSING_COMPANY_ID",
+        "row": {
+          "exchange": "NSE",
+          "symbol": "INFY",
+          "exchangeSegment": "NSE_EQ",
+          "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+          "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+        },
+        "expectedField": "companyId"
+      },
+      {
+        "_case": "MISSING_SECURITY_ID",
+        "row": {
+          "companyId": "INFY",
+          "exchange": "NSE",
+          "symbol": "INFY",
+          "exchangeSegment": "NSE_EQ",
+          "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+        },
+        "expectedField": "dhanSecurityId"
+      },
+      {
+        "_case": "BAD_SEGMENT",
+        "row": {
+          "companyId": "INFY",
+          "exchange": "NSE",
+          "symbol": "INFY",
+          "exchangeSegment": "NSE_COMMODITY",
+          "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+          "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+        },
+        "expectedField": "exchangeSegment"
+      },
+      {
+        "_case": "SEGMENT_EXCHANGE_MISMATCH",
+        "row": {
+          "companyId": "INFY",
+          "exchange": "BSE",
+          "symbol": "INFY",
+          "exchangeSegment": "NSE_EQ",
+          "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+          "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+        },
+        "expectedField": "exchange"
+      },
+      {
+        "_case": "MISSING_PROVENANCE",
+        "row": {
+          "companyId": "INFY",
+          "exchange": "NSE",
+          "symbol": "INFY",
+          "exchangeSegment": "NSE_EQ",
+          "dhanSecurityId": "SYNTH-NSE-EQ-0001"
+        },
+        "expectedField": "mappingProvenance"
+      }
+    ],
+    "conflicting": {
+      "companyIdRemapped": {
+        "companyId": "INFY",
+        "exchange": "NSE",
+        "symbol": "INFY",
+        "exchangeSegment": "NSE_EQ",
+        "dhanSecurityId": "SYNTH-NSE-EQ-9999",
+        "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+      },
+      "securityIdReused": {
+        "companyId": "WIPRO",
+        "exchange": "NSE",
+        "symbol": "WIPRO",
+        "exchangeSegment": "NSE_EQ",
+        "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+        "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+      },
+      "identicalDuplicate": {
+        "companyId": "INFY",
+        "exchange": "NSE",
+        "symbol": "INFY",
+        "exchangeSegment": "NSE_EQ",
+        "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+        "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+      }
+    }
+  },
+  "securityMasterEntities": [
+    {
+      "companyId": "INFY",
+      "isin": "INE009A01021",
+      "companyName": "Synthetic Infosys Test Entity",
+      "industry": "Information Technology",
+      "sector": "Technology",
+      "effectiveFrom": "2000-01-01T00:00:00.000Z",
+      "listings": [
+        {
+          "exchange": "NSE",
+          "symbol": "INFY",
+          "status": "ACTIVE",
+          "lotSize": 1,
+          "tickSize": 0.05
+        }
+      ]
+    },
+    {
+      "companyId": "TCS",
+      "isin": "INE467B01029",
+      "companyName": "Synthetic TCS Test Entity",
+      "industry": "Information Technology",
+      "sector": "Technology",
+      "effectiveFrom": "2000-01-01T00:00:00.000Z",
+      "listings": [
+        {
+          "exchange": "NSE",
+          "symbol": "TCS",
+          "status": "ACTIVE",
+          "lotSize": 1,
+          "tickSize": 0.05
+        }
+      ]
+    }
+  ],
+  "holdings": [
+    {
+      "symbol": "INFY",
+      "companyId": "INFY",
+      "isin": "INE009A01021",
+      "exchange": "NSE",
+      "quantity": 100,
+      "averageBuyPrice": 1450.5,
+      "currentPrice": 1450.5,
+      "marketValue": 145050,
+      "weightPercentage": 40.0,
+      "active": true,
+      "sourceBroker": "DHAN",
+      "lineageDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "identityStatus": "RESOLVED",
+      "resolutionDisposition": "CANONICAL_P04"
+    },
+    {
+      "symbol": "TCS",
+      "companyId": "TCS",
+      "isin": "INE467B01029",
+      "exchange": "NSE",
+      "quantity": 50,
+      "averageBuyPrice": 3800.0,
+      "currentPrice": 3800.0,
+      "marketValue": 190000,
+      "weightPercentage": 52.0,
+      "active": true,
+      "sourceBroker": "DHAN",
+      "lineageDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "identityStatus": "RESOLVED",
+      "resolutionDisposition": "CANONICAL_P04"
+    },
+    {
+      "symbol": "UNMAPPEDCO",
+      "companyId": "UNMAPPEDCO",
+      "exchange": "NSE",
+      "quantity": 10,
+      "averageBuyPrice": 100.0,
+      "currentPrice": 100.0,
+      "marketValue": 1000,
+      "weightPercentage": 8.0,
+      "active": true,
+      "sourceBroker": "DHAN",
+      "lineageDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "identityStatus": "RESOLVED",
+      "resolutionDisposition": "CANONICAL_P04"
+    }
+  ],
+  "quoteScenarios": {
+    "invalidTimestampQuote": {
+      "description": "Quote whose vendor trade timestamp is not parseable.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0001": {
+              "last_price": 1520.35,
+              "ohlc": {
+                "open": 1510.0,
+                "close": 1508.0,
+                "high": 1530.0,
+                "low": 1505.5
+              },
+              "volume": 2540000,
+              "net_change": 12.35,
+              "last_trade_time": "2026-09-25T09:59:58Z"
+            }
+          }
+        }
+      }
+    },
+    "invalidPriceQuote": {
+      "description": "Quote carrying a non-positive traded price.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0001": {
+              "last_price": 0,
+              "ohlc": {
+                "open": 1510.0,
+                "close": 1508.0,
+                "high": 1530.0,
+                "low": 1505.5
+              },
+              "volume": 2540000,
+              "net_change": 0,
+              "last_trade_time": "25/09/2026 15:29:58"
+            }
+          }
+        }
+      }
+    },
+    "crossFieldViolationQuote": {
+      "description": "Quote whose high/low relationship is contradictory.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0001": {
+              "last_price": 1520.35,
+              "ohlc": {
+                "open": 1510.0,
+                "close": 1508.0,
+                "high": 1400.0,
+                "low": 1600.0
+              },
+              "volume": 2540000,
+              "net_change": 12.35,
+              "last_trade_time": "25/09/2026 15:29:58"
+            }
+          }
+        }
+      }
+    },
+    "twoInstrumentQuote": {
+      "description": "Valid response covering both synthetic mapped instruments.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0001": {
+              "last_price": 1520.35,
+              "ohlc": {
+                "open": 1510.0,
+                "close": 1508.0,
+                "high": 1530.0,
+                "low": 1505.5
+              },
+              "volume": 2540000,
+              "average_price": 1518.75,
+              "net_change": 12.35,
+              "last_trade_time": "25/09/2026 15:29:58",
+              "depth": {
+                "buy": [
+                  {
+                    "quantity": 500,
+                    "orders": 4,
+                    "price": 1520.25
+                  }
+                ],
+                "sell": [
+                  {
+                    "quantity": 640,
+                    "orders": 6,
+                    "price": 1520.5
+                  }
+                ]
+              }
+            },
+            "SYNTH-NSE-EQ-0002": {
+              "last_price": 3850.5,
+              "ohlc": {
+                "open": 3820.0,
+                "close": 3810.0,
+                "high": 3865.0,
+                "low": 3815.0
+              },
+              "volume": 1200500,
+              "average_price": 3842.1,
+              "net_change": 40.5,
+              "last_trade_time": "25/09/2026 15:29:58",
+              "depth": {
+                "buy": [
+                  {
+                    "quantity": 120,
+                    "orders": 2,
+                    "price": 3850.0
+                  }
+                ],
+                "sell": [
+                  {
+                    "quantity": 140,
+                    "orders": 3,
+                    "price": 3850.75
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "twoInstrumentStaleQuote": {
+      "description": "Both instruments quoted inside the AD-12 stale concession band.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0001": {
+              "last_price": 1519.0,
+              "ohlc": {
+                "open": 1510.0,
+                "close": 1508.0,
+                "high": 1530.0,
+                "low": 1505.5
+              },
+              "volume": 2400000,
+              "net_change": 11.0,
+              "last_trade_time": "25/09/2026 15:10:00"
+            },
+            "SYNTH-NSE-EQ-0002": {
+              "last_price": 3845.0,
+              "ohlc": {
+                "open": 3820.0,
+                "close": 3810.0,
+                "high": 3865.0,
+                "low": 3815.0
+              },
+              "volume": 1150000,
+              "net_change": 35.0,
+              "last_trade_time": "25/09/2026 15:10:00"
+            }
+          }
+        }
+      }
+    }
+  },
+  "historicalScenarios": {
+    "validSeries": {
+      "description": "Three synthetic daily candles. Coverage is NOT a claim about real Dhan history.",
+      "httpStatus": 200,
+      "body": {
+        "open": [
+          1500.0,
+          1512.0,
+          1529.0
+        ],
+        "high": [
+          1525.0,
+          1530.0,
+          1540.0
+        ],
+        "low": [
+          1495.0,
+          1505.0,
+          1518.0
+        ],
+        "close": [
+          1510.0,
+          1528.0,
+          1521.0
+        ],
+        "volume": [
+          2100000,
+          2350000,
+          1980000
+        ],
+        "timestamp": [
+          1789948800,
+          1790035200,
+          1790121600
+        ]
+      },
+      "expectedCandleStarts": [
+        "2026-09-21T00:00:00.000Z",
+        "2026-09-22T00:00:00.000Z",
+        "2026-09-23T00:00:00.000Z"
+      ]
+    },
+    "raggedSeries": {
+      "description": "Series arrays of unequal length.",
+      "httpStatus": 200,
+      "body": {
+        "open": [
+          1500.0,
+          1512.0
+        ],
+        "high": [
+          1525.0,
+          1530.0
+        ],
+        "low": [
+          1495.0,
+          1505.0
+        ],
+        "close": [
+          1510.0,
+          1528.0
+        ],
+        "volume": [
+          2100000
+        ],
+        "timestamp": [
+          1789948800,
+          1790035200
+        ]
+      }
+    },
+    "missingSeries": {
+      "description": "Volume series absent.",
+      "httpStatus": 200,
+      "body": {
+        "open": [
+          1500.0
+        ],
+        "high": [
+          1525.0
+        ],
+        "low": [
+          1495.0
+        ],
+        "close": [
+          1510.0
+        ],
+        "timestamp": [
+          1789948800
+        ]
+      }
+    },
+    "emptySeries": {
+      "description": "Structurally valid but zero candles.",
+      "httpStatus": 200,
+      "body": {
+        "open": [],
+        "high": [],
+        "low": [],
+        "close": [],
+        "volume": [],
+        "timestamp": []
+      }
+    },
+    "invalidPriceSeries": {
+      "description": "Non-positive close price must fail canonical D02 validation.",
+      "httpStatus": 200,
+      "body": {
+        "open": [
+          1500.0
+        ],
+        "high": [
+          1525.0
+        ],
+        "low": [
+          1495.0
+        ],
+        "close": [
+          0
+        ],
+        "volume": [
+          2100000
+        ],
+        "timestamp": [
+          1789948800
+        ]
+      }
+    },
+    "invalidTimestampSeries": {
+      "description": "Non-positive epoch timestamp.",
+      "httpStatus": 200,
+      "body": {
+        "open": [
+          1500.0
+        ],
+        "high": [
+          1525.0
+        ],
+        "low": [
+          1495.0
+        ],
+        "close": [
+          1510.0
+        ],
+        "volume": [
+          2100000
+        ],
+        "timestamp": [
+          0
+        ]
+      }
+    },
+    "authenticationFailure": {
+      "description": "Simulated credential rejection on the historical endpoint.",
+      "httpStatus": 401,
+      "body": {
+        "status": "failure",
+        "data": {},
+        "remarks": {
+          "error_code": "SYNTHETIC-AUTH-REJECTED"
+        }
+      }
+    }
+  }
+}

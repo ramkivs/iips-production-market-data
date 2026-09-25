@@ -1,0 +1,298 @@
+{
+  "$schema": "https://iips.institutional/schemas/dhan-d2-integration-qualification-report.json",
+  "gateId": "DHAN-D2-INTEGRATION-QUALIFICATION-HARNESS",
+  "label": "PRE_ACCESS / SYNTHETIC / OFFLINE",
+  "governingStandards": "AD-01..AD-18 / AD-CHARTER-2026-01",
+  "effectiveDate": "2026-09-25",
+  "executionMode": "PRE_ACCESS_NO_LIVE_CREDENTIALS / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+  "accessStatus": {
+    "dhanCredentialsAvailable": false,
+    "realAuthenticationAttempted": false,
+    "realApiCallPerformed": false,
+    "externalNetworkContact": false,
+    "connectivityProven": false,
+    "historicalCoverageClaimed": false,
+    "productionReadinessClaimed": false
+  },
+  "baseline": {
+    "authoritativeBaselineSha": "4d3e1cdca3a33da0ec3be8b336b17128108a502c",
+    "d1DurabilityCommit": "74c9065f5671fc71f4f9e0de55583f019631de8b",
+    "branch": "arena/01a0d943-iips-production-market-data",
+    "remote": "origin",
+    "mainModified": false
+  },
+  "architecturePreserved": {
+    "flow": [
+      "Dhan API",
+      "DhanApiClient",
+      "DhanMarketDataSource",
+      "MarketDataSource<T> (existing SPI)",
+      "CanonicalEnvelope<MarketQuotePayload> (existing contract)",
+      "ProviderMarketDataRoute (provider-neutral)",
+      "MarketDataDTO (existing product transport)",
+      "portfolio revaluation / UI data-state / UI11 view model"
+    ],
+    "dhanSpecificDownstreamContractIntroduced": false,
+    "canonicalArchitectureRedesigned": false,
+    "providerNeutralLayerBypassed": false,
+    "historicalCanonicalContractReused": "src/contracts/d02_ohlcv.ts :: OHLCVCandle / validateOHLCVCandle"
+  },
+  "instrumentMapping": {
+    "rowValidation": "validateDhanInstrumentMappingRow -> MALFORMED_INSTRUMENT_MAPPING with field path",
+    "loader": "loadDhanInstrumentMappings -> accepted/rejected report, never throws",
+    "conflictDetection": [
+      "COMPANY_ID_REMAPPED",
+      "SECURITY_ID_REUSED",
+      "identical rows idempotent"
+    ],
+    "identityIntegration": "DhanInstrumentResolutionService via EXISTING P04 SecurityMaster / IdentityMappingStore",
+    "unresolvedBehaviour": [
+      "NO_MAPPING_DATA_LOADED",
+      "UNMAPPED_COMPANY_ID",
+      "IDENTITY_RESOLUTION_FAILURE"
+    ],
+    "realSecurityIdsCommitted": false,
+    "syntheticRowsTagged": "SYNTHETIC_PRE_ACCESS_FIXTURE",
+    "providerIdExposedDownstream": false
+  },
+  "dataStateIntegration": {
+    "GOOD": "CURRENT",
+    "STALE": "STALE (AD-12 concession preserved)",
+    "PARTIAL": "UNAVAILABLE",
+    "UNAVAILABLE": "UNAVAILABLE",
+    "providerFailure": "UNAVAILABLE + deterministic failure code",
+    "freshnessImplementationBypassed": false,
+    "staleCanPresentAsCurrent": false
+  },
+  "portfolioIntegration": {
+    "module": "frontend/src/features/portfolio/market-data/portfolio-market-data-binding.ts",
+    "consumes": "MarketDataDTO (canonical product transport) only",
+    "providerParsingPresent": false,
+    "verifiedFields": [
+      "ltp",
+      "previousClose",
+      "dayChangePerShare",
+      "dayChangeValue",
+      "dayChangePct",
+      "currentValue",
+      "investedValue",
+      "unrealizedPnl",
+      "unrealizedPnlPct",
+      "weightPercentage",
+      "asOf",
+      "lineageDigest",
+      "sourceClassification"
+    ],
+    "unpricedPositionsValuedAtCost": false,
+    "existingPortfolioCalculationsModified": false,
+    "syntheticWorkedExample": {
+      "INFY": {
+        "qty": 100,
+        "avgBuy": 1450.5,
+        "ltp": 1520.35,
+        "currentValue": 152035,
+        "unrealizedPnl": 6985,
+        "dayChangeValue": 1235,
+        "state": "CURRENT"
+      },
+      "TCS": {
+        "qty": 50,
+        "avgBuy": 3800.0,
+        "ltp": 3850.5,
+        "currentValue": 192525,
+        "unrealizedPnl": 2525,
+        "dayChangeValue": 2025,
+        "state": "CURRENT"
+      },
+      "UNMAPPEDCO": {
+        "qty": 10,
+        "state": "UNAVAILABLE",
+        "currentValue": null,
+        "disposition": "UNPRICED_NO_MARKET_DATA"
+      },
+      "totals": {
+        "totalInvestedValue": 336050,
+        "totalCurrentValue": 344560,
+        "totalUnrealizedPnl": 9510,
+        "totalDayChangeValue": 3260,
+        "portfolioState": "UNAVAILABLE_DUE_TO_UNPRICED_LEG"
+      }
+    }
+  },
+  "uiDataStateIntegration": {
+    "view": "buildProviderRouteDataStateView (existing AccessibilityEngine quality indicators)",
+    "representedStates": [
+      "CURRENT",
+      "STALE",
+      "UNAVAILABLE"
+    ],
+    "syntheticCurrentExample": {
+      "provider": "DHAN",
+      "state": "CURRENT",
+      "price": 1520.35,
+      "timestamp": "2026-09-25T09:59:58.000Z"
+    },
+    "providerLabelScope": "ROUTE_LEVEL_OPERATOR_METADATA_ONLY (symbolic SPI providerId)",
+    "existingViewModelExercised": "UI11ProvenanceAuditorBuilder (vendorTier masked TIER_2_COMMERCIAL)",
+    "uiRedesignPerformed": false,
+    "consumesRawVendorDtos": false,
+    "liveDataClaimed": false
+  },
+  "historicalPreparation": {
+    "requestModel": "DhanHistoricalRequest { companyId, interval, fromDate, toDate }",
+    "dateRangeValidation": [
+      "INVALID_DATE_RANGE",
+      "UNSUPPORTED_INTERVAL",
+      "MISSING_REQUIRED_FIELD"
+    ],
+    "vendorDtoBoundary": "columnar open/high/low/close/volume/timestamp (PROVISIONAL shape)",
+    "canonicalNormalization": "OHLCVCandle (existing D02) validated per candle; batch fails closed",
+    "liveRequestPerformed": false,
+    "coverageClaim": "ACCESS_PENDING_UNVERIFIED",
+    "yearsOfRealHistoryClaimed": null
+  },
+  "failureResilienceMatrix": [
+    {
+      "case": "authentication failure",
+      "code": "AUTHENTICATION_FAILURE",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "timeout",
+      "code": "TIMEOUT",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "transport failure",
+      "code": "TRANSPORT_FAILURE",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "HTTP failure (503)",
+      "code": "HTTP_ERROR",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "rate limited (429)",
+      "code": "RATE_LIMITED",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "malformed provider response",
+      "code": "MALFORMED_RESPONSE",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "provider status failure",
+      "code": "PROVIDER_STATUS_FAILURE",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "missing required field",
+      "code": "MISSING_REQUIRED_FIELD",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "unresolved instrument",
+      "code": "UNRESOLVED_INSTRUMENT",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "stale data (suppressed)",
+      "code": "STALE_DATA_SUPPRESSED",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "unavailable data (instrument absent)",
+      "code": "INSTRUMENT_NOT_IN_RESPONSE",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "invalid timestamp",
+      "code": "MALFORMED_RESPONSE",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "invalid price",
+      "code": "CANONICAL_VALIDATION_FAILURE",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "canonical validation failure (cross-field)",
+      "code": "CANONICAL_VALIDATION_FAILURE",
+      "state": "UNAVAILABLE"
+    },
+    {
+      "case": "credentials unavailable",
+      "code": "CREDENTIALS_UNAVAILABLE",
+      "state": "UNAVAILABLE"
+    }
+  ],
+  "failureMatrixInvariant": "every failure produced 0 priced portfolio positions, portfolioState=UNAVAILABLE and displayPrice=null",
+  "providerBoundaryVerification": {
+    "vendorTokensScanned": [
+      "dhan",
+      "last_price",
+      "net_change",
+      "last_trade_time",
+      "nse_eq",
+      "synth-nse-eq",
+      "securityid"
+    ],
+    "scannedArtefacts": [
+      "canonical envelope",
+      "MarketDataDTO",
+      "portfolio revaluation",
+      "UI11 view model",
+      "canonical candles",
+      "coverage report",
+      "canonical identity"
+    ],
+    "leakageDetected": false,
+    "marketDataDtoKeySetUnchanged": true
+  },
+  "securityScan": {
+    "scanDirectoryForSecrets": [
+      "src/providers",
+      "frontend/src/features/portfolio/market-data",
+      "evidence/dhan-d1",
+      "src",
+      "tests",
+      "frontend"
+    ],
+    "violations": 0,
+    "credentialInFixtures": false,
+    "credentialInEvidence": false,
+    "credentialInTestOutput": false,
+    "consoleOutputDuringHarness": 0,
+    "syntheticIdentifiersClearlySynthetic": "SYNTH-NSE-EQ-*, SYNTHETIC-*-PLACEHOLDER-*"
+  },
+  "validation": {
+    "typecheck": "npx tsc --noEmit :: PASS",
+    "build_tsc": "npx tsc :: PASS",
+    "build_vite": "npx vite build :: PASS",
+    "dhanD1Suite": "21/21 PASS",
+    "dhanD2Suite": "23/23 PASS",
+    "fullRepositorySuite": "npm test :: 586/586 PASS, 0 FAIL (563 pre-existing + 23 new)",
+    "existingTestsWeakenedOrModified": false
+  },
+  "scopeControl": {
+    "nseRouteModified": false,
+    "otherProvidersModified": false,
+    "uiRedesigned": false,
+    "canonicalContractRedesigned": false,
+    "d115ProductionActivation": false,
+    "mergedIntoMain": false,
+    "otherBranchCreated": false
+  },
+  "accessPending": [
+    "Real Dhan authentication and credential injection",
+    "Verification of real endpoint paths, headers and response field names",
+    "Real Dhan instrument-master mappings (no authoritative rows loaded)",
+    "Real historical coverage depth, earliest available date and adjustment policy",
+    "Live latency, rate-limit and throttling behaviour",
+    "Streaming / websocket market feed",
+    "Live freshness behaviour against the exchange clock"
+  ],
+  "nextExecutableGate": "DHAN-D3 (NOT STARTED - requires real Dhan access inputs and separate authorization)"
+}

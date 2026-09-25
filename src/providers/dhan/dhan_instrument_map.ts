@@ -61,8 +61,22 @@ export class DhanInstrumentMappingError extends Error {
  * In-memory instrument mapping registry.
  * Empty by construction: DHAN-D1 does not ship instrument master data.
  */
+/** Raised when a registration would conflict with an existing mapping row (DHAN-D2). */
+export class DhanInstrumentMappingConflictError extends Error {
+  public readonly companyId: string;
+  public readonly conflictKind: 'COMPANY_ID_REMAPPED' | 'SECURITY_ID_REUSED';
+
+  constructor(companyId: string, conflictKind: 'COMPANY_ID_REMAPPED' | 'SECURITY_ID_REUSED', details: string) {
+    super(`Dhan instrument mapping conflict for '${companyId}' [${conflictKind}]: ${details}`);
+    this.name = 'DhanInstrumentMappingConflictError';
+    this.companyId = companyId;
+    this.conflictKind = conflictKind;
+  }
+}
+
 export class DhanInstrumentRegistry {
   private readonly byCompanyId = new Map<string, DhanInstrumentMapping>();
+  private readonly bySecurityKey = new Map<string, string>();
 
   public register(mapping: DhanInstrumentMapping): void {
     if (!mapping.companyId || !mapping.companyId.trim()) {
@@ -74,7 +88,39 @@ export class DhanInstrumentRegistry {
     if (!mapping.mappingProvenance) {
       throw new Error('DhanInstrumentRegistry: mappingProvenance is required');
     }
-    this.byCompanyId.set(mapping.companyId.trim().toUpperCase(), { ...mapping });
+
+    const key = mapping.companyId.trim().toUpperCase();
+    const securityKey = `${mapping.exchangeSegment}:${mapping.dhanSecurityId}`;
+
+    // DHAN-D2: duplicate/conflicting mapping detection. Identical re-registration is
+    // idempotent; any divergent remap or cross-company security-id reuse fails closed.
+    const existing = this.byCompanyId.get(key);
+    if (existing) {
+      const identical =
+        existing.dhanSecurityId === mapping.dhanSecurityId &&
+        existing.exchangeSegment === mapping.exchangeSegment &&
+        existing.exchange === mapping.exchange &&
+        existing.symbol === mapping.symbol;
+      if (!identical) {
+        throw new DhanInstrumentMappingConflictError(
+          mapping.companyId,
+          'COMPANY_ID_REMAPPED',
+          `companyId is already mapped to a different provider instrument (${existing.exchangeSegment})`
+        );
+      }
+    }
+
+    const ownerOfSecurity = this.bySecurityKey.get(securityKey);
+    if (ownerOfSecurity && ownerOfSecurity !== key) {
+      throw new DhanInstrumentMappingConflictError(
+        mapping.companyId,
+        'SECURITY_ID_REUSED',
+        `provider instrument is already mapped to companyId '${ownerOfSecurity}'`
+      );
+    }
+
+    this.byCompanyId.set(key, { ...mapping });
+    this.bySecurityKey.set(securityKey, key);
   }
 
   public registerAll(mappings: readonly DhanInstrumentMapping[]): void {
