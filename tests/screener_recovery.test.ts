@@ -293,7 +293,10 @@ describe('A4 Screener — sole authority, no fabrication, fail-closed', () => {
 describe('A4 Screener — no new route / data authority; donor fidelity', () => {
   it('SC-08a: server, client, route map, proxy, deps, UI06 closure and shared components are byte-unchanged', () => {
     const PINNED: Record<string, string> = {
-      'frontend/server/research-sector-transport.ts': '373585c1fc6432b1dd39e813c4c57340a760b8be66b426821338eb71b906b785',
+      // B1 Cross-Sector restoration (superseded): the authorized GET /api/cross-sector endpoint was added to
+      // this authority, so its pin moves 373585c1 -> 4fc4c6fc. The other four authorities are byte-identical
+      // (asserted by cross_sector_recovery.test.ts CS-13a reconstruction). Every other pin is unchanged.
+      'frontend/server/research-sector-transport.ts': '4fc4c6fc667f15b57523579b48f2153f39b7c002120e303266e38de807bbc8d0',
       'frontend/src/api/decisionMatrix.ts': '742d680645a676e9821504cd5ee5e3f9e96862936dcd0fe36683562e9dba652f',
       'frontend/src/api/executive.ts': 'a404a58d783a4398f938336ff498cc429eb236df607ddf1ef86dc0347ab05817',
       'frontend/src/app/routes.ts': 'e3ddfc47dd40d731cfdb5e59b91ad3726db2b0953ff27e6f93afd206f53ee085',

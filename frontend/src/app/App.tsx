@@ -122,6 +122,11 @@ import { SectorIntelligence } from '../features/research/SectorIntelligence.js';
 // restored at /research/events/:id, composing ONLY the existing /api/evidence/:sector,
 // /api/replay/:sector and /api/decision-matrix clients over HTTP (no server import).
 import { ResearchEvents } from '../features/research/ResearchEvents.js';
+// B1 CROSS-SECTOR RECOVERY: the proven donor Cross-Sector Intelligence surface (tip blob
+// e811c57d, D89 guard retained) is restored at /research/cross-sector, reading the existing
+// 8788 SNAPSHOT authority's /api/cross-sector plus /api/evidence/:sector and /api/replay/:sector
+// over HTTP (no server import).
+import { CrossSectorIntelligence } from '../features/cross-sector/CrossSectorIntelligence.js';
 // DECISION MATRIX work item: the donor Decision Matrix (c3b6e947) restored onto the existing
 // /api/decision-matrix read authority + current-lineage client. HTTP only; no server import.
 import { DecisionMatrix } from '../features/decision-matrix/DecisionMatrix.js';
@@ -254,6 +259,9 @@ const authorization = (surface: string, note?: string): React.FC => {
  * Cross-Sector and Macro are separate gates and are NOT recovered here.
  * A3 Research Events restoration: Events has since been recovered by its own gate — the
  * `ResearchEventsStructural` factory is removed and the route mounts the donor surface.
+ * B1 Cross-Sector restoration: Cross-Sector has since been recovered by its own gate — the
+ * `CrossSectorStructural` factory is removed and the route mounts the donor surface, which
+ * fails closed (Loading / Error / Unavailable). No cross-sector data is fabricated.
  *
  * No UISurfaceId is claimed by either surface (UI03 remains /research, untouched).
  *
@@ -263,11 +271,6 @@ const authorization = (surface: string, note?: string): React.FC => {
  */
 
 // Donor research children (structure only — no UISurfaceId, no UI03 identity claim).
-const CrossSectorStructural = structural(
-  'Research — Cross-Sector',
-  'Cross-Sector Intelligence requires the platform research services, which are not active offline',
-  'Donor structure: features/cross-sector/CrossSectorIntelligence (API-coupled in the donor lineage). No cross-sector data is fabricated.'
-);
 const MacroStructural: React.FC = () => (
   <UnavailableSurface
     surface="Research — Macro"
@@ -412,7 +415,7 @@ export const App: React.FC<AppProps> = ({
 
         {/* ── OPTION A — remaining donor research children (structural, fail-closed) ──── */}
         <Route path={ROUTES.researchEvents} element={<ResearchEvents />} />
-        <Route path={ROUTES.researchCrossSector} element={<CrossSectorStructural />} />
+        <Route path={ROUTES.researchCrossSector} element={<CrossSectorIntelligence />} />
         {/* D91/D88: macro EXCLUDED — structural route renders the excluded state. */}
         <Route path={ROUTES.researchMacro} element={<MacroStructural />} />
 

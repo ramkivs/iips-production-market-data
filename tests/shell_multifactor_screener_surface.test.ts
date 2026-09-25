@@ -219,7 +219,8 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
       ['Sector', '/research/sector/Banking', 'partial'],
       // A3 Research Events restoration (superseded): restored donor surface -> 'partial'.
       ['Events', '/research/events/Banking', 'partial'],
-      ['Cross-Sector', '/research/cross-sector', 'unavailable'],
+      // B1 Cross-Sector restoration (superseded): restored donor surface -> 'partial'.
+      ['Cross-Sector', '/research/cross-sector', 'partial'],
       ['Macro', '/research/macro', 'unavailable'],
       ['Intelligence', '/intelligence', 'partial'],
       // DECISION MATRIX work item (governed update): restored donor surface -> 'partial'
@@ -262,7 +263,9 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
       // are UNCHANGED.
       // A3 Research Events restoration (superseded): ONLY Events moved `unavailable` -> `partial`, so
       // partial 9 -> 10 and unavailable 16 -> 15. Total, implemented and future are UNCHANGED.
-      { total: 32, implemented: 3, partial: 10, unavailable: 15, future: 4 }
+      // B1 Cross-Sector restoration (superseded): ONLY Cross-Sector moved `unavailable` -> `partial`, so
+      // partial 10 -> 11 and unavailable 15 -> 14. Total, implemented and future are UNCHANGED.
+      { total: 32, implemented: 3, partial: 11, unavailable: 14, future: 4 }
     );
   });
 

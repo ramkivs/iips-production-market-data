@@ -11,6 +11,12 @@
  *   GET /api/evidence/:id         → computeCertifiedEvidence()         FIXTURE (D79)
  *   GET /api/replay/:id           → computeCertifiedReplay()           FIXTURE (D79)
  *
+ *  B1 CROSS-SECTOR RECOVERY (authorized gate): a fifth SNAPSHOT authority is added —
+ *   GET /api/cross-sector         → computeCertifiedCrossSector()      FROZEN SNAPSHOT
+ *  It is the donor `computeCertifiedCrossSector()` mapping restored VERBATIM (donor lineage
+ *  da43051, executive-transport L510–540) over the SAME `computeCertifiedPlatform()` CSIP output.
+ *  The donor's per-principal data-mode dispatch is NOT reproduced: SNAPSHOT only, as below.
+ *
  * ══ WHAT THIS MODULE IS — AND IS NOT ═════════════════════════════════════════════════════════
  *  This is a NOT a recovery of the donor `frontend/server/executive-transport.ts` (56 KB, twelve
  *  surfaces). That module was explicitly excluded (manifest §5.3 E-1): its transitive closure is
@@ -421,6 +427,44 @@ export function computeCertifiedReplay(sectorId: string): CertifiedReplayPayload
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────────────────
+ * B1 Cross-Sector (CSIP) authority — donor mapping restored VERBATIM
+ * ───────────────────────────────────────────────────────────────────────────────────────── */
+
+/** Cross-sector DTO (Phase 8) — governed CSIP surface only. */
+export function computeCertifiedCrossSector(): unknown {
+  const { engineOutputs, csip: pr } = computeCertifiedPlatform();
+  // All values are certified CSIP outputs or certified engine outputs; 1:1 mapping.
+  return {
+    portfolio: {
+      portfolioId: pr.intelligence.portfolioId,
+      scenario: pr.intelligence.scenario,
+      holdings: pr.intelligence.holdings,
+      avgConviction: pr.intelligence.avgConviction,
+      avgQuality: pr.intelligence.avgQuality,
+      avgRisk: pr.intelligence.avgRisk,
+      concentration: pr.intelligence.concentration,
+      diversificationScore: pr.intelligence.diversificationScore,
+    },
+    diversification: { band: pr.diversification.diversificationBand, flags: pr.diversification.flags },
+    ranking: pr.ranking.map((r: any) => ({ companyId: r.companyId, sector: r.sector, conviction: r.conviction })),
+    opportunity: pr.opportunity.top.map((o: any) => ({ companyId: o.companyId, sector: o.sector, conviction: o.conviction })),
+    correlation: { flags: pr.correlation.flags, concentrationSectors: pr.correlation.concentrationSectors },
+    decisions: engineOutputs.map((o) => ({
+      sector: o.sector,
+      verdict: o.verdict,
+      composite: o.composite,
+      confidence: o.confidence,
+    })),
+    provenance: {
+      dataSource: 'certified v2.0 platform (CSIP cross-sector engine) over frozen v1.1 Replay Baseline inputs',
+      freshness: 'SNAPSHOT',
+      calibratedAt: '2026-08-09T00:00:00.000Z',
+      transportSemantics: '1:1 mapping; transport transformation != decision transformation',
+    },
+  };
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────────────────
  * SNAPSHOT-only request handling
  * ───────────────────────────────────────────────────────────────────────────────────────── */
 
@@ -495,6 +539,9 @@ export function handleResearchSectorRequest(requestUrl: string, requestMethod?: 
   try {
     if (path === '/api/decision-matrix') {
       return Object.freeze({ status: 200 as const, body: computeCertifiedDecisionMatrix() });
+    }
+    if (path === '/api/cross-sector') {
+      return Object.freeze({ status: 200 as const, body: computeCertifiedCrossSector() });
     }
     if (path.startsWith(COMPANY_PREFIX)) {
       const t = parseSectorTarget(path, COMPANY_PREFIX);

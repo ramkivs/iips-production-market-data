@@ -434,9 +434,10 @@ describe('Prompt 2C — exclusions held', () => {
     // leave this absent list. Every other exclusion is unchanged.
     // A3 Research Events restoration (superseded): ResearchEvents.tsx is recovered by the A3 gate and
     // leaves this absent list. Every other exclusion is unchanged.
+    // B1 Cross-Sector restoration (superseded): CrossSectorIntelligence.tsx is recovered by the B1 gate and
+    // leaves this absent list. Every other exclusion is unchanged.
     for (const absent of [
       'frontend/src/features/research/MacroContext.tsx',
-      'frontend/src/features/cross-sector/CrossSectorIntelligence.tsx',
     ]) {
       assert.strictEqual(existsSync(resolve(ROOT, absent)), false, `${absent} must not exist (out of scope)`);
     }

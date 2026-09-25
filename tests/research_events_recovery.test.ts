@@ -112,7 +112,8 @@ describe('A3 Research Events — route mounting and navigation', () => {
       ['Company', '/research/company/Banking', 'partial'],
       ['Sector', '/research/sector/Banking', 'partial'],
       ['Events', '/research/events/Banking', 'partial'],
-      ['Cross-Sector', '/research/cross-sector', 'unavailable'],
+      // B1 Cross-Sector restoration (superseded): restored donor surface -> 'partial'.
+      ['Cross-Sector', '/research/cross-sector', 'partial'],
       ['Screener', '/screener', 'partial'],
       ['Macro', '/research/macro', 'unavailable'],
     ]);
@@ -278,7 +279,10 @@ describe('A3 Research Events — client authority and fail-closed', () => {
 describe('A3 Research Events — no new route / data authority; donor fidelity', () => {
   it('RE-09a: server, clients, shared components, route map, dev proxy and dependencies are byte-unchanged', () => {
     const PINNED: Record<string, string> = {
-      'frontend/server/research-sector-transport.ts': '373585c1fc6432b1dd39e813c4c57340a760b8be66b426821338eb71b906b785',
+      // B1 Cross-Sector restoration (superseded): the authorized GET /api/cross-sector endpoint was added to
+      // this authority, so its pin moves 373585c1 -> 4fc4c6fc. The other four authorities are byte-identical
+      // (asserted by cross_sector_recovery.test.ts CS-13a reconstruction). Every other pin is unchanged.
+      'frontend/server/research-sector-transport.ts': '4fc4c6fc667f15b57523579b48f2153f39b7c002120e303266e38de807bbc8d0',
       'frontend/src/api/evidence.ts': '3a6797e2b2d4ffb09fa504cf77bc4fd4a50345a8b97ddb6cf3f69c82771fb16f',
       'frontend/src/api/replay.ts': 'bac8b56f04124ac866d2dad24a953338852fa2f52055351f8632936adff4fc9d',
       'frontend/src/api/decisionMatrix.ts': '742d680645a676e9821504cd5ee5e3f9e96862936dcd0fe36683562e9dba652f',

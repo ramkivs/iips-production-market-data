@@ -154,8 +154,10 @@ describe('Option A: donor route structure restored (inventory)', () => {
     // A3 Research Events restoration (superseded): moved ONLY Events from unavailable -> partial
     // (restored donor surface on the existing evidence/replay/decision-matrix authorities).
     // Total and every other entry UNCHANGED.
-    assert.strictEqual(census('partial'), 10, 'partial: prior 6 + Company + Sector (Prompt 2C) + Decision Matrix + Events (A3)');
-    assert.strictEqual(census('unavailable'), 15, 'unavailable: prior 19 less Company, Sector, Decision Matrix and Events');
+    // B1 Cross-Sector restoration (superseded): moved ONLY Cross-Sector from unavailable -> partial
+    // (restored donor surface on the existing 8788 SNAPSHOT authority). Total and every other entry UNCHANGED.
+    assert.strictEqual(census('partial'), 11, 'partial: prior 6 + Company + Sector (Prompt 2C) + Decision Matrix + Events (A3) + Cross-Sector (B1)');
+    assert.strictEqual(census('unavailable'), 14, 'unavailable: prior 19 less Company, Sector, Decision Matrix, Events and Cross-Sector');
     assert.strictEqual(census('future'), 4, 'future: Replay + Opportunities/Risks/Rankings');
   });
 });
@@ -199,7 +201,9 @@ describe('Option A: restored structural surfaces render honest fail-closed state
     // A3 Research Events restoration (superseded): /research/events/:id is NO LONGER a structural
     // route — the donor ResearchEvents surface is restored and mounted (covered by
     // research_events_recovery.test.ts). Every other entry is unchanged.
-    ['/research/cross-sector', 'Cross-Sector'],
+    // B1 Cross-Sector restoration (superseded): /research/cross-sector is NO LONGER a structural route —
+    // the donor CrossSectorIntelligence surface is restored and mounted (covered by
+    // cross_sector_recovery.test.ts). Every other entry is unchanged.
     // DECISION MATRIX work item (governed update): /intelligence/decision-matrix is NO LONGER a
     // structural route — the donor Decision Matrix is restored and mounted (covered by
     // decision_matrix_restoration.test.ts). Every other entry is unchanged.
@@ -448,7 +452,10 @@ describe('Option A: offline boundary (no server / auth / api / network in the sh
       // A3 Research Events restoration (superseded): 'ResearchEvents' removed from this list — it IS
       // recovered and mounted, reading the existing evidence/replay/decision-matrix clients over
       // HTTP (asserted in research_events_recovery.test.ts).
-      'CrossSectorIntelligence', 'ResearchHub', 'IntelligenceHub',
+      // B1 Cross-Sector restoration (superseded): 'CrossSectorIntelligence' removed from this list — it IS
+      // recovered and mounted, reading /api/cross-sector plus the existing evidence/replay clients over
+      // HTTP (asserted in cross_sector_recovery.test.ts).
+      'ResearchHub', 'IntelligenceHub',
       'CommandPalette', 'NotificationDrawer', 'NotesDrawer',
     ];
     for (const name of donorComponents) {
