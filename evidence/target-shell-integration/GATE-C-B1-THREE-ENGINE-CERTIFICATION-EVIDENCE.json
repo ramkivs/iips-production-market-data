@@ -1,0 +1,1805 @@
+{
+ "certificationId": "B1-CERT-IES016-IES017-IES020-2026-09-25-001",
+ "decisionId": "b1-three-engine-certification-2026-09-25-001",
+ "baseline": "c6794de3d529e00647620dbcc6b00ba6a2dd46d3",
+ "gateASupplement": "8b45d9ff6d4e8b3ee7b9db4ce538a35d44ec71ea",
+ "gateA": "0fd185940b328d8c1977d9ad838ee47e3a1f5624",
+ "gateB": "c6794de3d529e00647620dbcc6b00ba6a2dd46d3",
+ "authorityAct": "0e032c5e6002139fffdb0b4d7acbdca317c9853c",
+ "environment": {
+  "host": "Arena sandbox",
+  "os": "Linux 6.1.158+ x86_64",
+  "node": "v22.22.3",
+  "tsx": "v4.23.9",
+  "install": "npm ci (root + iips-platform)",
+  "windowsObserved": false
+ },
+ "engines": {
+  "IES-016": {
+   "engineId": "sector.telecommunications",
+   "A_engineIdentity": {
+    "registryFile": "iips-platform/src/integration/EngineRegistry.ts",
+    "registryBlob": "df1c2d3f0879327c24dcde67018964bc2667b13a",
+    "moduleConstantFile": "iips-platform/src/sector-engines/telecommunications/TelecommunicationsEngine.ts",
+    "test": "ER-10 / ER-11 (tests/engine_registry_wiring.test.ts)",
+    "result": "PASS"
+   },
+   "B_engineSource": {
+    "tree": "ff92542423f5751c992dc31961aedc9810651291",
+    "files": [
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/TelecommunicationsEngine.ts",
+      "gitBlob": "24380b71ac607f4fa0940d7f2fa2b51bd2f45bdc",
+      "sha256": "61e753950a74367f084d6ab04582e781a62b7787d7eac618e1303e54a6a0849c",
+      "bytes": 5232
+     },
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/calibration/TelecommunicationsCalibration.ts",
+      "gitBlob": "8f431ec0d66e617b2d778dfc2f8818b3269eb6aa",
+      "sha256": "bce695573420988183119092b0cd7676143481381db5b12c59c0f3b2e1db824d",
+      "bytes": 2377
+     },
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/decision/TelecommunicationsDecision.ts",
+      "gitBlob": "b9b5a5f629ec39f3951db1b4c30f5a9e46728791",
+      "sha256": "9bb8f724999b3fb1c9f77fb0202f9d4cd7be0160d370fb73e2fc4c315a677894",
+      "bytes": 3762
+     },
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/evidence/TelecommunicationsEvidence.ts",
+      "gitBlob": "0c61ac6ed6ece04002f97fbacb9725e3a3f49e96",
+      "sha256": "f1bb82bd48e0a7984ddaaaea360919ba65e367d69fa7bed9bf0c5925bcfd0693",
+      "bytes": 2229
+     },
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/index.ts",
+      "gitBlob": "7b106a43e6b6502246a2bc14ce6e83608fa8f292",
+      "sha256": "350836f816924591a18bac1b3df84cf0b97f9461ed114dfcc85c461de72f6a8b",
+      "bytes": 44
+     },
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/metrics/TelecommunicationsMetrics.ts",
+      "gitBlob": "89a070592cf5e3d7c4d48b4929642de5c2a7c998",
+      "sha256": "a86401f2b2d58affe2c071512b2beb29839e46d88e0d2cf6bfcd9015cae2b344",
+      "bytes": 3115
+     },
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/scoring/TelecommunicationsScoreEngine.ts",
+      "gitBlob": "b3b2d5b1531149d682497a5ea5a5203e6621cfba",
+      "sha256": "a32ad0e0108c578abfac638b05f6cfcfc76e779a9d7efdbad3a9a80c93db6d7b",
+      "bytes": 5992
+     },
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/telecommunications-calibration-1.0.0.json",
+      "gitBlob": "178160fcbe0a30975c6796ac22c73a9bd03ab91a",
+      "sha256": "45068525bc6bb05b46b30101aa0735e9cad13e6f75079798450dd4cd7d8384dd",
+      "bytes": 2536
+     },
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/telecommunications-expected-outputs-1.0.0.json",
+      "gitBlob": "0d45ffc44df6d61a6f95dac15a12cb6f88be3155",
+      "sha256": "3cfb9d93f545d45d749cc48c88e25bab23075b013911ea7751212b49f1168ee0",
+      "bytes": 6617
+     },
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/telecommunications-golden-reference-1.0.0.json",
+      "gitBlob": "f0dfc647b8e0220d04a241902a82899e3a667393",
+      "sha256": "b31f91c2ff7654662b09f0121124cf64fba206d654598b2e4c80b442e712b858",
+      "bytes": 5543
+     },
+     {
+      "path": "iips-platform/src/sector-engines/telecommunications/telecommunications-validation-fixtures-1.0.0.json",
+      "gitBlob": "25accdd952a6f774968e51b3a18eb6f4aa1dbf05",
+      "sha256": "acd54d85a203bdf06b9c59a0ebf22d2b70c388bfacc84745995e3bfc2663b249",
+      "bytes": 1787
+     }
+    ],
+    "lineageCrossCheck_irr_c2dda91_tree": "ff92542423f5751c992dc31961aedc9810651291",
+    "lineageEqual": true
+   },
+   "C_pack": {
+    "dir": "ies-016-telecommunications",
+    "tree": "33e4f3ac97428da6d257b7a308c9c56256350997",
+    "fileCount": 34,
+    "files": [
+     {
+      "path": "ies-016-telecommunications/D16_AUTHORITY_REVIEW.md",
+      "gitBlob": "7f796754cb04eeb75e87000c760bbef587eb060c",
+      "sha256": "369cadebf1953fcd3c520e7e6c5619783c3d2ac440af978c3ecf1bab8fc81802",
+      "bytes": 800
+     },
+     {
+      "path": "ies-016-telecommunications/IES-016_ARCHITECTURE_REVIEW.md",
+      "gitBlob": "ec715ca1e2305d11bb51f2aac7a307a74b06042e",
+      "sha256": "96ef579479a55aa880902384058003888b9d72d911e931bb3cb316211b3cb4c7",
+      "bytes": 807
+     },
+     {
+      "path": "ies-016-telecommunications/IES-016_FREEZE_MANIFEST.json",
+      "gitBlob": "70018bdb38849d50af7258f62d0341ac2bf64f1a",
+      "sha256": "3d2b53835efdb8df21d4cb1dc67e4e535833954c8921653a0c5de16f4086e69f",
+      "bytes": 3983
+     },
+     {
+      "path": "ies-016-telecommunications/IES-016_IMPLEMENTATION_READINESS_CERTIFICATE.md",
+      "gitBlob": "d764f276d980b6843e1b68939803299181bd3a47",
+      "sha256": "1c2a85630c7991d241346eab10ea0e0c5068e8a8d6689db868927f71768e6b01",
+      "bytes": 2071
+     },
+     {
+      "path": "ies-016-telecommunications/RELEASE_NOTES_IES-016_v1.0.0.md",
+      "gitBlob": "78a9b13fc566077ce562057ee03a0092d158471b",
+      "sha256": "34e9b53a50d4e66fdbd32a620da5f68b11da5bace5f5c88510a3848451275b2a",
+      "bytes": 1453
+     },
+     {
+      "path": "ies-016-telecommunications/TELECOMMUNICATIONS_DISCOVERY_PACK.md",
+      "gitBlob": "68aae104dd3a0ccad8122d5770bd8d2c61637ba6",
+      "sha256": "d935ad2a48a2907bfe288337ee8479cfc0296ef376f8c32bff85411a4c3e038e",
+      "bytes": 19564
+     },
+     {
+      "path": "ies-016-telecommunications/TELECOMMUNICATIONS_ENGINE_ACCEPTANCE_MATRIX.md",
+      "gitBlob": "0a45484582300d106c104e093a176d9ba52f6aec",
+      "sha256": "e670b6d4c616757f8d564e48c0ca27ee2f7408e2afad6f637fa70273633cfbd3",
+      "bytes": 1697
+     },
+     {
+      "path": "ies-016-telecommunications/TELECOMMUNICATIONS_IMPLEMENTATION_RISK_REGISTER.md",
+      "gitBlob": "16b37ee9f3d0b20a0849c2314ee66cb58e08e383",
+      "sha256": "2267fe5229d10efbb3610c9556d1b7a41a9d754cf9a97d3560f0f9efddf5fbe6",
+      "bytes": 1354
+     },
+     {
+      "path": "ies-016-telecommunications/calibration/telecommunications-calibration-1.0.0.json",
+      "gitBlob": "178160fcbe0a30975c6796ac22c73a9bd03ab91a",
+      "sha256": "45068525bc6bb05b46b30101aa0735e9cad13e6f75079798450dd4cd7d8384dd",
+      "bytes": 2536
+     },
+     {
+      "path": "ies-016-telecommunications/contract-tests/generate_expected_outputs.py",
+      "gitBlob": "c69ce2eb5d989f63a0618406b103dc398ebc4948",
+      "sha256": "c7c0b0d70390a2f8cc6073988361b8ab84fdc559d9134e9067392f0719c8e01a",
+      "bytes": 8379
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_01_README.md",
+      "gitBlob": "04bb92ba2af021769f1046ebc8cd0444ab329849",
+      "sha256": "9c15c9fe5118ce4ddea8070c323d8281405ae2a534c50d998ba915fe87e3acb3",
+      "bytes": 9057
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_02_EXECUTIVE_SUMMARY.md",
+      "gitBlob": "044deb495c5c97318f4568f736195d6227c1262f",
+      "sha256": "9c85f9191e90ad2ef0d8be9c8d2677be8e0a7e0496fa9732ca12a2c7955c2019",
+      "bytes": 7676
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_03_INDUSTRY_MODEL.md",
+      "gitBlob": "83b4697e37ac419784d90681e66e25708a73d581",
+      "sha256": "38b73208020858e72b880b8cdfbfef28b141512638d7acbca3174a2e8861ab0f",
+      "bytes": 6875
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_04_BUSINESS_MODEL.md",
+      "gitBlob": "ad81f6ddb013a1d85963c9d06aa6a0277781c19f",
+      "sha256": "afb56a4f243a9ae6e70f963f75e5ad3d29e12651cd470552964a3081e8bc9ef8",
+      "bytes": 7371
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_05_METHODOLOGY_PRINCIPLES.md",
+      "gitBlob": "7216977ee87d488a7a16b178a62db9ae8fcd11ec",
+      "sha256": "69670864b8616e7f3057e7ca0d74fb9200be7d8fe594b172ab39cf3b30085d94",
+      "bytes": 10023
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_06_METRIC_LIBRARY.md",
+      "gitBlob": "596d2158f9fb49c3b637c21e6a15ae8779cb0ea4",
+      "sha256": "141c61f0fa05347c065d41420b30f339b45956296eb45ff17c397de1acf14431",
+      "bytes": 8949
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_07_SCORE_ENGINE.md",
+      "gitBlob": "607610d7ee3b8e483104c107a1f7492b76fb6b5b",
+      "sha256": "5c067e8dfd096c80bd9eae6b3694654744c990f554ecefd61ccd202965dd6178",
+      "bytes": 6906
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_08_FORMULA_LIBRARY.md",
+      "gitBlob": "8d03d9e20aca7ba71c529b5f5f603744e34bf145",
+      "sha256": "13705a3d42054836f325a84feaca86b9747ac88c131955d00b53ddc8ff00fa92",
+      "bytes": 6784
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_09_CALIBRATION.md",
+      "gitBlob": "e45d71995a42f5a0d19ce59eefa794fdf560aa52",
+      "sha256": "80a2e9cb97b1ca7125a723651d4909a798bf2bab6978c0ef79429be95af1ce20",
+      "bytes": 19562
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_10_DECISION_ENGINE.md",
+      "gitBlob": "0927629c9de3585cd3cc87a90b4540c994afad6f",
+      "sha256": "9e7f7518d6aa17e859158d4f9004489ed996a06c9fddbe4ec48cf5108b086c62",
+      "bytes": 6412
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_11_EVIDENCE_FRAMEWORK.md",
+      "gitBlob": "30764c44976e454997fb794ee632b7f6ea92e72b",
+      "sha256": "6e3dbc05d83378f299e897ed65c11f89e51221c85eddbc25750443c0215a2b77",
+      "bytes": 8061
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_12_VALIDATION.md",
+      "gitBlob": "9dd39a402ef6b66acfa9b88f2d78b7f0ac3e89fb",
+      "sha256": "4236fddd19b96126e390c797acfe017827746a4e13c5e0a60bb3c70d7551c738",
+      "bytes": 11144
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_13_ARENA_IMPLEMENTATION_SPECIFICATION.md",
+      "gitBlob": "279c138862eb82d2e842d9bb876c3e9274b2c1a0",
+      "sha256": "65bc1eb6cd698e007f38c07db37c072fa927b4b121ad00331f7b3d2198b5ac8e",
+      "bytes": 8571
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_14_REFERENCE_ASSET_GOVERNANCE.md",
+      "gitBlob": "68077fd69d62e4fea27601529a7814d9479cc3b9",
+      "sha256": "a5d67a7efc753f2ca9cc12c5db654bfa80dfe94209f7ff7a7e657985e7473bcc",
+      "bytes": 10602
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_15_NORMATIVE_CALCULATION_APPENDIX.md",
+      "gitBlob": "a5f9286b49cdeef8e0e326048d579b96dd74d1d2",
+      "sha256": "051eeda1088d915d17d54dfe131cbcee139f2dd662c454acd2b9c80d31aaae24",
+      "bytes": 8631
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_16_IMPLEMENTATION_READINESS_CERTIFICATE.md",
+      "gitBlob": "ce896d1023c276e155595d0879907fc4aadf610a",
+      "sha256": "a1690b641dcac321e86d8ca481d2dc73da43ecf33b057c7edc3b8775a09f8aec",
+      "bytes": 7815
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_17_MASTER_INDEX.md",
+      "gitBlob": "ae0bee41b7eccab1aab4860a6d40b7df7677585e",
+      "sha256": "c4679421618a03d22380ec15bd9015bfef9c988999429c49ee84f4820a1c4849",
+      "bytes": 9207
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_18_DATA_DICTIONARY.md",
+      "gitBlob": "793d7f8a7b89ff9d509af164629e4dd025d8ed63",
+      "sha256": "b1fdb80da18ec3a89ad87483e6b6bbf590a3af4623d624b1df1182d2a044853a",
+      "bytes": 8128
+     },
+     {
+      "path": "ies-016-telecommunications/docs/IES-016_19_REFERENCE_DATA_SOURCES.md",
+      "gitBlob": "4d86bbdf7ecf48df4264c87720e1c4cf3bb47fbb",
+      "sha256": "2c46c0ee3b5f06b735bccbcbd0fcad99919b53c1899885e8c6f965db232a1c2e",
+      "bytes": 8561
+     },
+     {
+      "path": "ies-016-telecommunications/expected-outputs/telecommunications-expected-outputs-1.0.0.json",
+      "gitBlob": "0d45ffc44df6d61a6f95dac15a12cb6f88be3155",
+      "sha256": "3cfb9d93f545d45d749cc48c88e25bab23075b013911ea7751212b49f1168ee0",
+      "bytes": 6617
+     },
+     {
+      "path": "ies-016-telecommunications/fixtures/telecommunications-golden-reference-1.0.0.json",
+      "gitBlob": "f0dfc647b8e0220d04a241902a82899e3a667393",
+      "sha256": "b31f91c2ff7654662b09f0121124cf64fba206d654598b2e4c80b442e712b858",
+      "bytes": 5543
+     },
+     {
+      "path": "ies-016-telecommunications/fixtures/telecommunications-validation-fixtures-1.0.0.json",
+      "gitBlob": "25accdd952a6f774968e51b3a18eb6f4aa1dbf05",
+      "sha256": "acd54d85a203bdf06b9c59a0ebf22d2b70c388bfacc84745995e3bfc2663b249",
+      "bytes": 1787
+     },
+     {
+      "path": "ies-016-telecommunications/replay-datasets/telecommunications-replay-dataset-1.0.0.json",
+      "gitBlob": "ed6bbeb8b127f45ac8c8d99f9baee8c42bd60001",
+      "sha256": "22261acd32cb9efda8f0bd085a42fd53ae29267619c0d233fbfd253f174be8fc",
+      "bytes": 8566
+     },
+     {
+      "path": "ies-016-telecommunications/telecommunications-ontology-metadata-1.0.0.json",
+      "gitBlob": "31383863e126a6688bd95249522e654c933ec6f1",
+      "sha256": "a42f3b250bcd6b0a735aa7e54b632e8c8c64ed97cbf7bc0a05ec7ae53e38167a",
+      "bytes": 753
+     }
+    ]
+   },
+   "D_freezeManifestPins": [
+    {
+     "key": "calibration",
+     "sha256": "2d22256e2c13b0e5b855c0869558f9d12898ddb12a7f3d0f611f6c9b16cba7e0",
+     "matchedFile": "ies-016-telecommunications/calibration/telecommunications-calibration-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "goldenDataset",
+     "sha256": "feb521c8cdd55f5e404c99b3f8bb7507345593c05ce64de0e1ebc61168f530fa",
+     "matchedFile": "ies-016-telecommunications/fixtures/telecommunications-golden-reference-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "expectedOutputs",
+     "sha256": "18341d76da1c7577be879a030234f1aecb095330d93f5da4b36529b9772633d6",
+     "matchedFile": "ies-016-telecommunications/expected-outputs/telecommunications-expected-outputs-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "replayDataset",
+     "sha256": "097ca980c103a19b4132d4e994cc620743f14d16117cb24cc023e876aa0d11c5",
+     "matchedFile": "ies-016-telecommunications/replay-datasets/telecommunications-replay-dataset-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "validationFixtures",
+     "sha256": "783d68ebc9d311888adc8e1fb82f4651a58f584d1e4fe38eedccc7ebe8251c4f",
+     "matchedFile": "ies-016-telecommunications/fixtures/telecommunications-validation-fixtures-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "ontologyMetadata",
+     "sha256": "b12cf97abd1d6c6290eea57332e83c4960b685b4d357bbc8fa387d8f40a7d5d6",
+     "matchedFile": "ies-016-telecommunications/telecommunications-ontology-metadata-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "discoveryPack",
+     "sha256": "4f35d9f51cb29d03b60a87f6a5f3d23db9c3dc0c275fbd73d591389c04e9438a",
+     "matchedFile": "ies-016-telecommunications/TELECOMMUNICATIONS_DISCOVERY_PACK.md",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "acceptanceMatrix",
+     "sha256": "1e344fa5e65e46d633d4b3774dfd7acbd71488b464b1086bc9d672c31321c665",
+     "matchedFile": "ies-016-telecommunications/TELECOMMUNICATIONS_ENGINE_ACCEPTANCE_MATRIX.md",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "riskRegister",
+     "sha256": "bb45049d2d22facd5048fc3b15f7e645962dbee09a5e9b4324be4a356f2b2f07",
+     "matchedFile": "ies-016-telecommunications/TELECOMMUNICATIONS_IMPLEMENTATION_RISK_REGISTER.md",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "contractTestGenerator",
+     "sha256": "807a7dafba619d01543f78bbe13cb169165bf56ae8f4939c1fb8285711e8ae48",
+     "matchedFile": "ies-016-telecommunications/contract-tests/generate_expected_outputs.py",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "architectureReview",
+     "sha256": "96ef579479a55aa880902384058003888b9d72d911e931bb3cb316211b3cb4c7",
+     "matchedFile": "ies-016-telecommunications/IES-016_ARCHITECTURE_REVIEW.md",
+     "rendering": "raw",
+     "result": "PASS"
+    },
+    {
+     "key": "authorityReview",
+     "sha256": "369cadebf1953fcd3c520e7e6c5619783c3d2ac440af978c3ecf1bab8fc81802",
+     "matchedFile": "ies-016-telecommunications/D16_AUTHORITY_REVIEW.md",
+     "rendering": "raw",
+     "result": "PASS"
+    }
+   ],
+   "E_to_I_runtimeBinding": [
+    {
+     "engineLocal": "iips-platform/src/sector-engines/telecommunications/telecommunications-calibration-1.0.0.json",
+     "engineBlob": "178160fcbe0a30975c6796ac22c73a9bd03ab91a",
+     "packFile": "ies-016-telecommunications/calibration/telecommunications-calibration-1.0.0.json",
+     "packBlob": "178160fcbe0a30975c6796ac22c73a9bd03ab91a",
+     "identical": true
+    },
+    {
+     "engineLocal": "iips-platform/src/sector-engines/telecommunications/telecommunications-golden-reference-1.0.0.json",
+     "engineBlob": "f0dfc647b8e0220d04a241902a82899e3a667393",
+     "packFile": "ies-016-telecommunications/fixtures/telecommunications-golden-reference-1.0.0.json",
+     "packBlob": "f0dfc647b8e0220d04a241902a82899e3a667393",
+     "identical": true
+    },
+    {
+     "engineLocal": "iips-platform/src/sector-engines/telecommunications/telecommunications-validation-fixtures-1.0.0.json",
+     "engineBlob": "25accdd952a6f774968e51b3a18eb6f4aa1dbf05",
+     "packFile": "ies-016-telecommunications/fixtures/telecommunications-validation-fixtures-1.0.0.json",
+     "packBlob": "25accdd952a6f774968e51b3a18eb6f4aa1dbf05",
+     "identical": true
+    },
+    {
+     "engineLocal": "iips-platform/src/sector-engines/telecommunications/telecommunications-expected-outputs-1.0.0.json",
+     "engineBlob": "0d45ffc44df6d61a6f95dac15a12cb6f88be3155",
+     "packFile": "ies-016-telecommunications/expected-outputs/telecommunications-expected-outputs-1.0.0.json",
+     "packBlob": "0d45ffc44df6d61a6f95dac15a12cb6f88be3155",
+     "identical": true
+    }
+   ],
+   "regression": {
+    "acceptance": [
+     {
+      "test": "IES016-D16-ACC1: metric evaluation + engine executes (TC-001 -> Buy)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC2: all 13 frozen expected outputs reproduced exactly (composite + verdict + subsegment + archetype + overrides)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC3: pillars match frozen expected outputs (round-half-to-even at 1dp)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC4: effective band-table resolution (calibrated ?? baseline, boundaries+scores together)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC5: composite round-half-to-even (TC-012 raw 55.05 -> 55.0, ties-to-even)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC6: multi-subsegment + hybrid resolution (TC-009)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC7: override / min-rank deterministic (TC-006, TC-011)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC8: missing-data renormalization (TC-014: fcfYield omitted -> capitalEfficiency 0.0)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC9: exact band-boundary semantics (TC-015 lower-inclusive / upper-exclusive)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC10: all 6 verdict bands exercised across the 13 providers",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC11: ontology registration — 8/8 dimensions (CSIP-compatible)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC12: evidence complete for every provider + replay deterministic",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-D16-ACC13: leverage alert + archetype risk applied (TC-005 tower-infra infrastructure)",
+      "result": "PASS"
+     }
+    ],
+    "framework-integration": [
+     {
+      "test": "IES016-FI-ACC1: telecommunications manifest via shared ManifestLoader",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-FI-ACC2: telecommunications evidence via shared EvidencePipeline",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-FI-ACC3: telecommunications deterministic snapshot via shared Snapshot",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-FI-ACC4: telecommunications replay via shared ReplayService",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-FI-ACC5: telecommunications diagnostics + qualification + activation via shared framework",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-FI-ACC6: telecommunications transport via shared generic DTO",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-FI-ACC7: 14 plugins coexist through the same framework without branching",
+      "result": "PASS"
+     }
+    ],
+    "reuse-verification": [
+     {
+      "test": "IES016-RV-ACC1: sector.telecommunications registers + executes through the existing runtime",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-RV-ACC2: telecommunications produces snapshots + replays via shared services",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-RV-ACC3: 14 plugins coexist (12 peers + CSIP + telecommunications)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-RV-ACC4: telecommunications replay-compatible deterministic execution via shared services",
+      "result": "PASS"
+     }
+    ],
+    "wp4-validation": [
+     {
+      "test": "IES016-WP4-ACC1: golden regression — all 13 frozen expected outputs from the standards unit",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-WP4-ACC2: replay — byte-identical across repeated runs (calibration version bound)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-WP4-ACC3: validation fixtures — missing primitive + band boundary",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-WP4-ACC4: replay dataset integrity — derived 1:1 from approved inputs + expected outputs",
+      "result": "PASS"
+     },
+     {
+      "test": "IES016-WP4-ACC5: calibration integrity — 12 band tables, 5 subsegments, 6 archetypes, 6 verdict bands",
+      "result": "PASS"
+     }
+    ]
+   }
+  },
+  "IES-017": {
+   "engineId": "sector.automobile",
+   "A_engineIdentity": {
+    "registryFile": "iips-platform/src/integration/EngineRegistry.ts",
+    "registryBlob": "df1c2d3f0879327c24dcde67018964bc2667b13a",
+    "moduleConstantFile": "iips-platform/src/sector-engines/automobile/AutomobileEngine.ts",
+    "test": "ER-10 / ER-11 (tests/engine_registry_wiring.test.ts)",
+    "result": "PASS"
+   },
+   "B_engineSource": {
+    "tree": "dbdaa90e224b9297a330856f46abb6787790bdf7",
+    "files": [
+     {
+      "path": "iips-platform/src/sector-engines/automobile/AutomobileEngine.ts",
+      "gitBlob": "aef6873000d9482047c69716d7e5eec5c03bd5b1",
+      "sha256": "5864d89f8ac0d1443e9fed487d6adcc4c265effbb2c0f7ab960b6d29a2250411",
+      "bytes": 4968
+     },
+     {
+      "path": "iips-platform/src/sector-engines/automobile/automobile-calibration-1.0.0.json",
+      "gitBlob": "e3f84ede6f5e89580aa451a689c0b5689cf8674e",
+      "sha256": "02913ff64ecd407efdc465fa803feb3c01c61107ec91670d04d015903950b7a2",
+      "bytes": 2550
+     },
+     {
+      "path": "iips-platform/src/sector-engines/automobile/automobile-expected-outputs-1.0.0.json",
+      "gitBlob": "b9982d744d92d592714dcc5b1e8599bed63752f2",
+      "sha256": "ea22807925694aa3e2b97cd2f1b1990cc4235e4e19023b31ae43bdc55314d81d",
+      "bytes": 6736
+     },
+     {
+      "path": "iips-platform/src/sector-engines/automobile/automobile-golden-reference-1.0.0.json",
+      "gitBlob": "11dcd3953046c4e27f80a8ffc71c2c7ef59ede47",
+      "sha256": "e3b97d77ac0fd33ec3005c04293ac3189640ad5e6c1fdb8854c9939e2a7c2320",
+      "bytes": 5722
+     },
+     {
+      "path": "iips-platform/src/sector-engines/automobile/automobile-validation-fixtures-1.0.0.json",
+      "gitBlob": "fa9bb6df3560bd2449486d5ac9dbc889ff7ac56d",
+      "sha256": "9b637586e3d09f990a46bac22b57acb3d67c17153fb46e3dd1f773ab1a3e4596",
+      "bytes": 1981
+     },
+     {
+      "path": "iips-platform/src/sector-engines/automobile/calibration/AutomobileCalibration.ts",
+      "gitBlob": "94738d16a6cbdb0b8bc34479afae81d47dd5c058",
+      "sha256": "486a1ac619e1c48347240ade7b5c9bcc91309b069f8b1cacfadfa5a2232985a2",
+      "bytes": 2337
+     },
+     {
+      "path": "iips-platform/src/sector-engines/automobile/decision/AutomobileDecision.ts",
+      "gitBlob": "4fc8159339657a1b8ed978c88a2d050c15534887",
+      "sha256": "d8afe5a5fd12edc30ca21dcf76182fed65c498b842785a82065fccf9da1c94d2",
+      "bytes": 3810
+     },
+     {
+      "path": "iips-platform/src/sector-engines/automobile/evidence/AutomobileEvidence.ts",
+      "gitBlob": "323e9e6ec18325db2da7c0f47a2cd69ce79e70f6",
+      "sha256": "78fc4e25e7b27eb392e85ff1a3bae1c3e3e02a3cffa441de47f58268582a9834",
+      "bytes": 2153
+     },
+     {
+      "path": "iips-platform/src/sector-engines/automobile/index.ts",
+      "gitBlob": "4ec72d5b2633a5f83d67ca0a6a3beafd87180340",
+      "sha256": "407130018015961cf87194a0ca05f705b7a76b4883e6801bc9b47d6586ffbd38",
+      "bytes": 36
+     },
+     {
+      "path": "iips-platform/src/sector-engines/automobile/metrics/AutomobileMetrics.ts",
+      "gitBlob": "72fe497732c8aed953f028e6e4606a0443f6ef00",
+      "sha256": "0786c883e27990fe2638500a1b0e5e597a3a62f28da977cc2b8597a7eec2101a",
+      "bytes": 3036
+     },
+     {
+      "path": "iips-platform/src/sector-engines/automobile/scoring/AutomobileScoreEngine.ts",
+      "gitBlob": "dea75720a2c4fd4244981e792162ad94282173c1",
+      "sha256": "81a19119fbb52b974deb43006f29f0a6ebe7f5bf85a26e52eab734490c19f074",
+      "bytes": 5896
+     }
+    ],
+    "lineageCrossCheck_irr_c2dda91_tree": "dbdaa90e224b9297a330856f46abb6787790bdf7",
+    "lineageEqual": true
+   },
+   "C_pack": {
+    "dir": "ies-017-automobile",
+    "tree": "a2de07ffeb9ddfd2eac84221f0a1a6fef42a88d9",
+    "fileCount": 34,
+    "files": [
+     {
+      "path": "ies-017-automobile/AUTOMOBILE_DISCOVERY_PACK.md",
+      "gitBlob": "e0ad759f4be4231b18959ae6f22aaa3ec6e2ab0b",
+      "sha256": "95cad4613b9bea48af537a58742ff923b40b83c2532aa6ef782a634dd3763199",
+      "bytes": 13841
+     },
+     {
+      "path": "ies-017-automobile/AUTOMOBILE_ENGINE_ACCEPTANCE_MATRIX.md",
+      "gitBlob": "8707125b545d36541e1199e3f35d425fdda3613d",
+      "sha256": "180f80414aafc97dec1ecab9c4258de8b54ae0a5e67a69856f292841ff41e3c4",
+      "bytes": 1648
+     },
+     {
+      "path": "ies-017-automobile/AUTOMOBILE_IMPLEMENTATION_RISK_REGISTER.md",
+      "gitBlob": "7158304538f9e70e68b6cfe99a51386587dd0eb2",
+      "sha256": "9624b98afea9763048dee2aecdedd85d8a6cd79d8b12605fba1f2920b92bf4ca",
+      "bytes": 1353
+     },
+     {
+      "path": "ies-017-automobile/D17_AUTHORITY_REVIEW.md",
+      "gitBlob": "70f46417f5a906965f001911463eedd5345c2201",
+      "sha256": "1175f2a66123e396ce04f14bbc4faabb1b4fe7cbb68afb89b7eafb70bcbd40b2",
+      "bytes": 800
+     },
+     {
+      "path": "ies-017-automobile/IES-017_ARCHITECTURE_REVIEW.md",
+      "gitBlob": "f16b52ec1b5c152084fc131eba29888436adb8ec",
+      "sha256": "91905ce5d0d3c2e41a5ccf25d5134c3b99c264ff59cd0431986af231607afd17",
+      "bytes": 807
+     },
+     {
+      "path": "ies-017-automobile/IES-017_FREEZE_MANIFEST.json",
+      "gitBlob": "a7d1190edbd8bf0bfc5b852da466c5e03b6f2cd3",
+      "sha256": "2ad4fcd9ed0a76b5ce186a4fe269bc7eef46a78656e65fd2e64ba66039038afe",
+      "bytes": 3911
+     },
+     {
+      "path": "ies-017-automobile/IES-017_IMPLEMENTATION_READINESS_CERTIFICATE.md",
+      "gitBlob": "a1f8ee7f9a7e7bdb572041f9cbbe0357a87bc77f",
+      "sha256": "8b6e685d9a79319cf36e739d75f556765984841be9b14038fd7f7f3b1d65cd6d",
+      "bytes": 2053
+     },
+     {
+      "path": "ies-017-automobile/RELEASE_NOTES_IES-017_v1.0.0.md",
+      "gitBlob": "51ab933dd23d026ac7f7cda4b76b1e8d4d6d5c38",
+      "sha256": "930c0352a1a8fce97f65792c402342c8344865250317795bf8a32d57a2ce5638",
+      "bytes": 1465
+     },
+     {
+      "path": "ies-017-automobile/automobile-ontology-metadata-1.0.0.json",
+      "gitBlob": "c0cbe1659642ff6bcc2e767e06d24be081c4cd7f",
+      "sha256": "cd91a21f85cbfdbde1206ec9af0216e72f057c81111e07410c5d785b4d77df02",
+      "bytes": 794
+     },
+     {
+      "path": "ies-017-automobile/calibration/automobile-calibration-1.0.0.json",
+      "gitBlob": "e3f84ede6f5e89580aa451a689c0b5689cf8674e",
+      "sha256": "02913ff64ecd407efdc465fa803feb3c01c61107ec91670d04d015903950b7a2",
+      "bytes": 2550
+     },
+     {
+      "path": "ies-017-automobile/contract-tests/generate_expected_outputs.py",
+      "gitBlob": "ec599ce1aafb26fe645f238e1f953521e60795f8",
+      "sha256": "44ba141957eb78654bce0fe3320a709a812291f35b5b7b6a5f342bfe54f27a25",
+      "bytes": 8501
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_01_README.md",
+      "gitBlob": "6467d6639364fd6deb260fd4a0c0a6e051d0d577",
+      "sha256": "a9eca68d6a7f68238d5ad73aae43d5b6268b05f439bd1d9933bbde174231785a",
+      "bytes": 8918
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_02_EXECUTIVE_SUMMARY.md",
+      "gitBlob": "7c625c79545d22c8786979f1f95dd26ab4351f68",
+      "sha256": "6c15e216eb9459485ee137130d0e28550fd2c5d36a264958110137759e4b2dde",
+      "bytes": 8122
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_03_INDUSTRY_MODEL.md",
+      "gitBlob": "5cb365b3d0fcecd8e9845fa27e91a7979753710c",
+      "sha256": "d248ff36730bc5d25c721b027554bd809e0f25810c5907f152a73d2f25c22b12",
+      "bytes": 6687
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_04_BUSINESS_MODEL.md",
+      "gitBlob": "05366e8ec69ffc44a6b7f88ecdf222fb8c782cd8",
+      "sha256": "b4efdff739aec3586befc1aeecf410faf17e1dea7067b75b2c1ba459bd7311c2",
+      "bytes": 7305
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_05_METHODOLOGY_PRINCIPLES.md",
+      "gitBlob": "95f6b97b3a1c96218878600d5a3f8c599636dd1d",
+      "sha256": "243ff48ceb777efded84f71ac1e12c1c67ddc83df8e92bd1a4ae577549b7a7c5",
+      "bytes": 9489
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_06_METRIC_LIBRARY.md",
+      "gitBlob": "f78f3b8793fe58ed6ef45ed1b147e66e7fcf08e4",
+      "sha256": "ac8ea4d0ba08b2983bf07d5665bafc861300695ea30badce1ae32273aecac737",
+      "bytes": 8909
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_07_SCORE_ENGINE.md",
+      "gitBlob": "196c5a9ccb9c5145905d8398492e0bb2bc39027c",
+      "sha256": "004d6a4123e526a3257b810c4f658076057f1acc7d764e79dd8366dd7d057ef5",
+      "bytes": 6911
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_08_FORMULA_LIBRARY.md",
+      "gitBlob": "0a6224c41b3a4fe0bf6c932cf6f9f945fce2a007",
+      "sha256": "99196b7c036a11055212b11ec6d18233181a50d9626cb6ba1257d7381017f020",
+      "bytes": 6777
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_09_CALIBRATION.md",
+      "gitBlob": "5ae5730390fb6f1371bd284fd7f6c55945423b55",
+      "sha256": "4d8a4b964a920ab84feaeef622779a713fb0263d27aa49fafea784864325e86a",
+      "bytes": 19359
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_10_DECISION_ENGINE.md",
+      "gitBlob": "21d202e1f005622826697483cbba848813a2e38e",
+      "sha256": "40d147aadb196ed4749b30c549fd303d6d1c3f984aa420239500678ca2331d09",
+      "bytes": 6504
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_11_EVIDENCE_FRAMEWORK.md",
+      "gitBlob": "c462287f107f53ba62ca570923801974bee5b7bd",
+      "sha256": "19a198a7c79621c2c4560a723802647e82b185c14c474fe5d3e2ce8b728c3a96",
+      "bytes": 8426
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_12_VALIDATION.md",
+      "gitBlob": "7532ee5ab3f7aa68485e79735db6aefcf45b81eb",
+      "sha256": "4a0d16a32e351e0626227dd79cc74ee87b966c550054ff1f9460e5023c771b21",
+      "bytes": 11312
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_13_ARENA_IMPLEMENTATION_SPECIFICATION.md",
+      "gitBlob": "cd8f7be57074bd7eb67a76390b4ae600f4a9fc7b",
+      "sha256": "d0f700043535b749ee1b0c85ccd9676f42eb851c35b6210783f1e8c55bfd8089",
+      "bytes": 9052
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_14_REFERENCE_ASSET_GOVERNANCE.md",
+      "gitBlob": "033c398fa2d2481f1f1c3d4bde96358e5a41021d",
+      "sha256": "76ff8c9e8ad581f112179e004f6026180f858278af679dc7789819a8c8771d8c",
+      "bytes": 10362
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_15_NORMATIVE_CALCULATION_APPENDIX.md",
+      "gitBlob": "7e245d82db9a9125527e45dc8d2498e2d4495a92",
+      "sha256": "4c086c203a6db8df7228481a16c3220a24a1fbda9a62e2f7223e7e1b2494a42e",
+      "bytes": 8664
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_16_IMPLEMENTATION_READINESS_CERTIFICATE.md",
+      "gitBlob": "4fc947417fc4500826646acf89cc43b043dbc0be",
+      "sha256": "54112d62ec35f0454b6e4c8f1546eec5b10b0adc8cba5e9c1b1b9d1e650c79e8",
+      "bytes": 7781
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_17_MASTER_INDEX.md",
+      "gitBlob": "1f282a2710fca90599dbbe8c8aa39c3375426513",
+      "sha256": "32ce09b1e7a95898a4ef837d7d638068269916fa07d4c998e701a272e960f08d",
+      "bytes": 9027
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_18_DATA_DICTIONARY.md",
+      "gitBlob": "28536473a7a1e716268b90bdd179b470888e9add",
+      "sha256": "26b84ad519f34ce6a628e7855c6c943fe2e78813aaadebef38191423600e9ad4",
+      "bytes": 8227
+     },
+     {
+      "path": "ies-017-automobile/docs/IES-017_19_REFERENCE_DATA_SOURCES.md",
+      "gitBlob": "49bc75805e3d8785be0e33dd570bf15569a2bfa1",
+      "sha256": "02aff1ec597f69a91579c25feb9e202562883f371039f1d7feb7b7a8896f8999",
+      "bytes": 8298
+     },
+     {
+      "path": "ies-017-automobile/expected-outputs/automobile-expected-outputs-1.0.0.json",
+      "gitBlob": "b9982d744d92d592714dcc5b1e8599bed63752f2",
+      "sha256": "ea22807925694aa3e2b97cd2f1b1990cc4235e4e19023b31ae43bdc55314d81d",
+      "bytes": 6736
+     },
+     {
+      "path": "ies-017-automobile/fixtures/automobile-golden-reference-1.0.0.json",
+      "gitBlob": "11dcd3953046c4e27f80a8ffc71c2c7ef59ede47",
+      "sha256": "e3b97d77ac0fd33ec3005c04293ac3189640ad5e6c1fdb8854c9939e2a7c2320",
+      "bytes": 5722
+     },
+     {
+      "path": "ies-017-automobile/fixtures/automobile-validation-fixtures-1.0.0.json",
+      "gitBlob": "fa9bb6df3560bd2449486d5ac9dbc889ff7ac56d",
+      "sha256": "9b637586e3d09f990a46bac22b57acb3d67c17153fb46e3dd1f773ab1a3e4596",
+      "bytes": 1981
+     },
+     {
+      "path": "ies-017-automobile/replay-datasets/automobile-replay-dataset-1.0.0.json",
+      "gitBlob": "f4d599631ee27b48aa808472f5cd9cbb0b108cff",
+      "sha256": "c8ed26c58dc6d2f7db71caa4d8d959cae843ddff0b9dd4e072856ed2e952428f",
+      "bytes": 8904
+     }
+    ]
+   },
+   "D_freezeManifestPins": [
+    {
+     "key": "calibration",
+     "sha256": "64c8186debd575f61b03f3caa12709540f61bc834492fd422f00f43ae86a3799",
+     "matchedFile": "ies-017-automobile/calibration/automobile-calibration-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "goldenDataset",
+     "sha256": "d912224225c9364e86f4a9ed4e149928ee9ba2ae2b6487820b7cb67db41e54af",
+     "matchedFile": "ies-017-automobile/fixtures/automobile-golden-reference-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "expectedOutputs",
+     "sha256": "ae532792a759b56be7a3ea3d77fde93b88e99d1dc1facec2a6d660a7c2ff5b45",
+     "matchedFile": "ies-017-automobile/expected-outputs/automobile-expected-outputs-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "replayDataset",
+     "sha256": "fce68b0af3ef09abd7e3817fc0609b172d0b02386c079d916050c45c93dab2b3",
+     "matchedFile": "ies-017-automobile/replay-datasets/automobile-replay-dataset-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "validationFixtures",
+     "sha256": "e5a3cb5267666bf51e8f948eb9732e5cb2d36eddbc92df1b7f87d8abd5fb165c",
+     "matchedFile": "ies-017-automobile/fixtures/automobile-validation-fixtures-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "ontologyMetadata",
+     "sha256": "bbd293b130d0fd5f27c686c182f8b2b294c956402bdac17838291b50a28fa680",
+     "matchedFile": "ies-017-automobile/automobile-ontology-metadata-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "discoveryPack",
+     "sha256": "cd7096f23949877ec5cc47dd8053ce80c4fe4a0e0e4c43563bedee8319387f9f",
+     "matchedFile": "ies-017-automobile/AUTOMOBILE_DISCOVERY_PACK.md",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "acceptanceMatrix",
+     "sha256": "fb399c59244f7bc2f762cdead5a5e173c4a9d7f81c352ede2a8606cdddd0b00d",
+     "matchedFile": "ies-017-automobile/AUTOMOBILE_ENGINE_ACCEPTANCE_MATRIX.md",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "riskRegister",
+     "sha256": "f18359007c5943813e777aeafc96657651ba4c09029253075e7dc616fd83960c",
+     "matchedFile": "ies-017-automobile/AUTOMOBILE_IMPLEMENTATION_RISK_REGISTER.md",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "contractTestGenerator",
+     "sha256": "45fe3aab3d16a7333c5042a60d466ea36a94814ce0309c3bc9eb8ac3a5c1e3a1",
+     "matchedFile": "ies-017-automobile/contract-tests/generate_expected_outputs.py",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "architectureReview",
+     "sha256": "91905ce5d0d3c2e41a5ccf25d5134c3b99c264ff59cd0431986af231607afd17",
+     "matchedFile": "ies-017-automobile/IES-017_ARCHITECTURE_REVIEW.md",
+     "rendering": "raw",
+     "result": "PASS"
+    },
+    {
+     "key": "authorityReview",
+     "sha256": "1175f2a66123e396ce04f14bbc4faabb1b4fe7cbb68afb89b7eafb70bcbd40b2",
+     "matchedFile": "ies-017-automobile/D17_AUTHORITY_REVIEW.md",
+     "rendering": "raw",
+     "result": "PASS"
+    }
+   ],
+   "E_to_I_runtimeBinding": [
+    {
+     "engineLocal": "iips-platform/src/sector-engines/automobile/automobile-calibration-1.0.0.json",
+     "engineBlob": "e3f84ede6f5e89580aa451a689c0b5689cf8674e",
+     "packFile": "ies-017-automobile/calibration/automobile-calibration-1.0.0.json",
+     "packBlob": "e3f84ede6f5e89580aa451a689c0b5689cf8674e",
+     "identical": true
+    },
+    {
+     "engineLocal": "iips-platform/src/sector-engines/automobile/automobile-golden-reference-1.0.0.json",
+     "engineBlob": "11dcd3953046c4e27f80a8ffc71c2c7ef59ede47",
+     "packFile": "ies-017-automobile/fixtures/automobile-golden-reference-1.0.0.json",
+     "packBlob": "11dcd3953046c4e27f80a8ffc71c2c7ef59ede47",
+     "identical": true
+    },
+    {
+     "engineLocal": "iips-platform/src/sector-engines/automobile/automobile-validation-fixtures-1.0.0.json",
+     "engineBlob": "fa9bb6df3560bd2449486d5ac9dbc889ff7ac56d",
+     "packFile": "ies-017-automobile/fixtures/automobile-validation-fixtures-1.0.0.json",
+     "packBlob": "fa9bb6df3560bd2449486d5ac9dbc889ff7ac56d",
+     "identical": true
+    },
+    {
+     "engineLocal": "iips-platform/src/sector-engines/automobile/automobile-expected-outputs-1.0.0.json",
+     "engineBlob": "b9982d744d92d592714dcc5b1e8599bed63752f2",
+     "packFile": "ies-017-automobile/expected-outputs/automobile-expected-outputs-1.0.0.json",
+     "packBlob": "b9982d744d92d592714dcc5b1e8599bed63752f2",
+     "identical": true
+    }
+   ],
+   "regression": {
+    "acceptance": [
+     {
+      "test": "IES017-D17-ACC1: metric evaluation + engine executes (AB-001 -> Buy)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC2: all 13 frozen expected outputs reproduced exactly (composite + verdict + subsegment + archetype + overrides)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC3: pillars match frozen expected outputs (round-half-to-even at 1dp)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC4: effective band-table resolution (calibrated ?? baseline, boundaries+scores together)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC5: composite round-half-to-even (AB-010 raw 56.25 -> 56.2, ties-to-even)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC6: multi-subsegment + hybrid resolution (AB-009)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC7: override / min-rank deterministic (AB-006, AB-011)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC8: missing-data renormalization (AB-014: fcfYield omitted -> capitalEfficiency 0.0)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC9: calibrated band-boundary semantics (AB-015)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC10: all 6 verdict bands exercised across the 13 providers",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC11: ontology registration — 8/8 dimensions (CSIP-compatible)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC12: evidence complete for every provider + replay deterministic",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-D17-ACC13: leverage alert + archetype risk applied (AB-005 ev-native vs AB-006 mass-market-oem)",
+      "result": "PASS"
+     }
+    ],
+    "framework-integration": [
+     {
+      "test": "IES017-FI-ACC1: automobile manifest via shared ManifestLoader",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-FI-ACC2: automobile evidence via shared EvidencePipeline",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-FI-ACC3: automobile deterministic snapshot via shared Snapshot",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-FI-ACC4: automobile replay via shared ReplayService",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-FI-ACC5: automobile diagnostics + qualification + activation via shared framework",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-FI-ACC6: automobile transport via shared generic DTO",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-FI-ACC7: 14 plugins coexist through the same framework without branching",
+      "result": "PASS"
+     }
+    ],
+    "reuse-verification": [
+     {
+      "test": "IES017-RV-ACC1: sector.automobile registers + executes through the existing runtime",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-RV-ACC2: automobile produces snapshots + replays via shared services",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-RV-ACC3: 14 plugins coexist (12 peers + CSIP + automobile)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-RV-ACC4: automobile replay-compatible deterministic execution via shared services",
+      "result": "PASS"
+     }
+    ],
+    "wp4-validation": [
+     {
+      "test": "IES017-WP4-ACC1: golden regression — all 13 frozen expected outputs from the standards unit",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-WP4-ACC2: replay — byte-identical across repeated runs (calibration version bound)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-WP4-ACC3: validation fixtures — missing primitive + calibrated boundary",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-WP4-ACC4: replay dataset integrity — derived 1:1 from approved inputs + expected outputs",
+      "result": "PASS"
+     },
+     {
+      "test": "IES017-WP4-ACC5: calibration integrity — 12 band tables, 5 subsegments, 6 archetypes, 6 verdict bands",
+      "result": "PASS"
+     }
+    ]
+   }
+  },
+  "IES-020": {
+   "engineId": "sector.materials-metals",
+   "A_engineIdentity": {
+    "registryFile": "iips-platform/src/integration/EngineRegistry.ts",
+    "registryBlob": "df1c2d3f0879327c24dcde67018964bc2667b13a",
+    "moduleConstantFile": "iips-platform/src/sector-engines/materials-metals/MaterialsMetalsEngine.ts",
+    "test": "ER-10 / ER-11 (tests/engine_registry_wiring.test.ts)",
+    "result": "PASS"
+   },
+   "B_engineSource": {
+    "tree": "e3e13d5fc55e12947b27a2a50fe6f5baab994537",
+    "files": [
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/MaterialsMetalsEngine.ts",
+      "gitBlob": "8171b54a4ef097a084ff221777249c381832f0a8",
+      "sha256": "d3416d984b8ef12524d1c583bc8c542ab362ea5d0d3035750e22834b9fddc92f",
+      "bytes": 5164
+     },
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/calibration/MaterialsMetalsCalibration.ts",
+      "gitBlob": "dfcdd2d055e1ebd1a9a0898e5bae4a081a743820",
+      "sha256": "ec94a61ea139702f0a639f31d6399c86a5844cd7e250439b2b0a05b795b19583",
+      "bytes": 2366
+     },
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/decision/MaterialsMetalsDecision.ts",
+      "gitBlob": "442977a71ad680ce7c1b9a40e6381a03738cf145",
+      "sha256": "2b7b3584e059302e48be8c58d9629a3507dc29047807cd21e1a7923189a03a99",
+      "bytes": 3952
+     },
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/evidence/MaterialsMetalsEvidence.ts",
+      "gitBlob": "9f5a6cc209872b590afdd4da505cdc2606ceaa57",
+      "sha256": "3254019f53285c78889967d9c4062fbd8e1905b1fff05f32a2128bef031ff523",
+      "bytes": 2212
+     },
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/index.ts",
+      "gitBlob": "8be2a285d9e7d07fa952fe1b5dd395031d2dc85f",
+      "sha256": "ef502e84d0e85a9317a7ee4687bc26e19f3722deb83a433fc9d7b4b028de491b",
+      "bytes": 41
+     },
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/materials-metals-calibration-1.0.0.json",
+      "gitBlob": "ceea1d5fe7c9e4c56f76f6d34efcbbfef311cccf",
+      "sha256": "548154315772f9bc09e5578851024c70cbb8d2ac090e49e7e2e0b5913d014e86",
+      "bytes": 2575
+     },
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/materials-metals-expected-outputs-1.0.0.json",
+      "gitBlob": "3e67cb6f01fdc7a2459d6f4376e54cfa4b89cf2e",
+      "sha256": "56a6ad197640c9c9f3f922ffca3897ddd006a7682099f01347cfaa6e0d754025",
+      "bytes": 6736
+     },
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/materials-metals-golden-reference-1.0.0.json",
+      "gitBlob": "1b601093cb09d607a7725bfed6b7cc4689c3f1e0",
+      "sha256": "5eafada968dd2cfec41d6b42fd2ab2c154a556cc313b8a12251667fc42ea20bd",
+      "bytes": 5817
+     },
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/materials-metals-validation-fixtures-1.0.0.json",
+      "gitBlob": "000412669a40a7b36e6bdd85bcbb9196dd5ab2e4",
+      "sha256": "72339b609fb441bc0999799da6021a8772d1bf344da7ac16de44f71055f5fc71",
+      "bytes": 1948
+     },
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/metrics/MaterialsMetalsMetrics.ts",
+      "gitBlob": "f33aa32bb4f52b991825594782c5e7c96d5cb29b",
+      "sha256": "95c497de8e130b02d5a363087353b7e66033add770059e89cecad60455808ec5",
+      "bytes": 3100
+     },
+     {
+      "path": "iips-platform/src/sector-engines/materials-metals/scoring/MaterialsMetalsScoreEngine.ts",
+      "gitBlob": "5107e05624d5ee033b595170bb06650b7c896541",
+      "sha256": "0dffe990605266e88eef3d10f5fc5f004083ae748171711f52bcb4cc54c12f47",
+      "bytes": 5979
+     }
+    ],
+    "lineageCrossCheck_irr_c2dda91_tree": "e3e13d5fc55e12947b27a2a50fe6f5baab994537",
+    "lineageEqual": true
+   },
+   "C_pack": {
+    "dir": "ies-020-materials-metals",
+    "tree": "2b66ff12d81288d5ba0d25b2a4bcd166a178b58d",
+    "fileCount": 34,
+    "files": [
+     {
+      "path": "ies-020-materials-metals/D20_AUTHORITY_REVIEW.md",
+      "gitBlob": "de6bb32b6e6c7ca5d3de6525c2b7f5b9d11d5694",
+      "sha256": "8c309a1aa9ef35b86d24a1e79df495d70217d873d98181278e150688da605e27",
+      "bytes": 800
+     },
+     {
+      "path": "ies-020-materials-metals/IES-020_ARCHITECTURE_REVIEW.md",
+      "gitBlob": "b3c92b1ed9ece1bea1aa63d175825b386acc7e45",
+      "sha256": "da37dff062853d48b65be5490c8b29e21188e5671ef181e0abac4bc7970f48c5",
+      "bytes": 827
+     },
+     {
+      "path": "ies-020-materials-metals/IES-020_FREEZE_MANIFEST.json",
+      "gitBlob": "0d43a538734c9c13645778b0eadfbd978730f637",
+      "sha256": "648f26633ad87f9cd1f79185aba517bee8187c390e273663a0674603c84d6f60",
+      "bytes": 3967
+     },
+     {
+      "path": "ies-020-materials-metals/IES-020_IMPLEMENTATION_READINESS_CERTIFICATE.md",
+      "gitBlob": "7533e1d69dfd32b1f2781680e885e536a714f180",
+      "sha256": "63222a258964079d844efa8c8c0aca20a4e4b0371a079a2cba4d0dd4b439bd37",
+      "bytes": 2091
+     },
+     {
+      "path": "ies-020-materials-metals/MATERIALS_METALS_DISCOVERY_PACK.md",
+      "gitBlob": "7677ec47a335d0157411830a80aba29912dc97b5",
+      "sha256": "8fc5328b03d94de6baaf5545aeaedee39407fdaa2dd684a1c1cc34e20b2b5335",
+      "bytes": 11376
+     },
+     {
+      "path": "ies-020-materials-metals/MATERIALS_METALS_ENGINE_ACCEPTANCE_MATRIX.md",
+      "gitBlob": "12a04073ff0334bb3fe7ca6c1c0b8325da79059c",
+      "sha256": "617124e4bc51a96cb5d68f205ba4744f5b743971f1addf15a9e647b3953aa9de",
+      "bytes": 1675
+     },
+     {
+      "path": "ies-020-materials-metals/MATERIALS_METALS_IMPLEMENTATION_RISK_REGISTER.md",
+      "gitBlob": "159754c370e066dec7195ddbc771bc5ef853480d",
+      "sha256": "bd637a9b2fa8d0217cbb1b2b7b6a0d282e0be852a38f3a9fa81738a795dc13d1",
+      "bytes": 1360
+     },
+     {
+      "path": "ies-020-materials-metals/RELEASE_NOTES_IES-020_v1.0.0.md",
+      "gitBlob": "711bc4a5fc8728a00c3cfb8909906a0ff4f4f14e",
+      "sha256": "36178d476bacc44d4e8df95efc7e473fe566b36374c2a6a520f36e572a123b51",
+      "bytes": 1534
+     },
+     {
+      "path": "ies-020-materials-metals/calibration/materials-metals-calibration-1.0.0.json",
+      "gitBlob": "ceea1d5fe7c9e4c56f76f6d34efcbbfef311cccf",
+      "sha256": "548154315772f9bc09e5578851024c70cbb8d2ac090e49e7e2e0b5913d014e86",
+      "bytes": 2575
+     },
+     {
+      "path": "ies-020-materials-metals/contract-tests/generate_expected_outputs.py",
+      "gitBlob": "2552b6590b75a5bbbc3d5893e07fb27468991e48",
+      "sha256": "9d920fa987b7d042183139dd1fca5634d605f40c5ebcc92f486525c265dde446",
+      "bytes": 8628
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_01_README.md",
+      "gitBlob": "f8098ea0178911860f3d1836a8b1987e4469af4b",
+      "sha256": "b88fd880a967e2da5b7150a974c32cb754a29906e9930e99b043592e36bbe511",
+      "bytes": 9048
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_02_EXECUTIVE_SUMMARY.md",
+      "gitBlob": "6ba484b2cae33329fd5a08396488afc9eafee1d9",
+      "sha256": "c4479474723b001e9fa5f55831980c0affd96f8a4a9253566ebc1222e0a84a9a",
+      "bytes": 7983
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_03_INDUSTRY_MODEL.md",
+      "gitBlob": "fad4bdf6e4fc0763c4ddc620914075532dcb3859",
+      "sha256": "9ef7318b07652506b81e3f9f62e1f07f1e1c43444e376f847fdf62dd771cd1cd",
+      "bytes": 7281
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_04_BUSINESS_MODEL.md",
+      "gitBlob": "270138b0114c3fb9e410bb0ce6cbbc917e75ddec",
+      "sha256": "d17697f7d2142b98ac45421b0659c542990c605584cf2ac37d9e6192cbcc3527",
+      "bytes": 7508
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_05_METHODOLOGY_PRINCIPLES.md",
+      "gitBlob": "31567146132b68006494ddc8e458ae01ffe2c82b",
+      "sha256": "df58c1f5ce6cc5fca375360667e27614373006d2c5fb822152e63e599467e60f",
+      "bytes": 10957
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_06_METRIC_LIBRARY.md",
+      "gitBlob": "d8ad93fd560fd9aaf28516b8e1dd11b7b49f75d3",
+      "sha256": "1788b702905bad2e088977771b0eedc472dd76eb640e764f8cbaa0878f88e983",
+      "bytes": 9347
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_07_SCORE_ENGINE.md",
+      "gitBlob": "f0391550ab1748af00232b04c6b80f46cb56a8ca",
+      "sha256": "63ce1d3705aa8357ee0294dd2e62ffb09bd025daf5fbe26cc28b6e8347b79da2",
+      "bytes": 7081
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_08_FORMULA_LIBRARY.md",
+      "gitBlob": "0b9127a8140b1db320400ffaf7928f065c990d2f",
+      "sha256": "96d4126930b95622f4f7414f0eab015767147bbb51ea1eb10327a8175e06a1ea",
+      "bytes": 6741
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_09_CALIBRATION.md",
+      "gitBlob": "82859c5b8cafe9783907726589ef0fd79f36b065",
+      "sha256": "c7557cbc981b0b373b3bc05924d7c9727dac28584a377930f198187948a31c1b",
+      "bytes": 19380
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_10_DECISION_ENGINE.md",
+      "gitBlob": "9d45204c19a71b6388d2d2b077bf94ab98357450",
+      "sha256": "4ac92e878edae4828c7358f47564c378ae7cafc80ca4499e64c9e4d34743622d",
+      "bytes": 6468
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_11_EVIDENCE_FRAMEWORK.md",
+      "gitBlob": "b070176f7c5afe63fc6a1faa07796f5c1db1ea45",
+      "sha256": "794209ebc7a474c8a2e716c23567ab936de8d3703d24c043c7fc238d30a44b6c",
+      "bytes": 8351
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_12_VALIDATION.md",
+      "gitBlob": "1b9791976776a7e127528717f4265c23db1a33f4",
+      "sha256": "e6ba3b24572d8d043705f48ce4a7454c69a585ce85e0b4e254c6333e63387e9d",
+      "bytes": 11356
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_13_ARENA_IMPLEMENTATION_SPECIFICATION.md",
+      "gitBlob": "7892c1ed89e172cc9d9e787d80b6cb9bb618761f",
+      "sha256": "8cac2a0798c884adeeb755c661392031f7d2cb42cbc45d255c4bbb336c8aaafd",
+      "bytes": 8484
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_14_REFERENCE_ASSET_GOVERNANCE.md",
+      "gitBlob": "4ae7582040ae55e99434501fe070045ccb9b144d",
+      "sha256": "6251731bb08e971fb2edd12d4f6c8786d2b4c743321efd3a1c9bcdf1422a04de",
+      "bytes": 10564
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_15_NORMATIVE_CALCULATION_APPENDIX.md",
+      "gitBlob": "bd4a482bfb5ed83ef91c115d3044414b20b34bc1",
+      "sha256": "00624a9687ab32c584c8abca2181b591dc07101307351664d0b835f7160281d3",
+      "bytes": 8760
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_16_IMPLEMENTATION_READINESS_CERTIFICATE.md",
+      "gitBlob": "735b71ab8d26ed77197768cd7a9775e2276db26f",
+      "sha256": "6a87f266418cf4816b47bdddefbcb270323034c3a4b5cccc8fc8dbcf316188dd",
+      "bytes": 7854
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_17_MASTER_INDEX.md",
+      "gitBlob": "590746039eabd09595e0b8444bd0d3d169515a6c",
+      "sha256": "817a6421ae386da295e0fdcd606f4386441ff27cf8bbe16a4cf67f458a2e1ccc",
+      "bytes": 9232
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_18_DATA_DICTIONARY.md",
+      "gitBlob": "f8d25869614c46128c4ba8a9ac266df67054af74",
+      "sha256": "49fd2514b964a3738746f808f18259cec3a1da2a0b9f8f9532815a67d6e5f30c",
+      "bytes": 8313
+     },
+     {
+      "path": "ies-020-materials-metals/docs/IES-020_19_REFERENCE_DATA_SOURCES.md",
+      "gitBlob": "0aa8989d8ba2844cb98f1afdbe2d59861e304106",
+      "sha256": "2dfbf79f59c2c922a5b864896fdc676bffb1d06254dd27c11dfe575662803094",
+      "bytes": 8392
+     },
+     {
+      "path": "ies-020-materials-metals/expected-outputs/materials-metals-expected-outputs-1.0.0.json",
+      "gitBlob": "3e67cb6f01fdc7a2459d6f4376e54cfa4b89cf2e",
+      "sha256": "56a6ad197640c9c9f3f922ffca3897ddd006a7682099f01347cfaa6e0d754025",
+      "bytes": 6736
+     },
+     {
+      "path": "ies-020-materials-metals/fixtures/materials-metals-golden-reference-1.0.0.json",
+      "gitBlob": "1b601093cb09d607a7725bfed6b7cc4689c3f1e0",
+      "sha256": "5eafada968dd2cfec41d6b42fd2ab2c154a556cc313b8a12251667fc42ea20bd",
+      "bytes": 5817
+     },
+     {
+      "path": "ies-020-materials-metals/fixtures/materials-metals-validation-fixtures-1.0.0.json",
+      "gitBlob": "000412669a40a7b36e6bdd85bcbb9196dd5ab2e4",
+      "sha256": "72339b609fb441bc0999799da6021a8772d1bf344da7ac16de44f71055f5fc71",
+      "bytes": 1948
+     },
+     {
+      "path": "ies-020-materials-metals/materials-metals-ontology-metadata-1.0.0.json",
+      "gitBlob": "8ea6b53c08aad0c3cbb7fb04020d3f8b8903ab25",
+      "sha256": "88e08b21c6cf93bca3f28fc4452869739ab79353a169ea8bb33736a30512a028",
+      "bytes": 773
+     },
+     {
+      "path": "ies-020-materials-metals/replay-datasets/materials-metals-replay-dataset-1.0.0.json",
+      "gitBlob": "62ace6612c289a38ac6bb75ee5795c56be7650f5",
+      "sha256": "6dbc399e8de92d0a100b82c0e3bc8788cd35a5ced51f656a4dbbb8d5786253b3",
+      "bytes": 9037
+     }
+    ]
+   },
+   "D_freezeManifestPins": [
+    {
+     "key": "calibration",
+     "sha256": "bb0afb700d31b272b5e1da4b0e89ea0adcd2a01368789b940e8ccfc998c0b5d9",
+     "matchedFile": "ies-020-materials-metals/calibration/materials-metals-calibration-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "goldenDataset",
+     "sha256": "ec289d7701f3723ed0cd7d5c4c2dfb1288286e391c3ce7cf086e3e3a0798cd9d",
+     "matchedFile": "ies-020-materials-metals/fixtures/materials-metals-golden-reference-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "expectedOutputs",
+     "sha256": "1f1414dfe313fdccd2dd90438959c2de28511ce7017b6bfd41a431f06f70b580",
+     "matchedFile": "ies-020-materials-metals/expected-outputs/materials-metals-expected-outputs-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "replayDataset",
+     "sha256": "b8c8409d06c817908b231e603f8380ed57b4a4e1d5d2b589a87a8135c6a821f3",
+     "matchedFile": "ies-020-materials-metals/replay-datasets/materials-metals-replay-dataset-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "validationFixtures",
+     "sha256": "d090b1b2e0959444c0d1211b2392b9d6d13e105dd851b95e90bf74b001554190",
+     "matchedFile": "ies-020-materials-metals/fixtures/materials-metals-validation-fixtures-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "ontologyMetadata",
+     "sha256": "819a663498f5f7b7b8475c6135eaf8b83d9c4eac105bc83f57b7b49d50ead35e",
+     "matchedFile": "ies-020-materials-metals/materials-metals-ontology-metadata-1.0.0.json",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "discoveryPack",
+     "sha256": "fe4d1b4e386ad379878e5879acd2fb469388b323e25cbf9f05f7252649affbd8",
+     "matchedFile": "ies-020-materials-metals/MATERIALS_METALS_DISCOVERY_PACK.md",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "acceptanceMatrix",
+     "sha256": "7fcd2d5bb57c8785fa1a9ab421e0fb63d56d02830066ab93ffed5ac58d22f3f4",
+     "matchedFile": "ies-020-materials-metals/MATERIALS_METALS_ENGINE_ACCEPTANCE_MATRIX.md",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "riskRegister",
+     "sha256": "8cb2486f84c81d5ce18bc9d8eaabf5c336d4af6f4f6719e69a6f57cbe8ab4ae6",
+     "matchedFile": "ies-020-materials-metals/MATERIALS_METALS_IMPLEMENTATION_RISK_REGISTER.md",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "contractTestGenerator",
+     "sha256": "1f7ee122d8d7e3a24038dea96b644a120e101147126560da6107a57c028eb91a",
+     "matchedFile": "ies-020-materials-metals/contract-tests/generate_expected_outputs.py",
+     "rendering": "crlf",
+     "result": "PASS"
+    },
+    {
+     "key": "architectureReview",
+     "sha256": "da37dff062853d48b65be5490c8b29e21188e5671ef181e0abac4bc7970f48c5",
+     "matchedFile": "ies-020-materials-metals/IES-020_ARCHITECTURE_REVIEW.md",
+     "rendering": "raw",
+     "result": "PASS"
+    },
+    {
+     "key": "authorityReview",
+     "sha256": "8c309a1aa9ef35b86d24a1e79df495d70217d873d98181278e150688da605e27",
+     "matchedFile": "ies-020-materials-metals/D20_AUTHORITY_REVIEW.md",
+     "rendering": "raw",
+     "result": "PASS"
+    }
+   ],
+   "E_to_I_runtimeBinding": [
+    {
+     "engineLocal": "iips-platform/src/sector-engines/materials-metals/materials-metals-calibration-1.0.0.json",
+     "engineBlob": "ceea1d5fe7c9e4c56f76f6d34efcbbfef311cccf",
+     "packFile": "ies-020-materials-metals/calibration/materials-metals-calibration-1.0.0.json",
+     "packBlob": "ceea1d5fe7c9e4c56f76f6d34efcbbfef311cccf",
+     "identical": true
+    },
+    {
+     "engineLocal": "iips-platform/src/sector-engines/materials-metals/materials-metals-golden-reference-1.0.0.json",
+     "engineBlob": "1b601093cb09d607a7725bfed6b7cc4689c3f1e0",
+     "packFile": "ies-020-materials-metals/fixtures/materials-metals-golden-reference-1.0.0.json",
+     "packBlob": "1b601093cb09d607a7725bfed6b7cc4689c3f1e0",
+     "identical": true
+    },
+    {
+     "engineLocal": "iips-platform/src/sector-engines/materials-metals/materials-metals-validation-fixtures-1.0.0.json",
+     "engineBlob": "000412669a40a7b36e6bdd85bcbb9196dd5ab2e4",
+     "packFile": "ies-020-materials-metals/fixtures/materials-metals-validation-fixtures-1.0.0.json",
+     "packBlob": "000412669a40a7b36e6bdd85bcbb9196dd5ab2e4",
+     "identical": true
+    },
+    {
+     "engineLocal": "iips-platform/src/sector-engines/materials-metals/materials-metals-expected-outputs-1.0.0.json",
+     "engineBlob": "3e67cb6f01fdc7a2459d6f4376e54cfa4b89cf2e",
+     "packFile": "ies-020-materials-metals/expected-outputs/materials-metals-expected-outputs-1.0.0.json",
+     "packBlob": "3e67cb6f01fdc7a2459d6f4376e54cfa4b89cf2e",
+     "identical": true
+    }
+   ],
+   "regression": {
+    "acceptance": [
+     {
+      "test": "IES020-D20-ACC1: metric evaluation + engine executes (MM-001 -> Strong Buy)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC2: all 13 frozen expected outputs reproduced exactly (composite + verdict + subsegment + archetype + overrides)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC3: pillars match frozen expected outputs (round-half-to-even at 1dp)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC4: effective band-table resolution (calibrated ?? baseline, boundaries+scores together)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC5: composite round-half-to-even (MM-010 raw 63.25 -> 63.2, ties-to-even)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC6: multi-subsegment + hybrid resolution (MM-009)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC7: override / min-rank deterministic (MM-006, MM-011)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC8: missing-data renormalization (MM-014: fcfYield omitted -> capitalEfficiency 0.0)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC9: calibrated band-boundary semantics (MM-015)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC10: all 6 verdict bands exercised across the 13 providers",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC11: ontology registration — 8/8 dimensions (CSIP-compatible)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC12: evidence complete for every provider + replay deterministic",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-D20-ACC13: leverage alert + archetype risk applied (MM-006 vs MM-011)",
+      "result": "PASS"
+     }
+    ],
+    "framework-integration": [
+     {
+      "test": "IES020-FI-ACC1: materials-metals manifest via shared ManifestLoader",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-FI-ACC2: materials-metals evidence via shared EvidencePipeline",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-FI-ACC3: materials-metals deterministic snapshot via shared Snapshot",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-FI-ACC4: materials-metals replay via shared ReplayService",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-FI-ACC5: materials-metals diagnostics + qualification + activation via shared framework",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-FI-ACC6: materials-metals transport via shared generic DTO",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-FI-ACC7: 14 plugins coexist through the same framework without branching",
+      "result": "PASS"
+     }
+    ],
+    "reuse-verification": [
+     {
+      "test": "IES020-RV-ACC1: sector.materials-metals registers + executes through the existing runtime",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-RV-ACC2: materials-metals produces snapshots + replays via shared services",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-RV-ACC3: 14 plugins coexist (12 peers + CSIP + materials-metals)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-RV-ACC4: materials-metals replay-compatible deterministic execution via shared services",
+      "result": "PASS"
+     }
+    ],
+    "wp4-validation": [
+     {
+      "test": "IES020-WP4-ACC1: golden regression — all 13 frozen expected outputs from the standards unit",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-WP4-ACC2: replay — byte-identical across repeated runs (calibration version bound)",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-WP4-ACC3: validation fixtures — missing primitive + calibrated boundary",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-WP4-ACC4: replay dataset integrity — derived 1:1 from approved inputs + expected outputs",
+      "result": "PASS"
+     },
+     {
+      "test": "IES020-WP4-ACC5: calibration integrity — 12 band tables, 5 subsegments, 6 archetypes, 6 verdict bands",
+      "result": "PASS"
+     }
+    ]
+   }
+  }
+ },
+ "J_registry": {
+  "file": "iips-platform/src/integration/EngineRegistry.ts",
+  "blob": "df1c2d3f0879327c24dcde67018964bc2667b13a",
+  "adapterBlob": "1e9d649ca020b059a94a70acffaac641b8eda4c6",
+  "count": 13,
+  "tests": [
+   {
+    "test": "ER-01: GET /api/engines returns 200 with exactly the recovered donor registry projection",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-02: exactly 13 engines — the 10 (IES-006…015) unchanged in order, then IES-016/017/020; no D42 IDs",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-03: over real HTTP — GET 200; every other method and any execute path fail closed",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-04: static exposure — no execution route, transport or caller was introduced",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-05: /research/engines is registered and mounts the recovered donor EngineRegistry",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-06: the shipped surface renders the served registry and fails closed otherwise",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-07: navigation carries the donor Engines entry as `partial`, right after Cross-Sector",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-08: Gate 1 recovered files — client/component unchanged; registry/adapter differ from donor ONLY by the Gate B hunks",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-09: B1 wiring documents the boundary — no E2E-030 inheritance, execution dormant",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-10: every registered engine resolves to its existing B1 engine module ID (13/13; 006…015 unchanged)",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-11: the three adopted entries match their recovered freeze manifests and ontology metadata",
+    "result": "PASS"
+   },
+   {
+    "test": "ER-12: execution stays dormant — the adopted engines have no factory; the execute path fails closed",
+    "result": "PASS"
+   }
+  ]
+ },
+ "M_replayBaseline": {
+  "file": "program-v1.1-certification/PROGRAM_v1.1_REPLAY_BASELINE.json",
+  "blob": "63bcd350f2cda2b0337097c25236fd8dbe82d87b",
+  "suite": "iips-platform/tests/regression/program-v1.1-track3-replay-certification.test.ts",
+  "tests": [
+   {
+    "test": "T3-CERT-01: 10-sector baseline executions reproduce the Program v1.1 Replay Baseline (composite + verdict)",
+    "result": "PASS"
+   },
+   {
+    "test": "T3-CERT-02: same input -> same output (deterministic computation across fresh processes)",
+    "result": "PASS"
+   },
+   {
+    "test": "T3-CERT-03: same input -> same evidence (evidence determinism)",
+    "result": "PASS"
+   },
+   {
+    "test": "T3-CERT-04: same input -> same metadata (execution-identity determinism)",
+    "result": "PASS"
+   },
+   {
+    "test": "T3-CERT-05: snapshot -> replay reproduced for all 13 sectors (persistence/replay correctness)",
+    "result": "PASS"
+   },
+   {
+    "test": "T3-CERT-06: calibration version binding — calibration version is part of replay identity (stable), observed where exposed",
+    "result": "PASS"
+   },
+   {
+    "test": "T3-CERT-07: contract version binding — each engine manifest declares its methodology version",
+    "result": "PASS"
+   },
+   {
+    "test": "T3-CERT-08: runtime configuration binding — fixed clock + deterministic id yield identical replay identity",
+    "result": "PASS"
+   },
+   {
+    "test": "T3-CERT-09: cross-sector replay — all 13 sectors replay byte-identical through the shared runtime",
+    "result": "PASS"
+   },
+   {
+    "test": "T3-CERT-10: repeated replay — byte-identical across repeat calls",
+    "result": "PASS"
+   },
+   {
+    "test": "T3-CERT-11: fresh-process replay — new runtime reproduces the same output/evidence/metadata (no in-memory state effects)",
+    "result": "PASS"
+   }
+  ]
+ },
+ "O_api": {
+  "status": 200,
+  "xIipsCertification": "NONE CLAIMED",
+  "count": 13,
+  "certifiedCount": 13,
+  "b1Certification": "NONE CLAIMED",
+  "source": "Program v1.1 LTS — 10 frozen sector engines (IES-006…015) — freeze manifests + replay baseline; Gate B — IES-016/017/020 historical A1 lineage / B1 adoption pending certification (NOT B1-certified)",
+  "three": [
+   [
+    "IES-016",
+    "sector.telecommunications",
+    "historical A1 lineage / B1 adoption pending certification"
+   ],
+   [
+    "IES-017",
+    "sector.automobile",
+    "historical A1 lineage / B1 adoption pending certification"
+   ],
+   [
+    "IES-020",
+    "sector.materials-metals",
+    "historical A1 lineage / B1 adoption pending certification"
+   ]
+  ],
+  "ltsLineages": [
+   "Program v1.1 LTS"
+  ],
+  "ids": [
+   "sector.banking",
+   "sector.insurance",
+   "sector.capital-markets",
+   "sector.healthcare",
+   "sector.hospitality",
+   "sector.energy",
+   "sector.utilities",
+   "sector.consumer",
+   "sector.industrials",
+   "sector.technology",
+   "sector.telecommunications",
+   "sector.automobile",
+   "sector.materials-metals"
+  ],
+  "execute": [
+   [
+    "sector.telecommunications",
+    405,
+    404
+   ],
+   [
+    "sector.automobile",
+    405,
+    404
+   ],
+   [
+    "sector.materials-metals",
+    405,
+    404
+   ]
+  ]
+ },
+ "rootSuite": {
+  "command": "node --test dist/tests/*.test.js",
+  "tests": 771,
+  "pass": 771,
+  "fail": 0
+ },
+ "externalAnchors": {
+  "govTip_irr_arena/01a03e3b": "524739093adb927e6be40eb316367f745c5d4a3f",
+  "phase13-next": "1a602d849cc47331d4f61cc366ed0a343f80e287",
+  "a1Snapshot": "c2dda91de8bd362d4766ed19d777a80e6976c9b5"
+ }
+}
