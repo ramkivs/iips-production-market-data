@@ -1,0 +1,4 @@
+COMMAND=npx.cmd --no-install tsc
+EXIT_CODE=0
+RESULT=PASS
+NOTE=Compiler produced no diagnostic output; success established by exit code 0.
