@@ -323,6 +323,36 @@ export type CertificationLineage =
   | 'Program v1.1 LTS'
   | 'historical A1 lineage / B1 adoption pending certification';
 
+export const B1_CERTIFIED_ENGINES: readonly string[] = Object.freeze([
+  TELECOMMUNICATIONS_ENGINE_ID,
+  AUTOMOBILE_ENGINE_ID,
+  MATERIALS_METALS_ENGINE_ID,
+]);
+
+export const B1_CERTIFICATION_ID =
+  'B1-CERT-IES016-IES017-IES020-2026-09-25-001';
+
+export const B1_CERTIFICATION_DISCLOSURE =
+  'CERTIFIED — WITH RECORDED PERMANENT QUALIFICATIONS';
+
+export function getCertificationDisclosure(
+  engineId: string,
+): {
+  readonly status: 'CERTIFIED';
+  readonly certificateId: string;
+  readonly disclosure: 'CERTIFIED — WITH RECORDED PERMANENT QUALIFICATIONS';
+} | undefined {
+  if (!B1_CERTIFIED_ENGINES.includes(engineId)) {
+    return undefined;
+  }
+
+  return {
+    status: 'CERTIFIED',
+    certificateId: B1_CERTIFICATION_ID,
+    disclosure: B1_CERTIFICATION_DISCLOSURE,
+  };
+}
+
 export const B1_ADOPTION_PENDING_CERTIFICATION: readonly string[] = Object.freeze([
   TELECOMMUNICATIONS_ENGINE_ID,
   AUTOMOBILE_ENGINE_ID,

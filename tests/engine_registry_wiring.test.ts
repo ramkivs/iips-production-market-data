@@ -19,14 +19,24 @@
  * (sector.telecom / sector.auto / sector.materials) remain forbidden. Execution stays dormant: the
  * three have NO ENGINE_FACTORY entry, so the dormant execute path fails closed (`factory-missing`).
  *
+ * G6 (b1-three-engine-certification-g6-api-disclosure-2026-09-26-001; parent G5 issuance 5170585):
+ * per-engine API disclosure transition ONLY. IES-016 / IES-017 / IES-020 each carry the exact adapter
+ * `certification` object { status 'CERTIFIED', certificateId 'B1-CERT-IES016-IES017-IES020-2026-09-25-001',
+ * disclosure 'CERTIFIED — WITH RECORDED PERMANENT QUALIFICATIONS' }; IES-006…015 carry none. The global
+ * X-IIPS-Certification header and provenance.b1Certification remain NONE CLAIMED. Certification lineage
+ * is unchanged. No execute capability, factory or route is added.
+ * ER-08 reads the G5 source with `git show 5170585…:<path>` (requires git and that commit object; a
+ * shallow clone without it fails closed) so the Gate B hunks are reversed against Gate B bytes, not G6.
+ *
  * EXECUTION BOUNDARY: `EngineApiAdapter.execute()` / `executeEngine()` are dormant donor code —
  * PRESENT / NOT EXPOSED / NOT ROUTED / NOT CALLED / NOT AUTHORIZED. Asserted below.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve, join, relative, sep } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import React from 'react';
 import * as JsxRuntime from 'react/jsx-runtime';
@@ -48,7 +58,7 @@ import { handleResearchSectorRequest, createResearchSectorServer } from '../fron
 import { EngineApiAdapter } from '../iips-platform/src/integration/EngineApiAdapter.js';
 import {
   CERTIFIED_ENGINES, getEngineEntry, isCertifiedEngine, getEngineForSector, getCertificationLineage,
-  B1_ADOPTION_PENDING_CERTIFICATION,
+  B1_ADOPTION_PENDING_CERTIFICATION, B1_CERTIFIED_ENGINES, getCertificationDisclosure,
 } from '../iips-platform/src/integration/EngineRegistry.js';
 import { makeCertifiedEngine } from '../iips-platform/src/integration/EngineApiAdapter.js';
 import { BANKING_ENGINE_ID } from '../iips-platform/src/sector-engines/banking/BankingEngine.js';
@@ -75,6 +85,12 @@ const json = (v: unknown): unknown => JSON.parse(JSON.stringify(v));
 const stripComments = (src: string): string => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const listFiles = (dir: string): string[] =>
   readdirSync(dir).flatMap((n) => { const p = join(dir, n); return statSync(p).isDirectory() ? listFiles(p) : [p]; });
+/** Repository-relative path with '/' separators on every OS (Windows yields '\\' from path.join/relative). */
+const repoRel = (abs: string): string => relative(ROOT, abs).split(sep).join('/');
+/** G5 certification issuance commit — the last commit whose registry/adapter bytes are the Gate B bytes. */
+const G5_COMMIT = '5170585b46bb1384ee5cfd6e75f9896df5e170d0';
+const readAtG5 = (rel: string): string =>
+  execFileSync('git', ['show', `${G5_COMMIT}:${rel}`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 
 /** The exact certified 10-engine set (Program v1.1 LTS), in registry order, as read from the recovered donor registry. */
 const LTS_IDS = [
@@ -90,6 +106,14 @@ const EXPECTED_IES = ['IES-006', 'IES-007', 'IES-008', 'IES-009', 'IES-010', 'IE
 /** D42 13-engine extension IDs (iips-review-recovered 6a5d7cc) — still forbidden after Gate B. */
 const FORBIDDEN_IDS = ['sector.telecom', 'sector.auto', 'sector.materials'];
 const LTS_LINEAGE = 'Program v1.1 LTS';
+/** G6 — the exact per-engine certification object authorized for IES-016 / IES-017 / IES-020 only (G5 issuance). */
+const G6_CERTIFICATION = Object.freeze({
+  status: 'CERTIFIED',
+  certificateId: 'B1-CERT-IES016-IES017-IES020-2026-09-25-001',
+  disclosure: 'CERTIFIED — WITH RECORDED PERMANENT QUALIFICATIONS',
+});
+const G6_SOURCE_TEXT = 'Gate B — IES-016/017/020 historical A1 lineage; B1 certification disclosed per-engine';
+const isGateB = (id: string): boolean => (GATEB_IDS as readonly string[]).includes(id);
 const GATEB_LINEAGE = 'historical A1 lineage / B1 adoption pending certification';
 /** Engine-module ID constants (existing B1 engine sources), in registry order. */
 const MODULE_IDS = [BANKING_ENGINE_ID, INSURANCE_ENGINE_ID, CAPITAL_MARKETS_ENGINE_ID, HEALTHCARE_ENGINE_ID,
@@ -156,22 +180,58 @@ const GATEB_SOURCE_HUNKS: Readonly<Record<string, ReadonlyArray<readonly [string
     ]
   ]
 };
-const revertGateB = (rel: string): string => {
-  let out = read(rel);
-  for (const [gateB, donor] of GATEB_SOURCE_HUNKS[rel] ?? []) {
-    const first = out.indexOf(gateB);
-    if (first === -1) throw new Error(`Gate B hunk missing from ${rel}: ${gateB.split('\n')[1] ?? gateB}`);
-    if (out.indexOf(gateB, first + 1) !== -1) throw new Error(`Gate B hunk duplicated in ${rel}`);
-    out = out.slice(0, first) + donor + out.slice(first + gateB.length);
+/**
+ * G6 exact source hunks, [g6Text, g5Text], applied in order. Kept SEPARATE from GATEB_SOURCE_HUNKS (which stays
+ * Gate-B-only). Reversing them on the working tree MUST reproduce the G5 (= Gate B) blobs byte-for-byte, so
+ * G6 changed nothing else (ENGINE_FACTORY, execute(), the 13 entries and the lineage function included).
+ */
+const G6_SOURCE_HUNKS: Readonly<Record<string, ReadonlyArray<readonly [string, string]>>> = {
+  "iips-platform/src/integration/EngineRegistry.ts": [
+    [
+      "export const B1_CERTIFIED_ENGINES: readonly string[] = Object.freeze([\n  TELECOMMUNICATIONS_ENGINE_ID,\n  AUTOMOBILE_ENGINE_ID,\n  MATERIALS_METALS_ENGINE_ID,\n]);\n\nexport const B1_CERTIFICATION_ID =\n  'B1-CERT-IES016-IES017-IES020-2026-09-25-001';\n\nexport const B1_CERTIFICATION_DISCLOSURE =\n  'CERTIFIED — WITH RECORDED PERMANENT QUALIFICATIONS';\n\nexport function getCertificationDisclosure(\n  engineId: string,\n): {\n  readonly status: 'CERTIFIED';\n  readonly certificateId: string;\n  readonly disclosure: 'CERTIFIED — WITH RECORDED PERMANENT QUALIFICATIONS';\n} | undefined {\n  if (!B1_CERTIFIED_ENGINES.includes(engineId)) {\n    return undefined;\n  }\n\n  return {\n    status: 'CERTIFIED',\n    certificateId: B1_CERTIFICATION_ID,\n    disclosure: B1_CERTIFICATION_DISCLOSURE,\n  };\n}\n\nexport const B1_ADOPTION_PENDING_CERTIFICATION",
+      "export const B1_ADOPTION_PENDING_CERTIFICATION"
+    ]
+  ],
+  "iips-platform/src/integration/EngineApiAdapter.ts": [
+    [
+      "  getCertificationLineage,\n  getCertificationDisclosure,\n  type CertificationLineage,\n",
+      "  getCertificationLineage,\n  type CertificationLineage,\n"
+    ],
+    [
+      "    readonly certificationLineage: CertificationLineage;\n    readonly certification?: ReturnType<typeof getCertificationDisclosure>;\n",
+      "    readonly certificationLineage: CertificationLineage;\n"
+    ],
+    [
+      "        certificationLineage: getCertificationLineage(e.engineId),\n        certification: getCertificationDisclosure(e.engineId),\n",
+      "        certificationLineage: getCertificationLineage(e.engineId),\n"
+    ],
+    [
+      "          'Gate B — IES-016/017/020 historical A1 lineage; B1 certification disclosed per-engine',\n",
+      "          'Gate B — IES-016/017/020 historical A1 lineage / B1 adoption pending certification (NOT B1-certified)',\n"
+    ]
+  ]
+};
+const applyHunks = (label: string, rel: string, src: string, hunks: ReadonlyArray<readonly [string, string]> | undefined): string => {
+  if (hunks === undefined || hunks.length === 0) throw new Error(`${label}: no hunks declared for ${rel}`);
+  let out = src;
+  for (const [from, to] of hunks) {
+    const first = out.indexOf(from);
+    if (first === -1) throw new Error(`${label} hunk missing from ${rel}: ${from.split('\n')[1] ?? from}`);
+    if (out.indexOf(from, first + 1) !== -1) throw new Error(`${label} hunk duplicated in ${rel}`);
+    out = out.slice(0, first) + to + out.slice(first + from.length);
   }
   return out;
 };
+/** Gate B reversal runs on the committed G5 source (git show), never on the G6-modified working tree. */
+const revertGateB = (rel: string): string => applyHunks('Gate B', rel, readAtG5(rel), GATEB_SOURCE_HUNKS[rel]);
+/** G6 reversal runs on the working tree and must land exactly on the G5 bytes. */
+const revertG6 = (rel: string): string => applyHunks('G6', rel, read(rel), G6_SOURCE_HUNKS[rel]);
 
 const SERVER = 'frontend/server/research-sector-transport.ts';
 const CLIENT = 'frontend/src/api/engines.ts';
 const COMPONENT = 'frontend/src/features/engines/EngineRegistry.tsx';
 
-interface Served { apiVersion: string; engines: Array<{ engineId: string; ies: string; certificationLineage: string }>; provenance: { certifiedCount: number; freshness: string; source: string; b1Certification: string } }
+interface Served { apiVersion: string; engines: Array<{ engineId: string; ies: string; certificationLineage: string; certification?: unknown }>; provenance: { certifiedCount: number; freshness: string; source: string; b1Certification: string } }
 
 async function withServer<T>(fn: (base: string) => Promise<T>): Promise<T> {
   const server = createResearchSectorServer(0);
@@ -231,8 +291,20 @@ describe('Gate 2 / Gate B — GET /api/engines (read-only, 13 registered engines
       secVersion: e.secVersion, semcVersion: e.semcVersion, calibrationProfile: e.calibrationProfile,
       calibrationVersion: e.calibrationVersion, capabilities: e.capabilities,
       certificationLineage: getCertificationLineage(e.engineId),
-    }))), 'entries are CERTIFIED_ENGINES 1:1 (+ Gate B lineage) — no normalization, scoring or transformation');
+      ...(isGateB(e.engineId) ? { certification: G6_CERTIFICATION } : {}),
+    }))), 'entries are CERTIFIED_ENGINES 1:1 (+ Gate B lineage, + G6 per-engine certification for 016/017/020 only)');
     assert.strictEqual(body.apiVersion, '1.0');
+    // G6: the exact adapter certification object on IES-016/017/020; none on IES-006…015.
+    for (const e of body.engines) {
+      if (isGateB(e.engineId)) {
+        assert.deepStrictEqual(e.certification, { ...G6_CERTIFICATION }, `${e.ies} carries the G6 certification object`);
+        assert.deepStrictEqual(getCertificationDisclosure(e.engineId), { ...G6_CERTIFICATION }, `${e.ies} adapter source object`);
+        continue;
+      }
+      assert.strictEqual(Object.prototype.hasOwnProperty.call(e, 'certification'), false, `${e.ies} has no certification object`);
+      assert.strictEqual(getCertificationDisclosure(e.engineId), undefined, `${e.ies} adapter returns no certification`);
+    }
+    assert.deepStrictEqual(body.engines.filter((e) => e.certification !== undefined).map((e) => e.ies), ['IES-016', 'IES-017', 'IES-020']);
   });
 
   it('ER-02: exactly 13 engines — the 10 (IES-006…015) unchanged in order, then IES-016/017/020; no D42 IDs', () => {
@@ -249,8 +321,13 @@ describe('Gate 2 / Gate B — GET /api/engines (read-only, 13 registered engines
     assert.deepStrictEqual(body.engines.map((e) => e.certificationLineage),
       [...LTS_IDS.map(() => LTS_LINEAGE), ...GATEB_IDS.map(() => GATEB_LINEAGE)]);
     assert.deepStrictEqual([...B1_ADOPTION_PENDING_CERTIFICATION], [...GATEB_IDS]);
-    assert.strictEqual(body.provenance.b1Certification, 'NONE CLAIMED');
-    assert.ok(body.provenance.source.includes('IES-016/017/020 historical A1 lineage / B1 adoption pending certification (NOT B1-certified)'));
+    assert.strictEqual(body.provenance.b1Certification, 'NONE CLAIMED', 'shared provenance claims no global B1 certification');
+    assert.ok(body.provenance.source.includes(G6_SOURCE_TEXT), 'G6 provenance: B1 certification disclosed per-engine');
+    assert.strictEqual(body.provenance.source.includes('NOT B1-certified'), false, 'G6 superseded the pending-certification wording');
+    // G6 scope: exactly the three Gate B engines are B1-certified; unknown / D42 IDs get nothing.
+    assert.deepStrictEqual([...B1_CERTIFIED_ENGINES], [...GATEB_IDS]);
+    for (const id of [...FORBIDDEN_IDS, 'sector.unknown', '']) assert.strictEqual(getCertificationDisclosure(id), undefined, `no certification for ${id || '(empty)'}`);
+    assert.strictEqual(JSON.stringify(body).split(G6_CERTIFICATION.certificateId).length - 1, 3, 'certificateId served exactly 3 times');
     assert.ok(body.provenance.source.startsWith('Program v1.1 LTS — 10 frozen sector engines (IES-006…015) — freeze manifests + replay baseline'));
     for (const id of [...FORBIDDEN_IDS, 'sector.unknown', '']) {
       assert.throws(() => getCertificationLineage(id), /unregistered-engine/, `lineage fails closed for ${id || '(empty)'}`);
@@ -267,7 +344,10 @@ describe('Gate 2 / Gate B — GET /api/engines (read-only, 13 registered engines
       const ok = await fetch(`${base}/api/engines`);
       assert.strictEqual(ok.status, 200);
       assert.strictEqual(ok.headers.get('x-iips-certification'), 'NONE CLAIMED', 'B1 wiring claims no certification');
-      assert.deepStrictEqual((await ok.json() as Served).engines.map((e) => e.engineId), [...EXPECTED_IDS]);
+      const httpBody = await ok.json() as Served;
+      assert.deepStrictEqual(httpBody.engines.map((e) => e.engineId), [...EXPECTED_IDS]);
+      assert.deepStrictEqual(httpBody.engines.filter((e) => e.certification !== undefined).map((e) => e.engineId), [...GATEB_IDS],
+        'G6: per-engine certification only for 016/017/020 while the global header stays NONE CLAIMED');
       for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
         const r = await fetch(`${base}/api/engines`, { method, headers: { 'Content-Type': 'application/json' }, body: '{}' });
         assert.strictEqual(r.status, 405, `${method} /api/engines refused`);
@@ -300,12 +380,15 @@ describe('Gate 2 / Gate B — GET /api/engines (read-only, 13 registered engines
     // Browser tree: executeEngine exists ONLY as the dormant donor definition in the client.
     const files = listFiles(resolve(ROOT, 'frontend/src')).filter((f) => /\.(ts|tsx)$/.test(f));
     const callers = files.filter((f) => /executeEngine/.test(stripComments(readFileSync(f, 'utf8'))));
-    assert.deepStrictEqual(callers.map((f) => f.slice(ROOT.length + 1)), [CLIENT], 'executeEngine is defined, never called');
+    assert.deepStrictEqual(callers.map(repoRel), [CLIENT], 'executeEngine is defined, never called');
     const component = stripComments(read(COMPONENT));
     assert.match(component, /import \{ fetchEngines, type EngineListData \} from '\.\.\/\.\.\/api\/engines\.js';/);
     assert.strictEqual(/executeEngine|\/execute|fetch\(|authFetch/.test(component), false, 'surface only lists');
     // No other server module serves /api/engines, and the dev proxy is unchanged (8788 via /api).
-    const serverFiles = listFiles(resolve(ROOT, 'frontend/server')).filter((f) => /\.ts$/.test(f) && !f.endsWith(SERVER));
+    // Paths are compared separator-normalised so the legitimate /api/engines transport (SERVER) is excluded on Windows too.
+    const allServerFiles = listFiles(resolve(ROOT, 'frontend/server')).filter((f) => /\.ts$/.test(f));
+    assert.strictEqual(allServerFiles.filter((f) => repoRel(f) === SERVER).length, 1, 'the serving transport is located exactly once');
+    const serverFiles = allServerFiles.filter((f) => repoRel(f) !== SERVER);
     for (const f of serverFiles) assert.strictEqual(readFileSync(f, 'utf8').includes('/api/engines'), false, `${f} does not serve engines`);
     assert.strictEqual(read('vite.config.ts').includes('engines'), false, 'no new proxy rule (R-1 topology unchanged)');
   });
@@ -335,7 +418,7 @@ describe('Gate 2 — /research/engines route and navigation', () => {
     assert.ok(html.includes('data-testid="engine-registry-provenance"'));
     // SSR splits adjacent text nodes with `<!-- -->`; normalise before matching the donor sentence.
     assert.ok(html.replace(/<!-- -->/g, '').includes('13 engines · freshness FROZEN'));
-    assert.ok(html.replace(/<!-- -->/g, '').includes('(NOT B1-certified)'), 'the served provenance qualification is visible');
+    assert.ok(html.replace(/<!-- -->/g, '').includes(G6_SOURCE_TEXT), 'the served G6 provenance disclosure is visible');
     const failed = renderSeeded({ data: null, error: 'Error: engines transport returned 404', loading: false });
     assert.ok(failed.includes('data-testid="state-error"') && failed.includes('Unable to load engine registry'));
     assert.ok(renderSeeded({ data: null, error: null, loading: false }).includes('data-testid="state-unavailable"'), 'no payload -> Unavailable');
@@ -358,12 +441,18 @@ describe('Gate 2 — /research/engines route and navigation', () => {
 });
 
 describe('Gate 2 — donor fidelity and certification boundary', () => {
-  it('ER-08: Gate 1 recovered files — client/component unchanged; registry/adapter differ from donor ONLY by the Gate B hunks', () => {
+  it('ER-08: Gate 1 recovered files — client/component unchanged; registry/adapter differ from donor ONLY by the Gate B hunks (+ G6 hunks)', () => {
     // RAMKI Decision 3: the donor pins for EngineRegistry.ts / EngineApiAdapter.ts are retired for the bounded
-    // Gate B change and replaced by B1 assertions — the current B1 blobs are pinned, and reversing exactly
+    // Gate B change and replaced by B1 assertions — the B1 blobs are pinned, and reversing exactly
     // the Gate B hunks must still reproduce the donor 286f3da blobs byte-for-byte.
-    assert.strictEqual(gitBlob(read('iips-platform/src/integration/EngineApiAdapter.ts')), '1e9d649ca020b059a94a70acffaac641b8eda4c6', 'B1 Gate B adapter blob');
-    assert.strictEqual(gitBlob(read('iips-platform/src/integration/EngineRegistry.ts')), 'df1c2d3f0879327c24dcde67018964bc2667b13a', 'B1 Gate B registry blob');
+    // G6: the working tree is pinned to the G6 blobs; reversing ONLY the G6 hunks lands on the G5 (Gate B) blobs;
+    // the Gate B reversal is performed on the committed G5 source (git show 5170585:<path>), not on G6 bytes.
+    assert.strictEqual(gitBlob(read('iips-platform/src/integration/EngineApiAdapter.ts')), 'c7e9428519cf9a4c3c1f7f63ce992a89d6385fdf', 'B1 G6 adapter blob');
+    assert.strictEqual(gitBlob(read('iips-platform/src/integration/EngineRegistry.ts')), 'a96be332bb4a89fa68fdd5349ff94c21984b2743', 'B1 G6 registry blob');
+    assert.strictEqual(gitBlob(revertG6('iips-platform/src/integration/EngineApiAdapter.ts')), '1e9d649ca020b059a94a70acffaac641b8eda4c6', 'adapter = G5 + G6 hunks only');
+    assert.strictEqual(gitBlob(revertG6('iips-platform/src/integration/EngineRegistry.ts')), 'df1c2d3f0879327c24dcde67018964bc2667b13a', 'registry = G5 + G6 hunks only');
+    assert.strictEqual(gitBlob(readAtG5('iips-platform/src/integration/EngineApiAdapter.ts')), '1e9d649ca020b059a94a70acffaac641b8eda4c6', 'B1 Gate B adapter blob (at G5)');
+    assert.strictEqual(gitBlob(readAtG5('iips-platform/src/integration/EngineRegistry.ts')), 'df1c2d3f0879327c24dcde67018964bc2667b13a', 'B1 Gate B registry blob (at G5)');
     assert.strictEqual(gitBlob(revertGateB('iips-platform/src/integration/EngineApiAdapter.ts')), '16cf2aebeac80bc874c67dd892ba98c9baffdbbe',
       'adapter = donor + Gate B provenance hunks only (ENGINE_FACTORY / execute() unchanged)');
     assert.strictEqual(gitBlob(revertGateB('iips-platform/src/integration/EngineRegistry.ts')), '23f3622f381bef2d0b19a6eea69386bf6feccecd',

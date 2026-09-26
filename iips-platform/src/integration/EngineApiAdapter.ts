@@ -46,6 +46,7 @@ import {
   isCertifiedEngine,
   assertNotTaxonomyResolved,
   getCertificationLineage,
+  getCertificationDisclosure,
   type CertificationLineage,
 } from './EngineRegistry';
 
@@ -136,6 +137,7 @@ export interface EngineApiListResponse {
     readonly calibrationVersion: string;
     readonly capabilities: readonly string[];
     readonly certificationLineage: CertificationLineage;
+    readonly certification?: ReturnType<typeof getCertificationDisclosure>;
   }>;
   readonly provenance: {
     readonly certifiedCount: number;
@@ -210,12 +212,13 @@ export class EngineApiAdapter {
         calibrationVersion: e.calibrationVersion,
         capabilities: e.capabilities,
         certificationLineage: getCertificationLineage(e.engineId),
+        certification: getCertificationDisclosure(e.engineId),
       })),
       provenance: {
         certifiedCount: CERTIFIED_ENGINES.length,
         source:
           'Program v1.1 LTS — 10 frozen sector engines (IES-006…015) — freeze manifests + replay baseline; ' +
-          'Gate B — IES-016/017/020 historical A1 lineage / B1 adoption pending certification (NOT B1-certified)',
+          'Gate B — IES-016/017/020 historical A1 lineage; B1 certification disclosed per-engine',
         b1Certification: 'NONE CLAIMED',
         freshness: 'FROZEN',
         runtimeConfig: { clock: 'fixed', idProvider: 'deterministic' },
