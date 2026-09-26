@@ -1,0 +1,8 @@
+﻿G6 WINDOWS ARTIFACT DROP
+Purpose: byte-exact cross-environment transfer only
+Source HEAD: 5170585b46bb1384ee5cfd6e75f9896df5e170d0
+Source state: detached HEAD
+Remote: https://github.com/ramkivs/iips-production-market-data.git
+
+EngineApiAdapter.ts | 16412 | 655DF2188AE67CC60E14D4B285FBFF418CA7963BD9457F50CCCC33DE14ACC102
+EngineRegistry.ts   | 15220 | 5A54BDBDCFD1D22E5425FED735ECF3BD49A515C242F23D6F5403C0B0AB82642
