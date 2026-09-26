@@ -1,0 +1,5 @@
+
+> iips-production-market-data@1.0.0 dev:research-sector
+> tsc && node -e "require('node:fs').copyFileSync('iips-platform/package.json','dist/iips-platform/package.json')" && node dist/frontend/server/research-sector-dev-server.js
+
+[research-sector] NON-PRODUCTION SNAPSHOT authorities listening on http://127.0.0.1:8788 (dev/acceptance only; unauthenticated; no certification claimed)
