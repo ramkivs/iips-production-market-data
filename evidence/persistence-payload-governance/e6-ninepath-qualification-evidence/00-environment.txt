@@ -1,0 +1,6 @@
+captured_at_utc=2026-09-27T08:10:45Z
+node=v22.22.3
+npm=10.9.8
+tsc=Version 5.9.3
+head=7e9e590daa3a125fe41d27ca35b1d1d4265d61ca
+provenance_ts_blob=1bd9fe01f354e60f9acd53513fa23f6f6fc88306
