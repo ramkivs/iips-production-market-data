@@ -9,3 +9,4 @@ export * from './news_engine.js';
 export * from './estimates_engine.js';
 export * from './macro_engine.js';
 export * from './altdata_engine.js';
+export * from './d06_d07_build_time_wiring.js';
