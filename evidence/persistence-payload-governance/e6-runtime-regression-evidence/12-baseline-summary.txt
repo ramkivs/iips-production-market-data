@@ -1,0 +1,13 @@
+baseline_command=node --test dist/tests/*.test.js
+baseline_exit_code=0
+# tests 542
+# suites 83
+# pass 542
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14853.612891
+baseline_raw_bytes=4082922
+baseline_raw_lines=48914
+baseline_raw_sha256=d0686995a8588d37200732e61043ab173168b646a39c3c6836aba1f19f8eb98d

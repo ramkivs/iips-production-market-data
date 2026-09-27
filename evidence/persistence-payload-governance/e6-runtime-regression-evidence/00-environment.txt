@@ -1,0 +1,9 @@
+captured_at_utc=2026-09-27T06:05:28Z
+node=v22.22.3
+npm=10.9.8
+os=Linux 6.1.158+ x86_64
+repo=https://github.com/ramkivs/iips-production-market-data.git
+head=c4149198f58f0ecd21f84b777103090656537fa8
+main=4d3e1cdca3a33da0ec3be8b336b17128108a502c
+provenance_ts_blob=1bd9fe01f354e60f9acd53513fa23f6f6fc88306
+tracked_files=346

@@ -1,0 +1,93 @@
+26:    not ok 4 - BI03-04: aggregates duplicate securities and computes volume-weighted average buy price
+47:    not ok 5 - BI03-05: guarantees exact 100.0000% weight normalization across fractional splits
+68:    not ok 6 - BI03-06: integrates with P04/P12 Security Master and resolves authoritative companyId
+95:    not ok 8 - BI03-08: allows non-fail-closed fallback when explicitly requested with warning
+128:not ok 1 - BI-03: Broker Adapter Foundation & Holdings Mapper Contract
+193:    not ok 10 - BI04-10: detector and parser outputs are strictly deterministic across repeated runs
+232:    not ok 14 - BI04-14: Dhan Web UI adapter output resolves canonical P04 companyId via symbol and normalizes to 100.0000%
+271:not ok 2 - BI-04: Offline Broker Adapters & Format Detector Suite
+282:    not ok 1 - BI05-01: valid Zerodha CSV end-to-end reaches READY_FOR_PORTFOLIO_SAVE
+353:    not ok 9 - BI05-09: handles mixed valid and invalid records: excludes invalid and normalizes valid to 100.0%
+427:    not ok 18 - BI05-18: handles 100+ holding records without drift or failure
+453:    not ok 19 - BI05-19: valid Dhan Web UI summary CSV (DHAN_WEB_UI_SUMMARY_V1) end-to-end reaches READY_FOR_PORTFOLIO_SAVE
+485:    not ok 21 - BI05-21: Dhan Web UI summary CSV aggregates duplicate security symbols with volume-weighted average price
+511:    not ok 22 - BI05-22: Dhan Web UI summary CSV isolates invalid rows and normalizes valid subset to 100.0000%
+537:not ok 3 - BI-05: Broker Holdings Ingress Orchestration & Edge-Case Hardening
+578:    not ok 6 - BROWSER-06: BrokerImportIngressOrchestrator processes string content without Buffer
+612:    not ok 8 - BROWSER-08: PortfolioBrokerImportController runs end-to-end selectAndProcessFile in browser runtime
+643:    not ok 9 - BROWSER-09: PortfolioStore saveHoldings and getAnalytics run deterministically in browser runtime
+664:not ok 4 - BI-07: Browser Runtime Compatibility & Zero-Buffer Suite
+681:    not ok 2 - BI07-02: Zerodha CSV reaches PREVIEW_READY / READY_TO_SAVE state with populated preview items
+724:    not ok 5 - BI07-05: rejected rows are visibly represented in the preview view model
+764:    not ok 8 - BI07-08: confirm/import action is enabled ONLY when READY_FOR_PORTFOLIO_SAVE criteria are fully met
+814:    not ok 13 - BI07-13: successful save refreshes Portfolio state and feeds existing analytics data path
+852:not ok 5 - BI-07: Portfolio UI/UX Broker Import Integration & View-Model Suite
+881:    not ok 4 - HOST-04: BrokerImportModal binds to PortfolioBrokerImportController and performs Zerodha import workflow
+934:    not ok 9 - HOST-09: WCAG 2.1 AA dual-coding and accessibility metadata is preserved for React DOM consumers
+974:    not ok 12 - HOST-12: verifies repeated file selection reset handling allows re-selecting identical files
+1003:    not ok 13 - HOST-13: verifies BrokerImportModal re-entry resets controller and view-model to IDLE across successive modal openings
+1031:    not ok 14 - HOST-14: verifies PortfolioWorkspace Refresh button and Import Holdings button remain wired and responsive after save
+1059:not ok 6 - BI-07: React DOM Host Integration & Component Binding Suite
+1070:    not ok 1 - BI07-REPEAT-01: First import/save reaches SAVE_SUCCESS
+1102:    not ok 2 - BI07-REPEAT-02: After SAVE_SUCCESS, controller/view-model can return to IDLE
+1132:    not ok 3 - BI07-REPEAT-03: Second selectAndProcessFile() is accepted after first save
+1166:    not ok 5 - BI07-REPEAT-05: Portfolio Refresh updates UI after save
+1206:    not ok 8 - BI07-REPEAT-08: Second broker save executes Governed Multi-Broker Atomic Merge
+1234:    not ok 9 - BI07-REPEAT-09: First persisted portfolio data is preserved until governed atomic merge confirmation
+1260:    not ok 10 - BI07-REPEAT-10: No stale first-import error/preview state leaks into second import
+1289:    not ok 11 - BI07-REPEAT-11: Same-file retry remains possible
+1324:    not ok 13 - BI07-REPEAT-13: Repeat import specifically accepts actual Portfolio(2).csv DHAN_WEB_UI_SUMMARY_V1 format as second import
+1352:    not ok 14 - BI07-REPEAT-14: Second import with DHAN_WEB_UI_SUMMARY_V1 executes multi-broker merge and preserves exact 100.0000% weight sum
+1380:    not ok 15 - BI07-REPEAT-15: Consolidates overlapping securities across brokers with volume-weighted price and single companyId
+1414:    not ok 17 - BI07-REPEAT-17: Workspace Refresh and Import Holdings controls remain active and responsive after multi-broker saves
+1440:    not ok 18 - BI07-REPEAT-18: Multi-broker accumulation across 3 brokers consolidates cleanly with 100.0000% weight sum
+1484:    not ok 22 - BI07-REPEAT-22: View model and save guard provide required visual indicators and pre-condition checks
+1513:    not ok 23 - BI07-REPEAT-23: Top constituent allocations analytics summary generates positive weight proportions for meters
+1539:    not ok 24 - BI07-REPEAT-24: Application-level PortfolioStore survives unmount and remount cycles of PortfolioWorkspace
+1567:    not ok 25 - BI07-REPEAT-25: Multi-broker portfolio survives full 3-surface navigation round-trip without re-import
+1593:    not ok 26 - BI07-REPEAT-26: Module singleton getDefaultPortfolioStore provides stable Tier-B session continuity
+1619:not ok 7 - BI-07: Post-Save Repeat Import & Refresh Lifecycle Suite
+1630:    not ok 1 - AC-01: Re-uploading exact same CSV leaves valuation and quantities identical (B - A = 0)
+1665:    not ok 3 - AC-03: Contributions ledger length remains 1 (zero duplicate audit records)
+1692:    not ok 4 - AC-04: Multi-broker consolidation across distinct broker files preserves exact 100.0000% weight sum
+1719:    not ok 5 - AC-05: UI controller & view-model report informative duplicate feedback on duplicate save
+1748:    not ok 6 - AC-06: Explicit mode: REPLACE bypasses deduplication and resets portfolio state
+1775:    not ok 7 - AC-07: Non-production operator bypass preserves unmapped securities with zero fabricated IDs
+1808:    not ok 9 - Recovery & Reconstruction: resetPortfolio and re-ingress test
+1835:not ok 8 - BI-08: Idempotent Multi-Broker Ingress & Content-Hash Deduplication Suite
+1925:    not ok 7 - HYDRATION-07: Ingress orchestrator using broad master accepts Zerodha/Dhan exports with AIIL & AGI
+1954:not ok 10 - D05 Browser Runtime Hydration & Zero-FS Qualification
+1971:    not ok 2 - Phase 2A: Zerodha Kite CSV end-to-end ingestion and canonical companyId assignment
+2003:    not ok 4 - Phase 2C: Dhan Web UI Summary V1 ingestion with exact AGI GREENPAC alias resolution
+2035:    not ok 6 - Phase 3: Governed Multi-Broker Atomic Merge persistence across multiple broker imports
+2070:    not ok 9 - Phase 6: AGI, INE415A01038, BSE 500187, and AGI GREENPAC exact alias resolve to EQ_AGI_IN
+2120:not ok 11 - GATE-E2E-BROAD-UNIVERSE-MULTI-BROKER-INTEGRATION-VERIFICATION
+2131:    not ok 1 - Criterion A: Zero fabricated companyId values are introduced
+2175:    not ok 4 - Criterion E, F & G: Governed Multi-Broker Atomic Merge with mixed mapped/unmapped holdings
+2208:    not ok 6 - Criterion J: Governed D05 Entities Resolve Deterministically
+2238:    not ok 7 - Criterion K: Controller view-model builds non-production bypass indicators
+2268:not ok 12 - Block 3M-A: Non-Production Operator Identity Bypass Architecture
+2297:    not ok 4 - QUAL-04: resolves 100% of valid holdings across Zerodha, Dhan Detailed, Dhan Web UI, and Groww formats
+2356:not ok 13 - P04 / P12: Tier-2 Expanded Broad Universe Runtime Qualification & Promotion Suite
+2403:    not ok 7 - P04-BOOTSTRAP-07: Ingress orchestrator successfully resolves governed reference securities
+2438:    not ok 9 - P04-BOOTSTRAP-09: PortfolioBrokerImportController integrates with governed offline security master
+2467:not ok 14 - P04 / P12: Governed Offline Security Master Bootstrap Suite
+49121:    not ok 4 - CP-W2-04: Determinism & Repeatability Checkpoint — Identical inputs yield identical outputs and hashes
+49148:not ok 53 - Wave 2 Durability Checkpoint (CP-W2)
+49325:    not ok 3 - P12-03: EngineApiAdapter should construct FundamentalsDTO and IntelligenceDTO with executive provenance
+49358:not ok 58 - WS-D / P12 Product Transport APIs & Typed Client DTOs
+49619:    not ok 1 - CP-W5-01: qualifies unbroken 7-hop end-to-end lineage from raw ingress to UI presentation
+49640:    not ok 2 - CP-W5-02: enforces continuous SHA-256 digest propagation and strict NFR-06 provider masking
+49709:not ok 63 - Wave 5 Durability Checkpoint: CP-W5 (CP-W5-01 through CP-W5-10)
+49721:        not ok 1 - qualifies full provider-to-UI lineage across all 7 hops with SHA-256 digest propagation
+49748:    not ok 1 - P15-01: 7-Hop End-to-End Lineage Qualification
+49837:        not ok 1 - assembles a comprehensive cryptographic qualification manifest tied to the commit SHA
+49858:    not ok 6 - P15-06: Deterministic E2E Evidence Manifest Generation
+49868:not ok 64 - WS-F Package P15: E2E Lineage & Functional Qualification
+50223:    not ok 9 - D114-09: generates deterministic manifest with identical lineage hash for identical inputs
+50244:    not ok 10 - D114-10: preserves existing ACQUIRED_VALID records during resume
+50277:    not ok 13 - D114-13: generates full 6-file evidence package structure from manifest
+50316:    not ok 17 - D114-17: reconciles complete evidence package and produces cryptographic report
+50337:    not ok 18 - D114-18: accepts complete 6-file valid evidence package from deposit directory
+50370:    not ok 21 - D114-21: executes full transition from deposited package to reconciliation report
+50445:not ok 68 - WS-H / D114: Hardened 10-Year Historical Acquisition Feasibility & Evidence Suite

@@ -1,0 +1,5 @@
+workspace=/tmp/baseline (isolated, non-authoritative)
+source=git archive of c4149198f58f0ecd21f84b777103090656537fa8
+provenance_ts_replaced_with=4d3e1cdca3a33da0ec3be8b336b17128108a502c:src/contracts/provenance.ts
+e6_blob=1bd9fe01f354e60f9acd53513fa23f6f6fc88306
+baseline_blob=459c77a430f00e5b20fa1f80cc1a3b780165444a

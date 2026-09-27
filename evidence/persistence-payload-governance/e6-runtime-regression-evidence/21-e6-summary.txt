@@ -1,0 +1,13 @@
+e6_command=npm test  (node --test dist/tests/*.test.js)
+e6_exit_code=1
+# tests 542
+# suites 83
+# pass 467
+# fail 75
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 17169.925185
+e6_raw_bytes=4445546
+e6_raw_lines=50462
+e6_raw_sha256=81cd1c4de8dfce4ad75ba7ff2e038270e9420aa8bfc6614ccbcda0d29c8f3032
