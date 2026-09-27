@@ -433,7 +433,7 @@ export class PortfolioStore {
           contentDigest: c.contentDigest,
           importedAt: c.importedAt,
         })),
-        options,
+        ...(options === undefined ? {} : { options }),
       },
       { sourceClassification: 'REAL', asOf: savedAt, dataVersion: 'v1.0.0-bi07' }
     );

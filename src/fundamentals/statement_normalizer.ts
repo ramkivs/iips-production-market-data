@@ -248,7 +248,7 @@ export class StatementNormalizer {
       sourceFilingType,
       incomeStatement,
       balanceSheet,
-      cashFlow,
+      ...(cashFlow === undefined ? {} : { cashFlow }),
       qualityState: 'GOOD',
     };
   }

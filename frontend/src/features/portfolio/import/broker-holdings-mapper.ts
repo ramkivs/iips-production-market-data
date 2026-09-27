@@ -320,8 +320,8 @@ export function mapBrokerOutputToUserHoldings(
     const holdingPayload = {
       symbol: base.symbol,
       companyId: base.companyId,
-      isin: base.isin,
-      exchange: base.exchange,
+      ...(base.isin === undefined ? {} : { isin: base.isin }),
+      ...(base.exchange === undefined ? {} : { exchange: base.exchange }),
       quantity: base.quantity,
       averageBuyPrice: base.averageBuyPrice,
       currentPrice: base.currentPrice,

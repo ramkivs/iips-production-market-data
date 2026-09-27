@@ -86,7 +86,7 @@ export class EngineApiAdapter {
     const evaluatedAt = new Date().toISOString();
 
     const lineageDigest = computeLineageHash(
-      { ratios, ttmStatement, statementId: statement.statementId },
+      { ratios, ...(ttmStatement === undefined ? {} : { ttmStatement }), statementId: statement.statementId },
       { sourceClassification: 'DERIVED', asOf, dataVersion: 'v1.0.0-transport' }
     );
 

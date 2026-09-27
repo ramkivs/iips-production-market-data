@@ -76,7 +76,7 @@ export class UI02ExecutiveSummaryBuilder {
       responsiveLayout: {
         tier,
         columns: bp.columns,
-        pinnedColumn: bp.pinPrimaryColumn ? 'companyId' : undefined,
+        ...(bp.pinPrimaryColumn ? { pinnedColumn: 'companyId' } : {}),
       },
       accessibility: {
         ariaLive: 'polite',
