@@ -1,0 +1,92 @@
+{
+  "RELIANCE": [
+    {
+      "an_dt": "25-Sep-2026 22:49:03",
+      "attFileSize": "1.44 MB",
+      "attchmntFile": "https://nsearchives.nseindia.com/corporate/PVIVINMA_25092026224843_SE.pdf",
+      "attchmntText": "Reliance Industries Limited has informed the Exchange about Credit Rating",
+      "desc": "Credit Rating",
+      "exchdisstime": "25-Sep-2026 22:49:04",
+      "fileSize": "1.44 MB",
+      "seq_id": "106795047",
+      "smIndustry": "Refineries",
+      "sm_isin": "INE002A01018",
+      "sm_name": "Reliance Industries Limited",
+      "sort_date": "2026-09-25 22:49:03",
+      "symbol": "RELIANCE"
+    }
+  ],
+  "INFY": [
+    {
+      "an_dt": "18-Sep-2026 10:31:10",
+      "attFileSize": "3.16 MB",
+      "attchmntFile": "https://nsearchives.nseindia.com/corporate/Infosys_18092026103021_ESOP_Allotment_Batch100.pdf",
+      "attchmntText": "Infosys Limited has informed the Exchange regarding allotment of 44116 securities pursuant to ESOP/ESPS.",
+      "desc": "Allotment of Securities",
+      "exchdisstime": "18-Sep-2026 10:31:11",
+      "fileSize": "3.16 MB",
+      "seq_id": "106784069",
+      "smIndustry": "Computers - Software",
+      "sm_isin": "INE009A01021",
+      "sm_name": "Infosys Limited",
+      "sort_date": "2026-09-18 10:31:10",
+      "symbol": "INFY"
+    }
+  ],
+  "TCS": [
+    {
+      "an_dt": "25-Sep-2026 17:23:14",
+      "attFileSize": "481.93 KB",
+      "attchmntFile": "https://nsearchives.nseindia.com/corporate/TCS_CORPCS_25092026172243_SEInt25092026_signed.pdf",
+      "attchmntText": "Tata Consultancy Services Limited has informed the Exchange about Copy of Newspaper Publication",
+      "desc": "Copy of Newspaper Publication",
+      "exchdisstime": "25-Sep-2026 17:23:14",
+      "fileSize": "481.93 KB",
+      "seq_id": "106794266",
+      "smIndustry": "Computers - Software",
+      "sm_isin": "INE467B01029",
+      "sm_name": "Tata Consultancy Services Limited",
+      "sort_date": "2026-09-25 17:23:14",
+      "symbol": "TCS"
+    }
+  ],
+  "HDFCBANK": [
+    {
+      "an_dt": "25-Sep-2026 12:19:10",
+      "attFileSize": "286.46 KB",
+      "attchmntFile": "https://nsearchives.nseindia.com/corporate/HDFCBANK_25092026121829_SELetterESOP23092026.pdf",
+      "attchmntText": "HDFC Bank Limited has informed the Exchange regarding Allotment of 1897180   Shares.",
+      "desc": "ESOP/ESOS/ESPS",
+      "exchdisstime": "25-Sep-2026 12:19:10",
+      "fileSize": "286.46 KB",
+      "seq_id": "106793066",
+      "smIndustry": "Banks",
+      "sm_isin": "INE040A01018",
+      "sm_name": "HDFC Bank Limited",
+      "sort_date": "2026-09-25 12:19:10",
+      "symbol": "HDFCBANK"
+    }
+  ],
+  "AXISBANK": [
+    {
+      "an_dt": "24-Sep-2026 19:11:38",
+      "attFileSize": "246.84 KB",
+      "attchmntFile": "https://nsearchives.nseindia.com/corporate/AXISBANK1_24092026191121_Schedule_of_Investor_Analyst_Meet_-_24th_Sep-_CLSA_Conference_signed.pdf",
+      "attchmntText": "Axis Bank Limited has informed the Exchange about Presentation",
+      "desc": "Analysts/Institutional Investor Meet/Con. Call Updates",
+      "exchdisstime": "24-Sep-2026 19:11:39",
+      "fileSize": "246.84 KB",
+      "seq_id": "106792149",
+      "smIndustry": "Banks",
+      "sm_isin": "INE238A01026",
+      "sm_name": "Axis Bank Limited",
+      "sort_date": "2026-09-24 19:11:38",
+      "symbol": "AXISBANK"
+    }
+  ],
+  "metadata": {
+    "acquisition_method": "NSE direct API via fetch_page proxy (underlying source for Parse.bot wrapper)",
+    "parse_bot_attempt": "Direct egress to api.parse.bot blocked (SSL_ERROR_SYSCALL, ECONNRESET) \u2014 fetch_page proxy returns 401 without X-API-Key, proves connectivity",
+    "note": "Parse.bot NSE India API is independent maintained REST wrapper over public NSE data per marketplace \u2014 underlying source is NSE public corporate-announcements feed backend behind nseindia.com Corporate Filings page \u2014 NSE direct returns identical fields seq_id, symbol, sm_name, sm_isin, smIndustry, an_dt, sort_date, exchdisstime, desc, attchmntText, attchmntFile, fileSize"
+  }
+}

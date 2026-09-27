@@ -22,7 +22,8 @@ export type SourceClassification =
   | 'REAL'
   | 'DERIVED'
   | 'CERTIFIED_ENGINE'
-  | 'TIGZIG_YAHOO_FINANCE_ESTIMATES';
+  | 'TIGZIG_YAHOO_FINANCE_ESTIMATES'
+  | 'PARSE_BOT_NSE_CORPORATE_ANNOUNCEMENTS';
 
 export type VendorTier =
   | 'TIER_1_EXCHANGE'
