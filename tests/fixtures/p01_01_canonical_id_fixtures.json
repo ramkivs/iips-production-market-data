@@ -1,0 +1,79 @@
+{
+  "specificationId": "P01-01-CANONICAL-ID-SPECIFICATION",
+  "specificationVersion": "1.0.0",
+  "provenance": {
+    "authorization": "evidence/target-shell-integration/P01-WAVE1-EXECUTION-AUTHORITY-DESIGNATION-ACT.md @ 6b7552b642b92c0b783d4c190e409c4ce116e932",
+    "governedEntitySource": "src/identity/governed_fixture_master.ts (GOVERNED_OFFLINE_REFERENCE_ENTITIES, RELIANCE + INFY entries transcribed verbatim)",
+    "isinSource": "tests/fixtures/d05_fixtures.json validInstruments (INE009A01021) + src/identity/governed_fixture_master.ts (INE002A01018, INE467B01029)",
+    "eventIdModel": "tests/fixtures/d06_fixtures.json (NEWS-INFY-20260918-01)"
+  },
+  "valid": {
+    "COMPANY_ID": ["EQ_RELIANCE_IN", "EQ_INFY_IN", "EQ_TCS_IN", "EQ_HDFCBANK_IN", "EQ_AXISBANK_IN", "EQ_AGI_IN"],
+    "PORTFOLIO_ID": ["PF_DEFAULT", "PF_CORE_EQUITY_IN", "PF_BENCH_NIFTY50", "PF_A1"],
+    "RESEARCH_ID": ["RSRCH_2026Q3_ENERGY", "RSRCH_INIT_2026-09", "RSRCH_A"],
+    "EVENT_ID": ["EVT_INFY_20260918_01", "EVT_TCS_20260927_001", "EVT_AB_20260101_99"],
+    "ISIN": ["INE002A01018", "INE009A01021", "INE467B01029"],
+    "EXCHANGE_SYMBOL": ["RELIANCE", "INFY", "TCS", "HDFCBANK", "AXISBANK", "AGI"],
+    "COMPOSITE_TICKER": ["NSE:RELIANCE", "BSE:RELIANCE", "BSE:500325", "NSE:INFY", "BSE:500209"]
+  },
+  "invalid": {
+    "COMPANY_ID": ["INFY", "eq_reliance_in", "EQ_", "EQ_RELIANCE", "RELIANCE_IN", "EQ RELIANCE IN", "EQ__IN"],
+    "PORTFOLIO_ID": ["DEFAULT", "DEFAULT_PORTFOLIO", "pf_default", "PF ", "PF"],
+    "RESEARCH_ID": ["research-01", "RSRCH", "rsrch_x", "SRCH_01"],
+    "EVENT_ID": ["NEWS-INFY-20260918-01", "EVT_INFY_2026918_01", "EVT_INFY_20260918", "evt_infy_20260918_01", "EVT__20260918_01"],
+    "ISIN": ["INE002A0101", "INE002A010187", "INE002a01018", "IN_002A01018"],
+    "EXCHANGE_SYMBOL": ["reliance", "REL IANCE", "M&M", "R"],
+    "COMPOSITE_TICKER": ["NSE: reliance", "NYSE:RELIANCE", "NSE:", "BSE:50032", "NSE:REL IANCE", "BSE:50A325"]
+  },
+  "missingValueKinds": ["COMPANY_ID", "PORTFOLIO_ID", "RESEARCH_ID", "EVENT_ID", "ISIN", "EXCHANGE_SYMBOL", "COMPOSITE_TICKER"],
+  "normalizationCases": [
+    { "kind": "COMPANY_ID", "raw": " eq_reliance_in ", "normalized": "EQ_RELIANCE_IN" },
+    { "kind": "COMPOSITE_TICKER", "raw": " nse:reliance", "normalized": "NSE:RELIANCE" },
+    { "kind": "ISIN", "raw": "ine467b01029 ", "normalized": "INE467B01029" },
+    { "kind": "PORTFOLIO_ID", "raw": " pf_bench_nifty50", "normalized": "PF_BENCH_NIFTY50" }
+  ],
+  "reuseAnchors": {
+    "securityMasterEntities": [
+      {
+        "companyId": "EQ_RELIANCE_IN",
+        "companyName": "Reliance Industries Limited",
+        "isin": "INE002A01018",
+        "cin": "L17110MH1973PLC019786",
+        "industry": "Oil & Gas",
+        "sector": "ENERGY",
+        "listings": [
+          { "exchange": "NSE", "symbol": "RELIANCE", "lotSize": 1, "tickSize": 0.05, "status": "ACTIVE" },
+          { "exchange": "BSE", "symbol": "RELIANCE", "scripCode": "500325", "lotSize": 1, "tickSize": 0.05, "status": "ACTIVE" }
+        ],
+        "effectiveFrom": "2000-01-01T00:00:00.000Z"
+      },
+      {
+        "companyId": "EQ_INFY_IN",
+        "companyName": "Infosys Limited",
+        "isin": "INE009A01021",
+        "cin": "L85110KA1981PLC013115",
+        "industry": "IT Services",
+        "sector": "IT",
+        "listings": [
+          { "exchange": "NSE", "symbol": "INFY", "lotSize": 1, "tickSize": 0.05, "status": "ACTIVE" },
+          { "exchange": "BSE", "symbol": "INFY", "scripCode": "500209", "lotSize": 1, "tickSize": 0.05, "status": "ACTIVE" }
+        ],
+        "effectiveFrom": "1981-07-02T00:00:00.000Z"
+      }
+    ],
+    "pointInTimeMapping": {
+      "companyId": "EQ_LEGHOLD_IN",
+      "identifierType": "NSE_SYMBOL",
+      "identifierValue": "LEGHOLD",
+      "effectiveFrom": "2010-01-01T00:00:00.000Z",
+      "effectiveTo": "2020-12-31T23:59:59.999Z"
+    }
+  },
+  "legacyEvidence": [
+    { "file": "tests/fixtures/d05_fixtures.json", "field": "companyId", "value": "INFY", "classification": "LEGACY_OPAQUE — recorded; non-conformant to canonical COMPANY_ID grammar; not repaired" },
+    { "file": "tests/fixtures/d05_fixtures.json", "field": "companyId", "value": "TCS", "classification": "LEGACY_OPAQUE — recorded; non-conformant to canonical COMPANY_ID grammar; not repaired" },
+    { "file": "tests/fixtures/d06_fixtures.json", "field": "companyId", "value": "INFY", "classification": "LEGACY_OPAQUE — recorded; non-conformant; not repaired" },
+    { "file": "tests/bi07_portfolio_ui_integration.test.ts (BI-07 suites)", "field": "portfolioId", "value": "DEFAULT / DEFAULT_PORTFOLIO", "classification": "LEGACY_OPAQUE — recorded; non-conformant to canonical PORTFOLIO_ID grammar; no mapping invented" },
+    { "file": "tests/fixtures/d06_fixtures.json", "field": "newsId", "value": "NEWS-INFY-20260918-01", "classification": "LEGACY_EVENT_STYLE — model for canonical EVENT_ID form; no automatic rewrite" }
+  ]
+}
