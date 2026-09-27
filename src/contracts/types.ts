@@ -21,7 +21,8 @@ export type SourceClassification =
   | 'CANONICAL_MARKET_DATA'
   | 'REAL'
   | 'DERIVED'
-  | 'CERTIFIED_ENGINE';
+  | 'CERTIFIED_ENGINE'
+  | 'TIGZIG_YAHOO_FINANCE_ESTIMATES';
 
 export type VendorTier =
   | 'TIER_1_EXCHANGE'
