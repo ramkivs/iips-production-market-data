@@ -114,6 +114,120 @@ export function computeSha256(input: string | Uint8Array | ArrayBuffer): string 
     .join('');
 }
 
+/**
+ * E6 LINEAGE SERIALIZATION CONTRACT — RFC 8785 (JSON Canonicalization Scheme).
+ *
+ * Implements the RAMKI-designated E6 lineage serialization contract exactly:
+ *   payload_serialization   RFC 8785 JCS; non-I-JSON values rejected, never coerced
+ *   key_canonicalization    JCS property ordering (UTF-16 code-unit sort), never insertion order
+ *   null_undefined          JSON null preserved; undefined rejected, never omitted
+ *   unicode_normalization   NONE — the supplied Unicode scalar sequence is encoded exactly
+ *   number_normalization    JCS/ECMAScript number form; NaN and Infinity rejected
+ *
+ * Serialization failure is signalled by throwing. No value is silently coerced.
+ */
+const E6_JCS_REJECT = 'E6_JCS_REJECTED';
+
+/** Width of the unsigned 64-bit big-endian length prefix, in bytes. */
+const LINEAGE_LENGTH_PREFIX_BYTES = 8;
+
+const JCS_STRING_ESCAPES: Readonly<Record<string, string>> = {
+  '\b': '\\b',
+  '\t': '\\t',
+  '\n': '\\n',
+  '\f': '\\f',
+  '\r': '\\r',
+  '"': '\\"',
+  '\\': '\\\\',
+};
+
+function jcsSerializeString(value: string): string {
+  let out = '"';
+  for (const ch of value) {
+    const codePoint = ch.codePointAt(0) as number;
+    if (codePoint >= 0xd800 && codePoint <= 0xdfff) {
+      throw new Error(
+        `${E6_JCS_REJECT}: lone surrogate U+${codePoint.toString(16).toUpperCase()} is not a valid Unicode scalar`
+      );
+    }
+    const escaped = JCS_STRING_ESCAPES[ch];
+    if (escaped !== undefined) {
+      out += escaped;
+      continue;
+    }
+    if (codePoint < 0x20) {
+      out += `\\u${codePoint.toString(16).padStart(4, '0')}`;
+      continue;
+    }
+    out += ch;
+  }
+  return `${out}"`;
+}
+
+function jcsSerializeNumber(value: number): string {
+  if (Number.isNaN(value)) {
+    throw new Error(`${E6_JCS_REJECT}: NaN is not a permitted I-JSON numeric value`);
+  }
+  if (!Number.isFinite(value)) {
+    throw new Error(`${E6_JCS_REJECT}: Infinity is not a permitted I-JSON numeric value`);
+  }
+  if (value === 0) {
+    return '0';
+  }
+  return String(value);
+}
+
+function jcsSerializeValue(value: unknown, path: string): string {
+  if (value === null) {
+    return 'null';
+  }
+  const kind = typeof value;
+  if (kind === 'boolean') {
+    return value === true ? 'true' : 'false';
+  }
+  if (kind === 'string') {
+    return jcsSerializeString(value as string);
+  }
+  if (kind === 'number') {
+    return jcsSerializeNumber(value as number);
+  }
+  if (kind === 'undefined') {
+    throw new Error(`${E6_JCS_REJECT}: undefined at ${path} is not permitted in a canonical payload`);
+  }
+  if (kind === 'bigint') {
+    throw new Error(`${E6_JCS_REJECT}: bigint at ${path} is not a permitted I-JSON value`);
+  }
+  if (kind === 'function') {
+    throw new Error(`${E6_JCS_REJECT}: function at ${path} is not a permitted I-JSON value`);
+  }
+  if (kind === 'symbol') {
+    throw new Error(`${E6_JCS_REJECT}: symbol at ${path} is not a permitted I-JSON value`);
+  }
+  if (Array.isArray(value)) {
+    const items = value.map((item, index) => jcsSerializeValue(item, `${path}[${index}]`));
+    return `[${items.join(',')}]`;
+  }
+  const prototype = Object.getPrototypeOf(value as object);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new Error(`${E6_JCS_REJECT}: non-plain object at ${path} is not a permitted I-JSON value`);
+  }
+  const record = value as Record<string, unknown>;
+  const members = Object.keys(record)
+    .sort()
+    .map((key) => `${jcsSerializeString(key)}:${jcsSerializeValue(record[key], `${path}.${key}`)}`);
+  return `{${members.join(',')}}`;
+}
+
+/**
+ * Computes the E6 lineage digest.
+ *
+ * Framing (delimiter_strategy = NONE; boundaries come exclusively from length prefixes):
+ *   [u64 big-endian byte length][component bytes]  for each component, in designated order:
+ *   payload (JCS) -> sourceClassification -> asOf -> dataVersion
+ *
+ * parent_hash_chaining_policy = DISABLED: `parentHash` is accepted for API compatibility
+ * but is excluded from the hash input, so the digest is independent of its value.
+ */
 export function computeLineageHash(
   payload: unknown,
   metadata: {
@@ -123,16 +237,37 @@ export function computeLineageHash(
     parentHash?: string;
   }
 ): string {
-  const parts: string[] = [
-    JSON.stringify(payload),
-    metadata.sourceClassification,
-    metadata.asOf,
-    metadata.dataVersion,
+  const encoder = new TextEncoder();
+  const components: Uint8Array[] = [encoder.encode(jcsSerializeValue(payload, '$'))];
+
+  const metadataFields: ReadonlyArray<readonly [string, unknown]> = [
+    ['sourceClassification', metadata.sourceClassification],
+    ['asOf', metadata.asOf],
+    ['dataVersion', metadata.dataVersion],
   ];
-  if (metadata.parentHash) {
-    parts.push(metadata.parentHash);
+  for (const [name, supplied] of metadataFields) {
+    if (typeof supplied !== 'string') {
+      throw new Error(`${E6_JCS_REJECT}: metadata.${name} must be a string; received ${typeof supplied}`);
+    }
+    components.push(encoder.encode(supplied));
   }
-  return computeSha256(parts.join(''));
+
+  let totalBytes = 0;
+  for (const component of components) {
+    totalBytes += LINEAGE_LENGTH_PREFIX_BYTES + component.length;
+  }
+
+  const framed = new Uint8Array(totalBytes);
+  const prefixWriter = new DataView(framed.buffer);
+  let offset = 0;
+  for (const component of components) {
+    prefixWriter.setBigUint64(offset, BigInt(component.length), false);
+    offset += LINEAGE_LENGTH_PREFIX_BYTES;
+    framed.set(component, offset);
+    offset += component.length;
+  }
+
+  return computeSha256(framed);
 }
 
 /**
