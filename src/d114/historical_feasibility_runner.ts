@@ -416,7 +416,7 @@ export class HistoricalFeasibilityRunner {
         invalidRecordCount: 0,
         failureReason: `ZIP extraction failed: ${extraction.error}`,
         evaluatedAt,
-        priorSha256Hex,
+        ...(priorSha256Hex === undefined ? {} : { priorSha256Hex }),
         hashChangedFromPrior,
       };
     }
@@ -442,7 +442,7 @@ export class HistoricalFeasibilityRunner {
         invalidRecordCount: 0,
         failureReason: 'CSV extraction produced 0 headers or 0 rows',
         evaluatedAt,
-        priorSha256Hex,
+        ...(priorSha256Hex === undefined ? {} : { priorSha256Hex }),
         hashChangedFromPrior,
       };
     }
@@ -477,7 +477,7 @@ export class HistoricalFeasibilityRunner {
           invalidRecordCount: 0,
           failureReason: 'CSV extraction produced 0 rows',
           evaluatedAt,
-          priorSha256Hex,
+          ...(priorSha256Hex === undefined ? {} : { priorSha256Hex }),
           hashChangedFromPrior,
         };
       }
@@ -511,7 +511,7 @@ export class HistoricalFeasibilityRunner {
           invalidRecordCount: 0,
           failureReason: 'CSV extraction produced 0 rows',
           evaluatedAt,
-          priorSha256Hex,
+          ...(priorSha256Hex === undefined ? {} : { priorSha256Hex }),
           hashChangedFromPrior,
         };
       }
@@ -550,7 +550,7 @@ export class HistoricalFeasibilityRunner {
         schemaErrors,
         failureReason,
         evaluatedAt,
-        priorSha256Hex,
+        ...(priorSha256Hex === undefined ? {} : { priorSha256Hex }),
         hashChangedFromPrior,
       };
     }
@@ -572,7 +572,7 @@ export class HistoricalFeasibilityRunner {
       validRecordCount: validRows,
       invalidRecordCount: 0,
       evaluatedAt,
-      priorSha256Hex,
+      ...(priorSha256Hex === undefined ? {} : { priorSha256Hex }),
       hashChangedFromPrior,
     };
   }

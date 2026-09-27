@@ -236,7 +236,7 @@ export class StatementNormalizer {
       companyId: input.companyId,
       scope,
       fiscalYear: input.fiscalYear,
-      quarter: input.quarter,
+      ...(input.quarter === undefined ? {} : { quarter: input.quarter }),
       periodType: input.periodType,
       periodStart,
       periodEnd,
