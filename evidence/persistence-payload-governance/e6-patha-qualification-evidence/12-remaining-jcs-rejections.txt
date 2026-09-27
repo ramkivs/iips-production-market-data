@@ -1,0 +1,6 @@
+47793:      error: 'E6_JCS_REJECTED: undefined at $.quarter is not permitted in a canonical payload'
+48804:      error: 'E6_JCS_REJECTED: undefined at $.records.2026-09-15.priorSha256Hex is not permitted in a canonical payload'
+48837:      error: 'E6_JCS_REJECTED: undefined at $.records.2026-09-15.priorSha256Hex is not permitted in a canonical payload'
+48876:      error: 'E6_JCS_REJECTED: undefined at $.records.2026-09-15.priorSha256Hex is not permitted in a canonical payload'
+48897:      error: 'E6_JCS_REJECTED: undefined at $.records.2026-09-15.priorSha256Hex is not permitted in a canonical payload'
+48930:      error: 'E6_JCS_REJECTED: undefined at $.records.2026-09-15.priorSha256Hex is not permitted in a canonical payload'

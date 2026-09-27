@@ -1,0 +1,5 @@
+
+> iips-production-market-data@1.0.0 build:tsc
+> tsc
+
+build_exit=0

@@ -1,0 +1,8 @@
+47787:    not ok 4 - CP-W2-04: Determinism & Repeatability Checkpoint — Identical inputs yield identical outputs and hashes
+47814:not ok 53 - Wave 2 Durability Checkpoint (CP-W2)
+48798:    not ok 10 - D114-10: preserves existing ACQUIRED_VALID records during resume
+48831:    not ok 13 - D114-13: generates full 6-file evidence package structure from manifest
+48870:    not ok 17 - D114-17: reconciles complete evidence package and produces cryptographic report
+48891:    not ok 18 - D114-18: accepts complete 6-file valid evidence package from deposit directory
+48924:    not ok 21 - D114-21: executes full transition from deposited package to reconciliation report
+48999:not ok 68 - WS-H / D114: Hardened 10-Year Historical Acquisition Feasibility & Evidence Suite
