@@ -6,6 +6,7 @@
  */
 
 import { ValidationResult, ValidationIssue } from './types.js';
+import type { D114SecurityIdentity } from './types.js';
 
 export type CandleInterval = '1m' | '5m' | '15m' | '1h' | '1d' | '1w' | '1M';
 
@@ -23,6 +24,12 @@ export interface OHLCVCandle {
   vwap?: number;
   tradeCount?: number;
   isAdjusted: boolean;
+  /**
+   * IU-2 additive: series-aware D114 security identity.
+   * Optional at the type level so existing producers/consumers remain
+   * source-compatible. `companyId` is NOT repurposed for this identity.
+   */
+  securityIdentity?: D114SecurityIdentity;
 }
 
 export function validateOHLCVCandle(candle: OHLCVCandle): ValidationResult {

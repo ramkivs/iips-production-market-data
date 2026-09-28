@@ -10,6 +10,7 @@ import * as crypto from 'crypto';
 import * as zlib from 'zlib';
 import { MarketQuotePayload } from '../contracts/d01_quotes.js';
 import { OHLCVCandle } from '../contracts/d02_ohlcv.js';
+import { buildD114SecurityIdentity } from '../contracts/types.js';
 
 export interface CmUdiffRawRecord {
   TradDt: string;
@@ -260,12 +261,18 @@ export class CmUdiffParser {
 
   /**
    * Normalizes a CM-UDiFF row into a canonical D01 MarketQuotePayload.
+   *
+   * IU-2: propagates the already-validated raw `ISIN` + `SctySrs` into the
+   * additive series-aware D114 security identity. Fail-closed — when the raw
+   * identity information is malformed or absent, no identity is manufactured
+   * and the optional field is simply left unset.
    */
   public static toCanonicalQuote(row: CmUdiffRawRecord): MarketQuotePayload {
     const ltp = parseFloat(row.ClsPric || row.LastPric || '0');
     const prevClose = parseFloat(row.PrvsClsgPric || '0');
     const change = Number((ltp - prevClose).toFixed(2));
     const pctChange = prevClose !== 0 ? Number(((change / prevClose) * 100).toFixed(2)) : 0;
+    const securityIdentity = buildD114SecurityIdentity(row.ISIN, row.SctySrs);
 
     return {
       companyId: row.TckrSymb,
@@ -282,11 +289,17 @@ export class CmUdiffParser {
       volume: parseInt(row.TtlTradgVol || row.TtlTrfVal || '0', 10),
       change,
       pctChange,
+      ...(securityIdentity ? { securityIdentity } : {}),
     };
   }
 
   /**
    * Normalizes a CM-UDiFF row into a canonical D02 OHLCVCandle (Daily 1D bar).
+   *
+   * IU-2: propagates the already-validated raw `ISIN` + `SctySrs` into the
+   * additive series-aware D114 security identity. Fail-closed — when the raw
+   * identity information is malformed or absent, no identity is manufactured
+   * and the optional field is simply left unset.
    */
   public static toCanonicalOHLCV(row: CmUdiffRawRecord): OHLCVCandle {
     const close = parseFloat(row.ClsPric || '0');
@@ -294,6 +307,7 @@ export class CmUdiffParser {
     const high = parseFloat(row.HghPric || row.ClsPric || '0');
     const low = parseFloat(row.LwPric || row.ClsPric || '0');
     const volume = parseInt(row.TtlTradgVol || '0', 10);
+    const securityIdentity = buildD114SecurityIdentity(row.ISIN, row.SctySrs);
 
     const candleStart = `${row.TradDt}T09:15:00.000Z`;
     const candleEnd = `${row.TradDt}T15:30:00.000Z`;
@@ -310,6 +324,7 @@ export class CmUdiffParser {
       close,
       volume,
       isAdjusted: false,
+      ...(securityIdentity ? { securityIdentity } : {}),
     };
   }
 }

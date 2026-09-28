@@ -8,6 +8,7 @@
 
 import { MarketQuotePayload } from '../contracts/d01_quotes.js';
 import { OHLCVCandle } from '../contracts/d02_ohlcv.js';
+import { buildD114SecurityIdentity } from '../contracts/types.js';
 import { normalizeToUtcIso } from '../normalization/time_normalizer.js';
 
 export interface LegacyBhavcopyRawRecord {
@@ -172,12 +173,18 @@ export class LegacyBhavcopyParser {
 
   /**
    * Normalizes a legacy Bhavcopy record into a canonical D01 MarketQuotePayload.
+   *
+   * IU-2: propagates the already-validated raw `ISIN` + `SERIES` into the
+   * additive series-aware D114 security identity. Fail-closed — when the raw
+   * identity information is malformed or absent, no identity is manufactured
+   * and the optional field is simply left unset.
    */
   public static toCanonicalQuote(row: LegacyBhavcopyRawRecord): MarketQuotePayload {
     const ltp = parseFloat(row.LAST || row.CLOSE || '0');
     const prevClose = parseFloat(row.PREVCLOSE || '0');
     const change = Number((ltp - prevClose).toFixed(2));
     const pctChange = prevClose !== 0 ? Number(((change / prevClose) * 100).toFixed(2)) : 0;
+    const securityIdentity = buildD114SecurityIdentity(row.ISIN, row.SERIES);
 
     return {
       companyId: row.SYMBOL,
@@ -194,16 +201,23 @@ export class LegacyBhavcopyParser {
       volume: parseInt(row.TOTTRDQTY || '0', 10),
       change,
       pctChange,
+      ...(securityIdentity ? { securityIdentity } : {}),
     };
   }
 
   /**
    * Normalizes a legacy Bhavcopy record into a canonical D02 OHLCVCandle (1D).
+   *
+   * IU-2: propagates the already-validated raw `ISIN` + `SERIES` into the
+   * additive series-aware D114 security identity. Fail-closed — when the raw
+   * identity information is malformed or absent, no identity is manufactured
+   * and the optional field is simply left unset.
    */
   public static toCanonicalOHLCV(row: LegacyBhavcopyRawRecord): OHLCVCandle {
     const isoDate = LegacyBhavcopyParser.parseLegacyDate(row.TIMESTAMP);
     const candleStart = `${isoDate}T09:15:00.000Z`;
     const candleEnd = `${isoDate}T15:30:00.000Z`;
+    const securityIdentity = buildD114SecurityIdentity(row.ISIN, row.SERIES);
 
     return {
       companyId: row.SYMBOL,
@@ -217,6 +231,7 @@ export class LegacyBhavcopyParser {
       close: parseFloat(row.CLOSE || '0'),
       volume: parseInt(row.TOTTRDQTY || '0', 10),
       isAdjusted: false,
+      ...(securityIdentity ? { securityIdentity } : {}),
     };
   }
 }
