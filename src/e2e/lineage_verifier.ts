@@ -22,6 +22,11 @@ export interface E2ELineageHop {
   outputDigest: string;
   qualityState: string;
   providerMasked: boolean;
+  /**
+   * IU-1 additive: the series-aware security identity carried through this hop
+   * (`D114SecurityIdentity.securityId`), when the admitted envelope carries one.
+   */
+  securityId?: string;
 }
 
 export interface E2ELineageQualificationResult {
@@ -131,15 +136,28 @@ export class E2ELineageVerifier {
     });
 
     // Hop 3: Point-in-Time (PIT) Append-Only Storage
+    // IU-1: the lookup is series-aware whenever the admitted envelope carries a
+    // series-aware identity, so the as-of retrieval resolves inside the same PIT
+    // identity the record was admitted under and can never cross series.
+    const admittedSecurityId = ingressEnvelope.securityId;
     this.pitStore.append(ingressEnvelope);
     const pitRetrieved = this.pitStore.queryAsOf({
       companyId: resolvedCompanyId,
       domain: 'D01_QUOTES',
       asOf: rawFixturePayload.timestamp,
+      ...(admittedSecurityId !== undefined ? { securityId: admittedSecurityId } : {}),
     });
 
     if (!pitRetrieved) {
       throw new Error(`Lineage qualification failure: PIT store failed retrieval for ${resolvedCompanyId}`);
+    }
+
+    // Fail closed if the series-aware identity did not survive the PIT boundary.
+    if (admittedSecurityId !== undefined && pitRetrieved.securityId !== admittedSecurityId) {
+      throw new Error(
+        `Lineage qualification failure: series-aware identity not preserved through PIT ` +
+          `(admitted '${admittedSecurityId}', retrieved '${pitRetrieved.securityId}')`,
+      );
     }
 
     hops.push({
@@ -149,6 +167,7 @@ export class E2ELineageVerifier {
       outputDigest: pitRetrieved.provenance.lineageHash,
       qualityState: pitRetrieved.provenance.qualityState,
       providerMasked: true,
+      ...(pitRetrieved.securityId !== undefined ? { securityId: pitRetrieved.securityId } : {}),
     });
 
     // Hop 4: P11 Engine Execution (Namespace Guard + Sector Defaults + Frozen Engine)

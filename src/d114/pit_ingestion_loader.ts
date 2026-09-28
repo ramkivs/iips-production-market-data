@@ -13,6 +13,7 @@ import { MarketQuotePayload, validateMarketQuotePayload } from '../contracts/d01
 import { OHLCVCandle, validateOHLCVCandle } from '../contracts/d02_ohlcv.js';
 import { CanonicalEnvelope, createCanonicalEnvelope } from '../contracts/envelope.js';
 import { computeLineageHash } from '../contracts/provenance.js';
+import { isD114SecurityIdentity } from '../contracts/types.js';
 
 export interface ArchiveIngestionResult {
   success: boolean;
@@ -296,7 +297,26 @@ export class HistoricalPitIngestionLoader {
         continue;
       }
 
-      const sigD01 = `D01:${quote.companyId}:${dateIso}:${quote.ltp}:${quote.volume}`;
+      // IU-1: resolve the series-aware security identity for PIT admission.
+      // The identity itself was established by IU-2 at the D114 normalization
+      // seams; this only reads it. A present-but-malformed identity is
+      // ambiguous and must fail closed rather than be admitted under an
+      // ambiguous company-only PIT identity.
+      const quoteIdentity = quote.securityIdentity;
+      if (quoteIdentity !== undefined && !isD114SecurityIdentity(quoteIdentity)) {
+        this.rejectedRecords++;
+        this.malformedRecords++;
+        batchQuarantined++;
+        continue;
+      }
+      const securityId = quoteIdentity !== undefined ? quoteIdentity.securityId : undefined;
+
+      // Series-aware idempotency: the identity segment is appended only when one
+      // exists, so legacy signatures are byte-identical to before while records
+      // sharing an ISIN but differing in series are never deduplicated into one.
+      const sigD01 = `D01:${quote.companyId}:${dateIso}:${quote.ltp}:${quote.volume}${
+        securityId !== undefined ? `:${securityId}` : ''
+      }`;
       if (this.ingestedSignatures.has(sigD01)) {
         this.duplicateRecords++;
         this.idempotentlySkipped++;
@@ -307,11 +327,17 @@ export class HistoricalPitIngestionLoader {
       this.ingestedSignatures.add(sigD01);
       this.symbols.add(quote.symbol);
 
+      // The series-aware identity segment is appended only when one exists, so
+      // legacy envelopeIds are byte-identical to before. Without it, two series
+      // sharing an ISIN would produce the same envelopeId.
       const envelopeD01: CanonicalEnvelope<MarketQuotePayload> = createCanonicalEnvelope({
-        envelopeId: `env-d01-${quote.companyId}-${dateIso}-${sigD01.length}`,
+        envelopeId: `env-d01-${quote.companyId}-${dateIso}-${sigD01.length}${
+          securityId !== undefined ? `-${securityId}` : ''
+        }`,
         domain: 'D01_QUOTES',
         mode: 'PIT',
         companyId: quote.companyId,
+        ...(securityId !== undefined ? { securityId } : {}),
         payload: quote,
         provenance: {
           sourceClassification: 'CANONICAL_MARKET_DATA',
@@ -348,7 +374,22 @@ export class HistoricalPitIngestionLoader {
         continue;
       }
 
-      const sigD02 = `D02:${candle.companyId}:${dateIso}:${candle.open}:${candle.close}:${candle.volume}`;
+      // IU-1: resolve the series-aware security identity for PIT admission.
+      // Established by IU-2 at the D114 normalization seams; only read here.
+      // A present-but-malformed identity is ambiguous and must fail closed.
+      const candleIdentity = candle.securityIdentity;
+      if (candleIdentity !== undefined && !isD114SecurityIdentity(candleIdentity)) {
+        this.rejectedRecords++;
+        this.malformedRecords++;
+        batchQuarantined++;
+        continue;
+      }
+      const securityId = candleIdentity !== undefined ? candleIdentity.securityId : undefined;
+
+      // Series-aware idempotency (see the D01 loop): additive identity segment.
+      const sigD02 = `D02:${candle.companyId}:${dateIso}:${candle.open}:${candle.close}:${candle.volume}${
+        securityId !== undefined ? `:${securityId}` : ''
+      }`;
       if (this.ingestedSignatures.has(sigD02)) {
         this.duplicateRecords++;
         this.idempotentlySkipped++;
@@ -358,11 +399,15 @@ export class HistoricalPitIngestionLoader {
 
       this.ingestedSignatures.add(sigD02);
 
+      // Series-aware identity segment appended only when one exists (see D01).
       const envelopeD02: CanonicalEnvelope<OHLCVCandle> = createCanonicalEnvelope({
-        envelopeId: `env-d02-${candle.companyId}-${dateIso}-${sigD02.length}`,
+        envelopeId: `env-d02-${candle.companyId}-${dateIso}-${sigD02.length}${
+          securityId !== undefined ? `-${securityId}` : ''
+        }`,
         domain: 'D02_OHLCV',
         mode: 'PIT',
         companyId: candle.companyId,
+        ...(securityId !== undefined ? { securityId } : {}),
         payload: candle,
         provenance: {
           sourceClassification: 'CANONICAL_MARKET_DATA',

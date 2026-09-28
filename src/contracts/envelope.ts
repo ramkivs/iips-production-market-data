@@ -13,6 +13,17 @@ export interface CanonicalEnvelope<T> {
   domain: DataDomain;
   mode: OperatingMode;
   companyId: string;
+  /**
+   * IU-1 additive: series-aware security identity, carried verbatim from
+   * `D114SecurityIdentity.securityId` (grammar `ISIN:<isin>:<series>`) when the
+   * payload carries one.
+   *
+   * Optional at the type level so every existing producer and consumer remains
+   * source-compatible. Envelopes without a series-aware identity are unchanged
+   * and keep their existing PIT identity. `companyId` is NOT repurposed for this
+   * identity — it remains the company/resource key.
+   */
+  securityId?: string;
   payload: T;
   provenance: DataProvenanceDTO;
   timestamp: string; // ISO-8601 UTC
@@ -24,6 +35,12 @@ export function createCanonicalEnvelope<T>(params: {
   domain: DataDomain;
   mode: OperatingMode;
   companyId: string;
+  /**
+   * IU-1 additive: optional series-aware security identity
+   * (`D114SecurityIdentity.securityId`). Emitted only when supplied, so an
+   * envelope built without one keeps exactly its previous shape.
+   */
+  securityId?: string;
   payload: T;
   provenance: DataProvenanceDTO;
   timestamp?: string;
@@ -34,6 +51,7 @@ export function createCanonicalEnvelope<T>(params: {
     domain: params.domain,
     mode: params.mode,
     companyId: params.companyId,
+    ...(params.securityId !== undefined ? { securityId: params.securityId } : {}),
     payload: params.payload,
     provenance: params.provenance,
     timestamp: params.timestamp || new Date().toISOString(),
