@@ -6,4 +6,5 @@
  */
 
 export * from './corporate_actions.js';
+export * from './pit_read_service.js';
 export * from './pit_store.js';

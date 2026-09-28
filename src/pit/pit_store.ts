@@ -206,6 +206,29 @@ export class PointInTimeStore<T = unknown> {
     return count;
   }
 
+  /**
+   * Read-only enumeration of every PIT key admitted into this store.
+   *
+   * IU-3 (first non-production IRR -> IPD integration slice): the
+   * securityId-addressed read boundary must resolve a series-aware identity
+   * WITHOUT a `companyId`, because IRR holds no identifier that addresses an IPD
+   * company and must never be handed one (AG-5 stays unresolved). This accessor
+   * exposes already-admitted keys only.
+   *
+   * It does not mutate the store, does not re-key anything, and does not
+   * introduce a second key grammar — the IU-1 grammar
+   * `${companyId}:${domain}[:${securityId}]` remains the single authority.
+   */
+  public listAdmittedSeriesKeys(): ReadonlyArray<string> {
+    const keys = new Set<string>();
+    for (const admitted of this.seriesIndex.values()) {
+      for (const key of admitted) {
+        keys.add(key);
+      }
+    }
+    return Array.from(keys).sort();
+  }
+
   public clear(): void {
     this.store.clear();
     this.seriesIndex.clear();
