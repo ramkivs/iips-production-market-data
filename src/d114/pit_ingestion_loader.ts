@@ -446,6 +446,33 @@ export class HistoricalPitIngestionLoader {
   }
 
   /**
+   * Diagnostic-only sample lookup for the Stage-5 validation report.
+   *
+   * IU-6 — the report samples the quote store by company/domain WITHOUT a
+   * series-aware `securityId`. Once a corpus carries more than one series for
+   * one symbol (for example `ISIN:<isin>:EQ` and `ISIN:<isin>:BL`, which is
+   * exactly what real D114 archives contain), `PointInTimeStore` correctly
+   * refuses that ambiguous identity and THROWS. Report generation would then
+   * abort on a perfectly valid ingestion.
+   *
+   * The ambiguity is not resolved here: refusing to pick a series is the
+   * correct PIT behaviour and is preserved. Only the diagnostic sample is
+   * abandoned, so the report stays generatable and simply carries no sampled
+   * value. No series is inferred, defaulted, collapsed or selected as "first
+   * match", and no PIT read path uses this helper.
+   */
+  private sampleQuoteForReport(
+    companyId: string,
+    asOf: string,
+  ): CanonicalEnvelope<MarketQuotePayload> | undefined {
+    try {
+      return this.quoteStore.queryAsOf({ companyId, domain: 'D01_QUOTES', asOf });
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
    * Generates a formal Stage-5 Ingestion Validation Report.
    */
   public generateValidationReport(options?: Stage5ValidationReportOptions): Stage5IngestionValidationReport {
@@ -456,22 +483,14 @@ export class HistoricalPitIngestionLoader {
     let sampleCompanyId = 'INE467B01029';
     let sampleMatchedQuoteLtp: number | undefined;
 
-    const sampleQuote = this.quoteStore.queryAsOf({
-      companyId: sampleCompanyId,
-      domain: 'D01_QUOTES',
-      asOf: sampleQueryAsOf,
-    });
+    const sampleQuote = this.sampleQuoteForReport(sampleCompanyId, sampleQueryAsOf);
     if (sampleQuote) {
       sampleMatchedQuoteLtp = sampleQuote.payload.ltp;
     } else {
       // Fallback to first available symbol
       const firstSym = Array.from(this.symbols)[0] || 'TCS';
       sampleCompanyId = firstSym;
-      const q = this.quoteStore.queryAsOf({
-        companyId: sampleCompanyId,
-        domain: 'D01_QUOTES',
-        asOf: '2026-09-20T23:59:59.000Z',
-      });
+      const q = this.sampleQuoteForReport(sampleCompanyId, '2026-09-20T23:59:59.000Z');
       sampleMatchedQuoteLtp = q?.payload.ltp;
     }
 
