@@ -9,7 +9,10 @@
     "build:vite": "vite build",
     "dev": "vite",
     "test": "node --test dist/tests/*.test.js",
-    "test:direct": "node --test --experimental-strip-types tests/*.test.ts"
+    "test:direct": "node --test --experimental-strip-types tests/*.test.ts",
+    "build:pit-package": "tsc -p tsconfig.pit-package.json",
+    "prepack": "npm run build:pit-package",
+    "prepare": "npm run build:pit-package"
   },
   "keywords": [
     "iips",
@@ -33,5 +36,14 @@
   },
   "dependencies": {
     "react-router-dom": "^6.30.6"
-  }
+  },
+  "exports": {
+    "./pit": {
+      "types": "./dist/package/pit/package.d.ts",
+      "import": "./dist/package/pit/package.js"
+    }
+  },
+  "files": [
+    "dist/package"
+  ]
 }
