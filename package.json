@@ -41,6 +41,10 @@
     "./pit": {
       "types": "./dist/package/pit/package.d.ts",
       "import": "./dist/package/pit/package.js"
+    },
+    "./d114-non-production": {
+      "types": "./dist/package/d114/non_production_package.d.ts",
+      "import": "./dist/package/d114/non_production_package.js"
     }
   },
   "files": [

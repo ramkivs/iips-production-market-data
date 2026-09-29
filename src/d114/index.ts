@@ -12,3 +12,4 @@ export * from './historical_feasibility_runner.js';
 export * from './evidence_reconciler.js';
 export * from './evidence_handoff.js';
 export * from './pit_ingestion_loader.js';
+export * from './non_production_pit_population.js';

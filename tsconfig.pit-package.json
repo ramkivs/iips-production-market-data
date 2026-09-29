@@ -6,7 +6,7 @@
     "declarationMap": false,
     "sourceMap": false
   },
-  "files": ["src/pit/package.ts"],
+  "files": ["src/pit/package.ts", "src/d114/non_production_package.ts"],
   "include": [],
   "exclude": []
 }
