@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist/package",
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "files": ["src/pit/package.ts"],
+  "include": [],
+  "exclude": []
+}
