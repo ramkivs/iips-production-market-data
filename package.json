@@ -11,7 +11,8 @@
     "test": "node --test dist/tests/*.test.js",
     "test:direct": "node --test --experimental-strip-types tests/*.test.ts",
     "build:pit-package": "tsc -p tsconfig.pit-package.json",
-    "prepack": "npm run build:pit-package"
+    "prepack": "npm run build:pit-package",
+    "prepare": "npm run build:pit-package"
   },
   "keywords": [
     "iips",
