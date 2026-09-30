@@ -39,6 +39,7 @@ interface MappingRow {
 }
 
 interface AuditRow {
+  seq: number;
   audit_id: string;
   mapping_id: string;
   action: string;
@@ -81,6 +82,7 @@ function toMapping(row: MappingRow): ExternalIdentityMapping {
 
 function toAuditEvent(row: AuditRow): MappingAuditEvent {
   return {
+    seq: row.seq,
     auditId: row.audit_id,
     mappingId: row.mapping_id,
     action: row.action as MappingAuditAction,
@@ -204,7 +206,7 @@ export class IdentityRepository {
       .run(applicationUserId, updatedAt, mappingId);
   }
 
-  public insertAuditEvent(event: MappingAuditEvent): void {
+  public insertAuditEvent(event: Omit<MappingAuditEvent, 'seq'>): void {
     this.connection
       .prepare(
         `INSERT INTO mapping_audit_events
@@ -228,7 +230,7 @@ export class IdentityRepository {
       .prepare(
         `SELECT * FROM mapping_audit_events
           WHERE mapping_id = ?
-          ORDER BY occurred_at ASC, audit_id ASC`
+          ORDER BY seq ASC`
       )
       .all(mappingId) as AuditRow[];
     return rows.map(toAuditEvent);

@@ -264,6 +264,16 @@ test('G24-D11: mapping mutations and audit records are transactionally consisten
       assert.equal(event.actor, ACTOR.actor, 'governing actor must be recorded');
       assert.ok(event.occurredAt.length > 0, 'timestamp must be recorded');
     }
+
+    // The audit trail must have a total, reproducible order even when several
+    // records share the same millisecond (migration 002).
+    const sequences = audit.map((event) => (event as unknown as { seq: number }).seq);
+    assert.deepEqual(
+      sequences,
+      [...sequences].sort((a, b) => a - b),
+      'audit records must be returned in monotonic sequence order'
+    );
+    assert.equal(new Set(sequences).size, sequences.length, 'sequence values must be distinct');
   });
 });
 

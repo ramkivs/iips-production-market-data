@@ -49,6 +49,12 @@ export interface ExternalIdentityMapping {
 }
 
 export interface MappingAuditEvent {
+  /**
+   * Monotonic sequence establishing a total, reproducible ordering of the
+   * audit trail (migration 002). Timestamps alone are insufficient because two
+   * records written in the same millisecond would have no defined order.
+   */
+  readonly seq: number;
   readonly auditId: string;
   readonly mappingId: string;
   readonly action: MappingAuditAction;

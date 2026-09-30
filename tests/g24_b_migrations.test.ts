@@ -38,15 +38,17 @@ test('G24-B1: migration 001 is recorded in the ledger with its checksum', () => 
   const handle = openTestPersistence('b1');
   try {
     const applied = readAppliedMigrations(handle.connection);
-    assert.equal(applied.length, 1);
+    assert.equal(applied.length, 2);
     assert.equal(applied[0]!.id, '001');
     assert.equal(applied[0]!.name, 'initial_schema');
+    assert.equal(applied[1]!.id, '002');
+    assert.equal(applied[1]!.name, 'audit_event_sequence');
     assert.equal(
       applied[0]!.checksum,
       computeMigrationChecksum(MIGRATIONS[0]!.sql),
       'recorded checksum must equal the checksum of the immutable SQL'
     );
-    assert.equal(readSchemaVersion(handle.connection), '001');
+    assert.equal(readSchemaVersion(handle.connection), '002');
   } finally {
     closeTestPersistence(handle);
   }
@@ -57,7 +59,7 @@ test('G24-B2: re-running migrations on an already-migrated database applies noth
   try {
     const result = runMigrations(handle.connection);
     assert.deepEqual(result.applied, [], 'no migration may be re-applied');
-    assert.equal(result.currentVersion, '001');
+    assert.equal(result.currentVersion, '002');
   } finally {
     closeTestPersistence(handle);
   }
@@ -120,7 +122,7 @@ test('G24-B6: a failing migration fails startup and records nothing (transaction
   const handle = openTestPersistence('b6');
   try {
     const brokenMigration: MigrationDefinition = {
-      id: '002',
+      id: '003',
       name: 'broken_migration',
       sql: `CREATE TABLE should_not_exist_b6 (id TEXT PRIMARY KEY);
             THIS IS NOT VALID SQL;`,
@@ -129,7 +131,7 @@ test('G24-B6: a failing migration fails startup and records nothing (transaction
     assert.throws(
       () => runMigrations(handle.connection, [...MIGRATIONS, brokenMigration]),
       (error: unknown) =>
-        error instanceof MigrationApplicationError && error.migrationId === '002'
+        error instanceof MigrationApplicationError && error.migrationId === '003'
     );
 
     // Neither the DDL nor the ledger row may survive: application is transactional.
@@ -139,7 +141,7 @@ test('G24-B6: a failing migration fails startup and records nothing (transaction
     assert.equal(table, undefined, 'failed DDL must be rolled back');
 
     const applied = readAppliedMigrations(handle.connection);
-    assert.equal(applied.length, 1, 'failed migration must not be recorded in the ledger');
+    assert.equal(applied.length, 2, 'failed migration must not be recorded in the ledger');
     assert.equal(applied[0]!.id, '001');
   } finally {
     closeTestPersistence(handle);
@@ -150,19 +152,19 @@ test('G24-B7: migration DDL and ledger insert are atomic within one transaction'
   const handle = openTestPersistence('b7');
   try {
     const goodMigration: MigrationDefinition = {
-      id: '002',
+      id: '003',
       name: 'atomic_probe',
       sql: `CREATE TABLE atomic_probe_b7 (id TEXT PRIMARY KEY);`,
     };
 
     const applied = applyPendingMigrations(handle.connection, [...MIGRATIONS, goodMigration]);
-    assert.deepEqual(applied, ['002']);
+    assert.deepEqual(applied, ['003']);
 
     const table = handle.connection
       .prepare(`SELECT name FROM sqlite_master WHERE name = 'atomic_probe_b7'`)
       .get();
     assert.ok(table, 'DDL from the applied migration must be present');
-    assert.equal(readSchemaVersion(handle.connection), '002');
+    assert.equal(readSchemaVersion(handle.connection), '003');
   } finally {
     closeTestPersistence(handle);
   }
@@ -172,7 +174,7 @@ test('G24-B8: migration state survives a process restart and is not re-applied',
   const databasePath = tempDatabasePath('b8');
 
   const first = initializePersistenceWithConfig(temporaryPersistenceConfig(databasePath));
-  assert.deepEqual(first.startup.migrationsApplied, ['001']);
+  assert.deepEqual(first.startup.migrationsApplied, ['001', '002']);
   closeTestPersistence(first);
 
   // "Restart": a brand new connection against the same durable file.
@@ -183,10 +185,10 @@ test('G24-B8: migration state survives a process restart and is not re-applied',
       [],
       'migrations must not be re-applied on restart'
     );
-    assert.equal(second.startup.schemaVersion, '001');
+    assert.equal(second.startup.schemaVersion, '002');
 
     const applied = readAppliedMigrations(second.connection);
-    assert.equal(applied.length, 1);
+    assert.equal(applied.length, 2);
     assert.equal(applied[0]!.id, '001');
   } finally {
     closeTestPersistence(second);
