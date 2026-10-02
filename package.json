@@ -21,6 +21,9 @@
   ],
   "author": "Ramki / Sai <sairam260573@gmail.com>",
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "devDependencies": {
     "@types/node": "^22.13.9",
     "@types/react": "^18.3.31",
