@@ -36,7 +36,7 @@ export class UI13MacroVintageTrackerBuilder {
       }));
 
     const provenance: ExecutiveProvenance = {
-      sourceClassification: 'REAL',
+      sourceClassification: 'DERIVED',
       asOf: params.asOf,
       evaluatedAt: new Date().toISOString(),
       dataVersion: 'v1.0.0',
