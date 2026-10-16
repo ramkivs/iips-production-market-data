@@ -213,5 +213,26 @@ publication-verification section of this file.
 
 ---
 
+---
+
+## 13. PUBLICATION AND REMOTE VERIFICATION (appended 2026-10-16)
+
+**Publication commit (this record + its raw-evidence companion):**
+`22285d6a54315fe07601054276dd334f34806dae` — parent
+`f3ca83881fcdf67520433a0d6b3bbd216d76aa2e`, tree
+`01bb231d6b046852c549c462bb721f75e48c021d`, **+2,805 / −0** (exactly two added documentation
+files; no other change).
+
+| Artifact | Remote blob | sha256 (remote = local) | Byte identity |
+|---|---|---|---|
+| `…GATE_A_EXECUTION_RECORD_2026-10-16.md` | `853cc9d11da841b58f0c7ce48c6ab56d05443870` | `88965d7a3069f4f8987f2b386452c28bc3ef2e829fedd33555195c8f74d42988` | **IDENTICAL** (`cmp`) |
+| `…GATE_A_EXECUTION_RAW_EVIDENCE_2026-10-16.md` | `b42c5c6dcbc5f5a5e3b4ef777bc88a6d0b9db229` | `712edd8f19bbfc4e0a3fbe7992336ecbaa3622396473b4158acd8c66490762bb` | **IDENTICAL** (`cmp`) |
+
+PR #8 verified live: **OPEN, unmerged**, head `22285d6a54315fe07601054276dd334f34806dae`, 17 files.
+This section is appended by a **subsequent** commit to the same workstream, so the record's own
+identity is not self-referential.
+
+---
+
 *End of executed-act record `IIPS-V3-G2-IPD-GATE-A-PA-DECISION-2026-10-16-01` —
 **GATE A — PROVISIONED / VALIDATED** · one-time · local · offline · NON_PRODUCTION.*
