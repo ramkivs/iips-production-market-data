@@ -100,8 +100,8 @@ test('G24-G2: migration state survives restart and is never re-applied', () => {
 
   const first = initializePersistenceWithConfig(temporaryPersistenceConfig(databasePath));
   try {
-    assert.deepEqual(first.startup.migrationsApplied, ['001', '002']);
-    assert.equal(readSchemaVersion(first.connection), '002');
+    assert.deepEqual(first.startup.migrationsApplied, ['001', '002', '003']);
+    assert.equal(readSchemaVersion(first.connection), '003');
   } finally {
     closeTestPersistence(first);
   }
@@ -109,9 +109,9 @@ test('G24-G2: migration state survives restart and is never re-applied', () => {
   const second = initializePersistenceWithConfig(temporaryPersistenceConfig(databasePath));
   try {
     assert.deepEqual(second.startup.migrationsApplied, []);
-    assert.equal(second.startup.schemaVersion, '002');
+    assert.equal(second.startup.schemaVersion, '003');
     const applied = readAppliedMigrations(second.connection);
-    assert.equal(applied.length, 2);
+    assert.equal(applied.length, 3);
   } finally {
     closeTestPersistence(second);
   }

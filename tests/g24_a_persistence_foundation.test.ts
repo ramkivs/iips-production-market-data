@@ -34,11 +34,11 @@ test('G24-A1: initialization creates the database file and applies the accepted 
   try {
     assert.equal(handle.startup.databasePath, handle.config.databasePath);
     assert.ok(fs.existsSync(handle.config.databasePath), 'database file must exist');
-    assert.equal(handle.startup.schemaVersion, '002');
+    assert.equal(handle.startup.schemaVersion, '003');
     assert.deepEqual(
       handle.startup.migrationsApplied,
-      ['001', '002'],
-      'first boot applies migrations 001 and 002'
+      ['001', '002', '003'],
+      'first boot applies migrations 001, 002 and 003'
     );
     assert.ok(handle.isOpen);
   } finally {

@@ -10,11 +10,13 @@
 
 import { migration001InitialSchema } from './001_initial_schema.js';
 import { migration002AuditEventSequence } from './002_audit_event_sequence.js';
+import { migration003LocalPrincipalBindings } from './003_local_principal_bindings.js';
 import type { MigrationDefinition } from './types.js';
 
 export const MIGRATIONS: readonly MigrationDefinition[] = [
   migration001InitialSchema,
   migration002AuditEventSequence,
+  migration003LocalPrincipalBindings,
 ];
 
 /** Human-readable schema identity for diagnostics. */

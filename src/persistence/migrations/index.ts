@@ -8,3 +8,4 @@ export * from './registry.js';
 export * from './runner.js';
 export { migration001InitialSchema } from './001_initial_schema.js';
 export { migration002AuditEventSequence } from './002_audit_event_sequence.js';
+export { migration003LocalPrincipalBindings } from './003_local_principal_bindings.js';
