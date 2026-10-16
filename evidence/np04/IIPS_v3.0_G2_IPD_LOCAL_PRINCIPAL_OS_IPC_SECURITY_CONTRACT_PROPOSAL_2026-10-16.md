@@ -174,6 +174,8 @@ Reading F3 against the operations: opening a client connection that can **send**
 | A browser page (any site, any origin) | **No** — no API to open a named pipe | **No** — unreachable | **[D]** platform capability |
 | An administrator | Yes | **Yes — and it can read the store file directly anyway** | **[D]** F3 (Administrators) |
 
+**Correction (2026-10-16 verification pass).** The row for a *different non-administrative local user* above is correct about **invocation** but must be read with one addition: for a **duplex** pipe a client may connect specifying `GENERIC_READ` alone (Microsoft, `CreateNamedPipeW`, `PIPE_ACCESS_DUPLEX`), so a different local account — and a remote caller authenticating as a different account, if it can reach IPC$ — can complete a **read-only connection**; it still cannot **send** a request, because that requires write access. C5 rule 1 (never emit a byte before a valid, authorized request) is therefore a **load-bearing** control, and gate V must include a **read-only connect attempt** by a different user rather than only a DACL inspection. See `IIPS-V3-G2-LOCAL-IPC-TRUST-BOUNDARY-VERIFICATION-AND-RECOMMENDATION-2026-10-16-01` §3 F-5 / §4 / §8.
+
 **C5 — Design rules that compensate (all app-level, all testable).** **[P]**
 
 1. **Never write data to a connection that has not yet supplied a valid request.** No greeting, banner, version string, or portfolio data before the request is parsed and authorized. This removes the value of a *read-only* open — which is the only access the default DACL grants to other users and, potentially, to remote clients (F3/F4).
@@ -233,6 +235,8 @@ These were run in this session to replace assumption with measurement. They esta
 | Remote client → IPC endpoint | **Not for invocation** (no write access by default) — **to be measured**; disclosure and host hardening in §8/§9 | F4, §9 V-2 |
 | Browser → IRR `/api/user-portfolios*` | **Yes, and refused: HTTP 503 `owner-context-unavailable`** before any domain or persistence access | **[V]** IRR `frontend/server/user-portfolio-transport.ts`, `owner-context-unavailable.ts` |
 | Browser → IRR after any future admission | It would act **as the operator's principal** (it cannot impersonate a *different* user, since no user identity is supplied) | **[P]** → hence C8/C9 |
+
+**Correction (2026-10-16 verification pass).** The *remote client* row above is correct for **invocation**, but note the same read-only case as §4.3: a remote caller authenticating as a **different** account can complete a read-only connection if it can reach IPC$ (no bytes may be emitted — C5 rule 1), while a remote caller authenticating as the **operator's own account** would be the CREATOR OWNER and could send. Remote reachability therefore rests on host configuration and is measured by gate V-2. See `IIPS-V3-G2-LOCAL-IPC-TRUST-BOUNDARY-VERIFICATION-AND-RECOMMENDATION-2026-10-16-01` §3 F-4/F-5 / §7 / §8.
 
 **C8 — Loopback-only deployment posture.** The browser-facing surface that can reach owner-scoped operations must be bound to loopback on this laptop. LAN, hosted-preview (e.g. `*.e2b.app`), reverse-proxied, and shared-host deployments are **outside** the trust assumption and must not serve the capability. Wildcard CORS must not apply to owner-scoped routes. **[P]** — current IRR code listens without a host argument (all interfaces) and sets `Access-Control-Allow-Origin: *` **[V]** `frontend/server/executive-transport.ts`; its dev server uses `host: '0.0.0.0'` and `allowedHosts: ['.e2b.app']` **[V]** `frontend/vite.config.ts`.
 
