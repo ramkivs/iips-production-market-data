@@ -6,7 +6,7 @@
  * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   PortfolioStore,
   PortfolioRecord,
@@ -14,67 +14,123 @@ import {
   PortfolioSaveResult,
   getDefaultPortfolioStore,
 } from './index.js';
+import {
+  PortfolioStorePort,
+  SessionPortfolioStorePort,
+  describePersistenceStatus,
+} from './portfolioStorePort.js';
 import { BrokerImportModal } from './BrokerImportModal.js';
 import { SecurityMaster, getGovernedBroadSecurityMaster } from '../../../../src/identity/index.js';
 
 export interface PortfolioWorkspaceProps {
   portfolioStore?: PortfolioStore;
+  /** Optional store port. Defaults to the session-only, non-durable port over the store. */
+  storePort?: PortfolioStorePort;
   securityMaster?: SecurityMaster;
   portfolioId?: string;
 }
 
+function createEmptyPortfolioRecord(portfolioId: string): PortfolioRecord {
+  return {
+    portfolioId,
+    portfolioName: 'Institutional Flagship Portfolio',
+    holdings: [],
+    totalMarketValue: 0,
+    totalHoldingsCount: 0,
+    weightSumPercentage: 0.0,
+    lastUpdated: new Date().toISOString(),
+    provenanceDigest: '',
+    isSaved: false,
+  };
+}
+
 export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
   portfolioStore: initialPortfolioStore,
+  storePort: initialStorePort,
   securityMaster: initialSecurityMaster,
   portfolioId = 'DEFAULT_PORTFOLIO',
 }) => {
   // Store instance (uses passed application-level store or module singleton fallback for Tier-B session continuity)
   const store = useMemo(() => initialPortfolioStore || getDefaultPortfolioStore(), [initialPortfolioStore]);
+
+  // Store port: the UI's authority for reads, analytics and saves. Until a durable
+  // adapter is separately authorized, this is the session-only, non-durable adapter
+  // over the same in-memory store (act np04-g2-portfolio-ui-store-port-2026-10-16-001).
+  const storePort = useMemo(
+    () => initialStorePort || new SessionPortfolioStorePort(store),
+    [initialStorePort, store]
+  );
+
   const securityMaster = useMemo(() => initialSecurityMaster || getGovernedBroadSecurityMaster(), [initialSecurityMaster]);
 
-  // Reactive state for portfolio data
-  const [portfolio, setPortfolio] = useState<PortfolioRecord>(() => {
-    return (
-      store.getPortfolio(portfolioId) || {
-        portfolioId,
-        portfolioName: 'Institutional Flagship Portfolio',
-        holdings: [],
-        totalMarketValue: 0,
-        totalHoldingsCount: 0,
-        weightSumPercentage: 0.0,
-        lastUpdated: new Date().toISOString(),
-        provenanceDigest: '',
-        isSaved: false,
-      }
-    );
-  });
+  // Reactive state for portfolio data, loaded through the store port.
+  const [portfolio, setPortfolio] = useState<PortfolioRecord>(() => createEmptyPortfolioRecord(portfolioId));
 
-  const [analytics, setAnalytics] = useState<PortfolioAnalyticsSummary>(() => {
-    return store.getAnalytics(portfolioId);
-  });
+  const [analytics, setAnalytics] = useState<PortfolioAnalyticsSummary>(() => ({
+    portfolioId,
+    totalMarketValue: 0,
+    holdingsCount: 0,
+    topHoldings: [],
+    sectorAllocation: {},
+    lineageHash: '',
+  }));
+
+  const [loadState, setLoadState] = useState<'LOADING' | 'READY' | 'ERROR'>('LOADING');
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadedOnce, setLoadedOnce] = useState<boolean>(false);
+  const [storeRevision, setStoreRevision] = useState<number | undefined>(undefined);
+  const [revisionConflict, setRevisionConflict] = useState<string | null>(null);
 
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
-  // Authoritative refresh handler reading current state from PortfolioStore
-  const refreshPortfolio = useCallback(() => {
-    const updated = store.getPortfolio(portfolioId);
-    if (updated) {
-      setPortfolio({ ...updated, holdings: [...updated.holdings] });
+  // Authoritative refresh handler reading current state through the store port.
+  const refreshPortfolio = useCallback(async (): Promise<void> => {
+    setLoadState('LOADING');
+    try {
+      const [record, summary, revision] = await Promise.all([
+        storePort.getPortfolio(portfolioId),
+        storePort.getAnalytics(portfolioId),
+        storePort.getRevision(portfolioId),
+      ]);
+      if (record) {
+        setPortfolio({ ...record, holdings: [...record.holdings] });
+      }
+      setAnalytics(summary);
+      setStoreRevision(revision);
+      setLoadError(null);
+      setLoadedOnce(true);
+      setLoadState('READY');
+    } catch (err: unknown) {
+      setLoadError(err instanceof Error ? err.message : String(err));
+      setLoadState('ERROR');
     }
-    setAnalytics(store.getAnalytics(portfolioId));
-    setSuccessToast('Portfolio refreshed from authoritative store.');
+  }, [storePort, portfolioId]);
+
+  useEffect(() => {
+    void refreshPortfolio();
+  }, [refreshPortfolio]);
+
+  const handleRefreshClick = useCallback(() => {
+    void refreshPortfolio();
+    setSuccessToast('Portfolio refreshed from the session store (session-only; not durable).');
     setTimeout(() => {
       setSuccessToast(null);
     }, 3000);
-  }, [store, portfolioId]);
+  }, [refreshPortfolio]);
+
+  const handleRevisionConflict = useCallback((message: string) => {
+    setRevisionConflict(message);
+  }, []);
 
   // Handle successful save from modal: updates workspace and displays toast
   const handleSaveSuccess = useCallback(
     (result: PortfolioSaveResult) => {
-      refreshPortfolio();
+      void refreshPortfolio();
+      setRevisionConflict(null);
       setSuccessToast(
-        `Successfully imported ${result.holdingsSavedCount} holdings into ${result.portfolio.portfolioName}.`
+        `Successfully imported ${result.holdingsSavedCount} holdings into ${result.portfolio.portfolioName} ` +
+          '(session-scoped; not durable).'
       );
       setTimeout(() => {
         setSuccessToast(null);
@@ -83,8 +139,49 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
     [refreshPortfolio]
   );
 
+  const persistenceStatus = useMemo(
+    () =>
+      describePersistenceStatus({
+        isSaved: portfolio.isSaved,
+        durable: storePort.durable,
+        lastUpdated: portfolio.lastUpdated,
+      }),
+    [portfolio.isSaved, portfolio.lastUpdated, storePort.durable]
+  );
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 space-y-6">
+      {/* Pending state: the store port is being read (first load; later refreshes keep the view). */}
+      {loadState === 'LOADING' && !loadedOnce && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex items-center space-x-3 rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-slate-300"
+        >
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-teal-400 border-t-transparent"></span>
+          <span>Loading portfolio state from the store port...</span>
+        </div>
+      )}
+
+      {/* Error state: the port could not be read. */}
+      {loadState === 'ERROR' && (
+        <div
+          role="alert"
+          className="flex flex-col space-y-3 rounded-xl border border-rose-900/70 bg-rose-950/30 px-4 py-4 text-sm"
+        >
+          <span className="font-bold text-rose-200">Portfolio store port unavailable</span>
+          <span className="text-rose-300/80">{loadError || 'The portfolio store port could not be read.'}</span>
+          <button
+            type="button"
+            id="btn-retry-portfolio-load"
+            onClick={handleRefreshClick}
+            className="self-start cursor-pointer rounded-lg border border-rose-700 bg-rose-950/60 px-4 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-900/60"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Toast Notification (Positioned at bottom-right to prevent obscuring workspace header controls) */}
       {successToast && (
         <div
@@ -107,6 +204,26 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
         </div>
       )}
 
+      {/* Revision Conflict Notice (port optimistic concurrency) */}
+      {revisionConflict && (
+        <div
+          role="alert"
+          className="flex items-start justify-between space-x-3 rounded-lg border border-amber-800/60 bg-amber-950/30 px-4 py-3 text-xs text-amber-200"
+        >
+          <span>
+            <strong>Revision conflict:</strong> {revisionConflict}
+          </span>
+          <button
+            type="button"
+            id="btn-dismiss-revision-conflict"
+            onClick={() => setRevisionConflict(null)}
+            className="cursor-pointer rounded border border-amber-700/60 px-2 py-1 text-[11px] font-semibold text-amber-200 hover:bg-amber-900/40"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Surface Header & Navigation */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
@@ -118,7 +235,7 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Institutional Flagship Portfolio • Offline Broker Holdings Ingress &amp; Atomic Persistence
+            Institutional Flagship Portfolio • Offline Broker Holdings Ingress • Session-Scoped Store Port (Not Durable)
           </p>
         </div>
 
@@ -126,7 +243,7 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
           <button
             type="button"
             id="btn-refresh-portfolio"
-            onClick={refreshPortfolio}
+            onClick={handleRefreshClick}
             aria-label="Refresh portfolio data"
             className="cursor-pointer rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors pointer-events-auto shadow-sm"
           >
@@ -174,16 +291,14 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
           <div className="text-base font-bold mt-2 flex items-center space-x-2">
             <span
               className={`h-2.5 w-2.5 rounded-full ${
-                portfolio.isSaved ? 'bg-emerald-400' : 'bg-amber-400'
+                persistenceStatus.tone === 'emerald' ? 'bg-emerald-400' : 'bg-amber-400'
               }`}
             ></span>
-            <span className={portfolio.isSaved ? 'text-emerald-300' : 'text-amber-300'}>
-              {portfolio.isSaved ? 'COMMITTED (Atomic)' : 'EMPTY / INITIAL'}
+            <span className={persistenceStatus.tone === 'emerald' ? 'text-emerald-300' : 'text-amber-300'}>
+              {persistenceStatus.label}
             </span>
           </div>
-          <div className="text-xs text-slate-400 mt-1">
-            {portfolio.isSaved ? `Updated: ${portfolio.lastUpdated.slice(0, 19).replace('T', ' ')}` : 'No writes performed'}
-          </div>
+          <div className="text-xs text-slate-400 mt-1">{persistenceStatus.detail}</div>
         </div>
 
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm hover:border-slate-700 transition-colors">
@@ -266,7 +381,7 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
               <div>
                 <h2 className="text-base font-bold text-white">Constituent Holdings Vector</h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Authoritative holdings vector persisted in governed PortfolioStore
+                  Session-scoped holdings vector held in memory by the store port - not durably persisted
                 </p>
               </div>
               <span className="text-xs font-mono text-slate-400 bg-slate-950 px-2.5 py-1 rounded border border-slate-800">
@@ -345,6 +460,9 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
         onClose={() => setIsImportModalOpen(false)}
         onSaveSuccess={handleSaveSuccess}
         portfolioStore={store}
+        storePort={storePort}
+        expectedRevision={storeRevision}
+        onRevisionConflict={handleRevisionConflict}
         securityMaster={securityMaster}
       />
     </div>

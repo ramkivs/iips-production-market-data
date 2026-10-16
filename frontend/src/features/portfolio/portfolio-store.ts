@@ -70,6 +70,17 @@ export interface PortfolioAnalyticsSummary {
 }
 
 export class PortfolioStore {
+  /**
+   * Durability declaration (act `np04-g2-portfolio-ui-store-port-2026-10-16-001`).
+   *
+   * This store is SESSION-ONLY and NON-DURABLE. Portfolio state lives in the
+   * in-memory map below for the lifetime of the process session and is lost on
+   * reload or restart. No durable write exists in this build; the UI must never
+   * present a save performed here as a durable commit.
+   */
+  public readonly durability = 'SESSION_ONLY' as const;
+  public readonly durable = false as const;
+
   private portfolios: Map<string, PortfolioRecord> = new Map();
 
   constructor() {
