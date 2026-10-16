@@ -82,12 +82,19 @@ approval. It authorizes UI-side dependency inversion only.
 
 | Field | Value |
 |---|---|
-| Approver | `PENDING` |
-| Decision | `PENDING` — one of `APPROVED`, `APPROVED WITH LIMITS`, `DEFERRED`, `REJECTED` |
-| Decision date | `PENDING` |
-| Decision channel | `PENDING` (Program Authority decision relayed in the recording session) |
-| Verbatim decision wording | `PENDING` |
-| Recorded by / recording commit | `PENDING` |
+| Approver | RAMKI / Program Authority (IPD side) |
+| Decision | `APPROVED` — as written (no limits recorded, no scope expansion) |
+| Decision date | 2026-10-16 (Asia/Calcutta) |
+| Decision channel | Arena session decision — Program Authority approval relayed through the operator session |
+| Verbatim decision wording | "APPROVED as written — record and execute steps 1–3" (selected decision option, 2026-10-16) |
+| Recorded by / recording commit | Arena (recording agent) — approval recorded on branch `arena/21c63aef-iips-production-market-data` (PR #8): status line and closing note in `f9a499a`; approval table completed in the commit that follows `8c9ef08` |
+
+**Recording correction (2026-10-16).** The approval decision was taken before any source edit and the
+status line plus closing note were published in `f9a499a`. That commit did **not** include the approval
+table above (a concurrent-edit artifact left it reading `PENDING`), so at implementation commit `8c9ef08`
+the published act was internally inconsistent — it asserted approval while the table was incomplete.
+The table is completed by the commit immediately following `8c9ef08`. The decision itself, its date, its
+channel and its verbatim wording are unchanged, and the executed scope is exactly §A.3 under §A.4.
 
 **Effect of approval:** only the bounded scope of §A.3 under the requirements of §A.4, executed on the
 existing branch and PR #8. **No approval of this act may be inferred from:** the design-only Option A
