@@ -7,7 +7,7 @@
 | **Repository / ref** | `ramkivs/iips-production-market-data` — branch `arena/21c63aef-iips-production-market-data`, **PR #8** (existing authorized workstream; no competing PR) |
 | **Verified live state at this record** | PR #8 `OPEN`, head `c51f5000666775fa87477c971501392b4e494d52` (local == remote), base `main@70b24f0`, 10 files, +2645/−62, `MERGEABLE`/`CLEAN`, 0 comments, 0 reviews — prior commit re-verified before this record was written |
 | **Evidence provenance** | The laptop evidence in §3 is **Program-Authority-supplied and transcribed** (package `G2-GateV-20261016-191957.zip`); the recording agent has **no access to the laptop's local files** and independently measured none of it. §4's runtime check was performed by the recording agent against the pinned upstream sources and is marked as such. |
-| **Status** | **PA WAIVERS RECORDED. GATE V REASSESSED — REMAINS OPEN (V-P partially satisfied). NO CONTRACT ACCEPTANCE. NO IMPLEMENTATION AUTHORITY.** |
+| **Status** | **PA WAIVERS RECORDED. GATE V REASSESSED — REMAINS OPEN (V-P partially satisfied). NO CONTRACT ACCEPTANCE. NO IMPLEMENTATION AUTHORITY.** *(As first published. **Superseded in part by §9 — final four-waiver addendum: V-P disposition is now CLOSED; Gate V's V-E phase remains outstanding.**)* |
 
 ---
 
@@ -139,4 +139,84 @@ The PA waivers, and this record, do **not**: accept the proposed IPC security co
 
 ---
 
-*Recording agent: Arena — reconciliation and recording only; the laptop evidence is Program-Authority-supplied transcription, and §4 is the only measurement performed by the agent (source-level, upstream-pinned). Program Authority: Ramki. **Gate V is not closed by this record**, the contract is not accepted, and no implementation, provisioning, write, route or admission authority is created.*
+*Recording agent: Arena — reconciliation and recording only; the laptop evidence is Program-Authority-supplied transcription, and §4 is the only measurement performed by the agent (source-level, upstream-pinned). Program Authority: Ramki. ## 9. ADDENDUM (2026-10-16, later the same day) — FINAL FOUR-WAIVER RECONCILIATION AND V-P DISPOSITION
+
+**Provenance.** The Program Authority decision and the additional V-P attempt evidence below are **PA-supplied and transcribed** into this record. The recording agent has **no access to the laptop's local files** and measured none of the laptop output; §9.2's error-code meanings and the F-5 corroboration are source-level checks by the agent (cited), not measurements.
+
+### 9.1 The four waivers (recorded exactly)
+
+| # | Measurement | Disposition |
+|---|---|---|
+| 1 | **V-1 — ACL/SDDL capture** | **NOT REQUIRED — PA-WAIVED.** |
+| 2 | **V-4 — pipe collision and re-bind testing** | **NOT REQUIRED — PA-WAIVED.** |
+| 3 | Second-account access test | **NOT REQUIRED — PA-WAIVED.** |
+| 4 | Remote-machine access test | **NOT REQUIRED — PA-WAIVED.** |
+
+All four are **deliberate Program Authority waivers**. None may be recorded as **PASS, FAIL, or BLOCKED**; none is pending work; none may be re-run; none may be described as technical proof that the underlying property has been demonstrated.
+
+### 9.2 Additional V-P attempt evidence (PA-supplied, transcribed)
+
+**A fresh disposable probe started successfully:** pipe `\.\pipe\iips-g2-gatev-a5026495eab64286bcec87ac63b31c39`, **PID 468**, **Node v24.14.0**, start **2026-10-16T16:23:36.836Z**; the pipe **appeared in the local named-pipe inventory**. (Measured: the endpoint existed on this host and was locally enumerable.)
+
+**V-1 attempts — no permissions were changed by either attempt:**
+1. `GetNamedSecurityInfo` returned **error 87, ERROR_INVALID_PARAMETER**; **no descriptor was retrieved**.
+2. PowerShell `Get-Acl` returned **"Method failed with unexpected error code 231."** Error 231 is documented as **ERROR_PIPE_BUSY — "All pipe instances are busy"**: Microsoft, *Named Pipe Client* — *"If the pipe exists but all of its instances are busy, CreateFile returns INVALID_HANDLE_VALUE and GetLastError returns ERROR_PIPE_BUSY."* The failure therefore occurred at the **open** step; it is **not** a judgement about the ACL's contents.
+3. The precise cause of either error was **not diagnosed**, and with the waiver **no further attempt is required or made**.
+4. **Consequence: the effective ACL/SDDL was NOT captured.**
+
+**V-4:** collision and abrupt-termination/re-bind behaviour was **not tested**.
+
+**Second-account / remote:** not performed — only one Windows account exists on the laptop and no separate remote machine is available.
+
+**Never tested, at any point:** a production application endpoint.
+
+*Source-level corroboration recorded with this pass (not a measurement): the same Microsoft page states that **"For a duplex pipe, the client can specify read, write, or read/write access"**, independently corroborating **F-5**.*
+
+### 9.3 Measured results vs unverified properties (kept strictly separate)
+
+| Property | Status | Basis |
+|---|---|---|
+| Same-account connectivity to a **disposable probe** | **MEASURED — succeeded** | Initial test: `CONNECT_SUCCEEDED`; server `CLIENT_CONNECTED` / `CLIENT_CLOSED`; client sent **no application data** |
+| Probe exists / is locally enumerable on this host | **MEASURED — succeeded** | §9.2 second attempt |
+| **Effective pipe ACL/SDDL** | **NOT CAPTURED** (attempts failed: 87, 231) — now **PA-WAIVED** | §9.2 |
+| **Cross-account isolation** | **NOT DEMONSTRATED** — **PA-WAIVED** | PA-1; no second account exists |
+| **Remote isolation** | **NOT DEMONSTRATED** — **PA-WAIVED** | PA-2; no remote machine exists |
+| **Lifecycle fail-closed** (collision; abrupt termination/re-bind) | **NOT TESTED** — now **PA-WAIVED** | §9.2 |
+| Production endpoint security, authorization, durable write | **NOT TESTED** | Endpoint does not exist and is not authorized |
+| Application controls **C5.1 / C5.3 / C6** | **NOT TESTED** — not probe-measurable | Gate C items |
+
+### 9.4 Gate V reassessment with all four waivers in force
+
+**Not kept open because of the waived measurements:** V-1, V-2, V-3 and V-4 are explicitly **NOT REQUIRED — PA-WAIVED** and are removed from the open set.
+**Not declared satisfied by waiver alone:** closure by waiver is *not* technical proof; §9.3 remains the authoritative statement of what is unverified.
+
+| V-P criterion | Disposition |
+|---|---|
+| **V-5** version inventory (OS/build/arch/account/elevation, Node path + version, endpoint-name format; runtime deviation reconciled) | **SATISFIED — evidence** (§3.2/§3.3, §4) |
+| **V-6** same-account residual | **PARTIAL** — connect demonstrated; the *send* half was not measured. V-6 is an item introduced by the trust-boundary assessment §8 for documenting the accepted residual; it is **corroborative, not a §9 criterion**, and is not a blocker |
+| **V-1, V-2, V-3, V-4** | **NOT REQUIRED — PA-WAIVED** |
+
+**V-P DISPOSITION: CLOSED — closed by waiver where unmeasured, satisfied by evidence where measurable.** Rationale: every V-P criterion is now either **evidence-backed** (V-5) or **explicitly waived by the Program Authority** (V-1–V-4); no criterion remains genuinely open, and no new test or gate is invented to prolong the phase.
+
+**Qualifier that must travel with this disposition (do not drop it).** The waived properties — effective ACL, cross-account isolation, remote isolation, and lifecycle fail-closed behaviour — remain **technically unverified**. F-2/F-3/F-4/F-5 remain **source-verified platform facts**, not host measurements. The contract's §4.3/§9 statements must continue to be read as **unmeasured expectations**, and the contract remains **PROPOSAL ONLY**.
+
+### 9.5 Future V-E (production-endpoint) requirements — separate from current V-P work
+
+These were **never among the four waived measurements** and cannot be probe-measured; they require the real endpoint and separate authority:
+
+1. **C5.1** — no byte emitted before a valid, authorized request (gate C, Q9).
+2. **C5.3 / C6** — fail-closed startup with no fallback, shutdown behaviour, and no owner disclosure (gate C, Q2/Q4).
+3. **Q1–Q11** qualification items that depend on the realized endpoint (claim-refusal matrix, isolation behaviour, revision/lifecycle, durability, no parallel store, drift check).
+4. Where a V-E item would have repeated one of the four waived measurements, **the waiver governs** — nothing here reopens a waived measurement. If the Program Authority later intends the waivers to be narrower for the production endpoint, that scoping is theirs to record.
+
+### 9.6 Authority boundaries — unchanged by these waivers
+
+The waivers do **not**: accept the IPC security contract; authorize implementation of an endpoint; authorize provisioning (tenant administration remains **NOT AUTHORIZED**); amend IRR DP-1; grant **P-6**; qualify **P-8**; authorize route admission; authorize durable integration or portfolio writes; or admit/promote the off-main G24 lineage. **IRR's HTTP `503 owner-context-unavailable` fence and DP-2 Option 2F remain in force**, and **PR #8 is not merged**.
+
+### 9.7 Next genuinely required action
+
+**None in the V-P phase, and none requiring laptop work.** The next action is a **decision**, not a measurement: the IPD security-contract authority's disposition of the rev-2 §13 decision request (§13 requires gate V; the V-P portion is now dispositioned as above, and the V-E items are named in §9.5), followed — only if accepted — by gate A provisioning → gate B implementation authority → gate C qualification (incl. §9.5) → gate D admission → gate E write policy. On the IRR side, the **DP-1 amendment** remains a separate act.
+
+---
+
+**Gate V was not closed by this record as first published** — see §9 below for the final disposition after the four PA waivers. The contract is not accepted, and no implementation, provisioning, write, route or admission authority is created.*

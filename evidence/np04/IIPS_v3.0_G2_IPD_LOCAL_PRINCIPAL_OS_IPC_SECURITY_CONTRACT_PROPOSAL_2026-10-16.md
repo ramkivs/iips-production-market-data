@@ -373,6 +373,19 @@ A V-P result is a legitimate input to gate V but **closes nothing by itself**; o
 
 **PA waiver note (2026-10-16).** The Program Authority has decided that **V-2 (remote-machine access test)** and **V-3 (second-account access test)** are **NOT REQUIRED — PA-WAIVED**: only **one** Windows user account exists on the laptop and **no separate remote machine** is available. Those two rows are therefore **not pending and not failed**, and must never be recorded as PASS/FAIL/BLOCKED. The waivers do **not** demonstrate remote or cross-account isolation, and they change **no** clause and **no** other gate. **V-1 and V-4 remain outstanding** local criteria (they need neither waived resource), together with the whole V-E phase. Evidence: `IIPS-V3-G2-GATE-V-EVIDENCE-RECONCILIATION-AND-PA-WAIVER-2026-10-16-01`.
 
+**Superseding waiver note (2026-10-16, later the same day).** The Program Authority has now also
+waived **V-1 (ACL/SDDL capture)** and **V-4 (pipe collision and re-bind testing)** as **NOT REQUIRED
+— PA-WAIVED** (the V-1 capture attempts on the disposable probe failed — `GetNamedSecurityInfo`
+error 87 and `Get-Acl` error 231 — and neither error was diagnosed; with the waiver no further
+attempt is made). **All four Gate V measurements are therefore waived**: V-1, V-2, V-3 and V-4. The
+**V-P platform phase is dispositioned CLOSED** — closed by waiver where unmeasured, satisfied by
+evidence where measurable (V-5) — and **V-1/V-4 must no longer be read as pending**. This is **not**
+a demonstration of ACL structure, cross-account isolation, remote isolation or lifecycle fail-closed
+behaviour: those remain **technically unverified**, F-1…F-9 remain source-verified platform facts
+rather than host measurements, and this changes **no** clause and **no** other gate. The V-E phase
+remains as described above and in the reconciliation record §9.5. Evidence:
+`IIPS-V3-G2-GATE-V-EVIDENCE-RECONCILIATION-AND-PA-WAIVER-2026-10-16-01` §9.
+
 The deployment runtime's endpoint permissions **have not been measured on the operator's laptop** in this work, and this proposal therefore does **not** claim the design works on Windows. The following must be executed and published **before** any implementation-authority act is exercised, and before any claim of operability:
 
 | Gate | Procedure (run on the operator's laptop, ordinary user, no elevation) | Pass criterion |
