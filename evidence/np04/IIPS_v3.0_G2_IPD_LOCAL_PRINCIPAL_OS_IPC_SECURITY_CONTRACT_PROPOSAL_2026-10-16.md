@@ -5,7 +5,8 @@
 | Record ID | `IIPS-V3-G2-IPD-LOCAL-PRINCIPAL-OS-IPC-SECURITY-CONTRACT-PROPOSAL-2026-10-16-01` |
 | Revision | **2** (2026-10-16, Asia/Calcutta) — scope-refined: one user, one personal laptop, non-production. Supersedes the revision-1 framing published in IPD PR #8; revision-1 analysis is retained wherever it remains valid. |
 | Record type | **IPD-side security-contract proposal** — decision-ready input for one explicit IPD security-authority act. **Not** an authority act, **not** a contract amendment, **not** effective. |
-| Status | **PROPOSED — NOT APPROVED · NOT EFFECTIVE · NOT IMPLEMENTED · NOT QUALIFIED · NOT ADMITTED · NO IMPLEMENTATION AUTHORITY** |
+| Status | **PROPOSED — NOT APPROVED · NOT EFFECTIVE · NOT IMPLEMENTED · NOT QUALIFIED · NOT ADMITTED · NO IMPLEMENTATION AUTHORITY** *(as first published; **superseded by the acceptance act below**)* |
+| **Acceptance act (2026-10-16)** | **ACCEPTED WITH CHANGES** by Ramki, Program Authority acting as the IPD security-contract authority — decision record `IIPS-V3-G2-IPD-SECURITY-CONTRACT-ACCEPTANCE-DECISION-2026-10-16-01`; accepted text = revision-2 file at blob `cab04b6f94618c9afad1440882ebf63437fdf6f8`. Acceptance is scoped to one user / one personal laptop / non-production, is **not** a demonstration that the boundary works on the host, and grants **no** provisioning, implementation, qualification, successful-write, route or admission authority. || Status | **PROPOSED — NOT APPROVED · NOT EFFECTIVE · NOT IMPLEMENTED · NOT QUALIFIED · NOT ADMITTED · NO IMPLEMENTATION AUTHORITY** |
 | Requested decision authority | **Ramki — Program Authority and IPD repository owner/admin, acting in the IPD security-contract capacity** (§13) |
 | Authoritative repository for the proposed contract | `ramkivs/iips-production-market-data` (IPD) |
 | Upstream record | IRR `ramkivs/iips-review-recovered` PR **#117** — `docs/integration/IIPS_v3.0_G2_SINGLE_USER_LOCAL_PRINCIPAL_SECURITY_CONTRACT_DECISION_REQUEST_2026-10-16.md` (Recorded Program Authority direction: Option A in principle, **design only**, same-host OS-protected local IPC) |
@@ -398,6 +399,15 @@ The deployment runtime's endpoint permissions **have not been measured on the op
 
 **Failure disposition.** If V-1 shows write access for any identity other than the operator, Administrators, SYSTEM, or CREATOR OWNER, or if V-2 shows remote invocation capability, then **this design does not satisfy `L-IPC-1` on Windows as written**. The correct disposition is then: (a) a host-configuration mitigation that can be evidenced (e.g. disabling inbound file-and-printer sharing, single-account host), or (b) rejection of the Windows-Node variant — **not** a compensating workaround invented at implementation time, and **not** a native addon added without a separate decision (§11, A8).
 
+**Failure-disposition scope (dated note, 2026-10-16 — acceptance act).** The failure disposition
+above may fire **only** on **V-E (production-endpoint) evidence**. Because **V-1 and V-2 are `NOT
+REQUIRED — PA-WAIVED`**, it **cannot** be used to reopen the four waived V-P measurements (V-1
+ACL/SDDL capture, V-4 collision/re-bind, second-account, remote-machine), and the V-P phase is
+**CLOSED** (V-5 satisfied by evidence). Where a V-E item would repeat a waived measurement, **the
+waiver governs** unless the Program Authority records narrower scoping for the production endpoint.
+See `IIPS-V3-G2-IPD-SECURITY-CONTRACT-ACCEPTANCE-DECISION-2026-10-16-01` §4.4 and §6, and
+`IIPS-V3-G2-GATE-V-EVIDENCE-RECONCILIATION-AND-PA-WAIVER-2026-10-16-01` §9.
+
 **Host preconditions (part of the contract's assumptions, not new infrastructure).** One interactive user in scope; inbound SMB/file-and-printer sharing off; the laptop's browser surface loopback-bound (C8). These are local settings on the operator's own machine, verifiable by the operator, with no service, domain, or enterprise component.
 
 ---
@@ -457,6 +467,24 @@ This proposal and any acceptance of `L-IPC-1` do **not**: authorize implementati
 > If accepted, I amend **only** the G24 identity-acquisition clause for this one deployment — the credential position becomes "accepted on the IPD-owned, single-principal, same-host IPC endpoint" — with the `applicationUserId` model, external-identity mapping, tenant membership (exactly one `ACTIVE` row), the authorization triple, revision checks, canonical-identity validation, and DP-2 Option 2F **unchanged**; I accept the two narrow additions A-2 (binding record) and A-3 (local audit line).
 > I record that the application does **not** enforce the endpoint's OS permissions on Windows, that another process running as the operator's own account (including malware) is **outside** the protection boundary, and that gate V (§9) must be executed and published before any operability claim. I grant **no** provisioning, implementation, qualification, successful-write, route, or admission authority by this act.
 
+**DECIDED (2026-10-16) — `ACCEPT WITH CHANGES`.** The Program Authority accepted this proposal
+(revision 2, clauses C1–C12) for one user / one personal laptop / non-production, subject to five
+recorded change groups, in the durable IPD-side decision record
+`IIPS-V3-G2-IPD-SECURITY-CONTRACT-ACCEPTANCE-DECISION-2026-10-16-01`. The requested decision above
+is therefore **rendered, not pending**. Acceptance: (a) amends only the G24 identity-acquisition
+clause — credential position = "Accepted on the IPD-owned, single-principal, same-host IPC
+endpoint", identity from the provisioned binding, never a wire field; (b) accepts **A-2** and
+**A-3**; (c) preserves the `applicationUserId` model, external-identity mapping,
+exactly-one-`ACTIVE` membership, the authorization triple, revision checks, canonical-identity
+validation and **DP-2 Option 2F** unchanged; (d) records that the application does **not** enforce
+the endpoint's OS permissions on Windows and that a process running as the operator's own account
+(including malware) is **outside** the protection boundary; (e) preserves **C5.1/Q9** as a
+**mandatory** qualification requirement and claims **no** security of a future production endpoint
+from the disposable probe; and (f) grants **no** provisioning, implementation, qualification,
+successful-write, route or admission authority, and does **not** merge PR #8. A **V-P** result still
+closes nothing about the production endpoint; the §10/Q-list items that depend on the realized
+endpoint remain **V-E** requirements.
+
 **Interdependent IRR-side act (separately required, not inferred):** an explicit IRR-side amendment to the DP-1 Option 1A′ identity/credential trust clauses, preserving DP-2 Option 2F, H-18 scope, and the 503 fence. The same human may act in both capacities; each act must state its capacity and its repository/ref.
 
 ---
@@ -465,6 +493,12 @@ This proposal and any acceptance of `L-IPC-1` do **not**: authorize implementati
 
 | Gate | Content | Authority |
 |---|---|---|
+**Dated note (2026-10-16 — acceptance act).** Acceptance of the contract opened **none** of these
+gates: every row below remains a **separate act** and **none is granted**. Gate A (provisioning)
+remains **NOT AUTHORIZED**; gate B must still name an IPD-`main` implementation basis, and the
+off-main G24 lineage remains **not** a base. See
+`IIPS-V3-G2-IPD-SECURITY-CONTRACT-ACCEPTANCE-DECISION-2026-10-16-01` §7/§8.
+
 | **A — Local provisioning** (one-time, offline, operator-run) | Create one `application_user`, one opaque personal tenant, exactly one `ACTIVE` membership, and the principal binding; define revocation; add the A-3 audit line. Runs on the laptop, against the local store; no network, no admin, no enterprise component | Separate explicit IPD provisioning act (tenant provisioning is currently **NOT AUTHORIZED**, NP04-G32 §5) |
 | **B — Implementation authority** (local, single-user) | Name the exact IPD and IRR files/tests, the mechanism, the C5 rules, and the exclusions; state whether an IPD-`main` implementation basis exists or must be created | Separate IPD and IRR implementation-authority acts (the off-main lineage is **not** a base) |
 | **C — Qualification** | Execute §10 on the laptop; publish raw evidence including gate V | Separate qualification authority |
@@ -477,12 +511,22 @@ This proposal and any acceptance of `L-IPC-1` do **not**: authorize implementati
 
 | ID | Item |
 |---|---|
-| **U-1** | Gate V results on the actual laptop (endpoint DACL, remote reachability, second-user test, version inventory) — the single most important open item |
+| **U-1** | Gate V results on the actual laptop (endpoint DACL, remote reachability, second-user test, version inventory) — the single most important open item. **(Superseded 2026-10-16 — see the dated note below this table.)** || **U-1** | Gate V results on the actual laptop (endpoint DACL, remote reachability, second-user test, version inventory) — the single most important open item |
 | **U-2** | Whether the operator's host configuration (single account, inbound sharing off) is confirmed and recorded |
 | **U-3** | Whether peer process identity is obtainable in the in-scope toolchain (currently: no — E1; Windows equivalent not exposed) |
 | **U-4** | The tenant value rule for the one personal row (opaque, act-chosen; no value is invented here) |
 | **U-5** | Whether the operator accepts the same-user (T-1) residual explicitly, as required by §8.4 |
 | **U-6** | Whether A-2's binding record shape is accepted as proposed |
+
+**Dated note on §15 (2026-10-16 — acceptance act).** **U-1 is reconciled and no longer reads as a
+blanket open item.** The **V-P** platform phase is **CLOSED** (V-5 satisfied by evidence; **V-1
+ACL/SDDL capture**, **V-4 collision/re-bind**, **second-account** and **remote-machine** all `NOT
+REQUIRED — PA-WAIVED`). The waived properties — effective ACL/SDDL, cross-account isolation, remote
+isolation and lifecycle fail-closed behaviour — remain **technically unverified**. The parts of U-1
+that concern the **realized endpoint** are **V-E** requirements, kept distinct from the V-P waivers
+and listed in `IIPS-V3-G2-IPD-SECURITY-CONTRACT-ACCEPTANCE-DECISION-2026-10-16-01` §6. **U-5**
+(same-user residual) and **U-6** (A-2 shape) are resolved by the acceptance act; **U-2** (host
+configuration) and **U-4** (tenant value rule) remain as gate A/C details, not acceptance blockers.
 
 ---
 
