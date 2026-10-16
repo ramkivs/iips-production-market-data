@@ -34,6 +34,11 @@ authority act of any kind. **Nothing here may be described as decided until the 
 modified; no `application_user`, tenant, membership, or binding record exists; no endpoint/resolver
 code; no IRR modification; no ref promoted, merged, cherry-picked, or re-pinned.
 
+**Revision note (2026-10-16, this publication):** the basis field has been refined to the **exact
+accepted commit object** (§2, §2.1 — superseding the earlier object-choice framing), §1.8's wording
+was clarified to read as a **proposal** rather than a selection, and §3/§5 were aligned. **All eight
+fields remain `PROPOSED`; nothing is rendered.**
+
 ---
 
 ## 1. THE EIGHT PROPOSED DECISIONS (each `PROPOSED` — PA rendering required)
@@ -115,9 +120,9 @@ cherry-pick, or re-pinning of the off-main G24 lineage; merging PR #8 or PR #118
 > Consequence: the **PR #118 merge decision is a separate, additional prerequisite**; Gate A's
 > approval does not merge it, and this record does not merge it.
 
-**Reference:** request **§4.2.1** — this proposed field **selects reading (B)**, which is expressly
-*not* selected by the request itself; the request's amended-§9 field 8 remains open until the PA
-renders this field.
+**Reference:** request **§4.2.1** — this field is **proposed** to select reading (B) for execution
+ordering; the request expressly does *not* select a reading, and the request's amended-§9 field 8
+remains open until the PA renders the decision.
 
 > **Note for the PA:** choosing reading **(A)** instead would make publication sufficient and remove
 > this precondition from execution timing; the draft does not decide it — it proposes **(B)** as
@@ -127,7 +132,14 @@ renders this field.
 
 ## 2. EXECUTION BASIS — VERIFIED (read-only, live remote evidence)
 
-**Proposed basis:** `arena/01a0e6d9-iips-production-market-data`.
+**Proposed basis (for PA rendering — §8.1 field 3 / §9 item 3):** the **exact accepted commit
+object** `6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4` (tree
+`eb07ea36059c6e2d3f1b6ff9afb8e3fb0c562cc5`), carried for the executed record at ref
+`refs/heads/arena/01a0f308-iips-production-market-data` — **commit identity, not tree identity**
+(§2.1).
+
+**For completeness, the designated promotion target ref** — its tip is a **descendant** of the
+proposed basis and is **not** the basis:
 
 | Property | Verified value |
 |---|---|
@@ -151,25 +163,41 @@ renders this field.
 | Promotion executed | Authorized **fast-forward** `0dab122..6828155` into this ref, reported and independently verified in the NP04-PROMOTION-EXEC gate; no force, no merge commit, no new object |
 | Post-promotion acceptance | `NP04-POST-PROMOTION-ACCEPTANCE-ACT.md`, blob `f4e671555476…` — **`NP04 POST-PROMOTION ACCEPTANCE = ACCEPTED`**, bound to `6828155…` / tree `eb07ea36…`, one-time, state-scoped, non-transferable (governance branch only; not resident on the target branch) |
 
-**Identity and authorization: ESTABLISHED.** The ref is the accepted NP-04 integration target and
-its tree is identity-equal to the accepted lineage tree.
+**Authorization: ESTABLISHED.** The target ref is the designated NP-04 promotion target, and the
+accepted NP-04 lineage object `6828155…` is its accepted state (and an ancestor of its current tip).
+**Tree identity** to the accepted lineage tree is established (`eb07ea36…` = `eb07ea36…`); **commit
+identity** with the accepted object holds for `6828155…` only, **not** for the tip (§2.1).
 
-### 2.1 Unresolved field (stated, not decided) — basis *object* choice
+### 2.1 Basis disposition (PROPOSED — exact accepted object; no conflict found)
 
-The NP-04 post-promotion acceptance is bound to the **exact object** `6828155…` / tree `eb07ea36…`.
-The basis ref's **current tip is a later object** (`c1b955b…`) whose **tree is identical** and whose
-two intervening commits are docs-only (add + revert of the superseded `docs/` proposal, with the
-G-2 workstream now living on PR #8). Both readings are factually available:
+**Proposed:** the execution basis is the **exact accepted commit object**
+`6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4` (tree `eb07ea36059c6e2d3f1b6ff9afb8e3fb0c562cc5`),
+carried for the executed record at ref `refs/heads/arena/01a0f308-iips-production-market-data`
+(verified live: that ref's current tip **is** the accepted object; the same object is also the
+accepted state of the designated promotion target `arena/01a0e6d9-…` **at** that SHA).
 
-| Reading | Basis used for execution | Property |
-|---|---|---|
-| **(i)** branch tip | `c1b955b42748…` (tree `eb07ea36…`) | accepted **tree**; two docs-only commits beyond the accepted object |
-| **(ii)** accepted object | `6828155ec6…` (tree `eb07ea36…`), reachable via `arena/01a0f308-…` | **exactly** the accepted object and tree |
+**Commit identity vs tree identity (kept distinct).** The proposed basis is identified by its
+**commit object SHA**. The target ref's current tip is a **different commit object**,
+`c1b955b427486dbce6d6a159a448065b9db45dc9` (+2 docs-only descendants: `f7513943` add / `c1b955b`
+revert of the superseded `docs/` proposal → net tree change 0). Its **tree is identical**
+(`eb07ea36…`), but an identical tree is **not** Git object identity and the descendant is **not**
+the accepted object:
 
-**This draft does not choose between them.** It proposes the designated branch
-(`arena/01a0e6d9-…`) as instructed, and flags the object-level choice as an unresolved field for the
-PA's rendering (see §4 item 2). No ref is promoted, merged, cherry-picked, or re-pinned by this
-draft, and the contract's prohibition on promoting the off-main lineage is unchanged.
+> Acceptance act §3: *"No other SHA, tree, branch tip, descendant, or later mutation is accepted by
+> this act."* — and §4: *"It does not extend to any descendant commit, any other branch, any later
+> mutation of the target…"*
+
+**No conflict requiring resolution was found.** The acceptance binds the accepted state as the
+target branch **at** `6828155…` (Target SHA = `6828155…`; Accepted implementation SHA =
+`6828155…`), and the governing request itself (§3.2 item 2) names the durable-store basis as the
+off-main lineage `arena/01a0f308-…` @ `6828155…` (tree `eb07ea36…`). Designating the exact accepted
+object is therefore consistent with both records, and **no new authority act is required for the
+designation beyond Gate A's approval**; the earlier draft's object-choice field is superseded by
+this proposal. The designation nevertheless remains a PA field (§8.1 field 3 / §9 item 3) and is
+**not rendered here**.
+
+No ref is promoted, merged, cherry-picked, or re-pinned by this draft, and the contract's
+prohibition on promoting the off-main lineage is unchanged.
 
 ---
 
@@ -177,9 +205,10 @@ draft, and the contract's prohibition on promoting the off-main lineage is uncha
 
 The proposed disposition is **APPROVE WITH CHANGES**; the changes are:
 
-1. **Execution basis designated:** `refs/heads/arena/01a0e6d9-iips-production-market-data`
-   @ `c1b955b427486dbce6d6a159a448065b9db45dc9` (tree `eb07ea36059c6e2d3f1b6ff9afb8e3fb0c562cc5`) —
-   subject to the unresolved basis-object field (§2.1).
+1. **Execution basis designated:** the **exact accepted commit object**
+   `6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4` (tree `eb07ea36059c6e2d3f1b6ff9afb8e3fb0c562cc5`),
+   carried at `refs/heads/arena/01a0f308-iips-production-market-data` — commit identity, not tree
+   identity; the descendant tip `c1b955b…` is **not** designated (§2.1).
 2. **DP-1 ordering precondition:** reading **(B)** — Gate A execution may not begin until the IRR
    DP-1 amendment is **effective on IRR `main` and independently verified** (§1.8).
 3. **All other proposed fields** (§1.2–§1.7) are confirmed as proposed.
@@ -207,8 +236,11 @@ The proposed disposition is **APPROVE WITH CHANGES**; the changes are:
 
 1. **PA rendering** — approve-as-proposed / amend / reject / defer, with the PA's exact wording,
    date, and capacity statement. *(Required; nothing is effective without it.)*
-2. **Basis object choice** (§2.1) — branch tip `c1b955b…` (tree-identical, +2 docs-only commits) vs
-   the exact accepted object `6828155…`.
+2. **Basis field (proposed, not decided)** — the draft **proposes** the exact accepted object
+   `6828155…` at `arena/01a0f308-…` (§2.1); the designation itself remains a PA field (§8.1 field 3
+   / §9 item 3). No unresolved conflict was found: the acceptance binds the accepted state **at**
+   `6828155…` and expressly does not extend to descendants, so the descendant tip `c1b955b…` is not
+   proposed.
 3. **DP-1 alternative** — the draft proposes reading **(B)** (§1.8); reading **(A)** remains
    available to the PA and would remove the `main`-effectiveness precondition.
 4. **Concrete identifier values** — none exist and none are invented; `t-<uuidv4>` and `ep-<uuidv4>`
@@ -232,7 +264,7 @@ The proposed disposition is **APPROVE WITH CHANGES**; the changes are:
 | Refs promoted, merged, cherry-picked, re-pinned, or changed | **NO** |
 | Gates B/C/D/E advanced; P-6/P-8 granted | **NO** |
 | New controls invented; contract semantics changed | **NO** |
-| New artefacts | exactly one — this draft |
+| New artefacts | exactly one — this draft (revised in place; no additional artefact) |
 
 **Recording attestation:** Prepared by Arena as **Recording Agent** only, from the operating
 session's explicit instruction recording the **proposed** decisions. This draft **renders no
