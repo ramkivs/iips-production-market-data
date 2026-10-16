@@ -1,40 +1,44 @@
-# IIPS v3.0 — G-2: IPD-Side Security-Contract Proposal — Single-User Local Principal over OS-Protected Same-Host IPC
+# IIPS v3.0 — G-2: IPD-Side Security-Contract Proposal — Single-User Local Principal over Same-Host IPC (Personal-Laptop Scope)
 
 | Field | Value |
 |---|---|
 | Record ID | `IIPS-V3-G2-IPD-LOCAL-PRINCIPAL-OS-IPC-SECURITY-CONTRACT-PROPOSAL-2026-10-16-01` |
-| Record type | **IPD-side security-contract proposal** — decision-ready input for an explicit security-authority act. **Not** an authority act, **not** a contract amendment, **not** effective. |
+| Revision | **2** (2026-10-16, Asia/Calcutta) — scope-refined: one user, one personal laptop, non-production. Supersedes the revision-1 framing published in IPD PR #8; revision-1 analysis is retained wherever it remains valid. |
+| Record type | **IPD-side security-contract proposal** — decision-ready input for one explicit IPD security-authority act. **Not** an authority act, **not** a contract amendment, **not** effective. |
 | Status | **PROPOSED — NOT APPROVED · NOT EFFECTIVE · NOT IMPLEMENTED · NOT QUALIFIED · NOT ADMITTED · NO IMPLEMENTATION AUTHORITY** |
-| Date | 2026-10-16 (Asia/Calcutta) |
-| Requested decision authority | **Ramki — Program Authority and IPD repository owner/admin, acting in the IPD security-contract capacity** (exact act and clause scope in §14) |
+| Requested decision authority | **Ramki — Program Authority and IPD repository owner/admin, acting in the IPD security-contract capacity** (§13) |
 | Authoritative repository for the proposed contract | `ramkivs/iips-production-market-data` (IPD) |
-| Cross-repository dependency (upstream request and recorded Program Authority direction) | IRR `ramkivs/iips-review-recovered` PR **#117** — `docs/integration/IIPS_v3.0_G2_SINGLE_USER_LOCAL_PRINCIPAL_SECURITY_CONTRACT_DECISION_REQUEST_2026-10-16.md` (open, mergeable, CI pass; does **not** amend the IPD contract) |
-| Baselines inspected for this proposal | IPD `main@70b24f029842a7e9b7f615e4d9df7376fd4ff817`; IPD G24 reference lineage (off-main, evidence only) `arena/01a0e6d9-iips-production-market-data@6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4`; IRR `main@eb4bf820c62eb3e2f5c628a95d59c8f967e3f629` |
-| Scope | One single-user, personal-use, non-production deployment boundary on the operator's own host. Production is out of scope. |
-| Placement rationale | `evidence/` is IPD's established governance/decision-record root (`evidence/np04/…`, `evidence/d114/…`, `evidence/target-shell-integration/…`); `np04` is the IPD-side scope that owns the G22–G32 chain containing G24. This file is **new**; it modifies no existing artifact and touches no implementation, test, dependency, schema, or runtime surface. |
+| Upstream record | IRR `ramkivs/iips-review-recovered` PR **#117** — `docs/integration/IIPS_v3.0_G2_SINGLE_USER_LOCAL_PRINCIPAL_SECURITY_CONTRACT_DECISION_REQUEST_2026-10-16.md` (Recorded Program Authority direction: Option A in principle, **design only**, same-host OS-protected local IPC) |
+| Publication vehicle | IPD PR **#8** (this same file; no competing proposal is created) |
+| Baselines inspected | IPD `main@70b24f029842a7e9b7f615e4d9df7376fd4ff817`; IPD G24 lineage (off-main, evidence only) `arena/01a0e6d9-iips-production-market-data@6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4`; IRR `main@eb4bf820c62eb3e2f5c628a95d59c8f967e3f629` |
+| Deployment scope | One operator, one personal laptop, one OS account, non-production. Production is out of scope. |
 
-**Evidence classes used throughout.** **[V]** verified — reproducible from the cited path and ref. **[P]** proposed design — not implemented, not validated, creates no authority. **[U]** unresolved assumption / unvalidated fact — listed again in §16.
+**Revision-2 change summary (what this revision does differently).** (1) The deployment scope is narrowed to one user on one personal laptop and the enterprise-oriented scaffolding of revision 1 (multi-gate provisioning programme, cross-system audit, dedicated service-account alternative as a live option) is removed or demoted. (2) The **Windows named-pipe endpoint-permission reality is now verified from primary sources** (libuv source, Microsoft documentation, Node documentation/source), and the proposal **no longer claims that the application restricts the endpoint's OS permissions on Windows** — that claim was incorrect for this runtime, and §4 replaces it with measured facts, design rules that compensate, and a mandatory host verification gate. (3) The same-user-process exposure is stated with its exact mechanism (the default named-pipe DACL grants **full control to the creating user**), not as a generic disclaimer. (4) The separate privileged service is explicitly **not** proposed, with the technical reason it would not help on this runtime (§11, A7). (5) The required decision is reduced to **one clause plus two narrow additions** (§2.4, §6.3).
+
+**Evidence classes.** **[V]** verified — reproducible from the cited path, ref, source line, or executed probe (revision-2 probes are listed in §4.5 and were executed in this session). **[D]** documented platform behaviour — cited to the vendor's own documentation or upstream source. **[P]** proposed design — not implemented, creates no authority. **[U]** unresolved / not yet verified on the deployment host.
 
 ---
 
-## 1. Purpose and decision sought
+## 1. Purpose, scope, and decision sought
 
-### 1.1 Purpose
+### 1.1 What this is
 
-The Program Authority has selected the **same-host OS-protected local IPC** direction in principle, for **design only** (recorded in the IRR request §8). That selection resolved the *direction*; it did not define the trust boundary, the principal, the owner/tenant binding, the canonical-identity obligation, or the failure semantics — and it did not accept any IPD-side contract change.
+The Program Authority selected the **same-host OS-protected local IPC** direction in principle, for design only. This proposal supplies the **IPD-side contract** for that direction, at the smallest scope that satisfies it: **one user, one personal laptop, one OS account, non-production, no enterprise identity infrastructure.**
 
-This record supplies the missing IPD-side artifact: **one concrete, technically grounded security-contract proposal** for a single-user personal application, expressed as a bounded set of clauses that IPD's security authority can accept, amend, or reject **as written**. Its purpose is to let G-2 advance *without* inventing identity mappings and *without* weakening any existing safeguard.
+This is deliberately not an enterprise platform design. There is no identity provider, no directory, no role model, no multi-user or multi-tenant capability, no service account, no network listener for the privileged operation, and no new portfolio store. The design is two local processes on one machine, talking over an OS-provided same-host IPC endpoint, with the durable store staying exactly where G-2 already put it (IPD).
 
 ### 1.2 Decision sought
 
-The Program Authority is asked to render **one explicit decision** on the proposed contract `L-IPC-1` (binding clauses **C1–C13**, specified in §3–§7), in the IPD security-contract capacity identified in §14, choosing exactly one of:
+One explicit decision on the proposed contract **`L-IPC-1`** (binding clauses **C1–C12**, §3–§7), rendering exactly one of:
 
-- **Option A — Accept `L-IPC-1` as specified.** The proposed clauses become the binding IPD-side contract for one single-user local-principal deployment. This would be a **material amendment to the current G24/IPD identity-acquisition clause** (§2.4) and nothing else. It would **not** authorize provisioning, implementation, qualification, any successful write, route admission, or the removal of any fence.
-- **Option B — Accept with named clause changes.** The authority accepts the boundary but amends specific clauses (for example the tenant treatment in §6.2, the binding-record shape in §10.2, or the peer-permission requirement in C4), stating the changed text.
-- **Option C — Reject.** Record that a non-caller-controlled local principal cannot satisfy IPD's security requirements within the single-user, non-production scope; retain the existing fail-closed surfaces unchanged.
-- **Option D — Defer.** Keep every existing contract unchanged and treat §16's unresolved items (U-1…U-8) as the prerequisite set for a later decision.
+- **Option A — Accept `L-IPC-1` as specified.** One material amendment to the G24 identity-acquisition clause (§2.4) plus two narrow additions (§6.3), scoped to this one deployment. Grants no provisioning, no implementation, no qualification, no successful write, no admission, and removes no fence.
+- **Option B — Accept with named clause changes**, stating the changed text.
+- **Option C — Reject.** Record that a same-host IPC boundary cannot satisfy IPD's security requirements within this scope; keep the existing fail-closed surfaces unchanged.
+- **Option D — Defer**, treating §15 as the prerequisite set for a later decision.
 
-**What no option grants.** No option authorizes implementation, provisioning, credentials, database writes, a successful portfolio save, route/UI activation, the removal or relaxation of any current fence, or any change to IRR's DP-2 Option 2F, IRR's HTTP 503 fence, existing authority records, or the off-main G24 lineage. Those are separate acts (§15).
+### 1.3 What acceptance would not do
+
+Acceptance of `L-IPC-1` would **not** authorize implementation, provisioning, credentials, database writes, a successful portfolio save, route or UI activation, or the removal/relaxation of IRR's HTTP 503 fence, DP-2 Option 2F, or any existing authority record; and it would not promote, merge, cherry-pick, or re-pin the off-main G24 lineage. Those remain separate acts (§14).
 
 ---
 
@@ -42,468 +46,422 @@ The Program Authority is asked to render **one explicit decision** on the propos
 
 ### 2.1 Where the IPD-owned G24 security contract is defined
 
-The contract is **enforced in code and defined by the governed G24/NP04 records**, not by a single prose document:
+The contract is **enforced in code and recorded by the NP04 governance record**, not in a single prose document:
 
 | Layer | Location | Status |
 |---|---|---|
-| Enforcement — authentication | `src/server/http-server.ts` (authentication required on **every** `/api/ipd/*` route), `src/auth/oidc-verifier.ts` | **[V]** off-main G24 ref only |
-| Enforcement — trust configuration | `src/auth/config.ts` (`IPD_OIDC_ISSUER`, `IPD_OIDC_JWKS_URI`, `IPD_OIDC_AUDIENCE` = `ipd-user-portfolio-api`; trusted algorithms `RS256`/`ES256`; fail-closed when unconfigured) | **[V]** off-main G24 ref only |
-| Enforcement — authorization | `src/server/authorization.ts` (`PortfolioAuthorizer.authorize`, `authorizeScope`) | **[V]** off-main G24 ref only |
-| Enforcement — identity and tenant | `src/app_identity/service.ts` (`resolveExternalIdentity`, `resolveTenant`, `provisionTenantMembership`, `revokeTenantMembership`) | **[V]** off-main G24 ref only |
-| Enforcement — durable scope, revisions, guards | `src/portfolio/durable-store.ts`, `src/portfolio/repository.ts`, `src/portfolio/consolidation.ts` | **[V]** off-main G24 ref only |
-| Storage contract | `src/persistence/migrations/001_initial_schema.ts` (`application_users`, `external_identity_mappings`, `mapping_audit_events`, `tenant_memberships`, `user_portfolios`, `portfolio_revisions`, `portfolio_revision_holdings`, `portfolio_contributions`, `portfolio_events`) | **[V]** off-main G24 ref only |
-| Governance record of the IPD-side contract | `evidence/np04/NP04-GOVERNANCE-AUTHORITY-RECORD.md` (NP04-G32; records G22/G24/G29/G30/G31, the authorization triple, the tenant dispositions, and the deferred items) | **[V]** off-main G24 ref only |
+| Authentication on every `/api/ipd/*` route | `src/server/http-server.ts`, `src/auth/oidc-verifier.ts` | **[V]** off-main G24 ref |
+| Trust configuration (issuer, JWKS, audience `ipd-user-portfolio-api`, `RS256`/`ES256` only, fail-closed when unconfigured) | `src/auth/config.ts` | **[V]** off-main G24 ref |
+| Identity → tenant → portfolio authorization | `src/server/authorization.ts` | **[V]** off-main G24 ref |
+| Identity and tenant services | `src/app_identity/service.ts` (`resolveExternalIdentity`, `resolveTenant`, `provisionTenantMembership`, `revokeTenantMembership`) | **[V]** off-main G24 ref |
+| Durable store, revisions, consolidation guards | `src/portfolio/durable-store.ts`, `src/portfolio/repository.ts`, `src/portfolio/consolidation.ts` | **[V]** off-main G24 ref |
+| Storage contract | `src/persistence/migrations/001_initial_schema.ts` | **[V]** off-main G24 ref |
+| Governance record of the IPD-side contract | `evidence/np04/NP04-GOVERNANCE-AUTHORITY-RECORD.md` (NP04-G32) | **[V]** off-main G24 ref |
 
-**Two facts constrain this proposal:**
+**IPD `main@70b24f0` contains none of this** (`git grep` for `NP04`, `G24`, or `applicationUserId` returns **0** matches; no `src/server/`, no `src/persistence/`), and the off-main G24 lineage is **reference evidence only** — not admitted to `main`. **[V]**
 
-1. **IPD `main` contains none of this.** `git grep` for `NP04`, `G24`, or `applicationUserId` against IPD `main@70b24f0` returns **zero** matches; `src/persistence/` and `src/server/` do not exist on `main`. **[V]**
-2. **The off-main G24 lineage is reference evidence only.** It is not admitted to IPD `main`, and this proposal neither promotes, merges, cherry-picks, nor re-pins it. **[V]** (commits `8c99627`, `d4fdb33`, `6828155` sit on `arena/01a0e6d9-iips-production-market-data`, not on `main`).
+### 2.2 The checks that require OIDC, an external-identity mapping, and an active membership
 
-### 2.2 The current checks that require OIDC credentials, external-identity mappings, and active tenant membership
-
-The logical sequence, verified in `src/server/authorization.ts` (module header and `authorize()`):
+Verified sequence, from `src/server/authorization.ts` (module header and `authorize()`):
 
 ```text
-verified OIDC identity  →  issuer + subject  →  applicationUserId
-                        →  tenant membership  →  tenantId
-                        →  portfolio authorization (applicationUserId + tenantId + portfolioId)
+verified OIDC identity → issuer + subject → applicationUserId
+                       → tenant membership → tenantId
+                       → portfolio authorization (applicationUserId + tenantId + portfolioId)
 ```
 
 | Requirement | Exact current behaviour | Ref |
 |---|---|---|
-| OIDC bearer on every call | `verifier.verifyAuthorizationHeader(req.headers.authorization)` is invoked for every `/api/ipd/*` route before any routing decision; token must be a 3-segment JWS with a trusted `alg` (`RS256`/`ES256` only — `none` and symmetric algorithms rejected), a `kid`, a valid signature, `iss` equal to the configured issuer, `aud` containing the configured audience, and a non-expired `exp` | **[V]** `src/server/http-server.ts`, `src/auth/oidc-verifier.ts`, `src/auth/config.ts` |
-| External-identity mapping | `resolveExternalIdentity(credential.issuer, credential.subject)` — key `(issuer, subject)` mapped to **exactly one** `applicationUserId`; lifecycle `PENDING → APPROVED → ACTIVE → RETIRED`; missing/conflicting mappings fail closed; the application-user id is a random opaque UUID and is never derived from a token subject, username, browser value, `companyId`, portfolio id, or operator identity | **[V]** `src/app_identity/service.ts` (L379+), `migrations/001` |
-| Active tenant membership | `resolveTenant(applicationUserId, requestedTenantId)`: no memberships → Missing; explicit tenant not found → Missing; state ≠ `ACTIVE` → Revoked; **more than one `ACTIVE` membership with no tenant supplied → Missing (never guessed)**; zero `ACTIVE` → Revoked | **[V]** `src/app_identity/service.ts` (L466+) |
-| Tenant hint is caller-supplied but never trusted as such | `x-ipd-tenant-id` is a **hint only**; it is validated against memberships and fails closed on mismatch | **[V]** `src/server/http-server.ts`, `src/server/authorization.ts` |
-| Owner/tenant scope is always re-derived | Browser-supplied ownership is never trusted; ownership is re-derived from the governed mapping and the durable store; an unauthorized portfolio is indistinguishable from a missing one (`ResourceNotFoundError`) | **[V]** `src/server/authorization.ts`, `src/portfolio/durable-store.ts` |
-| Provisioning is a governed act | `provisionTenantMembership` / `revokeTenantMembership` are transactional upserts, **0 non-test callers, 0 HTTP endpoints, 0 authorization guards, and no audit events**; `tenantId` has **no upstream authoritative source** in the repository | **[V]** NP04-G32 §4.4, §5.4, §6 |
+| Bearer on every call | `verifyAuthorizationHeader()` runs before routing on every `/api/ipd/*` route; trusted `alg` only (`RS256`/`ES256`), valid signature, `iss`/`aud` match, `exp` not past | **[V]** |
+| Mapping | `(issuer, subject)` → **exactly one** opaque `applicationUserId`; lifecycle `PENDING → APPROVED → ACTIVE → RETIRED`; unmapped/conflicting fails closed; never derived from a subject, username, browser value, or `companyId` | **[V]** |
+| Active membership | `resolveTenant()`: none → Missing; explicit tenant absent → Missing; not `ACTIVE` → Revoked; **more than one `ACTIVE` with no tenant supplied → Missing (never guessed)**; zero `ACTIVE` → Revoked | **[V]** |
+| Caller tenant value | `x-ipd-tenant-id` is a **hint only**, validated against memberships, fail-closed on mismatch | **[V]** |
+| Ownership | Never taken from the browser; re-derived from the governed mapping and the store; unauthorized ≡ missing | **[V]** |
+| Provisioning | `provisionTenantMembership`/`revokeTenantMembership`: transactional upserts with **0 non-test callers, 0 HTTP endpoints, 0 authorization guards, and no audit events**; `tenantId` has no upstream authoritative source in the repository | **[V]** NP04-G32 §4.4, §5.4 |
 
 ### 2.3 Why a local principal is not an interpretation of the existing contract
 
-The current accepted trust path (`DP-1 Option 1A′`, IRR `docs/integration/IIPS_v3.0_GATE_C_S5A_DP1_OPTION_1A_PRIME_BINDING_CONTRACT_AND_PREREQUISITE_SPECIFICATION_2026-10-13.md`) expressly excludes, as implemented exclusions in `src/auth/config.ts`: caller-service authentication, mTLS, token exchange, **service credentials, forwarded IRR-principal trust, browser identity trust, and operator bypass**. **[V]**
+The accepted trust path (`DP-1 Option 1A′`) expressly excludes, as implemented exclusions in `src/auth/config.ts`: caller-service authentication, mTLS, token exchange, **service credentials, forwarded IRR-principal trust, browser identity trust, and operator bypass**. **[V]** A locally established principal therefore requires an explicit contract clause; it cannot be reached by interpretation. Conversely, being *local* proves nothing by itself (§4.1).
 
-A locally established principal is therefore **not** reachable by interpretation: it requires an explicit contract clause. Equally, the reverse is true — the *local* nature of a call establishes nothing by itself (§4.1).
-
-### 2.4 The precise incompatibility, stated as the clause to be amended
+### 2.4 The precise clause to be amended — and everything that stays
 
 ```text
-CURRENT (G24, as written):
-  The credential is a caller-presented, IPD-verified OIDC bearer.
-  Identity is resolved issuer+subject → applicationUserId.
-  Authorization requires an ACTIVE tenant membership.
+CURRENT (G24):
+  Credential position = a caller-presented, IPD-verified OIDC bearer at the TCP HTTP boundary.
+  Identity  = issuer+subject → applicationUserId.   Tenant = ACTIVE membership required.
 
-PROPOSED (L-IPC-1), scoped to ONE single-user deployment endpoint:
-  The credential-position fact is "the request was accepted on the OS-protected
-  same-host IPC endpoint that IPD itself created and that IPD bound to exactly
-  ONE pre-provisioned principal at provisioning time."
-  Identity is the endpoint's provisioned binding; it is never a wire field.
-  An ACTIVE tenant membership is still required, and is still the only tenant source.
+PROPOSED (L-IPC-1, ONE deployment, ONE principal):
+  Credential position = "this request was accepted, with write access, on the IPD-owned
+  named-pipe endpoint carrying exactly ONE provisioned principal binding."
+  Identity  = the endpoint's provisioned binding; never a wire field.
+  Tenant    = ACTIVE membership required — UNCHANGED, exactly one row.
 ```
 
-**This is a material security-contract change — it must be expressly accepted (§14), not inferred.** Everything downstream of the credential position (`applicationUserId` semantics, tenant resolution, portfolio authorization triple, revision and consolidation controls, tombstone behaviour, canonical-identity rules) is proposed to remain **unchanged**.
+**Amendment scope: this clause only.** The `applicationUserId` model, the external-identity mapping table and lifecycle, `resolveTenant` and the exactly-one-`ACTIVE` rule, the `(applicationUserId, tenantId, portfolioId)` authorization triple, "unauthorized ≡ missing", revision/optimistic-concurrency checks, tombstone behaviour, consolidation guards, canonical-identity validation, and DP-2 Option 2F refusal are all proposed to remain **in force and unchanged**. Two narrow additions are required (§6.3).
 
 ---
 
-## 3. Proposed OS-protected IPC trust boundary
+## 3. Proposed trust boundary (proportionate form)
 
-### 3.1 Topology (proposed)
+### 3.1 Topology
 
 ```text
-  ┌──────────────────────────── operator's host (single OS account, today) ────────────────────────────┐
-  │                                                                                                    │
-  │ Browser (first-party SPA)                                                                          │
-  │    │  HTTP, loopback only, same-origin; carries NO authority                                       │
-  │    │  (no principal, no owner, no tenant, no portfolio scope)                                      │
-  │    ▼                                                                                               │
-  │ IRR server process (frontend/server/executive-transport.ts, Node)                                  │
-  │    │  same-host IPC on the OS-protected endpoint created by IPD;                                   │
-  │    │  no bearer, no shared secret, no forwarded principal, no caller identity                      │
-  │    ▼                                                                                               │
-  │ IPD portfolio service process                                                                      │
-  │    (owns the durable store; binds the endpoint to ONE provisioned principal)                       │
-  │    │                                                                                               │
-  │    └─► durable portfolio store (IPD_PORTFOLIO_DB_PATH, SQLite)                                     │
-  └────────────────────────────────────────────────────────────────────────────────────────────────────┘
+  ┌───────────── one personal laptop · one user · one OS account · non-production ─────────────┐
+  │                                                                                            │
+  │ Browser (first-party UI)  ── HTTP on loopback only; carries NO authority                   │
+  │      │                                                                                     │
+  │      ▼                                                                                     │
+  │ IRR server process (Node)  ── same-host IPC to the IPD endpoint; supplies                  │
+  │                               no principal, owner, tenant, or scope                        │
+  │      │                                                                                     │
+  │      ▼                                                                                     │
+  │ IPD portfolio process (Node)  ── owns the endpoint, the single-principal                   │
+  │                                  binding, and the durable store                            │
+  │      └─► SQLite store (IPD_PORTFOLIO_DB_PATH)                                              │
+  └────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**C1 — Single privileged surface.** In this deployment, owner-scoped portfolio operations are reachable **only** through the same-host IPC endpoint. No TCP socket, HTTP route, browser-reachable URL, or other network surface may serve those operations. **[P]**
+**C1 — One privileged surface.** Owner-scoped portfolio operations are reachable **only** through the same-host IPC endpoint. No TCP port, HTTP route, URL, or other network surface serves them. **[P]**
 
-**C2 — Endpoint ownership.** The endpoint is **created and owned by the IPD service process** (server side of the IPC), not by IRR and not by the browser. IPD creates it only after configuration validation, store connection, and migration verification succeed — preserving the existing `validate → connect → migrate → verify → listen` startup discipline, with "listen" replaced by "bind the IPC endpoint". **[P]** (the discipline is **[V]** in `src/persistence/bootstrap.ts` / `src/server/http-server.ts` at the G24 ref.)
+**C2 — Endpoint owned by IPD.** IPD creates the endpoint, only after configuration validation, store connection, and migration verification succeed — preserving the existing `validate → connect → migrate → verify → listen` discipline (**[V]** in the G24 source), with "listen" becoming "bind the endpoint". **[P]**
 
-**C3 — Single-principal binding.** The endpoint carries exactly one provisioned principal binding, established by a separate IPD-side provisioning act (§6, §15). IPD never accepts a principal, owner, tenant, or portfolio-scope value from the wire for the purpose of establishing identity. **[P]**
+**C3 — One principal, no wire identity.** The endpoint carries exactly one provisioned principal binding. IPD never accepts a principal, owner, tenant, or portfolio-scope value from the wire for the purpose of establishing identity. **[P]**
 
-### 3.2 Operating-system primitive (per runtime)
-
-| Runtime | Candidate primitive | Rationale | Status |
-|---|---|---|---|
-| **Windows** — the actual operator deployment (see §9) | **Named pipe** (`\\.\pipe\<name>`) created by the IPD process, access-restricted to the operator's account/session by the pipe's OS security descriptor | Native Windows same-host byte-stream IPC; the OS — not the application — decides which principals may open the endpoint | **[P]** — mechanism selection to be validated on the deployment host (**U-1**, **U-2**) |
-| **POSIX** (developer/CI hosts; not the deployment) | **AF_UNIX socket** in a directory whose mode restricts access to the operator's uid (e.g. `0700` directory, socket reachable only by that uid) | Filesystem permissions are the OS-enforced control on the socket object | **[P]** — not applicable to the deployment host |
-| Windows AF_UNIX / other transports | Not proposed | Would add a second, unvalidated code path for no security benefit over named pipes | **[U]** |
-
-**Nothing in this proposal depends on which of these two is used**, beyond the requirement in C4 that the OS must be the enforcing authority for endpoint access. The selection is a validation item, not a design assumption.
-
-### 3.3 How IPD determines that a request came from the authorized application process
-
-This is the crux, and the proposal states it **without overclaiming**:
-
-1. **Reachability is OS-enforced (C4).** The endpoint's OS permissions admit only the OS principal(s) the provisioning act designates. A process outside those permissions cannot open the endpoint at all. This excludes: remote/LAN callers, other OS users or sessions, and every browser — browsers expose no API that can open a named pipe or AF_UNIX socket.
-2. **The single-principal binding (C3) means reachability is sufficient to attribute ownership, and only for this deployment.** Because the endpoint serves exactly one provisioned principal, "accepted on this endpoint" ⇒ "acts as the provisioned principal" — with no wire-supplied identity involved and no possibility of acting as a different principal.
-3. **Peer *process* identity is NOT asserted (U-3, explicit non-claim).** The in-scope toolchain does not provide a public API for peer credentials on AF_UNIX or for the Windows `GetNamedPipeClientProcessId` equivalent. Therefore **`L-IPC-1` does not claim that IPD can distinguish the authorized IRR process from any other process running as the same OS account.** What the contract claims is the weaker, verifiable statement in item 1 + item 2, plus the compensating controls in C5.
-
-**C4 — OS-enforced endpoint permissions.** The endpoint's OS permissions must be restricted to the operator's account/session and must be **verified on the deployment host** as part of qualification (§11, Q3–Q4). If, on the deployment host, the created endpoint cannot be shown to exclude at least: (a) other OS users, and (b) any caller that is not a local process on that host — then the boundary does **not** satisfy this contract and the correct disposition is rejection, not a compensating workaround. (Browser exclusion is structural, not permission-based: browsers expose no API that can open such an endpoint, and C1 removes the network path entirely.) **[P]**
-
-**C5 — Compensating controls required by the contract.** Because peer process identity is not asserted, the following are required and must be qualified: (i) the principal binding is single and endpoint-scoped, so no request can escalate to another principal; (ii) all IPD authorization and integrity checks remain authoritative (§5.3); (iii) the durable store's protection level must be **equal to, and not claimed to exceed**, the OS-account protection already applied to the store file — the proposal makes no confidentiality claim against code running as the operator's own account; (iv) the residual same-account risk is recorded in §8 as an explicit non-guarantee, not silently accepted. **[P]**
-
-### 3.4 Endpoint creation, lifecycle, stale endpoints, and cleanup
-
-**C6 — Lifecycle.** **[P]**
-
-1. **Creation:** only by the IPD service process, after full startup validation (C2). No endpoint is created if configuration, store, migrations, or the principal binding is missing, malformed, or inconsistent.
-2. **Name/stale-endpoint handling:** the endpoint identifier is created per service start from OS-provided randomness; any pre-existing object at that identifier is either rejected or removed only by the owning process. **The identifier is not a secret and is never treated as a credential** (see §4.1).
-3. **Cleanup:** on graceful shutdown the endpoint is closed and, where the platform requires it, the socket object removed. On abnormal termination the stale artifact must not be reusable as an authenticated channel: a stale endpoint yields either connection refusal or a request that IPD refuses because the binding for it does not exist (fail closed).
-4. **Restart durability:** restart of the IPD process must not change the principal binding or lose persisted portfolios; restart of the IRR process must not invalidate the binding.
-5. **Revocation:** the binding has an explicit state (`ACTIVE` / `REVOKED`). Revocation must take effect for **new connections** without requiring the store to be dropped, and must be observable in an audit record.
-6. **No fallback:** if the endpoint cannot be created or validated, the capability is unavailable. There is no default owner, no in-memory fallback, no "first-caller becomes owner", and no degraded mode. **[V]** *(the no-fallback principle is already established for persistence in `src/persistence/errors.ts`/`bootstrap.ts` at the G24 ref; **[P]** for the endpoint.)*
+**C4 — Two ordinary local processes, no service, no elevation.** The IPD process runs as the operator's own account, started by the operator, with no Windows service installation, no separate privileged account, and no administrator rights beyond what the operator normally uses. **[P]** (§11, A7 explains why a separate account is *not* proposed.)
 
 ---
 
-## 4. Peer authentication and endpoint permissions — what is and is not claimed
+## 4. Peer authentication and endpoint permissions — what is actually true on this runtime
 
-### 4.1 Explicit rejections (required by the decision request)
+### 4.1 Explicit rejections (nothing here is authentication)
 
-The following are **not** authentication and are **not** used as identity evidence under this proposal:
-
-| Non-credential | Why it is rejected |
+| Not a credential | Why |
 |---|---|
-| `localhost` / `127.0.0.1` / any loopback address | Reachable by every process on the host — including a browser page through `fetch`/`XHR` — and by anything the OS routes to loopback. **[V]** *(the current G24 HTTP boundary binds `127.0.0.1:8099` by default: `src/server/config.ts`.)* |
-| A private or unguessable URL / endpoint name | Possession, not proof; names leak through logs, config, process listings, and memory; a name is not a capability. |
-| A caller-supplied principal/owner/tenant/scope field | Refused outright (§5.2) and never promoted into authority. |
-| Browser `Origin`, `Host`, `Referer`, CORS, or same-origin policy | Access-control conveniences, not authentication; `Origin` is attacker-influenced in some configurations and is not a cryptographic proof. |
-| The single-user product scope label (H-18) | Product scope is not a credential. |
-| The F-3 owner-context carrier pair (`owner-7f3a91c2` / `irr-domain-4b82d6e1`) | Materialisation, never an authority; it is not an `applicationUserId`, not a tenant membership, and it does not unlock the portfolio capability. **[V]** IRR `frontend/server/owner-context-carrier.ts`, `owner-context-resolver.ts` |
-| A static or shared secret shipped in a file, header, or URL | Excluded by the existing trust contract; a same-account process can read a file the same account can read, so it adds no boundary *and* it invites credential-handling obligations this scope excludes. |
+| `localhost` / `127.0.0.1` / any loopback address | Reachable by every local process and by browser pages. **[D]** |
+| The endpoint *name* | Possession, not proof; names leak via config, logs, and process listings. |
+| Caller-supplied principal / owner / tenant / scope | Refused outright (§5.2); never promoted to authority. |
+| Browser `Origin`, `Host`, `Referer`, CORS, same-origin policy | Access-control conveniences, not authentication. |
+| The single-user scope label (H-18) | Product scope is not a credential. **[V]** |
+| The F-3 carrier pair (`owner-7f3a91c2` / `irr-domain-4b82d6e1`) | Materialisation, never authority; not an `applicationUserId`, not a membership. **[V]** IRR `frontend/server/owner-context-carrier.ts` |
 
-### 4.2 Unauthorized local access — required behaviour
+### 4.2 Verified platform facts — Windows named pipes from Node (this is the deployment runtime)
 
-**C7 — Fail closed, uniformly.** A connection that IPD's endpoint permissions do not admit fails at the OS level, with no application-visible distinction. A connection that is admitted but carries no valid binding, or a binding in a non-`ACTIVE` state, fails closed with **no owner disclosure**: the response must not reveal whether a principal, portfolio, or owner exists. **[P]** *(the existing posture: unauthorized portfolios are indistinguishable from missing ones — `ResourceNotFoundError` in `src/server/authorization.ts`.)*
+These are source- and documentation-level facts, cited so the design does not rest on invention:
 
-### 4.3 Windows versus other runtime environments — material differences
-
-| Concern | Windows (deployment) | POSIX (dev/CI only) |
+| # | Fact | Source |
 |---|---|---|
-| Endpoint object | Named pipe object; permissions are a security descriptor evaluated by the OS kernel | AF_UNIX socket file; permissions are filesystem mode/ownership (plus ACLs) |
-| Attribute owner | Pipe creator's token/session semantics govern the descriptor | Directory + socket ownership/permissions applied at bind time |
-| Peer identity available to the application | Not available through the in-scope Node public API (**U-3**) | Not available through the in-scope Node public API (**U-3**) |
-| Stale-object behaviour | A pipe object disappears when its last handle closes; recreation semantics must be validated (**U-2**) | A socket file can persist after abnormal exit and must be handled per C6.2 |
-| Additional requirement | The resulting descriptor must be **verified**, not assumed (**U-1**) | Directory mode must be set before the socket is created |
+| F1 | Node has **no AF_UNIX on Windows**: "On Windows, the local domain is implemented using a **named pipe**." | **[D]** Node v22.22.3 `doc/api/net.md` L58–59; libuv AF_UNIX-on-Windows request still open (libuv issue #2537) |
+| F2 | libuv creates the listening pipe with **`lpSecurityAttributes = NULL`**: `CreateNamedPipeW(name, PIPE_ACCESS_DUPLEX \| FILE_FLAG_OVERLAPPED \| WRITE_DAC \| (first ? FILE_FLAG_FIRST_PIPE_INSTANCE : 0), PIPE_TYPE_BYTE \| PIPE_READMODE_BYTE \| PIPE_WAIT, PIPE_UNLIMITED_INSTANCES, 65536, 65536, 0, NULL)` | **[V]** libuv v1.51.0 `src/win/pipe.c`, `pipe_alloc_accept()` |
+| F3 | With a `NULL` security descriptor Windows applies its **default** named-pipe DACL: "full control to the LocalSystem account, administrators, and the **creator owner**", and "**read access** to members of the **Everyone** group and the **anonymous** account" | **[D]** Microsoft, `CreateNamedPipeW` (`lpSecurityAttributes`); *Named Pipe Security and Access Rights* |
+| F4 | libuv does **not** set `PIPE_REJECT_REMOTE_CLIENTS` (0x8), so **`PIPE_ACCEPT_REMOTE_CLIENTS`** applies — "connections from remote clients can be accepted and checked against the security descriptor" | **[V]** libuv source (F2); **[D]** Microsoft, `CreateNamedPipeW` (`dwPipeMode`) |
+| F5 | Microsoft's documented remedy for remote/session access is to put the **logon SID** on the pipe DACL — i.e. it requires setting a security descriptor, which (F2) the in-scope runtime does not do | **[D]** Microsoft, *Named Pipe Security and Access Rights* |
+| F6 | Node's **only** pipe-permission control **widens** access: `readableAll` / `writableAll` "makes the pipe readable/writable **for all users**" (`net.js` → `fchmod` → `uv_pipe_chmod`), which adds an ACE for the **Everyone** well-known SID with `SET_ACCESS` | **[D]** Node `doc/api/net.md` L554–559; **[V]** Node `lib/net.js` (fchmod path), libuv `uv_pipe_chmod` |
+| F7 | The same `FILE_FLAG_FIRST_PIPE_INSTANCE` flag makes **squatting fail closed**: an existing pipe of that name makes creation fail with `ERROR_ACCESS_DENIED`, which libuv maps to `UV_EADDRINUSE` (bind error) | **[V]** libuv `src/win/pipe.c` (`uv_pipe_bind2` error mapping) |
 
-**These differences are material**: a design validated on a POSIX developer host does **not** establish the Windows deployment boundary. Qualification must run on the deployment host (§9, §11).
+**Consequences for the design (stated plainly).** On the actual deployment runtime, **the application cannot narrow the endpoint's OS permissions.** It cannot set a DACL at creation (F2), and the only permission knob it has widens rather than narrows (F6). Therefore `L-IPC-1` **makes no claim that IPD restricts the Windows endpoint to the operator's account**; what protects the endpoint is the *default* DACL (F3) plus host configuration (§9), and what must be *measured* is exactly which principals that DACL admits (§9 gate V-1).
+
+### 4.3 What that means concretely — who can and cannot invoke the operation
+
+Reading F3 against the operations: opening a client connection that can **send** a request requires write access; the default DACL grants write/full control only to LocalSystem, Administrators, and the **creating user** — the operator — and grants only *read* to Everyone/anonymous.
+
+| Caller | Can it reach the endpoint? | Can it invoke an owner-scoped operation? | Basis |
+|---|---|---|---|
+| The operator's own processes (IRR, and any other process running as the operator) | Yes | **Yes — full control** | **[D]** F3 (creator owner) |
+| Any other process running as the operator (including malware) | Yes | **Yes — outside the protection boundary** | **[D]** F3 |
+| A different non-administrative local user | OS-level read-only at best | **No** (no write access) — **but this must be measured, not assumed** | **[D]** F3 + §9 gate V-1 |
+| A different local user on another Windows session | As above; the logon-SID remedy that would exclude it is unavailable (F5) | **No** (no write access) — **to be measured** | **[D]** F3/F5 + §9 |
+| A remote/LAN caller | Possible: remote clients are accepted and checked against the DACL (F4) | **No** (no write access) — **to be measured**; host must also block SMB/file-sharing inbound | **[D]** F4 + §9 |
+| A browser page (any site, any origin) | **No** — no API to open a named pipe | **No** — unreachable | **[D]** platform capability |
+| An administrator | Yes | **Yes — and it can read the store file directly anyway** | **[D]** F3 (Administrators) |
+
+**C5 — Design rules that compensate (all app-level, all testable).** **[P]**
+
+1. **Never write data to a connection that has not yet supplied a valid request.** No greeting, banner, version string, or portfolio data before the request is parsed and authorized. This removes the value of a *read-only* open — which is the only access the default DACL grants to other users and, potentially, to remote clients (F3/F4).
+2. **Authorize every request from the binding, never from the payload** (§5.2, §6.1).
+3. **Bind the endpoint once, at startup, and fail closed if it cannot be bound** — including when the name is already taken (F7 squatting case). No retry loop, no fallback to TCP, no "first caller wins".
+4. **Cap concurrent connections and total request size**, so a caller that can open the endpoint cannot exhaust the process. **[P]** (proportionate: the endpoint serves exactly one client)
+5. **Close the endpoint on shutdown and refuse to serve requests when the binding is absent, malformed, or not `ACTIVE`.**
+
+**C6 — Fail closed, uniformly.** A connection the OS does not admit fails at the OS level. A connection that is admitted but carries no valid request, or where the binding is not `ACTIVE`, fails closed with **no owner disclosure**: the response must not reveal whether a principal, portfolio, or owner exists. **[P]** *(existing posture: unauthorized ≡ missing — `ResourceNotFoundError` in `src/server/authorization.ts`.)*
+
+### 4.4 Peer *process* identity is not available, and is not claimed
+
+`L-IPC-1` does **not** claim that IPD can distinguish the authorized IRR process from another process running as the operator. Empirically, on the in-scope stack, a UNIX-socket/named-pipe server learns **no** peer identity at all (probe E1, §4.5); the Windows equivalent (client process id/SID) is likewise not exposed through the in-scope API. The contract's claim is therefore limited to: *requests arriving on this endpoint act as the single provisioned principal*, plus C5. The same-user exposure is disclosed, not mitigated, and is explicitly accepted or rejected as part of the decision (§13).
+
+### 4.5 Executed probes (revision-2; POSIX host, Node v22.22.3, libuv 1.51.0)
+
+These were run in this session to replace assumption with measurement. They establish the *POSIX* half of the platform matrix; they do **not** stand in for the Windows measurement (§9), which cannot be run in this environment.
+
+| # | Probe | Result |
+|---|---|---|
+| E1 | What a same-host endpoint server learns about its peer | `remoteAddress` / `remoteFamily` / `remotePort` all **undefined** — **no peer identity is available** |
+| E2 | Cross-user connect matrix (dir mode / socket mode) | `0700 / 0600` → other user `EACCES`; `0700 / 0666` → `EACCES` (directory decides); `0777 / 0600` → `EACCES` (socket mode decides); `0777 / 0666` → **other user connected** |
+| E3 | Default endpoint mode created by Node | socket created **`0755`** under umask `022` — i.e. *not* private by default; the app must set and verify it |
+| E4 | Abnormal termination (SIGKILL) | endpoint file **persists**; connect → `ECONNREFUSED`; re-bind → `EADDRINUSE`; unlink then re-bind → succeeds |
+
+**Design consequence:** on POSIX the application **can** enforce the boundary (E2 — either the directory mode or the socket mode alone suffices) and must set it explicitly (E3) and clean up stale endpoints (E4). On Windows it **cannot** (F2/F6), so the boundary rests on the platform default and host configuration (§9). This is a genuine platform difference and is stated as such rather than smoothed over.
+
+### 4.6 Platform matrix (material differences)
+
+| Concern | Windows — the deployment | POSIX — dev/CI |
+|---|---|---|
+| Mechanism | Named pipe (F1) | UNIX domain socket |
+| Who sets permissions | Windows, from the default DACL (F2/F3) | The application (directory + socket mode) |
+| Other local users | No write access by default — **measure** | Excluded by application-set modes (E2) |
+| Remote callers | Accepted and DACL-checked (F4); additionally block inbound SMB on the host | Not applicable (AF_UNIX is host-local) |
+| Same-user processes | **Full control** (F3) — disclosed, not mitigated | Same (same uid) — disclosed |
+| Stale endpoint | Pipe object disappears with its last handle | File persists; app must unlink (E4) |
+| Peer identity | Not available | Not available (E1) |
 
 ---
 
-## 5. Browser and server trust separation
+## 5. Browser/server trust separation
 
-### 5.1 Which component is trusted to establish the principal
+### 5.1 Who establishes the principal
 
-**The IPD service process establishes the principal — not the browser, not IRR, and not the wire.** Concretely: the principal is the endpoint's provisioned binding (C3); IRR's role is to be the *only* component permitted to open the endpoint, and to relay portfolio operations without ever supplying identity. IRR does **not** mint, assert, or forward a principal, and no user/delegated credential is introduced.
+**IPD establishes it — as the endpoint's provisioned binding (C3).** IRR's role is to be the only component that opens the endpoint and to relay portfolio operations; IRR never mints, asserts, or forwards a principal, and no user or delegated credential is involved.
 
 ### 5.2 What IPD refuses, always
 
-**C8 — Refusal of caller-supplied authority.** On the IPC boundary, IPD must **refuse** (not ignore) any request that carries:
+**C7 — Refusal of caller-supplied authority.** IPD must **refuse** (not ignore) any request carrying: an application principal, user id, subject, or credential material; a portfolio owner claim; a tenant identity or membership claim; or a caller-selected portfolio scope. The IRR side already enumerates and refuses exactly these classes (`G2_TENANT_CLAIM_KEYS`, `G2_IDENTITY_CLAIM_KEYS` — including `companyId`, `runtimeCompanyId`, `identityStatus`, `resolutionDisposition` — and `G2_DURABLE_IDENTITY_KEYS`) via `assertNoG2CallerAuthority` / `classifyG2Claims` in `frontend/server/user-portfolio/translationBoundary.ts` **[V]**; `L-IPC-1` requires **IPD to re-enforce the same refusal at its own boundary**, so the guarantee does not depend on IRR's cooperation.
 
-1. an application principal, user id, subject, mapping id, or credential material;
-2. a portfolio owner claim;
-3. a tenant identity or membership claim;
-4. a portfolio authorization scope (owner/tenant/portfolio scope) selected by the caller.
+### 5.3 Can a browser or remote client invoke the privileged operation?
 
-This is not a new invention: the IRR-side contract already enumerates and refuses exactly these classes — `G2_TENANT_CLAIM_KEYS`, `G2_IDENTITY_CLAIM_KEYS` (including `companyId`, `runtimeCompanyId`, `identityStatus`, `resolutionDisposition`), and `G2_DURABLE_IDENTITY_KEYS` — via `assertNoG2CallerAuthority` / `classifyG2Claims` in `frontend/server/user-portfolio/translationBoundary.ts`. **[V]** `L-IPC-1` proposes that **IPD** re-enforce the same refusal independently, at its own boundary, so the refusal does not depend on IRR's cooperation.
-
-### 5.3 Checks that remain authoritative inside IPD (regardless of what IRR supplies)
-
-**C9 — No delegation of authority.** IRR's behaviour, shape-validation, or claim-refusal never substitutes for IPD enforcement. IPD remains solely authoritative for: identity (the provisioned binding), tenant resolution and membership state, portfolio ownership and lifecycle, revision/optimistic-concurrency checks, duplicate/idempotency and consolidation semantics, canonical company-identity validation and DP-2 Option 2F refusals, and audit emission. **[P]**, reusing **[V]** mechanisms where possible.
-
-### 5.4 Can an untrusted browser page, renderer, or remote client invoke the privileged operation directly?
-
-| Path | Answer under `L-IPC-1` | Basis |
+| Path | Answer | Basis |
 |---|---|---|
-| Browser → IPC endpoint directly | **No.** Browsers expose no API to open a named pipe or AF_UNIX socket, and the endpoint is not a network service. | **[P]** design; **[V]** platform capability |
-| Remote/LAN client → IPC endpoint | **No.** Same reason; nothing is published on any network interface for owner-scoped operations. | **[P]** |
-| Browser → IRR HTTP (`/api/user-portfolios*`) | **Yes, today, and it is refused with HTTP 503 `owner-context-unavailable` for every recognized owner-scoped route** — the transport does not read the body, the tenant claim, or the `Authorization` header, and it returns 503 before any domain or persistence access. | **[V]** IRR `frontend/server/user-portfolio-transport.ts`, `owner-context-unavailable.ts` |
-| Browser → IRR HTTP, **after any future admission** | It would reach the real capability, **acting as the provisioned operator principal** (the principal is not supplied by the browser, so a cross-site request cannot impersonate a *different* user — it can only drive the operator's own capability). | **[P]** — hence §5.5 |
+| Browser → IPC endpoint | **No** | Browsers cannot open named pipes/sockets **[D]** |
+| Remote client → IPC endpoint | **Not for invocation** (no write access by default) — **to be measured**; disclosure and host hardening in §8/§9 | F4, §9 V-2 |
+| Browser → IRR `/api/user-portfolios*` | **Yes, and refused: HTTP 503 `owner-context-unavailable`** before any domain or persistence access | **[V]** IRR `frontend/server/user-portfolio-transport.ts`, `owner-context-unavailable.ts` |
+| Browser → IRR after any future admission | It would act **as the operator's principal** (it cannot impersonate a *different* user, since no user identity is supplied) | **[P]** → hence C8/C9 |
 
-### 5.5 Current IRR exposure posture is incompatible with this contract (material finding)
+**C8 — Loopback-only deployment posture.** The browser-facing surface that can reach owner-scoped operations must be bound to loopback on this laptop. LAN, hosted-preview (e.g. `*.e2b.app`), reverse-proxied, and shared-host deployments are **outside** the trust assumption and must not serve the capability. Wildcard CORS must not apply to owner-scoped routes. **[P]** — current IRR code listens without a host argument (all interfaces) and sets `Access-Control-Allow-Origin: *` **[V]** `frontend/server/executive-transport.ts`; its dev server uses `host: '0.0.0.0'` and `allowedHosts: ['.e2b.app']` **[V]** `frontend/vite.config.ts`.
 
-Verified IRR facts at `main@eb4bf82`:
-
-- the API server listens **without a host argument** (`server.listen(port, …)`, port `8787` default) ⇒ all interfaces; **[V]** `frontend/server/executive-transport.ts`
-- it sets `Access-Control-Allow-Origin: *` and answers `OPTIONS` with `204` unconditionally; **[V]** same file
-- the dev server is configured `host: '0.0.0.0'` with `allowedHosts: ['.e2b.app']` and proxies `/api` to `http://localhost:8787`. **[V]** `frontend/vite.config.ts`
-
-None of this is authentication and none of it is a boundary. Under `L-IPC-1` the owner-scoped capability requires (**[P]**):
-
-- **C10 — Deployment posture.** The browser-facing surface that can reach owner-scoped operations must be **loopback-bound** on the operator's host; LAN, hosted-preview, reverse-proxied, and shared-host deployments are **outside** the trust assumption and must not serve the capability. CORS must not be wildcarded for owner-scoped routes.
-- **C11 — Cross-site request hardening.** Because a cross-site request reaching IRR would act as the operator's principal, IRR must reject owner-scoped state changes that do not originate from the first-party application (for example a required non-simple header / JSON content type forcing a preflight, plus an `Origin`/`Sec-Fetch-Site` consistency check). **These are CSRF hardening only and must never be treated as authentication.** **[P]**
+**C9 — Cross-site request hardening (not authentication).** Because a cross-site request that reaches IRR would act as the operator's principal, owner-scoped state changes must require a first-party signal (a non-simple header/JSON content type forcing a preflight, plus an `Origin`/`Sec-Fetch-Site` consistency check). This is CSRF hardening only and must **never** be recorded as authentication. **[P]**
 
 ---
 
 ## 6. Principal, owner, tenant, and portfolio binding
 
-### 6.1 Mapping the trusted local principal to an IPD `applicationUserId`
+### 6.1 Principal and owner
 
-**C12 — Binding is provisioned, opaque, and one-to-one.** **[P]**
+**C10 — Binding is provisioned, opaque, and one-to-one.** **[P]** IPD allocates **one** opaque `applicationUserId` (existing random-UUID semantics — never derived from any identifier **[V]**) by a **single, one-time, local, offline operator act** (§14, gate A). The binding associates: endpoint/deployment identity → `applicationUserId` → tenant → lifecycle state (`ACTIVE`/`REVOKED`) → creation/revocation timestamps. **No equivalence is created or implied** between this binding and the F-3 `ownerUserId`/`tenantId` pair, an IRR principal, an OIDC subject, a browser value, `companyId`/`runtimeCompanyId`, or any other domain's identity **[V]** (D-2 §8; NP08-D115: `companyId` is not an owner identity).
 
-1. IPD allocates **exactly one** opaque `applicationUserId` (existing random-UUID semantics, never derived from any identifier) for the local principal, by a **separate, explicit, operator-only offline provisioning act** (§15, gate P-A).
-2. The binding record associates: the endpoint instance (deployment identity) → `applicationUserId` → the tenant value → lifecycle state → creation/revocation metadata and audit.
-3. **No equivalence is created or implied** between this binding and: the F-3 `ownerUserId`/`tenantId` pair, an IRR principal, a raw OIDC subject, a browser value, an IRR owner id, `companyId`/`runtimeCompanyId`, or any other domain's identity. **[V]** standing constraint (D-2 §8; NP-08-D115-D2-G2 reconciliation; NP08-D115 §"companyId is not an owner identity").
-4. Binding revocation and change take effect per C6.5 and are audited.
+### 6.2 Tenant — the minimum the current contract requires, and nothing more
 
-### 6.2 Tenant membership — addressed explicitly, not inferred
-
-**Do not infer membership from single-user status, and do not assume a local principal establishes an IPD owner.** The current contract requires an `ACTIVE` membership and the current model fails closed without one (`resolveTenant`). Three options, with a recommendation:
+The current IPD contract requires a `tenantId` and an `ACTIVE` membership (`tenant_memberships.tenant_id`, `user_portfolios.tenant_id NOT NULL`, `resolveTenant()`) **[V]**. The proportionate treatment is therefore **exactly one row, and no tenant platform**:
 
 | Option | Content | Assessment |
 |---|---|---|
-| **T1 — Reuse the existing model (recommended)** | The provisioning act creates one `application_user` and **exactly one** `ACTIVE` `tenant_memberships` row using an opaque, act-created personal tenant value; `resolveTenant` stays unchanged and fail-closed; `user_portfolios.tenant_id` keeps its one-tenant-per-portfolio constraint | **+** No change to the tenant contract, schema, or isolation invariant; preserves "exactly one ACTIVE membership"; reuses the audited mapping/lifecycle pattern. **−** Requires tenant-provisioning authority (currently **NOT AUTHORIZED**, NP04-G32 §5) and requires the currently-missing **audit** for membership mutations. **Not** an assertion that `tenant_memberships` is an enterprise tenant source of truth. |
-| **T2 — Make tenant optional for this endpoint** | Contract/schema change (`user_portfolios.tenant_id NOT NULL`, `resolveTenant`) allowing a null tenant | **Rejected**: it weakens a governed isolation dimension, reopens the D115-adjacent tenant question, and buys nothing that T1 does not already provide at lower risk. |
-| **T3 — Defer the tenant treatment** | Decide nothing; keep the capability unavailable | **Valid fallback** (Option D, §1.2) — the honest disposition if T1's prerequisite acts are not granted. |
+| **T1 — One local membership row (recommended)** | The same one-time act creates one `application_user` and **exactly one** `ACTIVE` `tenant_memberships` row with an opaque, act-chosen personal value; `resolveTenant()` and its exactly-one-`ACTIVE` fail-closed rule stay unchanged; `user_portfolios.tenant_id` keeps its one-tenant-per-portfolio constraint | **+** No change to the tenant contract, schema, or isolation invariant; no tenant directory, no roles, no admin endpoints, no self-service, no cross-system audit. **−** Requires the provisioning authority act and a local audit line for the mutation (currently absent — §2.2). |
+| **T2 — Make the tenant optional on this path** | Contract/schema change allowing a null tenant | **Rejected** — it weakens a governed isolation dimension to save one row; strictly worse than T1. |
+| **T3 — Defer** | Decide nothing; capability stays unavailable | **Valid fallback** (Option D). |
 
-**Recommendation: T1.** The proposal does **not** create a tenant value, a membership, or an administration endpoint; it identifies precisely which act must.
+**Explicitly not introduced:** tenant administration endpoints, tenant lifecycle/restoration semantics, multi-tenant semantics, role-based access control, or any assertion that `tenant_memberships` is an enterprise tenant source of truth (NP04-G32 §5/§9 preserved). **[V]**
 
-### 6.3 Where the current IPD model must change (exact identification)
+### 6.3 The two narrow additions required (and the one amendment)
 
-| Dimension | Change required? | Exact answer |
+| # | Change | Size |
 |---|---|---|
-| Credential position / identity acquisition | **YES — material contract change** | The OIDC-bearer clause (§2.4) must be amended for this one deployment to "accepted on the IPD-owned, OS-protected, single-principal local IPC endpoint". Required source change is confined to the identity-acquisition seam; the `OidcVerifier` and the TCP surface simply are not on this path. |
-| `applicationUserId` semantics | **No** | Opaque, stable, separately governed; unchanged. |
-| External-identity mapping table | **No** — but see §10.2 for the binding-record recommendation | The `(issuer, subject)` mapping table is **not** proposed as the place to record a local-IPC principal (that would conflate a transport fact with an external identity claim). |
-| Tenant resolution and membership invariant | **No** (T1) | `resolveTenant` and the exactly-one-`ACTIVE` behaviour remain unchanged. |
-| Portfolio authorization triple, revisions, consolidations, tombstones | **No** | Unchanged; reused. |
-| Store / schema / parallel store | **No new store.** One narrow additive record (or migration) is needed for the binding (see §10.2) | The G24 store remains the candidate persistence capability. |
-| Audit | **Narrow addition required** | Membership provisioning/revocation are currently **not audited** (§2.2); the contract requires audit for the lifecycle operations it relies on. |
+| A-1 | **One clause amended** (§2.4): credential position becomes "accepted on the IPD-owned, single-principal local IPC endpoint" for this one deployment | One clause, one deployment |
+| A-2 | **One additive binding record** + migration, e.g. `local_principal_bindings(endpoint_id, application_user_id → application_users, tenant_id, state ∈ {ACTIVE, REVOKED}, created_at, updated_at, revoked_at)` — deliberately **not** reusing `external_identity_mappings`, to avoid conflating a transport fact with an external identity claim | One table |
+| A-3 | **Local audit line** on binding and membership lifecycle mutations (both currently unaudited) — local only; no cross-system audit destination is created or implied | One narrow addition |
+
+No other schema, contract, or identity change is required.
+
+### 6.4 Compatibility with the existing G24 pieces (reuse, not reimplementation)
+
+| Component | Under `L-IPC-1` |
+|---|---|
+| `PortfolioRepository`, `DurablePortfolioStore` (owner/tenant scoping, revisions, tombstones) | **Reused unchanged** — exactly the semantics this contract needs |
+| `resolveTenant()` + exactly-one-`ACTIVE` rule | **Reused unchanged** (T1). Caller tenant *hint* is unnecessary on this path: the binding's membership is the sole tenant source for the endpoint |
+| `consolidation.ts` (MERGE/REPLACE, idempotency, weight guard) | **Reused**, with the canonical-identity override in C12 |
+| `IdentityService` mapping lifecycle + `mapping_audit_events` transaction pattern | **Pattern reused** for A-2/A-3 |
+| `OidcVerifier`, `src/auth/config.ts` | **Not on this path**; unchanged for any other surface |
+| `src/server/http-server.ts` `validateHolding()` defaults | **Not carried over** — §7.3 |
+| `src/persistence/*` (bootstrap, migrations, ledger) | **Reused unchanged** (C2) |
+
+**C11 — No parallel store.** The G24 durable store remains the only portfolio store. **[P]** (G-2 architectural decision: extend, do not replace or duplicate **[V]**.)
 
 ---
 
-## 7. Canonical company identity — contract for a successful holding write
+## 7. Canonical company identity and DP-2 Option 2F
 
-Company identity is kept **entirely separate** from authentication and ownership. **[V]** standing separation (D-2 §8; DP-2).
+Company identity stays **entirely separate** from authentication and ownership **[V]** (D-2 §8; DP-2).
 
 ### 7.1 Existing IPD capability that can provide the resolution
 
 | Capability | Path | Verified properties |
 |---|---|---|
-| Security Master (D05) — **sole identity authority** | `src/identity/security_master.ts`, contract `src/contracts/d05_security_master.ts`, pinned fixture `evidence/operator_drop/d05_security_master_broad_universe.json` (SHA-256 `7f53540b…4b74b5`, pinned in `docs/FULL_IIPS_BI08_CONVERGENCE_FILE_MATRIX.md`) | `companyId` is the authoritative internal id; registering an entity auto-indexes ISIN, CIN, NSE symbol, BSE symbol/scrip code, and composite tickers |
-| Point-in-time identifier mapping and resolution | `src/identity/mapping_store.ts` (`IdentityMappingStore.resolveCompanyId`) | Effective-dated mappings (`effectiveFrom`/`effectiveTo`) resolved at an explicit `asOf`; **fails closed** with `IdentityAmbiguityError` when zero mappings match (`UNMAPPED_IDENTIFIER`, quarantined) or when multiple mappings collide on different `companyId`s (`AMBIGUOUS_COLLISION`, quarantined) |
-| Quarantine semantics | `src/identity/quarantine.ts` | Reason codes `UNMAPPED_IDENTIFIER`, `AMBIGUOUS_COLLISION`, `EXPIRED_EFFECTIVE_DATE`, `MISSING_EXCHANGE` |
-| Governed fixture master | `src/identity/governed_fixture_master.ts`, `src/identity/d05_broad_universe_data.ts` | Fixture-backed master used offline |
+| Security Master (D05) — **sole identity authority** | `src/identity/security_master.ts`; contract `src/contracts/d05_security_master.ts`; pinned fixture `evidence/operator_drop/d05_security_master_broad_universe.json` (SHA-256 `7f53540b…4b74b5`, pinned in `docs/FULL_IIPS_BI08_CONVERGENCE_FILE_MATRIX.md`) | `companyId` is the authoritative internal id; entity registration indexes ISIN, CIN, NSE/BSE symbols and scrip codes, composite tickers |
+| Point-in-time resolution | `src/identity/mapping_store.ts` (`IdentityMappingStore.resolveCompanyId`) | Effective-dated; **fails closed** with `IdentityAmbiguityError` on zero matches (`UNMAPPED_IDENTIFIER`) or conflicting matches (`AMBIGUOUS_COLLISION`) |
+| Quarantine reason codes | `src/identity/quarantine.ts` | `UNMAPPED_IDENTIFIER`, `AMBIGUOUS_COLLISION`, `EXPIRED_EFFECTIVE_DATE`, `MISSING_EXCHANGE` |
+| Governed fixture master | `src/identity/governed_fixture_master.ts`, `src/identity/d05_broad_universe_data.ts` | Fixture-backed, offline |
 
-All **[V]** on IPD `main@70b24f0`. **The competing resolver is already dispositioned**: the IPD convergence matrix records `frontend/server/portfolio/portfolio-resolver.ts` (FIGI/`canonicalSecurityId`) as **DEFER** — conflicting with `SecurityMaster` — and states that `SecurityMaster` is the sole identity authority. `L-IPC-1` therefore nominates the Security Master family only, and an implementation must not resurrect the deferred resolver. This is the capability the proposal nominates for authorized canonical resolution — **subject to a separate authority act designating it for the G-2 write path**, which this proposal does **not** render.
+All **[V]** on IPD `main@70b24f0`. The competing resolver `frontend/server/portfolio/portfolio-resolver.ts` (FIGI/`canonicalSecurityId`) is already recorded **DEFER — conflicts with `SecurityMaster`** in the convergence matrix; `SecurityMaster` is the sole identity authority, and the deferred resolver must not be resurrected. **[V]**
 
 ### 7.2 Required contract for a successful holding write
 
-**C13 — Canonical identity contract.** **[P]**
+**C12 — Canonical identity contract.** **[P]**
 
-1. A holding may persist only with a canonical `companyId` obtained from an **authorized, provenance-supported resolution** performed or verified **IPD-side**, using the capability in §7.1 (or another source separately designated by authority).
-2. **Ticker-shaped and caller-supplied identity values are not canonical identity.** IRR's `companyId` field, symbol, ISIN, exchange, or any client field must never be accepted as canonical by declaration.
-3. **Exactly one** resolution is admissible. Zero resolutions (`UNMAPPED_IDENTIFIER`) or multiple conflicting resolutions (`AMBIGUOUS_COLLISION`) ⇒ the holding is **refused**.
-4. **DP-2 Option 2F remains in force and is not relaxed**: unresolved or ambiguous holdings are refused **before** serialization, port call, or persistence; the boundary emits neither `NON_PRODUCTION_OPERATOR_BYPASS` nor a false canonical-provenance declaration.
-5. **No bypass may be introduced to enable saving.** The existing non-production single-operator bypass governs an offline UI-qualification path (`evidence/operator_drop/NON_PRODUCTION_SINGLE_OPERATOR_IDENTITY_BYPASS.md`, `GOV-REC-2026-NON-PROD-OPERATOR-BYPASS-01`); this proposal **does not extend, port, or admit** it to the IPC write path.
-6. Writes that fail C13 are refused **without** creating a revision, a holding row, or a successful-write response.
+1. A holding persists only with a canonical `companyId` obtained from an **authorized, provenance-supported resolution performed or verified IPD-side** (capability above, or another source separately designated by authority).
+2. **Ticker-shaped and caller-supplied identity values are never canonical identity** — not IRR's `companyId` field, not symbol/ISIN/exchange, not any client value.
+3. **Exactly one** resolution is admissible; zero (`UNMAPPED_IDENTIFIER`) or conflicting (`AMBIGUOUS_COLLISION`) ⇒ **refused**.
+4. **DP-2 Option 2F remains in force, unchanged and unrelaxed**: unresolved or ambiguous holdings are refused **before** serialization, port call, or persistence; neither `NON_PRODUCTION_OPERATOR_BYPASS` nor a false canonical-provenance declaration is emitted.
+5. **No bypass may be introduced to enable saving.** The existing non-production single-operator bypass governs an offline UI-qualification path (`evidence/operator_drop/NON_PRODUCTION_SINGLE_OPERATOR_IDENTITY_BYPASS.md`, `GOV-REC-2026-NON-PROD-OPERATOR-BYPASS-01`); it is **not** extended, ported, or admitted to this path.
+6. Refused writes create no revision, no holding row, and no success response.
 
-### 7.3 A verified gap this contract must close (material finding)
+### 7.3 Verified gap the future implementation must close
 
-The off-main G24 write path currently **accepts caller-supplied identity claims**, which conflicts with C13/2F:
-
-- `src/server/http-server.ts` → `validateHolding()` **defaults** `companyId` to `''`, `identityStatus` to `'RESOLVED'`, and `resolutionDisposition` to `'CANONICAL_P04'`. **[V]**
-- `src/portfolio/consolidation.ts` → Save Guard 2 treats a holding as resolved when `identityStatus !== 'UNRESOLVED' && !!companyId`, and accepts the explicit bypass branch `identityStatus === 'UNRESOLVED' && resolutionDisposition === 'NON_PRODUCTION_OPERATOR_BYPASS'`. **[V]**
-
-Consequences that must be fixed by the future authorized implementation, **not** by this proposal: a caller can assert resolution state, and the write path has no IPD-side canonical-resolution step. `L-IPC-1` therefore requires (a) IPD-side refusal of `identityStatus`/`resolutionDisposition`/`companyId` claims arriving on the IPC boundary, and (b) IPD-side canonical resolution (or refusal) before persistence. Any future implementation that reuses the off-main write-path guard **as-is** would violate C13.
+The off-main G24 write path currently **accepts caller-supplied identity claims**: `validateHolding()` in `src/server/http-server.ts` **defaults** `companyId` to `''`, `identityStatus` to `'RESOLVED'`, and `resolutionDisposition` to `'CANONICAL_P04'`; `consolidation.ts` Save Guard 2 treats a holding as resolved when `identityStatus !== 'UNRESOLVED' && !!companyId` and accepts the `NON_PRODUCTION_OPERATOR_BYPASS` branch. **[V]** Therefore the implementation must (a) refuse those fields on the IPC boundary and (b) perform IPD-side canonical resolution or refusal before persistence. **Reusing the off-main guard as-is would violate C12.**
 
 ---
 
-## 8. Threat model and fail-closed behaviour
+## 8. Threat model, fail-closed behaviour, and required disclosures
 
-### 8.1 Trust assumptions (explicit)
+### 8.1 Trust assumptions
 
-1. The operator's OS account and the host's OS kernel are trusted. **Outside the boundary:** a fully compromised OS account, a malicious kernel/administrator, hardware compromise, and physical access.
-2. The operator does not intentionally run hostile processes as the same account. *(If they do, see T-1 and §8.4.)*
-3. The IRR and IPD processes are the operator's own deployed code at authorized refs.
-4. The browser is **never** trusted for authority; the first-party UI is trusted only to render and to relay requests.
+1. The operator's OS account and the host OS are trusted.
+2. The browser is **never** trusted for authority; the first-party UI only renders and relays.
+3. IRR and IPD are the operator's own code at authorized refs, running as the operator.
+4. One human operator, one laptop, one account, non-production.
 
-### 8.2 Threats, enforcement points, and required outcomes
+### 8.2 Threats and enforcement points
 
-| # | Threat | Enforcement point | Required outcome |
+| # | Threat | Enforcement | Required outcome |
 |---|---|---|---|
-| T-1 | Unauthorized local process (same or different account) connects to the endpoint | OS endpoint permissions (C4) | Different account/session ⇒ refused by the OS; same account ⇒ **admitted** — this is the documented, accepted residual (C5(iv)); it must not be misrepresented as authenticated |
-| T-2 | Untrusted browser page / renderer / remote client calls the privileged operation | No network surface for owner-scoped operations (C1); CORS not wildcarded (C10); CSRF hardening (C11) | Cannot reach IPD at all; a cross-site request to IRR is rejected by the CSRF control |
-| T-3 | Forged principal/owner/tenant/scope in the request | C8 refusal + C9 IPD authority | Request refused; no owner disclosed; no partial effect |
-| T-4 | Forged or replayed credential material | Not applicable — the contract introduces no bearer; any principal-shaped field is refused (C8) | Refused |
-| T-5 | Endpoint exposure (name learned, endpoint discoverable, endpoint reachable from another interface) | Name is not a credential (C6.2, §4.1); endpoint is not a network service (C1) | Exposure of the name grants nothing beyond what the OS already permits |
-| T-6 | Stale endpoint / stale process state after abnormal exit | C6.3, C6.5 — stale endpoints yield refusal; revoked binding yields refusal | Fail closed; no owner inferred; no fallback |
-| T-7 | Ambiguous or unresolved holding | C13 (2F): refuse before persistence | Refusal; no revision, no partial write |
-| T-8 | Concurrent write / lost update | Existing revision (`expectedRevision`) and immediate-transaction semantics **[V]** `src/portfolio/durable-store.ts` | Revision conflict reported; no silent overwrite |
-| T-9 | Cross-owner / cross-tenant probe | Existing authorization triple + "unauthorized ≡ missing" **[V]** | Indistinguishable refusal; no disclosure |
-| T-10 | Binding revoked while IRR keeps calling | C6.5 revocation takes effect for new connections | Refusal until the operator re-provisions |
-| T-11 | Startup with missing/partial configuration (no binding, no store, no migrations) | C2, C6.1 | Capability unavailable; **no** endpoint creation |
-| T-12 | Store or binding corruption | Fail-closed persistence **[V]** `src/persistence/errors.ts` (no in-memory fallback) | Refusal; no degraded mode |
+| T-1 | Unintended access by another **local user** | Windows default DACL (F3) + §9 V-1 measurement | No write access; the app additionally never emits data before a valid request (C5.1); **measured**, not assumed |
+| T-2 | **Remote/LAN caller** | DACL check (F4) + host SMB/file-sharing blocked + §9 V-2 | Not able to invoke operations; exposure disclosed if measurement disagrees |
+| T-3 | Untrusted **browser** request | No browser-reachable path to the endpoint; C8 loopback posture; C9 CSRF hardening | Cannot reach IPD; cross-site request to IRR rejected |
+| T-4 | Forged **owner/tenant/scope/principal** claim | C7 refusal + §5.2 IPD-side authority | Refused; no owner disclosed; no partial effect |
+| T-5 | **Endpoint squatting** / name taken | `FILE_FLAG_FIRST_PIPE_INSTANCE` → bind fails (F7) | Startup fails closed; no fallback |
+| T-6 | **Stale endpoint** / abnormal exit | C5.5, E4 | Connection refused / binding absent ⇒ refused; no data served |
+| T-7 | **Ambiguous or unresolved** holding | C12 / DP-2 2F | Refused before persistence; quarantine evidence |
+| T-8 | **Concurrent write** / lost update | Existing `expectedRevision` + immediate-transaction semantics **[V]** | Revision conflict reported; no silent overwrite |
+| T-9 | Cross-owner/tenant probe | Existing authorization triple + "unauthorized ≡ missing" **[V]** | Indistinguishable refusal |
+| T-10 | Request flooding by a caller that can open the endpoint | C5.4 caps | Bounded; no availability claim is made |
+| T-11 | Missing/partial configuration at startup (no binding, no store, unverified migrations) | C2, C5.3 | Capability unavailable; endpoint not created |
+| T-12 | Binding revoked while IRR keeps calling | C10 lifecycle | Refused for new connections; audited (A-3) |
 
-### 8.3 What this boundary does **not** protect against (required disclosure)
+### 8.3 What this boundary does **not** protect against — required disclosure
 
-- A **fully compromised OS account** or an **equally privileged malicious process** running as the operator's account. The design does **not** claim process-identity authentication (U-3), so such a process may open the endpoint exactly as IRR can.
-- **Bypass of the store file's protection.** The proposal claims confidentiality/integrity for portfolio data **only** to the level of the OS-account protection applied to the store itself.
-- **Supply-chain or code-integrity attacks** inside either process.
-- **Hosted-preview, LAN, shared-host, or remote-browser operation** — explicitly outside the trust assumption (C10).
-- **Availability** guarantees, and **cross-system audit delivery** (still unresolved/deferred per NP04-G32 §5.4).
-- Any form of **user attribution or non-repudiation** beyond "the provisioned single principal performed this operation".
+- **Another process running as the operator's own account — including malware.** By the platform default, the creating user receives **full control** of the endpoint (F3), and peer process identity is not available to the server (E1). Such a process can connect and invoke operations. **This is outside the protection boundary and is not mitigated by this design.**
+- **Administrators and LocalSystem**, which the default DACL also grants full control (F3); an administrator can read the store file directly in any case.
+- A **fully compromised OS** or host.
+- **Confidentiality beyond the OS account**: the proposal claims protection for portfolio data **only** to the level of the OS-account protection applied to the store file itself.
+- **Availability/denial of service** and **cross-system security audit** (still deferred per NP04-G32 §5.4).
+- **User attribution/non-repudiation** beyond "the single provisioned principal performed this operation".
+- Anything on a **LAN, hosted preview, shared host, or remote browser** — outside the trust assumption by C8.
 
-### 8.4 Residual risk acceptance
+### 8.4 Residual-risk acceptance
 
-T-1's same-account residual is **inherent to the single-user, single-account deployment** and must be accepted explicitly as part of any Option A/B acceptance, or else the boundary must be strengthened beyond this scope (separate low-privilege service account — alternative **A7**, §12). It must **not** be recorded as "protected" anywhere in the contract, evidence, or UI.
+T-1/T-2 residuals are inherent to a personal-laptop, single-account deployment and must be **explicitly accepted** (or rejected) as part of the §13 decision. They must never be recorded in the contract, evidence, or UI as "protected".
 
 ---
 
-## 9. Runtime and deployment assumptions
+## 9. Mandatory Windows verification (gate V) — not yet executed
 
-| Assumption | Value / status |
+The deployment runtime's endpoint permissions **have not been measured on the operator's laptop** in this work, and this proposal therefore does **not** claim the design works on Windows. The following must be executed and published **before** any implementation-authority act is exercised, and before any claim of operability:
+
+| Gate | Procedure (run on the operator's laptop, ordinary user, no elevation) | Pass criterion |
+|---|---|---|
+| **V-1** | Start the IPD process; then inspect the endpoint's effective permissions: `accesschk.exe -accepteula -l -v \pipe\<endpoint-name>` (Sysinternals; `\pipe\` prefix selects named-pipe paths) and, as a cross-check, `Get-Acl \\.\pipe\<endpoint-name>`. Capture raw output. | Output shows `FILE_WRITE_DATA`/write access **only** for the operator account, Administrators, SYSTEM, and CREATOR OWNER; no other identity receives write access. Read-only ACEs for Everyone/anonymous are expected (F3) and **must be recorded, not hidden**. |
+| **V-2** | From a second machine, attempt remote enumeration/connection: `[System.IO.Directory]::GetFiles('\\<laptop>\pipe\')` and a connect attempt to the endpoint name; record the laptop's File-and-Printer-Sharing/SMB inbound state. | The endpoint is not remotely connectable with write access; if it is reachable read-only, that is recorded, and C5.1 (no data before a valid request) is demonstrated as the compensating control. |
+| **V-3** | As a second, non-administrative local user (or second session), attempt to connect and to send a request. | Connection denied, or accepted read-only with no operation possible and no data emitted. |
+| **V-4** | Confirm the endpoint disappears on clean shutdown and that a stale/colliding endpoint at startup yields a **failed start**, not a silent fallback. | Fail-closed behaviour observed; raw output captured. |
+| **V-5** | Record the exact versions: Windows build, Node version, libuv version, and the endpoint name format actually used. | Recorded; any deviation from F1–F7 assumptions triggers a re-read of the design. |
+
+**Failure disposition.** If V-1 shows write access for any identity other than the operator, Administrators, SYSTEM, or CREATOR OWNER, or if V-2 shows remote invocation capability, then **this design does not satisfy `L-IPC-1` on Windows as written**. The correct disposition is then: (a) a host-configuration mitigation that can be evidenced (e.g. disabling inbound file-and-printer sharing, single-account host), or (b) rejection of the Windows-Node variant — **not** a compensating workaround invented at implementation time, and **not** a native addon added without a separate decision (§11, A8).
+
+**Host preconditions (part of the contract's assumptions, not new infrastructure).** One interactive user in scope; inbound SMB/file-and-printer sharing off; the laptop's browser surface loopback-bound (C8). These are local settings on the operator's own machine, verifiable by the operator, with no service, domain, or enterprise component.
+
+---
+
+## 10. Verification and qualification scope (proportionate)
+
+Once implementation is separately authorized, the following evidence is sufficient for this single-user, non-production scope. It is intentionally smaller than an enterprise qualification programme, and every item is measurable on the one laptop.
+
+| ID | Evidence |
 |---|---|
-| Operator host | The operator's own machine, running Windows. Prior governed evidence records operator runs on Windows: IRR tracker §16.31 (`CV-CORR-19`) — operator run on `DESKTOP-NO0NHTP`, Windows PowerShell `5.1.26100.9444`, corroborated by hosted Windows runs (Windows PowerShell 5.1 and PowerShell 7.6); IPD `windows-acceptance-evidence/` records a Windows acceptance worktree at `G:\IIPS-IIPS-FULL-SHELL-WINDOWS-ACCEPTANCE`; IPD ships a Windows PowerShell operator script `run-d114-legacy-acquisition.ps1`. **[V]** |
-| Node.js | Node 22 / npm 10 — the toolchain the recorded local validation evidence was produced with and which IRR CI pins. **[V]** IRR `.github/workflows/ci.yml`; sandbox-verified Node `v22.22.3` |
-| Exact Windows build, pipe-descriptor behaviour, and Node patch level on the deployment host | **UNRESOLVED (U-1, U-2)** — must be probed, not assumed |
-| IRR server surface | `frontend/server/executive-transport.ts`, `EXEC_TRANSPORT_PORT` (default `8787`), currently listening on all interfaces with wildcard CORS. **[V]** (§5.5) |
-| IPD owner-scoped surface today | The G24 HTTP boundary (`IPD_HTTP_HOST` default `127.0.0.1`, `IPD_HTTP_PORT` default `8099`) exists **off-main only** and is not admitted. **[V]** |
-| Durable store | SQLite via exact-pinned `better-sqlite3@13.0.3`, DB path from `IPD_PORTFOLIO_DB_PATH` (absolute). **[V]** NP04-G32 §4.1/§6 |
-| Execution mode | NON_PRODUCTION. Production is out of scope. **[V]** |
-| Preview / remote environments | Arena preview hosts (`*.e2b.app`) and any LAN/shared host are **not** the deployment environment and **must not** serve the owner-scoped capability (C10). A green preview is not qualification. **[P]** |
-| Single operator | One human operator, one OS account, one host, one principal binding. **[P]** |
+| Q1 | Gate V (§9) passed and published, on the deployment host |
+| Q2 | Startup fail-closed: missing/invalid binding, missing store, unverified migrations ⇒ no endpoint, no fallback |
+| Q3 | Claim-refusal matrix: principal/owner/tenant/scope/`companyId`/`identityStatus`/`resolutionDisposition` claims each refused; no owner disclosed; no write |
+| Q4 | Owner/tenant isolation: the provisioned principal succeeds; any other/absent binding fails indistinguishably from "not found" |
+| Q5 | Canonical identity: one match proceeds only under the separately authorized write policy; zero/conflicting matches refused **before** serialization/port/store, with quarantine evidence |
+| Q6 | DP-2 2F: unresolved/ambiguous writes refused; no bypass emitted; no partial revision |
+| Q7 | Revision/lifecycle: stale `expectedRevision` rejected; duplicate-content no-op; tombstoned portfolio not disclosed |
+| Q8 | Durability: write → stop both processes → restart → read back; revoked binding fails closed after restart |
+| Q9 | C5.1 negative test: a read-only connection receives **no** bytes (no banner, no data) |
+| Q10 | No parallel store: inventory confirms exactly one portfolio store |
+| Q11 | Drift check: the qualified surfaces are byte-identical to what was tested (digests recorded) |
+
+A green preview, a unit-test pass, or a store-level test does **not** qualify the boundary.
 
 ---
 
-## 10. Compatibility with the existing G24 implementation
-
-### 10.1 Reuse assessment (from the inspected off-main reference; no promotion implied)
-
-| Component | Reuse under `L-IPC-1` | Note |
-|---|---|---|
-| `PortfolioRepository`, `DurablePortfolioStore` (scope triple, revisions, tombstone, consolidation delegation) | **Reusable unchanged** | Owner/tenant scoping is exactly what the contract needs |
-| `consolidation.ts` semantics (MERGE/REPLACE, idempotency, weight guard) | **Reusable**, with C13 override | Save Guard 2's caller-claim acceptance must be superseded at the IPC boundary |
-| `IdentityService` mapping lifecycle + `mapping_audit_events` | **Pattern reusable**; not used for a local-IPC principal by declaration | Audit-in-transaction pattern is the model for the binding record |
-| `resolveTenant` + `tenant_memberships` | **Reusable unchanged** (T1) | Requires provisioning authority + audit (narrow addition) |
-| `OidcVerifier`, `src/auth/config.ts`, trusted-algorithm set | **Not on this path** | Retained for any other surface; untouched by this proposal |
-| `src/server/http-server.ts` (TCP `/api/ipd/*`) | **Not on this path** for owner-scoped operations (C1) | Its `validateHolding()` defaults must not be carried into the IPC path (§7.3) |
-| `src/persistence/*` (bootstrap, migrations, ledger) | **Reusable unchanged** | Startup discipline preserved (C2) |
-
-### 10.2 Binding-record shape — recommendation
-
-Two shapes are technically possible. **Recommendation: shape (b).**
-
-- **(a) Reuse `external_identity_mappings` with a synthetic non-OIDC issuer value.** Rejected: it would place a *transport/deployment* fact into a table whose governed meaning is "external identity claim", inviting exactly the identity-equivalence inference the program forbids.
-- **(b) One narrow additive binding record (new migration), e.g. `local_principal_bindings(endpoint_id, application_user_id → application_users, tenant_id, state ∈ {ACTIVE, REVOKED}, created_at, updated_at, revoked_at)` plus an audit event on every lifecycle mutation.** Recommended: keeps namespaces separate, makes revocation explicit and auditable, and does not touch the OIDC mapping semantics. It adds **no** parallel portfolio store.
-
-### 10.3 Answer to "can the current G24 architecture support this without a material contract change?"
-
-**No — one material security-contract change is required**, and it is precisely the identity-acquisition/credential clause (§2.4). Everything else in the G24 architecture (authorization triple, store, revisions, consolidation, tenant model, migrations discipline) can be reused, with one narrow additive binding record and one narrow audit addition. **The off-main G24 lineage is not admitted, promoted, merged, cherry-picked, or re-pinned by this proposal.**
-
----
-
-## 11. Required tests and qualification evidence (future authorized implementation)
-
-**Evidence bar:** every item below must be executed on the **deployment host** (Windows), as a **separate OS process** pair (IRR server + IPD service), against **real** code — not mocks — with raw command output, exit codes, and artifact digests recorded. A green preview, unit suite, or store-level test alone does not qualify the boundary.
-
-| ID | Required evidence | Pass criterion |
-|---|---|---|
-| Q1 | Endpoint creation probe: confirm the endpoint exists after IPD startup and that **nothing** is listening on TCP for owner-scoped operations | Endpoint present; TCP absent (both interrogated, output attached) |
-| Q2 | Startup fail-closed: absent/malformed binding, absent store path, unverified migrations | No endpoint created; capability unavailable; no fallback |
-| Q3 | **Endpoint permission verification on Windows**: enumerate the endpoint's effective permissions/DACL and the identities they admit | Output shows only the operator's account/session (plus OS-mandated principals, disclosed explicitly); if broader, **QUALIFICATION FAILS** |
-| Q4 | Cross-account negative test: a second OS user/session attempts to connect | Connection refused/denied at the OS level |
-| Q5 | Same-account non-IRR process attempts to connect | Expected result **recorded honestly** as ADMITTED (residual T-1); the report must state that peer process identity is not established |
-| Q6 | Browser/remote reachability: browser page (including cross-origin) and a LAN peer attempt to reach the privileged operation | Both fail; no state change |
-| Q7 | Claim-refusal matrix: requests carrying principal/owner/tenant/portfolio-scope/`companyId`/`identityStatus`/`resolutionDisposition` claims | Each refused; no owner disclosed; no write |
-| Q8 | Owner/tenant isolation: matching binding succeeds; foreign tenant/portfolio attempts fail | Success only for the provisioned principal; foreign attempts indistinguishable from missing |
-| Q9 | Canonical identity: one match; zero matches (`UNMAPPED_IDENTIFIER`); conflicting matches (`AMBIGUOUS_COLLISION`) | One match proceeds only under the separately authorized write policy; zero/multiple refused **before** serialization/port/store, with quarantine evidence |
-| Q10 | Revision and integrity: stale `expectedRevision`, duplicate-content no-op, MERGE/REPLACE parity, tombstoned portfolio | Existing behaviour preserved; no silent overwrite; no cross-owner disclosure |
-| Q11 | Durability across restart: write, stop both processes, restart, read back; plus binding revocation across restart | Data intact; revoked binding fails closed for new connections |
-| Q12 | Audit evidence: binding lifecycle and any membership mutation emit auditable records | Records present, ordered, in-transaction |
-| Q13 | No-parallel-store check: file/store inventory confirms exactly one portfolio store | One store; no second portfolio model |
-| Q14 | Boundary-drift check: the qualified surfaces are byte-identical to what was tested (blob digests recorded) | Digests match; drift invalidates qualification |
-
-*(Q14 note: the "published state is the tested state" discipline is already the program's established evidence bar — IRR F-3 qualification and the Gate C fence-blob verification pattern.)*
-
----
-
-## 12. Alternatives considered, and why unsafe shortcuts are rejected
+## 11. Alternatives considered
 
 | Alt | Description | Verdict |
 |---|---|---|
-| **A1** | Loopback TCP + `Origin`/`Host` checks as the boundary | **Rejected.** Loopback is reachable by every local process and by browser pages; `Origin`/`Host` are not authentication; the existing G24 boundary already binds `127.0.0.1` and that fact proves nothing about the caller |
-| **A2** | Static/shared secret in a file, header, env var, or "endpoint token" | **Rejected.** Excluded by the current trust contract; a same-account process can read it, so it adds no boundary and creates credential-handling obligations outside this scope |
-| **A3** | OIDC / Keycloak / issuer / token exchange for the local app | **Rejected as an assumed solution.** Out of scope for the single-user product boundary (H-18) and excluded by Gate C P-2; the recorded P-2-class prerequisite chain is not reopened by this proposal |
-| **A4** | In-process library import of the IPD package (IRR pins IPD as a Git dependency and already imports it in-process — **[V]** IRR `frontend/package.json` pins `2e11fa3b…`) | **Rejected for this capability.** No OS-enforced separation; any code path in the IRR process (including anything reachable from the HTTP surface) would hold direct object access to the store, and the boundary would no longer be independently enforceable or testable. It also does not implement the Program Authority's selected direction. Reserved: it remains the existing integration mechanism for other domains |
-| **A5** | Reuse the F-3 owner-context carrier as the G24 principal | **Rejected.** F-3 is explicitly materialisation, not authority; it is not an `applicationUserId`, not a membership, does not unlock the portfolio capability, and D-2 §8 forbids the equivalence |
-| **A6** | Forwarded/asserted principal header from IRR ("the caller says who it is") | **Rejected.** Expressly excluded by the current trust contract; caller-supplied identity is not authentication (§4.1) |
-| **A7** | Run the IPD service under a **separate low-privilege OS account**, ACL the endpoint and store to that account, and constrain IRR's account to the endpoint only | **Not rejected — deferred as a scope question.** This is the only option that could raise the boundary above the same-account residual (T-1), but it introduces OS service/account administration, credential/ACL management, and deployment complexity beyond the single-user personal-application scope. Requires its own scope decision; it is out of scope here |
-| **A8** | mTLS or TLS over a local TCP socket | **Rejected.** Needs certificates/key custody/rotation (out of scope), and the transport remains TCP: an OS-level endpoint permission model is strictly simpler and strictly narrower |
+| A1 | Loopback TCP + `Origin`/`Host` checks | **Rejected** — loopback is reachable by every local process and by browser pages; those headers are not authentication |
+| A2 | Static shared secret in a file/header/env | **Rejected** — a same-account process can read it, so it adds no boundary and creates credential-handling obligations |
+| A3 | OIDC / Keycloak / issuer / token exchange | **Rejected as an assumed solution** — out of scope for a personal laptop (H-18) and excluded by the recorded Gate C P-2 scope |
+| A4 | In-process library import of the IPD package (IRR already imports IPD in-process for other domains **[V]**) | **Rejected for this capability** — no OS-enforced separation; any code reachable from the HTTP surface would hold direct store access |
+| A5 | Reuse the F-3 owner-context carrier as the principal | **Rejected** — materialisation, not authority; not an `applicationUserId`; equivalence forbidden by D-2 §8 |
+| A6 | Forwarded/asserted principal header from IRR | **Rejected** — caller-supplied identity is not authentication; expressly excluded by the current trust contract |
+| A7 | Run the IPD process under a **separate low-privilege Windows account** (previously floated as a hardening option) | **Not proposed.** On this runtime it does not work without a DACL the application cannot set (F2/F6): the default DACL gives read-only to Everyone, so the operator's own IRR process could not obtain write access to a pipe owned by another account — and widening it via `writableAll` would grant **all users** write (F6), which is worse than the default. Concrete necessity is therefore not demonstrated; this stays closed unless §9 V-1 fails in a way that host configuration cannot fix |
+| A8 | **Native addon** to set the pipe DACL (`SetSecurityInfo`; the libuv handle is even created with `WRITE_DAC` **[V]**) or a logon-SID DACL per Microsoft's remedy (F5) | **Deferred, not proposed.** It would be the technically correct way to exclude other users/sessions and remote callers, but it adds native compilation, per-Node-version build artefacts, and a new supply-chain surface for a single-user personal application — disproportionate unless §9 shows the default DACL is insufficient. If it ever becomes necessary, it needs its own decision and its own qualification |
+| A9 | AF_UNIX on Windows (filesystem-ACL'd socket) | **Unavailable** — Node on Windows uses named pipes for the local domain (F1) |
+| A10 | File-drop rendezvous in an ACL-protected directory | **Rejected** — NTFS ACLs on a user-profile directory grant the *same* principals as the pipe's default DACL, at the cost of a hand-rolled protocol (torn writes, stale files, polling). Not a security gain |
 
 ---
 
-## 13. Explicit non-goals
+## 12. Non-goals
 
-This proposal and any acceptance of `L-IPC-1` do **not**:
-
-- authorize implementation, provisioning, credentials, database writes, or a successful portfolio save;
-- approve, qualify, admit, or enable any route, UI surface, or capability;
-- modify or reinterpret the IRR HTTP 503 `owner-context-unavailable` fence, DP-2 Option 2F, DP-1 Option 1A′, or any existing authority record;
-- promote, merge, cherry-pick, or re-pin the off-main G24 lineage, or admit it to IPD `main`;
-- introduce OIDC, Keycloak, RBAC, multi-user or enterprise tenant infrastructure, PostgreSQL, enterprise deployment architecture, or a second portfolio store;
-- designate a Company Identity Authority, a canonical-identifier policy, or a successful-write policy (§7 requires a separate act for the write path);
-- remove, weaken, or extend the non-production operator-bypass record;
-- create, infer, or alias any owner, tenant, principal, or company identifier;
-- establish cross-system security-audit delivery, tenant administration, or tenant lifecycle policy;
-- assert production, deployment, or runtime readiness of anything.
+This proposal and any acceptance of `L-IPC-1` do **not**: authorize implementation, provisioning, credentials, database writes, or successful saves; approve, qualify, admit, or enable any route/UI/capability; modify IRR's 503 fence, DP-2, DP-1 Option 1A′, or any authority record; promote, merge, cherry-pick, or re-pin the off-main G24 lineage; introduce OIDC, Keycloak, RBAC, multi-user or enterprise tenant infrastructure, PostgreSQL, enterprise deployment architecture, a second portfolio store, a Windows service, a separate service account, or a native addon; designate a company-identity authority, canonical-identifier policy, or successful-write policy; extend or admit the non-production operator bypass; create or infer any owner, tenant, principal, or company identifier; create tenant administration, tenant lifecycle, or cross-system audit capability; or assert production, deployment, or runtime readiness of anything.
 
 ---
 
-## 14. The exact IPD authority whose acceptance is required, and the requested decision
+## 13. Exact IPD authority and requested decision
 
-**Accepting capacity:** **Ramki — Program Authority, acting as the IPD security-contract authority for `ramkivs/iips-production-market-data` (repository owner/admin)**. The acceptance must be recorded **durably in the IPD repository** (a new IPD-side decision record naming this proposal and its ref), because IPD owns the portfolio domain and the changed trust boundary is enforced by IPD. **[V]** basis: the G-2 architectural decision assigns IPD ownership of the portfolio domain; the IPD-side contract currently exists only in the NP04-G24 series; "an IRR-only note does not silently change IPD's security contract" (IRR request §4.2).
+**Accepting capacity:** **Ramki — Program Authority, acting as the IPD security-contract authority for `ramkivs/iips-production-market-data`**, recorded durably in IPD (a new IPD-side decision record naming this proposal and its ref). IPD owns the portfolio domain and enforces the changed boundary; an IRR-only note does not amend the IPD contract.
 
-**Requested decision text (accept/reject/amend, verbatim-quotable):**
+**Requested decision (verbatim-quotable):**
 
-> I, Ramki, as Program Authority and IPD security-contract authority, decide on the IPD-side security-contract proposal `IIPS-V3-G2-IPD-LOCAL-PRINCIPAL-OS-IPC-SECURITY-CONTRACT-PROPOSAL-2026-10-16-01` (`L-IPC-1`, clauses C1–C13). I accept / accept with the following clause changes / reject / defer:
-> [ … ].
-> If accepted, I amend, **for one single-user, non-production deployment only**, the G24 identity-acquisition clause: the credential position becomes "accepted on the IPD-owned, OS-protected, same-host IPC endpoint bound to exactly one pre-provisioned principal", with all downstream authorization, tenant-membership, revision, canonical-identity, and DP-2 Option 2F requirements unchanged. I grant **no** provisioning, implementation, qualification, successful-write, route, or admission authority by this act. I confirm that peer process identity is **not** claimed, and that the same-account residual (T-1) is accepted explicitly / is not accepted and requires alternative A7.
+> I, Ramki, as Program Authority and IPD security-contract authority, decide on `IIPS-V3-G2-IPD-LOCAL-PRINCIPAL-OS-IPC-SECURITY-CONTRACT-PROPOSAL-2026-10-16-01` (revision 2), clauses C1–C12, for **one user, one personal laptop, non-production**: accept / accept with these clause changes / reject / defer.
+> If accepted, I amend **only** the G24 identity-acquisition clause for this one deployment — the credential position becomes "accepted on the IPD-owned, single-principal, same-host IPC endpoint" — with the `applicationUserId` model, external-identity mapping, tenant membership (exactly one `ACTIVE` row), the authorization triple, revision checks, canonical-identity validation, and DP-2 Option 2F **unchanged**; I accept the two narrow additions A-2 (binding record) and A-3 (local audit line).
+> I record that the application does **not** enforce the endpoint's OS permissions on Windows, that another process running as the operator's own account (including malware) is **outside** the protection boundary, and that gate V (§9) must be executed and published before any operability claim. I grant **no** provisioning, implementation, qualification, successful-write, route, or admission authority by this act.
 
-**Interdependent IRR-side act (separately required, none inferred):** an explicit IRR-side amendment act to the DP-1 Option 1A′ identity/credential trust clauses (preserving DP-2 Option 2F, H-18 scope, and the 503 fence) — the same human may act in both capacities, but each act must state its capacity and its repository/ref.
+**Interdependent IRR-side act (separately required, not inferred):** an explicit IRR-side amendment to the DP-1 Option 1A′ identity/credential trust clauses, preserving DP-2 Option 2F, H-18 scope, and the 503 fence. The same human may act in both capacities; each act must state its capacity and its repository/ref.
 
 ---
 
-## 15. Separate subsequent gates (none opened by this proposal)
+## 14. Next gates (none opened by this proposal)
 
-| Gate | Content | Authority required |
+| Gate | Content | Authority |
 |---|---|---|
-| **P-A — Provisioning** | Create exactly one `application_user`, one opaque personal tenant, exactly one `ACTIVE` membership, and one local-principal binding; name the endpoint/deployment identity; define revocation; add the required audit for membership mutations; run operator-only, offline, non-production | Separate explicit IPD provisioning act (tenant provisioning is currently **NOT AUTHORIZED**, NP04-G32 §5) |
-| **P-B — Implementation authority** | Name the exact IPD and IRR repositories, base refs, files/config/tests to be created or changed, the IPC mechanism chosen from C4, and the exclusions; decide whether any IPD-main implementation basis exists or must be created | Separate explicit IPD and IRR implementation-authority acts (the off-main G24 lineage is **not** a base) |
-| **P-C — Qualification** | Execute Q1–Q14 on the deployment host; publish raw evidence; independent review | Separate qualification/acceptance authority |
-| **P-D — Route/consumer admission** | Per-operation admission (reads and writes separately), the fence reconsideration conditions, and any UI admission | Separate per-capability admission act; IRR's HTTP 503 fence stays in force until then |
-| **P-E — Write policy / canonical identity** | Designate the authorized canonical resolution source for the write path and the successful-write policy | Separate act; `L-IPC-1` presumes **no** successful writes |
+| **A — Local provisioning** (one-time, offline, operator-run) | Create one `application_user`, one opaque personal tenant, exactly one `ACTIVE` membership, and the principal binding; define revocation; add the A-3 audit line. Runs on the laptop, against the local store; no network, no admin, no enterprise component | Separate explicit IPD provisioning act (tenant provisioning is currently **NOT AUTHORIZED**, NP04-G32 §5) |
+| **B — Implementation authority** (local, single-user) | Name the exact IPD and IRR files/tests, the mechanism, the C5 rules, and the exclusions; state whether an IPD-`main` implementation basis exists or must be created | Separate IPD and IRR implementation-authority acts (the off-main lineage is **not** a base) |
+| **C — Qualification** | Execute §10 on the laptop; publish raw evidence including gate V | Separate qualification authority |
+| **D — Route/consumer admission** | Per-operation admission; IRR's 503 fence stays in force until then | Separate admission act |
+| **E — Write policy / canonical identity** | Designate the resolution source for the write path and the successful-write policy | Separate act; `L-IPC-1` presumes **no** successful writes |
 
 ---
 
-## 16. Unresolved assumptions and open questions (must be answered before or during P-B)
+## 15. Unresolved items
 
-| ID | Item | Why it matters |
-|---|---|---|
-| **U-1** | The **effective OS permissions** of the endpoint created on the deployment host (Windows named pipe security descriptor), and whether the in-scope toolchain can set or verify it | C4 depends on it; if it cannot be shown to exclude other users/sessions, the boundary fails and the disposition is rejection |
-| **U-2** | Stale-object and re-creation semantics for the chosen mechanism on the deployment host, including behaviour after abnormal termination | C6.3 |
-| **U-3** | Availability of **peer process identity** (Windows `GetNamedPipeClientProcessId` equivalent; POSIX peer credentials) in the in-scope toolchain | Determines whether §3.3.3's non-claim can be narrowed; today it cannot |
-| **U-4** | Whether the workspace/toolchain's Node version exposes any API relevant to endpoint permissions | Affects whether U-1 is achievable without native code (native code is **not** proposed) |
-| **U-5** | Exact tenant value rule for the single personal tenant (opaque act-created value) | T1 prerequisite; no value is invented here |
-| **U-6** | Whether the accepting authority requires the binding record shape (b) of §10.2 or prefers (a) | Clause-level acceptance |
-| **U-7** | Audit destination/retention for binding lifecycle and membership mutations in the single-user, non-production regime | NP04-G32 §5.4 defers cross-system audit; a local-only answer is required |
-| **U-8** | Whether the IRR-side CSRF hardening (C11) is acceptable within the existing no-auth program decision, or needs its own authorization | Warranted by §5.5; must not be treated as authentication |
+| ID | Item |
+|---|---|
+| **U-1** | Gate V results on the actual laptop (endpoint DACL, remote reachability, second-user test, version inventory) — the single most important open item |
+| **U-2** | Whether the operator's host configuration (single account, inbound sharing off) is confirmed and recorded |
+| **U-3** | Whether peer process identity is obtainable in the in-scope toolchain (currently: no — E1; Windows equivalent not exposed) |
+| **U-4** | The tenant value rule for the one personal row (opaque, act-chosen; no value is invented here) |
+| **U-5** | Whether the operator accepts the same-user (T-1) residual explicitly, as required by §8.4 |
+| **U-6** | Whether A-2's binding record shape is accepted as proposed |
 
 ---
 
-## 17. Closing statement
+## 16. Closing statement
 
-This record is a **proposal**. It is **not approved, not effective, not implemented, not qualified, and not admitted**. It changes no IPD security contract, no implementation, no test, no dependency, no schema, no runtime configuration, and no IRR artifact; it does not create or modify any owner, tenant, principal, or company identity; it does not touch IRR's 503 fence, DP-2, or any existing authority record; and it does not promote, merge, cherry-pick, or re-pin the off-main G24 lineage. **No implementation may begin because this proposal exists or because it is published or reviewed.** The next authorized action is the explicit IPD-side security-authority decision requested in §14.
+This record is a **proposal**. It is **not approved, not effective, not implemented, not qualified, and not admitted**, and it does not claim that the design works on Windows — gate V (§9) has not been executed. It changes no IPD security contract, implementation, test, schema, dependency, or runtime configuration; it creates no owner, tenant, principal, or company identity; it does not touch IRR's 503 fence, DP-2, or any authority record; and it does not promote, merge, cherry-pick, or re-pin the off-main G24 lineage. **No implementation may begin because this proposal exists, is published, or is reviewed.** The next authorized action is the single explicit IPD-side security-authority decision requested in §13, followed by gate A (local provisioning) and gate V.
 
-*End of proposal `IIPS-V3-G2-IPD-LOCAL-PRINCIPAL-OS-IPC-SECURITY-CONTRACT-PROPOSAL-2026-10-16-01`.*
+*End of proposal `IIPS-V3-G2-IPD-LOCAL-PRINCIPAL-OS-IPC-SECURITY-CONTRACT-PROPOSAL-2026-10-16-01`, revision 2.*
