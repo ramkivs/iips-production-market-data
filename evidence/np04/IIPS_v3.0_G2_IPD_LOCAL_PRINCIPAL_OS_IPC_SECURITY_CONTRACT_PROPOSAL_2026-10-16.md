@@ -371,6 +371,8 @@ T-1/T-2 residuals are inherent to a personal-laptop, single-account deployment a
 
 A V-P result is a legitimate input to gate V but **closes nothing by itself**; only V-E closes V-1/V-3/V-4 for the realized design, and neither phase substitutes for the other. Procedure: `IIPS-V3-G2-GATE-V-WINDOWS-TEST-PROCEDURE-AND-SEQUENCING-2026-10-16-01` §1.3. **This clarification changes no clause C1–C12 and no gate.**
 
+**PA waiver note (2026-10-16).** The Program Authority has decided that **V-2 (remote-machine access test)** and **V-3 (second-account access test)** are **NOT REQUIRED — PA-WAIVED**: only **one** Windows user account exists on the laptop and **no separate remote machine** is available. Those two rows are therefore **not pending and not failed**, and must never be recorded as PASS/FAIL/BLOCKED. The waivers do **not** demonstrate remote or cross-account isolation, and they change **no** clause and **no** other gate. **V-1 and V-4 remain outstanding** local criteria (they need neither waived resource), together with the whole V-E phase. Evidence: `IIPS-V3-G2-GATE-V-EVIDENCE-RECONCILIATION-AND-PA-WAIVER-2026-10-16-01`.
+
 The deployment runtime's endpoint permissions **have not been measured on the operator's laptop** in this work, and this proposal therefore does **not** claim the design works on Windows. The following must be executed and published **before** any implementation-authority act is exercised, and before any claim of operability:
 
 | Gate | Procedure (run on the operator's laptop, ordinary user, no elevation) | Pass criterion |

@@ -418,6 +418,8 @@ Say 'and any copy of the second-account / remote-machine windows that could not 
 | C5.1 no-bytes-before-request | **Not provable** — the probe has no protocol; it only shows the platform condition that makes C5.1 necessary | **Required** (gate C, Q9 negative test) | **NOT TESTED** |
 | C5.3/C6 fail-closed app behaviour, owner non-disclosure | **Not provable** | **Required** (gate C, Q2/Q4) | **NOT TESTED** |
 
+**Dated update (2026-10-16, after this preparation was published).** The Program Authority has **waived** V-2 and V-3 as **NOT REQUIRED — PA-WAIVED** (one Windows account; no separate remote machine). Block B and the C2 remote block are therefore **not to be executed**; the V-2/V-3 rows above are **not pending and not failed**. V-1, V-4 and the V-6 send half remain local, executable as prepared. See `IIPS-V3-G2-GATE-V-EVIDENCE-RECONCILIATION-AND-PA-WAIVER-2026-10-16-01` §2/§5/§8.
+
 **No row above is closed, and no Gate V disposition has changed.**
 
 ---
