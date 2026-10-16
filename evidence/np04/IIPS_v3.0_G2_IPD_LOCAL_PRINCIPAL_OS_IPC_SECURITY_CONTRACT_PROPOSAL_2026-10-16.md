@@ -364,6 +364,13 @@ T-1/T-2 residuals are inherent to a personal-laptop, single-account deployment a
 
 ## 9. Mandatory Windows verification (gate V) — not yet executed
 
+**Sequencing clarification (2026-10-16 verification pass).** V-1's procedure begins *"Start the IPD process"*, but no IPD process binds an endpoint today and creating one is not yet authorized (gates B/C). Gate V therefore has **two phases, both mandatory**:
+
+- **V-P — platform/host phase.** F-3/F-4/F-5/F-7/F-8 are properties of Windows + libuv + the owning account, not of the application. They are measured on a **disposable probe** created through the *identical* libuv path (`src/win/pipe.c` has exactly one `CreateNamedPipeW` call site, L546, with `lpSecurityAttributes = NULL`), in the same account, on the same host — no application code, no production name, no new authority. V-5 closes here; a V-P failure on V-1/V-2/V-3 is decisive **against** this design, because those are runtime facts.
+- **V-E — endpoint phase.** V-1/V-3/V-4 are **re-run against the production endpoint** after gate B, together with the application-level controls C5.1/C5.3/C6 at gate C (Q9/Q2/Q4).
+
+A V-P result is a legitimate input to gate V but **closes nothing by itself**; only V-E closes V-1/V-3/V-4 for the realized design, and neither phase substitutes for the other. Procedure: `IIPS-V3-G2-GATE-V-WINDOWS-TEST-PROCEDURE-AND-SEQUENCING-2026-10-16-01` §1.3. **This clarification changes no clause C1–C12 and no gate.**
+
 The deployment runtime's endpoint permissions **have not been measured on the operator's laptop** in this work, and this proposal therefore does **not** claim the design works on Windows. The following must be executed and published **before** any implementation-authority act is exercised, and before any claim of operability:
 
 | Gate | Procedure (run on the operator's laptop, ordinary user, no elevation) | Pass criterion |
