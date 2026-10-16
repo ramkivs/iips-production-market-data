@@ -210,7 +210,7 @@ factually verified candidates on the live IPD remote are:
 | `arena/01a0f308-iips-production-market-data` | `6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4` | `eb07ea36059c6e2d3f1b6ff9afb8e3fb0c562cc5` | 13 | 6 | **0** |
 | `arena/01a0e6d9-iips-production-market-data` | `c1b955b427486dbce6d6a159a448065b9db45dc9` | `eb07ea36059c6e2d3f1b6ff9afb8e3fb0c562cc5` | 13 | 6 | **0** |
 | `np04-governed-persistence-windows` | `2e11fa3b689d1a3674a5e4ba1f1de9a559e20494` | `7c1d516a4315…` | **9** | **0** | **0** |
-| `arena/21c63aef-iips-production-market-data` (PR #8) | `b3ee24ea563711586208ba0a4c70702b2ceef73d` | `318a7736711a…` | 0 | 0 | 0 |
+| `arena/21c63aef-iips-production-market-data` (PR #8) | head at the time of writing: `d90e734b70328704ff598ada65bec0b3354c5684` (this addendum's own commit; the branch head advances with each commit to the workstream) | `b7475336bb60…` | 0 | 0 | 0 |
 | `main` | `70b24f029842a7e9b7f615e4d9df7376fd4ff817` | `cc0f01178228…` | 0 | 0 | 0 |
 
 Facts material to the designation (stated, not decided):
