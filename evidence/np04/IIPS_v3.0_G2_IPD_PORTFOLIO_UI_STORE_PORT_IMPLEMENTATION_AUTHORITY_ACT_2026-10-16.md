@@ -15,7 +15,7 @@
 **Publication channel:** IPD PR #8 (existing), branch `arena/21c63aef-iips-production-market-data`,
 base `main@70b24f0`. No competing PR may be created.
 
-**Status:** `PROPOSED — NOT EFFECTIVE UNTIL EXPLICITLY APPROVED AND RECORDED IN §A.4`
+**Status:** `APPROVED — EFFECTIVE (recorded 2026-10-16; see §A.6)`
 
 ---
 
@@ -113,5 +113,6 @@ product scope; any standing or routine-work authority; or G-2 architecture accep
 
 ---
 
-*Recording agent note: this file records a proposed authority act and is not evidence of approval.
-If the approval block in §A.6 remains `PENDING`, no implementation under this act is authorized.*
+*Recording agent note: the approval block in §A.6 is completed and this act is effective for the bounded
+scope of §A.3 only. Approval was recorded on the branch before any source edit. The executed change set,
+tests and remote verification are reported separately (session report and PR #8).*
