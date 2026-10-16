@@ -28,7 +28,7 @@ security-contract authority** for `ramkivs/iips-production-market-data`
 | 0.7 | Accepted G24 lineage (off-main) | `arena/01a0f308-…` @ `6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4`, tree `eb07ea36059c6e2d3f1b6ff9afb8e3fb0c562cc5` — **13 `src/persistence` files**; the only head carrying the durable store |
 | 0.8 | Act/governance refs (unmoved) | `arena/01a0e6d9-…` @ `c1b955b42748…` (carries the revert `c1b955b` of the superseded `docs/` G-2 proposal commit `f7513943`, superseded by this PR #8 workstream); governance branch `arena/01a0f839-…` @ `12c480b5bf5c…`; NP-04 pin `np04-governed-persistence-windows` @ `2e11fa3b689d…` |
 | 0.9 | Gate A status | **NOT AUTHORIZED** — tenant provisioning is currently **NOT AUTHORIZED** (NP04-G32 §5); this request is the instrument that would change **only** that, for **one** one-time local act |
-| 0.10 | IRR state (verified live) | IRR `main` @ `eb4bf820c62eb3e2f5c628a95d59c8f967e3f629`; DP-1 Option 1A′ selected (`GC-D3`, 2026-10-13) with GC-D1 prohibitions + GC-D2 in force; **no IRR DP-1 amendment act rendered** (search: 0); DP-2 Option 2F effective; fence bytes present (see §4) |
+| 0.10 | IRR state (verified live) | IRR `main` @ `eb4bf820c62eb3e2f5c628a95d59c8f967e3f629`; DP-1 Option 1A′ selected (`GC-D3`, 2026-10-13) with GC-D1 prohibitions + GC-D2 in force; an **IRR DP-1 amendment record is published on open PR #118** (head `dc47dd2eb0…`, **not merged**) and is **not on authoritative `main`** and not effective there (see §4.2); DP-2 Option 2F effective; fence bytes present (see §4) |
 | 0.11 | Database state | **No database was created, opened, or modified by this request. No record exists.** Gate A provisioning is prospective only |
 
 ---
@@ -194,7 +194,8 @@ implication, and none of them may begin on the strength of this request.
 4. **The operator** executes the act offline; the Recording Agent prepares and records — it does not
    provision.
 5. **IRR-side acts remain separate and are NOT satisfied or inferred here**: the **IRR DP-1
-   amendment** is still required and unrendered (§4.2); the IRR-side prerequisites (P-1, P-2, P-4
+   amendment** is published on **open IRR PR #118** but is **not yet part of authoritative `main`**
+   and is not effective there (§4.2); the IRR-side prerequisites (P-1, P-2, P-4
    operator-only offline provisioning acts, P-6, P-8) remain IRR-side governance. An act in one
    repository does not amend the other.
 6. **PR #8** remains unmerged; this request neither merges it nor creates a competing PR.
@@ -213,13 +214,30 @@ remains byte-present on IRR `main`. Nothing in this request touches it.
 
 ### 4.2 IRR DP-1 — status of the amendment
 
-**The IRR DP-1 amendment remains REQUIRED and NOT RENDERED.** Verified at preparation time: DP-1
-Option 1A′ remains the selected direction (`GC-D3`, 2026-10-13); GC-D1's operational prohibitions
-(no issuer, no OIDC/Keycloak configuration, no delegated credential, no mapping, no provisioning, no
-tenant membership) and all of `GC-D2` remain in force; **no DP-1 amendment act exists in IRR** (search
-result: 0). The IPD security-contract acceptance did not amend IRR, is not inferred to have done so,
-and neither does this request. The DP-1 amendment remains a separate IRR-side act under its own
-explicit authority, preserving DP-2 Option 2F, H-18 scope, and the 503 fence.
+**The IRR DP-1 amendment has been prepared and published on IRR open PR #118; it is NOT yet part of
+authoritative `main` and is not effective there.** Verified live: IRR `main` remains
+`eb4bf820c62eb3e2f5c628a95d59c8f967e3f629`; PR #118 (`arena/8aff8266-iips-review-recovered`)
+carries `docs/integration/IIPS_v3.0_G2_IRR_DP1_IDENTITY_CREDENTIAL_TRUST_AMENDMENT_2026-10-16.md`
+(record `IIPS-V3-G2-IRR-DP1-IDENTITY-CREDENTIAL-TRUST-AMENDMENT-2026-10-16-01`; one file, +188/−0)
+at head `dc47dd2eb0989439c045e272ce7fed3b909e3c6e`, whose parent is exactly the `main` commit above;
+the PR is **OPEN, unmerged**, and the file is **absent from `main`** (main content lookup 404;
+compare `main...PR-head` = ahead 1 / behind 0). DP-1 Option 1A′ remains the selected direction
+(`GC-D3`, 2026-10-13); GC-D1's operational prohibitions (no issuer, no OIDC/Keycloak configuration,
+no delegated credential, no mapping, no provisioning, no tenant membership) and all of `GC-D2`
+remain in force pending that publication. The amendment record itself states that no merge and no
+merge authority is present in it; per IRR convention, effectiveness follows durable `main`
+publication + independent remote verification. The IPD security-contract acceptance did not amend
+IRR and is not inferred to have done so; neither does this request. The amendment remains a separate
+IRR-side act under its own explicit authority, preserving DP-2 Option 2F, H-18 scope, and the 503
+fence; this request neither merges PR #118, assumes its publication makes it effective on `main`,
+nor duplicates it.
+
+**Correction note (2026-10-16).** This section previously stated that the amendment was *"NOT
+RENDERED"* and that *"no DP-1 amendment act exists in IRR (search result: 0)."* That wording was
+accurate only as to authoritative `main` and wrongly conflated "not on `main`" with "not rendered":
+the amendment record had been published on open PR #118 (head `dc47dd2e…`) before this request was
+committed, and this request's search had been limited to `main`. The corrected statement above is
+substituted; **no other content of this request is changed.**
 
 ### 4.3 HTTP 503 `owner-context-unavailable` fence
 
@@ -309,7 +327,8 @@ Any failed criterion ⇒ §2.7 rollback; the act reports `GATE A — FAILED` and
 > non-`main` basis recorded in the executed act.
 > I record that Gate A grants **no** endpoint implementation, **no** resolver/runtime wiring, **no**
 > IRR change, **no** route admission, **no** write policy, and **no** successful-write authority;
-> that DP-2 Option 2F, the IRR DP-1 status (amendment still required and not rendered), and the
+> that DP-2 Option 2F, the IRR DP-1 status (amendment published on open IRR PR #118; not part of
+> authoritative `main` and not effective there), and the
 > HTTP 503 `owner-context-unavailable` fence remain in force; that the off-main G24 lineage is not
 > promoted, merged, cherry-picked or re-pinned; that PR #8 is not merged; and that Gates B, C, D
 > and E remain separate, un-granted authority gates.
