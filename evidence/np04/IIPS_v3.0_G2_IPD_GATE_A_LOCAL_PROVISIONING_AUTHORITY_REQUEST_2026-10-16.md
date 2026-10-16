@@ -200,6 +200,35 @@ implication, and none of them may begin on the strength of this request.
    repository does not amend the other.
 6. **PR #8** remains unmerged; this request neither merges it nor creates a competing PR.
 
+### 3.3 Execution-basis candidates (informational — NOT designated by this request)
+
+Gate A requires a named non-`main` basis (§3.2 item 2). For the PA's designation (§9 item 3), the
+factually verified candidates on the live IPD remote are:
+
+| Candidate ref | Tip | Tree | `src/persistence` files | `src/app_identity` files | A-2/A-3 artefacts |
+|---|---|---|---|---|---|
+| `arena/01a0f308-iips-production-market-data` | `6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4` | `eb07ea36059c6e2d3f1b6ff9afb8e3fb0c562cc5` | 13 | 6 | **0** |
+| `arena/01a0e6d9-iips-production-market-data` | `c1b955b427486dbce6d6a159a448065b9db45dc9` | `eb07ea36059c6e2d3f1b6ff9afb8e3fb0c562cc5` | 13 | 6 | **0** |
+| `np04-governed-persistence-windows` | `2e11fa3b689d1a3674a5e4ba1f1de9a559e20494` | `7c1d516a4315…` | **9** | **0** | **0** |
+| `arena/21c63aef-iips-production-market-data` (PR #8) | `b3ee24ea563711586208ba0a4c70702b2ceef73d` | `318a7736711a…` | 0 | 0 | 0 |
+| `main` | `70b24f029842a7e9b7f615e4d9df7376fd4ff817` | `cc0f01178228…` | 0 | 0 | 0 |
+
+Facts material to the designation (stated, not decided):
+
+1. **No existing ref carries the accepted A-2/A-3 additions** (`local_principal_bindings` /
+   migration `003` / the audit line): count `0` on every ref. Whichever basis is designated must
+   therefore be the ref on which Gate A creates those additions (§5 items 1–2) — i.e. a local
+   checkout of the designated ref, expected to be published as a derivative branch under this act,
+   **without promoting or admitting it**.
+2. **The two G24-lineage refs are tree-identical** (`eb07ea36…`): `arena/01a0f308-…` is the accepted
+   lineage tip (`6828155…`, whose tree the contract acceptance binds), and `arena/01a0e6d9-…`
+   (`c1b955b…`) carries the same tree. The NP-04 pin differs materially — **9 vs 13**
+   `src/persistence` files and **0** `src/app_identity` files — so it is **not** equivalent to the
+   accepted lineage and would run different code.
+3. **Nothing here is an authorization.** Designating a basis does not promote, merge, cherry-pick,
+   re-pin, or admit it; `arena/01a0f308-…` remains unadmitted (accepted IPD decision §7) and the
+   contract's prohibition on promoting the off-main lineage is unchanged.
+
 ---
 
 ## 4. INVARIANTS — EXPRESSLY CONFIRMED (item 10)
@@ -238,6 +267,26 @@ accurate only as to authoritative `main` and wrongly conflated "not on `main`" w
 the amendment record had been published on open PR #118 (head `dc47dd2e…`) before this request was
 committed, and this request's search had been limited to `main`. The corrected statement above is
 substituted; **no other content of this request is changed.**
+
+### 4.2.1 Ordering question surfaced for the PA's decision (NOT decided here)
+
+The accepted IPD security-contract decision (`IIPS-V3-G2-IPD-SECURITY-CONTRACT-ACCEPTANCE-DECISION-2026-10-16-01`,
+§8) orders the acts as **1 → IRR DP-1 amendment**, **2 → Gate A**. The amendment act is now
+**published** (IRR PR #118, head `dc47dd2eb0…`) but, per IRR convention, not **effective on IRR
+`main`** until merged and independently verified. Whether Gate A's ordering dependency is satisfied
+by the amendment's **publication** or requires it to be **effective on `main`** is **not decided in
+the durable corpus**, and this request does not decide it by inference.
+
+Two readings, both live:
+
+| Reading | Consequence for Gate A |
+|---|---|
+| (a) The dependency is **the amendment act being rendered/published** (the amendment act's own §10 then names Gate A as the next required act) | Gate A may be decided now; PR #118's merge remains a separate IRR decision |
+| (b) The dependency is **effectiveness on IRR `main`** under the IRR publication rule | Gate A's decision may be rendered, but execution awaits the separate PR #118 merge decision |
+
+**Neither reading is selected here.** This is surfaced as an explicit decision field (§9 item 8) so
+the PA resolves it explicitly rather than by assumption. Nothing in this request merges PR #118,
+modifies IRR, or treats an open PR as an authoritative-`main` decision.
 
 ### 4.3 HTTP 503 `owner-context-unavailable` fence
 
@@ -363,7 +412,8 @@ Any failed criterion ⇒ §2.7 rollback; the act reports `GATE A — FAILED` and
 2. **Confirmation of the two open value rules** (contract items `U-4`/`U-6` disposition): the
    **tenant rule T1-r** (§2.2) and the **endpoint-id rule** (§2.4) — or amended rules.
 3. **Designation of the named non-`main` execution basis** for the act (§3.2 item 2), or a
-   direction that Gate B must first create the basis.
+   direction that Gate B must first create the basis — the verified candidates are enumerated in
+   **§3.3** (informational; none is designated, none is promoted or admitted by designation).
 4. **Confirmation of the revocation position**: one-way revocation; no restoration; re-provisioning
    only under a new act (§2.5).
 5. **Confirmation of the A-3 scope**: local line only; no cross-system destination (§2.6).
@@ -371,6 +421,11 @@ Any failed criterion ⇒ §2.7 rollback; the act reports `GATE A — FAILED` and
    scope (§3.1 item 1) — with everything else deferred to B/C/D/E.
 7. **Confirmation of the publication form** (§8.3): the decision recorded as a separate durable
    record in the PR #8 workstream.
+8. **Resolution of the ordering question in §4.2.1** — whether Gate A's ordering dependency on the
+   IRR DP-1 amendment is satisfied by its publication (PR #118) or requires it to be effective on
+   IRR `main`. *Surfaced, not invented:* it arises directly from the accepted decision's §8 order
+   (1 → amendment, 2 → Gate A) combined with the IRR publication rule; this request resolves it by
+   neither reading.
 
 ---
 
