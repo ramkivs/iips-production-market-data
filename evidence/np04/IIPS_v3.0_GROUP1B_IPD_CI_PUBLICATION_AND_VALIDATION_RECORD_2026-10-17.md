@@ -272,7 +272,7 @@ Recorded verbatim. **No tag was created; no ref moved. Tags remain 4.**
 | 3 | Tag / re-pin disposition for `6828155e` | **PA** | blocked; conflicts with the G24 re-pin prohibition | separate act naming it |
 | 4 | IRR-side pin durability follow-up | IRR session | not started | after #2: `npm ci` against the tag |
 | 5 | IRR tracker reconciliation (§16.39 addendum from R25) | IRR session | prepared, unapplied | apply under an IRR documentation act |
-| 6 | Gate C execution | PA / Windows host | authority granted for Q1–Q4/Q9–Q11; **not executed** | bounded run on the Windows laptop |
+| 6 | Gate C execution | PA / Windows host | authority granted for Q1–Q4/Q9–Q11; **not executed**; prerequisites verified and the run is packaged in `IIPS_v3.0_G2_IPD_GATE_C_WINDOWS_READINESS_AND_EXECUTION_PACKAGE_2026-10-17.md` — **two blockers stand: no provisioned store (§5.1) and build exit 2 (§5.2)** | resolve §5.1/§5.2, then the bounded run on the Windows laptop |
 | 7 | IRR Gate B branch (`6c654be7`, no PR) | IRR session | unchanged | open a PR and obtain its act |
 
 ---
