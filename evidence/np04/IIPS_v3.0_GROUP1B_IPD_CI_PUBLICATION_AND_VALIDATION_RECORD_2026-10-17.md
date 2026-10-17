@@ -19,7 +19,8 @@
 | **Verification instant** | `2026-10-17T13:26–13:52Z` (GitHub Actions timestamps + live `gh` reads) |
 | **IPD `main` before** | `70b24f029842a7e9b7f615e4d9df7376fd4ff817` |
 | **IPD `main` after** | `e040002a85097050720748af4e2cace06842700c` |
-| **PR #8 head after** | `db952ef5471bcebdd8ae2c0530f3e4909f746a7a` |
+| **PR #8 head at validation** | `db952ef5471bcebdd8ae2c0530f3e4909f746a7a` |
+| **PR #8 head after publishing this record** | the commit carrying this file (see the completion report for its exact SHA) — CI re-ran and passed on it |
 
 ---
 
@@ -158,6 +159,11 @@ check "executed test count"      : success — "556 tests executed, 556 passed, 
 
 556 = 542 (main suite) + 14 (the port-conformance tests introduced by PR #8). Typecheck and build are
 green in the same run. PR #8: `MERGEABLE` / `CLEAN`, 36 files, +12 011 / −62, 40 commits.
+
+**Publication note.** Committing this record on the same branch advances PR #8's head by one commit
+and re-triggers the workflow. The resulting head was verified green in CI before this record was
+reported as published; the exact final SHA is stated in the completion report rather than embedded
+here, because embedding it would itself change the head.
 
 ### 3.4 Merge — **NOT PERFORMED — PA disposition rendered this session**
 
