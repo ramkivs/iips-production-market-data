@@ -178,10 +178,15 @@ That disposition is recorded verbatim above and governs. **PR #8 therefore remai
 green and mergeable at `db952ef`.**
 
 **The exact missing decision** is a rendered act that (a) cites and lifts the §4 limit as it applies
-to PR #8, (b) names the head commit it authorises (`db952ef…` or its successor), (c) states the merge
+to PR #8, (b) names the head commit it authorises (`dec1659…` or its successor), (c) states the merge
 method, and (d) states what the merge does **not** publish — Gate B IPC (`cec7080`, a different ref),
 Gate C/D/E, G24 lineage, or portfolio admission. Until that act exists, no merge is lawful regardless
 of technical readiness.
+
+The proposed text is prepared in
+`IIPS_v3.0_GROUP1B_AUTHORITY_HOLDS_AND_PROPOSED_ACTS_2026-10-17.md` §2, with a `HEAD_AT_RENDER` field
+because publishing that document advances the branch. **It is proposed only — a proposed act is not
+authority, and it authorises no merge.**
 
 ---
 
@@ -218,7 +223,7 @@ Recorded verbatim. **No tag was created; no ref moved. Tags remain 4.**
 
 ### 4.4 The exact act required (ready to render, not rendered)
 
-> **IIPS-V3-GROUP1-D3-IPD-PIN-TAG-ACT** — Authorise creating **one annotated tag**
+> **IIPS-V3-GROUP1-D3-IPD-PIN-TAG-ACT** — *(full proposed text: `IIPS_v3.0_GROUP1B_AUTHORITY_HOLDS_AND_PROPOSED_ACTS_2026-10-17.md` §3 — proposed only)* — Authorise creating **one annotated tag**
 > `iips-pin-np04-2e11fa3b` on `2e11fa3b689d1a3674a5e4ba1f1de9a559e20494` in
 > `ramkivs/iips-production-market-data`, and nothing else: no branch created or moved, no IRR change,
 > no pin change, no promotion or admission. Evidence required: tag object SHA, peeled commit SHA,
@@ -232,8 +237,8 @@ Recorded verbatim. **No tag was created; no ref moved. Tags remain 4.**
 
 | R25 item | Old status | Now | Basis |
 |---|---|---|---|
-| `CV-35` IPD false-green runner | OPEN — actual defect | **Remediated in `main`** | guard merged at `e040002`; zero-test run now exits 1 (§2.3); register update belongs to the IRR tracker owner |
-| `CV-42` CI — IPD half | OPEN — no workflow | **Implemented** | `.github/workflows/ci.yml` on `main`; run #5 green on `main` |
+| `CV-35` IPD false-green runner | OPEN — actual defect | **Remediated in `main`** | guard merged at `e040002`; zero-test run exits 1 (§2.3); the workflow **on `main`** reported **542 executed / 0 failed** (run `39036851167`, check `executed test count`). **Remediation is recorded here; closing the register row is the IRR tracker owner's act** |
+| `CV-42` CI — IPD half | OPEN — no workflow | **Implemented** | `.github/workflows/ci.yml` on `main`; run `39036851167` green on `main`. **Not demonstrated to be a required status check**: branch-protection state could not be read with this credential (HTTP `403`) and nothing observed gates a merge on the workflow — existence is not enforcement |
 | `CV-42` CI — IRR half | already green | unchanged | not touched |
 | `CV-25` pin durability | DECISION REQUIRED | **unchanged — still DECISION REQUIRED** | no tag act; PA disposition §4.3 |
 | Inventory row 24 (Gate B IPC) | implemented, unmerged, unqualified | **unchanged** | PR #8 publication does not publish `cec7080` |
@@ -292,6 +297,7 @@ Recorded verbatim. **No tag was created; no ref moved. Tags remain 4.**
 | Two intermediate runs failed (my evidence step) | recorded in §2.4; the guarded test step passed in both |
 | Action versions use major tags (`@v5`, `@v8`) | not SHA-pinned; acceptable for a personal, non-production repository, and stated rather than implied |
 | `test:direct` remains broken on `main` (pre-existing: `.js` specifiers do not resolve under `--experimental-strip-types`) | **not** fixed, **not** in scope; unchanged by this work |
+| Branch-protection / required-check state | could not be read with this credential (HTTP `403`); the workflow's **enforcement** status is therefore not claimed anywhere in this record |
 
 ---
 
