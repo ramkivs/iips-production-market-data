@@ -146,6 +146,11 @@ provisioning — on the Windows host — is a **new act**, not a re-run.
 
 **No fixture was created for this record.** Creating one would have been the unauthorized act.
 
+**Resolution instrument (added 2026-10-17):** the bounded act for path (a) is prepared and published
+as `evidence/np04/IIPS_v3.0_G2_IPD_GATE_A_PRIME_WINDOWS_STORE_PROVISIONING_AUTHORITY_REQUEST_2026-10-17.md`
+— status **`PROPOSED — NOT YET AUTHORIZED`**. It is a request, not authority; nothing in this record
+is resolved by its existence.
+
 ### 5.2 **BLOCKER 2 — The build does not exit 0 on `cec7080`**
 
 *Evidence (executed on the pinned commit, working tree unchanged afterwards):*
@@ -174,6 +179,12 @@ package remains executable — but the prerequisite as written is unmet.
 *“build” for this qualification means `npx tsc` emitting the runtime artefacts, with the four
 pre-existing test-file errors recorded and excluded* — **or** a bounded repair act for the two test
 files. This record does not choose, and does not fix them.
+
+**Resolution instrument (added 2026-10-17):** both routes are now costed, and a rule is proposed, in
+`evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_BUILD_PREREQUISITE_ACCEPTANCE_REQUEST_2026-10-17.md` — status
+**`PROPOSED — NOT YET AUTHORIZED`**. That round also established, by measurement, that the four
+diagnostics leave all 644 emitted `dist/src` artefacts byte-identical; §4.7(4) nevertheless remains
+**UNSATISFIED** until the Authority renders.
 
 ### 5.3 **Deviations to reconcile at execution (not blockers)**
 
