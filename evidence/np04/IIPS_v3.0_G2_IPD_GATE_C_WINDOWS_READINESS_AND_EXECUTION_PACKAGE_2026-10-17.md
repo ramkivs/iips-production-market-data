@@ -94,11 +94,20 @@ a runtime difference recorded in §5.3.
 | **Expected result** | Complete inventory matching the V-P values (`build 26200`, Node `v24.14.0`, libuv `1.51.0`), deviations reconciled | S1–S3: **no connectable endpoint at any point**; S4: pipe present and a control request succeeds | 8/8 classes: **0 bytes**, byte-identical, store unchanged, endpoint still live | Success **iff** the triple matches; all other cases byte-identical to "not found" | **0 bytes** on every read-only probe; liveness + direction controls non-zero | Exactly one `.sqlite`, one owning process, one store module on the IPC path | 15/15 digests + tree identical before and after |
 | **Acceptance criterion (existing)** | Inventory complete, deviations reconciled against F-1…F-9 with no design change; the act's recorded reading present | S1–S3 no listener/no fallback; S4 control succeeds — C2/C5.3/C5.5 | 7/7 + nested ⇒ 0 bytes, indistinguishable, store unchanged — C7/C6 | Success iff the triple matches — C3/C5.5/C6 | §7.4 rows 1–8 (0 bytes; admitted; idle-timeout closure; counters; liveness; direction; refusal paths; N/N) | Exactly one store, one owning process, no second store module on the IPC path — C11 | 15/15 identical, tree identical, before and after |
 | **Evidence to preserve** | `V5-endpoint-inventory.json` + raw console + host manifest | per-scenario raw logs + `Q2-matrix.json` | `Q3-matrix.jsonl` (one row per class) + raw client output + store digests | `Q4-matrix.jsonl` + raw outputs | `Q9-<runid>.jsonl`, raw client console, raw harness log, manifests | `Q10-inventory.txt`, `Q10-static.txt` | `Q11-manifest-before.json`, `Q11-manifest-after.json` |
-| **Status** | **BLOCKED** (§5.1) | **PARTIALLY BLOCKED** — S1 prepared and runnable; S2/S3/S4 blocked (§5.1) | **BLOCKED** (§5.1) | **BLOCKED** (§5.1) | **BLOCKED** (§5.1) | **PARTIAL** — static half **prepared** (§5.4); runtime half blocked (§5.1) | **PREPARED** — expected manifest frozen; execution needs the host only |
-| **Blocker** | No provisioned store ⇒ no endpoint can start | C-B/C-D/C-E derive from a provisioned store that does not exist | C-A cannot be constructed | C-A/C-C cannot be constructed | C-E cannot be constructed | Runtime inventory needs a live endpoint | Host access only (no store needed) |
+| **Status** | **BLOCKED** — store not provisioned (§5.1); *authorized*, not executed | **BLOCKED** — S1 needs the host build run only; S2/S3/S4 need the store | **BLOCKED** (§5.1) | **BLOCKED** (§5.1) | **BLOCKED** (§5.1) | **PARTIAL** — static half prepared (§5.4); runtime half blocked (§5.1) | **BLOCKED on the build prerequisite** — no store needed; `dist` is |
+| **Blocker** | Store not provisioned (§5.1) | S1: host build run under B-GC-1; S2–S4: store | C-A cannot be constructed | C-A/C-C cannot be constructed | C-E cannot be constructed | Runtime inventory needs a live endpoint | Host build run under B-GC-1 |
 
-**Reading of the matrix.** Q11 is the only check with **no** store dependency; Q2/S1 is a genuine
-sub-case that also needs no store. Everything else depends on the provisioned-store defect in §5.1.
+**Reading of the matrix** *(as prepared, 2026-10-17)*. Q11 is the only check with **no** store
+dependency; Q2/S1 is a genuine sub-case that also needs no store. Everything else depends on the
+provisioned-store defect in §5.1.
+
+**Reconciled 2026-10-17 (after the two renderings).** Both prerequisites are now **authorized** — the
+store by `IIPS-V3-G2-IPD-GATE-A-PRIME-PA-DECISION-2026-10-17-01`, the build by
+`IIPS-V3-G2-IPD-GATE-C-BUILD-EXCEPTION-PA-DECISION-2026-10-17-01` — and **neither has been
+executed**. The statement that Q11 is the only store-independent check stands. **The earlier
+implication that Q11 or Q2/S1 could run before the build question was settled is withdrawn**: every
+check's runbook compiles the tree and imports `dist/src/ipc/entrypoint.js`, so those two require the
+**B-GC-1 host build run** to be recorded first. **No check is runnable on 2026-10-17.**
 **Nothing in the matrix depends on PR #8, on a tag, or on the G24 lineage.**
 
 ---
@@ -146,10 +155,12 @@ provisioning — on the Windows host — is a **new act**, not a re-run.
 
 **No fixture was created for this record.** Creating one would have been the unauthorized act.
 
-**Resolution instrument (added 2026-10-17):** the bounded act for path (a) is prepared and published
-as `evidence/np04/IIPS_v3.0_G2_IPD_GATE_A_PRIME_WINDOWS_STORE_PROVISIONING_AUTHORITY_REQUEST_2026-10-17.md`
-— status **`PROPOSED — NOT YET AUTHORIZED`**. It is a request, not authority; nothing in this record
-is resolved by its existence.
+**Resolution instrument (added 2026-10-17; reconciled the same day):** the bounded act for path (a)
+was proposed in `evidence/np04/IIPS_v3.0_G2_IPD_GATE_A_PRIME_WINDOWS_STORE_PROVISIONING_AUTHORITY_REQUEST_2026-10-17.md`
+and is now **rendered** as `evidence/np04/IIPS_v3.0_G2_IPD_GATE_A_PRIME_PA_DECISION_RENDERED_2026-10-17.md`
+(`IIPS-V3-G2-IPD-GATE-A-PRIME-PA-DECISION-2026-10-17-01`) — disposition **`APPROVED`**, rule **P-1**
+adopted. **The store still does not exist**: a rendered authorization is not an execution, and no
+provisioning has occurred.
 
 ### 5.2 **BLOCKER 2 — The build does not exit 0 on `cec7080`**
 
@@ -180,11 +191,15 @@ package remains executable — but the prerequisite as written is unmet.
 pre-existing test-file errors recorded and excluded* — **or** a bounded repair act for the two test
 files. This record does not choose, and does not fix them.
 
-**Resolution instrument (added 2026-10-17):** both routes are now costed, and a rule is proposed, in
-`evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_BUILD_PREREQUISITE_ACCEPTANCE_REQUEST_2026-10-17.md` — status
-**`PROPOSED — NOT YET AUTHORIZED`**. That round also established, by measurement, that the four
-diagnostics leave all 644 emitted `dist/src` artefacts byte-identical; §4.7(4) nevertheless remains
-**UNSATISFIED** until the Authority renders.
+**Resolution instrument (added 2026-10-17; reconciled the same day):** both routes were costed, and a
+rule was proposed, in
+`evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_BUILD_PREREQUISITE_ACCEPTANCE_REQUEST_2026-10-17.md`; it is
+now **rendered** as
+`evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_BUILD_EXCEPTION_PA_DECISION_RENDERED_2026-10-17.md`
+(`IIPS-V3-G2-IPD-GATE-C-BUILD-EXCEPTION-PA-DECISION-2026-10-17-01`) — rule **B-GC-1** (`C1`–`C8`)
+adopted. That round also established, by measurement, that the four diagnostics leave all 644
+emitted `dist/src` artefacts byte-identical. **§4.7(4) remains UNSATISFIED in fact**: it may be
+recorded as `§4.7(4) SATISFIED UNDER BUILD EXCEPTION` only after the Windows host reproduces C1–C8.
 
 ### 5.3 **Deviations to reconcile at execution (not blockers)**
 
@@ -752,6 +767,13 @@ function Invoke-GqProbe {
 > Do not reorder, and do not run Q3/Q4/Q9 before Q2/S4 shows a live endpoint.
 
 ### 12.0 Session setup (once)
+
+**Build gate — before any command in this runbook.** `dist\src\ipc\entrypoint.js` must exist and the
+build must be recorded under **B-GC-1** (`IIPS-V3-G2-IPD-GATE-C-BUILD-EXCEPTION-PA-DECISION-2026-10-17-01`):
+run `npx tsc`, `npm run build`, `npx vite build`, and the C5/C6 scratch-copy causality check, each
+with its exit code and full output, then record the eight conditions. **If the disposition recorded is
+`INVALID` — or the build has not been run — no check in this runbook may proceed.**
+
 ```powershell
 . "$work\gq-lib.ps1"                                     # sha256 ddd1289d…
 $Node     = "C:\Program Files\nodejs\node.exe"
@@ -1082,5 +1104,34 @@ Rules: raw logs **unedited**; UTC timestamps; one `runId`; no synthesised or ill
 | Harness self-test ran on POSIX with Node 22 | Proves module resolution and framing only; proves nothing about Windows, pipes or zero-byte behaviour |
 | The four pre-existing TypeScript errors | Unresolved; declared in §5.2, not hidden |
 | Expected digests computed from git objects | They will match a clean checkout; a checkout with line-ending conversion (CRLF) would differ — **disable `core.autocrlf`** or record the mismatch explicitly as a checkout artifact, not drift |
+
+---
+
+## 20. DECISION RECONCILIATION — 2026-10-17 (added after §1–§19)
+
+Two independent PA decisions were rendered and published on 2026-10-17. They **change no measured
+fact** in this package; they change **what is authorized** and therefore the status of the
+prerequisites. Nothing in §1–§19 is retracted except the two lines marked as reconciled in §4.
+
+| Decision | Record | Status |
+|---|---|---|
+| `IIPS-V3-G2-IPD-GATE-A-PRIME-PA-DECISION-2026-10-17-01` | `evidence/np04/IIPS_v3.0_G2_IPD_GATE_A_PRIME_PA_DECISION_RENDERED_2026-10-17.md` | **RENDERED — `APPROVED`, rule P-1 adopted; not executed** |
+| `IIPS-V3-G2-IPD-GATE-C-BUILD-EXCEPTION-PA-DECISION-2026-10-17-01` | `evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_BUILD_EXCEPTION_PA_DECISION_RENDERED_2026-10-17.md` | **RENDERED — B-GC-1 adopted; no host run, none accepted** |
+
+| Prerequisite | Status after decision rendering |
+|---|---|
+| Gate A′ authority | **AUTHORIZED** — rendered `APPROVED` (P-1) |
+| Store provisioning | **NOT EXECUTED** — Windows-host operation outstanding |
+| B-GC-1 | **AUTHORIZED** — rendered `ADOPTED` |
+| Qualifying Windows-host build run | **OUTSTANDING** — no evidence exists |
+| Gate C Q-check execution | **NOT ESTABLISHED** by rendering these decisions |
+| Gate C result acceptance | **NOT ESTABLISHED** |
+| Gate D/E and CV-52 admission | **NOT ESTABLISHED** |
+| Production authorization | **NOT GRANTED** |
+| Any check runnable today | **NONE** — §4 reconciliation |
+
+**Hierarchy preserved:** a rendered decision is not an executed operation; this package is not
+Windows-host evidence; execution evidence is not result acceptance; result acceptance is not
+promotion or admission.
 
 *End of record.*
