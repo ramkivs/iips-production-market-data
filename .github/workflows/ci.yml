@@ -61,6 +61,7 @@ jobs:
           script: |
             const fs = require('fs');
             const log = fs.existsSync('test-output.log') ? fs.readFileSync('test-output.log', 'utf8') : '';
+            const headSha = context.payload.pull_request?.head?.sha ?? context.sha;
             const pick = (k) => { const m = log.match(new RegExp('^# ' + k + ' (\\d+)$', 'm')); return m ? m[1] : null; };
             const tests = pick('tests'), pass = pick('pass'), fail = pick('fail');
 
@@ -76,7 +77,6 @@ jobs:
 
             // Publish the count as its own check run on the exact head commit, so the executed
             // test count is readable from the API rather than inferred from a green badge.
-            const headSha = context.payload.pull_request?.head?.sha ?? context.sha;
             const run = await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
