@@ -1,0 +1,94 @@
+name: CI
+
+# CV-42: the IPD repository had no CI workflow, so every "tests pass" claim in this program was
+# local-execution evidence only, and the CV-35 zero-test false-green could not be caught.
+# This workflow is the repository's gate: typecheck, build, then a guarded test run.
+#
+# It is non-production infrastructure. It opens no network surface in the product, adds no
+# provider, credential, service or dependency, and changes no application behaviour.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: typecheck · build · test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install (locked)
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # Build first: the test script consumes compiled output and fails closed when it is absent.
+      - name: Build (tsc emit + vite bundle)
+        run: npm run build
+
+      # Guarded: exits non-zero when zero tests execute, when compiled tests are missing, or when
+      # the build is stale relative to its sources (CV-35).
+      - name: Test (guarded — zero tests is a failure)
+        run: npm test 2>&1 | tee test-output.log
+
+      # Records the executed test count against the exact head commit, so "tests passed" is
+      # checkable from the API instead of resting on a job's green badge.
+      - name: Publish executed test count
+        if: always()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const log = fs.existsSync('test-output.log') ? fs.readFileSync('test-output.log', 'utf8') : '';
+            const headSha = context.payload.pull_request?.head?.sha ?? context.sha;
+            const pick = (k) => { const m = log.match(new RegExp('^# ' + k + ' (\\d+)$', 'm')); return m ? m[1] : null; };
+            const tests = pick('tests'), pass = pick('pass'), fail = pick('fail');
+
+            const ok = tests !== null && Number(tests) > 0 && fail === '0';
+            const summary = ok
+              ? `**${tests} tests executed — ${pass} passed, ${fail} failed.** ` +
+                `Guard: a run that executes zero tests fails (CV-35). ` +
+                `Head: \`${headSha}\`.`
+              : `**No trustworthy executed-test count was recorded** (tests=${tests}, pass=${pass}, fail=${fail}). ` +
+                `The guarded runner must report a non-zero test count and zero failures (CV-35).`;
+
+            core.summary.addRaw('### IPD CI result\n').addRaw(`- ${summary}\n`).write();
+
+            // Publish the count as its own check run on the exact head commit, so the executed
+            // test count is readable from the API rather than inferred from a green badge.
+            const run = await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'executed test count',
+              head_sha: headSha,
+              status: 'completed',
+              conclusion: ok ? 'success' : 'failure',
+              output: {
+                title: ok ? `${tests} tests executed, ${fail} failed` : 'no trustworthy test count',
+                summary,
+              },
+            });
+            core.info(`recorded check run ${run.data.id} on ${headSha}`);
+
+            if (!ok) core.setFailed('guarded test run did not report a trustworthy executed-test count');
