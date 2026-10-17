@@ -29,10 +29,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
@@ -56,7 +56,7 @@ jobs:
       # checkable from the API instead of resting on a job's green badge.
       - name: Publish executed test count
         if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
@@ -68,31 +68,27 @@ jobs:
             const summary = ok
               ? `**${tests} tests executed — ${pass} passed, ${fail} failed.** ` +
                 `Guard: a run that executes zero tests fails (CV-35). ` +
-                `Head: \`${context.sha}\`.`
+                `Head: \`${headSha}\`.`
               : `**No trustworthy executed-test count was recorded** (tests=${tests}, pass=${pass}, fail=${fail}). ` +
                 `The guarded runner must report a non-zero test count and zero failures (CV-35).`;
 
             core.summary.addRaw('### IPD CI result\n').addRaw(`- ${summary}\n`).write();
 
-            const { data } = await github.rest.checks.listForRef({
+            // Publish the count as its own check run on the exact head commit, so the executed
+            // test count is readable from the API rather than inferred from a green badge.
+            const headSha = context.payload.pull_request?.head?.sha ?? context.sha;
+            const run = await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: context.sha,
-              check_name: 'typecheck · build · test',
-            });
-            const check = data.check_runs[0];
-            if (!check) {
-              core.setFailed('no check run found for this commit — cannot record the test count');
-              return;
-            }
-            if (!ok) core.setFailed('guarded test run did not report a trustworthy executed-test count');
-
-            await github.rest.checks.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              check_run_id: check.id,
+              name: 'executed test count',
+              head_sha: headSha,
+              status: 'completed',
+              conclusion: ok ? 'success' : 'failure',
               output: {
                 title: ok ? `${tests} tests executed, ${fail} failed` : 'no trustworthy test count',
                 summary,
               },
             });
+            core.info(`recorded check run ${run.data.id} on ${headSha}`);
+
+            if (!ok) core.setFailed('guarded test run did not report a trustworthy executed-test count');
