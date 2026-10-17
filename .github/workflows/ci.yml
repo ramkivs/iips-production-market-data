@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -49,13 +50,49 @@ jobs:
       # Guarded: exits non-zero when zero tests execute, when compiled tests are missing, or when
       # the build is stale relative to its sources (CV-35).
       - name: Test (guarded — zero tests is a failure)
-        run: npm test
+        run: npm test 2>&1 | tee test-output.log
 
-      - name: Summarise test result
+      # Records the executed test count against the exact head commit, so "tests passed" is
+      # checkable from the API instead of resting on a job's green badge.
+      - name: Publish executed test count
         if: always()
-        run: |
-          echo "### IPD CI result" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "- node: $(node --version)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- commit: ${GITHUB_SHA}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- guarded runner: \`scripts/run-tests.mjs\` (zero executed tests ⇒ failure)" >> "$GITHUB_STEP_SUMMARY"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const log = fs.existsSync('test-output.log') ? fs.readFileSync('test-output.log', 'utf8') : '';
+            const pick = (k) => { const m = log.match(new RegExp('^# ' + k + ' (\\d+)$', 'm')); return m ? m[1] : null; };
+            const tests = pick('tests'), pass = pick('pass'), fail = pick('fail');
+
+            const ok = tests !== null && Number(tests) > 0 && fail === '0';
+            const summary = ok
+              ? `**${tests} tests executed — ${pass} passed, ${fail} failed.** ` +
+                `Guard: a run that executes zero tests fails (CV-35). ` +
+                `Head: \`${context.sha}\`.`
+              : `**No trustworthy executed-test count was recorded** (tests=${tests}, pass=${pass}, fail=${fail}). ` +
+                `The guarded runner must report a non-zero test count and zero failures (CV-35).`;
+
+            core.summary.addRaw('### IPD CI result\n').addRaw(`- ${summary}\n`).write();
+
+            const { data } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              check_name: 'typecheck · build · test',
+            });
+            const check = data.check_runs[0];
+            if (!check) {
+              core.setFailed('no check run found for this commit — cannot record the test count');
+              return;
+            }
+            if (!ok) core.setFailed('guarded test run did not report a trustworthy executed-test count');
+
+            await github.rest.checks.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              check_run_id: check.id,
+              output: {
+                title: ok ? `${tests} tests executed, ${fail} failed` : 'no trustworthy test count',
+                summary,
+              },
+            });
