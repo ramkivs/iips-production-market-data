@@ -13,13 +13,30 @@ import {
   PortfolioBrokerImportController,
   PortfolioBrokerImportViewModel,
 } from './index.js';
+import { PortfolioStorePort, SessionPortfolioStorePort } from './portfolioStorePort.js';
 import { SecurityMaster } from '../../../../src/identity/security_master.js';
+
+/**
+ * Default for the non-production unresolved-holdings operator bypass.
+ *
+ * OFF by act `np04-g2-portfolio-ui-store-port-2026-10-16-001`: with the bypass
+ * disabled, holdings without a single canonical P04 identity are previewed and
+ * explained as rejected rows and cannot be persisted (DP-2 Option 2F). The
+ * historical bypass default (`true`) is deliberately not restored on this path.
+ */
+export const DEFAULT_ALLOW_NON_PRODUCTION_BYPASS = false;
 
 export interface BrokerImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveSuccess: (result: PortfolioSaveResult) => void;
   portfolioStore: PortfolioStore;
+  /** Optional store port; defaults to the session-only port over `portfolioStore`. */
+  storePort?: PortfolioStorePort;
+  /** Optional optimistic-concurrency token forwarded to the port save. */
+  expectedRevision?: number;
+  /** Invoked when a port save is refused with a revision conflict. */
+  onRevisionConflict?: (message: string) => void;
   securityMaster?: SecurityMaster;
   allowNonProductionBypass?: boolean;
   executionEnvironment?: 'PRODUCTION' | 'NON_PRODUCTION';
@@ -30,12 +47,22 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
   onClose,
   onSaveSuccess,
   portfolioStore,
+  storePort: optionalStorePort,
+  expectedRevision,
+  onRevisionConflict,
   securityMaster,
-  allowNonProductionBypass = true,
+  allowNonProductionBypass = DEFAULT_ALLOW_NON_PRODUCTION_BYPASS,
   executionEnvironment = 'NON_PRODUCTION',
 }) => {
   // Initialize governed controller
   const controller = useMemo(() => new PortfolioBrokerImportController(securityMaster), [securityMaster]);
+
+  // Store port: this modal's save path. Session-only and non-durable until a
+  // durable adapter is separately authorized (act np04-g2-portfolio-ui-store-port-2026-10-16-001).
+  const storePort = useMemo(
+    () => optionalStorePort || new SessionPortfolioStorePort(portfolioStore),
+    [optionalStorePort, portfolioStore]
+  );
 
   // Imperative DOM ref for native file dialog invocation
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,6 +73,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
   );
   const [isProcessingFile, setIsProcessingFile] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Reset helper that synchronizes controller, input ref, and view-model back to IDLE
   const resetToIdle = useCallback(() => {
@@ -57,6 +85,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
     setViewModel(controller.buildViewModel(viewportWidth, securityMaster));
     setIsProcessingFile(false);
     setIsDragging(false);
+    setIsSaving(false);
   }, [controller, securityMaster]);
 
   // Synchronize and reset state whenever modal is opened
@@ -122,20 +151,35 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
     }
   };
 
-  // Confirm and save handler
-  const handleConfirmSave = useCallback(() => {
+  // Confirm and save handler — persists through the asynchronous store port.
+  // Pending state is explicit; a refusal (including DP-2 Option 2F and revision
+  // conflicts) is surfaced without any store mutation.
+  const handleConfirmSave = useCallback(async () => {
     const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1280;
-    const vm = controller.confirmAndSave({
-      portfolioStore,
-      portfolioId: 'DEFAULT_PORTFOLIO',
-      viewportWidth,
-    });
-    setViewModel(vm);
+    setIsSaving(true);
+    try {
+      const vm = await controller.confirmAndSaveViaPort({
+        storePort,
+        portfolioId: 'DEFAULT_PORTFOLIO',
+        viewportWidth,
+        expectedRevision,
+      });
+      setViewModel(vm);
 
-    if (vm.state === 'SAVE_SUCCESS' && vm.saveResult?.success) {
-      onSaveSuccess(vm.saveResult);
+      if (vm.state === 'SAVE_SUCCESS' && vm.saveResult?.success) {
+        onSaveSuccess(vm.saveResult);
+      } else if (vm.portRefusal?.code === 'REVISION_CONFLICT' && onRevisionConflict) {
+        onRevisionConflict(vm.portRefusal.message);
+      }
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      const vm = controller.buildViewModel(viewportWidth, securityMaster);
+      vm.errors.push(`Port save failure: ${errorMsg}`);
+      setViewModel({ ...vm, state: 'REJECTED' });
+    } finally {
+      setIsSaving(false);
     }
-  }, [controller, portfolioStore, onSaveSuccess]);
+  }, [controller, storePort, expectedRevision, onRevisionConflict, securityMaster, onSaveSuccess]);
 
   // Clean close handler
   const handleClose = useCallback(() => {
@@ -376,7 +420,9 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                   <div className="rounded-lg border border-amber-800/60 bg-amber-950/30 px-3.5 py-2 text-xs text-amber-200 flex items-center space-x-2">
                     <span className="text-sm">⚠️</span>
                     <span>
-                      <strong>Non-Production Operator Mode:</strong> Retaining unresolved holdings under explicit authority bypass. Zero fabricated company IDs.
+                      <strong>Non-Production Operator Mode (preview only):</strong> unresolved holdings are displayed for
+                      explanation and cannot be persisted - saves containing them are refused under DP-2 Option 2F. Zero
+                      fabricated company IDs.
                     </span>
                   </div>
                 )}
@@ -478,6 +524,23 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
           {/* REJECTED / BLOCKED States */}
           {(viewModel.state === 'REJECTED' || viewModel.state === 'BLOCKED') && (
             <div className="rounded-xl border border-rose-900/70 bg-rose-950/30 p-6 space-y-4 text-center">
+              {viewModel.portRefusal && (
+                <div className="rounded-lg border border-amber-800/60 bg-amber-950/30 p-4 text-left text-xs text-amber-100 space-y-2">
+                  <div className="font-semibold text-amber-200">
+                    Persistence refused - {viewModel.portRefusal.code}
+                  </div>
+                  <p>{viewModel.portRefusal.message}</p>
+                  {viewModel.portRefusal.refusedHoldings.length > 0 && (
+                    <ul className="list-disc list-inside space-y-1">
+                      {viewModel.portRefusal.refusedHoldings.map((h, idx) => (
+                        <li key={idx}>
+                          <span className="font-mono">{h.symbol}</span>: {h.reason}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-900/50 text-rose-400 text-2xl font-bold border border-rose-700">
                 ✗
               </div>
@@ -517,9 +580,14 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                 ✓
               </div>
               <div>
-                <h3 className="text-xl font-bold text-emerald-200">Holdings Successfully Persisted</h3>
+                <h3 className="text-xl font-bold text-emerald-200">
+                  {viewModel.durable ? 'Holdings Successfully Persisted' : 'Holdings Saved (Session-Scoped)'}
+                </h3>
                 <p className="text-sm text-slate-300 mt-1">
-                  {viewModel.saveResult?.holdingsSavedCount ?? viewModel.acceptedHoldingsCount} holdings committed atomically to{' '}
+                  {viewModel.saveResult?.holdingsSavedCount ?? viewModel.acceptedHoldingsCount}{' '}
+                  {viewModel.durable
+                    ? 'holdings committed durably to'
+                    : 'holdings saved to the session-scoped store (not durable) in'}{' '}
                   <span className="font-semibold text-white">
                     {viewModel.saveResult?.portfolio.portfolioName || 'Institutional Flagship Portfolio'}
                   </span>
@@ -530,10 +598,24 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
               <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-5 text-left text-xs space-y-3 shadow-inner">
                 <div className="flex justify-between items-center text-slate-400">
                   <span className="font-medium">Persistence Mode:</span>
-                  <span className="text-emerald-400 font-semibold bg-emerald-950/80 px-2.5 py-1 rounded border border-emerald-700">
-                    COMMITTED (Multi-Broker Atomic Merge)
+                  <span
+                    className={`font-semibold px-2.5 py-1 rounded border ${
+                      viewModel.durable
+                        ? 'text-emerald-400 bg-emerald-950/80 border-emerald-700'
+                        : 'text-amber-300 bg-amber-950/60 border-amber-700'
+                    }`}
+                  >
+                    {viewModel.durable
+                      ? 'COMMITTED (Durable)'
+                      : 'SAVED (SESSION ONLY - NOT DURABLE)'}
                   </span>
                 </div>
+                {!viewModel.durable && (
+                  <p className="text-[11px] text-amber-300/80">
+                    Durability: session-only. No durable commit exists in this build; this state is held in memory
+                    and is lost on reload or restart.
+                  </p>
+                )}
                 <div className="flex justify-between items-center text-slate-400">
                   <span className="font-medium">Total Portfolio Value:</span>
                   <span className="text-white font-mono text-sm font-bold">
@@ -605,16 +687,26 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
               <button
                 type="button"
                 id="ui15-btn-confirm-save"
-                disabled={!viewModel.saveGuard.isSaveEnabled}
+                disabled={!viewModel.portSaveGuard.saveable || isSaving}
                 onClick={handleConfirmSave}
-                title={viewModel.saveGuard.disabledReason || 'Commit atomic holding vector to portfolio store'}
+                title={
+                  viewModel.portSaveGuard.disabledReason ||
+                  'Save the holding vector through the portfolio store port'
+                }
                 className={`inline-flex items-center space-x-2 rounded-lg px-5 py-2 text-xs font-bold text-white shadow transition-all ${
-                  viewModel.saveGuard.isSaveEnabled
+                  viewModel.portSaveGuard.saveable && !isSaving
                     ? 'bg-teal-600 hover:bg-teal-500 cursor-pointer focus:ring-2 focus:ring-teal-400 pointer-events-auto'
                     : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60'
                 }`}
               >
-                <span>Confirm &amp; Save Holdings</span>
+                {isSaving ? (
+                  <span className="inline-flex items-center space-x-2">
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                    <span>Saving...</span>
+                  </span>
+                ) : (
+                  <span>Confirm &amp; Save Holdings</span>
+                )}
               </button>
             )}
           </div>
