@@ -198,3 +198,27 @@ Neither instrument implies the other, and neither makes Gate C runnable on its o
 Published as additive documentation in the existing PR #8 workstream (`evidence/np04/`), committed
 and pushed with one non-forced push, and verified remotely by path, commit, blob and sha256 with a
 byte-identity read-back. The publication verification is appended after publication.
+
+---
+
+## 10. PUBLICATION AND REMOTE VERIFICATION (appended 2026-10-17)
+
+**Content commit:** `e9e3b3b32fb7dabb75455077e8abbd9f325a3f3a` — parent
+`d60c9be0477ec192d64c5491a9fb2c49bc1e283c`, tree
+`4764e71206cd7b97c6a93e989c80d1f64a447216`.
+
+| Artifact | Remote blob | Bytes | sha256 (remote = local) | Byte identity |
+|---|---|---|---|---|
+| this record | `8c10885ae5b3b3fd8b7760d7f5490a5649517be5` | 11 799 | `0cac32675443c71819b874edf888f5c9aa8d6044ee165cf0dee631897acf7690` | **IDENTICAL** (API read-back) |
+| Gate A′ decision | `084d784484ed482bed6dc5dbca16ec5f5fc0cbdb` | 16 539 | `efd8e0625990293e77dbef2971a7ad307c9aa504198426d8d227898ce2d4a92b` | **IDENTICAL** |
+
+CI on the content commit: run **`39050146649`** — **success**, **556 executed / 0 failed**. PR #8:
+**OPEN, unmerged**, head `e9e3b3b…`.
+
+This section is appended by a **subsequent** commit, so the record's own identity is not
+self-referential.
+
+---
+
+*End of rendered decision `IIPS-V3-G2-IPD-GATE-C-BUILD-EXCEPTION-PA-DECISION-2026-10-17-01` —
+**B-GC-1 ADOPTED**, **no Windows-host run occurred or was accepted** · NON_PRODUCTION.*
