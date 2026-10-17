@@ -8,7 +8,7 @@
     "build:tsc": "tsc",
     "build:vite": "vite build",
     "dev": "vite",
-    "test": "node --test dist/tests/*.test.js",
+    "test": "node scripts/run-tests.mjs",
     "test:direct": "node --test --experimental-strip-types tests/*.test.ts"
   },
   "keywords": [

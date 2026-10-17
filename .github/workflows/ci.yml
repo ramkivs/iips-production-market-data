@@ -1,0 +1,61 @@
+name: CI
+
+# CV-42: the IPD repository had no CI workflow, so every "tests pass" claim in this program was
+# local-execution evidence only, and the CV-35 zero-test false-green could not be caught.
+# This workflow is the repository's gate: typecheck, build, then a guarded test run.
+#
+# It is non-production infrastructure. It opens no network surface in the product, adds no
+# provider, credential, service or dependency, and changes no application behaviour.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: typecheck · build · test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install (locked)
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # Build first: the test script consumes compiled output and fails closed when it is absent.
+      - name: Build (tsc emit + vite bundle)
+        run: npm run build
+
+      # Guarded: exits non-zero when zero tests execute, when compiled tests are missing, or when
+      # the build is stale relative to its sources (CV-35).
+      - name: Test (guarded — zero tests is a failure)
+        run: npm test
+
+      - name: Summarise test result
+        if: always()
+        run: |
+          echo "### IPD CI result" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- node: $(node --version)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- commit: ${GITHUB_SHA}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- guarded runner: \`scripts/run-tests.mjs\` (zero executed tests ⇒ failure)" >> "$GITHUB_STEP_SUMMARY"
