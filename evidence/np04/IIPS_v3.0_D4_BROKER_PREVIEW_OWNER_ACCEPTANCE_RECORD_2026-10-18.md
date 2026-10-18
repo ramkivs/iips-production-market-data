@@ -198,9 +198,26 @@ new head and a re-statement would be required.
 
 ---
 
-## 7. Publication and remote verification
+## 7. Publication and remote verification (appended 2026-10-18)
 
-To be appended by a **subsequent** commit after publication, so this record's own identity is not
+**Content commit:** `5b5b290` — parent `eb028c6`, tree
+`7f59c5adab709a4bb9a8195b6632ed481bad0dee`; **one file added**, no other change.
+
+| Artifact | Remote blob | Bytes | sha256 (remote = local) | Byte identity |
+|---|---|---|---|---|
+| this record | `ac87e5a4c12a71683f1c94c1bbb93c63f342ff28` | 21,199 | `6e65fdbb196f1a1535c107b8df6d62d2f618cbe0849452a5964a032de44c7b33` | **IDENTICAL** (Contents API read-back) |
+
+CI on the content commit: run **`39099738456`** — **success**, typecheck · build · test, **556
+executed / 0 failed**. Published on
+`ramkivs/iips-production-market-data` / `arena/21c63aef-iips-production-market-data`; **PR #8 is not
+merged** and this record does not touch it.
+
+**IRR side, re-verified at publication time:** `refs/heads/main` remains
+`fadc395d7bd95041829981ca542b03188b17e727`; PR #114 remains `OPEN`, head
+`e331995a94b704e078b27a70a36cbc161311fd09`, `CONFLICTING` / `DIRTY`, 34 files, `mergedAt: null`.
+**No IRR file was created, changed, pushed or merged** (§0.1).
+
+This section is appended by a **subsequent** commit, so the record's own identity is not
 self-referential.
 
 ---
