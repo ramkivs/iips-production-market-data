@@ -294,3 +294,6 @@ The change set in this pass touches only `evidence/**/*.md` in IPD, and **no IRR
 ---
 
 *Recording agent: Arena Agent Mode. It recorded the Program Authority's Option A disposition, checked the PA-named candidate against the PA's stated evidentiary condition, and published the result. No authority is rendered or inferred by the agent. Nothing here provisions, implements, qualifies, admits, writes, merges product code, or lifts any fence.*
+
+
+> **Dated correction (2026-10-18, G3-D0; additive).** The Program Authority resolved the open Gate B/Gate 3 basis contradiction: **supersede the off-main implementation basis and re-author the intended implementation basis on IPD `main`**. The historical Gate B D-4 = ACCEPT remains intact for exactly its original 15-file scope on `gate-b/local-principal-ipc-implementation` at `cec7080252183a6a5332efe351e61c254d342a2d`; its code is reference-only for the intended G3 path and is not an admitted base. The IPD `main` SHA verified before this documentation publication was `f678363de5db1486aa6c52be79e4d290380fdd27`; the next authority act must pin the exact post-publication `main` SHA and scope. G3-D0 grants no implementation authority and does not alter the IRR D-4 record. See `evidence/cross-repository/IIPS_V3_G3_D0_DISPOSITION_2026-10-18.md`.

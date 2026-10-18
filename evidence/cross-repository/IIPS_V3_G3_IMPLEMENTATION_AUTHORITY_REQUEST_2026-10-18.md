@@ -3,11 +3,11 @@
 | Field | Value |
 |---|---|
 | **Request ID** | `IIPS-V3-G3-IMPLEMENTATION-AUTHORITY-REQUEST-2026-10-18-01` |
-| **Status** | **DECISION REQUIRED. GATE 3 IMPLEMENTATION AUTHORITY IS NOT GRANTED.** This request is preparation only. **See §11: an existing Gate B grant (D-4, 2026-10-17) and designated-ref implementation exist, and the relationship to this request is an open contradiction for the Program Authority (G3-D0).** It is not a grant, a permission to begin, or evidence that any implementation is authorized. The recording agent renders no decision. |
+| **Status** | **G3-D0 RESOLVED: RE-AUTHOR THE INTENDED IMPLEMENTATION BASIS ON IPD `main`.** The prior designated-ref Gate B D-4 remains an authentic historical grant at its original scope, but its implementation is superseded as the basis for the intended G3 path and is reference-only. **No new implementation authority is granted by G3-D0.** The remaining scope decisions and exact new Gate 3 act are still required; see the additive G3-D0 record and §11.6. |
 | **Decision authority** | **Program Authority** (Ramki). IPD security-contract authority for the IPD files. IRR capacity for the IRR files (IRR Gate 3 scope is separately named in §6.3). |
 | **Gate** | Gate 3 = implementation authority (CV-39) in the CV-20 Option A sequence (designation record §6). Named as *Gate B* in L-IPC-1 §14 and as *Gate 3* in the Gate 2 request §3. |
 | **Predecessors (all satisfied or recorded)** | CV-20 Option A designation `IIPS-V3-CV20-OPTION-A-OWNERSHIP-SOURCE-DESIGNATION-2026-10-18-01` (Gate 1). Gate 2 acceptance `IIPS-V3-G2-GATE2-ACCEPTANCE-AUTHORITY-REQUEST-2026-10-18-01` §6 (G2-D1 to G2-D5). Consumer contract v1.0.0 **ACCEPTED**. Gate E write policy rev 1 **ACCEPTED**. |
-| **Baselines at preparation** | IPD `main@b16d79fa116007f793620119c4c943996a286da2`. IRR `main@b1f1ea0fe9fba31aacae54180e1231f2b06014ba`. Both verified remotely on 2026-10-18. |
+| **Baselines at preparation** | IPD `main@b16d79fa116007f793620119c4c943996a286da2`. IRR `main@b1f1ea0fe9fba31aacae54180e1231f2b06014ba`. Both verified remotely on 2026-10-18. These are historical preparation baselines, not current refs. Additive current IPD verification: `main@f678363de5db1486aa6c52be79e4d290380fdd27`; current IRR verification is recorded in the separate Windows handoff manifest. |
 | **Label** | `non-production, single-principal, same-host IPC`. Single user, one laptop, non-production. |
 | **Production status** | `NON_PRODUCTION`. Production is **NOT AUTHORIZED**. |
 
@@ -137,8 +137,8 @@ Passing CI tests does **not** establish: restart durability on the host (QE-4); 
 
 | Act | What it means | Status |
 |---|---|---|
-| **Gate 3 — implementation authority** (this request) | Permission to write the named code and tests on IPD `main` and the named IRR code | **NOT GRANTED** |
-| **Implementation** | Code written and merged under the Gate 3 act | **Main: not begun, not authorized. Designated Gate B ref: already published under D-4 (15 files; see §11).** |
+| **Gate 3 — implementation authority** (this request) | Permission to write the named code and tests on IPD `main` and the named IRR code | **NOT GRANTED. G3-D0 selected a main-line re-authoring basis only; a new authority act must still name exact post-publication main SHA, file set, tests, and scope.** |
+| **Implementation** | Code written and merged under the Gate 3 act | **No new main-line implementation has begun or is authorized. The designated Gate B ref contains 15 historically D-4-authorized files, but is superseded as the basis for the intended G3 path and is reference-only; see §11.6.** |
 | **Gate 4 — qualification** | Execution of Gate E §4 QE-1 to QE-11 and Gate C Q1–Q4, Q9–Q11 on the Windows deployment host, at recorded digests, with raw output | **NOT EXECUTED** |
 | **Result acceptance** | A separate act accepting a Gate 4 result | Not requested |
 | **Gate 5 — admission** | A separate act naming qualified commits and lifting the IRR `503` for named operations | **NOT GRANTED** |
@@ -154,7 +154,9 @@ Respond with one line per item. Each is independent.
 
 ```text
 I, Ramki, as Program Authority (IPD security-contract authority; for the IRR items also in the IRR capacity), decide:
-G3-D0 Relationship to the rendered Gate B D-4 grant (designated ref `2ded0e98` → `cec7080`)  ... CONTINUE ON DESIGNATED REF / RE-AUTHOR ON MAIN (G3-D1) / SUPERSEDE D-4 / DEFER: ...
+G3-D0 Relationship to rendered Gate B D-4: RESOLVED — supersede the off-main implementation basis; re-author intended basis on IPD main; preserve the historical D-4 record and reconcile as in the additive decision record. This grants no new implementation authority.
+G3-D1 Main-line basis principle: RESOLVED — re-author on IPD main; the separate implementation act must pin the exact then-current main SHA and scope.
+G3-D2 through G3-D7 remain decisions required as listed below.
 G3-D1 IPD-main basis = IPD main at act time, new authored code only, off-main reference only ........ ACCEPT / CHANGE: ... / DEFER
 G3-D2 Storage technology (CV-20 (c)) ........................................ A (better-sqlite3) / B (node:sqlite) / C: ... / DEFER
 G3-D3 Write slice ........................................................... 3a (reads and refusal only) / 3b (writes disabled by default) / DEFER
@@ -221,3 +223,16 @@ The agent does **not** resolve A against B. Each reading would change what Gate 
 ### 11.5 Non-grant and fences (unchanged)
 
 No implementation authority is granted by this correction. No ref is moved, created, merged or re-pinned. IRR `/api/user-portfolios*` remains HTTP `503`. IPD `main` remains `SESSION_ONLY` / `durable: false`. No durable write is authorized. No off-`main` ref is admitted or promoted. No qualification, admission, or production claim is made.
+
+
+---
+
+## 12. G3-D0 disposition (2026-10-18, additive)
+
+The Program Authority selected **re-author the intended implementation basis on IPD `main`**, superseding the off-main Gate B implementation as a basis for the intended G3 path. The historical D-4 decision remains accurately recorded: it accepted exactly 15 files on `refs/heads/gate-b/local-principal-ipc-implementation` from baseline `2ded0e981407b38c73bdea164153f53856aa7217`, and the published ref remains `cec7080252183a6a5332efe351e61c254d342a2d`. G3-D0 does not retroactively erase or misrepresent that grant; it means that the off-main code cannot be used as the admitted base or continued as the intended implementation path. Further work on that ref would require separate authority.
+
+IPD `origin/main` was independently verified at `f678363de5db1486aa6c52be79e4d290380fdd27` before these documentation changes. The next implementation-authority act must identify the exact post-documentation-merge `main` SHA, bounded file set, tests, restrictions, and prerequisites. G3-D0 and the main-basis selection do **not** authorize implementation. No durable-write, qualification, admission, route, fence-lift, or production authority is granted. The IPD `SESSION_ONLY` / `durable: false` and IRR HTTP 503 fences remain.
+
+Authoritative record: `evidence/cross-repository/IIPS_V3_G3_D0_DISPOSITION_2026-10-18.md`. This resolution does not amend the IRR-side D-4 record or authorize IRR work.
+
+> **Additive clarification to §3 after G3-D0 (2026-10-18).** The Program Authority selected the main-line re-authoring principle, not a particular implementation scope or immutable commit. The proposed areas and tests in this request remain proposals until the separate authority act specifies the exact file set, tests, prerequisites and exact post-publication IPD `main` SHA.
