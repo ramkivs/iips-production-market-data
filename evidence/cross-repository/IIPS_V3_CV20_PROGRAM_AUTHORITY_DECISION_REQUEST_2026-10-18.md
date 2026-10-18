@@ -13,6 +13,9 @@
 | **Portfolio Safety Boundary** | **PRESERVED UNCHANGED** — IRR `/api/user-portfolios*` remains fail-closed at HTTP `503 owner-context-unavailable`; IPD `main` `PortfolioStorePort` / `PortfolioStore` remains `SESSION_ONLY` (`durable: false`); DP-2 Option 2F unresolved-holding write refusal remains in force |
 | **Production Status** | `NON_PRODUCTION` (`NOT AUTHORIZED` for production use) |
 
+
+> **Dated note (2026-10-18, post-publication; additive, historical text preserved).** The Program Authority has **selected Option A — Designate**. The disposition and the designated source (the single `ACTIVE` A-2 provisioned local-principal binding in the IPD store, consumed only by the IPD-owned same-host IPC endpoint under `L-IPC-1` rev 2 and the IRR DP-1 amendment) are recorded in `evidence/cross-repository/IIPS_V3_CV20_OPTION_A_OWNERSHIP_SOURCE_DESIGNATION_RECORD_2026-10-18.md` (`IIPS-V3-CV20-OPTION-A-OWNERSHIP-SOURCE-DESIGNATION-2026-10-18-01`). That record also resolves the IRR baseline citation in this request's header: IRR `main` advanced from `e9bb64c2…` to `d32c8122f0ba3cee7f1549c7279d1d53c45cb1d9` (PR #133, documentation-only) before this request merged. The "Current `CV-20` Status: DECISION REQUIRED" field above is historical as of this request's publication. **Every fence and non-authorization in this request remains in force.**
+
 ---
 
 ## 1. Purpose, Scope, and Authority Boundary
