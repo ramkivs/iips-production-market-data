@@ -1,6 +1,11 @@
 # IIPS v3.0 — `CV-25` SECOND PIN REQUIREMENT — `6828155e` TAG — DETERMINATION (`REQUIRES ITS OWN ACT`)
 
-> ## STATUS: **NO TAG CREATED · NO REF MOVED · G24 PROTECTED REF UNTOUCHED · THE REQUIRED DECISION IS NAMED, NOT INFERRED**
+> ## SUBSEQUENT STATUS AFTER §7 (2026-10-18): **CV-25 PIN/TAG ACCEPTANCE COMPLETE — 2 OF 2**
+> Both required commits now resolve by remote tag. The earlier status block below and §§1–6 record
+> the pre-act state and are preserved as history; §7 is the current reconciliation. The IRR tracker
+> was not mutated, and this record does not claim its status row was updated.
+
+> ## HISTORICAL STATUS AT ORIGINAL DETERMINATION: **NO TAG CREATED · NO REF MOVED · G24 PROTECTED REF UNTOUCHED · THE REQUIRED DECISION IS NAMED, NOT INFERRED**
 > The PA instruction of 2026-10-18 directs the IPD-bound Group 1 items to proceed **and explicitly
 > withholds** the `6828155e` tag: *"Create a tag for `6828155e…` only if an explicit valid act
 > authorizes it and reconciles the prohibition. Do not infer authorization."* No such act exists.
