@@ -103,3 +103,91 @@ Appended by a **subsequent** commit after publication, so the record is not self
 
 *End of determination `IIPS-V3-GROUP1-CV25-G24-TAG-DETERMINATION-2026-10-18-01` — **G24 REF PRESERVED ·
 NO TAG · ONE NARROW ACT REQUIRED · `CV-25` NOT COMPLETE · NON_PRODUCTION**.*
+
+---
+
+## 7. Subsequent reconciliation, execution, and acceptance (2026-10-18)
+
+This is a **subsequent, additive reconciliation**. §§1–6 above record the verified state before the
+second-pin act; their no-tag/no-authority statements are historical and are not rewritten. The
+required decision is now rendered by
+[`IIPS_v3.0_IPD_CV25_G24_SECOND_PIN_RECONCILIATION_ACT_2026-10-18.md`](IIPS_v3.0_IPD_CV25_G24_SECOND_PIN_RECONCILIATION_ACT_2026-10-18.md),
+and its execution is evidenced by
+[`IIPS_v3.0_IPD_CV25_G24_SECOND_PIN_EXECUTION_RECEIPT_2026-10-18.md`](IIPS_v3.0_IPD_CV25_G24_SECOND_PIN_EXECUTION_RECEIPT_2026-10-18.md).
+
+### 7.1 Rendered decision and publication
+
+The 2026-10-18 PA/owner instruction directs CV-25 to closure and directs this narrow required act to
+be rendered without redundant approval. The act decides that a durable read-only tag **is a re-pin
+in substance** under G24, then expressly authorizes a single exception only for
+`refs/tags/iips-pin-g24-6828155e` →
+`6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4`. It explicitly chooses an **annotated** tag and lifts no
+other G24 §4 prohibition. The protected branch is not moved or rewritten.
+
+The act was published first on the current IPD session branch:
+
+| Publication | Verified identity |
+|---|---|
+| Act publication commit | `bbf4263db3b58a93ce7d601932f9a2f8b895a28f`, parent `467eb529f52820032b17ea0212c92362a96dfe18` |
+| Act blob | `bced1243fb89e69fc7345b7b4379d39ebb3cb36a` |
+| Remote branch read-back | `refs/heads/arena/fb46926b-iips-production-market-data` = `bbf4263db3b58a93ce7d601932f9a2f8b895a28f` before tag execution |
+| Remote act content read-back | GitHub Contents API blob `bced1243fb89e69fc7345b7b4379d39ebb3cb36a`, equal to the published act blob |
+
+### 7.2 Execution and independent remote verification
+
+After act publication, the exact authorized annotated tag was created and pushed without force:
+
+| Item | Actual verified result |
+|---|---|
+| Tag | `refs/tags/iips-pin-g24-6828155e` |
+| Tag object | `dcdaaa94e8e050ba132a19813d2f22f214dca7d3`, type `tag` (annotated) |
+| Peeled target | `6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4`, type `commit` |
+| Annotation | `IIPS v3.0 G24 AD-03 designated-reference pin — 6828155e — CV-25 durable reference` |
+| Tagger / time | `ramkivs <302525469+ramkivs@users.noreply.github.com>` / `2026-10-18T05:52:40Z` |
+| Remote read-back | `git ls-remote --tags origin` returned the exact tag-object line and `^{}` peeled line shown above |
+| GitHub Git Data API | tag ref type `tag`, object `dcdaaa94…`; tag object targets exact commit `6828155e…` and returns the exact annotation/tagger |
+| Fresh clone | `cat-file -t` = `tag`; `rev-parse tag^{commit}` = `6828155e…`; protected branch fetched in the same fresh clone resolves to exactly `6828155e…`; `merge-base --is-ancestor` exited 0 |
+
+The independent ref inventory is in
+[`IIPS_v3.0_IPD_CV25_REMOTE_REF_INVENTORY_2026-10-18.txt`](IIPS_v3.0_IPD_CV25_REMOTE_REF_INVENTORY_2026-10-18.txt).
+Across the tag-execution step it records 54 → 56 advertised lines: precisely the new annotated tag
+ref and its peeled line were added; **zero refs were removed and zero pre-existing refs changed**.
+Distinct tags increased **5 → 6** (6 → 8 `ls-remote --tags` lines, with peel lines counted
+correctly). `refs/heads/arena/01a0f308-iips-production-market-data` remains at
+`6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4`. The original
+`iips-pin-np04-2e11fa3b` tag object `8e91cc7029ce14cf353a9f138c826906239b05c6` and peeled target
+`2e11fa3b689d1a3674a5e4ba1f1de9a559e20494` are unchanged.
+
+### 7.3 CV-25 acceptance and disposition
+
+The current authoritative IRR tracker was re-read **read-only** at
+`ramkivs/iips-review-recovered` `main` commit `a0a897045880878cbbdd30e3cc17747164b3b3de`, tracker
+blob `6c1ad8acf0becaf3e45b0852471dde2d2d0ed799`, §16.4.2. It recorded CV-25 as
+`PARTIALLY EXECUTED (1 OF 2 TAGS)` and its acceptance test requires `git ls-remote origin
+'refs/tags/*'` to show **both pins by tag**. The current remote read-back now proves:
+
+| Required pin | Tag ref | Type / target |
+|---|---|---|
+| `2e11fa3b689d1a3674a5e4ba1f1de9a559e20494` | `refs/tags/iips-pin-np04-2e11fa3b` | annotated object `8e91cc7029ce14cf353a9f138c826906239b05c6`, peeled to exact target |
+| `6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4` | `refs/tags/iips-pin-g24-6828155e` | annotated object `dcdaaa94e8e050ba132a19813d2f22f214dca7d3`, peeled to exact target |
+
+The new act, receipt, and CV-25 record explicitly cite the tag names as the durable pin refs; the
+protected branch is cited only for preservation and reachability. **The IPD CV-25 pin/tag acceptance
+criterion is COMPLETE — 2 OF 2.** The IRR repository and tracker were not mutated, as required, and
+this addendum does not claim that the IRR tracker status row itself was reconciled. No D2b, Windows
+Gate C, product, implementation, or unrelated work was performed. No production status is implied.
+
+The single, named exception to the G24 re-pin limb is spent by this one exact creation. **All other
+G24 §4 prohibitions remain in force.**
+
+### 7.4 Publication of this reconciliation record
+
+The act was published before execution; the execution receipt and raw inventories were published
+after remote verification in commit `a714742fab23c1b8684ea5c72e31cd393ef78014` (parent
+`bbf4263db3b58a93ce7d601932f9a2f8b895a28f`). Receipt blob
+`ed26ad557e4cae3fdf3d8992d8861a9db46a36f3` (SHA-256
+`6c9281bf66ca79998c5924c0a0b644245f557e2f03aaab6f1b675a890b1231af`); raw ref inventory blob
+`341b87f2360eb2d0adc5d3887e149ee10842107c` (SHA-256
+`b83a2ed91bb4b014a0fe1cf38f311b3d59667fdf0e26ae7ac28860fa0d4e0483`). The GitHub API read-back
+matched both blobs. This addendum is committed and published only after that receipt publication,
+so the record does not self-reference.
