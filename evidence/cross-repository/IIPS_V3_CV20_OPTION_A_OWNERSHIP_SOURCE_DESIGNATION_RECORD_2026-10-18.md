@@ -217,7 +217,7 @@ Each of the following yields **no read, no write, no owner disclosure, and no in
 |---|---|
 | Gate 1: CV-20 ownership source | **Resolved (Option A designated)** |
 | Gate 2: consumer contract + Gate E write policy | **Unlocked for preparation and PA review.** Drafts were published in this pass as **PROPOSED** (see §9). Acceptance requires a separate PA act. |
-| Gate 3: implementation authority (CV-39) | **Not granted** |
+| Gate 3: implementation authority (CV-39) | **Not granted for `main`, IRR admission, or writes.** Qualified by the dated correction below the table: a Gate B designated-ref grant (D-4, 2026-10-17) exists, and its relationship to Gate 3 is an open contradiction for the Program Authority (Gate 3 request §11, G3-D0). |
 | Gate 4: qualification and result acceptance (Gate A′, Gate C, Q5–Q8, CV-24/CV-38) | **Not granted / not executed** |
 | Gate 5: route admission and fence lift (CV-52, Gate D) | **Not granted.** The `503` fence remains. |
 | Production | **NOT AUTHORIZED** |
@@ -288,6 +288,8 @@ The change set in this pass touches only `evidence/**/*.md` in IPD, and **no IRR
 | IPD readiness reconciliation §3.3 / one-pass continuation | Dated note pointing to this record | PR #14 |
 | **IRR master tracker `CV-20` row, §16.12/§19 counts, §16.49.4 IPD SHA** | Proposed: `CV-20` status `DECISION REQUIRED` → `OPTION A DESIGNATED (ownership source, item (b)); items (a)/(c)/(d) and Gates 2–5 outstanding`. Next action → Gate 2 acceptance act. | **Not applied in this pass.** This session may push only to its IPD branch. Applying the change is an IRR-session action (owner: PA / IRR session). No competing tracker is created. |
 | **IRR PKG-02A D-2(a)/D-2(b); tracker §16.50.3** | Proposed: close D-2(a) as corrected on the IPD side (D-8), and close D-2(b) as resolved: `cab04b6f` is the accepted **blob** (D-9). Also record IRR `main` `b1f1ea0` as the IRR baseline at publication (D-7). | **Not applied.** IRR-owned; left for an IRR session. |
+
+> **Dated correction (2026-10-18, later; additive) — Gate B designated-ref grant.** The IPD Program Authority rendered Gate B implementation-authority decision **D-4 = ACCEPT** on 2026-10-17 (`evidence/np04/IIPS_v3.0_G2_IPD_GATE_B_IMPLEMENTATION_AUTHORITY_PA_DECISION_RECORD_RENDERED_2026-10-17.md`). It permits exactly 15 new files on the designated ref `refs/heads/gate-b/local-principal-ipc-implementation` (baseline `2ded0e981407b38c73bdea164153f53856aa7217`), not on `main`. The ref is at `cec7080252183a6a5332efe351e61c254d342a2d` (verified). The IRR companion grant (eight files, IRR-side, implementation not begun) is recorded at IRR `docs/integration/IIPS_v3.0_G2_IRR_GATE_B_D4_IMPLEMENTATION_AUTHORITY_PA_DECISION_RENDERED_2026-10-17.md`. The statement "Gate 3 not granted" stands for `main`, IRR admission and writes. Whether the designated-ref grant continues, supersedes or conflicts with L-IPC-1 §14 row B (which requires an IPD-`main` basis) is an **open contradiction for the Program Authority** (Gate 3 request §11, decision G3-D0). Nothing in this note grants, withdraws or narrows any authority.
 
 ---
 

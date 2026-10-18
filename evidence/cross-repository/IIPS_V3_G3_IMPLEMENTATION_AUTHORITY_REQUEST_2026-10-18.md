@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Request ID** | `IIPS-V3-G3-IMPLEMENTATION-AUTHORITY-REQUEST-2026-10-18-01` |
-| **Status** | **DECISION REQUIRED. GATE 3 IMPLEMENTATION AUTHORITY IS NOT GRANTED.** This request is preparation only. It is not a grant, a permission to begin, or evidence that any implementation is authorized. The recording agent renders no decision. |
+| **Status** | **DECISION REQUIRED. GATE 3 IMPLEMENTATION AUTHORITY IS NOT GRANTED.** This request is preparation only. **See §11: an existing Gate B grant (D-4, 2026-10-17) and designated-ref implementation exist, and the relationship to this request is an open contradiction for the Program Authority (G3-D0).** It is not a grant, a permission to begin, or evidence that any implementation is authorized. The recording agent renders no decision. |
 | **Decision authority** | **Program Authority** (Ramki). IPD security-contract authority for the IPD files. IRR capacity for the IRR files (IRR Gate 3 scope is separately named in §6.3). |
 | **Gate** | Gate 3 = implementation authority (CV-39) in the CV-20 Option A sequence (designation record §6). Named as *Gate B* in L-IPC-1 §14 and as *Gate 3* in the Gate 2 request §3. |
 | **Predecessors (all satisfied or recorded)** | CV-20 Option A designation `IIPS-V3-CV20-OPTION-A-OWNERSHIP-SOURCE-DESIGNATION-2026-10-18-01` (Gate 1). Gate 2 acceptance `IIPS-V3-G2-GATE2-ACCEPTANCE-AUTHORITY-REQUEST-2026-10-18-01` §6 (G2-D1 to G2-D5). Consumer contract v1.0.0 **ACCEPTED**. Gate E write policy rev 1 **ACCEPTED**. |
@@ -138,7 +138,7 @@ Passing CI tests does **not** establish: restart durability on the host (QE-4); 
 | Act | What it means | Status |
 |---|---|---|
 | **Gate 3 — implementation authority** (this request) | Permission to write the named code and tests on IPD `main` and the named IRR code | **NOT GRANTED** |
-| **Implementation** | Code written and merged under the Gate 3 act | Not begun |
+| **Implementation** | Code written and merged under the Gate 3 act | **Main: not begun, not authorized. Designated Gate B ref: already published under D-4 (15 files; see §11).** |
 | **Gate 4 — qualification** | Execution of Gate E §4 QE-1 to QE-11 and Gate C Q1–Q4, Q9–Q11 on the Windows deployment host, at recorded digests, with raw output | **NOT EXECUTED** |
 | **Result acceptance** | A separate act accepting a Gate 4 result | Not requested |
 | **Gate 5 — admission** | A separate act naming qualified commits and lifting the IRR `503` for named operations | **NOT GRANTED** |
@@ -154,6 +154,7 @@ Respond with one line per item. Each is independent.
 
 ```text
 I, Ramki, as Program Authority (IPD security-contract authority; for the IRR items also in the IRR capacity), decide:
+G3-D0 Relationship to the rendered Gate B D-4 grant (designated ref `2ded0e98` → `cec7080`)  ... CONTINUE ON DESIGNATED REF / RE-AUTHOR ON MAIN (G3-D1) / SUPERSEDE D-4 / DEFER: ...
 G3-D1 IPD-main basis = IPD main at act time, new authored code only, off-main reference only ........ ACCEPT / CHANGE: ... / DEFER
 G3-D2 Storage technology (CV-20 (c)) ........................................ A (better-sqlite3) / B (node:sqlite) / C: ... / DEFER
 G3-D3 Write slice ........................................................... 3a (reads and refusal only) / 3b (writes disabled by default) / DEFER
@@ -171,3 +172,52 @@ Gate 4 qualification and its execution; result acceptance; Gate 5 admission; lif
 ---
 
 *Prepared by Arena Agent Mode as a Gate 3 decision request. It is not an authority act, grants nothing, and has no effect until the Program Authority responds by a separate act. The agent renders no decision and selects no storage technology, basis or slice.*
+
+---
+
+## 11. Post-publication correction (2026-10-18, additive) — existing Gate B grant and an open contradiction
+
+**Why this section exists.** On verification after merge, sections 2, 3, 7 and 9 of this request omitted an existing grant and an existing implementation. This section corrects the record. It does not alter the request's non-grant: **Gate 3 implementation authority is still NOT GRANTED.**
+
+### 11.1 Facts (verified against remote refs and rendered records)
+
+| # | Fact | Verification |
+|---|---|---|
+| F-1 | IPD Program Authority rendered **Gate B implementation authority D-4 = ACCEPT** on 2026-10-17, at the full prepared scope: **exactly 15 new files, on the designated Gate B ref only** (`refs/heads/gate-b/local-principal-ipc-implementation`, baseline `2ded0e981407b38c73bdea164153f53856aa7217`). No durable portfolio writes, no G24 promotion, no PR merge, no Gate C/D/E authority. | `evidence/np04/IIPS_v3.0_G2_IPD_GATE_B_IMPLEMENTATION_AUTHORITY_PA_DECISION_RECORD_RENDERED_2026-10-17.md` on IPD `main` (merged via PR #8, merge `467eb529`). |
+| F-2 | D-4 was conditional on a **paired IRR D-4 act**. The IRR D-4 was rendered on 2026-10-17 at an **eight-file, IRR-side** scope; implementation **not begun**; `/api/user-portfolios*` stays HTTP 503; IRR listen host, CORS and `allowedHosts` changes and any IPD code change are excluded absent separate authority. | `docs/integration/IIPS_v3.0_G2_IRR_GATE_B_D4_IMPLEMENTATION_AUTHORITY_PA_DECISION_RENDERED_2026-10-17.md` on IRR `main` (`b1f1ea0`). |
+| F-3 | The 15 files were **published** on the designated ref as a non-forced fast-forward: `gate-b/local-principal-ipc-implementation` head = **`cec7080252183a6a5332efe351e61c254d342a2d`** (verified via GitHub refs API). GitHub compare `2ded0e98…` → `cec70802…`: **15 added, 0 modified, 0 deleted**: `src/ipc/{endpoint,entrypoint,errors,framing,index,server}.ts`; `src/user_portfolio/{canonical_identity,errors,index,operations}.ts`; `tests/gate_b_{canonical_identity,ipc_endpoint,ipc_refusals,support,user_portfolio_operations}.test.ts`. | GitHub refs and compare APIs (verified). Completion record: `evidence/np04/IIPS_v3.0_G2_IPD_GATE_B_COMPLETION_EVIDENCE_HANDOFF_2026-10-17.md`. |
+| F-4 | Source read of the designated-ref files (verified by GitHub contents API at `cec70802`): `src/ipc/server.ts` creates a `net` server for one endpoint and owns no durable state; `src/user_portfolio/operations.ts` states that its operations are read-only owner-scoped and that **no durable write occurs on this path**. `src/ipc/entrypoint.ts` imports `src/persistence/*` and `src/portfolio/durable-store.ts`. **Those modules are not among the 15 added files**, so they are inherited from baseline `2ded0e98` (inferred from the file list; not separately verified file by file). | GitHub contents API (verified for the four files named). |
+| F-5 | **IPD `main` still contains none of these files**: no `src/ipc`, no `src/user_portfolio`, no `gate_b` test (verified at `324ae46`). PR #8 added portfolio UI and port files and evidence to `main`; its non-evidence paths are `frontend/src/features/portfolio/*` and `tests/bi07_portfolio_store_port.test.ts`. | `git ls-tree` at `origin/main` and PR #8 file list (verified). |
+| F-6 | IRR D-4 names the IPD Gate A derivative ref `2ded0e98…` among the things IRR must not promote, merge, cherry-pick, re-pin or admit. | IRR rendered D-4 §4 item 5 (verified). |
+| F-7 | L-IPC-1 rev 2 §14, row **B — Implementation authority**, requires the Gate B act to "state whether an IPD-`main` implementation basis exists or must be created", and its 2026-10-16 dated note says "gate B must still name an IPD-`main` implementation basis, and the off-main G24 lineage remains **not** a base". | `evidence/np04/IIPS_v3.0_G2_IPD_LOCAL_PRINCIPAL_OS_IPC_SECURITY_CONTRACT_PROPOSAL_2026-10-16.md` §14 (verified). |
+
+### 11.2 The contradiction (not resolved here)
+
+- **Position A (the PA's rendered D-4):** Gate B implementation is permitted, and it has been published, on the **designated off-`main` ref** (baseline `2ded0e98`).
+- **Position B (L-IPC-1 §14 row B and its dated note):** Gate B must **name an IPD-`main` implementation basis**, and no off-`main` lineage is a base.
+- **Position C (this request, sections 2, 3, 7 and 9 as published):** the `main` basis is the proposal, "Implementation: Not begun", and no grant exists. Section 7 is **wrong** on the implementation status and section 9 omitted D-4.
+
+The agent does **not** resolve A against B. Each reading would change what Gate 3 would be. A and B cannot both be applied without a Program Authority act that says which governs.
+
+### 11.3 Effect on the Gate 3 request
+
+- **Gate 3 implementation authority: still NOT GRANTED.** D-4 is an implementation grant on a designated ref. It is not a main-basis grant, not a write-path grant, and not a Gate 3 act in this request's sense. Nothing in this correction grants anything.
+- **Nothing on the designated ref may be treated as admitted, promoted, or qualified.** Its existence does not change `main` (`SESSION_ONLY` / `durable: false`), the IRR 503 fence, Gate E W-1, or the non-grants above.
+- **The G3-D1 proposal in section 9 is one of several options and must be read with G3-D0.** It assumed no Gate B designated ref existed. That assumption was false.
+
+### 11.4 Decision added — G3-D0
+
+**G3-D0 — Relationship to the rendered Gate B D-4 grant and its designated ref.** The Program Authority is asked to choose one reading:
+
+| Option | Meaning | Consequence |
+|---|---|---|
+| (i) **Continue on the designated ref** | D-4 remains the implementation basis; any later Gate 3 act names `gate-b/…@cec7080` and the designated ref only. | Conflicts with L-IPC-1 §14 row B's `main`-basis expectation unless the PA amends that clause by separate act. Still needs a main admission act later. |
+| (ii) **Re-author on `main`** | The 15-file designated-ref code is reference only. Any implementation is re-authored on `main` under a Gate 3 act (the proposal in §9 G3-D1). | Satisfies L-IPC-1 row B. D-4 is left in place but superseded for implementation. |
+| (iii) **Supersede D-4** | The PA withdraws or narrows D-4 by a separate act, then selects (i) or (ii). | Requires a PA act naming D-4 and its record IDs. |
+| (iv) **Defer** | No choice now. The designated ref stays as published. No further implementation on it, and no Gate 3 act. | Gate 3 cannot be scoped until a choice is made. |
+
+**Agent recommendation: none.** The choice is the Program Authority's. The agent did not select a basis for IPD-`main` and did not change the designated ref.
+
+### 11.5 Non-grant and fences (unchanged)
+
+No implementation authority is granted by this correction. No ref is moved, created, merged or re-pinned. IRR `/api/user-portfolios*` remains HTTP `503`. IPD `main` remains `SESSION_ONLY` / `durable: false`. No durable write is authorized. No off-`main` ref is admitted or promoted. No qualification, admission, or production claim is made.
