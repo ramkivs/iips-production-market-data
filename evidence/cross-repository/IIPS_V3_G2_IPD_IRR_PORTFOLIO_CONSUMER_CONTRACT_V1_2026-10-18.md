@@ -13,6 +13,7 @@
 | **Write semantics** | Governed by the Gate E write policy `IIPS-V3-G2-GATE-E-PORTFOLIO-WRITE-POLICY-2026-10-18-01` (PROPOSED). Write operations are **defined but not authorized** by this contract. |
 | **Baselines** | IPD `main@2d12413446c29c08f6f357b8ac67e34594f30286`; IRR `main@d32c8122f0ba3cee7f1549c7279d1d53c45cb1d9` |
 | **Label** | `non-production, single-principal, same-host IPC` |
+| **Pre-acceptance corrections** | 2026-10-18, post-publication (IPD PR #14 → follow-up): (1) `portfolio.analytics` marked **RESERVED / not available in v1**; the original row's `{ portfolioId, currentPrices?, priceAsOf? }` shape matched neither IPD `main` nor G-2 §7. (2) Caller-identity key count corrected from 26 to **29** (verified at `d61f18df…`). Both corrections were made while the contract is PROPOSED, so the version stays `1.0.0`. Source: IRR PKG-02A D-2(a), independently re-verified. |
 
 ---
 
@@ -39,7 +40,7 @@ This contract specifies the wire boundary between the IRR server process (client
 |---|---|---|
 | Durability vocabulary `'SESSION_ONLY' \| 'DURABLE'` | IPD `frontend/src/features/portfolio/portfolioStorePort.ts` | `d61f18dfdce12a7f0c4377a3c6d410026d454089` |
 | Post-authorization refusal codes `REFUSED_UNRESOLVED_IDENTITY`, `REFUSED_STORE_GUARD`, `REVISION_CONFLICT`, `INVALID_REQUEST`, `UNAVAILABLE` | same file, `PortfolioPortRefusalCode` | same |
-| Caller-identity key refusal (26 keys) | same file, `CALLER_SUPPLIED_IDENTITY_KEYS` / `findCallerSuppliedIdentityKeys` | same |
+| Caller-identity key refusal (29 keys at blob `d61f18df…`) | same file, `CALLER_SUPPLIED_IDENTITY_KEYS` / `findCallerSuppliedIdentityKeys` | same |
 | Portfolio record, contribution SHA-256 lineage, BI-08 `contentDigest`, MERGE/REPLACE | IPD `frontend/src/features/portfolio/portfolio-store.ts` | `3bf852b99e300a8dfa71d3b1b04ed0f7b947b4a5` |
 | Canonical identity authority | IPD `src/identity/security_master.ts`, `src/identity/mapping_store.ts` (`resolveCompanyId`: `UNMAPPED_IDENTIFIER` / `AMBIGUOUS_COLLISION`) | `e260fd90…`, `eec60c09…` |
 | IRR route table (6 route/method pairs) and HTTP `503` fence | IRR `frontend/server/user-portfolio-transport.ts`, `owner-context-unavailable.ts` | `51704c12…`, `cb8db45d…` |
@@ -116,7 +117,7 @@ These are emitted only **after** the provisioned principal has been resolved. Th
 | `portfolio.list` | Read | none | `PortfolioSummary[]`: `portfolioId`, `portfolioName`, `revision`, `holdingsCount`, `totalMarketValue`, `lastUpdated` | `GET /api/user-portfolios` |
 | `portfolio.get` | Read | `{ portfolioId }` | `PortfolioDetail`: summary fields + `holdings`, `contributions` (with SHA-256 lineage), `weightSumPercentage`, `provenanceDigest`, `durability`, `durable` | `GET /api/user-portfolios/:id` |
 | `portfolio.revisions` | Read | `{ portfolioId }` | `RevisionEntry[]`: `revision`, `operation ∈ {INITIAL, MERGE, REPLACE, RESET, DELETE}`, `committedAt`, `contentDigest?` | `GET /api/user-portfolios/:id/revisions` |
-| `portfolio.analytics` | Read | `{ portfolioId, currentPrices?, priceAsOf? }` | Derived analytics. Nothing persisted. | none on IRR today |
+| `portfolio.analytics` | **RESERVED: not available in v1** | n/a. *(IPD `main` exposes only the session-local `getAnalytics(portfolioId?: string)`.)* | n/a. A reserved `op` is outside the v1 operation set: IPD refuses it as `UNKNOWN_OPERATION` (Class P, §5.1). | **None.** G-2 §7 excludes connecting user-owned portfolio data to the certified scoring/analytics path pending a separate governance decision. Enabling it needs that decision plus a contract minor revision (§8). |
 | `portfolio.create` | **Write** (Gate E) | `{ portfolioName? }` | `PortfolioDetail` at `revision: 1`, `operation: INITIAL` | `POST /api/user-portfolios` |
 | `portfolio.save` | **Write** (Gate E) | `{ portfolioId, expectedRevision, mode ∈ {MERGE, REPLACE}, holdings[], contentDigest?, broker? }` | `{ disposition ∈ {SAVED_NEW_BATCH, MERGED_INTO_EXISTING, ALREADY_IMPORTED_NO_OP}, revision, durability, durable }` | `PUT /api/user-portfolios/:id/holdings` |
 | `portfolio.reset` | **Write** (Gate E) | `{ portfolioId, expectedRevision }` | `PortfolioDetail` (empty holdings; new `RESET` revision) | none on IRR today (port method exists) |
@@ -181,6 +182,7 @@ Neither publication nor acceptance of this contract authorizes:
 - route admission or removal of the IRR `503` fence (Gate 5 / CV-52 / Gate D);
 - any login, OIDC, authentication, RBAC, multi-user, tenant-directory or enterprise element;
 - any change to G-2, D-2, H-18, DP-2 Option 2F, L-IPC-1 or the DP-1 amendment;
+- connecting user-owned portfolio data to any scoring/analytics path (G-2 §7; `portfolio.analytics` is reserved);
 - release readiness or production use.
 
 ---
