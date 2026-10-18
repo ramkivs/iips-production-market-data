@@ -61,6 +61,8 @@ Remote PR/run verification above confirms PR #8 (`467eb52`), PR #9 (`e040002`), 
 
 No product code or tests were changed or rerun. No Windows/browser/host qualification, mounted UI acceptance, identity probe, cross-repository integration acceptance, admission or production acceptance is claimed.
 
+> **Dated note (2026-10-18, Gate 2 disposition; additive).** The Program Authority approved G2-D1 to G2-D5 in full. Consumer contract v1.0.0 and Gate E write policy rev 1 are **ACCEPTED** (fail-closed; no implementation, write, qualification, admission, fence-lift or production authority). The G2-D3 Q8 meaning is option (b): stop and restart both IRR and IPD processes. The Gate 3 implementation-authority request is prepared as `IIPS_V3_G3_IMPLEMENTATION_AUTHORITY_REQUEST_2026-10-18.md` and is **NOT GRANTED**. Items 1 and 4 of §6 are superseded for the Gate 2 step by this note and by the Gate 2 decision request §6. Items 2 and 3 are unchanged. IRR remains at `503`, and IPD `main` remains `SESSION_ONLY` / `durable: false`.
+
 ## 6. Next actions / blockers
 
 1. Program Authority: issue the explicit CV-20 designate/decline/defer disposition with owner-source semantics; until then portfolio implementation remains blocked and IRR stays 503.

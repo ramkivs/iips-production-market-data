@@ -4,11 +4,11 @@
 |---|---|
 | **Policy ID** | `IIPS-V3-G2-GATE-E-PORTFOLIO-WRITE-POLICY-2026-10-18-01` |
 | **Revision** | **1** (2026-10-18) |
-| **Status** | **PROPOSED: NOT ACCEPTED · NOT EFFECTIVE.** Acceptance requires a separate Program Authority act (`IIPS-V3-G2-GATE2-ACCEPTANCE-AUTHORITY-REQUEST-2026-10-18-01`, decision G2-D2). |
+| **Status** | **ACCEPTED (revision 1) by the Program Authority on 2026-10-18 under decision G2-D2 (approved in full), fail-closed.** Recorded in `IIPS-V3-G2-GATE2-ACCEPTANCE-AUTHORITY-REQUEST-2026-10-18-01` §6. **Acceptance grants no Gate 3 implementation authority, authorizes no durable write, qualifies no implementation, admits no portfolio route, lifts no IRR `503` fence and authorizes no production use.** Under W-1 every write remains refused (`WRITE_NOT_AUTHORIZED`) until all four conditions are separately met. |
 | **Gate** | **Gate E**: "Write policy / canonical identity: designate the resolution source for the write path and the successful-write policy" (L-IPC-1 §14; acceptance decision §8 row 5) |
 | **Owning repository** | **IPD** (owner of the portfolio domain, store and write path; G-2 §1) |
-| **Depends on** | CV-20 Option A designation `IIPS-V3-CV20-OPTION-A-OWNERSHIP-SOURCE-DESIGNATION-2026-10-18-01`; consumer contract `IIPS-V3-G2-IPD-IRR-PORTFOLIO-CONSUMER-CONTRACT` v1.0.0 (PROPOSED) |
-| **Baselines** | IPD `main@2d12413446c29c08f6f357b8ac67e34594f30286`; IRR `main@d32c8122f0ba3cee7f1549c7279d1d53c45cb1d9` |
+| **Depends on** | CV-20 Option A designation `IIPS-V3-CV20-OPTION-A-OWNERSHIP-SOURCE-DESIGNATION-2026-10-18-01`; consumer contract `IIPS-V3-G2-IPD-IRR-PORTFOLIO-CONSUMER-CONTRACT` v1.0.0 (ACCEPTED under G2-D1, 2026-10-18) |
+| **Baselines** | As published: IPD `main@2d12413446c29c08f6f357b8ac67e34594f30286`; IRR `main@d32c8122f0ba3cee7f1549c7279d1d53c45cb1d9`. Verified at acceptance: IPD `main@b16d79fa116007f793620119c4c943996a286da2`; IRR `main@b1f1ea0fe9fba31aacae54180e1231f2b06014ba` (documentation-only intervening changes). |
 | **Production status** | `NON_PRODUCTION`; production is **NOT AUTHORIZED** |
 
 > **This policy grants no implementation authority.** It defines what a *permitted* write would be **if and when** separately authorized, implemented, qualified and admitted. Defining permitted behaviour is **not** permission to build it, enable it, or claim it. Until W-1's four conditions are met, every write operation is refused (`WRITE_NOT_AUTHORIZED`), IPD `main` stays `SESSION_ONLY` / `durable: false`, and IRR `/api/user-portfolios*` stays at HTTP `503 owner-context-unavailable`.
@@ -129,6 +129,7 @@ Class P: framing/version/operation violation, caller-supplied authority, binding
 
 - Portfolio data: **indefinite preservation; no automatic purge** (G-2 implementation record §8 item 3). `delete` is a tombstone. Purge is **not authorized**.
 - Data under a revoked binding is **retained and inaccessible**. Re-association to a re-provisioned principal or purge requires a separate act (CV-20 residual R-6).
+- **Accepted disposition for revoked-binding data (G2-D5, Program Authority, 2026-10-18; approved in full).** (1) Subsequent reads **and** writes through the revoked binding are denied. (2) Data is **not** automatically transferred to a replacement binding. (3) Data is **not** silently deleted merely because a binding was revoked. (4) Before retained data can become accessible again, an explicit, governed **recovery, reassignment or deletion** action is required. (5) The failure behaviour must be defined and tested before qualification or admission (QE-8). This is the approved policy for **future** implementation. It is **not** represented as implemented or tested, and it is not a Gate 4 result.
 
 ---
 
@@ -161,7 +162,7 @@ Executed on the **Windows deployment host**, after Gate A′ provisioning, again
 | QE-10 | **Outcome-unknown:** timeout after send yields no IRR auto-retry; reconcile-by-read procedure demonstrated | W-9 |
 | QE-11 | Q1–Q4 and Q9–Q11 (read-only Gate C subset) passed and accepted, including **C5.1/Q9 zero bytes** | Gate C |
 
-**Precondition for QE-4/Q8:** the Authority must first decide the meaning of "stop both processes" (`D-GC-G`). This policy does not choose it. Candidate readings are listed in the Gate 2 authority request, decision G2-D3.
+**Precondition for QE-4/Q8 — RESOLVED by the Program Authority (G2-D3, 2026-10-18, option (b)).** The meaning of "stop both processes" (`D-GC-G`) is **stop both the IRR and the IPD processes, then restart both**. QE-4 is therefore: create → durable commit → stop both IRR and IPD processes → restart both → byte-for-byte read-back. No OS reboot is required. Option (c) is not selected; a change to it needs documented evidence that restarting both processes is insufficient. Recording this decision does not execute QE-4 or accept any result. (Original text: the Authority must first decide the meaning of "stop both processes"; candidate readings were listed in the Gate 2 authority request, decision G2-D3.)
 
 ---
 
@@ -171,4 +172,4 @@ Implementing durable writes · enabling IPD durable persistence · promoting off
 
 ---
 
-*Prepared by Arena Agent Mode as a Gate 2 draft. It is PROPOSED and has no effect until the Program Authority accepts it by a separate act; even then it grants no implementation authority (W-1).*
+*Prepared by Arena Agent Mode as a Gate 2 draft. Accepted (rev 1) by the Program Authority on 2026-10-18 under G2-D2. Acceptance grants no implementation authority (W-1); the recording agent renders no decision.*
