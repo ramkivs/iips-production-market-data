@@ -290,3 +290,49 @@ No disposition above is answered by this section. Unrelated authorized work is u
 **One Program Authority response to G3-D2, G3-D3, G3-D4 and G3-D6 (with one-line confirmations of G3-D5 and, in the IRR capacity, G3-D7), beginning with G3-D2** — because the storage choice determines the dependency and persistence file set that every other element of a Gate 3 act must name. Only then can a Gate 3 act pin the exact IPD `main` SHA, file set, tests and restrictions as G3-D0 §3 and Gate E W-1 condition 2 require. Until that act issues: no durable-store or IPC implementation, no off-main promotion, no fence lift, and no qualification, admission, or production claim.
 
 *End of §13. Additive reconciliation only; §§1–12 are unchanged.*
+
+---
+
+## 14. IRR handoff reconciliation — corrected replacement package prepared and validated (2026-10-18, additive)
+
+**Purpose.** This section records a one-pass reconciliation of the earlier five-file IRR G3-D0 documentation handoff against the G3-D0 disposition and the §13 G3-D1…D7 classification, and the preparation of a corrected, documentation-only replacement patch for controlled application from the user's Windows IRR checkout. It records no new decision and grants no implementation authority. **Gate 3 remains NOT GRANTED; no change is published to IRR by this section.**
+
+### 14.1 Baselines independently re-resolved for this reconciliation
+
+| Item | Verified value | How verified |
+|---|---|---|
+| IPD `main` (authority baseline for the handoff) | `9310b1a250221b3eb1a2d41566611e1206f61052` (PR #22 merge) | `git ls-remote` + GitHub branches API; post-merge CI run `39145407033` `success`; executed-test-count check `556 tests executed, 0 failed` (CI evidence, not qualification) |
+| IPD chain since the pre-G3-D0 baseline | `f678363d…` → `8b65971f…` (PR #20) → `e76bb2ed…` (PR #21) → `9310b1a…` (PR #22); compare `f678363…9310b1a`: ahead 6, behind 0, `evidence/cross-repository/` Markdown only | GitHub compare/PR APIs |
+| IRR `main` (patch target baseline) | `82431e5b28ecc01a778e4f38427cbf294fa8eef5` (IRR PR #136 merge, 2026-10-18T15:29:29Z; CI run `39140713740` `success`) | `git ls-remote` + GitHub branches API (re-resolved immediately before patch validation) |
+| Gate B / Gate A refs | `cec7080252183a6a5332efe351e61c254d342a2d` / `2ded0e981407b38c73bdea164153f53856aa7217` (unchanged) | `git ls-remote` |
+| Fences | IPD: no `src/ipc`/`src/persistence`/`src/user_portfolio`; `SESSION_ONLY` / `durable:false` (blobs `d61f18df…`/`3bf852b9…`); no SQLite dependency. IRR: fence blobs `51704c12…`/`cb8db45d…` (HTTP `503`); **C8 NOT MET** re-read at source (`executive-transport.ts:693/926`, `vite.config.ts` `host:'0.0.0.0'`) | Local tree/source reads at both tips |
+
+Neither repository had advanced beyond the reference tips supplied for this pass (`9310b1a…` IPD, `82431e5…` IRR), so no intervening-commit reconciliation beyond PRs #20–#22 / IRR PR #136 was required. The G3-D0 and G3-D1…D7 source texts were read directly (§§11–13 above; disposition blob `b193fbbf…`; L-IPC-1 rev 2 §14 row B; rendered Gate B D-4; Gate 2 §6): the six authority boundaries in §13.2 and the §13.3 classes — D1 **[R]+[T]**, D2 **[P]+[T]** (`better-sqlite3` / `node:sqlite` / other / defer; no host evidence invented), D3 **[P]** (W-1 refusal preserved), D4 **[P]** (Gate A execution separate, not complete), D5 **[A]** (REFERENCE ONLY; Program Authority confirmation outstanding, not fabricated), D6 **[P]**, D7 **[P]** IRR capacity + **[T]** (C8 non-conformance preserved) — are carried into the IRR registration without enlargement.
+
+### 14.2 The previous five-file package — availability and exact differences found
+
+The earlier package (reported ZIP SHA-256 `d2fcf5eb…`, patch SHA-256 `4c534a82…`, 5 files, 101 insertions, 6 deletions) **was not available in this workspace and was not found on either repository's `main`** (workspace search; GitHub code search for `PKG-02C` in both repositories: no result; no CI artifacts/releases). Its reported hashes are therefore task-supplied identifiers only — **not independently verified here** — and its contents were not inspected. The replacement was reconstructed from the authoritative records above against the verified IRR baseline. Against current IRR `main` and the published IPD decisions, the gaps any pre-PR-#22 five-file handoff necessarily leaves — and which this replacement closes — are:
+
+1. **Stale authority baseline/blob.** IRR `main` cites this request at blob `d541102d…` (IPD `f678363…`, pre-G3-D0). The current blob at `9310b1a…` is `9fdcd8ef…` (additive §§12–13). The replacement cites the exact PR #22 baseline and current blob.
+2. **G3-D1…D7 classification missing.** IRR §16.52/PKG-02B §11 still direct the Program Authority to answer “G3-D0…G3-D7 — G3-D0 first”. Post-PR-#22 the correct registration is: D0 resolved, D1 principle resolved, D2-first sequencing (§13.4), with D5's **[A]** confirmation caveat and D7's IRR-capacity/C8 status stated expressly. A G3-D0-only registration omits all of this.
+3. **PKG-02B omitted from the reported file set.** PKG-02B §11 is the latest IRR packet statement of the open contradiction; the replacement adds a dated pointer addendum there (one file added, none removed; see the handoff manifest for the rationale).
+4. **Sequencing not yet recorded IRR-side.** IRR PR #136 (15:29Z) predates IPD PRs #20–#22 (16:17Z–16:31Z); the replacement records that §16.52 was accurate at its refs and superseded the same day, preserving historical text.
+
+No defect is asserted about the interior contents of the unavailable artifact beyond its reported file list, size, and pre-PR-#22 timing.
+
+### 14.3 Corrected handoff — identity and validation
+
+Prepared against IRR `82431e5…` and stored with this record at `evidence/cross-repository/irr-g3-handoff-2026-10-18/` (`irr-g3-d0-d1-d7-registration.patch`, `MANIFEST.md`, `APPLY-ON-WINDOWS.md`):
+
+- **Files (6, all Markdown):** IRR tracker (+62/−5, incl. new §16.53/`CV-CORR-36`/V89–V92); packet index (+3/−2); PKG-02A §13 pointer (+9/−1); PKG-02B §12 pointer (+10/−1); **new** PKG-02C (+116); DP-1 amendment §12 pointer (+9). **Total: 209 insertions, 9 deletions.**
+- **Patch:** 93,634 bytes, SHA-256 `e3ab8cdafa366b847d696bfdb896ecc8fb6c67dad16bb080fcd1b8c5680d1f8c`. Session ZIP (patch + manifest + apply instructions + `SHA256SUMS.txt`): 33,126 bytes, SHA-256 `5a49475f38e986e651a1bc331d2aa5e3e379b8d42d4e70444ada002a33d7063d`. Per-file resulting SHA-256 values are in the manifest.
+- **Validation (all passed):** IRR remote tip re-resolved; `git apply --check` + `git apply` on a fresh clean clone at the exact baseline SHA; complete diff inspected; `git diff --check` clean; resulting tree byte-identical to the build tree; every path documentation-only (`.md`); no runtime/route/dependency/configuration/listener/CORS/persistence/implementation path touched; table-column counts on edited register rows preserved.
+- **Application boundary:** the patch is to be applied only from the user's Windows IRR checkout, on a new branch cut from a re-verified `origin/main` at `82431e5…` (stop and re-reconcile if IRR `main` has advanced). The user's existing local IRR branch is not to be reset or overwritten. No IRR push, PR, or merge is made from this IPD session; IRR PR #114 is untouched.
+
+### 14.4 Verified vs source-reported; next dependency (unchanged)
+
+**Independently verified in this pass:** both remote tips and the PR #20–#22 / IRR PR #135–#136 publication and CI facts; the disposition/request/L-IPC-1/D-4/Gate-2 texts as published; fences and C8 at source; the replacement patch's clean application and hashes. **Source-reported (not re-executed):** the Program Authority rendering events as recorded in the published acts; IRR D-4 “implementation not begun”; off-`main` store/IPC behaviour summaries in §2.1; the previous package's reported hashes. No Windows/browser/localhost validation was performed or is claimed; Gate A′/Gate C remain **NOT EXECUTED**.
+
+**Single next actionable dependency — unchanged from §13.4:** one Program Authority response to G3-D2, G3-D3, G3-D4 and G3-D6 (with one-line confirmations of G3-D5 and, in the IRR capacity, G3-D7), beginning with G3-D2. Until a separate Gate 3 act pins the exact IPD `main` SHA, file set, tests, dependencies, restrictions, prerequisites, and acceptance evidence: no implementation, no durable write, no fence lift, and no qualification, admission, or production claim. Publication evidence for this section itself (PR, CI, merge, post-merge read-back) is the GitHub record of the PR that publishes it; this text asserts no merge result in advance.
+
+*End of §14. Additive handoff reconciliation only; §§1–13 are unchanged.*
