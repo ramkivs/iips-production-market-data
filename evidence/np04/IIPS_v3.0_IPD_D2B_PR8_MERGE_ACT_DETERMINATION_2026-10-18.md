@@ -133,9 +133,17 @@ IRR merge, or the branch's mergeability.
 
 ---
 
-## 6. Publication and remote verification
+## 6. Publication and remote verification (appended 2026-10-18)
 
-Appended by a **subsequent** commit after publication, so the record is not self-referential.
+**Content commit:** `c53ac74` — parent `afa09e7` — published together with the `CV-25` act record.
+CI on it: run **`39100067963`** — **success**, **556 executed / 0 failed**.
+
+**Re-verification after the CV-25 tag act:** PR #8 remains **`OPEN`**, `mergedAt: null`; no merge, no
+close, no review submitted, no comment added to the PR by this act; its head is the tip of
+`arena/21c63aef-…` at the time of writing. **The merge act was not rendered and no merge occurred.**
+
+This section is appended by a **subsequent** commit; the final blob and SHA-256 are recorded in the
+PR #8 verification comment and the final report rather than inside this file.
 
 ---
 

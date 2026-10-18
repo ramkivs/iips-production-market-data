@@ -83,20 +83,23 @@ and did not widen the object.
 
 ---
 
-## 4. Execution
+## 4. Execution and independent verification (2026-10-18)
 
-| Step | Result |
+| Step | Verified result |
 |---|---|
-| Command | `git tag -a iips-pin-np04-2e11fa3b 2e11fa3b689d1a3674a5e4ba1f1de9a559e20494 -m "IIPS v3.0 NP04 governed-persistence runtime pin — 2e11fa3b — CV-25 durable reference"` |
-| Local tag object | **`TAG_OBJECT_1`** |
-| Peeled target | **`2e11fa3b689d1a3674a5e4ba1f1de9a559e20494`** |
-| Push | `git push origin refs/tags/iips-pin-np04-2e11fa3b` |
-| Remote read-back | **`REMOTE_READBACK_1`** |
-| Fresh-clone check | **`FRESH_CLONE_1`** |
-| Tag count | **4 → 5** |
-| Branch heads | **all unmoved**; `main` unchanged |
-
----
+| Local tag creation | `git tag -a iips-pin-np04-2e11fa3b 2e11fa3b… -m "IIPS v3.0 NP04 governed-persistence runtime pin — 2e11fa3b — CV-25 durable reference"` |
+| **Tag object** | **`8e91cc7029ce14cf353a9f138c826906239b05c6`** — object type **`tag`** (annotated, not lightweight) |
+| **Peeled target** | **`2e11fa3b689d1a3674a5e4ba1f1de9a559e20494`** — object type `commit` |
+| Annotation body | `IIPS v3.0 NP04 governed-persistence runtime pin — 2e11fa3b — CV-25 durable reference` |
+| Tagger | `ramkivs <302525469+ramkivs@users.noreply.github.com>` — epoch `1792300669` (`+0000`) |
+| Signing | **unsigned** — no signing key is configured; recorded, not implied |
+| Push | `git push origin refs/tags/iips-pin-np04-2e11fa3b` → `* [new tag]  iips-pin-np04-2e11fa3b -> iips-pin-np04-2e11fa3b` |
+| Remote read-back (`git ls-remote --tags`) | `8e91cc7029ce14cf353a9f138c826906239b05c6  refs/tags/iips-pin-np04-2e11fa3b` **and** `2e11fa3b689d1a3674a5e4ba1f1de9a559e20494  refs/tags/iips-pin-np04-2e11fa3b^{}` — the peeled line equals the target exactly |
+| REST read-back | `GET /git/ref/tags/iips-pin-np04-2e11fa3b` → `{"ref":"refs/tags/iips-pin-np04-2e11fa3b","object":{"type":"tag","sha":"8e91cc70…"}}`; `GET /git/refs/tags` lists **5** tag refs |
+| **Fresh-clone verification** | A new clone (`/tmp/tagverify`, depth 1) fetched the tag and the np04 branch: `cat-file -t` = **`tag`**; `rev-parse iips-pin-np04-2e11fa3b^{commit}` = **`2e11fa3b689d1a3674a5e4ba1f1de9a559e20494`**; annotation and tagger read back byte-identically |
+| Tag count | **4 → 5** (four lightweight + one annotated; `ls-remote --tags` prints **6** lines because the annotated tag has a peeled `^{}` line — 6 lines ≠ 6 tags) |
+| Branch heads | **All unmoved** — `main` `e040002a…`, `gate-a/…` `2ded0e98…`, `gate-b/…` `cec7080…`, `np04-…` `2e11fa3b…`, `6828155e…` on `arena/01a0f308-…` |
+| `6828155e` | **No tag**; reachable only from its branch; untouched |
 
 ## 5. What this act does **not** authorise or establish
 
@@ -125,9 +128,20 @@ and did not widen the object.
 
 ---
 
-## 7. Publication and remote verification
+## 7. Publication and remote verification (appended 2026-10-18)
 
-Appended by a **subsequent** commit after publication, so the record is not self-referential.
+**Content commit:** `c53ac74` — parent `afa09e7` — the same commit that publishes the companion `D2b`
+determination. CI on it: run **`39100067963`** — **success**, `typecheck · build · test`, **556
+executed / 0 failed**.
+
+The **execution and read-back in §4 occurred after** that publication, which is why they are recorded
+here by this subsequent commit. The blob and SHA-256 of this record's **final** content are recorded
+in the PR #8 verification comment and in the final report — deliberately **outside** the file, so the
+record does not purport to hash itself.
+
+**What is authoritative for the tag act is not this file's hash but the tag object:** `8e91cc70…`,
+annotated, peeled to `2e11fa3b…`, read back from the remote and from a fresh clone (§4). The record
+documents the act; the tag is the act.
 
 ---
 
