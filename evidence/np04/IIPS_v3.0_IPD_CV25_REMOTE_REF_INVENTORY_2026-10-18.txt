@@ -1,0 +1,131 @@
+IIPS v3.0 IPD CV-25 — complete advertised-ref inventories for the authorized second-tag act
+Repository: https://github.com/ramkivs/iips-production-market-data
+Capture date: 2026-10-18 (UTC)
+Method: `git ls-remote origin | sort -k2`; each row is the advertised object ID followed by the exact ref name.
+The first inventory is the execution baseline after publication of the reconciliation act and before pushing the second tag. The second is a fresh remote read-back after the tag push.
+
+=== BEFORE TAG PUSH ===
+Advertised refs: 54 (38 heads, 6 tag lines representing 5 distinct tags, 10 other advertised refs)
+SHA-256 of sorted raw inventory: 56488d6a287c554e97c4496fdbab0e13df40999c50bc6a2a9829da6a40a2a748
+467eb529f52820032b17ea0212c92362a96dfe18	HEAD
+da4305149bd5495789f893f530edb2526d08bb5b	refs/heads/arena/01a0814b-iips-production-market-data
+b02acb1023e8aa9c96fa0ac0c6f70c9a432abec4	refs/heads/arena/01a0853c-iips-production-market-data
+3c084bb0ef463fd765a4bb8a29b7a2ed68b1a99d	refs/heads/arena/01a0853d
+b56a608b2a4b2e3524d1a82f12cf13eaeff35bb2	refs/heads/arena/01a0853d-iips-production-market-data
+ea0014087822ce31a96c8527180ad85ce5411b35	refs/heads/arena/01a0a438-iips-production-market-data
+7eb52dce0fc5fd7b48fe9ea4864288c061931cf1	refs/heads/arena/01a0a4a1-iips-production-market-data
+b0fdd8d5a8c21f90bc5baf17d810f05024b661ce	refs/heads/arena/01a0ae80-iips-production-market-data
+005f73248d9c0219608f859eddeeeb063ad280f7	refs/heads/arena/01a0b8e8-iips-production-market-data
+97527eadae5c4aa9704daa7a382010d0872db8b5	refs/heads/arena/01a0bdb5-iips-production-market-data
+42f91fad0ff5141fce665b068b544224ac471f73	refs/heads/arena/01a0c440-iips-production-market-data
+3695d9598f5ebe189d2c80e4d08454bdf09766ee	refs/heads/arena/01a0c86d-iips-production-market-data
+c3d61a15863bf53497a20cbe95cfef3c5498d61e	refs/heads/arena/01a0c960-iips-production-market-data
+f7cd994f6ebc02f24472783e9567593d2bfce4f5	refs/heads/arena/01a0ce79-iips-production-market-data
+ea70a8c4fdb52a1378953b2d249a315c9e68ca77	refs/heads/arena/01a0cf86-iips-production-market-data
+1c5f46ca039148594bdf243b964a5853c6433248	refs/heads/arena/01a0d1d3-iips-production-market-data
+887ecce026cd0e1f05b5f4039faa92cb2b9fbff0	refs/heads/arena/01a0d33d-iips-production-market-data
+224fc543c38d536ce9d80c5de3f62d369f65344b	refs/heads/arena/01a0d943-iips-production-market-data
+8c87317aacd12788a145d3e0fceecbd9282d2f6b	refs/heads/arena/01a0ddae-iips-production-market-data
+e716bf1f4bb1c32199f57f43de54f0b67daa6b72	refs/heads/arena/01a0e30c-iips-production-market-data
+c1b955b427486dbce6d6a159a448065b9db45dc9	refs/heads/arena/01a0e6d9-iips-production-market-data
+46aaa59304ab7d9ab838605138cefebc59984435	refs/heads/arena/01a0ec3d-iips-production-market-data
+6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4	refs/heads/arena/01a0f308-iips-production-market-data
+12c480b5bf5cfbe0f296fcd12c9189328b915417	refs/heads/arena/01a0f839-iips-production-market-data
+1f8800a39309f3f01025eb11bd3e434dca96e8e1	refs/heads/arena/21c63aef-iips-production-market-data
+bbf4263db3b58a93ce7d601932f9a2f8b895a28f	refs/heads/arena/fb46926b-iips-production-market-data
+59e555dba2a08204668541f6ab70374b6a2aebc3	refs/heads/ci/cv-35-cv-42-runner-guards
+4a95cd9b13d3863f1287cbc0fbee40e4b0e5bc6d	refs/heads/d114-legacy-windows-evidence
+1d57d0bea322f60b98e47edd39ac4e72c00f979a	refs/heads/d114-windows-evidence
+6e3cfcf21c8f4a6925df5a3a7b21838723367799	refs/heads/fix/xv-15-derived-macro-vintage-classification
+2ded0e981407b38c73bdea164153f53856aa7217	refs/heads/gate-a/local-principal-enablement-2026-10-16
+cec7080252183a6a5332efe351e61c254d342a2d	refs/heads/gate-b/local-principal-ipc-implementation
+246cb944e174dee09b7c08ffa93bfa672dca059c	refs/heads/iu-6-d114-pit-population
+ad41b4d48299b7a58d3f2f44ae8ef8e11462f294	refs/heads/m1-ad4-repair
+467eb529f52820032b17ea0212c92362a96dfe18	refs/heads/main
+2e11fa3b689d1a3674a5e4ba1f1de9a559e20494	refs/heads/np04-governed-persistence-windows
+9e45ac2fe88147591ad2cd8373b2311a7b0534d3	refs/heads/p14-implementation-recovered
+b217f7abbf11fca951fb2b261a80442d982e451b	refs/heads/windows-acceptance/full-shell-20260923
+d771e6a28514a6c529742d318dd9f3f08ed205f6	refs/heads/windows/d114-stage5-banking-replay-observation
+005f73248d9c0219608f859eddeeeb063ad280f7	refs/pull/1/head
+b217f7abbf11fca951fb2b261a80442d982e451b	refs/pull/2/head
+c3d61a15863bf53497a20cbe95cfef3c5498d61e	refs/pull/3/head
+f7cd994f6ebc02f24472783e9567593d2bfce4f5	refs/pull/4/head
+46aaa59304ab7d9ab838605138cefebc59984435	refs/pull/5/head
+246cb944e174dee09b7c08ffa93bfa672dca059c	refs/pull/6/head
+6e3cfcf21c8f4a6925df5a3a7b21838723367799	refs/pull/7/head
+1f8800a39309f3f01025eb11bd3e434dca96e8e1	refs/pull/8/head
+59e555dba2a08204668541f6ab70374b6a2aebc3	refs/pull/9/head
+8e91cc7029ce14cf353a9f138c826906239b05c6	refs/tags/iips-pin-np04-2e11fa3b
+2e11fa3b689d1a3674a5e4ba1f1de9a559e20494	refs/tags/iips-pin-np04-2e11fa3b^{}
+65b78f7723700dc9334801429382d1ebcf7c4737	refs/tags/p14-r7-65b78f7
+cb969b6729843fe46c974c54a56eac25ea3a086a	refs/tags/portfolio-option-a-cb969b6
+b46b4f42c3cf57333832ccc7f3e5bcd1e4de4cdd	refs/tags/post-cleanup-baseline-b46b4f4
+caf73ba43fe26ee4fb1987442152f6b93f78f71c	refs/tags/temporary-cleanup-caf73ba
+
+=== AFTER TAG PUSH ===
+Advertised refs: 56 (38 heads, 8 tag lines representing 6 distinct tags, 10 other advertised refs)
+SHA-256 of sorted raw inventory: a7817cc7c79e1d461874f96fee5896d873bf3ed2dfe42b09a1cb067ba8958e4e
+467eb529f52820032b17ea0212c92362a96dfe18	HEAD
+da4305149bd5495789f893f530edb2526d08bb5b	refs/heads/arena/01a0814b-iips-production-market-data
+b02acb1023e8aa9c96fa0ac0c6f70c9a432abec4	refs/heads/arena/01a0853c-iips-production-market-data
+3c084bb0ef463fd765a4bb8a29b7a2ed68b1a99d	refs/heads/arena/01a0853d
+b56a608b2a4b2e3524d1a82f12cf13eaeff35bb2	refs/heads/arena/01a0853d-iips-production-market-data
+ea0014087822ce31a96c8527180ad85ce5411b35	refs/heads/arena/01a0a438-iips-production-market-data
+7eb52dce0fc5fd7b48fe9ea4864288c061931cf1	refs/heads/arena/01a0a4a1-iips-production-market-data
+b0fdd8d5a8c21f90bc5baf17d810f05024b661ce	refs/heads/arena/01a0ae80-iips-production-market-data
+005f73248d9c0219608f859eddeeeb063ad280f7	refs/heads/arena/01a0b8e8-iips-production-market-data
+97527eadae5c4aa9704daa7a382010d0872db8b5	refs/heads/arena/01a0bdb5-iips-production-market-data
+42f91fad0ff5141fce665b068b544224ac471f73	refs/heads/arena/01a0c440-iips-production-market-data
+3695d9598f5ebe189d2c80e4d08454bdf09766ee	refs/heads/arena/01a0c86d-iips-production-market-data
+c3d61a15863bf53497a20cbe95cfef3c5498d61e	refs/heads/arena/01a0c960-iips-production-market-data
+f7cd994f6ebc02f24472783e9567593d2bfce4f5	refs/heads/arena/01a0ce79-iips-production-market-data
+ea70a8c4fdb52a1378953b2d249a315c9e68ca77	refs/heads/arena/01a0cf86-iips-production-market-data
+1c5f46ca039148594bdf243b964a5853c6433248	refs/heads/arena/01a0d1d3-iips-production-market-data
+887ecce026cd0e1f05b5f4039faa92cb2b9fbff0	refs/heads/arena/01a0d33d-iips-production-market-data
+224fc543c38d536ce9d80c5de3f62d369f65344b	refs/heads/arena/01a0d943-iips-production-market-data
+8c87317aacd12788a145d3e0fceecbd9282d2f6b	refs/heads/arena/01a0ddae-iips-production-market-data
+e716bf1f4bb1c32199f57f43de54f0b67daa6b72	refs/heads/arena/01a0e30c-iips-production-market-data
+c1b955b427486dbce6d6a159a448065b9db45dc9	refs/heads/arena/01a0e6d9-iips-production-market-data
+46aaa59304ab7d9ab838605138cefebc59984435	refs/heads/arena/01a0ec3d-iips-production-market-data
+6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4	refs/heads/arena/01a0f308-iips-production-market-data
+12c480b5bf5cfbe0f296fcd12c9189328b915417	refs/heads/arena/01a0f839-iips-production-market-data
+1f8800a39309f3f01025eb11bd3e434dca96e8e1	refs/heads/arena/21c63aef-iips-production-market-data
+bbf4263db3b58a93ce7d601932f9a2f8b895a28f	refs/heads/arena/fb46926b-iips-production-market-data
+59e555dba2a08204668541f6ab70374b6a2aebc3	refs/heads/ci/cv-35-cv-42-runner-guards
+4a95cd9b13d3863f1287cbc0fbee40e4b0e5bc6d	refs/heads/d114-legacy-windows-evidence
+1d57d0bea322f60b98e47edd39ac4e72c00f979a	refs/heads/d114-windows-evidence
+6e3cfcf21c8f4a6925df5a3a7b21838723367799	refs/heads/fix/xv-15-derived-macro-vintage-classification
+2ded0e981407b38c73bdea164153f53856aa7217	refs/heads/gate-a/local-principal-enablement-2026-10-16
+cec7080252183a6a5332efe351e61c254d342a2d	refs/heads/gate-b/local-principal-ipc-implementation
+246cb944e174dee09b7c08ffa93bfa672dca059c	refs/heads/iu-6-d114-pit-population
+ad41b4d48299b7a58d3f2f44ae8ef8e11462f294	refs/heads/m1-ad4-repair
+467eb529f52820032b17ea0212c92362a96dfe18	refs/heads/main
+2e11fa3b689d1a3674a5e4ba1f1de9a559e20494	refs/heads/np04-governed-persistence-windows
+9e45ac2fe88147591ad2cd8373b2311a7b0534d3	refs/heads/p14-implementation-recovered
+b217f7abbf11fca951fb2b261a80442d982e451b	refs/heads/windows-acceptance/full-shell-20260923
+d771e6a28514a6c529742d318dd9f3f08ed205f6	refs/heads/windows/d114-stage5-banking-replay-observation
+005f73248d9c0219608f859eddeeeb063ad280f7	refs/pull/1/head
+b217f7abbf11fca951fb2b261a80442d982e451b	refs/pull/2/head
+c3d61a15863bf53497a20cbe95cfef3c5498d61e	refs/pull/3/head
+f7cd994f6ebc02f24472783e9567593d2bfce4f5	refs/pull/4/head
+46aaa59304ab7d9ab838605138cefebc59984435	refs/pull/5/head
+246cb944e174dee09b7c08ffa93bfa672dca059c	refs/pull/6/head
+6e3cfcf21c8f4a6925df5a3a7b21838723367799	refs/pull/7/head
+1f8800a39309f3f01025eb11bd3e434dca96e8e1	refs/pull/8/head
+59e555dba2a08204668541f6ab70374b6a2aebc3	refs/pull/9/head
+dcdaaa94e8e050ba132a19813d2f22f214dca7d3	refs/tags/iips-pin-g24-6828155e
+6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4	refs/tags/iips-pin-g24-6828155e^{}
+8e91cc7029ce14cf353a9f138c826906239b05c6	refs/tags/iips-pin-np04-2e11fa3b
+2e11fa3b689d1a3674a5e4ba1f1de9a559e20494	refs/tags/iips-pin-np04-2e11fa3b^{}
+65b78f7723700dc9334801429382d1ebcf7c4737	refs/tags/p14-r7-65b78f7
+cb969b6729843fe46c974c54a56eac25ea3a086a	refs/tags/portfolio-option-a-cb969b6
+b46b4f42c3cf57333832ccc7f3e5bcd1e4de4cdd	refs/tags/post-cleanup-baseline-b46b4f4
+caf73ba43fe26ee4fb1987442152f6b93f78f71c	refs/tags/temporary-cleanup-caf73ba
+
+=== MACHINE-CHECKED COMPARISON ===
+Added refs (the one authorized annotated tag and its Git peeled line):
+  dcdaaa94e8e050ba132a19813d2f22f214dca7d3  refs/tags/iips-pin-g24-6828155e
+  6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4  refs/tags/iips-pin-g24-6828155e^{}
+Removed refs: none.
+Changed object IDs for pre-existing refs: none.
+The original `iips-pin-np04-2e11fa3b` object and peeled commit remain unchanged; `arena/01a0f308-iips-production-market-data` remains at `6828155ec6e882bbb4cabcd96b5a841d8c8a6bc4`.
