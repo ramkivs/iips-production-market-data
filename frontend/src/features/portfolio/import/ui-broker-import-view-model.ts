@@ -19,6 +19,14 @@ import {
 } from './types.js';
 import { BrokerImportIngressOrchestrator } from './broker-import-ingress.js';
 import { PortfolioStore, PortfolioSaveResult } from '../portfolio-store.js';
+import {
+  evaluatePortSaveGuard,
+  PortfolioDurability,
+  PortfolioPortRefusedHolding,
+  PortfolioPortRefusalCode,
+  PortfolioPortSaveGuard,
+  PortfolioStorePort,
+} from '../portfolioStorePort.js';
 
 export type BrokerImportUIState =
   | 'IDLE'
@@ -96,6 +104,24 @@ export interface PortfolioBrokerImportViewModel {
     pinnedColumn?: string;
   };
   saveResult?: PortfolioSaveResult;
+  /**
+   * Durability declared by the save path in use. `SESSION_ONLY` means the data is
+   * held in memory for this session only and is NOT durably persisted.
+   */
+  durability: PortfolioDurability;
+  durable: boolean;
+  /**
+   * Port-path save guard with DP-2 Option 2F applied (unresolved/ambiguous
+   * holdings are preview-only). Distinct from the legacy synchronous `saveGuard`,
+   * which is preserved unchanged for existing callers.
+   */
+  portSaveGuard: PortfolioPortSaveGuard;
+  /** Present when a port-path save was refused. */
+  portRefusal?: {
+    code: PortfolioPortRefusalCode;
+    message: string;
+    refusedHoldings: PortfolioPortRefusedHolding[];
+  };
 }
 
 export class PortfolioBrokerImportController {
@@ -104,6 +130,8 @@ export class PortfolioBrokerImportController {
   private lastSaveResult?: PortfolioSaveResult;
   private selectedFileName: string = '';
   private securityMaster?: SecurityMaster;
+  private durability: PortfolioDurability = 'SESSION_ONLY';
+  private portRefusal?: PortfolioBrokerImportViewModel['portRefusal'];
 
   constructor(securityMaster?: SecurityMaster) {
     this.securityMaster = securityMaster;
@@ -128,6 +156,7 @@ export class PortfolioBrokerImportController {
     this.currentState = 'IDLE';
     this.lastIngressResult = undefined;
     this.lastSaveResult = undefined;
+    this.portRefusal = undefined;
     this.selectedFileName = '';
   }
 
@@ -234,6 +263,106 @@ export class PortfolioBrokerImportController {
   }
 
   /**
+   * Confirms and persists the validated holding vector through the asynchronous
+   * portfolio store port (act `np04-g2-portfolio-ui-store-port-2026-10-16-001`).
+   *
+   * DP-2 Option 2F: unresolved or ambiguous holdings are refused before any
+   * mutation of the store — they may be previewed and explained, never persisted.
+   * The legacy synchronous `confirmAndSave({ portfolioStore })` path above is
+   * preserved unchanged for existing callers.
+   */
+  public async confirmAndSaveViaPort(params: {
+    storePort: PortfolioStorePort;
+    portfolioId?: string;
+    viewportWidth?: number;
+    mode?: 'MERGE' | 'REPLACE';
+    expectedRevision?: number;
+  }): Promise<PortfolioBrokerImportViewModel> {
+    const portfolioId = params.portfolioId || 'DEFAULT_PORTFOLIO';
+    const mode = params.mode || 'MERGE';
+    const viewportWidth = params.viewportWidth ?? 1280;
+
+    this.durability = params.storePort.durability;
+    this.portRefusal = undefined;
+
+    if (!this.lastIngressResult || this.lastIngressResult.disposition !== 'READY_FOR_PORTFOLIO_SAVE') {
+      this.currentState = 'REJECTED';
+      this.lastSaveResult = await this.buildFailureResult(
+        params.storePort,
+        portfolioId,
+        'Save Guard Block: Ingress disposition is not READY_FOR_PORTFOLIO_SAVE.'
+      );
+      return this.buildViewModel(viewportWidth);
+    }
+
+    const outcome = await params.storePort.saveHoldings({
+      portfolioId,
+      holdings: this.lastIngressResult.userHoldings,
+      options: {
+        mode,
+        sourceBroker: this.lastIngressResult.provenance.sourceBroker,
+        fileName: this.lastIngressResult.provenance.fileName,
+        contentDigest: this.lastIngressResult.provenance.contentDigest,
+        lineageDigest: this.lastIngressResult.provenance.lineageDigest,
+      },
+      expectedRevision: params.expectedRevision,
+    });
+
+    if (outcome.ok) {
+      this.lastSaveResult = outcome.result;
+      this.currentState = 'SAVE_SUCCESS';
+    } else {
+      this.currentState = 'REJECTED';
+      this.portRefusal = {
+        code: outcome.code,
+        message: outcome.message,
+        refusedHoldings: outcome.refusedHoldings,
+      };
+      this.lastSaveResult = {
+        success: false,
+        portfolio: outcome.portfolio,
+        holdingsSavedCount: 0,
+        totalMarketValue: 0,
+        weightSumPercentage: 0,
+        savedAt: new Date().toISOString(),
+        provenanceDigest: '',
+        error: outcome.message,
+      };
+    }
+
+    return this.buildViewModel(viewportWidth);
+  }
+
+  private async buildFailureResult(
+    storePort: PortfolioStorePort,
+    portfolioId: string,
+    message: string
+  ): Promise<PortfolioSaveResult> {
+    const portfolio = (await storePort.getPortfolio(portfolioId)) || {
+      portfolioId,
+      portfolioName: 'Institutional Flagship Portfolio',
+      holdings: [],
+      totalMarketValue: 0,
+      totalHoldingsCount: 0,
+      weightSumPercentage: 0.0,
+      lastUpdated: new Date().toISOString(),
+      provenanceDigest: '',
+      isSaved: false,
+    };
+
+    return {
+      success: false,
+      portfolio,
+      holdingsSavedCount: 0,
+      totalMarketValue: 0,
+      weightSumPercentage: 0,
+      savedAt: new Date().toISOString(),
+      provenanceDigest: '',
+      error: message,
+    };
+  }
+
+  /**
    * Synthesizes the governed PortfolioBrokerImportViewModel.
    */
   public buildViewModel(viewportWidth: number = 1280, securityMaster?: SecurityMaster): PortfolioBrokerImportViewModel {
@@ -280,6 +409,16 @@ export class PortfolioBrokerImportController {
       isExact100Weight: isExact100,
       hasValidHoldings: (res?.validHoldingsCount ?? 0) > 0,
       isReadyDisposition: res?.disposition === 'READY_FOR_PORTFOLIO_SAVE',
+    };
+
+    // Port-path save guard: DP-2 Option 2F applied on top of the synchronous guard.
+    // Unresolved/ambiguous holdings remain preview-only and cannot be persisted
+    // through the port; the legacy synchronous `saveGuard` above is unchanged.
+    const identityGuard = evaluatePortSaveGuard(res?.userHoldings);
+    const portSaveGuard: PortfolioPortSaveGuard = {
+      saveable: saveGuard.isSaveEnabled && identityGuard.saveable,
+      disabledReason: !identityGuard.saveable ? identityGuard.disabledReason : saveGuard.disabledReason,
+      refusedHoldings: identityGuard.refusedHoldings,
     };
 
     // Build accepted holding items
@@ -356,7 +495,7 @@ export class PortfolioBrokerImportController {
     } else if (this.currentState === 'BLOCKED') {
       liveRegionText = `Import Blocked: ${res?.errors[0] || 'Unsupported format'}`;
     } else if (this.currentState === 'REJECTED') {
-      liveRegionText = `Import Rejected: ${res?.errors[0] || 'Validation failed'}`;
+      liveRegionText = `Import Rejected: ${this.portRefusal?.message || res?.errors[0] || 'Validation failed'}`;
     }
 
     return {
@@ -393,6 +532,10 @@ export class PortfolioBrokerImportController {
         pinnedColumn: bp.pinPrimaryColumn ? 'symbol' : undefined,
       },
       saveResult: this.lastSaveResult,
+      durability: this.durability,
+      durable: this.durability === 'DURABLE',
+      portSaveGuard,
+      portRefusal: this.portRefusal,
     };
   }
 }
