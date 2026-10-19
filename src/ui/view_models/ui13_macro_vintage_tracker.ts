@@ -11,6 +11,9 @@ import { UI13MacroVintageTrackerViewModel, ResponsiveTier } from '../types.js';
 import { AccessibilityEngine } from '../accessibility_engine.js';
 import { ResponsiveEngine } from '../responsive_engine.js';
 import { ExecutiveProvenance } from '../../transports/types.js';
+import { QualityState } from '../../contracts/types.js';
+import { computeLineageHash } from '../../contracts/provenance.js';
+import { rollupQuality } from '../../quality/quality_rollup.js';
 
 export class UI13MacroVintageTrackerBuilder {
   public static build(params: {
@@ -23,25 +26,38 @@ export class UI13MacroVintageTrackerBuilder {
     const tier: ResponsiveTier = ResponsiveEngine.resolveTier(params.viewportWidth ?? 1280).tier;
     const bp = ResponsiveEngine.resolveTier(params.viewportWidth ?? 1280);
 
-    const indicatorSeries = params.seriesIds
+    const queryResults = params.seriesIds
       .map((sid) => params.macroEngine.queryAsOf(sid, params.asOf))
-      .filter((q): q is NonNullable<typeof q> => q !== null)
-      .map((q) => ({
-        indicatorCode: q.seriesId,
-        period: q.matchedPeriod,
-        releaseDate: q.releaseDate,
-        vintageDate: q.vintageDate,
-        value: q.value,
-        isCarriedForward: q.isStepwiseCarryForward,
-      }));
+      .filter((query): query is NonNullable<typeof query> => query !== null);
+    const indicatorSeries = queryResults.map((q) => ({
+      indicatorCode: q.seriesId,
+      period: q.matchedPeriod,
+      releaseDate: q.releaseDate,
+      vintageDate: q.vintageDate,
+      value: q.value,
+      isCarriedForward: q.isStepwiseCarryForward,
+    }));
 
+    const inputQualities: QualityState[] = queryResults.map((query) => query.qualityState);
+    const quality = rollupQuality(inputQualities);
     const provenance: ExecutiveProvenance = {
       sourceClassification: 'DERIVED',
       asOf: params.asOf,
       evaluatedAt: new Date().toISOString(),
-      dataVersion: 'v1.0.0',
-      lineageDigest: 'macro-vintage-tracker-lineage-hash-00000000000000000000000000000',
-      quality: 'GOOD',
+      dataVersion: 'ui13-macro-vintage-tracker-v1',
+      lineageDigest: computeLineageHash(
+        {
+          seriesIds: params.seriesIds,
+          queryResults,
+          indicatorSeries,
+        },
+        {
+          sourceClassification: 'DERIVED',
+          asOf: params.asOf,
+          dataVersion: 'ui13-macro-vintage-tracker-v1',
+        }
+      ),
+      quality,
       replayConstraintApplied: false,
     };
 
@@ -51,7 +67,7 @@ export class UI13MacroVintageTrackerBuilder {
       companyName: params.companyName,
       asOf: params.asOf,
       indicatorSeries,
-      qualityIndicator: AccessibilityEngine.getQualityIndicator('GOOD'),
+      qualityIndicator: AccessibilityEngine.getQualityIndicator(quality),
       provenance,
       responsiveLayout: {
         tier,

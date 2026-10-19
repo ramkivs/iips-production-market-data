@@ -106,7 +106,7 @@ describe('BI-07: Browser Runtime Compatibility & Zero-Buffer Suite', () => {
   it('BROWSER-02: computeLineageHash computes deterministic digests without Buffer in browser runtime', () => {
     runWithoutBuffer(() => {
       const payload = { portfolioId: 'DEFAULT', holdings: [{ symbol: 'INFY', qty: 10 }] };
-      const metadata = { sourceClassification: 'REAL', asOf: '2026-09-21T00:00:00.000Z', dataVersion: 'v1.0.0-bi07' };
+      const metadata = { sourceClassification: 'UNCLASSIFIED', asOf: '2026-09-21T00:00:00.000Z', dataVersion: 'v1.0.0-bi07' };
 
       const hash1 = computeLineageHash(payload, metadata);
       const hash2 = computeLineageHash(payload, metadata);

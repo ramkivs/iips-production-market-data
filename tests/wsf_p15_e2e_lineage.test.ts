@@ -61,6 +61,12 @@ describe('WS-F Package P15: E2E Lineage & Functional Qualification', () => {
       assert.strictEqual(result.companyId, 'INFY');
       assert.strictEqual(result.p04IdentityVerified, true);
       assert.strictEqual(result.nfr06MaskingVerified, true);
+      assert.strictEqual(result.hops[0].sourceClassification, 'UNCLASSIFIED');
+      assert.strictEqual(result.hops[0].qualityState, 'UNAVAILABLE', 'unvalidated raw fixtures are not stamped GOOD');
+      assert.strictEqual(result.hops[5].sourceClassification, 'UNCLASSIFIED');
+      assert.strictEqual(result.hops[5].qualityState, 'PARTIAL', 'empty intelligence data is incomplete');
+      assert.strictEqual(result.hops[6].sourceClassification, 'DERIVED');
+      assert.ok(result.hops.every((hop) => hop.sourceClassification !== 'REAL'), 'no unsupported REAL assertion may appear at any hop');
 
       // Verify each hop has a valid 64-char SHA-256 hex digest and provider masking
       for (const hop of result.hops) {
@@ -131,7 +137,7 @@ describe('WS-F Package P15: E2E Lineage & Functional Qualification', () => {
         mode: 'SNAPSHOT' as const,
         quality: 'GOOD' as const,
         provenance: {
-          sourceClassification: 'REAL' as const,
+          sourceClassification: 'UNCLASSIFIED' as const,
           asOf: '2026-09-18T10:00:00.000Z',
           evaluatedAt: '2026-09-18T10:00:01.000Z',
           dataVersion: 'v1.0.0',

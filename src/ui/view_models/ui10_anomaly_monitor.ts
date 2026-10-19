@@ -12,6 +12,9 @@ import { UI10AnomalyMonitorViewModel, ResponsiveTier } from '../types.js';
 import { AccessibilityEngine } from '../accessibility_engine.js';
 import { ResponsiveEngine } from '../responsive_engine.js';
 import { ExecutiveProvenance } from '../../transports/types.js';
+import { QualityState } from '../../contracts/types.js';
+import { computeLineageHash } from '../../contracts/provenance.js';
+import { rollupQuality } from '../../quality/quality_rollup.js';
 
 export class UI10AnomalyMonitorBuilder {
   public static build(params: {
@@ -27,8 +30,9 @@ export class UI10AnomalyMonitorBuilder {
     const bp = ResponsiveEngine.resolveTier(params.viewportWidth ?? 1280);
 
     const asOfTime = params.asOf ?? new Date().toISOString();
-    const anomalyReport = params.samplePayload
-      ? params.anomalyDetector.evaluatePayload(params.samplePayload, {
+    const hasSample = params.samplePayload !== undefined && Object.keys(params.samplePayload).length > 0;
+    const anomalyReport = hasSample
+      ? params.anomalyDetector.evaluatePayload(params.samplePayload!, {
           expectedDomain: 'D01_QUOTES',
           currentTimestamp: asOfTime,
         })
@@ -44,18 +48,38 @@ export class UI10AnomalyMonitorBuilder {
     const freshnessRes = evaluateFreshness(asOfTime, 'D01_QUOTES', new Date().toISOString());
     const isStale = freshnessRes.quality === 'STALE';
 
-    const qualityState = anomalyReport.detected || isStale
-      ? anomalyReport.categories.includes('STRUCTURAL_MALFORMATION')
+    let sampleQuality: QualityState;
+    if (!hasSample) {
+      sampleQuality = 'UNAVAILABLE';
+    } else if (anomalyReport.detected) {
+      sampleQuality = anomalyReport.categories.includes('STRUCTURAL_MALFORMATION')
         ? 'UNAVAILABLE'
-        : 'PARTIAL'
-      : 'GOOD';
+        : 'PARTIAL';
+    } else {
+      sampleQuality = 'GOOD';
+    }
+    const qualityState = rollupQuality([sampleQuality, freshnessRes.quality]);
 
+    const evaluatedAt = new Date().toISOString();
     const provenance: ExecutiveProvenance = {
       sourceClassification: 'DERIVED',
       asOf: asOfTime,
-      evaluatedAt: new Date().toISOString(),
-      dataVersion: 'v1.0.0',
-      lineageDigest: 'quality-anomaly-monitor-lineage-hash-0000000000000000000000000000000',
+      evaluatedAt,
+      dataVersion: 'ui10-anomaly-monitor-v1',
+      lineageDigest: computeLineageHash(
+        {
+          companyId: params.companyId,
+          samplePayload: hasSample ? params.samplePayload : null,
+          activeAnomalies,
+          freshness: freshnessRes,
+          quarantineCount: deadLetterCount,
+        },
+        {
+          sourceClassification: 'DERIVED',
+          asOf: asOfTime,
+          dataVersion: 'ui10-anomaly-monitor-v1',
+        }
+      ),
       quality: qualityState,
       replayConstraintApplied: false,
     };

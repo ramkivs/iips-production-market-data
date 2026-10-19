@@ -8,6 +8,7 @@
 import { ExecutiveProvenance } from './types.js';
 import { QualityState } from '../contracts/types.js';
 import { computeLineageHash } from '../contracts/provenance.js';
+import { rollupQuality } from '../quality/quality_rollup.js';
 
 export interface ScreenerFilter {
   sector?: string;
@@ -95,13 +96,14 @@ export class ScreenerService {
       dataVersion: 'v1.0.0-screener',
     });
 
+    const quality = rollupQuality(matched.map((candidate) => candidate.quality));
     const provenance: ExecutiveProvenance = {
       sourceClassification: 'DERIVED',
       asOf,
       evaluatedAt: new Date().toISOString(),
       dataVersion: 'v1.0.0-screener',
       lineageDigest,
-      quality: 'GOOD',
+      quality,
       replayConstraintApplied: false,
     };
 

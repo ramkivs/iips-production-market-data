@@ -5,7 +5,7 @@
  * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W2-AUTH-2026-01
  */
 
-import { MacroDataPayload, MacroSeriesId } from '../contracts/d08_macro.js';
+import { MacroDataPayload, MacroSeriesId, validateMacroData } from '../contracts/d08_macro.js';
 import { QualityState } from '../contracts/types.js';
 
 export interface MacroQueryResult {
@@ -24,8 +24,13 @@ export class MacroEngine {
   private seriesStore: MacroDataPayload[] = [];
 
   public ingestMacroData(data: MacroDataPayload): void {
-    if (typeof data.value !== 'number' || isNaN(data.value)) {
-      throw new Error(`Invalid macro value for series ${data.seriesId}: ${data.value}`);
+    const validation = validateMacroData(data);
+    const releaseDateValid = typeof data.releaseDate === 'string' && Number.isFinite(Date.parse(data.releaseDate));
+    if (!validation.isValid || !Number.isFinite(data.value) || !releaseDateValid) {
+      const detail = validation.errors.map((issue) => `${issue.field}: ${issue.message}`).join('; ');
+      throw new Error(
+        `Invalid macro data for series ${data.seriesId}: ${detail || (!releaseDateValid ? 'releaseDate must be valid ISO-8601' : 'value must be finite')}`
+      );
     }
     this.seriesStore.push(Object.freeze({ ...data }));
   }

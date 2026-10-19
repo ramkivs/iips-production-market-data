@@ -15,6 +15,7 @@ import {
   TTMCalculator,
   RatioEngine,
   MarketQuotePayload,
+  validateMarketQuotePayload,
 } from '../src/index.js';
 
 describe('WS-C / P09 Fundamentals & Financial Analysis Engine', () => {
@@ -280,6 +281,7 @@ describe('WS-C / P09 Fundamentals & Financial Analysis Engine', () => {
       marketQuote: quote,
       statement,
       cumulativeSplitFactor: 0.5,
+      quoteQuality: validateMarketQuotePayload(quote).quality,
     });
 
     assert.strictEqual(ratios.peRatio, 20); // 1500 / 75 = 20.0
@@ -289,6 +291,15 @@ describe('WS-C / P09 Fundamentals & Financial Analysis Engine', () => {
     assert.strictEqual(ratios.roe, 30); // 30B / 100B = 30%
     assert.strictEqual(ratios.splitAdjustedEps, 37.5); // 75.0 * 0.5 = 37.5
     assert.strictEqual(ratios.qualityState, 'GOOD');
+
+    const missingQuoteQuality = ratioEngine.computeRatios({
+      companyId: 'INFY',
+      asOf: '2026-05-01T00:00:00.000Z',
+      marketQuote: quote,
+      statement,
+      cumulativeSplitFactor: 0.5,
+    });
+    assert.strictEqual(missingQuoteQuality.qualityState, 'UNAVAILABLE', 'omitted quote quality cannot be assumed GOOD');
 
     // Negative Denominator / Loss Making Company Scenario (PAT < 0, Net Worth < 0)
     const lossStatement = normalizer.normalize({
@@ -308,11 +319,29 @@ describe('WS-C / P09 Fundamentals & Financial Analysis Engine', () => {
       asOf: '2026-05-01T00:00:00.000Z',
       marketQuote: quote,
       statement: lossStatement,
+      quoteQuality: validateMarketQuotePayload(quote).quality,
     });
 
     assert.strictEqual(lossRatios.peRatio, null);
     assert.strictEqual(lossRatios.pbRatio, null);
     assert.strictEqual(lossRatios.roe, null);
     assert.ok(lossRatios.calculationNotes.length >= 2);
+  });
+
+  it('P09-07: missing restatement comparison inputs remain PARTIAL and are not silently normalized as source-confirmed', () => {
+    const incomplete = normalizer.normalize({
+      statementId: 'STMT-INCOMPLETE-UI09',
+      companyId: 'INFY',
+      fiscalYear: 2026,
+      periodType: 'ANNUAL',
+      periodStart: '2025-04-01T00:00:00.000Z',
+      periodEnd: '2026-03-31T00:00:00.000Z',
+      filingDate: '2026-04-20T00:00:00.000Z',
+      incomeStatement: { revenue: 150000000000 },
+    });
+
+    assert.equal(incomplete.qualityState, 'PARTIAL');
+    assert.deepEqual(incomplete.normalizationAnomalyCodes, ['MISSING_SOURCE_FIELD:incomeStatement.pat']);
+    assert.equal(incomplete.incomeStatement?.pat, 150000000000, 'legacy derivation is retained internally but flagged as incomplete');
   });
 });

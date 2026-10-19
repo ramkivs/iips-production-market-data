@@ -509,7 +509,7 @@ export class BrokerImportIngressOrchestrator {
   }): BrokerIngressResult {
     const emptyLineage = computeLineageHash(
       { disposition: params.disposition, stage: params.stageReached, errors: params.errors },
-      { sourceClassification: 'REAL', asOf: params.asOf, dataVersion: 'v1.0.0-bi05' }
+      { sourceClassification: 'UNCLASSIFIED', asOf: params.asOf, dataVersion: 'v1.0.0-bi05' }
     );
 
     return {

@@ -69,7 +69,7 @@ describe('GATE-E2E-BROAD-UNIVERSE-MULTI-BROKER-INTEGRATION-VERIFICATION', () => 
     assert.strictEqual(manifest.fileChecksumSha256, EXPECTED_CHECKSUM, 'Manifest checksum must match');
     assert.strictEqual(manifest.recordCount, EXPECTED_RECORD_COUNT, 'Manifest record count must be 2,250');
     assert.strictEqual(manifest.selectedTier, 'TIER_2_ACTIVE_NSE_CM', 'Selected tier must be TIER_2_ACTIVE_NSE_CM');
-    assert.strictEqual(manifest.aiilRuling, 'RULING_3_DUAL_EFFECTIVE_DATED_MAPPING', 'AIIL ruling must be RULING_3');
+    assert.strictEqual(manifest.aiilRuling, 'RULING_3_DUAL_EFFECTIVE_DATED_MAPPING', 'preserve the as-deposited label; its ruling document was not located');
 
     const records = JSON.parse(pkgBytes.toString('utf8'));
     assert.strictEqual(records.length, EXPECTED_RECORD_COUNT, 'Physical record count in package must equal 2,250');
@@ -356,7 +356,7 @@ AIIL,INE206F01022,NSE,100,100,100,90.00,100.00,10000.00,1000.00,11.11`;
           qualityState: 'GOOD',
           factorBreakdown: { valuation: 85, quality: 90, profitability: 92, technical: 82 },
           provenance: {
-            sourceClassification: 'REAL',
+            sourceClassification: 'UNCLASSIFIED',
             vendorTier: 'TIER_1_EXCHANGE',
             asOf: '2026-09-22T00:00:00.000Z',
             receivedAt: '2026-09-22T00:00:00.000Z',
@@ -398,24 +398,26 @@ AIIL,INE206F01022,NSE,100,100,100,90.00,100.00,10000.00,1000.00,11.11`;
   });
 
   // ============================================================
-  // PHASE 5 — AIIL END-TO-END QUALIFICATION (RULING 3)
+  // PHASE 5 — AIIL IDENTITY RECONCILIATION (EVIDENCE-BASED RUNTIME GUARD)
   // ============================================================
-  it('Phase 5: AIIL dual effective-dated BSE scrip codes (543989 current & 539177 historical) resolve to EQ_AIIL_IN', () => {
-    // Current primary BSE listing (COMPOSITE_TICKER)
-    const currentResolution = securityMaster.resolveCompanyId({
-      identifierType: 'COMPOSITE_TICKER',
-      identifierValue: 'BSE:543989',
-      asOf: '2026-09-22T00:00:00.000Z',
-    });
-    assert.strictEqual(currentResolution, 'EQ_AIIL_IN', 'Current BSE scrip 543989 must resolve to EQ_AIIL_IN');
-
-    // Historical BSE listing (COMPOSITE_TICKER)
-    const historicalResolution = securityMaster.resolveCompanyId({
+  it('Phase 5: Authum resolves by INE206F01022 and BSE 539177; Sai Silks code 543989 fails closed', () => {
+    // BSE:539177 is the Authum listing code; this test does not claim a listing start/end date.
+    const authumBseResolution = securityMaster.resolveCompanyId({
       identifierType: 'COMPOSITE_TICKER',
       identifierValue: 'BSE:539177',
-      asOf: '2020-01-01T00:00:00.000Z',
+      asOf: '2026-09-22T00:00:00.000Z',
     });
-    assert.strictEqual(historicalResolution, 'EQ_AIIL_IN', 'Historical BSE scrip 539177 must resolve to EQ_AIIL_IN');
+    assert.strictEqual(authumBseResolution, 'EQ_AIIL_IN');
+
+    // BSE:543989 belongs to Sai Silks (Kalamandir), not Authum; D05 does not add Sai Silks.
+    assert.throws(
+      () => securityMaster.resolveCompanyId({
+        identifierType: 'COMPOSITE_TICKER',
+        identifierValue: 'BSE:543989',
+        asOf: '2026-09-22T00:00:00.000Z',
+      }),
+      /UNMAPPED_IDENTIFIER/
+    );
 
     // ISIN resolution
     const isinResolution = securityMaster.resolveCompanyId({
@@ -519,7 +521,7 @@ AGI GREENPAC, 250, 440.00, 480.00, 110000.00, 120000.00, 10000.00, 9.09`;
 
       assert.strictEqual(dto.companyId, companyId);
       assert.strictEqual(dto.symbol, sym);
-      assert.strictEqual(dto.quality, 'GOOD');
+      assert.strictEqual(dto.quality, 'UNAVAILABLE', 'transport cannot synthesize GOOD when upstream quality is absent');
       assert.strictEqual(dto.provenance.sourceClassification, 'CANONICAL_MARKET_DATA');
     }
   });

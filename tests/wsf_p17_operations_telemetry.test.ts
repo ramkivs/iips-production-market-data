@@ -137,7 +137,7 @@ describe('WS-F Package P17: Operations, Monitoring & Release Evidence', () => {
         anomalyCodes: ['REQUIRED_FIELD_MISSING'],
         errors: ['symbol: Required field missing'],
         receivedAt: new Date().toISOString(),
-        sourceClassification: 'REAL',
+        sourceClassification: 'UNCLASSIFIED',
       });
 
       const result = RunbooksHarness.executeDeadLetterTriage(dlq);

@@ -76,6 +76,8 @@ export interface StandardizedFinancialStatement {
   incomeStatement?: StandardizedIncomeStatement;
   balanceSheet?: StandardizedBalanceSheet;
   cashFlow?: StandardizedCashFlow;
+  /** Quality of supplied comparison inputs that are consumed by UI09; missing values are not source-confirmed. */
+  normalizationAnomalyCodes?: string[];
   qualityState: QualityState;
 }
 

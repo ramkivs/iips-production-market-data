@@ -27,8 +27,7 @@
  *   CHAR-B-03  [CORRECTED — REGRESSION GUARD]  faceValue 0 → INVALID (≠ absent), never 1
  *   CHAR-C-01  [APPROVED INVARIANT]            unchanged: effective-dated identity resolution
  *   CHAR-C-02  [CORRECTED — REGRESSION GUARD]  historical asOf disclosed; not silently current
- *   CHAR-D-01  [OBSERVED INCONSISTENCY — UNRESOLVED]  unchanged: AIIL needs authoritative BSE
- *                                                listing-history evidence (decision §5.2)
+ *   CHAR-D-01  [CORRECTED — REGRESSION GUARD]  runtime excludes 543989 from Authum; source deposit preserved
  *
  *  The full acceptance coverage for the corrected semantics lives in
  *  tests/d05_security_master_integrity_semantics.test.ts (SMI-*).
@@ -41,9 +40,9 @@
  *   · It does NOT assert historical descriptor correctness. Historical descriptor versioning
  *     remains a separate, unauthorized capability (decision §5.1); only honest disclosure of
  *     the current-snapshot basis is asserted.
- *   · It does NOT convert the AIIL dual BSE scrip-code mapping into an approved mapping rule,
- *     and does NOT assert which scrip code is "current" and which is "historical".
- *   · It mutates NO D05 corpus, schema, manifest or configuration.
+ *   · It does NOT treat the historical RULING_3 manifest label as a located or authoritative ruling,
+ *     and does NOT assert unsupported listing start/end dates.
+ *   · It preserves the as-deposited D05 corpus and manifest; only the runtime projection is corrected.
  *   · A passing run here is regression evidence for IPD producer semantics only — not product
  *     acceptance, qualification, consumer admission or production readiness (decision §5.6).
  */
@@ -318,70 +317,53 @@ describe('CHAR-C: asOf governs identifier mapping only — and the descriptor no
 });
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
- * CHAR-D — AIIL MANIFEST RULING vs. OBSERVED EFFECTIVE-DATE RECORDS
- * ════════════════════════════════════════════════════════════════════════════════════════ */
+ * CHAR-D — AIIL IDENTITY RECONCILIATION (EVIDENCE-BASED RUNTIME CORRECTION)
+ * ══════════════════════════════════════════════════════════════════════════════════════════ */
 
-describe('CHAR-D: AIIL manifest ruling vs. observed corpus effective dates (characterization)', () => {
-  it('CHAR-D-01 [OBSERVED INCONSISTENCY — UNRESOLVED]: the manifest declares RULING_3_DUAL_EFFECTIVE_DATED_MAPPING, but both AIIL BSE scrip codes are concurrently active with no effectiveTo', () => {
+describe('CHAR-D: AIIL identity reconciliation (regression guards)', () => {
+  it('CHAR-D-01 [CORRECTED — REGRESSION GUARD]: preserves the source deposit but never resolves Sai Silks scrip 543989 to Authum', () => {
     const manifest = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
 
-    // ── SOURCE OF TRUTH 1 — the governed manifest.
-    assert.strictEqual(
-      manifest.aiilRuling,
-      'RULING_3_DUAL_EFFECTIVE_DATED_MAPPING',
-      'the deposition manifest declares a dual EFFECTIVE-DATED mapping for AIIL'
-    );
+    // Preserve the historical source label without treating it as a located ruling record.
+    assert.strictEqual(manifest.aiilRuling, 'RULING_3_DUAL_EFFECTIVE_DATED_MAPPING');
     assert.strictEqual(manifest.authorizationRef, 'AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001');
 
-    // ── SOURCE OF TRUTH 2 — the governed corpus record.
-    const aiil = D05_BROAD_UNIVERSE_ENTITIES.find((e) => e.companyId === 'EQ_AIIL_IN');
-    assert.ok(aiil, 'EQ_AIIL_IN is present in the corpus');
-    assert.strictEqual(aiil.effectiveTo, undefined, 'the AIIL entity record carries no effectiveTo');
-
-    const bseListings = aiil.listings.filter((l) => l.exchange === 'BSE');
-    assert.strictEqual(bseListings.length, 2, 'AIIL carries two BSE listing rows');
+    const sourceAiil = D05_BROAD_UNIVERSE_ENTITIES.find((e) => e.companyId === 'EQ_AIIL_IN');
+    assert.ok(sourceAiil, 'the as-deposited EQ_AIIL_IN record is retained');
+    assert.strictEqual(sourceAiil.effectiveTo, undefined, 'no source effectiveTo is manufactured');
     assert.deepStrictEqual(
-      bseListings.map((l) => l.scripCode).sort(),
+      sourceAiil.listings.filter((l) => l.exchange === 'BSE').map((l) => l.scripCode).sort(),
       ['539177', '543989'],
-      'the two BSE scrip codes are 539177 and 543989'
+      'the original listing evidence remains preserved in the deposited corpus'
     );
 
-    // ── OBSERVABLE OUTPUT — no temporal distinction exists between the two scrip codes.
     const sm = getGovernedBroadSecurityMaster();
-    for (const asOf of [
-      '2016-01-01T00:00:00.000Z',
-      '2020-06-01T00:00:00.000Z',
-      '2026-10-19T00:00:00.000Z',
-    ]) {
-      for (const scrip of ['BSE:539177', 'BSE:543989']) {
-        assert.strictEqual(
-          sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: scrip, asOf }),
-          'EQ_AIIL_IN',
-          `${scrip} resolves at ${asOf}`
-        );
-      }
+    const authum = sm.getEntity('EQ_AIIL_IN');
+    assert.ok(authum);
+    assert.strictEqual(authum.companyName, 'Authum Investment & Infrastructure Limited');
+    assert.strictEqual(authum.isin, 'INE206F01022');
+    assert.strictEqual(authum.bseScripCode, '539177');
+    assert.deepStrictEqual(
+      authum.listings.filter((l) => l.exchange === 'BSE').map((l) => l.scripCode),
+      ['539177']
+    );
+    assert.strictEqual(sm.resolveCompanyId({ identifierType: 'ISIN', identifierValue: 'INE206F01022' }), 'EQ_AIIL_IN');
+    assert.strictEqual(sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:539177' }), 'EQ_AIIL_IN');
+
+    for (const asOf of ['2016-01-01T00:00:00.000Z', '2026-10-19T00:00:00.000Z']) {
+      assert.throws(
+        () => sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989', asOf }),
+        /UNMAPPED_IDENTIFIER/
+      );
     }
 
-    // ── CORPUS-WIDE CONTEXT: the absence of effective dating is not specific to AIIL.
+    // No listing-level effective date has been invented by the runtime correction.
+    assert.strictEqual(authum.effectiveFrom, sourceAiil.effectiveFrom);
+    assert.strictEqual(authum.effectiveTo, undefined);
     assert.strictEqual(
       D05_BROAD_UNIVERSE_ENTITIES.filter((e) => e.effectiveTo !== undefined).length,
       0,
-      'no corpus record carries an effectiveTo'
+      'the deposited source still carries no effectiveTo fields'
     );
-    assert.deepStrictEqual(
-      [...new Set(D05_BROAD_UNIVERSE_ENTITIES.map((e) => e.effectiveFrom))],
-      ['2015-01-01T00:00:00.000Z'],
-      'every corpus record shares a single effectiveFrom'
-    );
-
-    // ── RECORDED LIMIT — NOT AN ACCEPTANCE ASSERTION ──────────────────────────────────────
-    // This test exposes a three-way mismatch — manifest ruling vs. corpus record vs.
-    // observable output — WITHOUT changing any of them. It deliberately does NOT assert:
-    //   · which scrip code is "current" and which is "historical";
-    //   · that either scrip code ought to be inactive at any particular date;
-    //   · that the manifest wording is wrong and the data is right, or vice versa.
-    // The reconciliation (corpus effective-date correction, or manifest/report wording
-    // correction) is a governed-data change requiring Program Authority. Nothing here turns
-    // the present mapping into an approved mapping rule.
   });
 });

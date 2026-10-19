@@ -455,7 +455,7 @@ export class PortfolioBrokerImportController {
     }));
 
     // Quality Indicator
-    let qualityState: 'GOOD' | 'PARTIAL' | 'UNAVAILABLE' = 'GOOD';
+    let qualityState: 'GOOD' | 'PARTIAL' | 'UNAVAILABLE' = 'UNAVAILABLE';
     if (this.currentState === 'BLOCKED' || this.currentState === 'REJECTED') {
       qualityState = 'UNAVAILABLE';
     } else if (this.currentState === 'PARTIAL_REJECTIONS') {

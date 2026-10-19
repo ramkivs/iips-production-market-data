@@ -81,7 +81,7 @@ describe('WS-E / UI01–UI14 Functional Surfaces Qualification', () => {
         mode: 'SNAPSHOT',
         quality: 'GOOD',
         provenance: {
-          sourceClassification: 'REAL',
+          sourceClassification: 'UNCLASSIFIED',
           asOf: '2026-09-18T10:00:00.000Z',
           evaluatedAt: '2026-09-18T10:00:01.000Z',
           dataVersion: 'v1.0.0',
@@ -143,7 +143,7 @@ describe('WS-E / UI01–UI14 Functional Surfaces Qualification', () => {
         mode: 'SNAPSHOT',
         quality: 'GOOD',
         provenance: {
-          sourceClassification: 'REAL',
+          sourceClassification: 'UNCLASSIFIED',
           asOf: '2026-09-18T10:00:00.000Z',
           evaluatedAt: '2026-09-18T10:00:01.000Z',
           dataVersion: 'v1.0.0',
@@ -288,7 +288,7 @@ describe('WS-E / UI01–UI14 Functional Surfaces Qualification', () => {
         },
         quality: 'GOOD',
         provenance: {
-          sourceClassification: 'REAL',
+          sourceClassification: 'UNCLASSIFIED',
           asOf: '2026-09-18T10:00:00.000Z',
           evaluatedAt: '2026-09-18T10:00:01.000Z',
           dataVersion: 'v1.0.0',
@@ -389,13 +389,42 @@ describe('WS-E / UI01–UI14 Functional Surfaces Qualification', () => {
     assert.strictEqual(vm.factorBreakdown[0].weight, 0.3);
   });
 
-  it('UI06: Screener View should integrate Contract C6 server-side results', () => {
+  it('UI06: Screener View should integrate Contract C6 results and preserve candidate quality', () => {
     const vm = UI06MultiFactorScreenerBuilder.build({
       criteria: { sector: 'Technology' },
       screenerService: screener,
     });
     assert.strictEqual(vm.surfaceId, 'UI06_MULTIFACTOR_SCREENER');
     assert.strictEqual(vm.totalMatches, 1);
+    assert.strictEqual(vm.qualityIndicator.state, 'GOOD');
+  });
+
+  it('UI06: empty or partial screener results do not receive a hard-coded GOOD quality', () => {
+    const emptyVm = UI06MultiFactorScreenerBuilder.build({
+      criteria: {},
+      screenerService: new ScreenerService(),
+    });
+    assert.strictEqual(emptyVm.totalMatches, 0);
+    assert.strictEqual(emptyVm.qualityIndicator.state, 'UNAVAILABLE');
+    assert.strictEqual(emptyVm.provenance.quality, 'UNAVAILABLE');
+
+    const partialService = new ScreenerService();
+    partialService.registerCandidate({
+      companyId: 'FIXTURE_CO',
+      companyName: 'Fixture Company',
+      sector: 'Technology',
+      ltp: 10,
+      pe: null,
+      pb: null,
+      roe: null,
+      operatingMargin: null,
+      score: 0,
+      grade: 'F',
+      quality: 'PARTIAL',
+    });
+    const partialVm = UI06MultiFactorScreenerBuilder.build({ criteria: {}, screenerService: partialService });
+    assert.strictEqual(partialVm.qualityIndicator.state, 'PARTIAL');
+    assert.strictEqual(partialVm.provenance.quality, 'PARTIAL');
   });
 
   it('UI07: PIT Corporate Actions should calculate cumulative adjustment factors', () => {
@@ -419,13 +448,13 @@ describe('WS-E / UI01–UI14 Functional Surfaces Qualification', () => {
         adjustmentFactor: 0.5,
       },
       provenance: {
-        sourceClassification: 'REAL',
+        sourceClassification: 'UNCLASSIFIED',
         vendorTier: 'OFFLINE_BOOTSTRAP',
         asOf: '2018-09-04T00:00:00.000Z',
         receivedAt: '2018-09-04T00:00:00.000Z',
         evaluatedAt: '2018-09-04T00:00:00.000Z',
         dataVersion: 'v1.0',
-        lineageHash: 'hash-ca-01',
+        lineageHash: 'a3cf0f0a9d9bb0ddb570815f3d9cf5902448956b5a5fa2d7e6a6f0e5e8e9c742',
         qualityState: 'GOOD',
       },
     });
@@ -440,6 +469,55 @@ describe('WS-E / UI01–UI14 Functional Surfaces Qualification', () => {
     assert.strictEqual(vm.surfaceId, 'UI07_PIT_CORPORATE_ACTIONS');
     assert.strictEqual(vm.corporateActions.length, 1);
     assert.strictEqual(vm.adjustmentFactorCumulative, 0.5);
+    assert.strictEqual(vm.provenance.sourceClassification, 'UNCLASSIFIED');
+    assert.strictEqual(vm.provenance.quality, 'GOOD');
+    assert.strictEqual(vm.qualityIndicator.state, 'GOOD');
+    assert.match(vm.provenance.lineageDigest, /^[a-f0-9]{64}$/);
+    assert.ok(!('consumerEligibility' in vm), 'producer provenance/quality do not assert consumer admission');
+  });
+
+  it('UI07: missing corporate-action inputs are unavailable, not an asserted REAL/GOOD empty ledger', () => {
+    const vm = UI07PitCorporateActionsBuilder.build({
+      pitStore: new PointInTimeStore<any>(),
+      companyId: 'INFY',
+      companyName: 'Infosys Limited',
+      asOf: '2026-09-18T10:00:00.000Z',
+    });
+
+    assert.deepStrictEqual(vm.corporateActions, []);
+    assert.strictEqual(vm.adjustmentFactorCumulative, null);
+    assert.strictEqual(vm.provenance.sourceClassification, 'UNCLASSIFIED');
+    assert.strictEqual(vm.provenance.quality, 'UNAVAILABLE');
+    assert.strictEqual(vm.qualityIndicator.state, 'UNAVAILABLE');
+    assert.match(vm.provenance.lineageDigest, /^[a-f0-9]{64}$/);
+
+    const malformedStore = new PointInTimeStore<any>();
+    malformedStore.append({
+      envelopeId: 'env-ca-missing-factor',
+      domain: 'D04_CORPORATE_ACTIONS',
+      companyId: 'INFY',
+      timestamp: '2026-09-17T00:00:00.000Z',
+      mode: 'PIT',
+      schemaVersion: '1.0.0',
+      payload: {
+        companyId: 'INFY', actionId: 'CA-MISSING-FACTOR', actionType: 'SPLIT', status: 'EFFECTIVE',
+        exDate: '2026-09-17', recordDate: '2026-09-18', ratioNumerator: 1, ratioDenominator: 2,
+      },
+      provenance: {
+        sourceClassification: 'UNCLASSIFIED', vendorTier: 'OFFLINE_BOOTSTRAP',
+        asOf: '2026-09-17T00:00:00.000Z', receivedAt: '2026-09-17T00:00:00.000Z',
+        evaluatedAt: '2026-09-17T00:00:00.000Z', dataVersion: 'test', lineageHash: 'source-hash',
+        qualityState: 'GOOD',
+      },
+    });
+    const malformed = UI07PitCorporateActionsBuilder.build({
+      pitStore: malformedStore, companyId: 'INFY', companyName: 'Infosys Limited',
+      asOf: '2026-09-18T10:00:00.000Z',
+    });
+    assert.strictEqual(malformed.corporateActions[0].factor, null);
+    assert.strictEqual(malformed.adjustmentFactorCumulative, null);
+    assert.strictEqual(malformed.qualityIndicator.state, 'PARTIAL');
+    assert.ok(malformed.qualityAnomalyCodes.includes('MISSING_OR_INVALID_ADJUSTMENT_FACTOR:CA-MISSING-FACTOR'));
   });
 
   it('UI08: Security Master Modal should resolve identity with focus trap', () => {
@@ -453,7 +531,7 @@ describe('WS-E / UI01–UI14 Functional Surfaces Qualification', () => {
     assert.strictEqual(vm.trapFocus, true);
   });
 
-  it('UI09: Restatement Timeline Comparison should calculate delta percentages', () => {
+  it('UI09: Restatement Timeline derives materiality from complete inputs without degrading quality', () => {
     const tracker = new RestatementTracker();
     const origStmt = {
       statementId: 'stmt-orig',
@@ -493,7 +571,54 @@ describe('WS-E / UI01–UI14 Functional Surfaces Qualification', () => {
     assert.strictEqual(vm.surfaceId, 'UI09_RESTATEMENT_TIMELINE');
     assert.strictEqual(vm.deltaRevenuePct, 2.0); // +2%
     assert.strictEqual(vm.isMaterialDelta, true);
+    assert.strictEqual(vm.qualityIndicator.state, 'GOOD', 'materiality is not a quality grade');
+    assert.strictEqual(vm.provenance.sourceClassification, 'DERIVED');
+    assert.strictEqual(vm.provenance.quality, 'GOOD');
+    assert.match(vm.provenance.lineageDigest, /^[a-f0-9]{64}$/);
+    assert.deepStrictEqual(vm.qualityAnomalyCodes, []);
+    assert.ok(!('consumerEligibility' in vm), 'producer provenance/quality do not assert consumer admission');
+  });
+
+  it('UI09: missing income statement metrics remain unknown and cannot yield a zero delta or GOOD quality', () => {
+    const tracker = new RestatementTracker();
+    const statement = {
+      statementId: 'stmt-no-income',
+      companyId: 'INFY',
+      scope: 'CONSOLIDATED' as const,
+      fiscalYear: 2026,
+      periodType: 'ANNUAL' as const,
+      periodStart: '2025-04-01T00:00:00.000Z',
+      periodEnd: '2026-03-31T00:00:00.000Z',
+      filingDate: '2026-05-15T12:00:00.000Z',
+      restatementIndex: 0,
+      rawCurrency: 'INR',
+      currency: 'INR' as const,
+      isAudited: true,
+      sourceFilingType: 'MCA_XBRL' as const,
+      qualityState: 'GOOD' as const,
+      normalizationAnomalyCodes: ['MISSING_SOURCE_BLOCK:incomeStatement'],
+    };
+    const latest = { ...statement, statementId: 'stmt-no-income-latest', restatementIndex: 1 };
+
+    const vm = UI09RestatementTimelineBuilder.build({
+      tracker,
+      companyId: 'INFY',
+      fiscalYear: 2026,
+      companyName: 'Infosys Limited',
+      asOf: '2026-09-18T10:00:00.000Z',
+      originalStatement: statement,
+      latestStatement: latest,
+    });
+
+    assert.strictEqual(vm.originalFiling.revenue, null);
+    assert.strictEqual(vm.originalFiling.netIncome, null);
+    assert.strictEqual(vm.deltaRevenuePct, null);
+    assert.strictEqual(vm.deltaNetIncomePct, null);
+    assert.strictEqual(vm.isMaterialDelta, null);
     assert.strictEqual(vm.qualityIndicator.state, 'PARTIAL');
+    assert.strictEqual(vm.provenance.quality, 'PARTIAL');
+    assert.ok(vm.qualityAnomalyCodes.includes('ORIGINAL_SOURCE_METRIC_UNAVAILABLE:revenue'));
+    assert.match(vm.provenance.lineageDigest, /^[a-f0-9]{64}$/);
   });
 
   it('UI10: Data Quality Anomaly Monitor should report active anomalies', () => {
@@ -508,6 +633,20 @@ describe('WS-E / UI01–UI14 Functional Surfaces Qualification', () => {
     assert.strictEqual(vm.surfaceId, 'UI10_ANOMALY_MONITOR');
     assert.strictEqual(vm.activeAnomalies.length, 1);
     assert.strictEqual(vm.activeAnomalies[0].category, 'CONTRADICTORY_CROSS_FIELD');
+    assert.notStrictEqual(vm.qualityIndicator.state, 'GOOD');
+    assert.match(vm.provenance.lineageDigest, /^[a-f0-9]{64}$/);
+  });
+
+  it('UI10: missing sample data is UNAVAILABLE, not a clean GOOD anomaly result', () => {
+    const vm = UI10AnomalyMonitorBuilder.build({
+      anomalyDetector: new AnomalyDetector(),
+      companyId: 'INFY',
+      companyName: 'Infosys Limited',
+    });
+    assert.strictEqual(vm.activeAnomalies.length, 0);
+    assert.strictEqual(vm.qualityIndicator.state, 'UNAVAILABLE');
+    assert.strictEqual(vm.provenance.quality, 'UNAVAILABLE');
+    assert.match(vm.provenance.lineageDigest, /^[a-f0-9]{64}$/);
   });
 
   it('UI11: Executive Provenance Auditor should display lineage hash and version vector', () => {
@@ -603,6 +742,20 @@ describe('WS-E / UI01–UI14 Functional Surfaces Qualification', () => {
     assert.strictEqual(vm.indicatorSeries.length, 1);
     assert.strictEqual(vm.indicatorSeries[0].indicatorCode, 'CPI');
     assert.strictEqual(vm.indicatorSeries[0].value, 5.4);
+    assert.strictEqual(vm.provenance.quality, 'GOOD');
+    assert.strictEqual(vm.qualityIndicator.state, 'GOOD');
+    assert.match(vm.provenance.lineageDigest, /^[a-f0-9]{64}$/);
+
+    const empty = UI13MacroVintageTrackerBuilder.build({
+      macroEngine: new MacroEngine(),
+      seriesIds: ['CPI'],
+      companyName: 'National Economy',
+      asOf: '2026-09-18T10:00:00.000Z',
+    });
+    assert.strictEqual(empty.indicatorSeries.length, 0);
+    assert.strictEqual(empty.provenance.quality, 'UNAVAILABLE');
+    assert.strictEqual(empty.qualityIndicator.state, 'UNAVAILABLE');
+    assert.match(empty.provenance.lineageDigest, /^[a-f0-9]{64}$/);
   });
 
   it('UI14: Alternative Data Signal Auditor should verify approvalRef governance', () => {

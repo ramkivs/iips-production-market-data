@@ -175,13 +175,18 @@ portable code asset. Flagged as Open Question OQ-4.
 
 ### 4.3 Identity values verified in source
 
+> **Evidence follow-up (2026-10-19):** the original AIIL current/historical descriptions below were
+> unsupported and are superseded by `evidence/cross-repository/IIPS_V3_IPD_AIIL_IDENTITY_AND_PROVENANCE_FOLLOWUP_2026-10-19.md`.
+> The deposited D05 files remain preserved; the runtime projection removes BSE `543989` from Authum.
+
 | Fact | Location |
 |---|---|
-| AIIL current BSE `543989` | `d05_broad_universe_data.ts:701,722` |
-| AIIL historical BSE `539177` | `d05_broad_universe_data.ts:730` |
+| Authum identity: ISIN `INE206F01022`, BSE `539177` | Runtime correction overlay `src/identity/d05_listing_corrections.ts`; source deposit row preserved at `d05_broad_universe_data.ts:696-730` |
+| BSE `543989` is Sai Silks (Kalamandir), not Authum; no Sai Silks row is added to D05 | BSE evidence dossier (linked above); runtime mapping fails closed |
+| Historical manifest label `RULING_3_DUAL_EFFECTIVE_DATED_MAPPING` | Preserved as-deposited; no separate governing ruling record located |
 | AGI `companyId: "EQ_AGI_IN"` | `d05_broad_universe_data.ts:738` |
-| `AGI GREENPAC` exact alias | `governed_fixture_master.ts:145-149` |
-| Both resolve to `EQ_AIIL_IN` / `EQ_AGI_IN` | `e2e_…test.ts` Phase 5, Phase 6 |
+| `AGI GREENPAC` exact alias | `governed_fixture_master.ts` |
+| Authum/AGI mappings | `tests/e2e_broad_universe_multi_broker_integration.test.ts` Phase 5, Phase 6 |
 
 ### 4.4 Toolchain
 
@@ -455,7 +460,7 @@ and `tests/e2e_broad_universe_multi_broker_integration.test.ts` (Phases 1-10).
 | 8 | `REPLACE` bypasses dedup, resets state | AC-06 :244-246 |
 | 9 | Non-prod bypass: `identityStatus='UNRESOLVED'`, `companyId=''`, zero fabricated IDs | AC-07 :270-271 |
 | 10 | Production fails closed: `disposition='REJECTED'`, 0 holdings | AC-08 :283-284 |
-| 11 | AIIL `543989`/`539177` → `EQ_AIIL_IN` | e2e Phase 5 |
+| 11 | Authum `539177` → `EQ_AIIL_IN`; Sai Silks `543989` fails closed (no D05 expansion) | e2e Phase 5; evidence dossier |
 | 12 | `AGI GREENPAC` exact alias → `EQ_AGI_IN`, no fuzzy | e2e Phase 6 |
 | 13 | D05 byte-identical, SHA-256 `7f53540b…4b74b5`, 2,250 records | e2e Phase 1 |
 | 14 | Unmapped/malformed fail closed, no partial contamination | e2e Phase 10 |

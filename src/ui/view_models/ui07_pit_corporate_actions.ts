@@ -11,6 +11,9 @@ import { AccessibilityEngine } from '../accessibility_engine.js';
 import { ResponsiveEngine } from '../responsive_engine.js';
 import { ExecutiveProvenance } from '../../transports/types.js';
 import { CorporateActionPayload } from '../../contracts/d04_corporate_actions.js';
+import { SourceClassification, QualityState } from '../../contracts/types.js';
+import { computeLineageHash } from '../../contracts/provenance.js';
+import { rollupQuality } from '../../quality/quality_rollup.js';
 
 export class UI07PitCorporateActionsBuilder {
   public static build(params: {
@@ -26,26 +29,79 @@ export class UI07PitCorporateActionsBuilder {
     const caEnvelopes = params.pitStore.queryRange(params.companyId, 'D04_CORPORATE_ACTIONS', '1900-01-01T00:00:00.000Z', params.asOf);
 
     let cumulativeFactor = 1.0;
+    let allFactorsUsable = caEnvelopes.length > 0;
+    const qualityAnomalyCodes: string[] = [];
     const corporateActions = caEnvelopes.map((env) => {
       const p = env.payload;
-      cumulativeFactor *= (p.adjustmentFactor ?? 1.0);
+      const factor = typeof p.adjustmentFactor === 'number' && Number.isFinite(p.adjustmentFactor) && p.adjustmentFactor > 0
+        ? p.adjustmentFactor
+        : null;
+
+      if (factor === null) {
+        allFactorsUsable = false;
+        qualityAnomalyCodes.push(`MISSING_OR_INVALID_ADJUSTMENT_FACTOR:${p.actionId}`);
+      } else {
+        cumulativeFactor *= factor;
+      }
+
       return {
         actionId: p.actionId,
         actionType: p.actionType,
         exDate: p.exDate,
         recordDate: p.recordDate,
         ratio: p.ratioNumerator && p.ratioDenominator ? `${p.ratioNumerator}:${p.ratioDenominator}` : 'N/A',
-        factor: p.adjustmentFactor ?? 1.0,
+        factor,
       };
     });
 
+    const sourceClasses = caEnvelopes.map(
+      (env) => env.provenance?.sourceClassification ?? 'UNCLASSIFIED'
+    );
+    const uniqueSourceClasses = [...new Set(sourceClasses)];
+    // Carry through a consistent input classification; mixed or absent inputs stay unknown.
+    const sourceClassification: SourceClassification = uniqueSourceClasses.length === 1
+      ? uniqueSourceClasses[0]
+      : 'UNCLASSIFIED';
+
+    const inputQualityStates: QualityState[] = caEnvelopes.map(
+      (env) => env.provenance?.qualityState ?? 'UNAVAILABLE'
+    );
+    const inputQuality = rollupQuality(inputQualityStates);
+    const quality: QualityState = caEnvelopes.length === 0
+      ? 'UNAVAILABLE'
+      : qualityAnomalyCodes.length > 0
+        ? rollupQuality([inputQuality, 'PARTIAL'])
+        : inputQuality;
+
+    const adjustmentFactorCumulative = allFactorsUsable
+      ? Math.round(cumulativeFactor * 10000) / 10000
+      : null;
+
     const provenance: ExecutiveProvenance = {
-      sourceClassification: 'REAL',
+      sourceClassification,
       asOf: params.asOf,
       evaluatedAt: new Date().toISOString(),
-      dataVersion: 'v1.0.0',
-      lineageDigest: 'ca-pit-store-lineage-hash-0000000000000000000000000000000000000000',
-      quality: 'GOOD',
+      dataVersion: 'ui07-pit-corporate-actions-v1',
+      lineageDigest: computeLineageHash(
+        {
+          companyId: params.companyId,
+          asOf: params.asOf,
+          corporateActions,
+          adjustmentFactorCumulative,
+          inputLineage: caEnvelopes.map((env) => ({
+            envelopeId: env.envelopeId,
+            lineageHash: env.provenance?.lineageHash ?? null,
+            sourceClassification: env.provenance?.sourceClassification ?? 'UNCLASSIFIED',
+            qualityState: env.provenance?.qualityState ?? 'UNAVAILABLE',
+          })),
+        },
+        {
+          sourceClassification,
+          asOf: params.asOf,
+          dataVersion: 'ui07-pit-corporate-actions-v1',
+        }
+      ),
+      quality,
       replayConstraintApplied: false,
     };
 
@@ -55,8 +111,9 @@ export class UI07PitCorporateActionsBuilder {
       companyName: params.companyName,
       asOf: params.asOf,
       corporateActions,
-      adjustmentFactorCumulative: Math.round(cumulativeFactor * 10000) / 10000,
-      qualityIndicator: AccessibilityEngine.getQualityIndicator('GOOD'),
+      adjustmentFactorCumulative,
+      qualityAnomalyCodes,
+      qualityIndicator: AccessibilityEngine.getQualityIndicator(quality),
       provenance,
       responsiveLayout: {
         tier,

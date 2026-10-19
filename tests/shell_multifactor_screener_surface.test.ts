@@ -8,7 +8,6 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import React from 'react';
@@ -26,16 +25,12 @@ import {
   type ScreenerFilter,
   type ScreenerResponse,
 } from '../src/transports/screener_service.js';
+import { UI06MultiFactorScreenerBuilder } from '../src/ui/view_models/ui06_multifactor_screener.js';
 
 const SURFACE_PATH = join(
   process.cwd(),
   'frontend/src/features/screener/MultiFactorScreenerSurface.tsx'
 );
-const BUILDER_PATH = join(
-  process.cwd(),
-  'src/ui/view_models/ui06_multifactor_screener.ts'
-);
-const BUILDER_BLOB = 'd3cccdda4b0ab08f6249fbe6a01c6d2cf31aea63';
 const BI08_ROOT_CLASS = 'min-h-screen bg-slate-950 text-slate-100 p-6 space-y-6';
 
 function stripComments(source: string): string {
@@ -57,14 +52,6 @@ function renderAt(path: string): string {
 
 function renderSurface(props: React.ComponentProps<typeof MultiFactorScreenerSurface>): string {
   return renderToString(React.createElement(MultiFactorScreenerSurface, props));
-}
-
-function gitBlobHash(path: string): string {
-  const bytes = readFileSync(path);
-  return createHash('sha1')
-    .update(`blob ${bytes.length}\0`)
-    .update(bytes)
-    .digest('hex');
 }
 
 /** Existing service with no candidates; observes the builder's genuine service invocation. */
@@ -121,8 +108,22 @@ describe('F-9 UI06 restoration — routed binding and fail-closed payload bounda
     assert.ok(!code.includes('new ScreenerService'), 'surface must not construct a replacement service');
   });
 
-  it('UI06-05: the qualified UI06 builder remains byte-identical', () => {
-    assert.strictEqual(gitBlobHash(BUILDER_PATH), BUILDER_BLOB);
+  it('UI06-05: the builder does not assert GOOD when there are no candidates and rolls up partial inputs', () => {
+    const empty = UI06MultiFactorScreenerBuilder.build({
+      criteria: {},
+      screenerService: new ScreenerService(),
+    });
+    assert.strictEqual(empty.qualityIndicator.state, 'UNAVAILABLE');
+    assert.strictEqual(empty.provenance.quality, 'UNAVAILABLE');
+
+    const partialService = new ScreenerService();
+    partialService.registerCandidate({
+      companyId: 'FIXTURE', companyName: 'Fixture', sector: 'Technology', ltp: 1,
+      pe: null, pb: null, roe: null, operatingMargin: null, score: 0, grade: 'F', quality: 'PARTIAL',
+    });
+    const partial = UI06MultiFactorScreenerBuilder.build({ criteria: {}, screenerService: partialService });
+    assert.strictEqual(partial.qualityIndicator.state, 'PARTIAL');
+    assert.strictEqual(partial.provenance.quality, 'PARTIAL');
   });
 
   it('UI06-06: the mounted route fabricates no candidate universe or screening payload', () => {

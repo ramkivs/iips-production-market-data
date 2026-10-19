@@ -228,21 +228,28 @@ describe('SMI: D05 Security Master integrity semantics (acceptance)', () => {
     );
   });
 
-  it('SMI-08 [B4 — UNRESOLVED, guard only]: AIIL behaviour and governed data are unchanged pending authoritative BSE listing-history evidence; listings are disclosed as not effective-dated', () => {
+  it('SMI-08 [B4 — evidence-backed runtime correction]: preserve the deposit and remove the false 543989→Authum runtime association without inventing listing dates', () => {
     const manifest = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
-    assert.strictEqual(manifest.aiilRuling, 'RULING_3_DUAL_EFFECTIVE_DATED_MAPPING', 'manifest wording not rewritten');
-    const aiil = D05_BROAD_UNIVERSE_ENTITIES.find((e) => e.companyId === 'EQ_AIIL_IN')!;
-    assert.strictEqual(aiil.effectiveTo, undefined, 'corpus effective dates not edited');
-    assert.deepStrictEqual(aiil.listings.filter((l) => l.exchange === 'BSE').map((l) => l.scripCode), ['543989', '539177']);
+    assert.strictEqual(manifest.aiilRuling, 'RULING_3_DUAL_EFFECTIVE_DATED_MAPPING', 'retain the as-deposited label; no separate ruling record was located');
+    const sourceAiil = D05_BROAD_UNIVERSE_ENTITIES.find((e) => e.companyId === 'EQ_AIIL_IN')!;
+    assert.strictEqual(sourceAiil.effectiveTo, undefined, 'deposited corpus remains unchanged');
+    assert.deepStrictEqual(sourceAiil.listings.filter((l) => l.exchange === 'BSE').map((l) => l.scripCode), ['543989', '539177']);
 
-    for (const scrip of ['BSE:543989', 'BSE:539177']) {
-      for (const asOf of ['2016-01-01T00:00:00.000Z', '2026-10-19T00:00:00.000Z']) {
-        const r = resolver.resolveObject({ identifierType: 'COMPOSITE_TICKER', identifierValue: scrip, asOf });
-        assert.strictEqual(r.companyId, 'EQ_AIIL_IN');
-        // Neither scrip code is presented as current or historical: listings are not effective-dated.
-        assert.strictEqual(r.integrity.temporal.listingsEffectiveDated, false);
-        assert.strictEqual(r.listings.filter((l) => l.exchange === 'BSE').length, 2);
-      }
+    const runtimeAiil = resolver.resolveObject({ identifierType: 'ISIN', identifierValue: 'INE206F01022' });
+    assert.strictEqual(runtimeAiil.companyId, 'EQ_AIIL_IN');
+    assert.strictEqual(runtimeAiil.companyName, 'Authum Investment & Infrastructure Limited');
+    assert.deepStrictEqual(runtimeAiil.listings.filter((l) => l.exchange === 'BSE').map((l) => l.scripCode), ['539177']);
+    assert.strictEqual(runtimeAiil.integrity.temporal.listingsEffectiveDated, false);
+    assert.strictEqual(runtimeAiil.integrity.temporal.descriptorStatus, 'CURRENT_SNAPSHOT');
+
+    for (const asOf of ['2016-01-01T00:00:00.000Z', '2026-10-19T00:00:00.000Z']) {
+      assert.throws(
+        () => resolver.resolveObject({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989', asOf }),
+        /UNMAPPED_IDENTIFIER/
+      );
+      const authumByBse = resolver.resolveObject({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:539177', asOf });
+      assert.strictEqual(authumByBse.companyId, 'EQ_AIIL_IN');
+      assert.strictEqual(authumByBse.integrity.temporal.listingsEffectiveDated, false);
     }
   });
 

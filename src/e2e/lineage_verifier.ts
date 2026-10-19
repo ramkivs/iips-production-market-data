@@ -13,6 +13,7 @@ import { UI02ExecutiveSummaryBuilder } from '../ui/view_models/ui02_executive_su
 import { MarketDataDTO } from '../transports/market_data_dto.js';
 import { IntelligenceDTO } from '../transports/intelligence_dto.js';
 import { computeLineageHash } from '../contracts/provenance.js';
+import { QualityState, SourceClassification } from '../contracts/types.js';
 import { UIRegistry } from '../ui/ui_registry.js';
 
 export interface E2ELineageHop {
@@ -20,7 +21,8 @@ export interface E2ELineageHop {
   stageName: string;
   component: string;
   outputDigest: string;
-  qualityState: string;
+  sourceClassification: SourceClassification;
+  qualityState: QualityState;
   providerMasked: boolean;
 }
 
@@ -73,7 +75,7 @@ export class E2ELineageVerifier {
     });
 
     const hop1Digest = computeLineageHash(rawFixturePayload, {
-      sourceClassification: 'REAL',
+      sourceClassification: 'UNCLASSIFIED',
       asOf: rawFixturePayload.timestamp,
       dataVersion: 'v1.0.0-raw',
     });
@@ -83,7 +85,8 @@ export class E2ELineageVerifier {
       stageName: 'RAW_INGRESS_RESOLUTION',
       component: 'SecurityMaster',
       outputDigest: hop1Digest,
-      qualityState: 'GOOD',
+      sourceClassification: 'UNCLASSIFIED',
+      qualityState: 'UNAVAILABLE', // raw fixture has not passed domain validation at Hop 1
       providerMasked: UIRegistry.verifyProviderMasking(JSON.stringify(rawFixturePayload)),
     });
 
@@ -109,7 +112,7 @@ export class E2ELineageVerifier {
       domain: 'D01_QUOTES',
       mode: 'SNAPSHOT',
       companyId: resolvedCompanyId,
-      sourceClassification: 'REAL',
+      sourceClassification: 'UNCLASSIFIED',
       rawPayload: rawMarketQuote,
       receivedAt: rawFixturePayload.timestamp,
       asOf: rawFixturePayload.timestamp,
@@ -126,6 +129,7 @@ export class E2ELineageVerifier {
       stageName: 'INGRESS_CANONICAL_PACKAGING',
       component: 'IngestionPipeline',
       outputDigest: ingressEnvelope.provenance.lineageHash,
+      sourceClassification: ingressEnvelope.provenance.sourceClassification,
       qualityState: ingressEnvelope.provenance.qualityState,
       providerMasked: UIRegistry.verifyProviderMasking(JSON.stringify(ingressEnvelope)),
     });
@@ -147,6 +151,7 @@ export class E2ELineageVerifier {
       stageName: 'POINT_IN_TIME_PERSISTENCE',
       component: 'PointInTimeStore',
       outputDigest: pitRetrieved.provenance.lineageHash,
+      sourceClassification: pitRetrieved.provenance.sourceClassification,
       qualityState: pitRetrieved.provenance.qualityState,
       providerMasked: true,
     });
@@ -173,6 +178,7 @@ export class E2ELineageVerifier {
       stageName: 'FROZEN_ENGINE_SCORING',
       component: 'DataBoundExecutor',
       outputDigest: engineScore.provenance.lineageHash,
+      sourceClassification: engineScore.provenance.sourceClassification,
       qualityState: engineScore.qualityState,
       providerMasked: UIRegistry.verifyProviderMasking(JSON.stringify(engineScore)),
     });
@@ -191,14 +197,14 @@ export class E2ELineageVerifier {
       pctChange: ((rawFixturePayload.lastPrice - rawFixturePayload.previousClose) / rawFixturePayload.previousClose) * 100,
       volume: rawFixturePayload.volume,
       mode: 'SNAPSHOT',
-      quality: 'GOOD',
+      quality: ingressEnvelope.provenance.qualityState,
       provenance: {
-        sourceClassification: 'REAL',
-        asOf: rawFixturePayload.timestamp,
-        evaluatedAt: rawFixturePayload.timestamp,
-        dataVersion: 'v1.0.0',
-        lineageDigest: engineScore.provenance.lineageHash,
-        quality: 'GOOD',
+        sourceClassification: ingressEnvelope.provenance.sourceClassification,
+        asOf: ingressEnvelope.provenance.asOf,
+        evaluatedAt: ingressEnvelope.provenance.evaluatedAt,
+        dataVersion: ingressEnvelope.provenance.dataVersion,
+        lineageDigest: ingressEnvelope.provenance.lineageHash,
+        quality: ingressEnvelope.provenance.qualityState,
         replayConstraintApplied: false,
       },
     };
@@ -208,29 +214,40 @@ export class E2ELineageVerifier {
       stageName: 'PRODUCT_TRANSPORT_SERIALIZATION',
       component: 'EngineApiAdapter',
       outputDigest: marketDataDTO.provenance.lineageDigest,
+      sourceClassification: marketDataDTO.provenance.sourceClassification,
       qualityState: marketDataDTO.quality,
       providerMasked: UIRegistry.verifyProviderMasking(JSON.stringify(marketDataDTO)),
     });
 
-    // Hop 6: Intelligence Synthesis
-    const mockIntelligence: IntelligenceDTO = {
+    // Hop 6: Empty intelligence is a fixture, not real-market data, and is not GOOD when no
+    // news items or other intelligence inputs are present.
+    const intelligenceDataVersion = 'v1.0.0-e2e-intelligence-fixture';
+    const mockIntelligencePayload = {
       companyId: resolvedCompanyId,
       news: {
         newsItems: [],
         totalAvailable: 0,
         filteredCount: 0,
-        dominantSentiment: 'NEUTRAL',
+        dominantSentiment: 'NEUTRAL' as const,
         averageSentimentScore: 0.25,
-        qualityState: 'GOOD',
+        qualityState: 'PARTIAL' as const,
       },
-      quality: 'GOOD',
+    };
+    const mockIntelligence: IntelligenceDTO = {
+      ...mockIntelligencePayload,
+      quality: 'PARTIAL',
       provenance: {
-        sourceClassification: 'DERIVED',
+        sourceClassification: 'UNCLASSIFIED',
         asOf: rawFixturePayload.timestamp,
         evaluatedAt: rawFixturePayload.timestamp,
-        dataVersion: 'v1.0.0',
-        lineageDigest: hop1Digest,
-        quality: 'GOOD',
+        dataVersion: intelligenceDataVersion,
+        lineageDigest: computeLineageHash(mockIntelligencePayload, {
+          sourceClassification: 'UNCLASSIFIED',
+          asOf: rawFixturePayload.timestamp,
+          dataVersion: intelligenceDataVersion,
+          parentHash: hop1Digest,
+        }),
+        quality: 'PARTIAL',
         replayConstraintApplied: false,
       },
     };
@@ -240,6 +257,7 @@ export class E2ELineageVerifier {
       stageName: 'INTELLIGENCE_SYNTHESIS',
       component: 'DomainIntelligenceEngine',
       outputDigest: mockIntelligence.provenance.lineageDigest,
+      sourceClassification: mockIntelligence.provenance.sourceClassification,
       qualityState: mockIntelligence.quality,
       providerMasked: true,
     });
@@ -264,6 +282,7 @@ export class E2ELineageVerifier {
       stageName: 'UI_VIEWMODEL_PRESENTATION',
       component: 'UI02ExecutiveSummaryBuilder',
       outputDigest: finalLineageDigest,
+      sourceClassification: 'DERIVED',
       qualityState: viewModel.qualityIndicator.state,
       providerMasked: UIRegistry.verifyProviderMasking(JSON.stringify(viewModel)),
     });

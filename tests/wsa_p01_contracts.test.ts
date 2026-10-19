@@ -148,5 +148,11 @@ describe('WS-A / P01 Canonical Contracts & Schema Validation', () => {
     assert.strictEqual(validation.isValid, true);
     assert.strictEqual(envelope.companyId, 'INFY');
     assert.strictEqual(envelope.provenance.lineageHash.length, 64); // Valid SHA-256 hex length
+
+    const missingQualityEnvelope = JSON.parse(JSON.stringify(envelope)) as any;
+    delete missingQualityEnvelope.provenance.qualityState;
+    const missingQualityValidation = validateEnvelopeStructure(missingQualityEnvelope);
+    assert.strictEqual(missingQualityValidation.isValid, true, 'structure validation remains backward compatible');
+    assert.strictEqual(missingQualityValidation.quality, 'UNAVAILABLE', 'missing quality cannot be silently upgraded to GOOD');
   });
 });

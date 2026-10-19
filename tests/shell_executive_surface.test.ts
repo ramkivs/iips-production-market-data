@@ -98,7 +98,7 @@ function harnessEngineScore(overrides: Partial<EngineScoreOutput> = {}): EngineS
     qualityState: 'GOOD',
     factorBreakdown: { valuation: 85, quality: 90, profitability: 92, technical: 82 },
     provenance: {
-      sourceClassification: 'REAL',
+      sourceClassification: 'UNCLASSIFIED',
       vendorTier: 'TIER_1_EXCHANGE',
       asOf: '2026-09-18T10:00:00.000Z',
       receivedAt: '2026-09-18T10:00:00.000Z',

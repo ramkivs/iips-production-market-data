@@ -17,6 +17,7 @@ import {
   SecurityMaster,
   getGovernedBroadSecurityMaster,
   MarketQuotePayload,
+  validateMarketQuotePayload,
   StandardizedFinancialStatement,
   FinancialRatioMetrics,
   AD17_CONSTRAINT_TEXT,
@@ -65,7 +66,19 @@ describe('WS-D / P12 Product Transport APIs & Typed Client DTOs', () => {
     assert.strictEqual(liveDto.companyId, 'INFY');
     assert.strictEqual(liveDto.mode, 'LIVE');
     assert.strictEqual(liveDto.ltp, 1520.25);
+    assert.strictEqual(liveDto.quality, 'UNAVAILABLE', 'an omitted upstream quality cannot be upgraded to GOOD');
+    assert.strictEqual(liveDto.provenance.quality, 'UNAVAILABLE');
     assert.strictEqual(liveDto.provenance.sourceClassification, 'CANONICAL_MARKET_DATA');
+
+    const quoteValidation = validateMarketQuotePayload(quote);
+    assert.strictEqual(quoteValidation.isValid, true);
+    const explicitlyQualified = EngineApiAdapter.createMarketDataDTO({
+      quote,
+      mode: 'SNAPSHOT',
+      asOf: '2026-09-18T10:00:00.000Z',
+      quality: quoteValidation.quality,
+    });
+    assert.strictEqual(explicitlyQualified.quality, 'GOOD', 'a validated upstream quality is preserved');
 
     // Verify zero commercial vendor leakage (NFR-06)
     const jsonStr = JSON.stringify(liveDto).toLowerCase();
