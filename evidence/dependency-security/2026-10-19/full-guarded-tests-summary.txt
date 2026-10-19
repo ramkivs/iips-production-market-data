@@ -1,0 +1,12 @@
+[test-guard] files=52 (source suite files: 52)
+# tests 584
+# suites 90
+# pass 584
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 14524.544725
+[test-guard] OK — 584 test(s) executed, 584 passed, exit 0
+Complete original output: full-guarded-tests.txt.gz
+Uncompressed SHA256: 3bfd56482265a133b454b5a9f8bf452dcf8bf1c460bfb8a2d5a708de892fb670

@@ -1,0 +1,35 @@
+[
+  {
+    "route": "/",
+    "status": 200,
+    "spa_entry": true
+  },
+  {
+    "route": "/portfolio",
+    "status": 200,
+    "spa_entry": true
+  },
+  {
+    "route": "/security-master?type=BSE_SYMBOL&value=539177",
+    "status": 200,
+    "spa_entry": true
+  },
+  {
+    "route": "/security-master?type=BSE_SYMBOL&value=543989",
+    "status": 200,
+    "spa_entry": true
+  },
+  {
+    "asset": "/assets/index-BuGHYy7g.js",
+    "status": 200
+  },
+  {
+    "asset": "/assets/index-DRxJRl4Q.css",
+    "status": 200
+  },
+  {
+    "browser_bundle_sources": 64,
+    "source-map-js_or_postcss_in_browser_bundle": false,
+    "note": "HTTP and bundle-source smoke only; no real browser automation or DOM interaction claimed. Route semantics are covered by the 319 focused application tests."
+  }
+]

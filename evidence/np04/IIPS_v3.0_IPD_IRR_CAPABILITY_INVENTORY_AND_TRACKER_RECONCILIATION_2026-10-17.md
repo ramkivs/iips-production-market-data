@@ -516,3 +516,45 @@ Recorded after merge from authoritative remote reads (`git ls-remote`, GitHub ch
 **Tracker reconciliation:** this addendum is additive. Historical A1 findings and all unrelated row statuses are preserved; current B4, Workstream B and boundary statuses are recorded above. The tracker addendum itself is published through the current IPD follow-up documentation workflow; final `main` presence is verified in the completion report.
 
 *End of addendum A2.*
+
+---
+
+## ADDENDUM A3 — 2026-10-19: IPD dependency security audit and compatible remediation
+
+> Additive audit reconciliation only; historical A1/A2 and unrelated capability statuses are preserved. **Partial remediation — two moderate npm package findings remain unresolved.** A passing build/test suite is not vulnerability closure.
+
+### A3.1 Baseline and advisory register
+
+Verified `git fetch origin main`, HEAD and `origin/main` at `a5c3069abac17cf572dce012729d823fcb04fd50` (PR #31); initial worktree clean. Audit date: **2026-10-19 UTC**, Node **22.22.3**, npm **10.9.8**; CI uses Node 22 and lockfile-v3 `npm ci`. Current baseline audit repeats **2 moderate, 1 high** package findings. These are three distinct GHSA identifiers: two advisories on `react-router`, its affected `react-router-dom` parent, and one source-map advisory; npm's package count is not an advisory-ID count.
+
+| Identifier / severity | Installed dependency path | Current disposition / rationale |
+|---|---|---|
+| `GHSA-68fv-2mgg-jv7q` / `CVE-2026-93749`, **high** | IPD → `vite@8.3.0` → `postcss@8.5.28` → `source-map-js@1.2.1` | **Remediated to 1.2.2**, first patched version (`>=1.0.0 <1.2.2` affected). Indexed-source-map offsets can cause event-loop denial of service. Build/dev tooling path is reachable when processing hostile CSS maps; no browser runtime inclusion or market-data-to-source-map path found. Compatible with PostCSS's existing `^1.2.1` constraint. |
+| `GHSA-wrjc-x8rr-h8h6` / `CVE-2026-53669`, **moderate** | IPD → direct `react-router-dom@6.30.6` → transitive `react-router@6.30.6` | **Unresolved installed vulnerability.** Backslash open-redirect bypass affects `>=6.0.0 <7.18.0`; first patched 7.18.0. Actual app navigation uses checked-in internal NavLink paths and fixed `/portfolio` fallback; no attacker-derived navigation target identified. Runtime dependency remains affected; not called fixed/unconditionally safe. |
+| `GHSA-337j-9hxr-rhxg` / `CVE-2026-53666`, **moderate** | Same runtime Router path | **Not applicable to current declarative execution mode, but unresolved in installed versions/audit.** SSR hydration constructor injection affects `>=6.4.0 <7.18.0`; first patched 7.18.0. App uses `createRoot` + `BrowserRouter`/`Routes`, no Framework/Data Mode manual SSR hydration error path. |
+
+**Smallest supported change:** only `package-lock.json` source-map-js version, resolved tarball and integrity change; `package.json`, all other package entries, application sources, tests, frontend, CI and deposited data remain unchanged. Used targeted `npm update source-map-js --package-lock-only --ignore-scripts --no-audit --no-fund`, followed by clean `npm ci`. No force, override, fork, suppression or broad upgrade.
+
+**Router blocker:** latest published v6 is already installed (`6.30.6`); its parent pins the child exactly. npm proposes breaking `react-router-dom@7.18.4`. No compatible v6 backport exists at inspection. Overriding the exact child to v7 or changing only `@remix-run/router` is not a supported fix. Smallest remaining action: consume a vendor v6 backport if published, otherwise separately scope/validate the supported paired v7 migration (patched floor 7.18.0). Reassess before introducing untrusted navigation targets or SSR. **Do not mark all advisories resolved.**
+
+### A3.2 Validation and evidence
+
+Dossier: [`evidence/dependency-security/2026-10-19/README.md`](../dependency-security/2026-10-19/README.md). Contains raw machine/human audit results, GitHub advisory snapshots, before/after installed trees and exact one-package lockfile delta, replayable focused tests and full verification output (large repetitive application logs compressed losslessly).
+
+| Check | Result |
+|---|---|
+| Reproducible install | `npm ci --no-audit --no-fund` **exit 0** |
+| Post-remediation full audit | **2 moderate, 0 high, 0 critical**, exit **1**; two Router package findings remain, both GHSA IDs retained |
+| Supplementary runtime-only audit | Same **2 moderate**, exit **1** — not used to filter the authoritative full audit |
+| Source-map / PostCSS focused regression | **7/7 pass**; initial 6/7 evidence-test fixture default-parameter error corrected and retained transparently |
+| Focused application / frontend / integration suite | **319/319 pass**, 43 suites; D05, shell, BI07/BI08, broad-universe multi-broker, P13 UI |
+| Full guarded suite | **584/584 pass**, 90 suites, 0 failures/skips/cancellations |
+| Typecheck / build | `npx tsc --noEmit` **0 errors**; `npm run build` **success**, existing >500 kB chunk warning only |
+| Frontend smoke | SPA/deep-link entries and JS/CSS assets HTTP **200**; no source-map-js/PostCSS browser bundle sources; no real-browser automation claimed |
+| Data / boundaries | D05 JSON, generated TS and manifest; all Security Master source/test corrections; CV-22 Option C; 13-row IRR / fail-closed consumer behavior **unchanged**. No IRR access/write; no new architecture or consumer scope. Single-user personal-use application preserved. |
+
+### A3.3 Publication evidence
+
+This entry is published with the lockfile correction through the normal IPD PR workflow on `arena/7b2e212f-iips-production-market-data`. Commit, exact-head CI, merge, post-merge CI and remote file/blob/tracker verification will be recorded additively **after** they complete. No future check result or clean-audit status is inferred here.
+
+*End of addendum A3 (initial audit record).*
