@@ -15,10 +15,25 @@
  * - Browser runtime uses build-time imported canonical D05 dataset with zero dynamic Node fs/path dependencies.
  */
 
-import { SecurityMaster, SecurityMasterEntity } from './security_master.js';
+import { SecurityMaster, SecurityMasterEntity, GovernedSourceRevision } from './security_master.js';
 import { D05_BROAD_UNIVERSE_ENTITIES } from './d05_broad_universe_data.js';
 
 export { D05_BROAD_UNIVERSE_ENTITIES };
+
+/**
+ * Governed deposition identity of the D05 broad-universe corpus, transcribed verbatim from
+ * evidence/operator_drop/d05_security_master_manifest.json (equality with the manifest and
+ * with the SHA-256 of the deposited JSON is enforced by
+ * tests/d05_security_master_integrity_semantics.test.ts). Provenance only — this records
+ * which governed revision is resolved, not that any record is real-market (C1/C2/C3).
+ */
+export const D05_BROAD_UNIVERSE_SOURCE_REVISION: Readonly<GovernedSourceRevision> = Object.freeze({
+  batchId: 'BATCH-D05-TIER2-BROAD-UNIVERSE-2026-09-22-001',
+  fileChecksumSha256: '7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5',
+  recordCount: 2250,
+  authorizationRef: 'AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001',
+  operatingMode: 'OFFLINE_BOOTSTRAP',
+});
 
 /**
  * Governed baseline reference entities authorized for offline non-production development
@@ -136,7 +151,7 @@ export function getGovernedBroadSecurityMaster(): SecurityMaster {
     );
   }
 
-  const sm = new SecurityMaster();
+  const sm = new SecurityMaster({ sourceRevision: D05_BROAD_UNIVERSE_SOURCE_REVISION });
 
   for (const record of D05_BROAD_UNIVERSE_ENTITIES) {
     sm.registerEntity(record);

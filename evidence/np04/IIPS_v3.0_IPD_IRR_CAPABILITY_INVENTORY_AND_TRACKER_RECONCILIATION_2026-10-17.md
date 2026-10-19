@@ -406,4 +406,42 @@ This artifact is published additively to `refs/heads/arena/21c63aef-iips-product
 | **xlsx not rewritten** | Plan tracker remains stale (documented, `CV-36`) |
 | **IRR tracker not edited** | §10.3 blocker |
 
+---
+
+## ADDENDUM A1 — 2026-10-19: IPD provenance & eligibility decision (C1–C7) and Security Master integrity convergence
+
+> Additive dated entry. Sections 1–10 above are preserved unchanged as the 2026-10-17 record.
+> No existing row status is re-graded by this addendum except where §A1.2 cites new merged
+> evidence. IPD-only: **no IRR record or tracker was modified** (IRR is read-only context).
+
+### A1.1 Decision reference (reconciliation of the published C1–C7 decision)
+
+| Field | Value |
+|---|---|
+| Operative decision | `evidence/cross-repository/IIPS_V3_IPD_PROVENANCE_ELIGIBILITY_PROGRAM_AUTHORITY_DECISION_2026-10-19.md` — `IIPS-V3-IPD-PROVENANCE-ELIGIBILITY-PROGRAM-AUTHORITY-DECISION-2026-10-19-01` — **APPROVED BY PROGRAM AUTHORITY**, C1–C7 all present |
+| Provenance chain | Request `…-DECISION-REQUEST-2026-10-19-01` (PR #26, merge `02a5803`); review `…-DECISION-REVIEW-2026-10-19-01` and decision (PR #27) |
+| Publication | PR #27 **MERGED** 2026-10-19T17:59:08Z → `main` `77f843217593dfd0b33a106f27bafb432aa0b82d`; PR CI run `39298654094` SUCCESS; post-merge `main` CI run `39298753519` SUCCESS, **565/565** executed |
+| Implementation act | `evidence/cross-repository/IIPS_V3_IPD_SECURITY_MASTER_INTEGRITY_IMPLEMENTATION_ACT_2026-10-19.md` — `IIPS-V3-IPD-SECURITY-MASTER-INTEGRITY-IMPLEMENTATION-ACT-2026-10-19-01` |
+
+### A1.2 Security Master integrity findings register
+
+| Finding | Capability row | State | Evidence | Note |
+|---|---|---|---|---|
+| **B1** unsupported `REAL`/`GOOD` classification (CHAR-A-01/02) | Row 6 (identity / security master) | **CORRECTED** | SMI-01, SMI-02, SMI-09, SMI-10, SMI-12; CHAR-A-01/02 revised | Origin `UNKNOWN` / `UNCLASSIFIED`; quality derived; provenance bound to corpus revision |
+| **B2** `faceValue ?? 1` / `currency ?? INR` (CHAR-B-01/03) | Row 6 | **CORRECTED** | SMI-03…SMI-05, SMI-10, SMI-11; CHAR-B-01/03 revised | Missing/invalid → `null` + status + `PARTIAL`; reference fixture gap disclosed |
+| **B3** historical descriptor returned as current (CHAR-C-02) | Row 6 | **CORRECTED — disclosure semantics**; versioning **not implemented** | SMI-06, SMI-07, SMI-11; CHAR-C-02 revised | UTIBANK@2005 → `OUTSIDE_RECORD_EFFECTIVE_WINDOW`, `PARTIAL`; no historical accuracy claimed (decision §5.1) |
+| **B4** AIIL `RULING_3` vs. concurrent scrip codes (CHAR-D-01) | Row 6 | **UNRESOLVED — authoritative evidence insufficient** | SMI-08 guard; CHAR-D-01 unchanged | Requires BSE listing history for `539177`/`543989` (ISIN `INE206F01022`); no data mutation (decision §5.2) |
+| Per-record real-market classification / roster | Row 6 | **UNRESOLVED — evidence insufficient** | C2 | 52/2,198 not treated as per-record truth |
+| `CV-22` (IRR) | Rows 34/35 | **Unchanged — OPTION C: DEFER EXPANSION PENDING DEFINED PREREQUISITES** (IRR `main@ad008e45`, read-only) | IRR decision record (read-only) | Supersedes this tracker's 2026-10-17 "DECISION REQUIRED" wording *as a reference only*; IRR's own tracker is not edited from IPD. 13-row sector reference + `404 governed-row-not-found` preserved |
+
+Statuses of all other rows (`CV-20`, `CV-23`…`CV-53`, `INV-01`…`INV-12`) are **unchanged** by this addendum.
+
+### A1.3 Boundaries recorded
+
+Single-user personal-use scope unchanged; no auth/RBAC/persistence/service/API added; no IPD-to-IRR write; CV-22 Option C preserved; D05 corpus/manifest byte-identical (SHA-256 `7f53540b…a2b74b5`, 2,250 records); no consumer admission; `CV-22-D05-REAL-EQUITY-IDENTITY-PROBE` not made mandatory. Proposed IRR handoff is documented in the implementation act §8 only.
+
+### A1.4 Publication and remote verification of the implementation
+
+**PENDING — recorded after merge by a follow-up additive commit.** This addendum does not claim the implementation is merged or remotely verified until that record exists on `main`.
+
 *End of inventory.*

@@ -37,9 +37,31 @@ export interface SecurityMasterEntity {
   [key: string]: unknown;
 }
 
+/**
+ * Governed corpus revision a SecurityMaster was hydrated from (provenance only).
+ *
+ * Identifies WHICH governed deposition was resolved (manifest batch, checksum, record count,
+ * authorization). It is deliberately silent on record origin (real-market vs. synthetic),
+ * data quality and consumer eligibility: deposition authorization does not prove any of
+ * those (PA decision 2026-10-19-01, C1/C3).
+ */
+export interface GovernedSourceRevision {
+  batchId: string;
+  fileChecksumSha256: string;
+  recordCount: number;
+  authorizationRef: string;
+  operatingMode: string;
+}
+
 export class SecurityMaster {
   private entities: Map<string, SecurityMasterEntity> = new Map();
   public readonly mappingStore: IdentityMappingStore = new IdentityMappingStore();
+  /** Governed corpus revision, when the master was hydrated from a governed deposition. */
+  public readonly sourceRevision?: GovernedSourceRevision;
+
+  constructor(options?: { sourceRevision?: GovernedSourceRevision }) {
+    this.sourceRevision = options?.sourceRevision;
+  }
 
   public registerEntity(entity: SecurityMasterEntity): void {
     this.entities.set(entity.companyId, entity);
