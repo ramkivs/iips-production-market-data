@@ -1,0 +1,295 @@
+{
+  "implementation_pr": {
+    "headRefOid": "8499ab3c963944aec7f74b2d3872c1ade9a0839d",
+    "mergeCommit": {
+      "oid": "fc67340fce44a0cb21bf75cfaf1c5bf5b57ca9d2"
+    },
+    "mergedAt": "2026-10-19T19:43:58Z",
+    "number": 32,
+    "state": "MERGED",
+    "url": "https://github.com/ramkivs/iips-production-market-data/pull/32"
+  },
+  "ci_runs": [
+    {
+      "run_id": 39313285152,
+      "url": "https://github.com/ramkivs/iips-production-market-data/actions/runs/39313285152",
+      "head_sha": "8499ab3c963944aec7f74b2d3872c1ade9a0839d",
+      "status": "completed",
+      "conclusion": "success",
+      "check_runs": [
+        {
+          "id": 118268435200,
+          "name": "executed test count",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ramkivs/iips-production-market-data/runs/118268435200",
+          "output": {
+            "title": "584 tests executed, 0 failed",
+            "summary": "**584 tests executed \u2014 584 passed, 0 failed.** Guard: a run that executes zero tests fails (CV-35). Head: `8499ab3c963944aec7f74b2d3872c1ade9a0839d`.",
+            "text": null,
+            "annotations_count": 0,
+            "annotations_url": "https://api.github.com/repos/ramkivs/iips-production-market-data/check-runs/118268435200/annotations"
+          }
+        },
+        {
+          "id": 118268160551,
+          "name": "typecheck \u00b7 build \u00b7 test",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ramkivs/iips-production-market-data/actions/runs/39313285152/job/118268160551",
+          "output": {
+            "title": null,
+            "summary": null,
+            "text": null,
+            "annotations_count": 1,
+            "annotations_url": "https://api.github.com/repos/ramkivs/iips-production-market-data/check-runs/118268160551/annotations"
+          }
+        }
+      ]
+    },
+    {
+      "run_id": 39313422498,
+      "url": "https://github.com/ramkivs/iips-production-market-data/actions/runs/39313422498",
+      "head_sha": "fc67340fce44a0cb21bf75cfaf1c5bf5b57ca9d2",
+      "status": "completed",
+      "conclusion": "success",
+      "check_runs": [
+        {
+          "id": 118268887625,
+          "name": "executed test count",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ramkivs/iips-production-market-data/runs/118268887625",
+          "output": {
+            "title": "584 tests executed, 0 failed",
+            "summary": "**584 tests executed \u2014 584 passed, 0 failed.** Guard: a run that executes zero tests fails (CV-35). Head: `fc67340fce44a0cb21bf75cfaf1c5bf5b57ca9d2`.",
+            "text": null,
+            "annotations_count": 0,
+            "annotations_url": "https://api.github.com/repos/ramkivs/iips-production-market-data/check-runs/118268887625/annotations"
+          }
+        },
+        {
+          "id": 118268642979,
+          "name": "typecheck \u00b7 build \u00b7 test",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/ramkivs/iips-production-market-data/actions/runs/39313422498/job/118268642979",
+          "output": {
+            "title": null,
+            "summary": null,
+            "text": null,
+            "annotations_count": 1,
+            "annotations_url": "https://api.github.com/repos/ramkivs/iips-production-market-data/check-runs/118268642979/annotations"
+          }
+        }
+      ]
+    }
+  ],
+  "verified_authoritative_main_after_implementation": "fc67340fce44a0cb21bf75cfaf1c5bf5b57ca9d2",
+  "changed_path_count": 29,
+  "all_changed_paths_blob_identical": [
+    {
+      "path": "evidence/dependency-security/2026-10-19/GHSA-337j-9hxr-rhxg.json",
+      "pr_head_blob": "c4ea404bd0eb2c451dbba7281826988930f2fd67",
+      "remote_main_blob": "c4ea404bd0eb2c451dbba7281826988930f2fd67",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/GHSA-68fv-2mgg-jv7q.json",
+      "pr_head_blob": "515e6aec21ad8c298a649e31034411874bd361b9",
+      "remote_main_blob": "515e6aec21ad8c298a649e31034411874bd361b9",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/GHSA-wrjc-x8rr-h8h6.json",
+      "pr_head_blob": "03f47a0cf5546fe0886a6ed26115fef495d03a28",
+      "remote_main_blob": "03f47a0cf5546fe0886a6ed26115fef495d03a28",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/README.md",
+      "pr_head_blob": "adf4daae48ddda8d8d0d6dcbb75c990d351b8ae1",
+      "remote_main_blob": "adf4daae48ddda8d8d0d6dcbb75c990d351b8ae1",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/baseline-audit.json",
+      "pr_head_blob": "dfb6332ac722997d6b9845e759b552f42b40a86d",
+      "remote_main_blob": "dfb6332ac722997d6b9845e759b552f42b40a86d",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/baseline-audit.txt",
+      "pr_head_blob": "28d67efcf6edd496478bdd35108282b9f34bd6f2",
+      "remote_main_blob": "28d67efcf6edd496478bdd35108282b9f34bd6f2",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/baseline-install.txt",
+      "pr_head_blob": "7fab4aa89dfc91c3e2e15fe2482b31abb78aa18a",
+      "remote_main_blob": "7fab4aa89dfc91c3e2e15fe2482b31abb78aa18a",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/baseline-tree.json",
+      "pr_head_blob": "3202ed770efca665b3f46f291f036551650b843c",
+      "remote_main_blob": "3202ed770efca665b3f46f291f036551650b843c",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/build.txt",
+      "pr_head_blob": "bb9b3520fb7d372ff295ad29de2d5041775c2694",
+      "remote_main_blob": "bb9b3520fb7d372ff295ad29de2d5041775c2694",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/focused-application-tests-summary.txt",
+      "pr_head_blob": "59c5beb7fd8898ce63a05561d466eee4ef775937",
+      "remote_main_blob": "59c5beb7fd8898ce63a05561d466eee4ef775937",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/focused-application-tests.txt.gz",
+      "pr_head_blob": "80b66b9ecf69777120c0e7cbfa41be7dcf016ca5",
+      "remote_main_blob": "80b66b9ecf69777120c0e7cbfa41be7dcf016ca5",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/focused-source-map-tests-initial-harness-error.txt",
+      "pr_head_blob": "e7082512993611046ce012aa920dd1673f8b9f51",
+      "remote_main_blob": "e7082512993611046ce012aa920dd1673f8b9f51",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/focused-source-map-tests.txt",
+      "pr_head_blob": "8ccda3092f2327e9bd55e18a1c48cf201dd0ca89",
+      "remote_main_blob": "8ccda3092f2327e9bd55e18a1c48cf201dd0ca89",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/frontend-smoke.json",
+      "pr_head_blob": "bde15dc66ce3ab37018d93de62a8b06cc52ff8c6",
+      "remote_main_blob": "bde15dc66ce3ab37018d93de62a8b06cc52ff8c6",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/full-guarded-tests-summary.txt",
+      "pr_head_blob": "03490b07340fb8878eaadb05f3da42528b04d9c3",
+      "remote_main_blob": "03490b07340fb8878eaadb05f3da42528b04d9c3",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/full-guarded-tests.txt.gz",
+      "pr_head_blob": "800afcbce2fdc0610f09d006f778b243d25e87cb",
+      "remote_main_blob": "800afcbce2fdc0610f09d006f778b243d25e87cb",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/lockfile-change.json",
+      "pr_head_blob": "2aec0d5663961fbff547e807198075074988ce5c",
+      "remote_main_blob": "2aec0d5663961fbff547e807198075074988ce5c",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/remediated-audit.json",
+      "pr_head_blob": "9249aecdc7871a38d683b16a30b2d7af41551035",
+      "remote_main_blob": "9249aecdc7871a38d683b16a30b2d7af41551035",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/remediated-audit.txt",
+      "pr_head_blob": "2ad859e7bf981545269a405dc9bc1fe85b39544c",
+      "remote_main_blob": "2ad859e7bf981545269a405dc9bc1fe85b39544c",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/remediated-install.txt",
+      "pr_head_blob": "0c66439e27209864f9efd1e334914de270410e13",
+      "remote_main_blob": "0c66439e27209864f9efd1e334914de270410e13",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/remediated-tree.json",
+      "pr_head_blob": "223514db432ee984f01159358885aec497f0171e",
+      "remote_main_blob": "223514db432ee984f01159358885aec497f0171e",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/router-v6-versions.json",
+      "pr_head_blob": "00a8b2db356a882a8553c330f0ea0559457b775a",
+      "remote_main_blob": "00a8b2db356a882a8553c330f0ea0559457b775a",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/runtime-audit.json",
+      "pr_head_blob": "9249aecdc7871a38d683b16a30b2d7af41551035",
+      "remote_main_blob": "9249aecdc7871a38d683b16a30b2d7af41551035",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/source-map-regression.test.mjs",
+      "pr_head_blob": "b4ec895fa6e33eac8056e87efae730d2867428e4",
+      "remote_main_blob": "b4ec895fa6e33eac8056e87efae730d2867428e4",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/source-map-upstream-patch.json",
+      "pr_head_blob": "8f05427e1b1590c551872a31937d1e9fc1a1f8ed",
+      "remote_main_blob": "8f05427e1b1590c551872a31937d1e9fc1a1f8ed",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/typecheck.txt",
+      "pr_head_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "remote_main_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical": true
+    },
+    {
+      "path": "evidence/dependency-security/2026-10-19/verification.json",
+      "pr_head_blob": "2e21c6189df9f412bc058e524cb704f54f4b95ab",
+      "remote_main_blob": "2e21c6189df9f412bc058e524cb704f54f4b95ab",
+      "identical": true
+    },
+    {
+      "path": "evidence/np04/IIPS_v3.0_IPD_IRR_CAPABILITY_INVENTORY_AND_TRACKER_RECONCILIATION_2026-10-17.md",
+      "pr_head_blob": "0febab93564c47ed1b34502726aa5cf200521732",
+      "remote_main_blob": "0febab93564c47ed1b34502726aa5cf200521732",
+      "identical": true
+    },
+    {
+      "path": "package-lock.json",
+      "pr_head_blob": "98ae3c63f403d88b5b13afbc9d9c32676b4716fe",
+      "remote_main_blob": "98ae3c63f403d88b5b13afbc9d9c32676b4716fe",
+      "identical": true
+    }
+  ],
+  "unchanged_from_baseline": [
+    "package.json",
+    "src/**",
+    "tests/**",
+    "frontend/**",
+    ".github/**",
+    "evidence/operator_drop/d05_security_master_broad_universe.json",
+    "evidence/operator_drop/d05_security_master_manifest.json"
+  ],
+  "tracker_remote_api_blob": "0febab93564c47ed1b34502726aa5cf200521732",
+  "post_merge_local_verification": {
+    "head": "fc67340fce44a0cb21bf75cfaf1c5bf5b57ca9d2",
+    "npm_ci_exit": 0,
+    "audit_json_exit": 1,
+    "audit_text_exit": 1,
+    "source_map_tests": "7/7 pass",
+    "audit_counts": {
+      "info": 0,
+      "low": 0,
+      "moderate": 2,
+      "high": 0,
+      "critical": 0,
+      "total": 2
+    }
+  },
+  "dependency_sha256": {
+    "package.json": "f43a6ff1d7d214b5e1ccb3be95a97a1c9a3caff20af6bebe3ab11201ec86be9a",
+    "package-lock.json": "c77775af60ad24bbbd55df024bb92cbcf0f8b3c2bf14f938a5910d2264b216eb"
+  }
+}

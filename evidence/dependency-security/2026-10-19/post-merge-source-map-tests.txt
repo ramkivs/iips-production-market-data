@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: patched consumer rejects enormous section line offsets before mapping expansion
+ok 1 - patched consumer rejects enormous section line offsets before mapping expansion
+  ---
+  duration_ms: 1.207681
+  type: 'test'
+  ...
+# Subtest: patched consumer rejects malformed line and column offsets
+ok 2 - patched consumer rejects malformed line and column offsets
+  ---
+  duration_ms: 0.56938
+  type: 'test'
+  ...
+# Subtest: nested indexed offsets cannot bypass the cumulative line bound
+ok 3 - nested indexed offsets cannot bypass the cumulative line bound
+  ---
+  duration_ms: 0.831024
+  type: 'test'
+  ...
+# Subtest: ordinary indexed source maps retain correct positions
+ok 4 - ordinary indexed source maps retain correct positions
+  ---
+  duration_ms: 0.937346
+  type: 'test'
+  ...
+# Subtest: source node safely handles a valid offset past the end of generated code
+ok 5 - source node safely handles a valid offset past the end of generated code
+  ---
+  duration_ms: 0.634865
+  type: 'test'
+  ...
+# Subtest: source map generator preserves line-gap serialization
+ok 6 - source map generator preserves line-gap serialization
+  ---
+  duration_ms: 0.482049
+  type: 'test'
+  ...
+# Subtest: PostCSS consumes previous maps and produces usable CSS/source-map output
+ok 7 - PostCSS consumes previous maps and produces usable CSS/source-map output
+  ---
+  duration_ms: 1.971187
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 91.306961
