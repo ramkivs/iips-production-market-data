@@ -1,0 +1,67 @@
+TAP version 13
+# Subtest: patched consumer rejects enormous section line offsets before mapping expansion
+ok 1 - patched consumer rejects enormous section line offsets before mapping expansion
+  ---
+  duration_ms: 1.281371
+  type: 'test'
+  ...
+# Subtest: patched consumer rejects malformed line and column offsets
+not ok 2 - patched consumer rejects malformed line and column offsets
+  ---
+  duration_ms: 1.404126
+  type: 'test'
+  location: '/home/user/iips-production-market-data/evidence/dependency-security/2026-10-19/source-map-regression.test.mjs:19:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected exception.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///home/user/iips-production-market-data/evidence/dependency-security/2026-10-19/source-map-regression.test.mjs:22:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: nested indexed offsets cannot bypass the cumulative line bound
+ok 3 - nested indexed offsets cannot bypass the cumulative line bound
+  ---
+  duration_ms: 0.189184
+  type: 'test'
+  ...
+# Subtest: ordinary indexed source maps retain correct positions
+ok 4 - ordinary indexed source maps retain correct positions
+  ---
+  duration_ms: 0.898774
+  type: 'test'
+  ...
+# Subtest: source node safely handles a valid offset past the end of generated code
+ok 5 - source node safely handles a valid offset past the end of generated code
+  ---
+  duration_ms: 0.728547
+  type: 'test'
+  ...
+# Subtest: source map generator preserves line-gap serialization
+ok 6 - source map generator preserves line-gap serialization
+  ---
+  duration_ms: 0.653436
+  type: 'test'
+  ...
+# Subtest: PostCSS consumes previous maps and produces usable CSS/source-map output
+ok 7 - PostCSS consumes previous maps and produces usable CSS/source-map output
+  ---
+  duration_ms: 1.859759
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 6
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 114.345526

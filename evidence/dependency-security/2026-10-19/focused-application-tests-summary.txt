@@ -1,0 +1,10 @@
+# tests 319
+# suites 43
+# pass 319
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7235.978262
+Complete original output: focused-application-tests.txt.gz
+Uncompressed SHA256: c1ba91a0092bedc8e8fb30eefc55a4dfc691597b5353726bf907fc01d75fc1a7

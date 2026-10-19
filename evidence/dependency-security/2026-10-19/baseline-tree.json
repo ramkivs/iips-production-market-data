@@ -1,0 +1,279 @@
+{
+  "version": "1.0.0",
+  "name": "iips-production-market-data",
+  "dependencies": {
+    "@types/node": {
+      "version": "22.20.4",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-22.20.4.tgz",
+      "overridden": false,
+      "dependencies": {
+        "undici-types": {
+          "version": "6.21.0",
+          "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz",
+          "overridden": false
+        }
+      }
+    },
+    "@types/react-dom": {
+      "version": "18.3.7",
+      "resolved": "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.7.tgz",
+      "overridden": false,
+      "dependencies": {
+        "@types/react": {
+          "version": "18.3.31"
+        }
+      }
+    },
+    "@types/react": {
+      "version": "18.3.31",
+      "resolved": "https://registry.npmjs.org/@types/react/-/react-18.3.31.tgz",
+      "overridden": false,
+      "dependencies": {
+        "@types/prop-types": {
+          "version": "15.7.15",
+          "resolved": "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.15.tgz",
+          "overridden": false
+        },
+        "csstype": {
+          "version": "3.2.3",
+          "resolved": "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz",
+          "overridden": false
+        }
+      }
+    },
+    "@vitejs/plugin-react": {
+      "version": "6.1.1",
+      "resolved": "https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-6.1.1.tgz",
+      "overridden": false,
+      "dependencies": {
+        "@rolldown/plugin-babel": {},
+        "@rolldown/pluginutils": {
+          "version": "1.0.1",
+          "resolved": "https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.1.tgz",
+          "overridden": false
+        },
+        "babel-plugin-react-compiler": {},
+        "oxc-transform-react": {},
+        "vite": {
+          "version": "8.3.0"
+        }
+      }
+    },
+    "react-dom": {
+      "version": "18.3.1",
+      "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-18.3.1.tgz",
+      "overridden": false,
+      "dependencies": {
+        "loose-envify": {
+          "version": "1.4.0",
+          "resolved": "https://registry.npmjs.org/loose-envify/-/loose-envify-1.4.0.tgz",
+          "overridden": false,
+          "dependencies": {
+            "js-tokens": {
+              "version": "4.0.0",
+              "resolved": "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz",
+              "overridden": false
+            }
+          }
+        },
+        "react": {
+          "version": "18.3.1"
+        },
+        "scheduler": {
+          "version": "0.23.2",
+          "resolved": "https://registry.npmjs.org/scheduler/-/scheduler-0.23.2.tgz",
+          "overridden": false,
+          "dependencies": {
+            "loose-envify": {
+              "version": "1.4.0"
+            }
+          }
+        }
+      }
+    },
+    "react-router-dom": {
+      "version": "6.30.6",
+      "resolved": "https://registry.npmjs.org/react-router-dom/-/react-router-dom-6.30.6.tgz",
+      "overridden": false,
+      "dependencies": {
+        "@remix-run/router": {
+          "version": "1.23.4",
+          "resolved": "https://registry.npmjs.org/@remix-run/router/-/router-1.23.4.tgz",
+          "overridden": false
+        },
+        "react-dom": {
+          "version": "18.3.1"
+        },
+        "react-router": {
+          "version": "6.30.6",
+          "resolved": "https://registry.npmjs.org/react-router/-/react-router-6.30.6.tgz",
+          "overridden": false,
+          "dependencies": {
+            "@remix-run/router": {
+              "version": "1.23.4"
+            },
+            "react": {
+              "version": "18.3.1"
+            }
+          }
+        },
+        "react": {
+          "version": "18.3.1"
+        }
+      }
+    },
+    "react": {
+      "version": "18.3.1",
+      "resolved": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+      "overridden": false,
+      "dependencies": {
+        "loose-envify": {
+          "version": "1.4.0"
+        }
+      }
+    },
+    "typescript": {
+      "version": "5.9.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+      "overridden": false
+    },
+    "vite": {
+      "version": "8.3.0",
+      "resolved": "https://registry.npmjs.org/vite/-/vite-8.3.0.tgz",
+      "overridden": false,
+      "dependencies": {
+        "@types/node": {
+          "version": "22.20.4"
+        },
+        "@vitejs/devtools": {},
+        "esbuild": {},
+        "fsevents": {},
+        "jiti": {},
+        "less": {},
+        "lightningcss": {
+          "version": "1.33.0",
+          "resolved": "https://registry.npmjs.org/lightningcss/-/lightningcss-1.33.0.tgz",
+          "overridden": false,
+          "dependencies": {
+            "detect-libc": {
+              "version": "2.1.2",
+              "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+              "overridden": false
+            },
+            "lightningcss-android-arm64": {},
+            "lightningcss-darwin-arm64": {},
+            "lightningcss-darwin-x64": {},
+            "lightningcss-freebsd-x64": {},
+            "lightningcss-linux-arm-gnueabihf": {},
+            "lightningcss-linux-arm64-gnu": {},
+            "lightningcss-linux-arm64-musl": {},
+            "lightningcss-linux-x64-gnu": {
+              "version": "1.33.0",
+              "resolved": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.33.0.tgz",
+              "overridden": false
+            },
+            "lightningcss-linux-x64-musl": {
+              "version": "1.33.0",
+              "resolved": "https://registry.npmjs.org/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.33.0.tgz",
+              "overridden": false
+            },
+            "lightningcss-win32-arm64-msvc": {},
+            "lightningcss-win32-x64-msvc": {}
+          }
+        },
+        "picomatch": {
+          "version": "4.0.7",
+          "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz",
+          "overridden": false
+        },
+        "postcss": {
+          "version": "8.5.28",
+          "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.28.tgz",
+          "overridden": false,
+          "dependencies": {
+            "nanoid": {
+              "version": "3.3.19",
+              "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.19.tgz",
+              "overridden": false
+            },
+            "picocolors": {
+              "version": "1.1.1",
+              "resolved": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
+              "overridden": false
+            },
+            "source-map-js": {
+              "version": "1.2.1",
+              "resolved": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz",
+              "overridden": false
+            }
+          }
+        },
+        "rolldown": {
+          "version": "1.2.9",
+          "resolved": "https://registry.npmjs.org/rolldown/-/rolldown-1.2.9.tgz",
+          "overridden": false,
+          "dependencies": {
+            "@oxc-project/types": {
+              "version": "0.150.0",
+              "resolved": "https://registry.npmjs.org/@oxc-project/types/-/types-0.150.0.tgz",
+              "overridden": false
+            },
+            "@rolldown/binding-android-arm-eabi": {},
+            "@rolldown/binding-android-arm64": {},
+            "@rolldown/binding-darwin-arm64": {},
+            "@rolldown/binding-darwin-x64": {},
+            "@rolldown/binding-freebsd-x64": {},
+            "@rolldown/binding-linux-arm-gnueabihf": {},
+            "@rolldown/binding-linux-arm64-gnu": {},
+            "@rolldown/binding-linux-arm64-musl": {},
+            "@rolldown/binding-linux-ppc64-gnu": {},
+            "@rolldown/binding-linux-s390x-gnu": {},
+            "@rolldown/binding-linux-x64-gnu": {
+              "version": "1.2.9",
+              "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.2.9.tgz",
+              "overridden": false
+            },
+            "@rolldown/binding-linux-x64-musl": {
+              "version": "1.2.9",
+              "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-x64-musl/-/binding-linux-x64-musl-1.2.9.tgz",
+              "overridden": false
+            },
+            "@rolldown/binding-openharmony-arm64": {},
+            "@rolldown/binding-win32-arm64-msvc": {},
+            "@rolldown/binding-win32-x64-msvc": {},
+            "@rolldown/pluginutils": {
+              "version": "1.0.1"
+            }
+          }
+        },
+        "sass-embedded": {},
+        "sass": {},
+        "stylus": {},
+        "sugarss": {},
+        "terser": {},
+        "tinyglobby": {
+          "version": "0.2.17",
+          "resolved": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.17.tgz",
+          "overridden": false,
+          "dependencies": {
+            "fdir": {
+              "version": "6.5.0",
+              "resolved": "https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz",
+              "overridden": false,
+              "dependencies": {
+                "picomatch": {
+                  "version": "4.0.7"
+                }
+              }
+            },
+            "picomatch": {
+              "version": "4.0.7"
+            }
+          }
+        },
+        "tsx": {},
+        "yaml": {}
+      }
+    }
+  }
+}
