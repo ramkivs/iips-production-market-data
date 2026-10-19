@@ -442,6 +442,19 @@ Single-user personal-use scope unchanged; no auth/RBAC/persistence/service/API a
 
 ### A1.4 Publication and remote verification of the implementation
 
-**PENDING — recorded after merge by a follow-up additive commit.** This addendum does not claim the implementation is merged or remotely verified until that record exists on `main`.
+Recorded after merge from authoritative remote reads (`git ls-remote`, GitHub checks API, `git show origin/main:<path>`):
+
+| Check | Result |
+|---|---|
+| Implementation PR | **#28** `fix(d05): evidence-based Security Master provenance, descriptor & temporal semantics (C1–C7, B1–B4)` — head `4491ad272ece2c4f05397765c06360a1fbbf623a`, base `main@77f8432` |
+| PR CI | run `39301865120` `typecheck · build · test` **SUCCESS**; `executed test count` **SUCCESS — 577 tests executed, 577 passed, 0 failed** |
+| Merge | **MERGED** 2026-10-19T18:22:50Z (merge commit, no history rewrite, no check bypass) → `main` = `bdc3caa9172eb8957efd07c06f09db0718d36e17` (parents `77f8432` + `4491ad2`) |
+| Post-merge `main` CI | run `39302286871` (push, `bdc3caa`) **SUCCESS**; `executed test count` **577 / 577, 0 failed** |
+| Merged files on `main` | All 12 changed paths present on `bdc3caa` with blobs identical to PR head `4491ad2` (resolver `b570f273…`, UI08 builder `895d5a27…`, `security_master.ts` `60030e0c…`, `governed_fixture_master.ts` `7dac59a8…`, `types.ts` `47a40c7f…`, `SecurityMasterSurface.tsx` `072dc58b…`, SMI suite `85a3d93e…`, CHAR suite `a45eb7ad…`, P12 `97770a64…`, SM `d5c87d84…`, implementation act `f2fa7341…`, this tracker `60826937…`) |
+| Resolver on `main` | `'REAL'` literal occurrences in `src/transports/object_resolver.ts`: **0** |
+| D05 governed data on `main` | `git diff 77f8432 bdc3caa -- src/identity/d05_broad_universe_data.ts evidence/operator_drop/` → **empty**; deposited JSON SHA-256 `7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5` (= manifest) |
+| IRR | No write performed; IRR `main` read-only reference `ad008e45…` |
+
+**Status after verification:** B1, B2, B3 (disclosure semantics) — **completed and remotely verified on `main@bdc3caa`**. B4 and per-record origin classification — **unresolved, authoritative evidence insufficient**. Historical descriptor versioning — **not authorized / not implemented**. CV-22 — **unchanged, Option C**. This A1.4 entry is itself published by a follow-up documentation PR; its presence on `main` is verified by the post-merge read reported in that PR's closure.
 
 *End of inventory.*
