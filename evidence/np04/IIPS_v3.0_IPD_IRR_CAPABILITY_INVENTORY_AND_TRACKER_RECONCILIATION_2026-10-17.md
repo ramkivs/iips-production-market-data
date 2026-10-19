@@ -558,3 +558,18 @@ Dossier: [`evidence/dependency-security/2026-10-19/README.md`](../dependency-sec
 This entry is published with the lockfile correction through the normal IPD PR workflow on `arena/7b2e212f-iips-production-market-data`. Commit, exact-head CI, merge, post-merge CI and remote file/blob/tracker verification will be recorded additively **after** they complete. No future check result or clean-audit status is inferred here.
 
 *End of addendum A3 (initial audit record).*
+
+### A3.4 Completed implementation publication and remote verification — 2026-10-19
+
+| Check | Verified result |
+|---|---|
+| Implementation commit / PR | `8499ab3c963944aec7f74b2d3872c1ade9a0839d`; [IPD PR #32](https://github.com/ramkivs/iips-production-market-data/pull/32) |
+| PR CI | [run `39313285152`](https://github.com/ramkivs/iips-production-market-data/actions/runs/39313285152) **SUCCESS**; exact-head executed-test-count check `118268435200`: **584/584, 0 failed** |
+| Normal merge | **MERGED** 2026-10-19T19:43:58Z → `main@fc67340fce44a0cb21bf75cfaf1c5bf5b57ca9d2`; `MERGEABLE` / `CLEAN` with both checks successful before merge; no bypass/history rewrite |
+| Post-merge main CI | [run `39313422498`](https://github.com/ramkivs/iips-production-market-data/actions/runs/39313422498) **SUCCESS**; exact-merge executed-test-count check `118268887625`: **584/584, 0 failed**; install/typecheck/build/guarded tests all successful |
+| Authoritative remote verification | `git fetch origin main` and `git ls-remote origin refs/heads/main` both returned `fc67340fce44a0cb21bf75cfaf1c5bf5b57ca9d2` |
+| Merged files / tracker | All **29 changed paths** blob-identical to verified PR head, including lockfile and tracker. GitHub contents API independently confirms remote tracker blob `0febab93564c47ed1b34502726aa5cf200521732`. Full evidence in `evidence/dependency-security/2026-10-19/post-merge-verification.json`. |
+| Repeat against implementation merge | Same session branch fast-forwarded to merge; clean `npm ci` **exit 0**, focused source-map/PostCSS **7/7 pass**; complete post-merge machine/human audits **exit 1**, **2 moderate / 0 high / 0 critical** |
+| Preserved integrity | Diff from initial `a5c3069` remains empty for application source/tests/frontend/CI and D05 deposit/mirror/manifest. No IRR access or writes; CV-22 Option C / 13-row consumer behavior unchanged. |
+
+**Reconciled status:** high source-map-js advisory **REMEDIATED**; moderate Router advisories **UNRESOLVED INSTALLED VULNERABILITIES** (no compatible v6 patch), with reachability limitations recorded in A3.1. No unrelated tracker status changes. This A3.4 post-merge evidence entry is itself published through the same normal IPD follow-up documentation workflow; its final remote-main presence and CI are verified in the completion report, rather than asserting a future self-referential merge result.

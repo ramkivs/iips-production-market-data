@@ -69,3 +69,16 @@ Branch-protection details endpoint returned `403 Resource not accessible by inte
 ## Boundaries
 
 All writes remain within IPD; **no IRR access or writes occurred**. No authentication, RBAC implementation, multi-user capability, PostgreSQL, persistence, enterprise deployment, provider or service was added. Application remains single-user, strictly personal-use, with its existing non-production boundaries. Security Master corrections and D05 source/manifest are preserved. CV-22 Option C, existing 13-row IRR behavior and consumer integration scope are untouched. Passing tests and CI do **not** imply the remaining moderate vulnerabilities are fixed.
+
+## Verified implementation publication — completed 2026-10-19
+
+- Implementation commit: `8499ab3c963944aec7f74b2d3872c1ade9a0839d`.
+- [PR #32](https://github.com/ramkivs/iips-production-market-data/pull/32), normal merge at **2026-10-19T19:43:58Z** → authoritative `main@fc67340fce44a0cb21bf75cfaf1c5bf5b57ca9d2`. Mergeability was `MERGEABLE` / `CLEAN`, both checks successful, no outstanding review decision; no bypass or history rewrite.
+- PR [CI run 39313285152](https://github.com/ramkivs/iips-production-market-data/actions/runs/39313285152): **success**; exact-head executed-test-count check **118268435200**, **584 passed / 0 failed**.
+- Post-merge [CI run 39313422498](https://github.com/ramkivs/iips-production-market-data/actions/runs/39313422498): **success**; exact-merge executed-test-count check **118268887625**, **584 passed / 0 failed**. Includes locked install, typecheck, full build and guarded tests.
+- `git fetch origin main` and `git ls-remote origin refs/heads/main` both verified the implementation merge SHA. All **29 changed paths** are Git-blob-identical to verified PR head, including both dependency files and the tracker. The GitHub contents API independently returned tracker blob `0febab93564c47ed1b34502726aa5cf200521732` on remote main.
+- Source, tests, frontend, CI, D05 corpus, generated mirror and manifest remain byte-identical to initial `main@a5c3069`. Full changed-path and check-run evidence: `post-merge-verification.json`.
+- Fast-forwarded **the same session branch** to the verified merge (no branch switch) and repeated clean `npm ci`, audit in both formats, and focused package checks. Install exit 0; **7/7** package checks pass; audit still exits **1**, **2 moderate / 0 high / 0 critical**. Complete files: `post-merge-install.txt`, `post-merge-audit.json`, `post-merge-audit.txt`, `post-merge-source-map-tests.txt`.
+- This post-merge record and tracker A3.4 are documentation/evidence-only follow-up publication. The final follow-up merge/ref/CI and remote tracker presence will be verified and reported at completion; this record does not claim to contain its own future merge SHA.
+
+**Final security disposition: high advisory remediated; both moderate Router advisories remain recorded, with no compatible published v6 fix.**
