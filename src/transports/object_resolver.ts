@@ -26,7 +26,7 @@ export interface ResolvedSecurityObject {
     tickSize: number;
   }>;
   faceValue: number;
-  currency: 'INR';
+  currency: 'INR' | 'USD';
   provenance: ExecutiveProvenance;
 }
 
@@ -65,6 +65,12 @@ export class ObjectResolverService {
       replayConstraintApplied: false,
     };
 
+    const faceValue =
+      typeof entity.faceValue === 'number' && Number.isFinite(entity.faceValue) && entity.faceValue > 0
+        ? entity.faceValue
+        : 1;
+    const currency: 'INR' | 'USD' = entity.currency === 'USD' ? 'USD' : 'INR';
+
     return {
       companyId: entity.companyId,
       isin: entity.isin,
@@ -80,8 +86,8 @@ export class ObjectResolverService {
         lotSize: l.lotSize,
         tickSize: l.tickSize,
       })),
-      faceValue: 1, // Base standard face value
-      currency: 'INR',
+      faceValue,
+      currency,
       provenance,
     };
   }

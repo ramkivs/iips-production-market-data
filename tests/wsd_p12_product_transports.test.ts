@@ -7,12 +7,15 @@
 
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 import {
   EngineApiAdapter,
   ScreenerService,
   ObjectResolverService,
   SecurityMaster,
+  getGovernedBroadSecurityMaster,
   MarketQuotePayload,
   StandardizedFinancialStatement,
   FinancialRatioMetrics,
@@ -203,5 +206,63 @@ describe('WS-D / P12 Product Transport APIs & Typed Client DTOs', () => {
     assert.strictEqual(resolved.sector, 'Technology');
     assert.strictEqual(resolved.listings.length, 2);
     assert.strictEqual(resolved.provenance.sourceClassification, 'REAL');
+
+    // Verify faithful mapping of faceValue and currency from governed D05 broad universe records
+    const broadResolver = new ObjectResolverService(getGovernedBroadSecurityMaster());
+    const reliance = broadResolver.resolveObject({
+      identifierType: 'NSE_SYMBOL',
+      identifierValue: 'RELIANCE',
+    });
+    assert.strictEqual(reliance.companyId, 'EQ_RELIANCE_IN');
+    assert.strictEqual(reliance.isin, 'INE002A01018');
+    assert.strictEqual(reliance.faceValue, 10);
+    assert.strictEqual(reliance.currency, 'INR');
+
+    const infyBroad = broadResolver.resolveObject({
+      identifierType: 'NSE_SYMBOL',
+      identifierValue: 'INFY',
+    });
+    assert.strictEqual(infyBroad.companyId, 'EQ_INFY_IN');
+    assert.strictEqual(infyBroad.faceValue, 5);
+    assert.strictEqual(infyBroad.currency, 'INR');
+
+    const axisBroad = broadResolver.resolveObject({
+      identifierType: 'NSE_SYMBOL',
+      identifierValue: 'AXISBANK',
+    });
+    assert.strictEqual(axisBroad.companyId, 'EQ_AXISBANK_IN');
+    assert.strictEqual(axisBroad.faceValue, 2);
+    assert.strictEqual(axisBroad.currency, 'INR');
+
+    const tcsBroad = broadResolver.resolveObject({
+      identifierType: 'NSE_SYMBOL',
+      identifierValue: 'TCS',
+    });
+    assert.strictEqual(tcsBroad.companyId, 'EQ_TCS_IN');
+    assert.strictEqual(tcsBroad.faceValue, 1);
+    assert.strictEqual(tcsBroad.currency, 'INR');
+
+    // Verify faithful mapping from D05 fixtures (tests/fixtures/d05_fixtures.json)
+    const d05Fixtures = JSON.parse(
+      fs.readFileSync(path.resolve('tests/fixtures/d05_fixtures.json'), 'utf8')
+    );
+    const fixtureSm = new SecurityMaster();
+    for (const inst of d05Fixtures.validInstruments) {
+      fixtureSm.registerEntity(inst);
+    }
+    const fixtureResolver = new ObjectResolverService(fixtureSm);
+    const fixtureInfy = fixtureResolver.resolveObject({
+      identifierType: 'NSE_SYMBOL',
+      identifierValue: 'INFY',
+    });
+    assert.strictEqual(fixtureInfy.faceValue, 5);
+    assert.strictEqual(fixtureInfy.currency, 'INR');
+
+    const fixtureTcs = fixtureResolver.resolveObject({
+      identifierType: 'NSE_SYMBOL',
+      identifierValue: 'TCS',
+    });
+    assert.strictEqual(fixtureTcs.faceValue, 1);
+    assert.strictEqual(fixtureTcs.currency, 'INR');
   });
 });
