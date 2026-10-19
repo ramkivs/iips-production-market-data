@@ -176,6 +176,8 @@ No IRR tracker or record was modified; IPD completion does not depend on any IRR
 
 ## 10. Publication and remote verification
 
-Recorded after merge in tracker addendum A1 (`evidence/np04/IIPS_v3.0_IPD_IRR_CAPABILITY_INVENTORY_AND_TRACKER_RECONCILIATION_2026-10-17.md`, §A1.4) via the standard post-merge remote-evidence reads: implementation PR number and CI, merge commit, post-merge `main` CI with executed-test count, and `git show <main>:<path>` presence of every changed file.
+**Implementation published:** PR **#28** (head `4491ad2`, PR CI run `39301865120` SUCCESS, 577/577) merged 2026-10-19T18:22:50Z → `main@bdc3caa9172eb8957efd07c06f09db0718d36e17`; post-merge `main` CI run `39302286871` SUCCESS, **577/577**; all changed files verified on `main` blob-identical to the PR head; D05 corpus/manifest diff empty. B1/B2/B3 rows in §9 are therefore **completed and remotely verified**.
+
+Full verification table recorded after merge in tracker addendum A1 (`evidence/np04/IIPS_v3.0_IPD_IRR_CAPABILITY_INVENTORY_AND_TRACKER_RECONCILIATION_2026-10-17.md`, §A1.4) via the standard post-merge remote-evidence reads: implementation PR number and CI, merge commit, post-merge `main` CI with executed-test count, and `git show <main>:<path>` presence of every changed file.
 
 *End of implementation act and closure record.*
