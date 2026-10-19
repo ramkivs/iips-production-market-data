@@ -118,6 +118,19 @@ describe('F-3: /security-master routed surface', () => {
     const out = renderAt('/security-master?type=NSE_SYMBOL&value=INFY');
     assert.ok(out.includes('Infosys Limited'), 'company name');
     assert.ok(out.includes('INE009A01021'), 'ISIN from the governed master');
+    assert.ok(out.includes('L85110KA1981PLC013115'), 'CIN from the governed master');
+    assert.ok(
+      out.includes('>Face Value</td><td style="padding:8px">5</td>'),
+      'INFY faceValue must be 5 from governed D05 master, not hard-coded 1'
+    );
+    assert.ok(
+      !out.includes('>Face Value</td><td style="padding:8px">1</td>'),
+      'INFY faceValue must not regress to hard-coded 1'
+    );
+    assert.ok(
+      out.includes('>Currency</td><td style="padding:8px">INR</td>'),
+      'INFY currency must be INR from governed D05 master'
+    );
     assert.ok(out.includes('Lineage Digest'), 'provenance block renders');
     assert.ok(out.includes('REAL'), 'source classification is REAL (governed)');
   });
@@ -254,5 +267,70 @@ describe('F-3: /security-master routed surface', () => {
     for (const id of ['UI05', 'UI06', 'UI07', 'UI09', 'UI10', 'UI12', 'UI13', 'UI14']) {
       assert.ok(!out.includes(id), `the UI08 route must not claim the ${id} surface identity`);
     }
+  });
+
+  it('SM-15: face value and currency faithfully reflect D05 source descriptors for RELIANCE and fixtures', () => {
+    const reliance = renderAt('/security-master?type=NSE_SYMBOL&value=RELIANCE');
+    assert.ok(reliance.includes('EQ_RELIANCE_IN'), 'RELIANCE resolves to EQ_RELIANCE_IN');
+    assert.ok(reliance.includes('Reliance Industries Limited'), 'RELIANCE company name');
+    assert.ok(reliance.includes('INE002A01018'), 'RELIANCE ISIN');
+    assert.ok(reliance.includes('L17110MH1973PLC019786'), 'RELIANCE CIN');
+    assert.ok(
+      reliance.includes('>Face Value</td><td style="padding:8px">10</td>'),
+      'RELIANCE faceValue must be 10 from governed D05 source, not hard-coded 1'
+    );
+    assert.ok(
+      !reliance.includes('>Face Value</td><td style="padding:8px">1</td>'),
+      'RELIANCE faceValue must not be hard-coded as 1'
+    );
+    assert.ok(
+      reliance.includes('>Currency</td><td style="padding:8px">INR</td>'),
+      'RELIANCE currency must be INR from governed D05 source'
+    );
+
+    const axis = renderAt('/security-master?type=NSE_SYMBOL&value=AXISBANK');
+    assert.ok(axis.includes('EQ_AXISBANK_IN'), 'AXISBANK resolves to EQ_AXISBANK_IN');
+    assert.ok(
+      axis.includes('>Face Value</td><td style="padding:8px">2</td>'),
+      'AXISBANK faceValue must be 2 from governed D05 source'
+    );
+    assert.ok(
+      axis.includes('>Currency</td><td style="padding:8px">INR</td>'),
+      'AXISBANK currency must be INR'
+    );
+
+    const tcs = renderAt('/security-master?type=NSE_SYMBOL&value=TCS');
+    assert.ok(tcs.includes('EQ_TCS_IN'), 'TCS resolves to EQ_TCS_IN');
+    assert.ok(
+      tcs.includes('>Face Value</td><td style="padding:8px">1</td>'),
+      'TCS faceValue must be 1 from governed D05 source'
+    );
+    assert.ok(
+      tcs.includes('>Currency</td><td style="padding:8px">INR</td>'),
+      'TCS currency must be INR'
+    );
+
+    // Controlled D05-supported USD fixture proves currency is mapped from source rather than hard-coded as INR
+    const usdMaster = new SecurityMaster();
+    usdMaster.registerEntity({
+      companyId: 'EQ_USD_FIXTURE_IN',
+      isin: 'INE999A01018',
+      companyName: 'USD Denominated Fixture Limited',
+      industry: 'IT Services',
+      sector: 'IT',
+      faceValue: 10,
+      currency: 'USD',
+      effectiveFrom: '2020-01-01T00:00:00.000Z',
+      listings: [{ exchange: 'NSE', symbol: 'USDFIX', status: 'ACTIVE', lotSize: 1, tickSize: 0.05 }],
+    });
+    const usdOut = renderSurface({ securityMaster: usdMaster }, '/security-master?type=NSE_SYMBOL&value=USDFIX');
+    assert.ok(
+      usdOut.includes('>Face Value</td><td style="padding:8px">10</td>'),
+      'USD fixture faceValue must be 10 from source descriptor'
+    );
+    assert.ok(
+      usdOut.includes('>Currency</td><td style="padding:8px">USD</td>'),
+      'USD fixture currency must be mapped as USD from source descriptor, not hard-coded INR'
+    );
   });
 });
