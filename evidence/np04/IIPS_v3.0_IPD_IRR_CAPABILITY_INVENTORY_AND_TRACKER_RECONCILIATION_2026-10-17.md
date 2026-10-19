@@ -458,3 +458,61 @@ Recorded after merge from authoritative remote reads (`git ls-remote`, GitHub ch
 **Status after verification:** B1, B2, B3 (disclosure semantics) — **completed and remotely verified on `main@bdc3caa`**. B4 and per-record origin classification — **unresolved, authoritative evidence insufficient**. Historical descriptor versioning — **not authorized / not implemented**. CV-22 — **unchanged, Option C**. This A1.4 entry is itself published by a follow-up documentation PR; its presence on `main` is verified by the post-merge read reported in that PR's closure.
 
 *End of inventory.*
+
+---
+
+## ADDENDUM A2 — 2026-10-19: AIIL identity reconciliation and provenance/quality follow-up
+
+> Additive follow-up to A1.2/A1.4. Those sections remain an accurate record of the earlier implementation state, when B4 had not yet been supported by exchange filings. This addendum records the subsequent evidence-backed runtime correction and Workstream B audit. No unrelated capability-row status is re-graded.
+
+### A2.1 Follow-up evidence and decision
+
+| Field | Result |
+|---|---|
+| Initial remote baseline | `origin/main` and `git ls-remote` both verified at `29b8351873866eeaafd9b22616458cb60af12e50` before investigation (PR #29). |
+| External evidence dossier | `evidence/cross-repository/IIPS_V3_IPD_AIIL_IDENTITY_AND_PROVENANCE_FOLLOWUP_2026-10-19.md`; BSE-hosted issuer/exchange filings and current BSE security details are linked there. |
+| AIIL source history | Original wrong association entered with the D05 deposit at `407d9c7`; no independent `RULING_3` decision record or linked listing-history evidence exists in the fetched IPD history. |
+| Identity finding | BSE `543989` identifies Sai Silks (Kalamandir), ISIN `INE438K01021`; BSE/issuer records pair Authum ISIN `INE206F01022` with BSE `539177`. The prior “543989 current / 539177 historical” assertion is unsupported and the `543989`→Authum runtime association is incorrect. |
+| Runtime correction | PR #30 adds `IPD-AIIL-BSE-SCRIP-CORRECTION-2026-10-19-001`: runtime Authum projection keeps `539177`, excludes `543989`, and fails closed for the Sai Silks code/ISIN/symbol because Sai Silks is not in D05. |
+| D05 source | Deposited JSON, generated TS mirror and manifest remain unchanged and byte-identical. No extra issuer, new manifest/checksum, listing-specific date, or `effectiveTo` was added. |
+| `539177` end date | No authoritative `effectiveTo`/cessation date established. The latest BSE filing reviewed (2026-10-10) still uses `539177`/`AIIL`; no end date is inferred. Exact original BSE listing date remains unknown; evidence establishes the code/issuer relationship by the FY 2015–16 BSE annual report. |
+| Ruling semantics | No standalone governing `RULING_3` text was found. The as-deposited manifest label is retained as historical metadata, not treated as an authoritative ruling. |
+
+### A2.2 Follow-up findings register
+
+| Finding | Capability area | Current disposition | Evidence / note |
+|---|---|---|---|
+| **B4 — AIIL scrip association** | Row 6 / D05 identity | **Runtime mapping corrected; listing-date semantics partially unresolved** | PR #30 runtime overlay excludes `543989` from Authum. `539177` remains and is not described as historical. No unsupported listing start/end date was introduced. Source D05 and manifest are preserved. |
+| **C1/C2/C3 — remaining `REAL` assertions** | Lineage, UI view models and broker provenance | **Corrected in audited paths** | `lineage_verifier`, UI07/UI09, and broker-import/portfolio hash metadata no longer stamp unsupported `REAL`; the `REAL` type member remains available for future evidence-backed use. |
+| **Quality and missing-value assertions** | UI06/UI07/UI09/UI10/UI13, transport, envelope, D03 comparison inputs, portfolio import | **Corrected in scoped paths** | Good is derived/rolled up, or omitted quality fails to `UNAVAILABLE`; UI09 missing comparison values remain null/partial, UI07 missing factors do not become `1.0`, and empty UI paths do not assert `GOOD`. Other validation/freshness-derived `GOOD` controls are retained. |
+| Per-record real-market classification / eligibility roster | Row 6 / C2/C7 | **Unresolved — authoritative per-record evidence still insufficient** | This follow-up does not create an origin roster or consumer-admission decision. |
+| `CV-22` (IRR) | Rows 34/35 | **Unchanged — OPTION C: DEFER EXPANSION PENDING DEFINED PREREQUISITES** | No IRR write. Existing 13-row governed sector-reference behavior and `404 governed-row-not-found` remain unchanged. |
+
+### A2.3 Validation and preserved boundaries
+
+| Check | Result |
+|---|---|
+| Focused Workstreams A–C regressions | **164/164 passed** |
+| Full guarded test suite | **584/584 passed, 0 failed across 90 suites** |
+| Typecheck | `npx tsc --noEmit` — **0 errors** |
+| Build | `npm run build` (TypeScript + Vite) — **SUCCESS**; existing Vite >500 kB chunk advisory only |
+| Frontend checks | Vite production bundle, shell security-master/UI06 route, P13 view-model and portfolio UI tests passed |
+| D05 corpus/manifest | JSON, TS mirror and manifest diff from baseline — **empty**; the new mapping overlay is runtime-only |
+| Personal-use architecture | Single-user/session-only behavior preserved; no auth/RBAC/persistence/service/consumer integration added |
+| IRR | **No writes** of any kind |
+
+### A2.4 Publication and remote verification of the implementation
+
+| Check | Result |
+|---|---|
+| Implementation PR | **#30** `fix(ipd): reconcile AIIL identity and provenance quality`, head `2bf4def8567a7c2225a51138d0e7416f0e006b13`, base `main@29b8351` |
+| PR CI | run `39310571312` `typecheck · build · test` **SUCCESS**; executed-test-count check `118258956115` reports **584/584, 0 failed** |
+| Merge | **MERGED** 2026-10-19T19:24:10Z → `main` = `63b8beecc395ada7246c6dbab80fa9a45394c7c2` |
+| Post-merge `main` CI | run `39310683617` **SUCCESS**; executed-test-count check `118259419195` reports **584/584, 0 failed** |
+| Remote `main` ref | `git fetch origin main` and `git ls-remote origin refs/heads/main` both returned `63b8beecc395ada7246c6dbab80fa9a45394c7c2` after merge |
+| Merged files | All 44 changed paths in PR #30 are blob-identical on `main@63b8bee` to PR head `2bf4def` (`git diff --exit-code 2bf4def 63b8bee -- <changed paths>` empty) |
+| D05 source integrity | `git diff 29b8351 63b8bee -- src/identity/d05_broad_universe_data.ts evidence/operator_drop/d05_security_master_broad_universe.json evidence/operator_drop/d05_security_master_manifest.json` — **empty** |
+
+**Tracker reconciliation:** this addendum is additive. Historical A1 findings and all unrelated row statuses are preserved; current B4, Workstream B and boundary statuses are recorded above. The tracker addendum itself is published through the current IPD follow-up documentation workflow; final `main` presence is verified in the completion report.
+
+*End of addendum A2.*
