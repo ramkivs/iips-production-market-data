@@ -57,7 +57,7 @@ describe('D05 Browser Runtime Hydration & Zero-FS Qualification', () => {
     assert.strictEqual(companyIds.includes('EQ_AGI_IN'), true);
   });
 
-  it('HYDRATION-03: AIIL resolves deterministically via NSE symbol, ISIN, and BSE scrips without unmapped error', () => {
+  it('HYDRATION-03: Authum resolves via NSE symbol, ISIN, and BSE 539177; BSE 543989 fails closed', () => {
     const sm = getGovernedBroadSecurityMaster();
 
     // NSE symbol resolution
@@ -78,24 +78,26 @@ describe('D05 Browser Runtime Hydration & Zero-FS Qualification', () => {
       'EQ_AIIL_IN'
     );
 
-    // Current BSE listing (543989)
+    // Evidence-backed Authum BSE code. The inherited entity window is unchanged; no
+    // listing-level historical/current semantics are claimed by this regression guard.
     assert.strictEqual(
       sm.resolveCompanyId({
         identifierType: 'COMPOSITE_TICKER',
-        identifierValue: 'BSE:543989',
+        identifierValue: 'BSE:539177',
         asOf: '2026-09-22T00:00:00.000Z',
       }),
       'EQ_AIIL_IN'
     );
 
-    // Historical BSE listing (539177)
-    assert.strictEqual(
-      sm.resolveCompanyId({
+    // BSE:543989 is Sai Silks (Kalamandir); D05 does not contain that issuer and the
+    // runtime must fail closed rather than conflate it with Authum.
+    assert.throws(
+      () => sm.resolveCompanyId({
         identifierType: 'COMPOSITE_TICKER',
-        identifierValue: 'BSE:539177',
-        asOf: '2020-01-01T00:00:00.000Z',
+        identifierValue: 'BSE:543989',
+        asOf: '2026-09-22T00:00:00.000Z',
       }),
-      'EQ_AIIL_IN'
+      /UNMAPPED_IDENTIFIER/
     );
   });
 

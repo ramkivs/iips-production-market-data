@@ -387,7 +387,7 @@ export class PortfolioStore {
             identityStatus: base.identityStatus,
             resolutionDisposition: base.resolutionDisposition,
           },
-          { sourceClassification: 'REAL', asOf: savedAt, dataVersion: 'v1.0.0-bi07' }
+          { sourceClassification: 'UNCLASSIFIED', asOf: savedAt, dataVersion: 'v1.0.0-bi07' }
         );
 
         finalHoldings.push({
@@ -446,7 +446,7 @@ export class PortfolioStore {
         })),
         options,
       },
-      { sourceClassification: 'REAL', asOf: savedAt, dataVersion: 'v1.0.0-bi07' }
+      { sourceClassification: 'UNCLASSIFIED', asOf: savedAt, dataVersion: 'v1.0.0-bi07' }
     );
 
     const updatedPortfolio: PortfolioRecord = {

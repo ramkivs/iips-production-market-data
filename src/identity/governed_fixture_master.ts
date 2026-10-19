@@ -17,6 +17,7 @@
 
 import { SecurityMaster, SecurityMasterEntity, GovernedSourceRevision } from './security_master.js';
 import { D05_BROAD_UNIVERSE_ENTITIES } from './d05_broad_universe_data.js';
+import { applyD05AiilListingCorrection } from './d05_listing_corrections.js';
 
 export { D05_BROAD_UNIVERSE_ENTITIES };
 
@@ -154,7 +155,9 @@ export function getGovernedBroadSecurityMaster(): SecurityMaster {
   const sm = new SecurityMaster({ sourceRevision: D05_BROAD_UNIVERSE_SOURCE_REVISION });
 
   for (const record of D05_BROAD_UNIVERSE_ENTITIES) {
-    sm.registerEntity(record);
+    // Preserve the as-deposited D05 array; apply the narrowly-scoped, evidence-backed
+    // AIIL scrip correction only to the runtime SecurityMaster projection.
+    sm.registerEntity(applyD05AiilListingCorrection(record));
   }
 
   // Governed Alias Mapping: AGI GREENPAC -> EQ_AGI_IN

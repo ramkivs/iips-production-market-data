@@ -97,7 +97,7 @@ Companion to `docs/FULL_IIPS_BI08_CONVERGENCE_PLAN.md`.
 | path | lineage | action | reason | phase |
 |---|---|---|---|---|
 | `src/identity/security_master.ts` | MAIN | **FREEZE** | sole identity authority (`companyId`) | — |
-| `src/identity/d05_broad_universe_data.ts` | MAIN | **FREEZE** | 2,250 records; AIIL `543989`/`539177`; `EQ_AGI_IN` | — |
+| `src/identity/d05_broad_universe_data.ts` | MAIN | **PRESERVE AS DEPOSITED** | 2,250-record source remains byte-identical; runtime-only correction overlay excludes the unsupported AIIL `543989` link; `EQ_AGI_IN` unchanged | Evidence dossier (2026-10-19) |
 | `src/identity/governed_fixture_master.ts` | MAIN | FREEZE | `AGI GREENPAC` exact alias (:145-149) | — |
 | `src/identity/mapping_store.ts` | MAIN | FREEZE | mappings | — |
 | `src/identity/quarantine.ts` | MAIN | FREEZE | unresolved handling | — |

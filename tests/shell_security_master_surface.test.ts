@@ -179,9 +179,11 @@ describe('F-3: /security-master routed surface', () => {
     assert.ok(!out.includes('security-master-resolution'), 'no resolution panel for ambiguous input');
   });
 
-  it('SM-08: the AIIL mapping remains deterministic (RULING_3 dual effective-dated)', () => {
+  it('SM-08: the AIIL NSE identity renders Authum without relying on the unverified dual-scrip label', () => {
     const out = renderAt('/security-master?type=NSE_SYMBOL&value=AIIL');
     assert.ok(out.includes('EQ_AIIL_IN'), 'AIIL must resolve to EQ_AIIL_IN');
+    const wrongScrip = renderAt('/security-master?type=COMPOSITE_TICKER&value=' + encodeURIComponent('BSE:543989'));
+    assert.ok(wrongScrip.includes('security-master-fail-closed'), 'Sai Silks scrip 543989 must not resolve to Authum');
   });
 
   it('SM-09: AGI GREENPAC resolves through the EXACT governed alias (no fuzzy matching)', () => {

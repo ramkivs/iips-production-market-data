@@ -33,7 +33,7 @@ describe('P04 / P12: Tier-2 Expanded Broad Universe Runtime Qualification & Prom
   // ──────────────────────────────────────────────────────────────────────────
   // Phase 1: Deposition Integrity Recheck
   // ──────────────────────────────────────────────────────────────────────────
-  it('QUAL-01: verifies byte-exact deposition integrity, cryptographic manifest hash, and SteerCo provenance', () => {
+  it('QUAL-01: verifies byte-exact deposition integrity and as-deposited manifest metadata', () => {
     assert.ok(fs.existsSync(pkgPath), 'Deposited package file must exist');
     assert.ok(fs.existsSync(manifestPath), 'Deposited manifest file must exist');
 
@@ -48,7 +48,7 @@ describe('P04 / P12: Tier-2 Expanded Broad Universe Runtime Qualification & Prom
     assert.strictEqual(manifest.fileChecksumSha256, '7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5');
     assert.strictEqual(manifest.authorizationRef, 'AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001');
     assert.strictEqual(manifest.selectedTier, 'TIER_2_ACTIVE_NSE_CM');
-    assert.strictEqual(manifest.aiilRuling, 'RULING_3_DUAL_EFFECTIVE_DATED_MAPPING');
+    assert.strictEqual(manifest.aiilRuling, 'RULING_3_DUAL_EFFECTIVE_DATED_MAPPING', 'retain the historical manifest label without treating it as a located ruling');
   });
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -146,15 +146,18 @@ INFY, 20, 1500.00, 1600.00, 30000.00, 32000.00, 2000.00, 6.67`;
   });
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Phase 5: AIIL Point-in-Time Qualification (Ruling 3)
+  // Phase 5: AIIL identity reconciliation (runtime correction; no listing dates inferred)
   // ──────────────────────────────────────────────────────────────────────────
-  it('QUAL-05: AIIL resolves deterministically via NSE symbol, ISIN, and dual BSE scrip codes (543989 & 539177)', () => {
+  it('QUAL-05: Authum resolves by NSE symbol, ISIN and BSE 539177; 543989 fails closed', () => {
     const sm = getGovernedBroadSecurityMaster();
 
     assert.strictEqual(sm.resolveCompanyId({ identifierType: 'NSE_SYMBOL', identifierValue: 'AIIL' }), 'EQ_AIIL_IN');
     assert.strictEqual(sm.resolveCompanyId({ identifierType: 'ISIN', identifierValue: 'INE206F01022' }), 'EQ_AIIL_IN');
-    assert.strictEqual(sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989' }), 'EQ_AIIL_IN');
     assert.strictEqual(sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:539177' }), 'EQ_AIIL_IN');
+    assert.throws(
+      () => sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989' }),
+      /UNMAPPED_IDENTIFIER/
+    );
   });
 
   // ──────────────────────────────────────────────────────────────────────────

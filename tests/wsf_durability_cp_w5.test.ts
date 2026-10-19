@@ -91,6 +91,9 @@ describe('Wave 5 Durability Checkpoint: CP-W5 (CP-W5-01 through CP-W5-10)', () =
     const result = verifier.qualifyLineage(fixture);
     assert.strictEqual(result.isFullyQualified, true);
     assert.strictEqual(result.totalHops, 7);
+    assert.strictEqual(result.hops[0].sourceClassification, 'UNCLASSIFIED');
+    assert.strictEqual(result.hops[0].qualityState, 'UNAVAILABLE');
+    assert.ok(result.hops.every((hop) => hop.sourceClassification !== 'REAL'));
     assert.deepStrictEqual(
       result.hops.map((h) => h.stageName),
       [
@@ -163,7 +166,7 @@ describe('Wave 5 Durability Checkpoint: CP-W5 (CP-W5-01 through CP-W5-10)', () =
       mode: 'SNAPSHOT' as const,
       quality: 'GOOD' as const,
       provenance: {
-        sourceClassification: 'REAL' as const,
+        sourceClassification: 'UNCLASSIFIED' as const,
         asOf: '2026-09-18T10:00:00.000Z',
         evaluatedAt: '2026-09-18T10:00:01.000Z',
         dataVersion: 'v1.0.0',
@@ -330,7 +333,7 @@ describe('Wave 5 Durability Checkpoint: CP-W5 (CP-W5-01 through CP-W5-10)', () =
       anomalyCodes: ['REQUIRED_FIELD_MISSING'],
       errors: ['symbol: Required field missing'],
       receivedAt: new Date().toISOString(),
-      sourceClassification: 'REAL',
+      sourceClassification: 'UNCLASSIFIED',
     });
 
     const rb1 = RunbooksHarness.executeDeadLetterTriage(dlq);

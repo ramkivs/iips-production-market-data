@@ -25,7 +25,7 @@ export class RatioEngine {
    * and worst-case quality floor propagation.
    */
   public computeRatios(input: RatioCalculationInput): FinancialRatioMetrics {
-    const { companyId, asOf, marketQuote, statement, cumulativeSplitFactor = 1.0, quoteQuality = 'GOOD' } = input;
+    const { companyId, asOf, marketQuote, statement, cumulativeSplitFactor = 1.0, quoteQuality = 'UNAVAILABLE' } = input;
     const notes: string[] = [];
 
     const ltp = marketQuote.ltp;

@@ -30,7 +30,7 @@ export class UI06MultiFactorScreenerBuilder {
       filterCriteria: params.criteria,
       totalMatches: screenResponse.totalMatched,
       results: screenResponse.results,
-      qualityIndicator: AccessibilityEngine.getQualityIndicator('GOOD'),
+      qualityIndicator: AccessibilityEngine.getQualityIndicator(screenResponse.provenance.quality),
       provenance: screenResponse.provenance,
       responsiveLayout: {
         tier,

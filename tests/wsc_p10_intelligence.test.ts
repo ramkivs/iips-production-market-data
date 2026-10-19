@@ -177,6 +177,10 @@ describe('WS-C / P10 Domain Intelligence Engines (D06, D07, D08, D09)', () => {
 
     macroEngine.ingestMacroData(cpiAugV1);
     macroEngine.ingestMacroData(cpiAugV2);
+    assert.throws(
+      () => macroEngine.ingestMacroData({ ...cpiAugV1, releaseDate: 'not-a-date' }),
+      /releaseDate must be valid ISO-8601/
+    );
 
     // Query on 2026-09-01 (before release) -> Returns null (no lookahead leakage)
     const qBeforeRelease = macroEngine.queryAsOf('CPI', '2026-09-01T00:00:00.000Z');

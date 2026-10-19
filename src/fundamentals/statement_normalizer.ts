@@ -97,6 +97,24 @@ export class StatementNormalizer {
     const sourceFilingType = input.sourceFilingType || 'EXCHANGE_DISCLOSURE';
     const restatementIndex = input.restatementIndex ?? 0;
 
+    // UI09 compares revenue and PAT. Do not let the normalizer's legacy numeric fallbacks
+    // make either absent source metric look complete or source-confirmed.
+    const normalizationAnomalyCodes: string[] = [];
+    if (!input.incomeStatement) {
+      normalizationAnomalyCodes.push('MISSING_SOURCE_BLOCK:incomeStatement');
+    } else {
+      if (typeof input.incomeStatement.revenue !== 'number' || !Number.isFinite(input.incomeStatement.revenue)) {
+        normalizationAnomalyCodes.push('MISSING_SOURCE_FIELD:incomeStatement.revenue');
+      }
+      const patSupplied = typeof input.incomeStatement.pat === 'number' && Number.isFinite(input.incomeStatement.pat);
+      const patDerivable =
+        typeof input.incomeStatement.pbt === 'number' && Number.isFinite(input.incomeStatement.pbt) &&
+        typeof input.incomeStatement.taxExpense === 'number' && Number.isFinite(input.incomeStatement.taxExpense);
+      if (!patSupplied && !patDerivable) {
+        normalizationAnomalyCodes.push('MISSING_SOURCE_FIELD:incomeStatement.pat');
+      }
+    }
+
     const periodStart = normalizeToUtcIso(input.periodStart);
     const periodEnd = normalizeToUtcIso(input.periodEnd);
     const filingDate = normalizeToUtcIso(input.filingDate);
@@ -249,7 +267,8 @@ export class StatementNormalizer {
       incomeStatement,
       balanceSheet,
       cashFlow,
-      qualityState: 'GOOD',
+      normalizationAnomalyCodes,
+      qualityState: normalizationAnomalyCodes.length === 0 ? 'GOOD' : 'PARTIAL',
     };
   }
 

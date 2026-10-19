@@ -121,7 +121,7 @@ export function validateEnvelopeStructure<T>(
   const isValid = errors.length === 0;
   return {
     isValid,
-    quality: isValid ? envelope.provenance?.qualityState || 'GOOD' : 'UNAVAILABLE',
+    quality: isValid ? envelope.provenance?.qualityState ?? 'UNAVAILABLE' : 'UNAVAILABLE',
     errors,
     anomalyCodes,
   };

@@ -259,7 +259,7 @@ export function mapBrokerOutputToUserHoldings(
   if (totalPortfolioMarketValue <= 0 || intermediateHoldings.length === 0) {
     const emptyProvenanceDigest = computeLineageHash(
       { userHoldings: [], totalPortfolioMarketValue: 0, sourceBroker },
-      { sourceClassification: 'REAL', asOf, dataVersion: 'v1.0.0-bi03' }
+      { sourceClassification: 'UNCLASSIFIED', asOf, dataVersion: 'v1.0.0-bi03' }
     );
 
     return {
@@ -334,7 +334,7 @@ export function mapBrokerOutputToUserHoldings(
     };
 
     const lineageDigest = computeLineageHash(holdingPayload, {
-      sourceClassification: 'REAL',
+      sourceClassification: 'UNCLASSIFIED',
       asOf,
       dataVersion: 'v1.0.0-bi03',
     });
@@ -357,7 +357,7 @@ export function mapBrokerOutputToUserHoldings(
       totalPortfolioMarketValue,
       sourceBroker,
     },
-    { sourceClassification: 'REAL', asOf, dataVersion: 'v1.0.0-bi03' }
+    { sourceClassification: 'UNCLASSIFIED', asOf, dataVersion: 'v1.0.0-bi03' }
   );
 
   return {

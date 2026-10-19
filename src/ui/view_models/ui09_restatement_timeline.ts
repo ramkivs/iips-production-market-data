@@ -11,6 +11,33 @@ import { UI09RestatementTimelineViewModel, ResponsiveTier } from '../types.js';
 import { AccessibilityEngine } from '../accessibility_engine.js';
 import { ResponsiveEngine } from '../responsive_engine.js';
 import { ExecutiveProvenance } from '../../transports/types.js';
+import { QualityState } from '../../contracts/types.js';
+import { computeLineageHash } from '../../contracts/provenance.js';
+import { rollupQuality } from '../../quality/quality_rollup.js';
+
+type ComparisonMetric = 'revenue' | 'pat';
+
+function sourceMetric(
+  statement: StandardizedFinancialStatement,
+  metric: ComparisonMetric,
+  side: 'original' | 'restated',
+  anomalyCodes: string[]
+): number | null {
+  const key = `MISSING_SOURCE_FIELD:incomeStatement.${metric}`;
+  const sectionKey = 'MISSING_SOURCE_BLOCK:incomeStatement';
+  const value = statement.incomeStatement?.[metric];
+  if (
+    !statement.incomeStatement ||
+    statement.normalizationAnomalyCodes?.includes(sectionKey) ||
+    statement.normalizationAnomalyCodes?.includes(key) ||
+    typeof value !== 'number' ||
+    !Number.isFinite(value)
+  ) {
+    anomalyCodes.push(`${side.toUpperCase()}_SOURCE_METRIC_UNAVAILABLE:${metric}`);
+    return null;
+  }
+  return value;
+}
 
 export class UI09RestatementTimelineBuilder {
   public static build(params: {
@@ -28,22 +55,71 @@ export class UI09RestatementTimelineBuilder {
     const tier: ResponsiveTier = ResponsiveEngine.resolveTier(params.viewportWidth ?? 1280).tier;
     const bp = ResponsiveEngine.resolveTier(params.viewportWidth ?? 1280);
 
-    const originalRevenue = params.originalStatement.incomeStatement?.revenue ?? 0;
-    const latestRevenue = params.latestStatement.incomeStatement?.revenue ?? originalRevenue;
-    const originalNetIncome = params.originalStatement.incomeStatement?.pat ?? 0;
-    const latestNetIncome = params.latestStatement.incomeStatement?.pat ?? originalNetIncome;
+    const qualityAnomalyCodes: string[] = [];
+    const originalRevenue = sourceMetric(params.originalStatement, 'revenue', 'original', qualityAnomalyCodes);
+    const latestRevenue = sourceMetric(params.latestStatement, 'revenue', 'restated', qualityAnomalyCodes);
+    const originalNetIncome = sourceMetric(params.originalStatement, 'pat', 'original', qualityAnomalyCodes);
+    const latestNetIncome = sourceMetric(params.latestStatement, 'pat', 'restated', qualityAnomalyCodes);
 
-    const deltaRevenuePct = originalRevenue > 0 ? ((latestRevenue - originalRevenue) / originalRevenue) * 100 : 0;
-    const deltaNetIncomePct = originalNetIncome > 0 ? ((latestNetIncome - originalNetIncome) / originalNetIncome) * 100 : 0;
-    const isMaterialDelta = Math.abs(deltaRevenuePct) > 0.5 || Math.abs(deltaNetIncomePct) > 0.5;
+    let deltaRevenuePct: number | null = null;
+    if (originalRevenue !== null && latestRevenue !== null && originalRevenue > 0) {
+      deltaRevenuePct = ((latestRevenue - originalRevenue) / originalRevenue) * 100;
+    } else {
+      qualityAnomalyCodes.push('REVENUE_DELTA_UNAVAILABLE');
+    }
+
+    let deltaNetIncomePct: number | null = null;
+    if (originalNetIncome !== null && latestNetIncome !== null && originalNetIncome > 0) {
+      deltaNetIncomePct = ((latestNetIncome - originalNetIncome) / originalNetIncome) * 100;
+    } else {
+      qualityAnomalyCodes.push('NET_INCOME_DELTA_UNAVAILABLE');
+    }
+
+    const isMaterialDelta: boolean | null = deltaRevenuePct !== null && deltaNetIncomePct !== null
+      ? Math.abs(deltaRevenuePct) > 0.5 || Math.abs(deltaNetIncomePct) > 0.5
+      : null;
+
+    // Materiality is a business comparison result, not a data-quality grade. Quality follows
+    // the input statements and degrades only when required comparison values are unavailable.
+    const statementQualities: QualityState[] = [
+      params.originalStatement.qualityState,
+      params.latestStatement.qualityState,
+    ];
+    const quality: QualityState = qualityAnomalyCodes.length > 0
+      ? rollupQuality([...statementQualities, 'PARTIAL'])
+      : rollupQuality(statementQualities);
 
     const provenance: ExecutiveProvenance = {
-      sourceClassification: 'REAL',
+      sourceClassification: 'DERIVED',
       asOf: params.asOf,
       evaluatedAt: new Date().toISOString(),
-      dataVersion: 'v1.0.0',
-      lineageDigest: 'restatement-tracker-lineage-hash-0000000000000000000000000000000',
-      quality: isMaterialDelta ? 'PARTIAL' : 'GOOD',
+      dataVersion: 'ui09-restatement-timeline-v1',
+      lineageDigest: computeLineageHash(
+        {
+          companyId: params.companyId,
+          fiscalYear: params.fiscalYear,
+          quarter: params.quarter,
+          scope: params.scope,
+          originalStatement: params.originalStatement,
+          latestStatement: params.latestStatement,
+          comparison: {
+            originalRevenue,
+            latestRevenue,
+            originalNetIncome,
+            latestNetIncome,
+            deltaRevenuePct,
+            deltaNetIncomePct,
+            isMaterialDelta,
+            qualityAnomalyCodes,
+          },
+        },
+        {
+          sourceClassification: 'DERIVED',
+          asOf: params.asOf,
+          dataVersion: 'ui09-restatement-timeline-v1',
+        }
+      ),
+      quality,
       replayConstraintApplied: false,
     };
 
@@ -69,10 +145,11 @@ export class UI09RestatementTimelineBuilder {
         netIncome: latestNetIncome,
         restatementIndex: params.latestStatement.restatementIndex,
       },
-      deltaRevenuePct: Math.round(deltaRevenuePct * 100) / 100,
-      deltaNetIncomePct: Math.round(deltaNetIncomePct * 100) / 100,
+      deltaRevenuePct: deltaRevenuePct === null ? null : Math.round(deltaRevenuePct * 100) / 100,
+      deltaNetIncomePct: deltaNetIncomePct === null ? null : Math.round(deltaNetIncomePct * 100) / 100,
       isMaterialDelta,
-      qualityIndicator: AccessibilityEngine.getQualityIndicator(isMaterialDelta ? 'PARTIAL' : 'GOOD'),
+      qualityAnomalyCodes: [...new Set(qualityAnomalyCodes)],
+      qualityIndicator: AccessibilityEngine.getQualityIndicator(quality),
       provenance,
       responsiveLayout: {
         tier,

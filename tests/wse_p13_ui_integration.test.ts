@@ -69,7 +69,7 @@ describe('WS-E / P13 Product UI Data Integration', () => {
     mode: 'SNAPSHOT',
     quality: 'GOOD',
     provenance: {
-      sourceClassification: 'REAL',
+      sourceClassification: 'UNCLASSIFIED',
       asOf: '2026-09-18T10:00:00.000Z',
       evaluatedAt: '2026-09-18T10:00:01.000Z',
       dataVersion: 'v1.0.0',
@@ -205,7 +205,7 @@ describe('WS-E / P13 Product UI Data Integration', () => {
       },
       quality: 'GOOD',
       provenance: {
-        sourceClassification: 'REAL',
+        sourceClassification: 'UNCLASSIFIED',
         asOf: '2026-09-18T10:00:00.000Z',
         evaluatedAt: '2026-09-18T10:00:01.000Z',
         dataVersion: 'v1.0.0',

@@ -30,7 +30,9 @@ export class EngineApiAdapter {
     isSimulationOrReplay?: boolean;
     quality?: QualityState;
   }): MarketDataDTO {
-    const { quote, mode, asOf, isSimulationOrReplay = false, quality = 'GOOD' } = params;
+    const { quote, mode, asOf, isSimulationOrReplay = false, quality } = params;
+    // Omitting the upstream validation state cannot upgrade an unchecked quote to GOOD.
+    const effectiveQuality: QualityState = quality ?? 'UNAVAILABLE';
     const evaluatedAt = new Date().toISOString();
 
     const lineageDigest = computeLineageHash(quote, {
@@ -45,7 +47,7 @@ export class EngineApiAdapter {
       evaluatedAt,
       dataVersion: 'v1.0.0-transport',
       lineageDigest,
-      quality,
+      quality: effectiveQuality,
       replayConstraintApplied: isSimulationOrReplay,
       replayConstraintText: isSimulationOrReplay ? AD17_CONSTRAINT_TEXT : undefined,
     };
@@ -67,7 +69,7 @@ export class EngineApiAdapter {
       turnover: quote.turnover,
       tradeCount: quote.tradeCount,
       mode,
-      quality,
+      quality: effectiveQuality,
       provenance,
     };
   }

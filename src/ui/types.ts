@@ -202,9 +202,11 @@ export interface UI07PitCorporateActionsViewModel extends BaseViewModel {
     exDate: string;
     recordDate: string;
     ratio: string;
-    factor: number;
+    factor: number | null;
   }>;
-  adjustmentFactorCumulative: number;
+  /** Null when no usable action records exist or any factor is missing/invalid. */
+  adjustmentFactorCumulative: number | null;
+  qualityAnomalyCodes: string[];
 }
 
 /**
@@ -223,11 +225,13 @@ export interface UI08SecurityMasterModalViewModel extends BaseViewModel {
  */
 export interface UI09RestatementTimelineViewModel extends BaseViewModel {
   surfaceId: 'UI09_RESTATEMENT_TIMELINE';
-  originalFiling: { filingDate: string; revenue: number; netIncome: number; restatementIndex: number };
-  restatedFiling: { filingDate: string; revenue: number; netIncome: number; restatementIndex: number };
-  deltaRevenuePct: number;
-  deltaNetIncomePct: number;
-  isMaterialDelta: boolean;
+  originalFiling: { filingDate: string; revenue: number | null; netIncome: number | null; restatementIndex: number };
+  restatedFiling: { filingDate: string; revenue: number | null; netIncome: number | null; restatementIndex: number };
+  deltaRevenuePct: number | null;
+  deltaNetIncomePct: number | null;
+  /** Null means a materiality comparison could not be made from available source values. */
+  isMaterialDelta: boolean | null;
+  qualityAnomalyCodes: string[];
 }
 
 /**

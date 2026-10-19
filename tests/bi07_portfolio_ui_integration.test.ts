@@ -188,9 +188,10 @@ TCS,50,3800.00,3950.00,197500.00,7500.00,3.95,-0.20`;
   it('BI07-07: confirm/import action is strictly disabled for rejected/blocked/idle states', () => {
     const controller = new PortfolioBrokerImportController();
 
-    // 1. In IDLE state
+    // 1. In IDLE state: no data means quality is unavailable, not GOOD.
     let vm = controller.buildViewModel();
     assert.strictEqual(vm.saveGuard.isSaveEnabled, false);
+    assert.strictEqual(vm.qualityIndicator.state, 'UNAVAILABLE');
 
     // 2. In REJECTED state (invalid format)
     vm = controller.selectAndProcessFile({
