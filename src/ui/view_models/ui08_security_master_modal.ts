@@ -33,7 +33,8 @@ export class UI08SecurityMasterModalBuilder {
       resolution,
       isModalOpen: params.isModalOpen ?? true,
       trapFocus: params.isModalOpen ?? true,
-      qualityIndicator: AccessibilityEngine.getQualityIndicator('GOOD'),
+      // Quality is the resolver-derived descriptor quality — never a hard-coded GOOD (C3/C4).
+      qualityIndicator: AccessibilityEngine.getQualityIndicator(resolution.provenance.quality),
       provenance: resolution.provenance,
       responsiveLayout: {
         tier,

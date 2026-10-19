@@ -132,7 +132,11 @@ describe('F-3: /security-master routed surface', () => {
       'INFY currency must be INR from governed D05 master'
     );
     assert.ok(out.includes('Lineage Digest'), 'provenance block renders');
-    assert.ok(out.includes('REAL'), 'source classification is REAL (governed)');
+    // PA decision 2026-10-19-01 C1/C5: the surface must not render an unsupported REAL claim
+    // (previously asserted here as "governed"; corrected by the 2026-10-19 implementation act).
+    assert.ok(out.includes('UNCLASSIFIED'), 'source classification renders UNCLASSIFIED');
+    assert.ok(!/>REAL</.test(out), 'no cell renders a bare REAL classification');
+    assert.ok(out.includes('Record Origin'), 'record origin is disclosed');
   });
 
   it('SM-06: an UNKNOWN identifier fails closed — no canonical identity is displayed', () => {

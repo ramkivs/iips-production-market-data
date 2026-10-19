@@ -28,6 +28,14 @@
  *  · The UI08 view model's accessibility contract (dialog role, aria-live assertive,
  *    focus element, table caption) and responsive tiers are rendered as defined by the
  *    builder — not re-invented here.
+ *
+ * ══ HONEST DISCLOSURE (PA decision 2026-10-19-01 C1–C7; implementation act 2026-10-19-01) ══
+ *  · Record origin is rendered as UNKNOWN — never REAL. Successful resolution, a valid ISIN
+ *    or corpus membership does not establish real-market status (C1/C2/C5).
+ *  · Missing or invalid face value / currency are rendered as such — never a default (C4).
+ *  · A historical asOf scopes identity only; the descriptor and listings shown are the current
+ *    governed snapshot and are labelled as NOT historically verified (§5.1).
+ *  · Consumer eligibility is not asserted here; each consumer decides its own admission (C6).
  */
 
 import { useMemo, useState } from 'react';
@@ -57,6 +65,33 @@ export interface SecurityMasterSurfaceProps {
 }
 
 type Listing = UI08SecurityMasterModalViewModel['resolution']['listings'][number];
+type Resolution = UI08SecurityMasterModalViewModel['resolution'];
+type DescriptorFieldStatus = Resolution['integrity']['descriptor']['faceValue'];
+
+/** Render a descriptor attribute without ever substituting a value the source did not provide. */
+function describeDescriptor(value: string | number | null, status: DescriptorFieldStatus): string {
+  if (status === 'SOURCE_PROVIDED' && value !== null) return String(value);
+  if (status === 'MISSING') return 'Not provided by source (missing — no default substituted)';
+  return 'Invalid or unsupported in source (not displayed — no default substituted)';
+}
+
+function describeTemporal(r: Resolution): string {
+  const t = r.integrity.temporal;
+  switch (t.descriptorStatus) {
+    case 'CURRENT_SNAPSHOT':
+      return 'Current governed snapshot (descriptor and listings are not versioned)';
+    case 'AS_OF_NOT_VERSIONED':
+      return `Current governed snapshot — NOT historically verified for ${t.identityAsOf}; historical descriptor and listing values are unavailable`;
+    case 'OUTSIDE_RECORD_EFFECTIVE_WINDOW':
+      return `Current governed snapshot — the resolved record is NOT effective at ${t.identityAsOf}; identity resolved via an effective-dated mapping, descriptor and listings are present-day values, not historical`;
+  }
+}
+
+function describeRevision(r: Resolution): string {
+  const rev = r.integrity.sourceRevision;
+  if (!rev) return 'None — not hydrated from a governed deposition';
+  return `${rev.batchId} · sha256 ${rev.fileChecksumSha256.slice(0, 12)}… · ${rev.recordCount} records · ${rev.operatingMode}`;
+}
 
 const IDENTIFIER_TYPES: readonly IdentityQuery['identifierType'][] = [
   'NSE_SYMBOL',
@@ -240,20 +275,47 @@ export function SecurityMasterSurface({
                 { field: 'CIN', value: resolution.vm.resolution.cin ?? '—' },
                 { field: 'Industry', value: resolution.vm.resolution.industry },
                 { field: 'Sector', value: resolution.vm.resolution.sector },
-                { field: 'Face Value', value: String(resolution.vm.resolution.faceValue) },
-                { field: 'Currency', value: resolution.vm.resolution.currency },
-                { field: 'As of', value: resolution.vm.asOf },
+                {
+                  field: 'Face Value',
+                  value: describeDescriptor(resolution.vm.resolution.faceValue, resolution.vm.resolution.integrity.descriptor.faceValue),
+                },
+                {
+                  field: 'Currency',
+                  value: describeDescriptor(resolution.vm.resolution.currency, resolution.vm.resolution.integrity.descriptor.currency),
+                },
+                { field: 'Identity As of', value: resolution.vm.asOf },
+                { field: 'Descriptor Temporal Basis', value: describeTemporal(resolution.vm.resolution) },
                 { field: 'Source Classification', value: resolution.vm.provenance.sourceClassification },
+                {
+                  field: 'Record Origin',
+                  value: 'Unknown — no record-specific origin evidence; not asserted as real-market or synthetic',
+                },
+                {
+                  field: 'Descriptor Quality',
+                  value:
+                    resolution.vm.provenance.quality +
+                    (resolution.vm.resolution.integrity.qualityAnomalyCodes.length > 0
+                      ? ` (${resolution.vm.resolution.integrity.qualityAnomalyCodes.join(', ')})`
+                      : ''),
+                },
+                { field: 'Governed Source Revision', value: describeRevision(resolution.vm.resolution) },
+                { field: 'Consumer Eligibility', value: 'Not asserted by IPD — each consumer decides its own admission' },
                 { field: 'Lineage Digest', value: resolution.vm.provenance.lineageDigest },
               ]}
             />
           </div>
-          <div role="region" aria-label="Exchange Listings (governed)">
+          <div role="region" aria-label="Exchange Listings (current governed snapshot; not effective-dated)">
             <DataTable columns={LISTING_COLUMNS} rows={resolution.vm.resolution.listings} />
           </div>
           <p className="app-surface__note" data-testid="security-master-provenance-note">
             Resolved locally from the governed D05 broad security master. Provenance and
             lineage digest are computed by the governed resolver — never synthesized here.
+          </p>
+          <p className="app-surface__note" data-testid="security-master-origin-disclosure">
+            Non-production, offline-bootstrap reference data. Records are not classified as
+            real-market or synthetic: a valid ISIN, corpus membership or successful resolution
+            does not establish real-market status. Descriptor quality describes completeness
+            only and is not an eligibility or admission decision.
           </p>
         </div>
       )}

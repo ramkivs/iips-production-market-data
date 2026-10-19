@@ -21,7 +21,14 @@ export type SourceClassification =
   | 'CANONICAL_MARKET_DATA'
   | 'REAL'
   | 'DERIVED'
-  | 'CERTIFIED_ENGINE';
+  | 'CERTIFIED_ENGINE'
+  /**
+   * No evidence-backed source / record-origin classification is asserted (PA decision
+   * IIPS-V3-IPD-PROVENANCE-ELIGIBILITY-PROGRAM-AUTHORITY-DECISION-2026-10-19-01, C1/C2).
+   * Emitted where record-specific, independently verifiable origin evidence is absent,
+   * e.g. every governed D05 Security Master record. It is NOT a synonym for synthetic.
+   */
+  | 'UNCLASSIFIED';
 
 export type VendorTier =
   | 'TIER_1_EXCHANGE'

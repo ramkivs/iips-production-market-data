@@ -205,7 +205,12 @@ describe('WS-D / P12 Product Transport APIs & Typed Client DTOs', () => {
     assert.strictEqual(resolved.companyName, 'Infosys Limited');
     assert.strictEqual(resolved.sector, 'Technology');
     assert.strictEqual(resolved.listings.length, 2);
-    assert.strictEqual(resolved.provenance.sourceClassification, 'REAL');
+    // PA decision 2026-10-19-01 C1/C2: no record-specific origin evidence exists, so the resolver
+    // must not assert REAL (previously pinned here as a literal; corrected by implementation act
+    // IIPS-V3-IPD-SECURITY-MASTER-INTEGRITY-IMPLEMENTATION-ACT-2026-10-19-01).
+    assert.notStrictEqual(resolved.provenance.sourceClassification, 'REAL');
+    assert.strictEqual(resolved.provenance.sourceClassification, 'UNCLASSIFIED');
+    assert.strictEqual(resolved.integrity.recordOrigin.classification, 'UNKNOWN');
 
     // Verify faithful mapping of faceValue and currency from governed D05 broad universe records
     const broadResolver = new ObjectResolverService(getGovernedBroadSecurityMaster());

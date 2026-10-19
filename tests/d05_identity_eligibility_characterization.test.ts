@@ -1,52 +1,51 @@
 /**
  * Institutional Investment Platform System (IIPS)
- * Test Suite: D05 Security Master — Identity / Eligibility CHARACTERIZATION
+ * Test Suite: D05 Security Master — Identity / Eligibility CHARACTERIZATION → REGRESSION GUARDS
  *
  * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01
  *                 AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001 (D05 corpus)
  *                 f3-ui08-security-master-functional-2026-09-23-001 (UI08 surface)
+ *                 IIPS-V3-IPD-PROVENANCE-ELIGIBILITY-PROGRAM-AUTHORITY-DECISION-2026-10-19-01 (C1–C7)
+ *                 IIPS-V3-IPD-SECURITY-MASTER-INTEGRITY-IMPLEMENTATION-ACT-2026-10-19-01
  * Execution Mode: NON_PRODUCTION / OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV
  *
- * ══ WHAT THIS SUITE IS ═══════════════════════════════════════════════════════════════════
- *  CHARACTERIZATION (also called "golden master") coverage. This suite records the
- *  OBSERVED behaviour of the governed D05 identity stack at a known source revision so the
- *  behaviour and its limits are reproducible, reviewable, and protected against silent
- *  change.
+ * ══ HISTORY OF THIS SUITE ════════════════════════════════════════════════════════════════
+ *  Published at main@02a5803 (PR #26) as CHARACTERIZATION coverage: eight tests that pinned the
+ *  OBSERVED behaviour of the D05 identity stack, four of them marked
+ *  `[OBSERVED DEFECT — UNRESOLVED]` and one `[OBSERVED INCONSISTENCY — UNRESOLVED]`. Those
+ *  assertions documented defects; they were never an acceptance contract.
  *
- *  A PASSING TEST HERE IS NOT AN ACCEPTANCE STATEMENT.
+ *  The Program Authority then approved the C1–C7 semantic direction, and the Security Master
+ *  integrity implementation act (2026-10-19-01) repaired the defects. As the original header
+ *  required, the defect-pinning tests then FAILED and are here updated DELIBERATELY — not
+ *  suppressed. Each keeps its original identifier for traceability and is re-marked:
  *
- *  Four conditions below are recorded as `[OBSERVED DEFECT — UNRESOLVED]` or
- *  `[OBSERVED INCONSISTENCY — UNRESOLVED]`. For those tests the assertion pins the CURRENT
- *  OUTPUT, not an approved invariant. If a defect is later repaired the corresponding test
- *  will FAIL — that failure is the signal to update this characterization deliberately, not
- *  a regression to be suppressed. Tests marked `[APPROVED INVARIANT]` record behaviour that
- *  an existing authority act or existing suite already establishes as intended.
+ *   CHAR-A-01  [CORRECTED — REGRESSION GUARD]  no literal REAL/GOOD; origin UNKNOWN
+ *   CHAR-A-02  [CORRECTED — REGRESSION GUARD]  UI08 renders no REAL claim; discloses origin
+ *   CHAR-B-01  [CORRECTED — REGRESSION GUARD]  absent faceValue/currency → null + PARTIAL
+ *   CHAR-B-02  [OBSERVED — CONTROL]            unchanged: populated values pass through
+ *   CHAR-B-03  [CORRECTED — REGRESSION GUARD]  faceValue 0 → INVALID (≠ absent), never 1
+ *   CHAR-C-01  [APPROVED INVARIANT]            unchanged: effective-dated identity resolution
+ *   CHAR-C-02  [CORRECTED — REGRESSION GUARD]  historical asOf disclosed; not silently current
+ *   CHAR-D-01  [OBSERVED INCONSISTENCY — UNRESOLVED]  unchanged: AIIL needs authoritative BSE
+ *                                                listing-history evidence (decision §5.2)
  *
- *  ══ WHAT THIS SUITE DELIBERATELY DOES NOT DO ════════════════════════════════════════════
- *   · It does NOT assert that `sourceClassification: 'REAL'` or `quality: 'GOOD'` is
- *     CORRECT for any record. It asserts only that the resolver currently emits them.
- *   · It does NOT decide whether a D05 record is real-market, synthetic, or of unknown
- *     eligibility. No D05 row carries a typed eligibility discriminator, and none is
- *     invented here. Where a modelled filler record is used, it is identified only by the
- *     repository's own documented corpus composition.
- *   · It does NOT decide whether an absent `faceValue` / `currency` must be rejected,
- *     quarantined, or defaulted. It records the current default and marks the policy choice
- *     as requiring a Program Authority decision.
- *   · It does NOT convert the AIIL dual BSE scrip-code mapping into an approved mapping
- *     rule, and does NOT assert which scrip code is "current" and which is "historical".
- *     It records only that no temporal distinction is present in the data.
- *   · It does NOT specify a required descriptor-versioning model. The existing authoritative
- *     contract (F-3 act §2 "full resolution descriptor") does not define descriptor temporal
- *     validity, so no such requirement is asserted here.
- *   · It changes NO production behaviour. This suite performs no mutation of source,
- *     schema, corpus, manifest or configuration.
+ *  The full acceptance coverage for the corrected semantics lives in
+ *  tests/d05_security_master_integrity_semantics.test.ts (SMI-*).
  *
- *  ══ DECISION DEPENDENCIES (Program Authority — see the accompanying decision brief) ══════
- *   CHAR-A-01, CHAR-A-02 : blocked on "what provenance/eligibility semantics IPD may assert"
- *   CHAR-B-01, CHAR-B-03 : blocked on "default / reject / quarantine for absent descriptor
- *                          attributes"
- *   CHAR-C-02            : blocked on "is historical descriptor validity in scope"
- *   CHAR-D-01            : blocked on "reconcile manifest ruling vs. corpus effective dates"
+ * ══ WHAT THIS SUITE STILL DELIBERATELY DOES NOT DO ═══════════════════════════════════════
+ *   · It does NOT decide whether any D05 record is real-market or synthetic. No D05 row carries
+ *     a typed origin discriminator, and none is invented here. The modelled Tier-2 record is
+ *     identified only by the repository's own documented corpus composition, which is NOT
+ *     treated as per-record truth (C2).
+ *   · It does NOT assert historical descriptor correctness. Historical descriptor versioning
+ *     remains a separate, unauthorized capability (decision §5.1); only honest disclosure of
+ *     the current-snapshot basis is asserted.
+ *   · It does NOT convert the AIIL dual BSE scrip-code mapping into an approved mapping rule,
+ *     and does NOT assert which scrip code is "current" and which is "historical".
+ *   · It mutates NO D05 corpus, schema, manifest or configuration.
+ *   · A passing run here is regression evidence for IPD producer semantics only — not product
+ *     acceptance, qualification, consumer admission or production readiness (decision §5.6).
  */
 
 import { describe, it } from 'node:test';
@@ -106,8 +105,8 @@ const EXTERNALLY_NAMED_SYMBOL = 'RELIANCE';
  * CHAR-A — UNSUPPORTED CLASSIFICATION CLAIMS
  * ════════════════════════════════════════════════════════════════════════════════════════ */
 
-describe('CHAR-A: D05 classification claims are literal, not derived (characterization)', () => {
-  it('CHAR-A-01 [OBSERVED DEFECT — UNRESOLVED]: ObjectResolverService stamps REAL and GOOD on a modelled Tier-2 D05 record, and the values are source literals rather than record-derived', () => {
+describe('CHAR-A: D05 classification claims are no longer literal assertions (regression guards)', () => {
+  it('CHAR-A-01 [CORRECTED — REGRESSION GUARD]: the resolver asserts no REAL classification and no literal GOOD; record origin is UNKNOWN for a modelled Tier-2 record and an externally-named issuer alike', () => {
     const resolver = new ObjectResolverService(getGovernedBroadSecurityMaster());
 
     const modelled = resolver.resolveObject({
@@ -119,72 +118,50 @@ describe('CHAR-A: D05 classification claims are literal, not derived (characteri
       identifierValue: EXTERNALLY_NAMED_SYMBOL,
     });
 
-    // ── OBSERVED: the claim is emitted for the modelled Tier-2 filler record.
     assert.strictEqual(modelled.companyId, 'EQ_IT0001_IN');
-    assert.strictEqual(modelled.provenance.sourceClassification, 'REAL');
-    assert.strictEqual(modelled.provenance.quality, 'GOOD');
 
-    // ── OBSERVED: the claim is a constant. Both records receive the identical
-    //    classification and quality regardless of which entity was resolved.
-    assert.strictEqual(named.provenance.sourceClassification, 'REAL');
-    assert.strictEqual(named.provenance.quality, 'GOOD');
-    assert.strictEqual(
-      modelled.provenance.sourceClassification,
-      named.provenance.sourceClassification,
-      'classification is invariant across a modelled filler record and an externally-named issuer'
-    );
+    // ── CORRECTED: no unsupported REAL assertion on either record (C1).
+    for (const r of [modelled, named]) {
+      assert.notStrictEqual(r.provenance.sourceClassification, 'REAL');
+      assert.strictEqual(r.provenance.sourceClassification, 'UNCLASSIFIED');
+      assert.strictEqual(r.integrity.recordOrigin.classification, 'UNKNOWN');
+      assert.strictEqual(r.integrity.recordOrigin.basis, 'NO_RECORD_SPECIFIC_ORIGIN_EVIDENCE');
+      assert.strictEqual(r.integrity.consumerEligibility, 'NOT_ASSERTED');
+    }
 
-    // ── OBSERVED: the D05 row contract exposes no field from which a real-market,
-    //    synthetic, eligibility, provenance-tier or quality value could be derived.
+    // ── STILL TRUE (preserved observation): the D05 row contract exposes no field from which a
+    //    real-market, synthetic, eligibility or provenance-tier value could be derived. Hence
+    //    the only evidence-supported origin state is UNKNOWN — for every record (C2).
     const corpusRowKeys = Object.keys(D05_BROAD_UNIVERSE_ENTITIES[52]).map((k) => k.toLowerCase());
     const eligibilityBearingKey = corpusRowKeys.find((k) =>
       /eligib|synthetic|real|classification|vendor|sourc|quality|tier/.test(k)
     );
-    assert.strictEqual(
-      eligibilityBearingKey,
-      undefined,
-      'no D05 corpus row field can supply a classification or eligibility value — ' +
-        'therefore any emitted classification is asserted, not derived'
-    );
+    assert.strictEqual(eligibilityBearingKey, undefined);
 
-    // ── OBSERVED: the values are hard-coded string literals in the resolver source.
+    // ── CORRECTED: the literals are gone from the resolver source.
     const resolverSource = readFileSync(RESOLVER_PATH, 'utf8');
-    assert.ok(
-      /sourceClassification:\s*'REAL'/.test(resolverSource),
-      "the literal sourceClassification: 'REAL' is present in src/transports/object_resolver.ts"
-    );
-    assert.ok(
-      /quality:\s*'GOOD'/.test(resolverSource),
-      "the literal quality: 'GOOD' is present in src/transports/object_resolver.ts"
-    );
+    assert.ok(!/sourceClassification:\s*'REAL'/.test(resolverSource), "no literal sourceClassification: 'REAL'");
+    assert.ok(!/quality:\s*'GOOD'/.test(resolverSource), "no literal quality: 'GOOD'");
 
-    // ── RECORDED LIMIT — NOT AN ACCEPTANCE ASSERTION ──────────────────────────────────────
-    // These assertions document present output only. They do NOT assert that 'REAL' is a
-    // correct or authorised classification for this record, and they do NOT establish the
-    // record's real-market status. Per the repository's own standard
-    // (evidence/target-shell-integration/PHASE2-EVIDENCE-PAYLOAD-FORENSIC-REPORT.md §10.3):
-    // "sourceClassification values ... are governed attestations; asserting one over invented
-    // data is a false attestation."
-    // RESOLUTION REQUIRES: Program Authority determination of what provenance and eligibility
-    // semantics IPD is authorised to assert from the governed D05 corpus.
+    // ── LIMIT: quality GOOD may still be DERIVED for a record whose assessed descriptors are
+    //    complete and current (both records here). That is a completeness statement only; it
+    //    is not origin and not eligibility (C3). It does not make IT0001 real.
+    assert.strictEqual(modelled.provenance.quality, 'GOOD');
+    assert.deepStrictEqual(modelled.integrity.qualityAnomalyCodes, []);
   });
 
-  it('CHAR-A-02 [OBSERVED DEFECT — UNRESOLVED]: the UI08 surface renders the unsupported classification claim to the user', () => {
+  it('CHAR-A-02 [CORRECTED — REGRESSION GUARD]: the UI08 surface renders no REAL claim and discloses unknown record origin for the modelled record', () => {
     const out = renderAt(
       `/security-master?type=NSE_SYMBOL&value=${encodeURIComponent(MODELLED_TIER2_SYMBOL)}`
     );
 
-    assert.ok(out.includes('EQ_IT0001_IN'), 'the modelled record resolves and is displayed');
-    assert.ok(
-      out.includes('Source Classification'),
-      'the UI08 surface labels a source-classification row'
-    );
-    assert.ok(out.includes('REAL'), 'the surface renders the resolver classification claim verbatim');
-
-    // ── RECORDED LIMIT — NOT AN ACCEPTANCE ASSERTION ──────────────────────────────────────
-    // The rendered value is the resolver literal, not a governed per-record fact. Whether
-    // synthetic or incompletely classified records may be displayed at all, and under what
-    // explicit conditions, is a Program Authority decision — not settled here.
+    assert.ok(out.includes('EQ_IT0001_IN'), 'the modelled record resolves and is displayed (C5 bounded display)');
+    assert.ok(out.includes('Source Classification'), 'the classification row remains visible');
+    assert.ok(out.includes('UNCLASSIFIED'), 'the classification renders UNCLASSIFIED');
+    assert.ok(!/>REAL</.test(out), 'no cell renders a bare REAL classification');
+    assert.ok(out.includes('Record Origin'), 'a record-origin row is rendered');
+    assert.ok(out.includes('not asserted as real-market'), 'origin is disclosed as unknown');
+    assert.ok(out.includes('security-master-origin-disclosure'), 'the non-production disclosure is rendered');
   });
 });
 
@@ -192,7 +169,7 @@ describe('CHAR-A: D05 classification claims are literal, not derived (characteri
  * CHAR-B — SILENT DESCRIPTOR DEFAULTS
  * ════════════════════════════════════════════════════════════════════════════════════════ */
 
-describe('CHAR-B: absent descriptor attributes fall back silently (characterization)', () => {
+describe('CHAR-B: absent or invalid descriptor attributes are never silently substituted (regression guards)', () => {
   const register = (overrides: Partial<SecurityMasterEntity>, symbol: string, companyId: string) => {
     const sm = new SecurityMaster();
     const entity: SecurityMasterEntity = {
@@ -212,26 +189,29 @@ describe('CHAR-B: absent descriptor attributes fall back silently (characterizat
     });
   };
 
-  it('CHAR-B-01 [OBSERVED DEFECT — UNRESOLVED]: a registration without faceValue or currency resolves to faceValue 1 / currency INR with quality GOOD and classification REAL', () => {
+  it('CHAR-B-01 [CORRECTED — REGRESSION GUARD]: a registration without faceValue or currency resolves with null descriptors, MISSING status and PARTIAL quality — never 1 / INR / GOOD / REAL', () => {
     const resolved = register({}, 'NODESC', 'EQ_CHAR_NODESC_IN');
 
-    // ── OBSERVED: the source record supplies neither field; the output supplies both.
-    assert.strictEqual(resolved.faceValue, 1, 'absent faceValue falls back to 1');
-    assert.strictEqual(resolved.currency, 'INR', 'absent currency falls back to INR');
+    // ── CORRECTED: the source supplies neither field, and the output supplies neither (C4).
+    assert.strictEqual(resolved.faceValue, null, 'absent faceValue is not defaulted to 1');
+    assert.strictEqual(resolved.currency, null, 'absent currency is not defaulted to INR');
+    assert.strictEqual(resolved.integrity.descriptor.faceValue, 'MISSING');
+    assert.strictEqual(resolved.integrity.descriptor.currency, 'MISSING');
+    assert.strictEqual(resolved.integrity.descriptor.complete, false);
 
-    // ── OBSERVED: the fallback carries no downgrade, anomaly, or warning of any kind.
-    assert.strictEqual(resolved.provenance.quality, 'GOOD');
-    assert.strictEqual(resolved.provenance.sourceClassification, 'REAL');
-    assert.strictEqual(resolved.provenance.replayConstraintApplied, false);
-
-    // ── RECORDED LIMIT — NOT AN ACCEPTANCE ASSERTION ──────────────────────────────────────
-    // This records that an unsupported or legacy registration can silently receive default
-    // financial attributes. It does NOT decide whether such a registration must be rejected,
-    // quarantined, surfaced as unknown, or defaulted — that policy choice, and the quality
-    // state it should carry, requires a Program Authority decision.
+    // ── CORRECTED: the gap is disclosed through quality and anomaly codes.
+    assert.strictEqual(resolved.provenance.quality, 'PARTIAL');
+    assert.notStrictEqual(resolved.provenance.quality, 'GOOD');
+    assert.deepStrictEqual(resolved.integrity.qualityAnomalyCodes, [
+      'MISSING_MANDATORY_FIELD:faceValue',
+      'MISSING_MANDATORY_FIELD:currency',
+    ]);
+    assert.strictEqual(resolved.provenance.sourceClassification, 'UNCLASSIFIED');
+    // An ad-hoc registration was not hydrated from a governed deposition.
+    assert.strictEqual(resolved.integrity.sourceRevision, null);
   });
 
-  it('CHAR-B-02 [OBSERVED — CONTROL]: populated faceValue and currency pass through unchanged, proving the fallback only engages when the source value is absent', () => {
+  it('CHAR-B-02 [OBSERVED — CONTROL]: populated faceValue and currency pass through unchanged — valid, explicitly sourced descriptors are preserved', () => {
     const inr = register({ faceValue: 10, currency: 'INR' }, 'CHARINR', 'EQ_CHAR_INR_IN');
     assert.strictEqual(inr.faceValue, 10);
     assert.strictEqual(inr.currency, 'INR');
@@ -240,21 +220,21 @@ describe('CHAR-B: absent descriptor attributes fall back silently (characterizat
     assert.strictEqual(usd.faceValue, 10);
     assert.strictEqual(usd.currency, 'USD', 'a populated non-INR currency is projected faithfully');
 
-    // Control: the fallback is therefore a substitution for missing data, not a constant.
+    assert.strictEqual(usd.integrity.descriptor.complete, true);
+    assert.strictEqual(usd.provenance.quality, 'GOOD', 'complete, current descriptors may derive GOOD');
+
+    // Control: correction of the absent/invalid paths (CHAR-B-01/03) did not disturb valid data.
   });
 
-  it('CHAR-B-03 [OBSERVED DEFECT — UNRESOLVED]: a non-positive faceValue also collapses to the fallback value of 1', () => {
+  it('CHAR-B-03 [CORRECTED — REGRESSION GUARD]: a non-positive faceValue is reported INVALID — distinguishable from an absent one — and never collapses to 1', () => {
     const zero = register({ faceValue: 0, currency: 'INR' }, 'CHARZERO', 'EQ_CHAR_ZERO_IN');
-    assert.strictEqual(
-      zero.faceValue,
-      1,
-      'a supplied faceValue of 0 is indistinguishable from an absent one in the output'
-    );
-
-    // ── RECORDED LIMIT — NOT AN ACCEPTANCE ASSERTION ──────────────────────────────────────
-    // Records the loss of the distinction between "absent" and "explicitly zero". Whether
-    // that distinction must be preserved is part of the same Program Authority decision as
-    // CHAR-B-01; it is not decided here.
+    assert.strictEqual(zero.faceValue, null, 'an invalid faceValue is not displayed as a value');
+    assert.notStrictEqual(zero.faceValue, 1, 'and is never substituted by the old fallback');
+    assert.strictEqual(zero.integrity.descriptor.faceValue, 'INVALID', 'explicit zero ≠ absent');
+    assert.strictEqual(zero.integrity.descriptor.currency, 'SOURCE_PROVIDED');
+    assert.strictEqual(zero.currency, 'INR', 'a valid sibling descriptor is preserved');
+    assert.strictEqual(zero.provenance.quality, 'PARTIAL');
+    assert.deepStrictEqual(zero.integrity.qualityAnomalyCodes, ['OUT_OF_RANGE_VALUE:faceValue']);
   });
 });
 
@@ -262,7 +242,7 @@ describe('CHAR-B: absent descriptor attributes fall back silently (characterizat
  * CHAR-C — HISTORICAL IDENTIFIER RESOLUTION vs. DESCRIPTOR TEMPORAL VALIDITY
  * ════════════════════════════════════════════════════════════════════════════════════════ */
 
-describe('CHAR-C: asOf governs identifier mapping only — not the returned descriptor (characterization)', () => {
+describe('CHAR-C: asOf governs identifier mapping only — and the descriptor now says so (characterization + regression guard)', () => {
   const HISTORICAL_ASOF = '2005-01-01T00:00:00.000Z';
 
   it('CHAR-C-01 [APPROVED INVARIANT]: effective-dated identifier resolution works — UTIBANK@2005 resolves to EQ_AXISBANK_IN and UTIBANK@today fails closed', () => {
@@ -291,7 +271,7 @@ describe('CHAR-C: asOf governs identifier mapping only — not the returned desc
     //  tests/p04_expanded_broad_universe_runtime_qualification.test.ts QUAL-08).
   });
 
-  it('CHAR-C-02 [OBSERVED DEFECT — UNRESOLVED]: the descriptor returned for a historical asOf is the current stored snapshot, not an asOf-scoped descriptor', () => {
+  it('CHAR-C-02 [CORRECTED — REGRESSION GUARD]: a historical asOf no longer silently returns the present-day descriptor as though it were historical — the current-snapshot basis is disclosed and quality is not GOOD', () => {
     const resolver = new ObjectResolverService(getGovernedBroadSecurityMaster());
 
     const historical = resolver.resolveObject({
@@ -304,34 +284,36 @@ describe('CHAR-C: asOf governs identifier mapping only — not the returned desc
       identifierValue: 'AXISBANK',
     });
 
-    // ── OBSERVED: identity resolution honoured the asOf …
+    // ── PRESERVED: identity resolution honours the asOf (CHAR-C-01).
     assert.strictEqual(historical.companyId, 'EQ_AXISBANK_IN');
 
-    // … but the descriptor is byte-identical to today's descriptor.
-    assert.deepStrictEqual(
-      historical.listings,
-      current.listings,
-      'a 2005 query returns the present-day AXISBANK exchange listings'
-    );
-    assert.ok(
-      historical.listings.some((l) => l.symbol === 'AXISBANK'),
-      'the 2005 query returns the post-rename symbol, not any 2005-era symbol'
-    );
+    // ── PRESERVED FACT: the only descriptor available is the current snapshot. It is still
+    //    returned — historical values do not exist in the governed data and none is invented.
+    assert.deepStrictEqual(historical.listings, current.listings);
 
-    // ── OBSERVED: the provenance echoes the requested asOf, so a consumer cannot detect
-    //    from the payload that the descriptor is not asOf-scoped.
-    assert.strictEqual(historical.provenance.asOf, HISTORICAL_ASOF);
+    // ── CORRECTED: the payload now tells the consumer exactly that (not silent any more).
+    const t = historical.integrity.temporal;
+    assert.strictEqual(t.identityResolution, 'EFFECTIVE_DATED_AS_OF');
+    assert.strictEqual(t.identityAsOf, HISTORICAL_ASOF);
+    assert.strictEqual(t.historicalAsOfRequested, true);
+    assert.strictEqual(t.descriptorBasis, 'CURRENT_SNAPSHOT');
+    assert.strictEqual(t.descriptorHistoricallyVerified, false);
+    assert.strictEqual(t.listingsEffectiveDated, false);
+    // EQ_AXISBANK_IN's own record window starts 2015-01-01, so 2005 is outside it.
+    assert.strictEqual(t.descriptorStatus, 'OUTSIDE_RECORD_EFFECTIVE_WINDOW');
+    assert.strictEqual(historical.provenance.quality, 'PARTIAL');
+    assert.deepStrictEqual(historical.integrity.qualityAnomalyCodes, [
+      'DESCRIPTOR_RECORD_NOT_EFFECTIVE_AT_AS_OF',
+      'DESCRIPTOR_NOT_AS_OF_SCOPED',
+    ]);
 
-    // ── RECORDED LIMIT — NOT AN ACCEPTANCE ASSERTION ──────────────────────────────────────
-    // This test distinguishes two separate concepts and deliberately asserts ONLY the
-    // negative observation:
-    //   (a) EFFECTIVE-DATED IDENTIFIER RESOLUTION — implemented, tested, approved (CHAR-C-01);
-    //   (b) HISTORICAL DESCRIPTOR VALIDITY        — not implemented; the resolver returns the
-    //       current snapshot regardless of asOf.
-    // No descriptor-versioning requirement is asserted: the existing authoritative contract
-    // (F-3 act §2) requires "the full resolution descriptor" but is silent on descriptor
-    // temporal validity. Whether historical descriptor versioning is in scope at all — and
-    // if so, what shape it takes — requires a Program Authority decision.
+    // The current query is unaffected.
+    assert.strictEqual(current.integrity.temporal.descriptorStatus, 'CURRENT_SNAPSHOT');
+    assert.strictEqual(current.provenance.quality, 'GOOD');
+
+    // ── LIMIT — NOT AN ACCEPTANCE OF HISTORICAL ACCURACY ─────────────────────────────────
+    // Historical descriptor versioning is NOT implemented and NOT authorized (decision §5.1).
+    // This guard asserts only that the absence of historical descriptor data is disclosed.
   });
 });
 
