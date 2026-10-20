@@ -55,6 +55,43 @@ function refuseClassP(socket: Socket, reason: ClassPReason, detail: string): voi
 }
 
 /**
+ * Post-flush one-frame watchdog (Windows named-pipe transport).
+ *
+ * The frame reader's flush guard only spans frame-1 parse → response flush.
+ * On a Windows byte-mode pipe the single response can be irreversibly flushed
+ * before a delayed second frame is delivered, and reader.release() has removed
+ * the reader-owned listeners. Without this observer such a frame would be
+ * silently uncounted. The response cannot be un-sent (platform impossibility —
+ * see IRR PKG-11 §E), but the one-frame invariant stays enforceable after the
+ * flush: the second frame is never dispatched (the handler state machine is
+ * finished), it is recorded as MALFORMED_FRAME in the bounded sink, and the
+ * connection is torn down. Exactly one response is ever emitted.
+ *
+ * Only the three watchdog-owned listeners are removed on terminal events;
+ * caller-owned listeners (the dispatcher's error handler above) are preserved.
+ */
+function attachPostFlushWatch(socket: Socket): void {
+  const onTrailingData = (): void => {
+    cleanup();
+    diagnosticSink.record(
+      'MALFORMED_FRAME',
+      'a second frame delivered after the response flush is refused; the frame is never dispatched',
+    );
+    socket.destroy();
+  };
+  const cleanup = (): void => {
+    socket.off('data', onTrailingData);
+    socket.off('end', cleanup);
+    socket.off('close', cleanup);
+    socket.off('error', cleanup);
+  };
+  socket.on('data', onTrailingData);
+  socket.on('end', cleanup);
+  socket.on('close', cleanup);
+  socket.on('error', cleanup);
+}
+
+/**
  * Writes exactly one frame and half-closes the writable side, surfacing write
  * failures instead of swallowing them. The frame reader's flush guard is raced
  * against this write so trailing data arriving before the flush still produces
@@ -104,6 +141,9 @@ export function createConnectionHandler(
       // use the same guarded single-response write path. Before assignment
       // (a fault during the pre-write validation) it stays a zero-byte no-op.
       let writeGuarded: (frame: Buffer) => Promise<boolean> = () => Promise.resolve(false);
+      // Set only once a response frame has flushed successfully. On flush-guard
+      // transports that arms the post-flush one-frame watchdog in finally.
+      let responded = false;
 
       try {
         // C7: caller-supplied authority/identity at any depth is refused before any
@@ -178,6 +218,7 @@ export function createConnectionHandler(
             } else {
               await endFrame(socket, frame);
             }
+            responded = true;
             return true;
           } catch (error) {
             if (error instanceof ClassPError) {
@@ -235,6 +276,14 @@ export function createConnectionHandler(
         // Detach exactly the reader-owned listeners; the caller's socket error
         // handler registered above remains available for transmission faults.
         reader.release();
+        // Flush-guard transports (Windows named pipes): keep the one-frame
+        // invariant enforceable for a second frame delivered after the
+        // response irreversibly flushed. Zero-byte refusal remains impossible
+        // at this point (documented in IRR PKG-11 §E); the frame is refused by
+        // sink record plus teardown and is never dispatched.
+        if (reader.settlement === 'flush-guard' && responded && !socket.readableEnded) {
+          attachPostFlushWatch(socket);
+        }
       }
     })();
   };

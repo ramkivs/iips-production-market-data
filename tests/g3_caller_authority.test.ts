@@ -19,6 +19,7 @@ import { GATE3_MIGRATIONS } from '../src/ipc/entrypoint.js';
 import {
   listenIpc,
   resolveEndpointTarget,
+  settlementPolicyForEndpoint,
   type IpcHandle,
 } from '../src/ipc/endpoint.js';
 import { createConnectionHandler } from '../src/ipc/dispatch.js';
@@ -87,7 +88,7 @@ describe('g3 / T-H caller authority (C7) refusal matrix', () => {
     endpointPath = target.path;
     handle = await listenIpc(
       target,
-      createConnectionHandler(db),
+      createConnectionHandler(db, { settlement: settlementPolicyForEndpoint(target) }),
       { platform: HOST_PLATFORM },
     );
   });

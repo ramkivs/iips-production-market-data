@@ -35,7 +35,13 @@ import {
   type FrameReader,
   type RequestEnvelope,
 } from '../src/ipc/protocol.js';
-import { listenIpc, resolveEndpointTarget, type IpcHandle } from '../src/ipc/endpoint.js';
+import {
+  IPC_ENDPOINT_SETTING,
+  listenIpc,
+  resolveEndpointTarget,
+  settlementPolicyForEndpoint,
+  type IpcHandle,
+} from '../src/ipc/endpoint.js';
 import { createConnectionHandler } from '../src/ipc/dispatch.js';
 import { openDatabase, closeDatabase } from '../src/persistence/connection.js';
 import { ensureMigrations } from '../src/persistence/migration_ledger.js';
@@ -63,6 +69,9 @@ class FakeSocket extends EventEmitter {
   private readonly pending: { chunk: Buffer; cb: (error?: Error | null) => void }[] = [];
   public destroyed = false;
   public broken = false;
+  // Mirrors stream.Readable.readableEnded: true once the pipe-break 'end' has
+  // been emitted, after which no further data event can arrive.
+  public readableEnded = false;
 
   constructor(private readonly ackTicks = 1) {
     super();
@@ -120,6 +129,7 @@ class FakeSocket extends EventEmitter {
   /** libuv Windows: FlushFileBuffers delivers no EOF; the 50ms eof timer breaks the pipe. */
   forceBrokenPipeEof(): void {
     this.broken = true;
+    this.readableEnded = true;
     this.emit('end');
   }
 }
@@ -311,7 +321,7 @@ describe('g3 / T-A ipc framing', () => {
     }
   });
 
-  it('a second frame delivered in a separate write/event is refused with zero bytes over a real socket', async () => {
+  it('a second frame delivered in a separate write/event is refused over a real socket', async () => {
     diagnosticSink.drain();
     const f1 = jsonFrame({ v: 1, op: 'portfolio.list' });
     const f2 = jsonFrame({ v: 1, op: 'portfolio.get' });
@@ -327,7 +337,30 @@ describe('g3 / T-A ipc framing', () => {
         });
       });
     });
-    assert.equal(received.byteLength, 0);
+
+    if (!IS_WINDOWS_HOST) {
+      // AF_UNIX delivers a usable half-close, so the airtight gate withholds
+      // the response entirely: zero bytes plus a Class P diagnostic.
+      assert.equal(received.byteLength, 0);
+      assert.equal(diagnosticSink.peek().at(-1)?.reason, 'MALFORMED_FRAME');
+      return;
+    }
+
+    // Windows named pipes provide no pre-break half-close signal (libuv:
+    // FlushFileBuffers only; EOF arrives when the 50 ms timer force-breaks
+    // the pipe, when writes can no longer succeed). A second frame delayed
+    // past the response flush therefore cannot make the first response
+    // undispatched. The enforceable Windows guarantees are asserted instead:
+    // exactly one well-formed response, the guard still trips on the second
+    // frame, and it is never dispatched (no second response).
+    assert.ok(received.byteLength > IPC_LENGTH_PREFIX_BYTES, 'one response frame was delivered before the pipe broke');
+    const declared = received.readUInt32BE(0);
+    assert.equal(declared, received.byteLength - IPC_LENGTH_PREFIX_BYTES);
+    const body = JSON.parse(received.subarray(4).toString('utf8')) as Record<string, unknown>;
+    assert.equal(body.ok, true);
+    assert.equal(body.op, 'portfolio.list', 'the second frame is never dispatched');
+    // Allow the trailing guard event to land before inspecting the sink.
+    await drainTicks(4);
     assert.equal(diagnosticSink.peek().at(-1)?.reason, 'MALFORMED_FRAME');
   });
 });
@@ -588,5 +621,102 @@ describe('g3 / T-A flush-guard settlement (Windows named-pipe transport emulatio
     assert.equal(socket.listenerCount('data'), 0);
     assert.equal(socket.listenerCount('end'), 0);
     assert.equal(socket.listenerCount('error'), 1, 'the dispatcher error handler remains owner-attached');
+  });
+
+  // Round-4 defect regression (Windows-transport emulation, not native evidence):
+  // a connection handler constructed without the transport-derived settlement
+  // policy defaults to half-close-required and therefore withholds its response
+  // until the only EOF a Windows byte-mode pipe ever delivers — the 50 ms
+  // forced break, when writes fail. The peer receives zero bytes. This is the
+  // exact mechanism behind the native-Windows empty-response failures.
+  it('a default-policy handler withholds every response byte on the Windows pipe timeline', async () => {
+    const socket = new FakeSocket();
+    createConnectionHandler(db, { idleTimeoutMs: 2000 })(socket as unknown as Socket);
+    socket.emit('data', listFrame);
+    setImmediate(() => socket.forceBrokenPipeEof());
+    await drainTicks(6);
+
+    assert.equal(socket.written.length, 0, 'the half-close gate never opens on a Windows pipe');
+    assert.equal(socket.destroyed, true, 'the failed response write fails closed with a teardown');
+    assert.equal(diagnosticSink.peek().at(-1)?.reason, 'MALFORMED_FRAME');
+  });
+
+  // Companion regression: deriving the policy from the actual endpoint target
+  // (as startIpcServer does, and as every direct handler construction must)
+  // selects flush-guard for a named pipe and the response is delivered in full
+  // before the forced break.
+  it('an endpoint-derived flush-guard handler delivers the full response on the same timeline', async () => {
+    const pipeTarget = resolveEndpointTarget(
+      { [IPC_ENDPOINT_SETTING]: '\\\\.\\pipe\\g3-round4-emulation' },
+      'win32',
+    );
+    const socketTarget = resolveEndpointTarget(
+      { [IPC_ENDPOINT_SETTING]: '/tmp/g3-round4-emulation.sock' },
+      'linux',
+    );
+    assert.equal(settlementPolicyForEndpoint(pipeTarget), 'flush-guard');
+    assert.equal(settlementPolicyForEndpoint(socketTarget), 'half-close-required');
+
+    const socket = new FakeSocket();
+    createConnectionHandler(db, {
+      settlement: settlementPolicyForEndpoint(pipeTarget),
+      idleTimeoutMs: 2000,
+    })(socket as unknown as Socket);
+    socket.emit('data', listFrame);
+    setImmediate(() => socket.forceBrokenPipeEof());
+    await drainTicks(6);
+
+    assert.equal(socket.written.length, 1, 'exactly one response frame reaches the peer');
+    const body = JSON.parse(socket.written[0].subarray(4).toString('utf8')) as Record<string, unknown>;
+    assert.equal(body.ok, true);
+    assert.equal(body.op, 'portfolio.list');
+  });
+
+  // §E boundary (Windows-transport emulation, not native evidence): frame 2 is
+  // delivered in a separate data event only AFTER the response has flushed.
+  // Zero-byte refusal is impossible once the response is irreversibly flushed,
+  // but the one-frame invariant stays enforceable: frame 2 is never dispatched
+  // (no second response), it trips MALFORMED_FRAME in the bounded sink, and the
+  // connection is destroyed. The watchdog then detaches on terminal EOF.
+  it('a post-flush second frame is recorded and torn down without a second response', async () => {
+    const socket = new FakeSocket();
+    createConnectionHandler(db, { settlement: 'flush-guard', idleTimeoutMs: 2000 })(
+      socket as unknown as Socket,
+    );
+    socket.emit('data', listFrame);
+    await drainTicks(2);
+    assert.equal(socket.written.length, 1, 'the frame-1 response has already flushed');
+
+    socket.emit('data', secondFrame);
+    await drainTicks(4);
+
+    assert.equal(socket.written.length, 1, 'the second frame is never dispatched or answered');
+    assert.equal(socket.destroyed, true, 'the post-flush violation tears the connection down');
+    assert.equal(diagnosticSink.peek().at(-1)?.reason, 'MALFORMED_FRAME');
+    const firstBody = JSON.parse(socket.written[0].subarray(4).toString('utf8')) as Record<string, unknown>;
+    assert.equal(firstBody.op, 'portfolio.list');
+
+    socket.forceBrokenPipeEof();
+    await drainTicks(2);
+    assert.equal(socket.listenerCount('data'), 0);
+    assert.equal(socket.listenerCount('end'), 0);
+    assert.equal(socket.listenerCount('error'), 1, 'only the caller-owned error handler remains');
+  });
+
+  it('a clean post-flush EOF with no trailing frame leaves the sink empty', async () => {
+    const socket = new FakeSocket();
+    createConnectionHandler(db, { settlement: 'flush-guard', idleTimeoutMs: 2000 })(
+      socket as unknown as Socket,
+    );
+    socket.emit('data', listFrame);
+    await drainTicks(2);
+    assert.equal(socket.written.length, 1);
+    assert.equal(socket.destroyed, false);
+
+    socket.forceBrokenPipeEof();
+    await drainTicks(2);
+    assert.equal(socket.written.length, 1);
+    assert.equal(socket.destroyed, false, 'a well-behaved single-frame peer is not torn down');
+    assert.equal(diagnosticSink.peek().length, 0);
   });
 });
