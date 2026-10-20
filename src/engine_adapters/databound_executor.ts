@@ -46,7 +46,7 @@ export class DataBoundExecutor {
       roce: (sanitizedMarketData['D03_FUNDAMENTALS.roce'] as number) ?? request.governedFinancialInputs?.roce,
       operatingMargin: (sanitizedMarketData['D03_FUNDAMENTALS.operatingMargin'] as number) ?? request.governedFinancialInputs?.operatingMargin,
       beta: (sanitizedMarketData['D01_QUOTES.beta'] as number) ?? request.governedFinancialInputs?.beta,
-      momentum: (sanitizedMarketData['D01_QUOTES.pctChange'] as number) ?? 0,
+      momentum: sanitizedMarketData['D01_QUOTES.pctChange'] as number | undefined,
     };
 
     // 4. Governed Sector Default Fallback Injection
@@ -69,7 +69,17 @@ export class DataBoundExecutor {
     };
 
     const effectiveQuality: QualityState = injectedFields.length > 0 ? 'PARTIAL' : 'GOOD';
-    const lineageHash = computeLineageHash(scoringResult, {
+    // Bind the effective (post-fallback) scoring inputs to this exact derived result,
+    // including engine identity/version and the requested as-of context. Do not include
+    // volatile execution timestamps/IDs so equivalent deterministic runs have stable hashes.
+    const lineageHash = computeLineageHash({
+      companyId: request.companyId,
+      engineId: request.engineId,
+      versionVector,
+      asOf: request.asOf,
+      effectiveScoringInputs: resolvedInputs,
+      output: scoringResult,
+    }, {
       sourceClassification: 'CERTIFIED_ENGINE',
       asOf: request.asOf,
       dataVersion: versionVector.engineVersion,

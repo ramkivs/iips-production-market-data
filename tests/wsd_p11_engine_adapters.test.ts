@@ -7,6 +7,7 @@
 
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
+import { computeLineageHash } from '../src/contracts/provenance.js';
 
 import {
   DataBoundExecutor,
@@ -72,6 +73,61 @@ describe('WS-D / P11 Engine Adapters & Recalculation Integration', () => {
     assert.strictEqual(result.provenance.sourceClassification, 'CERTIFIED_ENGINE');
     assert.strictEqual(result.provenance.lineageHash.length, 64);
     assert.strictEqual(result.versionVector.engineVersion, 'v1.0.0-certified-frozen');
+  });
+
+  it('P11-01: canonical momentum reaches frozen scoring and changes the result', () => {
+    const base = {
+      'MD:D01_QUOTES.pe': 25,
+      'MD:D01_QUOTES.pb': 6,
+      'MD:D03_FUNDAMENTALS.roe': 24,
+      'MD:D03_FUNDAMENTALS.roce': 30,
+      'MD:D03_FUNDAMENTALS.operatingMargin': 22,
+    };
+    const executeWithMomentum = (pctChange?: number) => executor.execute({
+      requestId: 'REQ-MOMENTUM', companyId: 'INFY', engineId: 'SECTOR_IT',
+      asOf: '2026-09-18T10:00:00.000Z',
+      rawMarketDataInputs: { ...base, ...(pctChange === undefined ? {} : { 'MD:D01_QUOTES.pctChange': pctChange }) },
+    });
+    const positive = executeWithMomentum(10);
+    const negative = executeWithMomentum(-10);
+    assert.strictEqual(positive.factorBreakdown.momentumScore, 70);
+    assert.strictEqual(negative.factorBreakdown.momentumScore, 30);
+    assert.notStrictEqual(positive.normalizedScore, negative.normalizedScore);
+
+    const missing = executeWithMomentum();
+    assert.strictEqual(missing.factorBreakdown.momentumScore, 50);
+    assert.ok(missing.fallbackFields.includes('momentum'));
+    assert.strictEqual(missing.qualityState, 'PARTIAL');
+  });
+
+  it('P11-03: lineage binds effective inputs, output, engine/version and as-of metadata', () => {
+    const request = {
+      requestId: 'REQ-LINEAGE', companyId: 'INFY', engineId: 'SECTOR_IT' as const,
+      asOf: '2026-09-18T10:00:00.000Z',
+      rawMarketDataInputs: {
+        'MD:D01_QUOTES.pe': 22, 'MD:D01_QUOTES.pb': 6,
+        'MD:D01_QUOTES.pctChange': 1, 'MD:D03_FUNDAMENTALS.roe': 24,
+        'MD:D03_FUNDAMENTALS.roce': 30, 'MD:D03_FUNDAMENTALS.operatingMargin': 22,
+      },
+    };
+    const first = executor.execute(request);
+    const same = executor.execute({ ...request, requestId: 'different-request-id' });
+    const changed = executor.execute({ ...request, rawMarketDataInputs: { ...request.rawMarketDataInputs, 'MD:D01_QUOTES.pe': 23 } });
+    assert.strictEqual(first.provenance.lineageHash, same.provenance.lineageHash);
+    assert.notStrictEqual(first.provenance.lineageHash, changed.provenance.lineageHash);
+
+    const sanitized = NamespaceGuard.validateAndSanitizeInputs(request.rawMarketDataInputs);
+    const effectiveInputs = {
+      pe: sanitized['D01_QUOTES.pe'], pb: sanitized['D01_QUOTES.pb'],
+      roe: sanitized['D03_FUNDAMENTALS.roe'], roce: sanitized['D03_FUNDAMENTALS.roce'],
+      operatingMargin: sanitized['D03_FUNDAMENTALS.operatingMargin'],
+      beta: 0.95, momentum: sanitized['D01_QUOTES.pctChange'],
+    };
+    const output = { rawScore: first.rawScore, normalizedScore: first.normalizedScore, grade: first.grade, factors: first.factorBreakdown };
+    assert.strictEqual(first.provenance.lineageHash, computeLineageHash({
+      companyId: first.companyId, engineId: first.engineId, versionVector: first.versionVector,
+      asOf: request.asOf, effectiveScoringInputs: effectiveInputs, output,
+    }, { sourceClassification: 'CERTIFIED_ENGINE', asOf: request.asOf, dataVersion: first.versionVector.engineVersion }));
   });
 
   it('P11-02: C1-C6 Namespace Guard should reject non-namespaced inputs and fail closed', () => {

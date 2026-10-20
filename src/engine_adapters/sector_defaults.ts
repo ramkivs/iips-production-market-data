@@ -61,6 +61,15 @@ export class SectorDefaultInjector {
       }
     }
 
+    // Momentum has no sector-specific calibration. Keep its historical neutral fallback.
+    const momentum = inputs.momentum;
+    if (typeof momentum === 'number' && Number.isFinite(momentum)) {
+      resolved.momentum = momentum;
+    } else {
+      resolved.momentum = 0;
+      injectedFields.push('momentum');
+    }
+
     return { resolvedInputs: resolved, injectedFields };
   }
 }
