@@ -720,3 +720,120 @@ The governing token holds repository `contents: write` (branch push and PR creat
 - No source code was changed by this pass. PR #36 remains open, unmerged and explicitly marked not for merge.
 
 *End of Addendum A5.*
+
+---
+
+## ADDENDUM A6 — 2026-10-21 (post-admission): `D-06` admission of the P11 remediation lineage **completed and remotely verified**; reconciliation of the A4/A5 residuals (condition C-7)
+
+**Status of this addendum.** Dated, additive post-admission record required by condition **C-7** of IRR §16.70.7.2. It **reconciles the residuals created by admission**; it does **not** rewrite any dated record, does **not** alter the admitted commit IDs, and renders no new decision.
+
+**What changed, stated plainly.** The P11 remediation lineage **is now on IPD `main`**. Before this admission it was not. Every dated statement below that says otherwise was accurate when written and is superseded **as state**, not corrected as history.
+
+### A6.1 The admission act (condition C-1 / C-2 — the act preceded the merge)
+
+| Field | Value |
+|---|---|
+| Act ID | `IIPS-V3-DEC06-P11-MAIN-ADMISSION-ACT-2026-10-21-01` |
+| Decision | **`D-06` — `ADMIT`** |
+| File | `evidence/cross-repository/IIPS_V3_DEC06_P11_MAIN_ADMISSION_ACT_2026-10-21.md` |
+| Blob at `main` | **`86d79f0d152e014423043666f2c372680fb6475e`** |
+| Publication | PR **#38** — **MERGED** 2026-10-21T16:42:23Z → merge commit **`6ff80d0cc5fb678367ba5fb2129b28ab854f2e52`** |
+| Authority | IRR `IIPS-V3-DEC06-AUTHORITY-RECONCILIATION-IRR-2026-10-21-01` — tracker §16.70 (`CV-CORR-53`, `CHG-2026-10-21-04`); IRR PR #173 → `bf14a7c4`, PR #174 → IRR `main@d89b785c` |
+
+**Ordering verified, not assumed.** Immediately after PR #38 merged and before any admission merge, both candidate commits were re-tested against `origin/main` and **neither was an ancestor** — so the act did not itself admit anything, and the merge that followed was the first act that did.
+
+### A6.2 The admitted lineage and the final merge
+
+| Field | Value |
+|---|---|
+| Source-code commit (admitted) | **`b6e622432cb0ca3e5452c4194bc683c496a688fc`** — "Fix P11 momentum propagation and scoring lineage" |
+| Documentation commit (admitted) | **`3eaec0edd4f89a806b301d647499ca860c2a1172`** — "Record bounded P11 library scope and Row 26 gap" |
+| Integration merge (C-3 mechanism) | **`86c76538979f159c478bb5887d1c387f4ef2ddb3`** — parents `6ff80d0c` + `3eaec0ed` |
+| **Final merge commit on `main`** | **`ef634df108acc18ca028789169b20ae5a4473966`** — parents **`6ff80d0c` + `86c76538`** |
+| **Final merge tree** | **`ddb5d2461453a0c8e895ed84382537d727cbab85`** |
+| `mergedAt` | **2026-10-21T16:45:53Z** (PR #39) |
+| Final `main` | **`ef634df108acc18ca028789169b20ae5a4473966`** (`git ls-remote origin refs/heads/main` agreement) |
+
+**C-4 satisfied precisely.** The merge tree was **re-derived** against then-current `main` after the act landed. The pre-act dry-run preview on `main@15465e45` had produced `56ac4796…`; publishing the act advanced `main`, and the definitive tree re-derived on `main@6ff80d0c` is **`ddb5d246…`** — confirming exactly why C-4 forbids quoting a pre-computed tree. **`26dec9ac…` was never used.** The validated tree and the tree that landed are the **same object**: `ef634df1^{tree}` = `ddb5d246…`.
+
+**Prohibitions honoured.** PR #36 was **not** merged and remains an unmerged review vehicle. No squash, no rebase, no cherry-pick, no direct commit to `main`; both candidate commit IDs are unchanged. `3eaec0e` was not published alone.
+
+### A6.3 The five admitted paths and their verified blob identities
+
+Blobs verified by remote read-back at `main@ef634df1` and compared against the validated tree `ddb5d246` (condition C-6).
+
+| # | Path | Candidate blob @ `3eaec0e` | **Blob at `main@ef634df1`** | Relation |
+|---|---|---|---|---|
+| 1 | `src/engine_adapters/databound_executor.ts` | `a22b3363…` | **`a22b33630377e58125f4ea72a7384c01a72c2e7a`** | identical to candidate |
+| 2 | `src/engine_adapters/sector_defaults.ts` | `66a2debc…` | **`66a2debc4baea7753f17653caedfbb0b749da1cf`** | identical to candidate |
+| 3 | `tests/wsd_p11_engine_adapters.test.ts` | `afc5eb3a…` | **`afc5eb3a4647028d48507739c96b98e753af61dd`** | identical to candidate |
+| 4 | `evidence/cross-repository/IPD_P11_BOUNDED_LIBRARY_SCOPE_AND_ROW26_RECONCILIATION_2026-10-20.md` | `384cf6a6…` | **`384cf6a63f2c10867cdb02a2eb58e13c157cf87f`** | identical to candidate (added path) |
+| 5 | `evidence/np04/IIPS_v3.0_IPD_IRR_CAPABILITY_INVENTORY_AND_TRACKER_RECONCILIATION_2026-10-17.md` | `735fde8f…` | **`eb1b6b94058f6cf1b5c2e1e034167dcaed4df099`** | **C-5 union — differs from both parents by construction** |
+
+**Why path 5 must differ, stated rather than glossed.** It is the **overlapping** path. Condition C-5 requires the merged file to carry **both** `main`'s addenda **and** the candidate's row-13 annotation, so its content equals **neither** parent's blob. Equality for this path is therefore asserted against the **validated integration tree**, not against the candidate. All five remote blobs equal the validated tree exactly — which is the correct reading of C-6 and the strongest available proof.
+
+**Scope containment.** `git diff --name-status` from pre-admission `main` `6ff80d0c` to `ef634df1` returns **exactly these five paths** and nothing else. `frontend/`, `src/persistence`, `src/ipc`, `.github/workflows/`, `package.json`, `package-lock.json` and `tsconfig.json` are **byte-unchanged**.
+
+### A6.4 Validation on the exact admitted tree (C-4)
+
+Executed on integration tree **`ddb5d246…`** — the same tree that landed. POSIX, Node `v22.22.3`, `npm ci` from the committed lockfile.
+
+| Target | `npm ci` | `tsc --noEmit` | `npm run build` | Guarded full suite |
+|---|---|---|---|---|
+| **Pre-admission `main` @ `6ff80d0c`** (baseline, freshly executed — not the historical figure) | 0 | **0** | **0** | **584 executed / 584 pass / 0 fail / 0 skipped**, `files=52` |
+| **Admitted tree `ddb5d246`** | 0 | **0** | **0** | **586 executed / 586 pass / 0 fail / 0 cancelled / 0 skipped**, `files=52` |
+| Focused `wsd_p11_engine_adapters` @ `ddb5d246` | — | — | — | **8 executed / 8 pass / 0 fail / 0 skipped** |
+
+Delta `584 → 586` is exactly the two added cases. The CV-35 guard reported a non-zero executed count in both runs, so neither result is a zero-test false-green.
+
+**C-5 assertions on the admitted tree:** inventory file **722 lines**; `ADDENDUM A4` present (1); `ADDENDUM A5` present (1); candidate row-13 annotation present (1). Both sides survived.
+
+### A6.5 CI evidence
+
+| Check | Value |
+|---|---|
+| Exact-head PR CI (PR #39 @ `86c76538`) | run **`39637530790`** — `typecheck · build · test` **success** |
+| Published count check @ `86c76538` | **`executed test count`** — success, *"586 tests executed, 0 failed"* |
+| Post-merge `main` CI @ `ef634df1` | run **`39637705534`** — **success** |
+| Published count check @ `ef634df1` | **`executed test count`** — success, *"586 tests executed, 0 failed"* |
+| Admission act PR #38 exact-head CI | run `39637033751` — success |
+
+### A6.6 Reconciliation of the residuals recorded in IRR §16.70.6
+
+Each dated statement below is **preserved as written**; the reconciliation is the dated row beside it.
+
+| # | Dated statement (preserved verbatim in place) | Location | Reconciled position after A6 |
+|---|---|---|---|
+| R1 | "**Commit `3eaec0e…` only — NOT on IPD `main`**" | A4.2 table, row "IPD-side bounded P11 scope record" | **Superseded as state.** `3eaec0e` is now an **ancestor of `main`**; both commits are on `main` and the record's blob is `384cf6a6…` at `main@ef634df1`. |
+| R2 | "**The IPD-side record of that scope is NOT on `main`.** … *ahead 2, behind 0* (fast-forwardable)" | A4.4 | **Superseded as state**, and its "fast-forwardable" finding was already corrected by A5.1. The record **is** on `main`; the mechanism used was a **merge commit**, not a fast-forward. |
+| R3 | "**the candidate is no longer fast-forwardable** … *merge commit required*" | A5.1 | **Satisfied.** A merge commit was in fact the mechanism used (C-3). The condition A5.1 anticipated is the condition that was met. |
+| R4 | "This record and the IPD inventory annotation are published on the IPD task branch only." | Candidate record §6 (publication boundary) | **Superseded as state.** Both are now on `main`. The record's remaining point — that the IRR repository was read-only and Row 26 was not closed by it — **still stands unchanged**. |
+| R5 | Row-13 cell: "Row 26 authority decision pending" | Inventory matrix row 13 | **Resolved for authority, not for Row 26.** The Row 26 authority question was settled by IRR §16.65 (`CV-CORR-48`) and §16.70; the cell described the state when written. **Row 26 itself is unchanged by this admission** and remains as §16.65 left it — see A6.7. |
+
+### A6.7 What this admission does NOT establish (condition C-8)
+
+Recorded affirmatively, so that the admitted code is not read as more than it is:
+
+- **No product-consumer integration** and **no broader E2E claim**. Row 26 E2E remains **`NA` for the bounded library scope only** and is **not changed** here.
+- **No IPD/IRR engine or taxonomy equivalence.**
+- **No qualification.** A merge commit plus green Linux CI is **not** Gate 4 qualification, **not** a Gate 4 result acceptance, and **not** a Gate 5 admission.
+- **No operational-eligibility change.** Status remains `NON_PRODUCTION`.
+- **Gate 3 remains BLOCKED / NOT ACCEPTED**; IPD PR #34 remains open and unmerged and is independent of `D-06`.
+- **No acceptance of other gates**, no certification and no release.
+- The open items of IRR **§16.65.3** remain open: `P11-02` recalculation/replay/snapshot/ownership; `CSIP_COMPOSITE` executor-dispatch semantics; `mode` / `governedIntelligenceInputs` semantics; UI05 compatibility; IPD/IRR mapping and equivalence; broader P15 lineage and golden-digest claims.
+- The existing P11 bounded-acceptance record is **not modified**. `503` fences, `SESSION_ONLY` / `durable:false`, the 29-key caller-identity guard, `G-2` §7/§8 exclusions, `CV-22` Option C, `CV-40` Option B and every other recorded deferral are unchanged.
+
+### A6.8 Disclosed limitations (carried forward, not resolved by admission)
+
+1. **The two new tests were authored alongside the fix, in the same commit.** They are not independent acceptance tests; their independence rests on PA review.
+2. **POSIX-only execution.** Local runs and hosted CI are `ubuntu-latest`. This establishes **nothing** about the Windows deployment host, and no Windows, browser, localhost or operator acceptance is claimed.
+3. **Unit/library level only** — no product-consumer test, HTTP transport, IPD→IRR invocation or equivalence test exists to run.
+4. **Behavioural, not exhaustive** — the suite shows momentum now discriminates and lineage is input-sensitive for the exercised cases; it does not prove every momentum consumer or a full P15 provider-to-score chain.
+
+### A6.9 Post-admission state
+
+- **`D-06` admission: COMPLETE — durably published and remotely verified.** Proven by `merge-base --is-ancestor` for both candidate commits, five-path blob equality at remote `main` against the validated tree, and `mergedAt` on PR #39.
+- **C-9 honoured:** IPD only. IRR was read through a `/tmp` scratch clone; **no IRR ref, file or issue was modified** by this pass.
+- This addendum is itself published through the normal IPD PR workflow; its own merge and post-merge verification are recorded in the completion report rather than self-asserted here.
+
+*End of Addendum A6.*
