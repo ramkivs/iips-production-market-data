@@ -66,4 +66,25 @@ To complete ROUT-05 / ROUT-06 at the issue layer, an actor with **`issues: write
 2. Post §2 of this record as a comment on **#16** and close it (`not planned` or `completed`).
 3. Delete neither issue.
 
+---
+
+## 4. Re-verification — 2026-10-21 (second pass): permission still unavailable, scope now exactly specified
+
+Both issues were re-read live at the start of the second IPD pass and remained **OPEN with zero comments**, neither labelled, neither linked to a PR. The substantive closure case in §1 and §2 was re-checked and is unchanged — including blob-level re-verification that `IIPS_V3_G3_IMPLEMENTATION_AUTHORITY_REQUEST_2026-10-18.md` is `ac4b402573b165faa771e451bbce6faeeaa4d2e0` and that the consumer contract is `163eb1f18ce023bb9a06917de99ca279fdb86bf7` with correction **C-1** (26 → 29) in place and no residual `26` occurrence.
+
+**The permission denial was re-tested once and reproduced** (no further attempts were made, per the no-blind-retry rule). This pass adds the precise required-scope header, which the first pass did not capture:
+
+| Probe | Result |
+|---|---|
+| `POST /repos/ramkivs/iips-production-market-data/issues/17/comments` | **HTTP 403** `Resource not accessible by integration` |
+| `POST /repos/ramkivs/iips-production-market-data/issues/16/comments` | **HTTP 403**; response header `X-Accepted-Github-Permissions: issues=write; pull_requests=write` |
+
+**Exact boundary, now demonstrated rather than inferred.** The governing token is a GitHub App / fine-grained credential that holds repository **`contents: write`** and **`pull_requests: write`** but **not `issues: write`**. Evidence for the granted half: branch pushes succeed, and a pull request was created successfully in the same pass (**IPD PR #36**). Evidence for the absent half: the `X-Accepted-Github-Permissions` header above, returned on the comment POST.
+
+`repos/…` reports `"permissions": {"admin": true, …}` for the underlying account; **that is not the token's effective scope** and must not be read as issue-write capability. The installation-level permissions could not be introspected (`401`, not a JWT), so the boundary is established from the operation itself, which is the stronger evidence.
+
+**State after this pass:** closure note **published in the repository**; issue comments **not posted**; issues **not closed**; permission **unavailable**. This is a permission limitation, not a substantive one — no part of §1 or §2 was revised, because no new evidence changed the closure case.
+
+**Minimum action still required** (unchanged from §3, restated with the exact scope): an operator holding a credential with **`issues: write`** on `ramkivs/iips-production-market-data` should (1) post §1 as a comment on **#17** and close as `completed`; (2) post §2 as a comment on **#16** and close as `not planned`; (3) delete neither. Nothing else is outstanding; no repository change is required to finish, and no new evidence needs to be gathered.
+
 *End of record.*
