@@ -655,3 +655,68 @@ This entry is published with the lockfile correction through the normal IPD PR w
 - No IRR mutation of any kind was performed by this pass.
 
 *End of Addendum A4.*
+
+---
+
+## ADDENDUM A5 — 2026-10-21 (second pass): refreshed `DEC-06` state, correction of the A4.4 fast-forward finding, exact-head CI evidence, and issue-closure status
+
+**Status of this addendum:** additive documentation reconciliation only. It renders **no** Program Authority decision, grants no authority, admits no capability, lifts no fence and changes no operational eligibility. It supersedes nothing in A4 except the single factual finding identified in A5.1.
+
+**Verification basis.** IPD `main` = `a6ad4a9dc8c9ba9b1a4c392888c7a42f2e1b3893` (PR #35 merge). IRR `main` = `8d2fc9852cc4df62c0fd7683016fe7e6480de0d8` — read only; **no IRR path was created, modified or deleted**.
+
+### A5.1 Correction to A4.4 — the candidate is no longer fast-forwardable
+
+A4.4 recorded `git compare main...3eaec0e` → *ahead 2, behind 0* (**fast-forwardable**). **That finding was accurate when written and is now stale.** `main` has since advanced two commits — `0980bd8` (the Group B reconciliation that added A4 itself) and `a6ad4a9` (PR #35 merge) — and `0980bd8` **touched the same inventory file** that `3eaec0e` annotates.
+
+| Property | A4.4 (as recorded) | Refreshed (this addendum) |
+|---|---|---|
+| Ancestry | ahead 2, behind 0 | **diverged** — ahead 2, behind 2; merge base `3d44e0a` |
+| Admission mechanism | fast-forward available | **merge commit required** (or rebase, which changes the commit IDs) |
+| Overlapping file | none | `evidence/np04/…RECONCILIATION_2026-10-17.md` |
+| Merge conflicts | n/a | **none** — `ort` auto-merge; A4 and the row-13 annotation both retained |
+| Check runs on the two commits | none | **none before this pass**; see A5.2 |
+
+The substantive A4.4 determination is **unchanged and re-confirmed**: no PA main-admission decision for this lineage exists, so it remains off `main`.
+
+### A5.2 Exact-head CI evidence now exists
+
+A2/A4 recorded that "tests pass" rested on local execution with no check runs attached. That gap is now closed for the candidate. A review-only PR was opened — **IPD PR #36, explicitly labelled NOT FOR MERGE** — to obtain an exact-head CI record:
+
+| Item | Verified value |
+|---|---|
+| CI run | `39629785765` — **success** (`pull_request`, head `3eaec0e`) |
+| Published count check | `executed test count` — **success**, check id `119324882624`: *586 tests executed — 586 passed, 0 failed* |
+| Mergeability | `MERGEABLE`, `mergeStateStatus` **`CLEAN`** |
+| GitHub merge preview | `0046adb1ea97eb6d3727c093757c85d93e9a9384`, tree `26dec9ac01515635cc15eb9cfa812435ff0f7f65` |
+
+Local runs in this pass, on the **tree identical to GitHub's merge preview**: `main` 584/584; candidate 586/586; merged integration 586/586; focused P11 suite 8/8; `tsc --noEmit` clean and `npm run build` ok in all three. POSIX execution remains **non-qualifying** for the Windows host.
+
+### A5.3 `DEC-06` decision package published
+
+The complete admission decision package is now a durable artifact:
+
+- `evidence/cross-repository/IIPS_V3_DEC06_P11_MAIN_ADMISSION_DECISION_PACKAGE_2026-10-21.md`
+- Package ID `IIPS-V3-DEC06-P11-MAIN-ADMISSION-DECISION-PACKAGE-2026-10-21-01`; status **DECISION REQUIRED — NOT DECIDED**.
+
+It carries the nine elements A4.4 recommended but did not assemble: exact commit IDs and parent chain; precise source/test/documentation scope with blob identities at `main`, candidate and merge tree; a **reproduced** statement of the defect (the P11 momentum factor is provably inert at 50/100 on `main`, because `SectorDefaultInjector`'s whitelist omits `momentum` before `FrozenEngines` applies `inputs.momentum ?? 0`); the validation evidence **and its limitations**; the acceptance-versus-admission boundary with IRR §16.65 quoted; dependencies and preserved fences; the exact decision requested as `D-06` with four options; the consequences of each; and the prohibited actions until the decision exists.
+
+**The `D-06` question:** admit lineage `b6e622432cb0ca3e5452c4194bc683c496a688fc` → `3eaec0edd4f89a806b301d647499ca860c2a1172` to IPD `main` — **ADMIT / ADMIT WITH CONDITIONS / REJECT / DEFER**. No option has been selected by any agent.
+
+### A5.4 Issues #16 and #17 — status re-verified, closure still not executable
+
+Both issues remained **OPEN with zero comments** at refresh. The prior pass's `403` was re-tested **once** and reproduced, now with the precise required-scope header captured:
+
+- `POST /repos/ramkivs/iips-production-market-data/issues/17/comments` → **HTTP 403** `Resource not accessible by integration`
+- `POST /repos/…/issues/16/comments` → **HTTP 403**, `X-Accepted-Github-Permissions: issues=write; pull_requests=write`
+
+The governing token holds repository `contents: write` (branch push and PR creation succeed; PR #36 was created successfully) but **not `issues: write`**. Per the no-blind-retry rule, no further attempts were made. **No issue comment was posted and no issue was closed in this pass.** The closure notes at `evidence/cross-repository/IPD_ISSUES_16_17_CLOSURE_NOTES_2026-10-21.md` remain the durable, evidence-backed basis for an operator with issue-write scope.
+
+### A5.5 Preserved boundaries confirmed by this pass
+
+- `SESSION_ONLY` / `durable:false` and the 29-key caller-identity guard unchanged; no `frontend/` path touched.
+- Gate 3 remains **not accepted**; IPD PR #34 remains open and unmerged; the Gate 3 lineage is independent of `D-06`.
+- All `503` fences, `G-2` §7/§8 exclusions, `CV-22` Option C, `CV-40` Option B deferral and every recorded deferral are unchanged.
+- No IRR mutation of any kind; IRR inspected read-only.
+- No source code was changed by this pass. PR #36 remains open, unmerged and explicitly marked not for merge.
+
+*End of Addendum A5.*
