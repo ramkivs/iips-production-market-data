@@ -573,3 +573,85 @@ This entry is published with the lockfile correction through the normal IPD PR w
 | Preserved integrity | Diff from initial `a5c3069` remains empty for application source/tests/frontend/CI and D05 deposit/mirror/manifest. No IRR access or writes; CV-22 Option C / 13-row consumer behavior unchanged. |
 
 **Reconciled status:** high source-map-js advisory **REMEDIATED**; moderate Router advisories **UNRESOLVED INSTALLED VULNERABILITIES** (no compatible v6 patch), with reachability limitations recorded in A3.1. No unrelated tracker status changes. This A3.4 post-merge evidence entry is itself published through the same normal IPD follow-up documentation workflow; its final remote-main presence and CI are verified in the completion report, rather than asserting a future self-referential merge result.
+
+---
+
+## ADDENDUM A4 — 2026-10-21: Row 48 / `CV-36` workbook historical-snapshot reconciliation, and bounded P11 status verification (`DEC-06`)
+
+**Status of this addendum:** additive documentation reconciliation only. It renders **no** Program Authority decision, grants no authority, admits no capability, lifts no fence, and changes no operational eligibility. It is published on IPD `main` through the normal IPD PR workflow; its own merge and post-merge verification are recorded in the completion report rather than asserted here.
+
+**Verification basis for this addendum.** IPD `main` = `3d44e0a123f2495f3b88ce0ab8b47fbc5bf072db` (PR #33 merge; exact-head checks `typecheck · build · test` **success** and `executed test count` **success — 584 tests executed, 0 failed**). IRR `main` = `8d2fc9852cc4df62c0fd7683016fe7e6480de0d8` (PR #170 merge, 2026-10-21T15:24:30Z) — read only; **no IRR path was read-modified or written**.
+
+### A4.1 What the historical snapshot is, exactly
+
+| Item | Verified value |
+|---|---|
+| Artifact | `IIPS_Production_Market_Data_Intelligence_Program_v1.0_TRACKER_INTEGRATION_ALIGNED.xlsx` (IPD repository root) |
+| Blob at `main` | **`6f4abdbceda1e75f12ea22cc0855a87d591f961c`** |
+| Size | `39,365` bytes |
+| Structure (read from the archive, not from prose) | **12 worksheets**: `Program Overview`, `IIPS Integration Baseline`, `Integration Decisions`, `Phase Roadmap`, `Work Tracker`, `Dependency Matrix`, `UI Coverage`, `Data Domains`, `Phase Gates`, `Status Legend`, `Parallel Execution`, `Git & Workspace`; plus 9 `FilterDatabase` defined names |
+| Change history | **One** commit touches this path on `main` — it has not been revised since the program baseline. It is therefore a **frozen planning snapshot**, not a live tracker. |
+| Disposition | **Preserved byte-unchanged.** Rewriting 59 status cells inside a binary planning artifact would destroy the historical record and substitute an unverifiable "current" workbook. That substitution is explicitly not performed here. |
+
+**Consequence.** Any status asserted by the workbook is **historical planning intent at program baseline**, and must never be cited as present-day implementation, validation, acceptance, qualification, admission or release evidence.
+
+### A4.2 What the authoritative trackers actually are
+
+| Layer | Authoritative artifact | Ref | Present state |
+|---|---|---|---|
+| Cross-repository capability register (51 rows) + decision register (`CV-*`, `XV-*`) | IRR `IIPS_V3_E2E_MASTER_TRACKER_AND_IRR_IPD_DECISION_REGISTER_2026-10-13.md` | IRR `main` @ `8d2fc985` | Current: §16.67 (`CV-CORR-50`, 2026-10-21) re-derived all 51 rows from live evidence and restated counts (`16` complete/accepted, `11` active outstanding, `35` register items); §16.68 (`CV-CORR-51`, 2026-10-21) records the Group B receipt |
+| IPD-side evidence and reconciliation record | **This document** (`evidence/np04/…RECONCILIATION_2026-10-17.md`), §1–§10 and addenda A1–A4 | IPD `main` | Current through this addendum |
+| IPD-side bounded P11 scope record | `evidence/cross-repository/IPD_P11_BOUNDED_LIBRARY_SCOPE_AND_ROW26_RECONCILIATION_2026-10-20.md` | **Commit `3eaec0edd4f89a806b301d647499ca860c2a1172` only — NOT on IPD `main`** | See A4.4 |
+| IPD program-plan workbook | The `.xlsx` described in A4.1 | IPD `main` | **Historical snapshot — superseded for status purposes by the rows above** |
+
+**Repository-boundary note.** `CV-36` and Matrix **row 48** are register items whose rows live in the **IRR** master tracker. This addendum can and does establish the IPD-side facts; it **cannot** move the IRR row's status. Any IRR-side text change is a separate IRR-authorised follow-up and was **not** attempted from this IPD task.
+
+### A4.3 `CV-36` / row 48 — what is reconciled and what is not
+
+**Reconciled by this addendum (IPD side):**
+
+1. The workbook is identified precisely (A4.1) and **declared a historical planning snapshot**, not current authority.
+2. The workbook is **preserved byte-unchanged**; no cell was edited, and no replacement "current" workbook was created.
+3. The live authoritative trackers are **named with refs and blobs** (A4.2), so the historical/current distinction is explicit at the point of use.
+4. The specific workbook-versus-evidence contradictions already enumerated in §8.3 of this document stand and are **not** revised (e.g. `P13-05` `NOT STARTED` against `evidence/p13` `CERTIFIED`; `P13-03` `NOT STARTED` against an implemented store port).
+
+**Not reconciled, and why — recorded as an explicit residual rather than silently closed:**
+
+- The `CV-36` closure condition is "every P-phase row's status cites a commit/evidence path; P14–P17 rows exist or are explicitly marked out of tracker scope". Satisfying that condition by rewriting the workbook is exactly the substitution prohibited above; satisfying it by declaring the workbook historical requires the **IRR register row** to carry that declaration. That row is IRR-owned.
+- Therefore **`CV-36` cannot be marked complete from an IPD-only pass.** Its accurate status after this addendum is: *IPD-side facts established and the historical/current distinction made explicit; the register-level status transition remains IRR-owned.*
+
+### A4.4 `DEC-06` — bounded P11 acceptance and the admission/publication boundary
+
+**Verified acceptance (established and published — not recreated here).**
+
+| Element | Verified state |
+|---|---|
+| Governing record | IRR tracker §16.65 (`CV-CORR-48`, 2026-10-20) — Program Authority selected **bounded in-process IPD P11 library acceptance** |
+| Publication of that record | IRR **PR #164** — **MERGED** 2026-10-20T17:42:53Z; §16.65 is present in the IRR tracker at `main` |
+| Scope of the acceptance | The existing in-process IPD **library** capability only — `DataBoundExecutor`, namespace guard, governed defaults, frozen sector engines, recalculation DAG — including the documented momentum-propagation and effective input-to-output lineage fixes. **Row 26 E2E is `NA` for this bounded scope only.** |
+| Restrictions expressly preserved | P11-02 recalculation/replay/snapshot/ownership unresolved; `CSIP_COMPOSITE` dispatch semantics undefined; `mode` / `governedIntelligenceInputs` semantics unresolved; UI05 compatibility unclaimed; IPD/IRR mapping and engine equivalence unverified; broader P15 provider-to-score claims bounded to their own historical tests. No blanket P11/P15 acceptance, certification or product-E2E completion. |
+
+**The IPD-side record of that scope is NOT on `main`.** Verified: `git compare main...3eaec0e` → **ahead 2, behind 0** (fast-forwardable). The two commits are:
+
+| Commit | Content | Nature |
+|---|---|---|
+| `b6e622432cb0ca3e5452c4194bc683c496a688fc` | "Fix P11 momentum propagation and scoring lineage" — modifies `src/engine_adapters/databound_executor.ts`, `src/engine_adapters/sector_defaults.ts`, `tests/wsd_p11_engine_adapters.test.ts` | **Implementation (source + test)** |
+| `3eaec0edd4f89a806b301d647499ca860c2a1172` | Adds `evidence/cross-repository/IPD_P11_BOUNDED_LIBRARY_SCOPE_AND_ROW26_RECONCILIATION_2026-10-20.md` (+67); annotates inventory row 13 | **Documentation** |
+
+**Boundary determination — publication not performed in this pass.**
+
+1. Publishing `b6e6224` would place **new engine source code on IPD `main`**. That is IPD **main admission of an implementation change**, not evidence publication. §16.65.4 records that the applicable standing-authorization ceiling covers governance-record preparation, branch publication for review and read-only verification, and **"does not by itself authorize or prove main admission"**; main admission is "a distinct, separately authorized and verifiable act".
+2. Publishing only `3eaec0e` is documentation and would pass no source gate — but it would land a record on `main` that cites a remediation commit whose code is **not** on `main`. Publishing that half alone risks being read as implied admission, which the task prohibits. It was therefore **not** published.
+3. Acceptance is **already established and already published** on the authoritative register (IRR, PR #164). It does **not** depend on the IPD record reaching `main`. No acceptance record was recreated.
+4. No admission decision for the IPD lineage was found in any inspected record. One therefore **has not been made**, and none is invented here.
+
+**Recommended next step (for the Program Authority; not performed, not pre-judged).** Issue one bounded IPD main-admission decision covering `b6e6224` + `3eaec0e` as a single unit, stating: the named commits; that the change is confined to `src/engine_adapters/**` and `tests/wsd_p11_engine_adapters.test.ts`; the required exact-head CI evidence; the bounded library scope per IRR §16.65; and that admission of this remediation establishes **no** product-consumer integration, no Row 26 E2E, no IPD/IRR equivalence, no Gate 3/4/5 movement and no operational eligibility change. Until that act exists, the lineage remains **off-`main`**.
+
+### A4.5 Preserved boundaries confirmed by this pass
+
+- `SESSION_ONLY` / `durable:false` and the 29-key caller-identity guard unchanged; no `frontend/` path touched.
+- Gate 3 remains **not accepted**; IPD PR #34 remains **open and unmerged**; no Gate 3 manifest path was added, removed or modified by this addendum.
+- `503` fences, `G-2` §7/§8 exclusions, `CV-22` Option C, `CV-40` Option B deferral, row 14/16 Option A closures and every recorded deferral are unchanged.
+- No IRR mutation of any kind was performed by this pass.
+
+*End of Addendum A4.*
