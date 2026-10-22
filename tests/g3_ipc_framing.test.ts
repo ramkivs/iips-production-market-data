@@ -191,13 +191,11 @@ describe('g3 / T-A ipc framing', () => {
     endpointPath = target.path;
 
     // The live endpoint is served by the production dispatcher, exactly as
-    // startIpcServer wires it. The previous hand-rolled echo handler released
-    // the frame reader immediately after writing its response, so on a
-    // flush-guard (Windows named pipe) transport a second frame delivered
-    // after the flush had no listener left to trip the guard — the sink could
-    // never record MALFORMED_FRAME, which is precisely the native-Windows
-    // failure disclosed on PR #34. The production handler races the flush
-    // guard during the write and keeps the post-flush watchdog attached.
+    // startIpcServer wires it. On a flush-guard (Windows named pipe)
+    // transport, the production handler races the flush guard during the
+    // write and then closes the handle once the single response has flushed,
+    // releasing the endpoint's one connection slot. A frame delivered after
+    // that close cannot reach the server or be dispatched.
     const db = openDatabase(join(root, 'store', 'ipd.db'));
     ensureMigrations(db, GATE3_MIGRATIONS);
     const now = new Date().toISOString();
@@ -346,21 +344,23 @@ describe('g3 / T-A ipc framing', () => {
     }
 
     // Windows named pipes provide no pre-break half-close signal (libuv:
-    // FlushFileBuffers only; EOF arrives when the 50 ms timer force-breaks
-    // the pipe, when writes can no longer succeed). A second frame delayed
-    // past the response flush therefore cannot make the first response
-    // undispatched. The enforceable Windows guarantees are asserted instead:
-    // exactly one well-formed response, the guard still trips on the second
-    // frame, and it is never dispatched (no second response).
-    assert.ok(received.byteLength > IPC_LENGTH_PREFIX_BYTES, 'one response frame was delivered before the pipe broke');
+    // FlushFileBuffers only; EOF arrives when the pipe breaks). The response
+    // is therefore written under the flush guard, after which the server
+    // closes the handle so the single C5.4 capacity slot is released. A frame
+    // delivered after that close cannot reach the server: the enforceable
+    // guarantees are exactly one well-formed response, no second response
+    // bytes, and no dispatch of the second frame. Pre-flush pipelined frames
+    // remain covered by the deterministic zero-byte/MALFORMED_FRAME tests.
+    assert.ok(received.byteLength > IPC_LENGTH_PREFIX_BYTES, 'one response frame was delivered');
     const declared = received.readUInt32BE(0);
-    assert.equal(declared, received.byteLength - IPC_LENGTH_PREFIX_BYTES);
+    assert.equal(
+      received.byteLength,
+      IPC_LENGTH_PREFIX_BYTES + declared,
+      'exactly one response frame and no second response bytes',
+    );
     const body = JSON.parse(received.subarray(4).toString('utf8')) as Record<string, unknown>;
     assert.equal(body.ok, true);
     assert.equal(body.op, 'portfolio.list', 'the second frame is never dispatched');
-    // Allow the trailing guard event to land before inspecting the sink.
-    await drainTicks(4);
-    assert.equal(diagnosticSink.peek().at(-1)?.reason, 'MALFORMED_FRAME');
   });
 });
 
@@ -547,7 +547,11 @@ describe('g3 / T-A flush-guard settlement (Windows named-pipe transport emulatio
     await drainTicks(6);
 
     assert.equal(socket.written.length, 1, 'exactly one response frame is delivered');
-    assert.equal(socket.destroyed, false, 'a successful response never destroys the socket');
+    assert.equal(
+      socket.destroyed,
+      true,
+      'the handle is closed once the response has flushed, releasing the single capacity slot',
+    );
     const response = socket.written[0];
     const declared = response.readUInt32BE(0);
     assert.ok(declared > 0 && declared === response.byteLength - IPC_LENGTH_PREFIX_BYTES);
@@ -671,13 +675,13 @@ describe('g3 / T-A flush-guard settlement (Windows named-pipe transport emulatio
     assert.equal(body.op, 'portfolio.list');
   });
 
-  // §E boundary (Windows-transport emulation, not native evidence): frame 2 is
-  // delivered in a separate data event only AFTER the response has flushed.
-  // Zero-byte refusal is impossible once the response is irreversibly flushed,
-  // but the one-frame invariant stays enforceable: frame 2 is never dispatched
-  // (no second response), it trips MALFORMED_FRAME in the bounded sink, and the
-  // connection is destroyed. The watchdog then detaches on terminal EOF.
-  it('a post-flush second frame is recorded and torn down without a second response', async () => {
+  // Windows-transport emulation, not native evidence: frame 2 is delivered
+  // only AFTER the response has flushed. At that point the server has closed
+  // the handle to release the sole capacity slot, so frame 2 cannot reach it,
+  // is never dispatched, and produces no second response. Zero-byte refusal
+  // and a post-flush sink record cannot apply after a valid response has
+  // already been delivered; pre-flush T-A refusals retain that coverage.
+  it('a post-flush second frame cannot reach the closed handle and is never dispatched', async () => {
     const socket = new FakeSocket();
     createConnectionHandler(db, { settlement: 'flush-guard', idleTimeoutMs: 2000 })(
       socket as unknown as Socket,
@@ -685,13 +689,13 @@ describe('g3 / T-A flush-guard settlement (Windows named-pipe transport emulatio
     socket.emit('data', listFrame);
     await drainTicks(2);
     assert.equal(socket.written.length, 1, 'the frame-1 response has already flushed');
+    assert.equal(socket.destroyed, true, 'the handle is closed as soon as the response has flushed');
 
     socket.emit('data', secondFrame);
     await drainTicks(4);
 
     assert.equal(socket.written.length, 1, 'the second frame is never dispatched or answered');
-    assert.equal(socket.destroyed, true, 'the post-flush violation tears the connection down');
-    assert.equal(diagnosticSink.peek().at(-1)?.reason, 'MALFORMED_FRAME');
+    assert.equal(diagnosticSink.peek().length, 0, 'no post-flush frame can be observed on a closed handle');
     const firstBody = JSON.parse(socket.written[0].subarray(4).toString('utf8')) as Record<string, unknown>;
     assert.equal(firstBody.op, 'portfolio.list');
 
@@ -702,7 +706,7 @@ describe('g3 / T-A flush-guard settlement (Windows named-pipe transport emulatio
     assert.equal(socket.listenerCount('error'), 1, 'only the caller-owned error handler remains');
   });
 
-  it('a clean post-flush EOF with no trailing frame leaves the sink empty', async () => {
+  it('releases the handle after a clean single-frame exchange and records nothing', async () => {
     const socket = new FakeSocket();
     createConnectionHandler(db, { settlement: 'flush-guard', idleTimeoutMs: 2000 })(
       socket as unknown as Socket,
@@ -710,24 +714,26 @@ describe('g3 / T-A flush-guard settlement (Windows named-pipe transport emulatio
     socket.emit('data', listFrame);
     await drainTicks(2);
     assert.equal(socket.written.length, 1);
-    assert.equal(socket.destroyed, false);
+    assert.equal(
+      socket.destroyed,
+      true,
+      'a well-behaved single-frame peer is released, freeing the connection slot',
+    );
 
     socket.forceBrokenPipeEof();
     await drainTicks(2);
-    assert.equal(socket.written.length, 1);
-    assert.equal(socket.destroyed, false, 'a well-behaved single-frame peer is not torn down');
-    assert.equal(diagnosticSink.peek().length, 0);
+    assert.equal(socket.written.length, 1, 'the single response is never duplicated');
+    assert.equal(diagnosticSink.peek().length, 0, 'a clean single-frame exchange records nothing');
   });
 
-  // Real-transport companion: the same post-flush assertion over an actual
-  // socket, with the settlement policy forced to flush-guard. This exercises
-  // on every host (including Linux CI) the exact watchdog path that the
-  // native-Windows real-socket test depends on, instead of leaving it
-  // observable only on a Windows pipe. The second frame is written only
-  // after the client has received the response, so the frame is post-flush
-  // by construction (allowHalfOpen keeps the client writable side open
-  // across the server's response FIN).
-  it('real socket under flush-guard: a post-flush second frame is recorded, never dispatched', async () => {
+  // Real-transport companion: the same post-flush boundary over an actual
+  // socket, with the settlement policy forced to flush-guard. The second
+  // frame is written only after the client has received the response, by
+  // which time the server has closed its handle. It therefore cannot be
+  // dispatched, and the next sequential request proves the sole connection
+  // slot was released. On POSIX this is a regression guard; the slot-release
+  // property is the one that discriminates on a native Windows pipe.
+  it('real socket under flush-guard: post-flush frame cannot dispatch and the slot is released', async () => {
     const target = resolveEndpointTarget(
       {
         [IPC_ENDPOINT_SETTING]: `iips-g3-flush-real-${process.pid}`,
@@ -759,12 +765,24 @@ describe('g3 / T-A flush-guard settlement (Windows named-pipe transport emulatio
 
       assert.ok(received.byteLength > IPC_LENGTH_PREFIX_BYTES, 'exactly the first response was delivered');
       const declared = received.readUInt32BE(0);
-      assert.equal(declared, received.byteLength - IPC_LENGTH_PREFIX_BYTES);
+      assert.equal(
+        received.byteLength,
+        IPC_LENGTH_PREFIX_BYTES + declared,
+        'exactly one response frame and no second response bytes',
+      );
       const body = JSON.parse(received.subarray(4).toString('utf8')) as Record<string, unknown>;
       assert.equal(body.ok, true);
       assert.equal(body.op, 'portfolio.list', 'the second frame is never dispatched');
-      await drainTicks(4);
-      assert.equal(diagnosticSink.peek().at(-1)?.reason, 'MALFORMED_FRAME');
+
+      const nextResponse = await rawRoundTrip(target.path, listFrame);
+      assert.ok(
+        nextResponse.byteLength > IPC_LENGTH_PREFIX_BYTES,
+        'a later sequential request succeeds after the flush-guard connection closes',
+      );
+      const nextBody = JSON.parse(nextResponse.subarray(4).toString('utf8')) as Record<string, unknown>;
+      assert.equal(nextBody.ok, true);
+      assert.equal(nextBody.op, 'portfolio.list');
+      assert.equal(diagnosticSink.peek().length, 0, 'neither clean exchange records a Class P refusal');
     } finally {
       await realHandle.stop();
     }

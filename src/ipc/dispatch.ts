@@ -55,40 +55,20 @@ function refuseClassP(socket: Socket, reason: ClassPReason, detail: string): voi
 }
 
 /**
- * Post-flush one-frame watchdog (Windows named-pipe transport).
+ * Writes exactly one frame WITHOUT half-closing the writable side.
  *
- * The frame reader's flush guard only spans frame-1 parse → response flush.
- * On a Windows byte-mode pipe the single response can be irreversibly flushed
- * before a delayed second frame is delivered, and reader.release() has removed
- * the reader-owned listeners. Without this observer such a frame would be
- * silently uncounted. The response cannot be un-sent (platform impossibility —
- * see IRR PKG-11 §E), but the one-frame invariant stays enforceable after the
- * flush: the second frame is never dispatched (the handler state machine is
- * finished), it is recorded as MALFORMED_FRAME in the bounded sink, and the
- * connection is torn down. Exactly one response is ever emitted.
- *
- * Only the three watchdog-owned listeners are removed on terminal events;
- * caller-owned listeners (the dispatcher's error handler above) are preserved.
+ * Used on the flush-guard (Windows named-pipe) path only. A libuv pipe has no
+ * half-close primitive: `end()` there is a FlushFileBuffers that neither signals
+ * EOF to the peer nor closes the handle. Writing and then closing the handle
+ * explicitly states what actually happens on that transport.
  */
-function attachPostFlushWatch(socket: Socket): void {
-  const onTrailingData = (): void => {
-    cleanup();
-    diagnosticSink.record(
-      'MALFORMED_FRAME',
-      'a second frame delivered after the response flush is refused; the frame is never dispatched',
-    );
-    socket.destroy();
-  };
-  const cleanup = (): void => {
-    socket.off('data', onTrailingData);
-    socket.off('end', cleanup);
-    socket.off('close', cleanup);
-    socket.off('error', cleanup);
-  };
-  socket.on('data', onTrailingData);
-  socket.on('end', cleanup);
-  socket.on('close', cleanup);
-  socket.on('error', cleanup);
+function writeFrame(socket: Socket, frame: Buffer): Promise<void> {
+  return new Promise((resolve, reject) => {
+    socket.write(frame, (error?: Error | null) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
 }
 
 /**
@@ -141,10 +121,6 @@ export function createConnectionHandler(
       // use the same guarded single-response write path. Before assignment
       // (a fault during the pre-write validation) it stays a zero-byte no-op.
       let writeGuarded: (frame: Buffer) => Promise<boolean> = () => Promise.resolve(false);
-      // Set only once a response frame has flushed successfully. On flush-guard
-      // transports that arms the post-flush one-frame watchdog in finally.
-      let responded = false;
-
       try {
         // C7: caller-supplied authority/identity at any depth is refused before any
         // store access, at top level and inside payload/options alike.
@@ -210,15 +186,31 @@ export function createConnectionHandler(
           try {
             if (reader.settlement === 'flush-guard') {
               await Promise.race([
-                endFrame(socket, frame),
+                writeFrame(socket, frame),
                 reader.whenGuardTripped.then((fault) => {
                   throw fault;
                 }),
               ]);
-            } else {
-              await endFrame(socket, frame);
+              // The single response has flushed. Close the server handle now:
+              // `listenIpc` sets maxConnections = 1 (C5.4) and Node decrements
+              // `server._connections` only in Socket._destroy, so an open handle
+              // would consume the one capacity slot for the server's lifetime and
+              // every later connection would be dropped before 'connection'.
+              // Closing also delivers the peer's EOF: on a libuv pipe `end()` is
+              // a FlushFileBuffers with no half-close, so the peer observes
+              // ERROR_BROKEN_PIPE only on handle close. The frame is already
+              // flushed, so the peer drains it first.
+              //
+              // Consequence (contract position, act §4.2 item 11 / §4.3 T-A):
+              // a frame delivered after this point cannot reach a closed handle,
+              // so the one-request/at-most-one-response invariant is enforced
+              // structurally. The pipelined-frame refusal — the case T-A governs
+              // ("zero bytes; connection closed (Class P)") — still happens before
+              // the flush and is unchanged below.
+              socket.destroy();
+              return true;
             }
-            responded = true;
+            await endFrame(socket, frame);
             return true;
           } catch (error) {
             if (error instanceof ClassPError) {
@@ -276,13 +268,13 @@ export function createConnectionHandler(
         // Detach exactly the reader-owned listeners; the caller's socket error
         // handler registered above remains available for transmission faults.
         reader.release();
-        // Flush-guard transports (Windows named pipes): keep the one-frame
-        // invariant enforceable for a second frame delivered after the
-        // response irreversibly flushed. Zero-byte refusal remains impossible
-        // at this point (documented in IRR PKG-11 §E); the frame is refused by
-        // sink record plus teardown and is never dispatched.
-        if (reader.settlement === 'flush-guard' && responded && !socket.readableEnded) {
-          attachPostFlushWatch(socket);
+        // Flush-guard transports (Windows named pipes): every path must leave
+        // the capacity slot free. A successful response closes the handle in
+        // writeGuarded; a Class P refusal or transport fault closes it in
+        // refuseClassP. This guard covers any remaining flush-guard exit so no
+        // path can hold the single connection slot open.
+        if (reader.settlement === 'flush-guard' && !socket.destroyed) {
+          socket.destroy();
         }
       }
     })();

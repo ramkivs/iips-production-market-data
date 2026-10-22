@@ -186,3 +186,115 @@ describe('g3 / T-B binding resolution', () => {
     db.exec('ROLLBACK;');
   });
 });
+
+/**
+ * Gate 3 T-C — connection release across sequential requests.
+ *
+ * Regression for the native-Windows zero-byte defect: with the flush-guard
+ * (Windows named-pipe) settlement policy the server wrote its single response
+ * without ever closing the handle. `listenIpc` sets `maxConnections = 1` (C5.4)
+ * and Node decrements `server._connections` only in `Socket._destroy`, so the
+ * one capacity slot stayed consumed for the server's lifetime and `net.js`
+ * dropped every later connection before emitting 'connection' — the peer saw
+ * zero bytes. The first request of a server lifetime succeeded and every
+ * subsequent one was silently refused, which is why the whole-file run failed
+ * while a name-filtered single test passed.
+ *
+ * The flush-guard policy is forced here so this regression also runs on POSIX,
+ * where the endpoint would otherwise select the AF_UNIX half-close policy whose
+ * `end()` happens to close the socket and mask the defect.
+ */
+describe('g3 / T-C connection release across sequential requests', () => {
+  let root: string;
+  let db: DatabaseSync;
+  let handle: IpcHandle;
+  let endpointPath: string;
+  let accepted = 0;
+  let closed = 0;
+
+  before(async () => {
+    root = mkdtempSync(join(tmpdir(), 'g3-release-'));
+    db = openDatabase(join(root, 'store', 'ipd.db'));
+    ensureMigrations(db, GATE3_MIGRATIONS);
+    const now = new Date().toISOString();
+    db.prepare(
+      "INSERT INTO local_principal_bindings (binding_id, principal_label, status, created_at, updated_at, revoked_at) VALUES ('r-1', 'operator', 'ACTIVE', ?, ?, NULL)",
+    ).run(now, now);
+    db.prepare(
+      "INSERT INTO local_principal_memberships (membership_id, binding_id, tenant_id, canonical_owner_id, status, created_at, updated_at, revoked_at) VALUES ('rm-1', 'r-1', 'tenant-local', 'owner-local', 'ACTIVE', ?, ?, NULL)",
+    ).run(now, now);
+
+    const target = resolveEndpointTarget(
+      { IIPS_G2_IPC_ENDPOINT: `iips-g3-release-${process.pid}`, IIPS_G3_LOCAL_STATE_DIR: join(root, 'state') },
+      HOST_PLATFORM,
+    );
+    endpointPath = target.path;
+    handle = await listenIpc(
+      target,
+      createConnectionHandler(db, { settlement: 'flush-guard' }),
+      { platform: HOST_PLATFORM },
+    );
+    // Observe the server's own accounting: a connection is accepted, and its
+    // handle is closed exactly when the capacity slot is released.
+    handle.server.on('connection', (socket) => {
+      accepted += 1;
+      socket.once('close', () => {
+        closed += 1;
+      });
+    });
+  });
+
+  after(async () => {
+    await handle.stop();
+    closeDatabase();
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  /** Wait for every accepted connection to be closed, bounded so a leak fails loudly. */
+  async function awaitAllReleased(deadlineMs = 5000): Promise<void> {
+    const started = Date.now();
+    while (closed < accepted && Date.now() - started < deadlineMs) {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+    assert.equal(closed, accepted, `${accepted} accepted connection(s) must all be closed`);
+  }
+
+  it('serves every sequential request for the lifetime of one server', async () => {
+    const envelope = { v: 1, op: 'portfolio.list' };
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      const response = await call(endpointPath, envelope);
+      assert.ok(
+        response.byteLength > 0,
+        `request ${attempt} received a response (an unreleased connection slot yields zero bytes)`,
+      );
+      const body = JSON.parse(response.subarray(4).toString('utf8')) as Record<string, unknown>;
+      assert.equal(body.ok, true, `request ${attempt} returned a success frame`);
+      assert.equal(body.op, 'portfolio.list');
+    }
+    assert.equal(accepted, 5, 'each request opened its own connection');
+  });
+
+  it('releases the single capacity slot once the response has flushed', async () => {
+    await awaitAllReleased();
+    const idle = await new Promise<number>((resolve) =>
+      handle.server.getConnections((error, count) => resolve(error ? -1 : count)),
+    );
+    assert.equal(idle, 0, 'no connection remains counted against the capacity of one');
+  });
+
+  it('recovers to a successful request after a zero-byte Class P refusal', async () => {
+    const now = new Date().toISOString();
+    db.prepare("UPDATE local_principal_bindings SET status = 'REVOKED', revoked_at = ? WHERE binding_id = 'r-1'").run(now);
+    db.prepare("UPDATE local_principal_memberships SET status = 'REVOKED', revoked_at = ? WHERE membership_id = 'rm-1'").run(now);
+
+    const refused = await call(endpointPath, { v: 1, op: 'portfolio.list' });
+    assert.equal(refused.byteLength, 0, 'the refusal is zero bytes');
+
+    db.prepare("UPDATE local_principal_bindings SET status = 'ACTIVE', revoked_at = NULL WHERE binding_id = 'r-1'").run();
+    db.prepare("UPDATE local_principal_memberships SET status = 'ACTIVE', revoked_at = NULL WHERE membership_id = 'rm-1'").run();
+
+    const recovered = await call(endpointPath, { v: 1, op: 'portfolio.list' });
+    assert.ok(recovered.byteLength > 0, 'the next request after a refusal succeeds');
+    await awaitAllReleased();
+  });
+});
