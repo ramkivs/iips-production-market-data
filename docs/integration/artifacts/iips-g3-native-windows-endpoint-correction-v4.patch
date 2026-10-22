@@ -1,0 +1,744 @@
+diff --git a/scripts/run-tests.mjs b/scripts/run-tests.mjs
+index fe1ab1a..6b51ab1 100644
+--- a/scripts/run-tests.mjs
++++ b/scripts/run-tests.mjs
+@@ -92,7 +92,7 @@ if (stale.length > 0) {
+ 
+ console.log(`[test-guard] files=${files.length} (source suite files: ${sourceTests.length})`);
+ 
+-const runnerArgs = ['--test', ...files];
++const runnerArgs = ['--test-reporter=tap', '--test', ...files];
+ 
+ const result = spawnSync(process.execPath, runnerArgs, {
+   cwd: repoRoot,
+diff --git a/src/ipc/endpoint.ts b/src/ipc/endpoint.ts
+index 1d32ae4..89c3db1 100644
+--- a/src/ipc/endpoint.ts
++++ b/src/ipc/endpoint.ts
+@@ -2,95 +2,312 @@
+  * IIPS Production Market Data — IPC endpoint
+  *
+  * Gate 3 act IIPS-V3-G3-IMPLEMENTATION-AUTHORITY-ACT-2026-10-19-02 §4.2 item 12.
+- * Same-host endpoint only: UNIX domain socket in an owner-only (0700) directory
+- * with 0600 socket mode on POSIX; Windows named pipe on the deployment host
+- * (verified only at Gate 4). Refuses to create an endpoint on name/path collision.
+- * Creates no TCP, HTTP or URL listener.
++ * Same-host endpoint only: POSIX Unix-domain socket in an owner-only (0700)
++ * directory with a 0600 socket mode; native Windows uses a named pipe.
++ * No TCP, HTTP, URL, or externally reachable listener is created.
+  */
+ 
+-import { createServer as createUnixServer, type AddressInfo } from 'node:net';
+-import { mkdirSync, existsSync } from 'node:fs';
+-import { join, dirname } from 'node:path';
++import {
++  createServer,
++  type Server,
++  type Socket,
++} from 'node:net';
++import {
++  chmodSync,
++  existsSync,
++  lstatSync,
++  mkdirSync,
++  rmSync,
++} from 'node:fs';
++import { join, dirname, isAbsolute } from 'node:path';
+ import { tmpdir } from 'node:os';
+ 
+ export interface EndpointOptions {
++  /** POSIX only. The parent directory must be private (0700). */
+   socketPath?: string;
++  /** Windows only. Supply the pipe name, not a full \\.\pipe\ path. */
+   pipeName?: string;
+ }
+ 
+ export interface CreatedEndpoint {
+-  close(): void;
+-  onConnection(handler: (socket: import('node:net').Socket) => void): void;
++  /** Closes the listener and active connections; resolves after closure. */
++  close(): Promise<void>;
++  onConnection(handler: (socket: Socket) => void): void;
+   address(): string;
+ }
+ 
+ export class EndpointError extends Error {
+-  constructor(message: string) {
++  readonly code?: string;
++
++  constructor(message: string, code?: string) {
+     super(message);
+     this.name = 'EndpointError';
++    this.code = code;
+   }
+ }
+ 
+-/**
+- * Create a same-host IPC endpoint. On POSIX this is a UNIX domain socket in an
+- * owner-only directory (0700) with socket mode 0600. On Windows this would be a
+- * named pipe (verified only at Gate 4 on the deployment host).
+- *
+- * Throws EndpointError on name/path collision or if unable to create.
+- */
+-export function createIpcEndpoint(options: EndpointOptions = {}): CreatedEndpoint {
+-  const socketPath =
+-    options.socketPath ?? join(tmpdir(), 'iips-g3-ipc.sock');
++const WINDOWS_PIPE_PREFIX = '\\\\.\\pipe\\';
++const WINDOWS_PIPE_NAME_PATTERN = /^[A-Za-z0-9._-]{1,100}$/;
+ 
+-  if (existsSync(socketPath)) {
+-    throw new EndpointError(
+-      `IPC endpoint already exists at ${socketPath}; refusing to create on collision.`,
++function errorCode(error: unknown): string | undefined {
++  if (typeof error !== 'object' || error === null || !('code' in error)) {
++    return undefined;
++  }
++  const code = (error as { code?: unknown }).code;
++  return typeof code === 'string' ? code : undefined;
++}
++
++function endpointErrorForBind(error: unknown, address: string, windows: boolean): EndpointError {
++  const code = errorCode(error);
++  const collisionCodes = windows
++    ? ['EADDRINUSE', 'EEXIST', 'EACCES', 'EPERM', 'EBUSY']
++    : ['EADDRINUSE', 'EEXIST'];
++
++  if (code !== undefined && collisionCodes.includes(code)) {
++    return new EndpointError(
++      `IPC endpoint already exists or cannot be claimed (${code}); refusing collision: ${address}`,
++      code,
+     );
+   }
+ 
++  return new EndpointError(
++    `IPC endpoint could not be bound${code ? ` (${code})` : ''}: ${address}`,
++    code,
++  );
++}
++
++function ensurePrivateSocketDirectory(socketPath: string): void {
+   const socketDir = dirname(socketPath);
++
+   try {
+-    mkdirSync(socketDir, { recursive: true, mode: 0o700 });
+-  } catch (e) {
+-    throw new EndpointError(`Cannot create IPC socket directory: ${e}`);
++    if (!existsSync(socketDir)) {
++      mkdirSync(socketDir, { recursive: true, mode: 0o700 });
++    }
++
++    const directory = lstatSync(socketDir);
++    if (!directory.isDirectory() || directory.isSymbolicLink()) {
++      throw new EndpointError(`IPC socket parent is not a real directory: ${socketDir}`);
++    }
++
++    if (typeof process.getuid === 'function' && directory.uid !== process.getuid()) {
++      throw new EndpointError(`IPC socket parent is not owned by the current user: ${socketDir}`);
++    }
++
++    const permissions = directory.mode & 0o777;
++    if (permissions !== 0o700) {
++      throw new EndpointError(
++        `IPC socket parent must have mode 0700 (found ${(permissions).toString(8)}): ${socketDir}`,
++      );
++    }
++  } catch (error) {
++    if (error instanceof EndpointError) throw error;
++    throw new EndpointError(`Cannot validate private IPC socket directory: ${String(error)}`);
+   }
++}
+ 
+-  const server = createUnixServer((socket) => {
+-    // Handler is registered by the caller via onConnection.
+-  });
++function resolveEndpoint(options: EndpointOptions): { address: string; windows: boolean } {
++  const windows = process.platform === 'win32';
+ 
+-  server.listen(socketPath, () => {
+-    try {
+-      // Set socket file mode to 0600 (owner read/write only).
+-      const fs = require('node:fs');
+-      fs.chmodSync(socketPath, 0o600);
+-    } catch {
+-      // Best effort; if chmod fails, the socket is still usable by owner.
++  if (windows) {
++    if (options.socketPath !== undefined) {
++      throw new EndpointError(
++        'socketPath is POSIX-only; native Windows must use a named-pipe endpoint',
++      );
+     }
+-  });
+ 
+-  let connectionHandler: ((socket: import('node:net').Socket) => void) | null = null;
++    const name = options.pipeName ?? 'iips-g3-ipc';
++    if (!WINDOWS_PIPE_NAME_PATTERN.test(name)) {
++      throw new EndpointError(
++        'pipeName must be 1–100 ASCII letters, digits, dots, underscores, or hyphens',
++      );
++    }
++
++    return { address: `${WINDOWS_PIPE_PREFIX}${name}`, windows: true };
++  }
++
++  if (options.pipeName !== undefined) {
++    throw new EndpointError('pipeName is Windows-only; POSIX must use a Unix-domain socket');
++  }
++
++  const socketPath =
++    options.socketPath ??
++    join(
++      tmpdir(),
++      `iips-g3-${typeof process.getuid === 'function' ? process.getuid() : process.pid}`,
++      'ipc.sock',
++    );
++
++  if (!isAbsolute(socketPath)) {
++    throw new EndpointError(`IPC socket path must be absolute: ${socketPath}`);
++  }
++
++  ensurePrivateSocketDirectory(socketPath);
++
++  // lstat semantics matter: a dangling symlink is also an occupied name.
++  try {
++    lstatSync(socketPath);
++    throw new EndpointError(
++      `IPC endpoint already exists at ${socketPath}; refusing to create on collision.`,
++    );
++  } catch (error) {
++    if (error instanceof EndpointError) throw error;
++    if (errorCode(error) !== 'ENOENT') {
++      throw new EndpointError(
++        `IPC endpoint path could not be inspected: ${socketPath}`,
++        errorCode(error),
++      );
++    }
++  }
++
++  return { address: socketPath, windows: false };
++}
++
++/**
++ * Creates a local IPC listener and resolves only after the OS confirms that it
++ * is listening at the configured local path. Bind errors reject this promise.
++ */
++export async function createIpcEndpoint(
++  options: EndpointOptions = {},
++): Promise<CreatedEndpoint> {
++  const target = resolveEndpoint(options);
++  const server: Server = createServer();
++  let connectionHandler: ((socket: Socket) => void) | null = null;
++  const liveSockets = new Set<Socket>();
++  let closePromise: Promise<void> | null = null;
++  let ready = false;
++
+   server.on('connection', (socket) => {
++    liveSockets.add(socket);
++    socket.once('close', () => liveSockets.delete(socket));
++
+     if (connectionHandler) {
+-      connectionHandler(socket);
++      try {
++        connectionHandler(socket);
++      } catch {
++        socket.destroy();
++      }
++    } else {
++      socket.destroy();
+     }
+   });
+ 
+-  return {
+-    close(): void {
+-      server.close(() => {
++  const close = (): Promise<void> => {
++    if (closePromise) return closePromise;
++
++    closePromise = new Promise<void>((resolve, reject) => {
++      for (const socket of liveSockets) socket.destroy();
++
++      if (!server.listening) {
++        resolve();
++        return;
++      }
++
++      try {
++        server.close((error) => {
++          if (error) {
++            reject(error);
++            return;
++          }
++
++          try {
++            // Node closes a Unix-domain listener but does not remove its path.
++            // Remove only the path owned by this successfully bound endpoint.
++            if (!target.windows) rmSync(target.address, { force: true });
++            resolve();
++          } catch (cleanupError) {
++            reject(new EndpointError(
++              `Could not remove closed IPC socket path: ${String(cleanupError)}`,
++            ));
++          }
++        });
++      } catch (error) {
++        reject(error);
++      }
++    });
++
++    return closePromise;
++  };
++
++  return await new Promise<CreatedEndpoint>((resolve, reject) => {
++    let settled = false;
++
++    const rejectAfterClose = (error: Error): void => {
++      if (settled) return;
++      settled = true;
++      void close().then(
++        () => reject(error),
++        (closeError: unknown) =>
++          reject(new EndpointError(
++            `${error.message}; endpoint cleanup also failed: ${String(closeError)}`,
++          )),
++      );
++    };
++
++    const onError = (error: Error): void => {
++      if (settled) {
++        // A post-bind server error must not become an unhandled EventEmitter error.
++        void close();
++        return;
++      }
++
++      const mapped = endpointErrorForBind(error, target.address, target.windows);
++      if (server.listening) {
++        rejectAfterClose(mapped);
++        return;
++      }
++
++      settled = true;
++      reject(mapped);
++    };
++
++    const onListening = (): void => {
++      if (settled) return;
++
++      const boundAddress = server.address();
++      if (typeof boundAddress !== 'string' || boundAddress !== target.address) {
++        rejectAfterClose(
++          new EndpointError(
++            'Bound IPC endpoint did not resolve to the configured local path; refusing readiness',
++          ),
++        );
++        return;
++      }
++
++      if (!target.windows) {
+         try {
+-          require('node:fs').unlinkSync(socketPath);
+-        } catch {
+-          // Best effort cleanup.
++          chmodSync(target.address, 0o600);
++        } catch (error) {
++          rejectAfterClose(
++            new EndpointError(`Could not restrict IPC socket permissions to 0600: ${String(error)}`),
++          );
++          return;
+         }
++      }
++
++      ready = true;
++      settled = true;
++
++      resolve({
++        close,
++        onConnection(handler: (socket: Socket) => void): void {
++          connectionHandler = handler;
++        },
++        address(): string {
++          if (!ready) {
++            throw new EndpointError('IPC endpoint is not ready');
++          }
++          return target.address;
++        },
+       });
+-    },
+-    onConnection(handler: (socket: import('node:net').Socket) => void): void {
+-      connectionHandler = handler;
+-    },
+-    address(): string {
+-      return socketPath;
+-    },
+-  };
++    };
++
++    server.on('error', onError);
++    server.once('listening', onListening);
++
++    try {
++      server.listen(target.address);
++    } catch (error) {
++      onError(error instanceof Error ? error : new Error(String(error)));
++    }
++  });
+ }
+diff --git a/src/ipc/entrypoint.ts b/src/ipc/entrypoint.ts
+index e1173bc..15d669b 100644
+--- a/src/ipc/entrypoint.ts
++++ b/src/ipc/entrypoint.ts
+@@ -137,69 +137,109 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_active_membership
+   },
+ ] as const;
+ 
+-function main(): void {
+-  // Step 1: Validate runtime (Node >= 22.13.0 enforced in getConnection).
+-  const db: DatabaseSync = getConnection();
+-
+-  // Step 2: Connect (done by getConnection opening the database).
+-
+-  // Step 3: Migrate — verify and apply pending migrations.
+-  const ledger = new MigrationLedger(db, EXPECTED_MIGRATIONS);
+-  const verification = ledger.verify();
+-  if (!verification.ok) {
+-    console.error(`[durable-persistence] Migration verification failed:`);
+-    for (const problem of verification.problems) {
+-      console.error(`  - ${problem}`);
++async function main(): Promise<void> {
++  let endpoint: Awaited<ReturnType<typeof createIpcEndpoint>> | null = null;
++
++  try {
++    // Step 1: Validate runtime and open the operator-local database.
++    const db: DatabaseSync = getConnection();
++
++    // Step 2: Connect (done by getConnection opening the database).
++
++    // Step 3: Migrate — verify and apply pending migrations.
++    const ledger = new MigrationLedger(db, EXPECTED_MIGRATIONS);
++    const pending = ledger.pendingMigrations();
++    const verification = ledger.verify();
++
++    // A missing expected migration is a legitimate first-start state, not by
++    // itself evidence of tampering. Only suppress those exact verification
++    // findings when pendingMigrations() independently confirms the same IDs.
++    // Any checksum mismatch, unexpected applied migration, or uncorroborated
++    // missing-migration finding remains a fail-closed integrity error.
++    const pendingIds = new Set(pending);
++    const integrityProblems = verification.problems.filter((problem) => {
++      const missing = /^expected migration not applied: (.+)$/.exec(problem);
++      return !(missing && pendingIds.has(missing[1]));
++    });
++    if (integrityProblems.length > 0) {
++      console.error('[durable-persistence] Migration integrity verification failed:');
++      for (const problem of integrityProblems) {
++        console.error(`  - ${problem}`);
++      }
++      throw new Error('Migration integrity verification failed; refusing to bind IPC endpoint');
+     }
+-    closeConnection();
+-    process.exit(1);
+-  }
+ 
+-  const pending = ledger.pendingMigrations();
+-  for (const id of pending) {
+-    const migration = EXPECTED_MIGRATIONS.find((m) => m.id === id);
+-    if (!migration) {
+-      console.error(`[durable-persistence] Pending migration not in expected set: ${id}`);
+-      closeConnection();
+-      process.exit(1);
++    for (const id of pending) {
++      const migration = EXPECTED_MIGRATIONS.find((m) => m.id === id);
++      if (!migration) {
++        throw new Error(`Pending migration not in expected set: ${id}`);
++      }
++      ledger.apply(migration);
+     }
+-    ledger.apply(migration);
+-  }
+ 
+-  // Re-verify after applying migrations.
+-  const postVerify = ledger.verify();
+-  if (!postVerify.ok) {
+-    console.error(`[durable-persistence] Post-migration verification failed:`);
+-    for (const problem of postVerify.problems) {
+-      console.error(`  - ${problem}`);
++    // Re-verify after applying migrations.
++    const postVerify = ledger.verify();
++    if (!postVerify.ok) {
++      console.error('[durable-persistence] Post-migration verification failed:');
++      for (const problem of postVerify.problems) {
++        console.error(`  - ${problem}`);
++      }
++      throw new Error('Post-migration verification failed; refusing to bind IPC endpoint');
+     }
+-    closeConnection();
+-    process.exit(1);
+-  }
+ 
+-  // Step 4: Verify (done above). Step 5: Bind — create IPC endpoint.
+-  let endpoint: ReturnType<typeof createIpcEndpoint> | null = null;
+-  try {
+-    endpoint = createIpcEndpoint();
+-  } catch (e) {
+-    console.error(`[durable-persistence] Endpoint creation failed: ${e}`);
+-    closeConnection();
+-    process.exit(1);
+-  }
++    // Step 4: Bind. Readiness is not reported until the OS confirms the local
++    // socket/pipe has bound successfully.
++    endpoint = await createIpcEndpoint();
++    console.log(`[durable-persistence] IPC endpoint ready at ${endpoint.address()}`);
++
++    let shutdownPromise: Promise<void> | null = null;
++    const shutdown = (): Promise<void> => {
++      if (shutdownPromise) return shutdownPromise;
++
++      shutdownPromise = (async () => {
++        try {
++          await endpoint?.close();
++        } catch (error) {
++          console.error(`[durable-persistence] IPC endpoint shutdown failed: ${error}`);
++          process.exitCode = 1;
++        }
++
++        try {
++          closeConnection();
++        } catch (error) {
++          console.error(`[durable-persistence] Database shutdown failed: ${error}`);
++          process.exitCode = 1;
++        }
++      })();
++
++      return shutdownPromise;
++    };
++
++    process.once('SIGTERM', () => {
++      void shutdown();
++    });
++    process.once('SIGINT', () => {
++      void shutdown();
++    });
++  } catch (error) {
++    console.error(`[durable-persistence] Startup failed; no ready endpoint: ${error}`);
++
++    if (endpoint !== null) {
++      try {
++        await endpoint.close();
++      } catch (closeError) {
++        console.error(`[durable-persistence] Endpoint cleanup failed: ${closeError}`);
++      }
++    }
++
++    try {
++      closeConnection();
++    } catch (closeError) {
++      console.error(`[durable-persistence] Database cleanup failed: ${closeError}`);
++    }
+ 
+-  console.log(`[durable-persistence] IPC endpoint ready at ${endpoint.address()}`);
+-
+-  // Graceful shutdown.
+-  process.on('SIGTERM', () => {
+-    endpoint?.close();
+-    closeConnection();
+-    process.exit(0);
+-  });
+-  process.on('SIGINT', () => {
+-    endpoint?.close();
+-    closeConnection();
+-    process.exit(0);
+-  });
++    process.exitCode = 1;
++  }
+ }
+ 
+-main();
++void main();
+diff --git a/tests/g3_no_network_listener.test.ts b/tests/g3_no_network_listener.test.ts
+index 25f9c32..c191b9a 100644
+--- a/tests/g3_no_network_listener.test.ts
++++ b/tests/g3_no_network_listener.test.ts
+@@ -1,42 +1,113 @@
+ /**
+  * Gate 3 test T-F — No network listener (act §4.3).
+- * No TCP, HTTP or URL listener is created by the IPD process; the endpoint is
+- * a local socket/pipe only.
++ * The endpoint must bind only to a local Unix socket or Windows named pipe.
+  */
+ 
+-import assert from 'node:assert';
+-import { describe, it } from 'node:test';
+-import { createIpcEndpoint } from '../src/ipc/endpoint.js';
++import assert from 'node:assert/strict';
++import { randomUUID } from 'node:crypto';
++import { createConnection } from 'node:net';
++import { chmodSync, existsSync, lstatSync, mkdtempSync, rmSync } from 'node:fs';
+ import { tmpdir } from 'node:os';
+-import { join } from 'node:path';
+-import { existsSync, unlinkSync } from 'node:fs';
++import { dirname, join } from 'node:path';
++import { describe, it } from 'node:test';
++import { createIpcEndpoint, type EndpointOptions } from '../src/ipc/endpoint.js';
++
++const IS_WINDOWS = process.platform === 'win32';
++
++function uniqueOptions(label: string): EndpointOptions {
++  const suffix = `${label}-${randomUUID()}`;
++  if (IS_WINDOWS) return { pipeName: `iips-g3-${suffix}` };
++
++  const directory = mkdtempSync(join(tmpdir(), 'iips-g3-test-'));
++  chmodSync(directory, 0o700);
++  return { socketPath: join(directory, 'ipc.sock') };
++}
++
++function cleanup(options: EndpointOptions): void {
++  if (IS_WINDOWS || options.socketPath === undefined) return;
++  rmSync(dirname(options.socketPath), { recursive: true, force: true });
++}
+ 
+ describe('g3_no_network_listener', () => {
+-  it('creates a local socket path (not a TCP/HTTP listener)', () => {
+-    const socketPath = join(tmpdir(), 'iips-g3-no-network-test.sock');
++  it('binds only a local socket or named pipe and waits for readiness', { timeout: 5000 }, async () => {
++    const options = uniqueOptions('local');
++    let endpoint: Awaited<ReturnType<typeof createIpcEndpoint>> | null = null;
+     try {
+-      if (existsSync(socketPath)) unlinkSync(socketPath);
+-      const endpoint = createIpcEndpoint({ socketPath });
+-      assert.ok(existsSync(endpoint.address()));
+-      endpoint.close();
+-    } finally {
+-      if (existsSync(socketPath)) {
+-        try { unlinkSync(socketPath); } catch { /* best effort */ }
++      endpoint = await createIpcEndpoint(options);
++      const address = endpoint.address();
++      assert.equal(typeof address, 'string');
++      assert.ok(address.length > 0);
++      assert.equal(endpoint.address().startsWith('tcp://'), false);
++      assert.equal(endpoint.address().startsWith('http://'), false);
++      assert.equal(endpoint.address().startsWith('https://'), false);
++
++      if (IS_WINDOWS) {
++        assert.ok(address.startsWith('\\\\.\\pipe\\iips-g3-'));
++      } else {
++        assert.equal(address, options.socketPath);
++        assert.ok(existsSync(address), 'Unix socket path must exist after successful bind');
++        assert.equal(lstatSync(address).mode & 0o777, 0o600);
+       }
++    } finally {
++      if (endpoint !== null) await endpoint.close();
++      cleanup(options);
+     }
+   });
+ 
+-  it('refuses to create endpoint on path collision', () => {
+-    const socketPath = join(tmpdir(), 'iips-g3-collision-test.sock');
++  it('refuses a name collision and permits reuse after clean shutdown', { timeout: 5000 }, async () => {
++    const options = uniqueOptions('collision');
++    let first: Awaited<ReturnType<typeof createIpcEndpoint>> | null = null;
++    let second: Awaited<ReturnType<typeof createIpcEndpoint>> | null = null;
++
+     try {
+-      if (existsSync(socketPath)) unlinkSync(socketPath);
+-      const endpoint1 = createIpcEndpoint({ socketPath });
+-      assert.throws(() => createIpcEndpoint({ socketPath }), /already exists/);
+-      endpoint1.close();
++      first = await createIpcEndpoint(options);
++      const address = first.address();
++
++      await assert.rejects(
++        createIpcEndpoint(options),
++        /already exists|collision|could not be bound/i,
++      );
++
++      assert.equal(first.address(), address, 'failed collision attempt must not disturb the first endpoint');
++      await first.close();
++      first = null;
++
++      second = await createIpcEndpoint(options);
++      assert.equal(second.address(), address, 'endpoint name should be reusable after shutdown');
+     } finally {
+-      if (existsSync(socketPath)) {
+-        try { unlinkSync(socketPath); } catch { /* best effort */ }
++      if (second !== null) await second.close();
++      if (first !== null) await first.close();
++      cleanup(options);
++    }
++  });
++
++  it('closes active local clients when the endpoint closes', { timeout: 5000 }, async () => {
++    const options = uniqueOptions('client-close');
++    let endpoint: Awaited<ReturnType<typeof createIpcEndpoint>> | null = null;
++    let client: import('node:net').Socket | null = null;
++
++    try {
++      endpoint = await createIpcEndpoint(options);
++      endpoint.onConnection((socket) => socket.on('error', () => undefined));
++      client = await new Promise((resolve, reject) => {
++        const socket = createConnection(endpoint!.address());
++        socket.once('connect', () => resolve(socket));
++        socket.once('error', reject);
++      });
++
++      await endpoint.close();
++      endpoint = null;
++      if (client !== null && !client.destroyed) {
++        await new Promise<void>((resolve, reject) => {
++          const timer = setTimeout(() => reject(new Error('Client did not close after endpoint shutdown')), 2000);
++          client!.once('close', () => { clearTimeout(timer); resolve(); });
++        });
+       }
++      assert.equal(client?.destroyed, true);
++    } finally {
++      client?.destroy();
++      if (endpoint !== null) await endpoint.close();
++      cleanup(options);
+     }
+   });
+ });
+diff --git a/tests/g3_startup_validation.test.ts b/tests/g3_startup_validation.test.ts
+index b1128b9..7379f25 100644
+--- a/tests/g3_startup_validation.test.ts
++++ b/tests/g3_startup_validation.test.ts
+@@ -5,6 +5,10 @@
+  */
+ 
+ import assert from 'node:assert';
++import { spawnSync } from 'node:child_process';
++import { existsSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++import { createIpcEndpoint } from '../src/ipc/endpoint.js';
+ import { describe, it } from 'node:test';
+ import { MigrationLedger, sha256Of } from '../src/persistence/migration_ledger.js';
+ import { getConnection, closeConnection } from '../src/persistence/connection.js';
+@@ -113,4 +117,32 @@ describe('g3_startup_validation', () => {
+     assert.ok(!versionGte([22, 13, 0], '22.12.0'));
+     assert.ok(!versionGte([22, 13, 0], '21.0.0'));
+   });
++
++
++  it('a bind collision fails startup closed and never reports readiness', { timeout: 10000 }, async () => {
++    const occupied = await createIpcEndpoint();
++
++    try {
++      const entrypointPath = fileURLToPath(new URL('../src/ipc/entrypoint.js', import.meta.url));
++      assert.ok(existsSync(entrypointPath), `compiled entrypoint is missing: ${entrypointPath}`);
++
++      const child = spawnSync(process.execPath, [entrypointPath], {
++        encoding: 'utf8',
++        timeout: 8000,
++        windowsHide: true,
++      });
++
++      assert.equal(child.error, undefined, `child process failed to execute: ${String(child.error)}`);
++      assert.equal(child.signal, null, `child process was terminated: ${String(child.signal)}`);
++      assert.notEqual(child.status, 0, 'startup must fail when the endpoint name is occupied');
++
++      const output = `${child.stdout ?? ''}\n${child.stderr ?? ''}`;
++      assert.match(output, /Startup failed/i);
++      assert.match(output, /already exists|collision|could not be bound|EACCES|EADDRINUSE/i);
++      assert.doesNotMatch(output, /IPC endpoint ready at/i);
++    } finally {
++      await occupied.close();
++      closeConnection();
++    }
++  });
+ });
