@@ -25,6 +25,7 @@ export interface PortfolioStorePort {
   list(owner: OwnerRef): ReturnType<DurablePortfolioStore['list']>;
   get(owner: OwnerRef, portfolioId: string): ReturnType<DurablePortfolioStore['get']>;
   revisions(owner: OwnerRef, portfolioId: string): ReturnType<DurablePortfolioStore['revisions']>;
+  contributions(owner: OwnerRef, portfolioId: string): ReturnType<DurablePortfolioStore['contributions']>;
 }
 
 export class DurablePortfolioStorePort implements PortfolioStorePort {
@@ -52,6 +53,10 @@ export class DurablePortfolioStorePort implements PortfolioStorePort {
 
   revisions(owner: OwnerRef, portfolioId: string): ReturnType<DurablePortfolioStore['revisions']> {
     return this.store.revisions(owner, portfolioId);
+  }
+
+  contributions(owner: OwnerRef, portfolioId: string): ReturnType<DurablePortfolioStore['contributions']> {
+    return this.store.contributions(owner, portfolioId);
   }
 
   create(owner: OwnerRef, portfolioId: string, request: PortfolioSaveRequest): number {

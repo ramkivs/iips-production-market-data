@@ -92,7 +92,7 @@ if (stale.length > 0) {
 
 console.log(`[test-guard] files=${files.length} (source suite files: ${sourceTests.length})`);
 
-const runnerArgs = ['--test', ...files];
+const runnerArgs = ['--test', '--test-reporter=tap', ...files];
 
 const result = spawnSync(process.execPath, runnerArgs, {
   cwd: repoRoot,

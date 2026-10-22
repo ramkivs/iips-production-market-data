@@ -61,11 +61,87 @@ export interface PortfolioSaveRequest {
   readonly holdings: HoldingInput[];
   readonly provenanceDigest: string;
   readonly operation?: 'MERGE' | 'REPLACE';
+  /**
+   * The broker file's content digest (contract v1 `portfolio.save` payload
+   * field `contentDigest?`; Gate E W-8 / BI-08 idempotency key).
+   *
+   * When present it is the contribution identity: it is recorded in the
+   * contribution ledger and it is the key the W-8 duplicate check uses. When
+   * absent, the request's own computed content digest is the contribution
+   * identity, so a request that carries no broker digest still gets a stable
+   * contribution row and the same duplicate protection.
+   */
+  readonly contentDigest?: string;
 }
 
 export interface OwnerRef {
   readonly canonicalOwnerId: string;
   readonly tenantId: string;
+}
+
+/* ------------------------------------------------------------------ *
+ * Read projections — accepted wire contract v1 shapes
+ * ------------------------------------------------------------------ */
+
+/**
+ * `PortfolioSummary` (contract v1 §6, `portfolio.list`).
+ *
+ * The list projection WITHOUT holdings or contributions. A list item is never
+ * a substitute for a full view.
+ */
+export interface PortfolioSummary {
+  readonly portfolioId: string;
+  readonly portfolioName: string;
+  readonly revision: number;
+  readonly holdingsCount: number;
+  readonly totalMarketValue: number;
+  readonly lastUpdated: string;
+}
+
+/**
+ * One committed import, as recorded in the durable contribution ledger.
+ *
+ * The ledger schema is fixed by migration `001_initial_schema` and is not
+ * extended here: `contribution_id` carries the import's content digest (the
+ * Gate E W-8 / BI-08 idempotency key) and `amount` carries the import's total
+ * market value. The contract's per-contribution broker attribution, file name
+ * and contribution SHA-256 lineage have no column in the fixed schema and are
+ * therefore NOT invented here; see the outstanding schema act.
+ */
+export interface PortfolioContribution {
+  readonly contributionId: string;
+  readonly amount: number;
+  readonly contributedAt: string;
+  readonly createdAt: string;
+}
+
+/**
+ * `PortfolioDetail` (contract v1 §6, `portfolio.get`).
+ *
+ * Summary fields plus the holdings snapshot, the contribution ledger, the
+ * weight sum and the revision provenance digest.
+ */
+export interface PortfolioDetail extends PortfolioSummary {
+  readonly weightSumPercentage: number;
+  readonly provenanceDigest: string;
+  readonly holdings: HoldingInput[];
+  readonly contributions: PortfolioContribution[];
+}
+
+/**
+ * `RevisionEntry` (contract v1 §6, `portfolio.revisions`).
+ */
+export interface RevisionEntry {
+  readonly revision: number;
+  readonly operation: string;
+  /**
+   * The commit timestamp of the revision (contract v1 §6 `RevisionEntry`
+   * field `committedAt`). The stored column is `portfolio_revisions.created_at`;
+   * the wire property name is fixed by contract v1 and by the effective Gate 3
+   * act, and is `committedAt`.
+   */
+  readonly committedAt: string;
+  readonly contentDigest?: string;
 }
 
 /**
@@ -115,48 +191,80 @@ const MAX_REVISIONS = 4;
 export class DurablePortfolioStore {
   constructor(private readonly db: DatabaseSync) {}
 
-  list(owner: OwnerRef): Array<{ portfolioId: string; name: string; currentRevision: number }> {
+  list(owner: OwnerRef): PortfolioSummary[] {
     const rows = this.db
       .prepare(
-        `SELECT portfolio_id, portfolio_name, current_revision
-           FROM portfolios
-          WHERE canonical_owner_id = ? AND tenant_id = ? AND status = 'ACTIVE'
-          ORDER BY portfolio_id`,
+        `SELECT p.portfolio_id       AS portfolio_id,
+                p.portfolio_name     AS portfolio_name,
+                p.current_revision   AS current_revision,
+                p.updated_at         AS updated_at,
+                COALESCE(r.holdings_count, 0)     AS holdings_count,
+                COALESCE(r.total_market_value, 0) AS total_market_value
+           FROM portfolios p
+           LEFT JOIN portfolio_revisions r
+             ON r.canonical_owner_id = p.canonical_owner_id
+            AND r.portfolio_id       = p.portfolio_id
+            AND r.revision           = p.current_revision
+          WHERE p.canonical_owner_id = ? AND p.tenant_id = ? AND p.status = 'ACTIVE'
+          ORDER BY p.portfolio_id`,
       )
       .all(owner.canonicalOwnerId, owner.tenantId) as unknown as Array<{
       portfolio_id: string;
       portfolio_name: string;
       current_revision: number;
+      updated_at: string;
+      holdings_count: number;
+      total_market_value: number;
     }>;
     return rows.map((row) => ({
       portfolioId: row.portfolio_id,
-      name: row.portfolio_name,
-      currentRevision: Number(row.current_revision),
+      portfolioName: row.portfolio_name,
+      revision: Number(row.current_revision),
+      holdingsCount: Number(row.holdings_count),
+      totalMarketValue: Number(row.total_market_value),
+      lastUpdated: row.updated_at,
     }));
   }
 
-  private resolvePortfolio(owner: OwnerRef, portfolioId: string): { currentRevision: number } {
+  private resolvePortfolio(
+    owner: OwnerRef,
+    portfolioId: string,
+  ): { currentRevision: number; portfolioName: string; updatedAt: string } {
     const row = this.db
       .prepare(
-        `SELECT current_revision, status FROM portfolios
+        `SELECT current_revision, status, portfolio_name, updated_at FROM portfolios
           WHERE canonical_owner_id = ? AND tenant_id = ? AND portfolio_id = ?`,
       )
       .get(owner.canonicalOwnerId, owner.tenantId, portfolioId) as
-      | { current_revision: number; status: string }
+      | { current_revision: number; status: string; portfolio_name: string; updated_at: string }
       | undefined;
     if (!row || row.status === 'TOMBSTONED') {
       // Missing, foreign and tombstoned are deliberately indistinguishable.
       throw new ResourceUnavailableError();
     }
-    return { currentRevision: Number(row.current_revision) };
+    return {
+      currentRevision: Number(row.current_revision),
+      portfolioName: row.portfolio_name,
+      updatedAt: row.updated_at,
+    };
   }
 
-  get(owner: OwnerRef, portfolioId: string): {
-    portfolioId: string;
-    revision: number;
-    holdings: HoldingInput[];
-  } {
+  get(owner: OwnerRef, portfolioId: string): PortfolioDetail {
     const resolved = this.resolvePortfolio(owner, portfolioId);
+    const revisionRow = this.db
+      .prepare(
+        `SELECT holdings_count, total_market_value, weight_sum_percentage, provenance_digest
+           FROM portfolio_revisions
+          WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`,
+      )
+      .get(owner.canonicalOwnerId, portfolioId, resolved.currentRevision) as
+      | {
+          holdings_count: number;
+          total_market_value: number;
+          weight_sum_percentage: number;
+          provenance_digest: string;
+        }
+      | undefined;
     const rows = this.db
       .prepare(
         `SELECT holding_key, symbol, company_id, quantity, average_buy_price, current_price,
@@ -169,27 +277,66 @@ export class DurablePortfolioStore {
       .all(owner.canonicalOwnerId, portfolioId, resolved.currentRevision) as unknown as Array<Record<string, unknown>>;
     return {
       portfolioId,
+      portfolioName: resolved.portfolioName,
       revision: resolved.currentRevision,
+      holdingsCount: Number(revisionRow?.holdings_count ?? 0),
+      totalMarketValue: Number(revisionRow?.total_market_value ?? 0),
+      lastUpdated: resolved.updatedAt,
+      weightSumPercentage: Number(revisionRow?.weight_sum_percentage ?? 0),
+      provenanceDigest: revisionRow?.provenance_digest ?? '',
       holdings: rows.map((r) => this.holdingFromRow(r)),
+      contributions: this.contributions(owner, portfolioId),
     };
   }
 
-  revisions(owner: OwnerRef, portfolioId: string): Array<{ revision: number; operation: string; createdAt: string }> {
+  /**
+   * The contribution ledger for one portfolio (contract v1 `PortfolioDetail`).
+   *
+   * Every committed import appends exactly one contribution row whose
+   * `contribution_id` is the import's content digest. The row is the durable
+   * evidence that a particular broker file was already imported, which is what
+   * makes the Gate E W-8 / BI-08 duplicate rule evaluable for a re-import of
+   * an *earlier* file and not only for the most recent revision.
+   */
+  contributions(owner: OwnerRef, portfolioId: string): PortfolioContribution[] {
+    const rows = this.db
+      .prepare(
+        `SELECT contribution_id, amount, contributed_at, created_at FROM portfolio_contributions
+          WHERE canonical_owner_id = ? AND portfolio_id = ?
+          ORDER BY contributed_at, contribution_id`,
+      )
+      .all(owner.canonicalOwnerId, portfolioId) as unknown as Array<{
+      contribution_id: string;
+      amount: number;
+      contributed_at: string;
+      created_at: string;
+    }>;
+    return rows.map((row) => ({
+      contributionId: row.contribution_id,
+      amount: Number(row.amount),
+      contributedAt: row.contributed_at,
+      createdAt: row.created_at,
+    }));
+  }
+
+  revisions(owner: OwnerRef, portfolioId: string): RevisionEntry[] {
     this.resolvePortfolio(owner, portfolioId);
     const rows = this.db
       .prepare(
-        `SELECT revision, operation, created_at FROM portfolio_revisions
+        `SELECT revision, operation, created_at, content_digest FROM portfolio_revisions
           WHERE canonical_owner_id = ? AND portfolio_id = ? ORDER BY revision`,
       )
       .all(owner.canonicalOwnerId, portfolioId) as unknown as Array<{
       revision: number | bigint;
       operation: string;
       created_at: string;
+      content_digest: string | null;
     }>;
     return rows.map((row) => ({
       revision: Number(row.revision),
       operation: row.operation,
-      createdAt: row.created_at,
+      committedAt: row.created_at,
+      contentDigest: row.content_digest ?? undefined,
     }));
   }
 
@@ -247,6 +394,24 @@ export class DurablePortfolioStore {
     }
     const nextRevision = expectedRevision + 1;
     const contentDigest = contentDigestOf(request);
+    // Gate E W-8 / BI-08: a save whose content digest matches an ALREADY
+    // COMMITTED CONTRIBUTION, with operation != REPLACE, is an idempotent
+    // no-op: no new revision, no new rows, no duplicated contribution.
+    //
+    // The check reads the contribution ledger, not only the newest revision,
+    // so re-importing an EARLIER broker file is also detected as a duplicate
+    // and is not applied a second time.
+    const contributionId = request.contentDigest ?? contentDigest;
+    if (operation === 'MERGE') {
+      const committed = this.db
+        .prepare(
+          'SELECT 1 AS present FROM portfolio_contributions WHERE canonical_owner_id = ? AND portfolio_id = ? AND contribution_id = ?',
+        )
+        .get(owner.canonicalOwnerId, portfolioId, contributionId) as { present: number } | undefined;
+      if (committed) {
+        return expectedRevision;
+      }
+    }
     const lastRevision = this.db
       .prepare('SELECT content_digest FROM portfolio_revisions WHERE canonical_owner_id = ? AND portfolio_id = ? ORDER BY revision DESC LIMIT 1')
       .get(owner.canonicalOwnerId, portfolioId) as { content_digest: string | null } | undefined;
@@ -257,6 +422,14 @@ export class DurablePortfolioStore {
     const now = new Date().toISOString();
     const totalMarketValue = request.holdings.reduce((sum, h) => sum + h.marketValue, 0);
     const weightSum = request.holdings.reduce((sum, h) => sum + h.weightPercentage, 0);
+    if (operation === 'REPLACE' || operation === 'RESET') {
+      // Gate E W-10: REPLACE and RESET start a new contribution set. Prior
+      // revisions are preserved; the contribution ledger for this portfolio is
+      // the set that is replaced.
+      this.db
+        .prepare('DELETE FROM portfolio_contributions WHERE canonical_owner_id = ? AND portfolio_id = ?')
+        .run(owner.canonicalOwnerId, portfolioId);
+    }
     this.db
       .prepare(
         `INSERT INTO portfolio_revisions
@@ -307,6 +480,17 @@ export class DurablePortfolioStore {
     this.db
       .prepare('UPDATE portfolios SET current_revision = ?, updated_at = ? WHERE canonical_owner_id = ? AND portfolio_id = ?')
       .run(nextRevision, now, owner.canonicalOwnerId, portfolioId);
+    // The contribution ledger: exactly one row per committed import, keyed by
+    // the import's content digest (Gate E W-8 / BI-08). It is the durable
+    // evidence that a broker file was already imported, which is what the
+    // duplicate check above reads.
+    this.db
+      .prepare(
+        `INSERT INTO portfolio_contributions
+           (canonical_owner_id, portfolio_id, contribution_id, amount, contributed_at, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(owner.canonicalOwnerId, portfolioId, contributionId, totalMarketValue, now, now);
     return nextRevision;
   }
 
