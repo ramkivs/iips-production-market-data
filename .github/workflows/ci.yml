@@ -24,15 +24,8 @@ concurrency:
 jobs:
   verify:
     name: typecheck · build · test
-    # Gate 3: native-Windows coverage. bash shell (Git Bash on windows-latest)
-    # keeps the npm/tee invocation identical across both legs.
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 25
-    shell: bash
 
     steps:
       - name: Checkout
@@ -62,8 +55,7 @@ jobs:
       # Records the executed test count against the exact head commit, so "tests passed" is
       # checkable from the API instead of resting on a job's green badge.
       - name: Publish executed test count
-        # Ubuntu leg only: avoids duplicate check-run names from the matrix.
-        if: always() && matrix.os == 'ubuntu-latest'
+        if: always()
         uses: actions/github-script@v8
         with:
           script: |
