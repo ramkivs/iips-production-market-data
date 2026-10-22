@@ -117,7 +117,7 @@ describe('g3 / T-C portfolio read isolation', () => {
   it('a valid list returns only the resolved owner portfolios', async () => {
     const response = parseResponse(await call(endpointPath, { v: 1, op: 'portfolio.list' }));
     assert.equal(response.ok, true);
-    const portfolios = (response.result as { portfolios: Array<{ portfolioId: string }> }).portfolios;
+    const portfolios = (response.result as Array<{ portfolioId: string }>);
     const ids = portfolios.map((p) => p.portfolioId).sort();
     assert.deepEqual(ids, ['P-LOCAL']);
   });
@@ -179,6 +179,6 @@ describe('g3 / T-C portfolio read isolation', () => {
     assert.ok(second.byteLength > 0);
     const revisions = parseResponse(second);
     assert.equal(revisions.ok, true);
-    assert.equal((revisions.result as { revisions: unknown[] }).revisions.length, 1);
+    assert.equal((revisions.result as unknown[]).length, 1);
   });
 });

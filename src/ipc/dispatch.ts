@@ -235,16 +235,22 @@ export function createConnectionHandler(
         let result: unknown;
         switch (envelope.op) {
           case 'portfolio.list':
-            result = { portfolios: store.list(owner) };
+            // Contract v1 §6: the `portfolio.list` result IS `PortfolioSummary[]`.
+            // The result is the array itself, not an envelope wrapped around it.
+            // The effective Gate 3 act fixes the wire property names by reference
+            // to contract v1 and requires them to be implemented exactly.
+            result = store.list(owner);
             break;
           case 'portfolio.get': {
             const portfolioId = String(payload.portfolioId ?? 'DEFAULT_PORTFOLIO');
-            result = { portfolio: store.get(owner, portfolioId) };
+            // Contract v1 §6: the `portfolio.get` result IS `PortfolioDetail`.
+            result = store.get(owner, portfolioId);
             break;
           }
           case 'portfolio.revisions': {
             const portfolioId = String(payload.portfolioId ?? 'DEFAULT_PORTFOLIO');
-            result = { revisions: store.revisions(owner, portfolioId) };
+            // Contract v1 §6: the `portfolio.revisions` result IS `RevisionEntry[]`.
+            result = store.revisions(owner, portfolioId);
             break;
           }
           default:
