@@ -509,3 +509,43 @@ to 32, adopt H-12, perform host preflight, or start QE. The required closure is 
 Authority corrective membership determination/adoption-boundary decision** naming the exact 33-path set
 (or reconciling the effective act's count) and its status. Until that decision is durably published
 and independently read back, H-12 remains **NOT ADOPTED** and Gate 4 remains **AUTHORIZED — NOT STARTED**.
+
+## CAP-02 PR #69 publication and final remote-main verification (2026-10-23)
+
+PR #69 published the H-12 preparation/stop record and the tracker reconciliation. It was independently
+fetched after merge; no claim relies only on the PR page.
+
+| Item | Independently verified value |
+|---|---|
+| PR #69 | `MERGED` at `2026-10-23T16:40:29Z`; URL https://github.com/ramkivs/iips-production-market-data/pull/69 |
+| PR head / candidate tree | `a211cbfdf83c3172a89a1d5c31cbf57c9a38957e` / `6fe2d6dea72772dd04e8442cc7135dac5c46388d` |
+| Merge commit / root tree | `6804e17d04373ccc5fed82ecfc5153afdc6f0b3e` / `6fe2d6dea72772dd04e8442cc7135dac5c46388d` |
+| Merge parents | first `a52b47b0f8ca448c8c9c195cf261e83ecf813ba3`; second `a211cbfdf83c3172a89a1d5c31cbf57c9a38957e` |
+| Tree/ancestry reconciliation | PR head is merge parent 2; candidate tree equals merge tree; `git diff --name-only a211cbf… 6804e17…` is empty. |
+| PR #69 changes | 3 files, 12933 additions, 0 deletions: tracker plus the two H-12 candidate/validation records. |
+| PR #69 CI | `typecheck · build · test`: `SUCCESS`, PR run `39988569866`, job `120534085899`; `executed test count`: `SUCCESS`, check `120534500538`. |
+| Post-merge `main` CI | run `39988741293` (`push`, head `6804e17…`) **SUCCESS**; job `120534674459` and executed-count job `120535149701` both **SUCCESS**. |
+| Authoritative remote ref | `refs/heads/main` now `6804e17d04373ccc5fed82ecfc5153afdc6f0b3e`, tree `6fe2d6dea72772dd04e8442cc7135dac5c46388d`. |
+
+### Final artifact read-back at remote `main`
+
+The following identities were read directly from the fetched `origin/main` tree after PR #69.
+The PR #67 decision blobs remain unchanged and still match the original raw SHA-256 values.
+
+| Exact `origin/main` path | Git blob ID | Bytes | Lines | Raw SHA-256 |
+|---|---|---:|---:|---|
+| `evidence/cross-repository/IIPS_V3_CAP02_GATE4_TARGET_HOST_QUALIFICATION_ACT_EFFECTIVE_2026-10-23.md` | `66b56fd1584890525a7250aadd7da449def621e5` | 34316 | 420 | `c8c1378622657a320f14f34c008bb27fde2acaf57acc9a73a3489ea6be57c7b6` |
+| `evidence/cross-repository/IIPS_V3_CAP02_GATE_A_PRIME_SUCCESSOR_PROVISIONING_ACT_EFFECTIVE_2026-10-23.md` | `528de6aeddbc8e5f3191be8792f3937d77de4037` | 29856 | 354 | `df8e44f704814e2321b5134206b04f25097830bdc5dd53c4d907d1256e4c788d` |
+| `evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` | `163f66618e164a3defb0e9ed6c012bc418c16628` | 49463 | 511 | `e0762e2a26237a2c64ee6d0cfb4ac8b7947acd55d91fce401a904d9b77f497d6` |
+| `evidence/cross-repository/IIPS_V3_CAP02_G4_H12_MANIFEST_V3_CANDIDATE_2026-10-23.json` | `a169e1f7d8721860942807bad1b325ccc57d2404` | 482205 | 12796 | `344d1bd19c35231cc9d243c58f7e1ce22ccb7bfeda541966a71c1355a17d0594` |
+| `evidence/cross-repository/IIPS_V3_CAP02_G4_H12_MANIFEST_V3_CANDIDATE_VALIDATION_2026-10-23.md` | `64d04e78750878f2bd35e06ef30d4d2ba25c2674` | 3918 | 59 | `ff9d97f9c7047dd2fafdd0b6c8d1256bc722240768403153bee00d72f73f5ed1` |
+
+The two H-12 artifacts are **preparation evidence only**. The machine-readable candidate records the
+76 repository-entry identity checks and the 33-versus-32 membership conflict; its status is
+`NOT ADOPTED`. The final main tree has no discrepancy from PR #69 head, and no IRR mutation occurred.
+
+**Final durable handover:** IPD `ramkivs/iips-production-market-data` `refs/heads/main` is
+`6804e17d04373ccc5fed82ecfc5153afdc6f0b3e`, tree `6fe2d6dea72772dd04e8442cc7135dac5c46388d`.
+Next action is the separate PA correction/reconciliation of the H-12 path-membership conflict. Gate A′
+identity values remain unresolved; provisioning, host preflight, QE-1…QE-11, H-12 adoption, result
+acceptance and W-1/U6 write authorization remain unperformed/not granted as applicable.
