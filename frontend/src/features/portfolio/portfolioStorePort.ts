@@ -75,12 +75,48 @@ export interface PortfolioPortSaveRequest {
   expectedRevision?: number;
 }
 
+/**
+ * The accepted v1 broker-import disposition vocabulary (contract v1 §6).
+ * A duplicate is derived ONLY from `ALREADY_IMPORTED_NO_OP`.
+ */
+export type PortfolioCommitDisposition = 'SAVED_NEW_BATCH' | 'MERGED_INTO_EXISTING' | 'ALREADY_IMPORTED_NO_OP';
+
+/**
+ * The minimal v1 commit receipt (CAP-02 U7, IPD act
+ * `IIPS-V3-CAP02-U7-IPD-PROVIDER-OUTCOME-ACT-2026-10-23-01`).
+ *
+ * This is the ONLY authoritative statement that a commit happened, and the only
+ * source from which a consumer may display a committed result or a durability
+ * claim. It deliberately carries no portfolio record, counts, totals, digest or
+ * timestamp: an adapter that only has the v1 receipt must still be able to
+ * satisfy this port without inventing any of those.
+ */
+export interface PortfolioCommitReceipt {
+  readonly disposition: PortfolioCommitDisposition;
+  readonly revision: number;
+  readonly durability: PortfolioDurability;
+  readonly durable: boolean;
+}
+
 export interface PortfolioPortSaveSuccess {
   ok: true;
+  /** Authoritative post-commit receipt. The only source of committed display. */
+  receipt: PortfolioCommitReceipt;
+  /**
+   * The durability this adapter declares. Always equal to
+   * `receipt.durability` — retained as a top-level field only for existing
+   * callers; it is NOT independent commit evidence.
+   */
   durability: PortfolioDurability;
+  /** Equal to `receipt.durable`. Never true unless the receipt says so. */
   durable: boolean;
-  /** The certified `PortfolioSaveResult` shape produced by the underlying store. */
-  result: PortfolioSaveResult;
+  /**
+   * The legacy `PortfolioSaveResult` shape, when the underlying store produces
+   * one. OPTIONAL: a governed v1 adapter that holds only the minimal receipt
+   * supplies `receipt` and omits this field. A consumer MUST NOT require it.
+   */
+  result?: PortfolioSaveResult;
+  /** Equal to `receipt.revision`. */
   revision: number;
 }
 
@@ -88,16 +124,54 @@ export interface PortfolioPortSaveRefusal {
   ok: false;
   code: PortfolioPortRefusalCode;
   message: string;
-  durability: PortfolioDurability;
-  durable: boolean;
+  /**
+   * Declared store capability, when the adapter has one. This is a capability
+   * declaration, NOT evidence about an operation: nothing was committed, so no
+   * durability claim may be rendered from a refusal.
+   */
+  durability?: PortfolioDurability;
+  durable?: boolean;
+  /**
+   * Per-holding refusal detail. An empty array means "the outcome reported no
+   * per-holding detail"; it is never a fabricated list.
+   */
   refusedHoldings: PortfolioPortRefusedHolding[];
-  /** Unmutated portfolio snapshot for display. */
-  portfolio: PortfolioRecord;
+  /**
+   * Unmutated portfolio snapshot, when the adapter actually holds one.
+   * OPTIONAL: a Class A refusal carries no record, and an adapter must not
+   * synthesize an empty or invented record to satisfy this shape.
+   */
+  portfolio?: PortfolioRecord;
   expectedRevision?: number;
+  /** Populated ONLY from an authoritative conflict outcome. */
   actualRevision?: number;
 }
 
-export type PortfolioPortSaveOutcome = PortfolioPortSaveSuccess | PortfolioPortSaveRefusal;
+/**
+ * A distinct third outcome (CAP-02 U7 rule 6).
+ *
+ * A timeout, transport fault or otherwise unrepresentable result means the
+ * commit outcome CANNOT BE KNOWN. This is neither success nor refusal:
+ *  - no receipt is produced (so no committed result and no durability claim),
+ *  - no rollback is claimed,
+ *  - no automatic retry is performed by the provider,
+ *  - reconciliation is a separately authorised read.
+ */
+export interface PortfolioPortSaveOutcomeUnknown {
+  ok: 'unknown';
+  code: 'OUTCOME_UNKNOWN';
+  message: string;
+  portfolioId: string;
+  reconciliationRequired: true;
+  /** Never present: an unknown outcome proves no commit. */
+  receipt?: undefined;
+  result?: undefined;
+}
+
+export type PortfolioPortSaveOutcome =
+  | PortfolioPortSaveSuccess
+  | PortfolioPortSaveRefusal
+  | PortfolioPortSaveOutcomeUnknown;
 
 /**
  * Narrow asynchronous port. Reads, analytics and saves only.
@@ -109,7 +183,12 @@ export interface PortfolioStorePort {
   readonly durability: PortfolioDurability;
   readonly durable: boolean;
   getPortfolio(portfolioId?: string): Promise<PortfolioRecord | undefined>;
-  getAnalytics(portfolioId?: string): Promise<PortfolioAnalyticsSummary>;
+  /**
+   * OPTIONAL. The accepted CAP-02 surface (the broker-import modal) does not
+   * require analytics, and a host whose `portfolio.analytics` operation is
+   * reserved must not be forced to implement it to satisfy this port.
+   */
+  getAnalytics?(portfolioId?: string): Promise<PortfolioAnalyticsSummary>;
   getRevision(portfolioId?: string): Promise<number>;
   saveHoldings(request: PortfolioPortSaveRequest): Promise<PortfolioPortSaveOutcome>;
 }
@@ -409,8 +488,21 @@ export class SessionPortfolioStorePort implements PortfolioStorePort {
     const revision = result.isDuplicate ? actualRevision : actualRevision + 1;
     this.revisions.set(portfolioId, revision);
 
+    // The receipt is derived from THIS adapter's own authoritative store
+    // result — disposition from the store's certified disposition (or, for a
+    // legacy result that predates the field, the store's own duplicate flag),
+    // and durability from this adapter's declared, honest capability.
+    const disposition: PortfolioCommitDisposition =
+      result.disposition ?? (result.isDuplicate ? 'ALREADY_IMPORTED_NO_OP' : 'SAVED_NEW_BATCH');
+
     return {
       ok: true,
+      receipt: {
+        disposition,
+        revision,
+        durability: this.durability,
+        durable: this.durable,
+      },
       durability: this.durability,
       durable: this.durable,
       result,
@@ -421,7 +513,7 @@ export class SessionPortfolioStorePort implements PortfolioStorePort {
   private refuse(params: {
     code: PortfolioPortRefusalCode;
     message: string;
-    portfolio: PortfolioRecord;
+    portfolio?: PortfolioRecord;
     refusedHoldings?: PortfolioPortRefusedHolding[];
     expectedRevision?: number;
     actualRevision?: number;

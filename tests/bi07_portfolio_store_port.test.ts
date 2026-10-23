@@ -227,7 +227,7 @@ describe('BI-07 Portfolio Store Port — conformance, 2F refusal, durability hon
 
     assert.strictEqual(direct.success, true);
     assert.strictEqual(outcome.ok, true);
-    if (!outcome.ok) return;
+    if (outcome.ok !== true) return;
 
     const a = directStore.getPortfolio('DEFAULT_PORTFOLIO');
     const b = portStore.getPortfolio('DEFAULT_PORTFOLIO');
@@ -241,8 +241,16 @@ describe('BI-07 Portfolio Store Port — conformance, 2F refusal, durability hon
       b.holdings.map((h) => [h.symbol, h.companyId, h.quantity, h.weightPercentage, h.lineageDigest]),
       a.holdings.map((h) => [h.symbol, h.companyId, h.quantity, h.weightPercentage, h.lineageDigest])
     );
+    // `result` is now OPTIONAL on the success shape (CAP-02 U7): a governed v1
+    // adapter may report only the minimal receipt. This session adapter still
+    // supplies it, and its receipt must agree with it.
+    assert.ok(outcome.result, 'the session adapter still supplies the legacy result');
     assert.strictEqual(outcome.result.holdingsSavedCount, direct.holdingsSavedCount);
     assert.strictEqual(outcome.result.portfolio.isSaved, true);
+    assert.strictEqual(outcome.receipt.disposition, 'SAVED_NEW_BATCH');
+    assert.strictEqual(outcome.receipt.revision, outcome.revision);
+    assert.strictEqual(outcome.receipt.durability, outcome.durability);
+    assert.strictEqual(outcome.receipt.durable, outcome.durable);
     assert.strictEqual(outcome.durability, 'SESSION_ONLY');
     assert.strictEqual(outcome.durable, false);
     assert.strictEqual(outcome.revision, 1);
@@ -266,9 +274,11 @@ describe('BI-07 Portfolio Store Port — conformance, 2F refusal, durability hon
       options: saveOptions('digest-B'),
     });
     assert.strictEqual(second.ok, true);
-    if (!second.ok) return;
+    if (second.ok !== true) return;
+    assert.ok(second.result, 'the session adapter still supplies the legacy result');
     assert.strictEqual(second.result.isDuplicate, true);
     assert.strictEqual(second.result.disposition, 'ALREADY_IMPORTED_NO_OP');
+    assert.strictEqual(second.receipt.disposition, 'ALREADY_IMPORTED_NO_OP');
     assert.strictEqual(second.revision, 1, 'Idempotent no-op must not advance the session revision');
     assert.strictEqual(store.getPortfolio('DEFAULT_PORTFOLIO')?.contributions?.length, 1);
   });
@@ -285,7 +295,7 @@ describe('BI-07 Portfolio Store Port — conformance, 2F refusal, durability hon
     });
 
     assert.strictEqual(outcome.ok, false);
-    if (outcome.ok) return;
+    if (outcome.ok !== false) return;
     assert.strictEqual(outcome.code, 'REFUSED_UNRESOLVED_IDENTITY');
     assert.strictEqual(outcome.refusedHoldings.length, 1);
     assert.strictEqual(outcome.refusedHoldings[0].symbol, 'ASK AUTOMOTIVE');
@@ -345,7 +355,7 @@ describe('BI-07 Portfolio Store Port — conformance, 2F refusal, durability hon
     });
 
     assert.strictEqual(outcome.ok, false);
-    if (outcome.ok) return;
+    if (outcome.ok !== false) return;
     assert.strictEqual(outcome.code, 'REFUSED_UNRESOLVED_IDENTITY');
     assert.ok(outcome.refusedHoldings.some((h) => h.symbol === 'ASK AUTOMOTIVE'));
     assert.strictEqual(store.getPortfolio('DEFAULT_PORTFOLIO')?.isSaved, false);
@@ -366,7 +376,7 @@ describe('BI-07 Portfolio Store Port — conformance, 2F refusal, durability hon
 
     const topLevel = await port.saveHoldings(withTopLevelIdentity);
     assert.strictEqual(topLevel.ok, false);
-    if (topLevel.ok) return;
+    if (topLevel.ok !== false) return;
     assert.strictEqual(topLevel.code, 'INVALID_REQUEST');
     assert.match(topLevel.message, /tenantId/);
 
@@ -378,7 +388,7 @@ describe('BI-07 Portfolio Store Port — conformance, 2F refusal, durability hon
 
     const scoped = await port.saveHoldings(withScopedOptions);
     assert.strictEqual(scoped.ok, false);
-    if (scoped.ok) return;
+    if (scoped.ok !== false) return;
     assert.strictEqual(scoped.code, 'INVALID_REQUEST');
     assert.match(scoped.message, /authorization/);
 
@@ -406,7 +416,7 @@ describe('BI-07 Portfolio Store Port — conformance, 2F refusal, durability hon
     });
 
     assert.strictEqual(conflict.ok, false);
-    if (conflict.ok) return;
+    if (conflict.ok !== false) return;
     assert.strictEqual(conflict.code, 'REVISION_CONFLICT');
     assert.strictEqual(conflict.expectedRevision, 0);
     assert.strictEqual(conflict.actualRevision, 1);
@@ -427,7 +437,7 @@ describe('BI-07 Portfolio Store Port — conformance, 2F refusal, durability hon
     });
 
     assert.strictEqual(outcome.ok, false);
-    if (outcome.ok) return;
+    if (outcome.ok !== false) return;
     assert.strictEqual(outcome.code, 'REFUSED_STORE_GUARD');
     assert.match(outcome.message, /weights/i);
     assert.strictEqual(store.getPortfolio('DEFAULT_PORTFOLIO')?.isSaved, false);

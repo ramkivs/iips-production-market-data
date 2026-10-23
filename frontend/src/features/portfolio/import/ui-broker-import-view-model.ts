@@ -21,6 +21,7 @@ import { BrokerImportIngressOrchestrator } from './broker-import-ingress.js';
 import { PortfolioStore, PortfolioSaveResult } from '../portfolio-store.js';
 import {
   evaluatePortSaveGuard,
+  PortfolioCommitReceipt,
   PortfolioDurability,
   PortfolioPortRefusedHolding,
   PortfolioPortRefusalCode,
@@ -36,6 +37,7 @@ export type BrokerImportUIState =
   | 'PARTIAL_REJECTIONS'
   | 'READY_TO_SAVE'
   | 'SAVE_SUCCESS'
+  | 'OUTCOME_UNKNOWN'
   | 'REJECTED'
   | 'BLOCKED';
 
@@ -103,12 +105,40 @@ export interface PortfolioBrokerImportViewModel {
     containerClass: string;
     pinnedColumn?: string;
   };
+  /**
+   * The legacy result shape, present ONLY when the save outcome actually carried
+   * one. It is never synthesized from preview data and never used as the
+   * authority for a committed display.
+   */
   saveResult?: PortfolioSaveResult;
   /**
-   * Durability declared by the save path in use. `SESSION_ONLY` means the data is
-   * held in memory for this session only and is NOT durably persisted.
+   * Authoritative post-commit receipt (CAP-02 U7). Present ONLY when the port
+   * returned a success outcome. This — not any preview field and not the port's
+   * static capability declaration — is the sole source of committed facts and
+   * durability wording.
+   */
+  commitReceipt?: PortfolioCommitReceipt;
+  /** Which provider outcome the last port save produced. */
+  portOutcome: 'NONE' | 'SUCCESS' | 'REFUSED' | 'OUTCOME_UNKNOWN';
+  /**
+   * Present only for a distinct outcome-unknown state: the commit result could
+   * not be established. No receipt exists, no retry is performed, and
+   * reconciliation requires a separately authorised read.
+   */
+  outcomeUnknown?: {
+    message: string;
+    portfolioId: string;
+    reconciliationRequired: true;
+  };
+  /**
+   * Durability: `commitReceipt`-derived when a commit is known, otherwise the
+   * save path's DECLARED capability. A declaration is not commit evidence.
    */
   durability: PortfolioDurability;
+  /**
+   * True ONLY when an authoritative receipt says `durable: true`. Never derived
+   * from the store's static capability.
+   */
   durable: boolean;
   /**
    * Port-path save guard with DP-2 Option 2F applied (unresolved/ambiguous
@@ -131,6 +161,10 @@ export class PortfolioBrokerImportController {
   private selectedFileName: string = '';
   private securityMaster?: SecurityMaster;
   private durability: PortfolioDurability = 'SESSION_ONLY';
+  private durable: boolean = false;
+  private commitReceipt?: PortfolioCommitReceipt;
+  private portOutcome: 'NONE' | 'SUCCESS' | 'REFUSED' | 'OUTCOME_UNKNOWN' = 'NONE';
+  private outcomeUnknown?: PortfolioBrokerImportViewModel['outcomeUnknown'];
   private portRefusal?: PortfolioBrokerImportViewModel['portRefusal'];
 
   constructor(securityMaster?: SecurityMaster) {
@@ -157,6 +191,10 @@ export class PortfolioBrokerImportController {
     this.lastIngressResult = undefined;
     this.lastSaveResult = undefined;
     this.portRefusal = undefined;
+    this.outcomeUnknown = undefined;
+    this.portOutcome = 'NONE';
+    this.commitReceipt = undefined;
+    this.durable = false;
     this.selectedFileName = '';
   }
 
@@ -282,16 +320,26 @@ export class PortfolioBrokerImportController {
     const mode = params.mode || 'MERGE';
     const viewportWidth = params.viewportWidth ?? 1280;
 
+    // Start from a clean outcome. The declared capability of the save path is a
+    // DECLARATION only; it is replaced by receipt-derived facts on success and
+    // it never authorises a committed display.
     this.durability = params.storePort.durability;
+    this.durable = false;
+    this.portOutcome = 'NONE';
     this.portRefusal = undefined;
+    this.outcomeUnknown = undefined;
+    this.commitReceipt = undefined;
 
     if (!this.lastIngressResult || this.lastIngressResult.disposition !== 'READY_FOR_PORTFOLIO_SAVE') {
+      // A guard-block is a refusal. Nothing was saved, so no result, no
+      // timestamp and no placeholder record is synthesized.
       this.currentState = 'REJECTED';
-      this.lastSaveResult = await this.buildFailureResult(
-        params.storePort,
-        portfolioId,
-        'Save Guard Block: Ingress disposition is not READY_FOR_PORTFOLIO_SAVE.'
-      );
+      this.portOutcome = 'REFUSED';
+      this.portRefusal = {
+        code: 'REFUSED_STORE_GUARD',
+        message: 'Save Guard Block: Ingress disposition is not READY_FOR_PORTFOLIO_SAVE.',
+        refusedHoldings: [],
+      };
       return this.buildViewModel(viewportWidth);
     }
 
@@ -308,58 +356,43 @@ export class PortfolioBrokerImportController {
       expectedRevision: params.expectedRevision,
     });
 
-    if (outcome.ok) {
+    if (outcome.ok === true) {
+      // Committed: the receipt is the authority. Nothing is inferred from
+      // preview data, and the legacy result is used only if actually supplied.
+      this.commitReceipt = outcome.receipt;
+      this.durability = outcome.receipt.durability;
+      this.durable = outcome.receipt.durable === true;
+      this.portOutcome = 'SUCCESS';
       this.lastSaveResult = outcome.result;
       this.currentState = 'SAVE_SUCCESS';
-    } else {
-      this.currentState = 'REJECTED';
-      this.portRefusal = {
-        code: outcome.code,
-        message: outcome.message,
-        refusedHoldings: outcome.refusedHoldings,
-      };
-      this.lastSaveResult = {
-        success: false,
-        portfolio: outcome.portfolio,
-        holdingsSavedCount: 0,
-        totalMarketValue: 0,
-        weightSumPercentage: 0,
-        savedAt: new Date().toISOString(),
-        provenanceDigest: '',
-        error: outcome.message,
-      };
+      return this.buildViewModel(viewportWidth);
     }
 
+    if (outcome.ok === 'unknown') {
+      // Distinct third state: the commit result cannot be known. No receipt is
+      // produced, no retry is attempted, and no refusal wording is used.
+      this.portOutcome = 'OUTCOME_UNKNOWN';
+      this.outcomeUnknown = {
+        message: outcome.message,
+        portfolioId: outcome.portfolioId,
+        reconciliationRequired: true,
+      };
+      this.lastSaveResult = undefined;
+      this.currentState = 'OUTCOME_UNKNOWN';
+      return this.buildViewModel(viewportWidth);
+    }
+
+    // Ordinary refusal: no record, no timestamp, no zero metrics, no durability
+    // claim, and no unmutated portfolio snapshot unless the port supplied one.
+    this.portOutcome = 'REFUSED';
+    this.portRefusal = {
+      code: outcome.code,
+      message: outcome.message,
+      refusedHoldings: outcome.refusedHoldings ?? [],
+    };
+    this.lastSaveResult = undefined;
+    this.currentState = 'REJECTED';
     return this.buildViewModel(viewportWidth);
-  }
-
-  private async buildFailureResult(
-    storePort: PortfolioStorePort,
-    portfolioId: string,
-    message: string
-  ): Promise<PortfolioSaveResult> {
-    const portfolio = (await storePort.getPortfolio(portfolioId)) || {
-      portfolioId,
-      portfolioName: 'Institutional Flagship Portfolio',
-      holdings: [],
-      totalMarketValue: 0,
-      totalHoldingsCount: 0,
-      weightSumPercentage: 0.0,
-      lastUpdated: new Date().toISOString(),
-      provenanceDigest: '',
-      isSaved: false,
-    };
-
-    return {
-      success: false,
-      portfolio,
-      holdingsSavedCount: 0,
-      totalMarketValue: 0,
-      weightSumPercentage: 0,
-      savedAt: new Date().toISOString(),
-      provenanceDigest: '',
-      error: message,
-    };
   }
 
   /**
@@ -386,6 +419,11 @@ export class PortfolioBrokerImportController {
     if (this.currentState === 'SAVE_SUCCESS') {
       isSaveEnabled = false;
       disabledReason = 'Holdings already successfully saved to portfolio.';
+    } else if (this.currentState === 'OUTCOME_UNKNOWN') {
+      // No automatic retry: the commit result is unknown, so a second save is
+      // withheld until the state is reconciled by a separately authorised read.
+      isSaveEnabled = false;
+      disabledReason = 'Commit outcome unknown. Reconcile by read before any retry.';
     } else if (this.currentState === 'BLOCKED') {
       isSaveEnabled = false;
       disabledReason = 'Import blocked: Unsupported binary format (requires BI-06 qualification).';
@@ -456,7 +494,11 @@ export class PortfolioBrokerImportController {
 
     // Quality Indicator
     let qualityState: 'GOOD' | 'PARTIAL' | 'UNAVAILABLE' = 'UNAVAILABLE';
-    if (this.currentState === 'BLOCKED' || this.currentState === 'REJECTED') {
+    if (
+      this.currentState === 'BLOCKED' ||
+      this.currentState === 'REJECTED' ||
+      this.currentState === 'OUTCOME_UNKNOWN'
+    ) {
       qualityState = 'UNAVAILABLE';
     } else if (this.currentState === 'PARTIAL_REJECTIONS') {
       qualityState = 'PARTIAL';
@@ -494,6 +536,8 @@ export class PortfolioBrokerImportController {
       }
     } else if (this.currentState === 'BLOCKED') {
       liveRegionText = `Import Blocked: ${res?.errors[0] || 'Unsupported format'}`;
+    } else if (this.currentState === 'OUTCOME_UNKNOWN') {
+      liveRegionText = `Import Outcome Unknown: ${this.outcomeUnknown?.message || 'The commit result could not be established.'} Reconcile before retrying; no automatic retry was attempted.`;
     } else if (this.currentState === 'REJECTED') {
       liveRegionText = `Import Rejected: ${this.portRefusal?.message || res?.errors[0] || 'Validation failed'}`;
     }
@@ -519,7 +563,12 @@ export class PortfolioBrokerImportController {
       warnings: res?.warnings || [],
       errors: res?.errors || [],
       accessibility: {
-        ariaLive: this.currentState === 'REJECTED' || this.currentState === 'BLOCKED' ? 'assertive' : 'polite',
+        ariaLive:
+          this.currentState === 'REJECTED' ||
+          this.currentState === 'BLOCKED' ||
+          this.currentState === 'OUTCOME_UNKNOWN'
+            ? 'assertive'
+            : 'polite',
         ariaRole: 'dialog',
         focusElementId: isSaveEnabled ? 'ui15-btn-confirm-save' : 'ui15-btn-file-select',
         tableCaption: `Broker Holdings Import Preview for ${brokerDisplayName} (${this.selectedFileName})`,
@@ -532,8 +581,13 @@ export class PortfolioBrokerImportController {
         pinnedColumn: bp.pinPrimaryColumn ? 'symbol' : undefined,
       },
       saveResult: this.lastSaveResult,
+      commitReceipt: this.commitReceipt,
+      portOutcome: this.portOutcome,
+      outcomeUnknown: this.outcomeUnknown,
       durability: this.durability,
-      durable: this.durability === 'DURABLE',
+      // Receipt-driven only: a static capability declaration is never a
+      // per-operation durability claim.
+      durable: this.durable === true && this.durability === 'DURABLE',
       portSaveGuard,
       portRefusal: this.portRefusal,
     };
