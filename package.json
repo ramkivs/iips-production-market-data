@@ -4,12 +4,15 @@
   "description": "Institutional Investment Platform System (IIPS) - Production Market Data & Intelligence Pipeline",
   "type": "module",
   "scripts": {
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && npm run build:portfolio-ui-package",
     "build:tsc": "tsc",
     "build:vite": "vite build",
+    "build:portfolio-ui-package": "tsc -p tsconfig.portfolio-ui-package.json",
     "dev": "vite",
     "test": "node scripts/run-tests.mjs",
-    "test:direct": "node --test --experimental-strip-types tests/*.test.ts"
+    "test:direct": "node --test --experimental-strip-types tests/*.test.ts",
+    "prepack": "npm run build:portfolio-ui-package",
+    "prepare": "npm run build:portfolio-ui-package"
   },
   "keywords": [
     "iips",
@@ -33,5 +36,14 @@
   },
   "dependencies": {
     "react-router-dom": "^6.30.6"
-  }
+  },
+  "exports": {
+    "./portfolio-ui": {
+      "types": "./dist/package/src/ui/portfolio_ui_package.d.ts",
+      "import": "./dist/package/src/ui/portfolio_ui_package.js"
+    }
+  },
+  "files": [
+    "dist/package"
+  ]
 }
