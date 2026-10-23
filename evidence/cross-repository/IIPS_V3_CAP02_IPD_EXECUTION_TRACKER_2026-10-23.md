@@ -270,3 +270,19 @@ Added: re-pinned Q1–Q12 determination sheet and the exact `desktop-no0nhtp` op
 Gate A′ successor PROPOSED, Gate 4 NOT AUTHORIZED, U4 not rendered, U5 not granted, U6 denied;
 `WRITE_NOT_AUTHORIZED` / `SESSION_ONLY` / `durable:false` preserved. No `src/`, `tests/`,
 `scripts/`, CI, manifest or IRR change.
+
+### Publication receipt — PR #62 (verified against IPD `main`)
+
+```text
+IPD main before:    bb4101b5d16546a1327227258a947e9cbe463900  tree b02ef11c61bb87e64c3effb5d252566f43ef26c5
+PR #62 head:        0548b67 (arena/f9358f79-iips-production-market-data)
+PR #62 checks:      run 39966897587 "typecheck · build · test" SUCCESS; "executed test count" SUCCESS
+PR #62 merge:       MERGED 2026-10-23T14:08:35Z
+IPD main after:     a3ababf183b118a7c5dd9ab31cd6dddc02d1905d  tree 29bc721fceab106bf7f37d0aa8fb17e4d044f958
+changed paths:      6 — the successor-execution record, this tracker, 4 raw-evidence artifacts (compare-verified)
+remote read-back:   4/4 sampled blobs byte-identical at the merge commit (record, tracker, probe JSON, validation summary)
+post-merge CI:      push run 39967117152 SUCCESS at a3ababf1…; "executed test count" SUCCESS
+```
+
+This receipt verifies documentation and remote state only. It does not provision Gate A′, qualify
+Gate 4, render U4, grant U5/U6, enable operational writes, or change any gate status.
