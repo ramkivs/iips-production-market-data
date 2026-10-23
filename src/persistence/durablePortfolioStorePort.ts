@@ -59,6 +59,11 @@ export class DurablePortfolioStorePort implements PortfolioStorePort {
     return this.store.contributions(owner, portfolioId);
   }
 
+  withBrokerImportTransaction<T>(owner: OwnerRef, work: (writer: this) => T): T {
+    this.assertWritable();
+    return this.store.withBrokerImportTransaction(owner, () => work(this));
+  }
+
   create(owner: OwnerRef, portfolioId: string, request: PortfolioSaveRequest): number {
     this.assertWritable();
     return this.store.create(owner, portfolioId, request);

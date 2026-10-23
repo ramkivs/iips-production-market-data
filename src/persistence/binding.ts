@@ -69,48 +69,56 @@ export function inspectBindings(db: DatabaseSync): {
  */
 export function resolveActiveBinding(db: DatabaseSync): ActiveOwner {
   db.exec('BEGIN IMMEDIATE;');
-  return resolveInsideTransaction(db);
-}
-
-function resolveInsideTransaction(db: DatabaseSync): ActiveOwner {
   try {
-    const bindings = db
-      .prepare("SELECT binding_id, principal_label, status FROM local_principal_bindings WHERE status = 'ACTIVE'")
-      .all() as unknown as BindingRow[];
-    if (bindings.length === 0) {
-      throw new BindingAbsentError('no ACTIVE local principal binding is registered');
-    }
-    if (bindings.length > 1) {
-      throw new BindingInvalidError('more than one ACTIVE local principal binding exists');
-    }
-    const binding = bindings[0];
-
-    const memberships = db
-      .prepare(
-        "SELECT membership_id, binding_id, tenant_id, canonical_owner_id, status FROM local_principal_memberships WHERE status = 'ACTIVE'",
-      )
-      .all() as unknown as MembershipRow[];
-    if (memberships.length === 0) {
-      throw new BindingAbsentError('the ACTIVE binding has no ACTIVE membership');
-    }
-    if (memberships.length > 1) {
-      throw new BindingInvalidError('more than one ACTIVE membership exists');
-    }
-    const membership = memberships[0];
-    if (membership.binding_id !== binding.binding_id) {
-      throw new BindingInvalidError('the ACTIVE membership is not attached to the ACTIVE binding');
-    }
-    const owner: ActiveOwner = {
-      bindingId: binding.binding_id,
-      principalLabel: binding.principal_label,
-      membershipId: membership.membership_id,
-      tenantId: membership.tenant_id,
-      canonicalOwnerId: membership.canonical_owner_id,
-    };
+    const owner = resolveActiveBindingInCurrentTransaction(db);
     db.exec('COMMIT;');
     return owner;
   } catch (error) {
     db.exec('ROLLBACK;');
     throw error;
   }
+}
+
+/**
+ * Resolves the active owner without taking transaction ownership. The caller
+ * must already hold BEGIN IMMEDIATE on this same connection, which serializes
+ * this check with revocation and the caller's protected writes.
+ */
+export function resolveActiveBindingInCurrentTransaction(db: DatabaseSync): ActiveOwner {
+  if (!db.isTransaction) {
+    throw new Error('resolveActiveBindingInCurrentTransaction requires an active transaction');
+  }
+  const bindings = db
+    .prepare("SELECT binding_id, principal_label, status FROM local_principal_bindings WHERE status = 'ACTIVE'")
+    .all() as unknown as BindingRow[];
+  if (bindings.length === 0) {
+    throw new BindingAbsentError('no ACTIVE local principal binding is registered');
+  }
+  if (bindings.length > 1) {
+    throw new BindingInvalidError('more than one ACTIVE local principal binding exists');
+  }
+  const binding = bindings[0];
+
+  const memberships = db
+    .prepare(
+      "SELECT membership_id, binding_id, tenant_id, canonical_owner_id, status FROM local_principal_memberships WHERE status = 'ACTIVE'",
+    )
+    .all() as unknown as MembershipRow[];
+  if (memberships.length === 0) {
+    throw new BindingAbsentError('the ACTIVE binding has no ACTIVE membership');
+  }
+  if (memberships.length > 1) {
+    throw new BindingInvalidError('more than one ACTIVE membership exists');
+  }
+  const membership = memberships[0];
+  if (membership.binding_id !== binding.binding_id) {
+    throw new BindingInvalidError('the ACTIVE membership is not attached to the ACTIVE binding');
+  }
+  return {
+    bindingId: binding.binding_id,
+    principalLabel: binding.principal_label,
+    membershipId: membership.membership_id,
+    tenantId: membership.tenant_id,
+    canonicalOwnerId: membership.canonical_owner_id,
+  };
 }
