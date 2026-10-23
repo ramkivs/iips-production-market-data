@@ -25,6 +25,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseTestSummary } from './test-summary-parser.mjs';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -109,11 +110,11 @@ if (result.error) {
 }
 
 const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
-const reported = output.match(/^# tests (\d+)$/m);
-const executed = reported ? Number(reported[1]) : null;
+const summary = parseTestSummary(output);
+const executed = summary.executed;
 
 if (executed === null) {
-  fail('the runner reported no test count — the result cannot be trusted', 'no "# tests <n>" line found');
+  fail('the runner reported no test count — the result cannot be trusted', 'no anchored TAP/spec test summary found');
 }
 if (executed === 0) {
   fail('the runner executed zero tests', 'a zero-test run is never a pass');
@@ -123,7 +124,6 @@ if (result.status !== 0) {
   process.exit(result.status === null ? 1 : result.status);
 }
 
-const passed = output.match(/^# pass (\d+)$/m);
 console.log(
-  `\n[test-guard] OK — ${executed} test(s) executed, ${passed ? passed[1] : 'unknown'} passed, exit 0`,
+  `\n[test-guard] OK — ${executed} test(s) executed, ${summary.passed === null ? 'unknown' : summary.passed} passed, exit 0`,
 );
