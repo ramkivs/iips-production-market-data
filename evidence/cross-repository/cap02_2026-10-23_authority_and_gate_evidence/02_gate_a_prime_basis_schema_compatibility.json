@@ -1,0 +1,70 @@
+{
+  "probe": "Gate A prime basis vs current-main schema compatibility (no rows, no provisioning)",
+  "basis_tables": [
+    "application_users",
+    "external_identity_mappings",
+    "local_principal_audit_events",
+    "local_principal_bindings",
+    "mapping_audit_events",
+    "portfolio_contributions",
+    "portfolio_events",
+    "portfolio_revision_holdings",
+    "portfolio_revisions",
+    "sqlite_sequence",
+    "tenant_memberships",
+    "user_portfolios"
+  ],
+  "basis_local_principal_bindings_columns": [
+    "endpoint_id",
+    "application_user_id",
+    "tenant_id",
+    "state",
+    "created_at",
+    "updated_at",
+    "revoked_at"
+  ],
+  "current_main_tables": [
+    "_migration_ledger",
+    "audit_events",
+    "local_principal_bindings",
+    "local_principal_memberships",
+    "portfolio_contributions",
+    "portfolio_holdings",
+    "portfolio_revisions",
+    "portfolios",
+    "sqlite_sequence"
+  ],
+  "current_main_local_principal_bindings_columns": [
+    "binding_id",
+    "principal_label",
+    "status",
+    "created_at",
+    "updated_at",
+    "revoked_at"
+  ],
+  "basis_tables_absent_on_main": [
+    "application_users",
+    "tenant_memberships",
+    "local_principal_audit_events"
+  ],
+  "main_migrations_applied_over_basis_schema": {
+    "ok": false,
+    "name": "Error",
+    "message": "table portfolio_revisions already exists"
+  },
+  "tables_after_failed_apply": [
+    "_migration_ledger",
+    "application_users",
+    "external_identity_mappings",
+    "local_principal_audit_events",
+    "local_principal_bindings",
+    "mapping_audit_events",
+    "portfolio_contributions",
+    "portfolio_events",
+    "portfolio_revision_holdings",
+    "portfolio_revisions",
+    "sqlite_sequence",
+    "tenant_memberships",
+    "user_portfolios"
+  ]
+}

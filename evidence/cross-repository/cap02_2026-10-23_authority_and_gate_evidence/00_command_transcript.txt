@@ -1,0 +1,261 @@
+### CMD: git rev-parse HEAD
+### START_UTC: 2026-10-23T13:42:06Z
+2d9130e76bb0dc89daeefabaf297e27bdaa84250
+### EXIT: 0
+
+### CMD: git rev-parse HEAD^{tree}
+### START_UTC: 2026-10-23T13:42:06Z
+4658699180ef161aae3c1b33d3946e918d6fb9b2
+### EXIT: 0
+
+### CMD: git rev-parse origin/main
+### START_UTC: 2026-10-23T13:42:06Z
+2d9130e76bb0dc89daeefabaf297e27bdaa84250
+### EXIT: 0
+
+### CMD: git rev-parse origin/main^{tree}
+### START_UTC: 2026-10-23T13:42:06Z
+4658699180ef161aae3c1b33d3946e918d6fb9b2
+### EXIT: 0
+
+### CMD: git status --porcelain=v1 | wc -l
+### START_UTC: 2026-10-23T13:42:06Z
+1
+### EXIT: 0
+
+### CMD: gh api repos/ramkivs/iips-production-market-data/commits/main --jq '{sha:.sha,tree:.commit.tree.sha,date:.commit.committer.date}'
+### START_UTC: 2026-10-23T13:42:06Z
+{"date":"2026-10-23T12:13:34Z","sha":"2d9130e76bb0dc89daeefabaf297e27bdaa84250","tree":"4658699180ef161aae3c1b33d3946e918d6fb9b2"}
+### EXIT: 0
+
+### CMD: gh api repos/ramkivs/iips-review-recovered/commits/main --jq '{sha:.sha,tree:.commit.tree.sha,date:.commit.committer.date}'
+### START_UTC: 2026-10-23T13:42:06Z
+{"date":"2026-10-23T13:11:29Z","sha":"409604e4dfefbe6aa966113f52af607995b5f297","tree":"297ce6aebd9a4d93b8e3fc572720aa18a8e682ca"}
+### EXIT: 0
+
+### CMD: for f in src/persistence/migrations/001_initial_schema.ts src/persistence/migrations/002_audit_event_sequence.ts src/persistence/migrations/003_local_principal_bindings.ts src/persistence/migrations/004_portfolio_contribution_provenance.ts src/persistence/provisioning.ts src/persistence/binding.ts src/persistence/portfolio_store.ts src/persistence/durablePortfolioStorePort.ts src/ipc/dispatch.ts src/ipc/protocol.ts src/ipc/entrypoint.ts src/ipc/endpoint.ts scripts/run-tests.mjs; do printf '%s  %s\n' "$(git rev-parse HEAD:$f)" "$f"; done
+### START_UTC: 2026-10-23T13:42:07Z
+f594a18264c45ccdcbfa2381592820a72d3c453b  src/persistence/migrations/001_initial_schema.ts
+932af8e603c4be41c9f0d8a6b051f41836c1fee8  src/persistence/migrations/002_audit_event_sequence.ts
+32b125bf962bb76a6ae59d3b262203dbbb988197  src/persistence/migrations/003_local_principal_bindings.ts
+6bad5a5095b6bb94ce91a86a4b65f7ab915c516c  src/persistence/migrations/004_portfolio_contribution_provenance.ts
+dc844189a1c92f00acc3d7572c22f3e28e138eb6  src/persistence/provisioning.ts
+96d0079dd04b75c6f257a2001c8f7eff1ffc560a  src/persistence/binding.ts
+4a005b737de26443e261156a3102d553dd90b726  src/persistence/portfolio_store.ts
+d95608d90b6abe0535f82373b7e621d95aecbae8  src/persistence/durablePortfolioStorePort.ts
+27becc76749f5b11a37ca4e6254d58132620f57f  src/ipc/dispatch.ts
+f4dc72b12ed9d618d1cfde836160f992ff1be9a5  src/ipc/protocol.ts
+ae3edd12e1199845f6b5fe059fa79fed6245ae32  src/ipc/entrypoint.ts
+e565aa5b343266f62ffd411d17d74c89b9f29324  src/ipc/endpoint.ts
+4a90d935bc74bac03902d43906ddef32e582c7b7  scripts/run-tests.mjs
+### EXIT: 0
+
+### CMD: for f in evidence/cross-repository/IIPS_V3_G2_GATE_E_PORTFOLIO_WRITE_POLICY_2026-10-18.md evidence/np04/IIPS_v3.0_G2_IPD_LOCAL_PRINCIPAL_OS_IPC_SECURITY_CONTRACT_PROPOSAL_2026-10-16.md evidence/np04/IIPS_v3.0_G2_IPD_GATE_A_PRIME_PA_DECISION_RENDERED_2026-10-17.md; do printf '%s  %s  %s\n' "$(git rev-parse HEAD:$f)" "$(sha256sum $f | cut -d' ' -f1)" "$f"; done
+### START_UTC: 2026-10-23T13:42:07Z
+4a9501bffb49abbbc0ba5b5c4f81d2841812913e  6385345b98fe33dc294212b37592ff455589b7656aa42bf05fdb29e04c57e7cf  evidence/cross-repository/IIPS_V3_G2_GATE_E_PORTFOLIO_WRITE_POLICY_2026-10-18.md
+fc8d1cbc9ec96f4f93fce8afbbb659b044f6268f  be56e6fdfc21f6382780f6d272e9f3b03d9f612671520e2994bc25b4f135f613  evidence/np04/IIPS_v3.0_G2_IPD_LOCAL_PRINCIPAL_OS_IPC_SECURITY_CONTRACT_PROPOSAL_2026-10-16.md
+c04f8a304acaffe49f92a5aac2ce2242673e9a51  6d712edf1d6f7653ae287abfc5ee0451a0941761e2fd154b3215c06098e70ee9  evidence/np04/IIPS_v3.0_G2_IPD_GATE_A_PRIME_PA_DECISION_RENDERED_2026-10-17.md
+### EXIT: 0
+
+### CMD: uname -srm; node -v; npm -v; node -p 'process.platform'
+### START_UTC: 2026-10-23T13:42:07Z
+Linux 6.1.158+ x86_64
+v22.22.3
+10.9.8
+linux
+### EXIT: 0
+
+### CMD: ping -c1 -W1 desktop-no0nhtp
+### START_UTC: 2026-10-23T13:42:07Z
+ping: desktop-no0nhtp: Name or service not known
+### EXIT: 2
+
+### CMD: npx tsc --noEmit
+### START_UTC: 2026-10-23T13:42:07Z
+### EXIT: 0
+
+### CMD: npm run build
+### START_UTC: 2026-10-23T13:42:15Z
+
+> iips-production-market-data@1.0.0 build
+> tsc && vite build && npm run build:portfolio-ui-package && npm run build:pit-package
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 73 modules transformed.
+rendering chunks...
+computing gzip size...
+dist-frontend/index.html                     0.58 kB │ gzip:   0.38 kB
+dist-frontend/assets/index-DRxJRl4Q.css     14.17 kB │ gzip:   3.80 kB
+dist-frontend/assets/index-DESzrqsS.js   1,489.05 kB │ gzip: 189.37 kB │ map: 4,072.70 kB
+
+✓ built in 446ms
+
+> iips-production-market-data@1.0.0 build:portfolio-ui-package
+> tsc -p tsconfig.portfolio-ui-package.json
+
+
+> iips-production-market-data@1.0.0 build:pit-package
+> tsc -p tsconfig.pit-package.json
+
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+### EXIT: 0
+
+### CMD: git status --porcelain --untracked-files=no | wc -l
+### START_UTC: 2026-10-23T13:42:40Z
+0
+### EXIT: 0
+
+### CMD: git status --porcelain | sed -n '1,5p'
+### START_UTC: 2026-10-23T13:42:40Z
+?? evidence/cross-repository/cap02_2026-10-23_authority_and_gate_evidence/
+### EXIT: 0
+
+### NOTE: the two preceding checks distinguish tracked changes (0) from the in-progress untracked evidence directory created by this pass.
+### CMD: npm test 2>&1 | tail -12
+### START_UTC: 2026-10-23T13:42:40Z
+  ...
+1..103
+# tests 875
+# suites 121
+# pass 874
+# fail 0
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 15929.485082
+
+[test-guard] OK — 875 test(s) executed, 874 passed, exit 0
+### EXIT: 0
+
+### CMD: for t in g3_startup_validation q1_ownership_source_readiness g3_write_gate g3_durability_vocabulary g3_binding_resolution q1_broker_import_durability g3_caller_authority; do printf '%s ' $t; node --test --test-reporter=tap dist/tests/$t.test.js 2>/dev/null | grep -E '^# (tests|pass|fail) ' | tr '\n' ' '; echo "exit=$?"; done
+### START_UTC: 2026-10-23T13:42:56Z
+g3_startup_validation # tests 20 # pass 20 # fail 0 exit=0
+q1_ownership_source_readiness # tests 4 # pass 4 # fail 0 exit=0
+g3_write_gate # tests 9 # pass 9 # fail 0 exit=0
+g3_durability_vocabulary # tests 6 # pass 6 # fail 0 exit=0
+g3_binding_resolution # tests 13 # pass 13 # fail 0 exit=0
+q1_broker_import_durability # tests 18 # pass 18 # fail 0 exit=0
+g3_caller_authority # tests 103 # pass 103 # fail 0 exit=0
+### EXIT: 0
+
+### CMD: node /tmp/probe/ga_probe.mjs
+### START_UTC: 2026-10-23T13:42:58Z
+{
+  "probe": "gate-a-prime reachability/refusal",
+  "node": "22.22.3",
+  "platform": "linux",
+  "schema_versions": [
+    {
+      "migration_id": "001_initial_schema",
+      "checksum": "08e712fd323f547413618f0443ec361015b136285c28b519d967f02b6d9580ab"
+    },
+    {
+      "migration_id": "002_audit_event_sequence",
+      "checksum": "01892a862c8a877c97403a938123fb575cb43f9445d4c5345aa209f5adae47ed"
+    },
+    {
+      "migration_id": "003_local_principal_bindings",
+      "checksum": "7967acc06584811df9cf37e05b84d78d6126b6dae979ee79e0523dfce924004e"
+    },
+    {
+      "migration_id": "004_portfolio_contribution_provenance",
+      "checksum": "0dbf90c129154d8c547b6c5876157877c5e12790ebf2b35c741640751ea7b0ac"
+    }
+  ],
+  "tables": [
+    "_migration_ledger",
+    "audit_events",
+    "local_principal_bindings",
+    "local_principal_memberships",
+    "portfolio_contributions",
+    "portfolio_holdings",
+    "portfolio_revisions",
+    "portfolios",
+    "sqlite_sequence"
+  ],
+  "authorization_candidates": [
+    {
+      "candidate": 0,
+      "threw": true,
+      "name": "ProvisioningNotAuthorizedError",
+      "message": "Gate A′ provisioning is not authorized in this build"
+    },
+    {
+      "candidate": 1,
+      "threw": true,
+      "name": "ProvisioningNotAuthorizedError",
+      "message": "Gate A′ provisioning is not authorized in this build"
+    },
+    {
+      "candidate": 2,
+      "threw": true,
+      "name": "ProvisioningNotAuthorizedError",
+      "message": "Gate A′ provisioning is not authorized in this build"
+    },
+    {
+      "candidate": 3,
+      "threw": true,
+      "name": "ProvisioningNotAuthorizedError",
+      "message": "Gate A′ provisioning is not authorized in this build"
+    }
+  ],
+  "all_refused": true,
+  "bindings_before": {
+    "bindings": [],
+    "memberships": []
+  },
+  "bindings_after": {
+    "bindings": [],
+    "memberships": []
+  },
+  "rows_unchanged": true,
+  "audit_events_before": 0,
+  "audit_events_after": 0,
+  "pure_builder_works_without_authorization": {
+    "bindingIdLen": true,
+    "keys": [
+      "bindingSql",
+      "membershipSql"
+    ]
+  },
+  "in_repo_importers_of_provisioning": []
+}
+(node:3527) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+### EXIT: 0
+
+### CMD: node -e "const re=/^# tests (\\d+)$/m, rep=/^# pass (\\d+)$/m; const lf='# tests 875\\n# pass 874\\n'; const crlf='# tests 875\\r\\n# pass 874\\r\\n'; const mk='\u2139 tests 875\\n\u2139 pass 874\\n'; console.log(JSON.stringify({lf:{t:lf.match(re)?.[1]??null,p:lf.match(rep)?.[1]??null},crlf:{t:crlf.match(re)?.[1]??null,p:crlf.match(rep)?.[1]??null},info_marker:{t:mk.match(re)?.[1]??null,p:mk.match(rep)?.[1]??null}}));"
+### START_UTC: 2026-10-23T13:42:58Z
+{"lf":{"t":"875","p":"874"},"crlf":{"t":"875","p":"874"},"info_marker":{"t":null,"p":null}}
+### EXIT: 0
+
+### CMD: node --test --test-reporter=tap /tmp/tapcheck/s.test.mjs 2>&1 | grep -E '^# (tests|pass) '
+### START_UTC: 2026-10-23T13:42:58Z
+# tests 2
+# pass 2
+### EXIT: 0
+
+### CMD: script -qec 'node --test /tmp/tapcheck/s.test.mjs' /dev/null | grep -a 'tests' | cat -v
+### START_UTC: 2026-10-23T13:42:58Z
+M-bM-^DM-9 tests 2^M
+### EXIT: 0
+
+### CMD: diff -u /tmp/run-tests-fe1ab1a3.mjs scripts/run-tests.mjs
+### START_UTC: 2026-10-23T13:42:58Z
+--- /tmp/run-tests-fe1ab1a3.mjs	2026-10-23 13:41:28.388216976 +0000
++++ scripts/run-tests.mjs	2026-10-23 13:37:44.980635973 +0000
+@@ -92,7 +92,7 @@
+
+ console.log(`[test-guard] files=${files.length} (source suite files: ${sourceTests.length})`);
+
+-const runnerArgs = ['--test', ...files];
++const runnerArgs = ['--test', '--test-reporter=tap', ...files];
+
+ const result = spawnSync(process.execPath, runnerArgs, {
+   cwd: repoRoot,
+### EXIT: 1
