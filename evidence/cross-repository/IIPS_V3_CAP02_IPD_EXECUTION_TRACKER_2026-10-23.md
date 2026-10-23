@@ -544,11 +544,12 @@ The two H-12 artifacts are **preparation evidence only**. The machine-readable c
 76 repository-entry identity checks and the 33-versus-32 membership conflict; its status is
 `NOT ADOPTED`. The final main tree has no discrepancy from PR #69 head, and no IRR mutation occurred.
 
-**Final durable handover:** IPD `ramkivs/iips-production-market-data` `refs/heads/main` is
+**Handover state recorded at the PR #69 receipt (superseded by later tracker-only publications):**
+IPD `ramkivs/iips-production-market-data` `refs/heads/main` was
 `6804e17d04373ccc5fed82ecfc5153afdc6f0b3e`, tree `6fe2d6dea72772dd04e8442cc7135dac5c46388d`.
-Next action is the separate PA correction/reconciliation of the H-12 path-membership conflict. Gate A′
-identity values remain unresolved; provisioning, host preflight, QE-1…QE-11, H-12 adoption, result
-acceptance and W-1/U6 write authorization remain unperformed/not granted as applicable.
+The next action remains the separate PA correction/reconciliation of the H-12 path-membership
+conflict. Gate A′ identity values remain unresolved; provisioning, host preflight, QE-1…QE-11, H-12
+adoption, result acceptance and W-1/U6 write authorization remain unperformed/not granted as applicable.
 
 ## CAP-02 PR #70 publication receipt (2026-10-23)
 
@@ -569,3 +570,25 @@ verified before this final tracker update.
 This receipt does not change any decision status: H-12 remains **NOT ADOPTED** at the explicit
 33-versus-32 membership conflict; Gate 4 remains **AUTHORIZED — NOT STARTED**; Gate A′ execution
 remains **NOT AUTHORIZED** pending its separate identity-value act and host conditions.
+
+## CAP-02 PR #72 tracker-status reconciliation receipt (2026-10-23)
+
+PR #72 corrected only the existing authoritative U3/Gate 4 and Binding provisioning rows after
+re-reading the published PR #68 implementation and the H-12 v3 stop record. No source, act, IRR
+artifact, host operation, QE execution, result acceptance, or write authorization changed.
+
+| Item | Verified value |
+|---|---|
+| PR #72 | `MERGED` at `2026-10-23T16:49:53Z`; URL https://github.com/ramkivs/iips-production-market-data/pull/72 |
+| PR head / tree | `1af5f6425081506418a1c47bc707f5986ef808e6` / `09bff9dbccff60a90b48a25bf880c81c1bb00338` |
+| Merge commit / tree | `50cbe6842e13a1c9ea0c833e7e3b2351ff90a305` / `09bff9dbccff60a90b48a25bf880c81c1bb00338` |
+| Merge parents | first `4198170b9c9eccc7bba8fab6c11825564ad043d3`; second `1af5f6425081506418a1c47bc707f5986ef808e6`; PR head is parent 2 and the merge tree matches the PR-head tree |
+| PR #72 CI | `typecheck · build · test`: `SUCCESS`, run `39989882080`, job `120538597607`; `executed test count`: `SUCCESS`, check `120538971949` |
+| Post-merge `main` CI | run `39990027123` (`push`, head `50cbe684…`) **SUCCESS**; job `120539100924` and executed-count job `120539582698` both **SUCCESS** |
+| Remote `main` at this receipt | `50cbe6842e13a1c9ea0c833e7e3b2351ff90a305`, tree `09bff9dbccff60a90b48a25bf880c81c1bb00338` |
+
+The corrected rows preserve the effective statuses: Gate 4 remains **AUTHORIZED — NOT STARTED**;
+Gate A′ implementation is **PUBLISHED/REMOTE-VERIFIED** but provisioning remains **NOT AUTHORIZED**
+while identity values are unresolved; H-12 remains **NOT ADOPTED** at the explicit 33-versus-32
+membership conflict. The next action remains a separate PA membership correction/adoption-boundary
+decision; no host preflight, QE-1…QE-11, result acceptance, Gate 5, U6, or write operation occurred.
