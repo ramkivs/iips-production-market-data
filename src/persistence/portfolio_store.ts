@@ -12,6 +12,7 @@
  */
 import { createHash } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
+import { BindingAbsentError, BindingInvalidError, resolveActiveBindingInCurrentTransaction } from './binding.js';
 
 export class InvalidPortfolioRequestError extends Error {
   constructor(message: string) {
@@ -41,6 +42,13 @@ export class WriteNotAuthorizedError extends Error {
   }
 }
 
+export class CommitOutcomeUnknownError extends Error {
+  constructor(message = 'The transaction commit outcome could not be established') {
+    super(message);
+    this.name = 'CommitOutcomeUnknownError';
+  }
+}
+
 export interface HoldingInput {
   symbol: string;
   companyId: string;
@@ -56,8 +64,20 @@ export interface HoldingInput {
   resolutionDisposition: string;
 }
 
+export type ContributionSemantics = 'SAVED_NEW_BATCH' | 'MERGED_INTO_EXISTING' | 'RESET' | 'REPLACE';
+
+export interface BrokerImportProvenance {
+  readonly fileName: string;
+  readonly sourceBroker: string;
+  readonly contentDigest: string;
+  readonly lineageDigest: string;
+  readonly importedAt: string;
+  readonly semantics: ContributionSemantics;
+}
+
 export interface PortfolioSaveRequest {
   readonly name?: string;
+  readonly brokerImportProvenance?: BrokerImportProvenance;
   readonly holdings: HoldingInput[];
   readonly provenanceDigest: string;
   readonly operation?: 'MERGE' | 'REPLACE';
@@ -101,18 +121,22 @@ export interface PortfolioSummary {
 /**
  * One committed import, as recorded in the durable contribution ledger.
  *
- * The ledger schema is fixed by migration `001_initial_schema` and is not
- * extended here: `contribution_id` carries the import's content digest (the
- * Gate E W-8 / BI-08 idempotency key) and `amount` carries the import's total
- * market value. The contract's per-contribution broker attribution, file name
- * and contribution SHA-256 lineage have no column in the fixed schema and are
- * therefore NOT invented here; see the outstanding schema act.
+ * Migration `004_portfolio_contribution_provenance` adds nullable, additive
+ * provenance fields. Existing rows remain NULL for facts that were not recorded
+ * before the migration; import writers populate these fields only from the
+ * broker-ingress request and computed lineage evidence.
  */
 export interface PortfolioContribution {
   readonly contributionId: string;
   readonly amount: number;
   readonly contributedAt: string;
   readonly createdAt: string;
+  readonly fileName: string | null;
+  readonly sourceBroker: string | null;
+  readonly contentDigest: string | null;
+  readonly lineageDigest: string | null;
+  readonly importedAt: string | null;
+  readonly semantics: ContributionSemantics | null;
 }
 
 /**
@@ -189,7 +213,68 @@ function contentDigestOf(request: PortfolioSaveRequest): string {
 const MAX_REVISIONS = 4;
 
 export class DurablePortfolioStore {
-  constructor(private readonly db: DatabaseSync) {}
+  private transactionDepth = 0;
+
+  constructor(
+    private readonly db: DatabaseSync,
+    private readonly testHooks?: { afterMutation?: (step: string) => void; afterCommit?: () => void },
+  ) {}
+
+  private afterMutation(step: string): void {
+    this.testHooks?.afterMutation?.(step);
+  }
+
+  private withTransaction<T>(work: () => T): T {
+    if (this.transactionDepth > 0) return work();
+    this.db.exec('BEGIN IMMEDIATE;');
+    this.transactionDepth += 1;
+    let commitAttempted = false;
+    try {
+      const result = work();
+      commitAttempted = true;
+      this.db.exec('COMMIT;');
+      this.testHooks?.afterCommit?.();
+      return result;
+    } catch (error) {
+      if (commitAttempted && !this.db.isTransaction) {
+        throw new CommitOutcomeUnknownError();
+      }
+      if (this.db.isTransaction) {
+        try {
+          this.db.exec('ROLLBACK;');
+        } catch {
+          throw new CommitOutcomeUnknownError();
+        }
+      } else {
+        throw new CommitOutcomeUnknownError();
+      }
+      throw error;
+    } finally {
+      this.transactionDepth -= 1;
+    }
+  }
+
+  /**
+   * Runs one broker-import request under one SQLite write transaction and
+   * revalidates the sole active owner while revocation is serialized.
+   */
+  withBrokerImportTransaction<T>(owner: OwnerRef, work: (store: this) => T): T {
+    return this.withTransaction(() => {
+      let active;
+      try {
+        active = resolveActiveBindingInCurrentTransaction(this.db);
+      } catch (error) {
+        if (error instanceof BindingAbsentError || error instanceof BindingInvalidError) {
+          throw new ResourceUnavailableError();
+        }
+        throw error;
+      }
+      if (active.canonicalOwnerId !== owner.canonicalOwnerId || active.tenantId !== owner.tenantId) {
+        throw new ResourceUnavailableError();
+      }
+      return work(this);
+    });
+  }
 
   list(owner: OwnerRef): PortfolioSummary[] {
     const rows = this.db
@@ -301,7 +386,9 @@ export class DurablePortfolioStore {
   contributions(owner: OwnerRef, portfolioId: string): PortfolioContribution[] {
     const rows = this.db
       .prepare(
-        `SELECT contribution_id, amount, contributed_at, created_at FROM portfolio_contributions
+        `SELECT contribution_id, amount, contributed_at, created_at, file_name, source_broker,
+                content_digest, lineage_digest, imported_at, contribution_semantics
+           FROM portfolio_contributions
           WHERE canonical_owner_id = ? AND portfolio_id = ?
           ORDER BY contributed_at, contribution_id`,
       )
@@ -310,12 +397,24 @@ export class DurablePortfolioStore {
       amount: number;
       contributed_at: string;
       created_at: string;
+      file_name: string | null;
+      source_broker: string | null;
+      content_digest: string | null;
+      lineage_digest: string | null;
+      imported_at: string | null;
+      contribution_semantics: ContributionSemantics | null;
     }>;
     return rows.map((row) => ({
       contributionId: row.contribution_id,
       amount: Number(row.amount),
       contributedAt: row.contributed_at,
       createdAt: row.created_at,
+      fileName: row.file_name,
+      sourceBroker: row.source_broker,
+      contentDigest: row.content_digest,
+      lineageDigest: row.lineage_digest,
+      importedAt: row.imported_at,
+      semantics: row.contribution_semantics,
     }));
   }
 
@@ -429,6 +528,7 @@ export class DurablePortfolioStore {
       this.db
         .prepare('DELETE FROM portfolio_contributions WHERE canonical_owner_id = ? AND portfolio_id = ?')
         .run(owner.canonicalOwnerId, portfolioId);
+      this.afterMutation('contributions-delete');
     }
     this.db
       .prepare(
@@ -449,6 +549,7 @@ export class DurablePortfolioStore {
         contentDigest,
         now,
       );
+    this.afterMutation('revision-insert');
     const insertHolding = this.db.prepare(
       `INSERT INTO portfolio_holdings
          (canonical_owner_id, portfolio_id, revision, holding_key, symbol, company_id,
@@ -476,10 +577,12 @@ export class DurablePortfolioStore {
         h.resolutionDisposition,
         now,
       );
+      this.afterMutation(`holding-insert:${h.symbol}`);
     }
     this.db
       .prepare('UPDATE portfolios SET current_revision = ?, updated_at = ? WHERE canonical_owner_id = ? AND portfolio_id = ?')
       .run(nextRevision, now, owner.canonicalOwnerId, portfolioId);
+    this.afterMutation('portfolio-update');
     // The contribution ledger: exactly one row per committed import, keyed by
     // the import's content digest (Gate E W-8 / BI-08). It is the durable
     // evidence that a broker file was already imported, which is what the
@@ -487,65 +590,87 @@ export class DurablePortfolioStore {
     this.db
       .prepare(
         `INSERT INTO portfolio_contributions
-           (canonical_owner_id, portfolio_id, contribution_id, amount, contributed_at, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+           (canonical_owner_id, portfolio_id, contribution_id, amount, contributed_at, created_at,
+            file_name, source_broker, content_digest, lineage_digest, imported_at, contribution_semantics)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(owner.canonicalOwnerId, portfolioId, contributionId, totalMarketValue, now, now);
+      .run(
+        owner.canonicalOwnerId,
+        portfolioId,
+        contributionId,
+        totalMarketValue,
+        now,
+        now,
+        request.brokerImportProvenance?.fileName ?? null,
+        request.brokerImportProvenance?.sourceBroker ?? null,
+        request.brokerImportProvenance?.contentDigest ?? null,
+        request.brokerImportProvenance?.lineageDigest ?? null,
+        request.brokerImportProvenance?.importedAt ?? null,
+        request.brokerImportProvenance?.semantics ?? null,
+      );
+    this.afterMutation('contribution-insert');
     return nextRevision;
   }
 
   create(owner: OwnerRef, portfolioId: string, request: PortfolioSaveRequest): number {
-    this.validate(request);
-    const existing = this.db
-      .prepare('SELECT 1 FROM portfolios WHERE canonical_owner_id = ? AND portfolio_id = ?')
-      .get(owner.canonicalOwnerId, portfolioId);
-    if (existing) {
-      throw new InvalidPortfolioRequestError(`portfolio already exists: ${portfolioId}`);
-    }
-    const now = new Date().toISOString();
-    // Start at revision 0; the INITIAL revision write below moves it to 1
-    // through the same conflict-checked path as every later revision.
-    this.db
-      .prepare(
-        `INSERT INTO portfolios (portfolio_id, canonical_owner_id, tenant_id, portfolio_name,
-                                 current_revision, status, created_at, updated_at, deleted_at)
-         VALUES (?, ?, ?, ?, 0, 'ACTIVE', ?, ?, NULL)`,
-      )
-      .run(portfolioId, owner.canonicalOwnerId, owner.tenantId, request.name ?? portfolioId, now, now);
-    return this.writeRevision(owner, portfolioId, request, 'INITIAL', 0);
+    return this.withTransaction(() => {
+      this.validate(request);
+      const existing = this.db
+        .prepare('SELECT 1 FROM portfolios WHERE canonical_owner_id = ? AND portfolio_id = ?')
+        .get(owner.canonicalOwnerId, portfolioId);
+      if (existing) throw new InvalidPortfolioRequestError(`portfolio already exists: ${portfolioId}`);
+      const now = new Date().toISOString();
+      this.db
+        .prepare(
+          `INSERT INTO portfolios (portfolio_id, canonical_owner_id, tenant_id, portfolio_name,
+                                   current_revision, status, created_at, updated_at, deleted_at)
+           VALUES (?, ?, ?, ?, 0, 'ACTIVE', ?, ?, NULL)`,
+        )
+        .run(portfolioId, owner.canonicalOwnerId, owner.tenantId, request.name ?? portfolioId, now, now);
+      this.afterMutation('portfolio-insert');
+      return this.writeRevision(owner, portfolioId, request, 'INITIAL', 0);
+    });
   }
 
   save(owner: OwnerRef, portfolioId: string, request: PortfolioSaveRequest, expectedRevision: number): number {
-    this.validate(request);
-    return this.writeRevision(owner, portfolioId, request, request.operation === 'REPLACE' ? 'REPLACE' : 'MERGE', expectedRevision);
+    return this.withTransaction(() => {
+      this.validate(request);
+      return this.writeRevision(owner, portfolioId, request, request.operation === 'REPLACE' ? 'REPLACE' : 'MERGE', expectedRevision);
+    });
   }
 
   reset(owner: OwnerRef, portfolioId: string, request: PortfolioSaveRequest, expectedRevision: number): number {
-    this.validate(request);
-    return this.writeRevision(owner, portfolioId, request, 'RESET', expectedRevision);
+    return this.withTransaction(() => {
+      this.validate(request);
+      return this.writeRevision(owner, portfolioId, request, 'RESET', expectedRevision);
+    });
   }
 
   delete(owner: OwnerRef, portfolioId: string, expectedRevision: number): void {
-    const current = this.resolvePortfolio(owner, portfolioId);
-    if (current.currentRevision !== expectedRevision) {
-      throw new RevisionConflictError(
-        `expected revision ${expectedRevision} but the portfolio is at ${current.currentRevision}`,
-      );
-    }
-    const now = new Date().toISOString();
-    this.db
-      .prepare(
-        `INSERT INTO portfolio_revisions
-           (portfolio_id, canonical_owner_id, revision, operation, total_market_value,
-            weight_sum_percentage, holdings_count, provenance_digest, content_digest, created_at)
-         VALUES (?, ?, ?, 'DELETE', 0, 0, 0, ?, NULL, ?)`,
-      )
-      .run(portfolioId, owner.canonicalOwnerId, expectedRevision + 1, `tombstone:${portfolioId}`, now);
-    this.db
-      .prepare(
-        `UPDATE portfolios SET status = 'TOMBSTONED', deleted_at = ?, updated_at = ?
-          WHERE canonical_owner_id = ? AND portfolio_id = ?`,
-      )
-      .run(now, now, owner.canonicalOwnerId, portfolioId);
+    this.withTransaction(() => {
+      const current = this.resolvePortfolio(owner, portfolioId);
+      if (current.currentRevision !== expectedRevision) {
+        throw new RevisionConflictError(
+          `expected revision ${expectedRevision} but the portfolio is at ${current.currentRevision}`,
+        );
+      }
+      const now = new Date().toISOString();
+      this.db
+        .prepare(
+          `INSERT INTO portfolio_revisions
+             (portfolio_id, canonical_owner_id, revision, operation, total_market_value,
+              weight_sum_percentage, holdings_count, provenance_digest, content_digest, created_at)
+           VALUES (?, ?, ?, 'DELETE', 0, 0, 0, ?, NULL, ?)`,
+        )
+        .run(portfolioId, owner.canonicalOwnerId, expectedRevision + 1, `tombstone:${portfolioId}`, now);
+      this.afterMutation('delete-revision-insert');
+      this.db
+        .prepare(
+          `UPDATE portfolios SET status = 'TOMBSTONED', deleted_at = ?, updated_at = ?
+            WHERE canonical_owner_id = ? AND portfolio_id = ?`,
+        )
+        .run(now, now, owner.canonicalOwnerId, portfolioId);
+      this.afterMutation('delete-portfolio-update');
+    });
   }
 }
