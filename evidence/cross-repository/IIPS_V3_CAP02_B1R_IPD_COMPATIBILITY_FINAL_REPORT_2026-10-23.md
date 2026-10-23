@@ -1,6 +1,6 @@
 # IIPS v3.0 CAP-02 — B-1R IPD compatibility consolidated final report
 
-**Status at this revision: validated implementation candidate; publication receipt pending.**
+**Status: PUBLISHED ON IPD `main` — PR #58 merged and post-merge CI verified.**
 
 ## Outcome
 
@@ -41,12 +41,18 @@ Receipt-only success, fabrication-free refusal, distinct `OUTCOME_UNKNOWN`, no a
 
 ## Remaining work and non-claims
 
-Publication is not inferred from local validation. The remaining publication steps are the focused
-IPD PR, required checks, merge, remote commit/tree/blob/package read-back, merged-commit consumer
-re-proof and post-merge CI. IRR's separately authorized repin and any target-host/operator-store work
-remain outside this IPD change. Gate 4 is **not qualified**; U4 is not rendered, U5/U6 are not granted,
-Gate A′ is not provisioned, and no production E2E or durability claim is made.
+The IPD package prerequisite is published on `main` at merge commit
+`16459f465024ca1eb4da4953d8e178eba4269f8e`. IRR's separately authorized B-1R repin remains outside this
+IPD-only task and was not executed; no IRR file or ref was changed. Any target-host/operator-store work
+is likewise separate. Gate 4 is **not qualified**; U4 is not rendered, U5/U6 are not granted, Gate A′ is
+not provisioned, and no production E2E, IRR route E2E or durability claim is made.
 
 ## Publication receipt
 
-Pending; append the verified PR/merge and post-merge evidence here after remote read-back.
+PR **#58** passed CI run `39950883166` and executed-test-count check `120405152716` on head
+`b613d4f984fa1cc72cae9b6dfeee6f4bc393f06a`, then merged at `2026-10-23T12:08:01Z` as
+`16459f465024ca1eb4da4953d8e178eba4269f8e`. The remote root tree is
+`0c088282d69a03eced2f33533b19ff647179145a`, identical to the verified PR-head tree; all 27 changed-path
+remote blobs match. A clean detached worktree of the merge commit passed `npm ci` and the complete
+packed-consumer/actual-IRR-importer re-proof. Post-merge push CI run `39951277310` and check
+`120406562857` passed on the merge commit, reporting 875 executed, 874 passed and zero failed.

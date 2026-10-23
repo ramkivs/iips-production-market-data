@@ -1,6 +1,6 @@
 # IIPS v3.0 CAP-02 — B-1R IPD compatibility execution evidence
 
-> **LOCAL IMPLEMENTATION/PACKAGE EVIDENCE — PUBLICATION RECEIPT PENDING AT THIS REVISION.**
+> **IMPLEMENTATION PUBLISHED ON IPD `main` — PR #58 / MERGE AND POST-MERGE CI VERIFIED.**
 > This record is evidence for the exact non-production IPD compatibility act. It is not Gate 4
 > qualification, target-host evidence, production acquisition evidence, operational-write approval,
 > IRR repin evidence or cross-repository E2E evidence.
@@ -100,7 +100,30 @@ was used. The D114 data is explicitly frozen local non-production fixture data. 
 does not qualify Gate 4, render U4, grant U5/U6, provision Gate A′, accept results, admit Gate 5, enable
 writes, execute the IRR B-1R repin or establish cross-repository E2E.
 
-## 6. Publication receipt
+## 6. Publication receipt — PR #58 and merged-commit re-proof
 
-**Pending at this revision.** The implementation candidate has not been called published. The receipt
-will be appended only after the focused IPD PR, required checks, merge and remote read-back are complete.
+```text
+IPD main before:       b3428f3f431eceb1dcde60e3b120bbd1888622bb
+PR:                    #58 — CAP-02: add compatible PIT and D114 package surfaces
+PR head:               b613d4f984fa1cc72cae9b6dfeee6f4bc393f06a
+PR checks:             CI run 39950883166 SUCCESS, including Public package consumer
+                       executed-test-count check 120405152716 SUCCESS
+                       875 executed / 874 passed / 0 failed
+Merge:                 MERGED 2026-10-23T12:08:01Z
+IPD main/merge commit: 16459f465024ca1eb4da4953d8e178eba4269f8e
+Root tree:             0c088282d69a03eced2f33533b19ff647179145a
+Tree equivalence:      merge tree == verified PR-head tree
+Remote blob read-back: 27/27 changed paths match the committed PR-head blobs
+Merged-pack re-proof:  PASS from detached 16459f4… after clean npm ci
+                       121 packed files; standalone runtime/declarations/browser closure PASS
+                       five verbatim IRR importers TypeScript PASS
+                       real IRR production composition/adapter PASS (8 and 20 records)
+Post-merge CI:         push run 39951277310 SUCCESS on 16459f4…
+                       Public package consumer step SUCCESS
+                       executed-test-count check 120406562857 SUCCESS
+                       875 executed / 874 passed / 0 failed
+```
+
+PR #58 is therefore published implementation/package evidence, not merely a local commit or open PR.
+It does not execute the IRR B-1R repin or any IRR route suite and does not change the Gate 4/U4/U5/U6,
+provisioning, durability, operational-write or E2E non-claims above.

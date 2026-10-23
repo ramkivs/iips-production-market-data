@@ -196,3 +196,20 @@ endpoint, production acquisition or operational write was used. Gate 4 remains *
 unrendered, U5/U6 are ungranted, Gate A′ is unprovisioned, and durability/E2E remain unclaimed.
 `WRITE_NOT_AUTHORIZED`, `SESSION_ONLY` and `durable:false` remain enforced. Detailed evidence and the
 consolidated report are the sibling `IIPS_V3_CAP02_B1R_IPD_COMPATIBILITY_*_2026-10-23.md` records.
+
+## 10. Publication receipt — IPD PR #58 (remote-verified)
+
+- PR #58 head `b613d4f984fa1cc72cae9b6dfeee6f4bc393f06a` passed CI run `39950883166`, including the new
+  packed/actual-IRR consumer step, and executed-test-count check `120405152716` (875/874/0).
+- It merged at `2026-10-23T12:08:01Z` as `16459f465024ca1eb4da4953d8e178eba4269f8e`. Remote `main` tree
+  `0c088282d69a03eced2f33533b19ff647179145a` equals the verified PR-head tree. All 27 changed-path blobs
+  match remote read-back, and the PR head is an ancestor of `main`.
+- A clean detached worktree at the merge commit passed locked installation and the complete packed
+  consumer re-proof: 121 files, all runtime/declaration subpaths, five verbatim IRR importer typechecks,
+  real 8/20-record IRR composition/adapter execution and browser-closure scanning.
+- Post-merge push CI run `39951277310` succeeded on the merge commit, including the public consumer step;
+  check `120406562857` reports 875 executed, 874 passed and zero failed.
+
+The B-1R IPD package/API prerequisite is therefore **published on current IPD `main`**, not merely
+implemented locally. This does not execute IRR's separate repin or route E2E and does not qualify Gate 4,
+render U4, grant U5/U6, provision Gate A′ or authorize production/durable/operational writes.
