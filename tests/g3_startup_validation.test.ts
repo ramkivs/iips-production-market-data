@@ -338,16 +338,20 @@ describe('g3 / T-E startup validation', () => {
     assert.equal(inspectBindings(db).bindings.length, 0);
   });
 
-  it('no IPC entrypoint or dispatch module has an import edge to provisioning', () => {
+  it('no IPC, startup, root composition or frontend module imports either provisioning entrypoint', () => {
     const here = fileURLToPath(new URL('.', import.meta.url));
-    for (const name of ['entrypoint.ts', 'dispatch.ts']) {
-      const source = stripComments(
-        readFileSync(join(here, '..', '..', 'src', 'ipc', name), 'utf8'),
-      );
+    const paths = [
+      join(here, '..', '..', 'src', 'ipc', 'entrypoint.ts'),
+      join(here, '..', '..', 'src', 'ipc', 'dispatch.ts'),
+      join(here, '..', '..', 'src', 'index.ts'),
+      join(here, '..', '..', 'frontend', 'src', 'main.tsx'),
+    ];
+    for (const path of paths) {
+      const source = stripComments(readFileSync(path, 'utf8'));
       assert.ok(
-        !/from\s+['"][^'"]*provisioning['"]/.test(source) &&
-          !/import\(\s*['"][^'"]*provisioning['"]\s*\)/.test(source),
-        `${name} must not import provisioning`,
+        !/from\s+['"][^'"]*(?:provisioning|gateAPrimeProvisioning)['"]/.test(source) &&
+          !/import\(\s*['"][^'"]*(?:provisioning|gateAPrimeProvisioning)['"]\s*\)/.test(source),
+        `${path} must not import a Gate A′ provisioning module`,
       );
     }
   });

@@ -2,7 +2,7 @@
 
 **Repository:** `ramkivs/iips-production-market-data`
 
-**Session branch:** `arena/7b04bc0f-iips-production-market-data`
+**Session branch:** `arena/7b9e7a9d-iips-production-market-data`
 **Status semantics:** implementation progress only; this tracker does not accept results or promote gates.
 
 | Workstream | Current evidence | Status | Next gate / blocker |
@@ -345,3 +345,89 @@ in this pass.
    `>=22.13.0 <23` unverified there.
 5. **Downstream acts** — Gate C acceptance, Gate 4 result acceptance, Gate 5 admission, U6 write
    authorization: none is granted, sequenced or implied here.
+
+## CAP-02 PR #67 post-merge verification — independent remote read-back (2026-10-23)
+
+This section is the post-merge publication receipt required by both effective acts. It was measured
+from a fresh `git fetch --prune origin main` and `gh pr view/checks`, not copied from the pre-merge
+candidate or from the owner's merge notice.
+
+| Item | Independently verified value |
+|---|---|
+| Authoritative repository / ref | `ramkivs/iips-production-market-data` / `refs/heads/main` |
+| Remote `main` commit / root tree | `7f64d37afe8e70adec9c05d80aa74aca5498a194` / `04f53910623da4024e28bf4bd307df3f5c6e8349` |
+| PR #67 | `MERGED`; merge commit `7f64d37afe8e70adec9c05d80aa74aca5498a194`; merged `2026-10-23T16:22:25Z` |
+| PR candidate / parent / tree | candidate `33bf35b48ea1a717c3e05e242abaee1e2a6cc4c7`; parent `5fc74085ade980846ff4a07b36415b6d49446486`; tree `04f53910623da4024e28bf4bd307df3f5c6e8349` |
+| Merge relationship | The candidate is merge parent 2 of `7f64d37…`; candidate tree equals merge tree; `git diff --name-only 33bf35b… 7f64d37…` is empty. The merge's first parent is `5fc74085…`. |
+| Changed paths | Exactly 3 relative to first parent: the two act files below were added and this tracker was modified. |
+| CI | `typecheck · build · test`: `SUCCESS` (run `39985596870`, job `120523817486`); `executed test count`: `SUCCESS` (run/check `120524376556`). `gh pr checks 67` returned both checks as pass. |
+| GitHub publication coordinates | https://github.com/ramkivs/iips-production-market-data/pull/67 |
+
+### Published artifact identities and content integrity
+
+All three paths were resolved directly as `origin/main:<path>` and read back from the fetched Git
+object database. Blob SHA-1 is the Git identity; SHA-256 is over the exact raw blob bytes (no newline
+normalization).
+
+| Exact authoritative path | Git blob ID | Bytes | Lines | Raw SHA-256 |
+|---|---|---:|---:|---|
+| `evidence/cross-repository/IIPS_V3_CAP02_GATE4_TARGET_HOST_QUALIFICATION_ACT_EFFECTIVE_2026-10-23.md` | `66b56fd1584890525a7250aadd7da449def621e5` | 34316 | 420 | `c8c1378622657a320f14f34c008bb27fde2acaf57acc9a73a3489ea6be57c7b6` |
+| `evidence/cross-repository/IIPS_V3_CAP02_GATE_A_PRIME_SUCCESSOR_PROVISIONING_ACT_EFFECTIVE_2026-10-23.md` | `528de6aeddbc8e5f3191be8792f3937d77de4037` | 29856 | 354 | `df8e44f704814e2321b5134206b04f25097830bdc5dd53c4d907d1256e4c788d` |
+| `evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` | `14658b9353d7154dcaa08ac1cea9e0bd81b1a2c5` | 35139 | 347 | `47450b6c4f87d1a2eab455258c48229f1c11d5f6123bf958fc1688d4a3bf9810` |
+
+The candidate, merge commit and fetched remote tree have no discrepancy. The only pre-existing
+tracker discrepancy was temporal: its fourth-pass rows still described effectiveness as conditional
+on the merge and explicitly deferred the receipt. This section closes that receipt without editing
+either act, as required by the acts' non-edit-after-publication rule.
+
+### Effectiveness confirmation — decisions remain bounded
+
+- **Gate A′ successor act:** **EFFECTIVE** under §13: exact content is in the merged `main` tree,
+  both PR checks passed, and the three published blobs were read back. This makes the successor basis
+  and the four-path bounded implementation authority effective. It does **not** select
+  `principal_label`, `tenantId` or `canonicalOwnerId`; all three remain **UNRESOLVED**. Provisioning
+  execution is **NOT AUTHORIZED**, the host/P-1 procedure is unmet, and no store, row or identity value
+  was created by publication.
+- **Gate 4 qualification act:** **EFFECTIVE** under §15: exact content is in the merged `main` tree,
+  both PR checks passed, and read-back succeeded. Gate 4 is **AUTHORIZED — NOT STARTED**; QE-1…QE-11
+  remain `0/11 executed`, and no result was accepted, no H-12 v3 was adopted, no host was contacted,
+  no Gate C/4 result acceptance occurred, and no W-1/U6 fence changed.
+
+## CAP-02 authorized implementation continuation — candidate state after the effective acts
+
+The following work is authorized by the effective four-path Gate A′ act and Gate 4 §4.2 only. It is
+recorded as a candidate until its own publication receipt exists; it does not expand either act's
+file set.
+
+| Authorized slice | Exact paths | Candidate result |
+|---|---|---|
+| Gate A′ bounded entrypoint/validator | `src/persistence/gateAPrimeProvisioning.ts`; `src/persistence/gateAPrimeValidation.ts`; `tests/g3_gate_a_prime_successor_provisioning.test.ts`; bounded addition to `tests/g3_startup_validation.test.ts` | Implemented on this session branch. Execute remains inert because the three compiled constants are `null`, with `IDENTITY_VALUES_UNRESOLVED` and no store creation. |
+| Gate 4 Limb A | Summary-parsing region of `scripts/run-tests.mjs`; mandatory `tests/g4_run_tests_summary_parsing.test.ts`; conditional pure helper `scripts/test-summary-parser.mjs` (present) | Implemented on this session branch. TAP/spec summaries and LF/CRLF are covered; stale/missing compiled counterparts, malformed/missing summaries and non-zero child exits remain fail-closed. |
+
+### Candidate validation evidence
+
+- `npm run build` — exit 0 (TypeScript, Vite and both package builds).
+- `npm test` — exit 0: **892 executed / 891 passed / 0 failed / 1 skipped**; the guarded runner
+  reported the anchored summary and did not execute an empty suite.
+- Focused tests: Gate A′ successor **7/7**; Gate 4 summary matrix **10/10**; `git diff --check` —
+  exit 0.
+- No package, lockfile, migration, existing `src` module, CI, runtime, IPC, frontend or IRR path
+  was changed. No host operation, provisioning attempt, QE execution or result acceptance was made.
+
+### Next authorized work and entry conditions
+
+1. Publish this exact bounded implementation through a PR with green CI, merge it to IPD `main`,
+   independently fetch/read back the final commit/tree/blobs, and run the native-Windows canonical
+   `npm test` at that final Limb A commit when `desktop-no0nhtp` is available. The IPD QE pin is that
+   final Limb A merge commit; it must not be guessed.
+2. At that exact final commit, regenerate and fully validate H-12 v3 (33 mandatory IPD paths, the
+   conditional helper, 10 anchors, criteria, IRR consumer set, runtime and evidence-deposit sets).
+   H-12 adoption is a **separate express PA act**; this record does not adopt it.
+3. Only after Gate A′ identity values are named by a separate PA determination, H-12 is separately
+   adopted, and the designated Windows preflight succeeds may S1/S3/S4 proceed. The current Linux
+   sandbox cannot contact `desktop-no0nhtp`, and it must not claim native-Windows evidence.
+
+**Durable state at this receipt:** the verified published decisions are at IPD `main@7f64d37…`,
+root tree `04f53910…`; the candidate implementation is on session branch
+`arena/7b9e7a9d-iips-production-market-data` and is not yet a remote-main result until its own
+publication receipt is appended.
