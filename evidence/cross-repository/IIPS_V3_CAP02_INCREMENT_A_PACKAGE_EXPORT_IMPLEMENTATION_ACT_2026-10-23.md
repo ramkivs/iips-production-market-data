@@ -243,7 +243,8 @@ source*; the authoritative write-denial behaviour remains covered by the unchang
 | `A-11` | `npm pack` → 95 files, 213.6 kB, only `package.json` + `dist/package/**`; external consumer install resolved `./portfolio-ui` with 22 runtime exports and `SESSION_ONLY`/`false` | **PASS** |
 | `A-12` | Gate 3 anchors re-hashed after the change: 9 of 10 byte-identical; `package.json` intentionally changed (disclosed at §2) | **PASS — as declared** |
 | `A-13` | No IRR object created, modified, pushed or commented; IRR clone used read-only (`git rev-parse`, `git show`, `git ls-tree`, reads only) | **PASS** |
-| `A-14` | Remote read-back after publication: merge commit, tree, ancestry, changed paths and blob identity against this §4 list | **PASS — see §9** |
+| `A-14` | Remote read-back after publication: merge commit `a75af71d…`, tree `864fc81e…`, ancestry of `536a44ce…`, 6 changed paths, and per-path blob identity against this §4 list | **PASS — see §9** |
+| `A-15` | Independent re-execution at the published merge commit from a fresh clone: typecheck `0`, build `0`, `npm test` 831/830/0/1; `npm ci` ran `prepare` and built `dist/package`; pack reproduced shasum `bee92cc0…`; consumer resolved `./portfolio-ui` with 22 exports | **PASS** |
 
 ---
 
@@ -252,23 +253,42 @@ source*; the authoritative write-denial behaviour remains covered by the unchang
 | Element | Value |
 |---|---|
 | Branch | `arena/ab068c78-iips-production-market-data` |
-| Commit | _recorded in the post-merge receipt below_ |
-| PR | _recorded below_ |
-| CI | PR-head run and post-merge `main` push run, both required to be green at the exact SHAs |
-| Proof of effect | The merge commit on IPD `main` plus remote blob read-back of the four changed paths. A green CI run alone, a branch commit alone, or this record alone is **not** proof |
+| Commit | `536a44ce19822c31996e2554f7e2ffece0846ea9` |
+| PR | IPD **#46** — `MERGEABLE`, both checks `SUCCESS` before merge |
+| Merge | `MERGED` `2026-10-23T09:02:17Z`, merge commit `a75af71de34ee76d516598d23f5292cf2335ef06` |
+| Proof of effect | The merge commit on IPD `main` **plus** remote blob read-back of every changed path **plus** an independent clean-clone re-execution at that commit. A green CI run alone, a branch commit alone, or this record alone is **not** proof |
 
 Publication receipt (appended after merge):
 
 ```text
 IPD main before:  73fd8c1644e9725c9a5499e14d42efdfcb4fe2f2  tree 66020736919befa5e5320550a396187cd351b40e
-IPD main after:   <merge commit>                            tree <tree>
-changed paths:    package.json (M), tsconfig.portfolio-ui-package.json (A),
-                  src/ui/portfolio_ui_package.ts (A), tests/portfolio_ui_package.test.ts (A),
-                  evidence/cross-repository/IIPS_V3_CAP02_INCREMENT_A_PACKAGE_EXPORT_IMPLEMENTATION_ACT_2026-10-23.md (A),
-                  evidence/cross-repository/IIPS_V3_CAP02_U2_GATE3_MANIFEST_AMENDMENT_PROPOSED_2026-10-23.md (A)
-PR-head CI:       <run id> / <conclusion>
-post-merge CI:    <run id> / <conclusion> / <executed test count>
+IPD main after:   a75af71de34ee76d516598d23f5292cf2335ef06  tree 864fc81e4b3de235f9492c6038893f2d50229125
+ancestry:         536a44ce… verified an ancestor of origin/main after merge
+changed paths:    6 — exactly the §4 list, no other path
+  M package.json                                              blob f7146b67d44fc7d1c016f34b10307b46e3921a7f
+  A src/ui/portfolio_ui_package.ts                            blob 03ffdd4655d26dc8f9f6030d36b0f30924a89836
+  A tsconfig.portfolio-ui-package.json                        blob b5395d7b79f2ceacf9e0413bd920164d477ff44d
+  A tests/portfolio_ui_package.test.ts                        blob ab162f7c8d8a004ba3e530710c74ec5f1f103f2e
+  A evidence/…INCREMENT_A_PACKAGE_EXPORT_IMPLEMENTATION_ACT  blob 3d450c5621d801bf348dad792a85d6d9d6884c01
+  A evidence/…U2_GATE3_MANIFEST_AMENDMENT_PROPOSED             blob 234870d34da3494773e07ecd574236d583bf6d66
+PR-head CI:       run 39928807574 (pull_request) — SUCCESS; check "executed test count" 120331948196
+                  "831 tests executed — 830 passed, 0 failed" at head 536a44ce…
+post-merge CI:    run 39928943356 (push, main) — SUCCESS, both jobs; check
+                  "831 tests executed, 0 failed" at a75af71d…
+independent re-run at the merge commit (fresh clone, no working-tree carry-over):
+                  tsc --noEmit 0 · npm run build 0 (incl. prepare + package build) ·
+                  npm test 831 / 830 pass / 0 fail / 1 skipped
+packaging re-proof at the merge commit:
+                  clean clone → npm ci ran `prepare` → dist/package built → npm pack 95 files,
+                  213.6 kB, shasum bee92cc0475e23f9edd9d15e661274b8acfe4cee (identical to the
+                  pre-merge pack) → external consumer resolved 22 runtime exports, SESSION_ONLY/false
+Gate 3 anchors on merged main:  9 of 10 byte-identical (tsconfig 6d696ec2, ci.yml aeee464f,
+                  portfolioStorePort d61f18df, security_master 60030e0c, mapping_store eec60c09,
+                  quarantine 70c6f658, vite.config 5563e1bc, portfolio-store b900a248,
+                  package-lock 98ae3c63); package.json intentionally changed (disclosed at §2)
 ```
+
+**Environmental note (unverified transport only).** A direct `npm i github:ramkivs/iips-production-market-data#a75af71…` could not be executed in this sandbox because TLS interception makes `codeload.github.com` fail certificate verification (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`). The git-dependency *content* path was therefore verified by cloning the merge commit locally, running `npm ci` (which executes `prepare`), packing, and installing that tarball. The GitHub transport itself is unverified here and is **not** claimed.
 
 ---
 
