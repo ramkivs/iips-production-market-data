@@ -12,12 +12,12 @@
 | U2 Part B provenance/schema | Effective separate schema act `IIPS_V3_CAP02_U2_PROVENANCE_SCHEMA_ACT_EFFECTIVE_2026-10-23.md`; additive migration `004_portfolio_contribution_provenance` merged in PR #52; all six fields asserted on insert and after restart; pre-existing rows keep six SQL `NULL`s; migration 001 blob `f594a182…` unchanged; ledger idempotent. | **Implemented and verified** | Retain NULL for historical facts not recorded; Gate 4/5 unchanged. |
 | U2 write-port wrapper | Supplemental exact-scope authority published in PR #51; merged as `7145a2cea0b2d7d9d8a401e57db3f9ce20a8f0a7`; pre-merge checks and post-merge CI run `39934639130` succeeded. Wrapper merged in PR #52; `assertWritable()` still refuses before any transaction or callback. | Authority and implementation merged; no write enabled | Existing W-1 guard still refuses first. |
 | U2 evidence gaps closed this pass | (a) governed-source rejection: a resolver built over a non-governed master now has an executed fail-closed test; (b) T-U2-5 upgraded to race a revocation against the **actual** `withBrokerImportTransaction` path, plus absent / duplicate-ACTIVE / mismatched-membership binding shapes and the caller-transaction precondition. | **Closed** | None; no defect or regression found in the merged implementation. |
-| U3 / Gate 4 qualification | IPD-local matrix remains recorded in `IIPS_V3_CAP02_U2_CRITERION_EVIDENCE_AND_GATE_STATUS_2026-10-23.md` §B. This CAP-02 follow-on revalidated local typecheck/build/tests and 131 focused refusal/authority/binding guard tests; it did not access a target host or operator store (details in `IIPS_V3_CAP02_B1R_PACKAGE_AND_GATE4_PREPARATION_2026-10-23.md`). | **Not qualified** | Target Windows host run and real-store restart evidence remain absent; `durable:true` remains blocked on U6; cross-repo E2E remains separate. |
-| U4 result acceptance | Not rendered. | **Not rendered** | Requires actual Gate 4 results. Green CI and a merged PR are not acceptance. |
-| U5 Gate 5 admission | Not granted. | **Not granted** | Depends on U4 acceptance; not inferable from U2 implementation. |
-| U6 operational write authorization | W-1(3) and W-1(4) unmet; `WRITE_NOT_AUTHORIZED` preserved and enforced; only shipped port declares `SESSION_ONLY` / `durable:false`. | **Not authorized** | Effective U6 decision satisfying W-1. No code change can supply it. |
+| U3 / Gate 4 qualification | The qualification act exists only as **`PROPOSED — NOT EFFECTIVE`** in IRR (`…G4_TARGET_HOST_QUALIFICATION_AUTHORITY_ACT_PROPOSED_2026-10-22.md`, blob `c02093e0…`); its §9 requires an express PA determination (Q1–Q12 + Act ID) and publication confers no effectiveness. Its pinned IPD basis is **29 commits stale** and the components QE-1…QE-11 measure changed materially (see `IIPS_V3_CAP02_U3_GATE4_ACT_RECONCILIATION_2026-10-23.md`). No QE item executed: `IIPS_V3_CAP02_QE1_QE11_EXECUTION_STATUS_MATRIX_2026-10-23.md` (11/11 BLOCKED). | **Not authorized / not qualified** | PA determination adopting the act, re-pinning the basis, reconciling the Limb A runner line, adopting H-12, plus Gate A′ and the native Windows host. |
+| U4 result acceptance | Not rendered; no acceptance act exists in either repository. | **Not rendered** | Requires executed QE-1…QE-11 on the designated host at a fixed commit. Green CI, a merged PR and local fixtures are not acceptance. |
+| U5 Gate 5 admission | Not granted. | **Not granted** | Depends on effective U4 acceptance and its own act; not inferable from U2 implementation or package publication. |
+| U6 operational write authorization | W-1(3) and W-1(4) unmet; `evaluatePortSaveGuard()` returns hard-false with both reasons; `WRITE_NOT_AUTHORIZED` enforced before mutation; shipped UI port declares `SESSION_ONLY` / `durable:false`. Re-verified by executed tests this pass (9 + 6 tests). | **Not authorized** | Effective U6 decision satisfying W-1. No code change can supply it; provisioning does not supply it. |
 | U7 provider-side outcome mapping | IRR's U7 read/result contract is now **EFFECTIVE** at IRR `main@30091d33ecf3c094cc25d78d4b66023ab3279759`, whose §5 names the exact IPD act. IPD act rendered: `IIPS_V3_CAP02_U7_IPD_PROVIDER_OUTCOME_ACT_EFFECTIVE_2026-10-23.md`. Implemented: minimal v1 receipt, no preview fallbacks in the committed panel, refusals with no mandatory record/timestamp/zero/durability, a distinct `OUTCOME_UNKNOWN` state with no retry, receipt-driven durability, optional `getAnalytics`. Tests `T-U7-1…T-U7-7` (10 tests) pass. | **Provider side executed** (IPD capacity) | IRR must repin to the IPD commit carrying this change, then create its `PortfolioStorePort` implementation, mount the surface and produce end-to-end evidence. No end-to-end claim is made here. |
-| Binding provisioning / active owner | Resolver, in-transaction revalidation and all binding failure shapes are under test. `src/persistence/provisioning.ts` remains library-only, brand-gated and unreachable from `ipc/**` and startup. No identity was provisioned and none should have been. | Implementation behaviour verified; **no provisioning performed; none authorised** | Effective Gate A′/provisioning execution decision, then a controlled operator action. Provenance: an operational identity write, not an implementation gap. |
+| Binding provisioning / active owner | Resolver, in-transaction revalidation and all binding failure shapes are under test. `src/persistence/provisioning.ts` remains library-only, brand-gated and unreachable from `ipc/**` and startup; this pass **executed** a refusal probe: 4/4 forgeable authorization shapes refused before any SQL, 0 binding rows, 0 membership rows, 0 audit rows, 0 in-repo importers. The 2026-10-17 Gate A′ act's own basis is not on `main` (3 of 4 pinned paths absent, migration `003` blob differs) and its schema is measurably incompatible. Successor act prepared: `IIPS_V3_CAP02_SUCCESSOR_GATE_A_PRIME_PROVISIONING_ACT_PROPOSED_2026-10-23.md`. | Implementation behaviour verified; **no provisioning performed; none authorised** | A PA determination adopting the successor Gate A′ act **and** the paired implementation authority for its provisioning entrypoint. Then a controlled operator action on `desktop-no0nhtp`. |
 | IRR | Read-only inspection only: `main@3f628cbc15d0a4712980dc9c9e378edf062be67e`, tree `eb807be6c9b02062c060a7a0793b3733e80612b6`. Five actual IPD-package importers; one additional tracker-listed path is comment-only. | Unchanged | No IRR file, branch, PR, issue, comment or tracker modified. |
 | CAP-02 B-1R PIT/D114 package prerequisite | Evaluated IPD baseline `main@24e62c80…` exports only `./portfolio-ui`; both required subpaths fail runtime and TypeScript resolution, and its PIT/D114 APIs are missing or incompatible. See `IIPS_V3_CAP02_B1R_PACKAGE_AND_GATE4_PREPARATION_2026-10-23.md`. | **BLOCKED — no sufficiently scoped effective IPD-main act; no package/API change made** | Effective exact-scope IPD act and implementation/test/publication for compatible `./pit` and `./d114-non-production`; only then execute the already-authorized IRR B-1R repin and verification. |
 
@@ -150,3 +150,87 @@ Post-merge CI:        push run 39951277310 SUCCESS; consumer step SUCCESS
 **CAP-02 B-1R IPD package/API prerequisite: PUBLISHED AND REMOTE-VERIFIED on IPD `main`.** The separate
 IRR repin remains unexecuted and IRR remains read-only. This receipt does not qualify Gate 4, render U4,
 grant U5/U6, provision Gate A′, enable operational/durable writes, or establish IRR/production E2E.
+
+## CAP-02 successor Gate A′, U3/Gate 4 act and QE status — one-pass execution (2026-10-23, second pass)
+
+**Scope of this pass.** Verified the two remote baselines, every relevant effective record, the current
+provisioning/write-guard/IPC implementation, target-host availability and operator-store availability;
+determined whether the successor Gate A′ act and the U3/Gate 4 qualification act can be rendered under
+existing authority; and produced decision-ready records for each, without crossing any authority
+boundary. **No implementation, no provisioning, no QE execution, no gate movement.**
+
+**Verified baselines.** IPD `main@2d9130e76bb0dc89daeefabaf297e27bdaa84250`, tree
+`4658699180ef161aae3c1b33d3946e918d6fb9b2` (matches the reported authoritative tip; zero tracked
+working-tree changes) · read-only IRR `main@409604e4dfefbe6aa966113f52af607995b5f297`, tree
+`297ce6aebd9a4d93b8e3fc572720aa18a8e682ca` (matches the reported tip).
+
+**Substantive findings (all executed, not inferred).**
+
+1. **The 2026-10-17 Gate A′ act cannot be executed on `main`.** Its own D-A′-1 pins the designated ref
+   `gate-a/local-principal-enablement-2026-10-16@2ded0e98` — still present and byte-matching — but three
+   of its four pinned paths (`src/gate_a/provision.ts`, `src/gate_a/validate.ts`,
+   `src/app_identity/local_principal.ts`) **do not exist on `main`**, and migration `003` differs
+   (`9ba884ac` vs `32b125bf`). D-A′-8/§4.9 make that a hard stop.
+2. **The two schemas are mutually incompatible, measured.** Three tables the old act provisions
+   (`application_users`, `tenant_memberships`, `local_principal_audit_events`) are absent from `main`;
+   applying `main`'s migration set over a Gate A′-basis store fails closed with
+   `table portfolio_revisions already exists`. A store provisioned on the old basis could not be opened
+   by the build that Gate 4 must qualify.
+3. **No provisioning entrypoint exists on `main`.** The only mutating function is gated on a
+   module-private symbol; four attemptable authorization shapes were refused before any SQL, with zero
+   row and zero audit delta, and no `src/` module imports it. Any successor act therefore needs a
+   **paired implementation authority**, not only provisioning authority.
+4. **The U3/Gate 4 qualification act is already written and is `PROPOSED — NOT EFFECTIVE`** (IRR blob
+   `c02093e0…`). Its §9 requires an express PA determination assigning an Act ID and resolving Q1–Q12;
+   publication and merge confer no effectiveness; and its publication locus (IRR) is read-only to this
+   pass. It is additionally **29 commits stale** (`1cceacff…` vs `2d9130e7…`; 54 files), including the
+   identity resolver, transaction/revision logic, binding revalidation, provenance migration and six
+   test files that the matrix measures. Silent re-pinning is prohibited by its own §14.5.
+5. **Limb A (Windows runner parser) is unreconciled.** The only delta on `scripts/run-tests.mjs` between
+   the Gate 3-accepted baseline (`fe1ab1a3…`) and `main` (`4a90d935…`) is `'--test-reporter=tap'`
+   (commit `196a0e88…`, PR #45) — a runner change that no located effective IPD act names, while the
+   Gate 3 act excludes runner changes and `G3-AMEND-01` §6.4(1) defers the repair to a Gate 4 act.
+   Measured: the parser is **CRLF-safe** and **fails only on the spec reporter's `ℹ` marker**; the
+   mandatory `tests/g4_run_tests_summary_parsing.test.ts` is still absent. Limb A must be re-scoped by
+   the PA before the Gate 4 act can take effect.
+6. **QE-1 … QE-11: 0 of 11 executed.** Every item is BLOCKED for prerequisite, not outcome, reasons.
+   The host `desktop-no0nhtp` is unreachable, no store path or IPC endpoint exists, Gate A′ is
+   unprovisioned and no effective execution act exists. Local suites remain implementation evidence only.
+
+**Records published by this pass.** `IIPS_V3_CAP02_SUCCESSOR_GATE_A_PRIME_PROVISIONING_ACT_PROPOSED_2026-10-23.md`
+(decision-ready successor act, D-A2-1…D-A2-8), `IIPS_V3_CAP02_U3_GATE4_ACT_RECONCILIATION_2026-10-23.md`,
+`IIPS_V3_CAP02_QE1_QE11_EXECUTION_STATUS_MATRIX_2026-10-23.md`,
+`IIPS_V3_CAP02_ONE_PASS_FINAL_REPORT_2026-10-23.md`, and raw evidence under
+`evidence/cross-repository/cap02_2026-10-23_authority_and_gate_evidence/`.
+
+**Missing acts — owner and closure evidence.**
+
+| Missing act | Owner | Closure evidence |
+|---|---|---|
+| Successor Gate A′ act at a named current commit **+** bounded implementation authority for its provisioning entrypoint | PA (Ramki) | rendered act, published + remotely verified; then host receipt with V-A2-1…V-A2-8 |
+| Gate 4 qualification determination (Q1–Q12, Act ID), re-pinned basis, Limb A reconciliation, H-12 adoption | PA (Ramki) | effective act + adopted H-12 at the final commit |
+| QE-1…QE-11 execution | operator of `desktop-no0nhtp` | host transcript per `IIPS_V3_CAP02_QE1_QE11_EXECUTION_STATUS_MATRIX_2026-10-23.md` |
+| U4 result acceptance | PA | separate acceptance act referencing host evidence |
+| U5 admission / U6 write authorization | PA | separate acts satisfying W-1; no code change supplies them |
+
+**Local validation of this pass (Linux, Node v22.22.3).** `npx tsc --noEmit` exit 0 · `npm run build`
+exit 0 · `npm test` exit 0, **875 executed / 874 passed / 0 failed / 1 skipped** · focused:
+`g3_startup_validation` 20, `q1_ownership_source_readiness` 4, `g3_write_gate` 9,
+`g3_durability_vocabulary` 6, `g3_binding_resolution` 13, `q1_broker_import_durability` 18,
+`g3_caller_authority` 103 — all pass · `git diff --check` clean. These are **not** Gate 4 qualification,
+result acceptance, admission or write authorization.
+
+**Non-negotiable gate state after this pass.**
+
+```text
+WRITE_NOT_AUTHORIZED:              preserved and enforced before any transaction or callback
+SESSION_ONLY / durable:false:      preserved; durable:true still unreachable from the shipped adapter
+Gate A′:                           APPROVED (2026-10-17, superseded basis) / NOT EXECUTED — successor PROPOSED
+Gate A′ provisioning:              not performed, not authorised, no store, no row
+Gate 4 / U3:                       NOT AUTHORIZED / NOT STARTED — act PROPOSED, basis 29 commits stale
+QE-1 … QE-11:                      0 executed, 0 pass, 0 fail — all BLOCKED
+U4 result acceptance:              not rendered
+Gate 5 / U5:                       not granted
+U6 operational writes:             denied
+IRR:                               read-only; no file, branch, PR, issue, comment or tracker modified
+```

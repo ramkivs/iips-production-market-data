@@ -1,0 +1,80 @@
+{
+  "probe": "gate-a-prime reachability/refusal",
+  "node": "22.22.3",
+  "platform": "linux",
+  "schema_versions": [
+    {
+      "migration_id": "001_initial_schema",
+      "checksum": "08e712fd323f547413618f0443ec361015b136285c28b519d967f02b6d9580ab"
+    },
+    {
+      "migration_id": "002_audit_event_sequence",
+      "checksum": "01892a862c8a877c97403a938123fb575cb43f9445d4c5345aa209f5adae47ed"
+    },
+    {
+      "migration_id": "003_local_principal_bindings",
+      "checksum": "7967acc06584811df9cf37e05b84d78d6126b6dae979ee79e0523dfce924004e"
+    },
+    {
+      "migration_id": "004_portfolio_contribution_provenance",
+      "checksum": "0dbf90c129154d8c547b6c5876157877c5e12790ebf2b35c741640751ea7b0ac"
+    }
+  ],
+  "tables": [
+    "_migration_ledger",
+    "audit_events",
+    "local_principal_bindings",
+    "local_principal_memberships",
+    "portfolio_contributions",
+    "portfolio_holdings",
+    "portfolio_revisions",
+    "portfolios",
+    "sqlite_sequence"
+  ],
+  "authorization_candidates": [
+    {
+      "candidate": 0,
+      "threw": true,
+      "name": "ProvisioningNotAuthorizedError",
+      "message": "Gate A′ provisioning is not authorized in this build"
+    },
+    {
+      "candidate": 1,
+      "threw": true,
+      "name": "ProvisioningNotAuthorizedError",
+      "message": "Gate A′ provisioning is not authorized in this build"
+    },
+    {
+      "candidate": 2,
+      "threw": true,
+      "name": "ProvisioningNotAuthorizedError",
+      "message": "Gate A′ provisioning is not authorized in this build"
+    },
+    {
+      "candidate": 3,
+      "threw": true,
+      "name": "ProvisioningNotAuthorizedError",
+      "message": "Gate A′ provisioning is not authorized in this build"
+    }
+  ],
+  "all_refused": true,
+  "bindings_before": {
+    "bindings": [],
+    "memberships": []
+  },
+  "bindings_after": {
+    "bindings": [],
+    "memberships": []
+  },
+  "rows_unchanged": true,
+  "audit_events_before": 0,
+  "audit_events_after": 0,
+  "pure_builder_works_without_authorization": {
+    "bindingIdLen": true,
+    "keys": [
+      "bindingSql",
+      "membershipSql"
+    ]
+  },
+  "in_repo_importers_of_provisioning": []
+}
