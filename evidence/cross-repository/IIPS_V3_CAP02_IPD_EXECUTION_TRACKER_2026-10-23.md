@@ -27,7 +27,36 @@
 - PR #51 published the exact write-guard adapter amendment only; merged commit `7145a2cea0b2d7d9d8a401e57db3f9ce20a8f0a7`; pre-merge CI and executed-test-count checks passed, and post-merge CI succeeded.
 - PR #52 merged as `c15135df09a4b71a20cc99623a4a322a41979903`; PR checks passed (CI run `39935747730`, executed-test-count check `120354984364`), and post-merge CI run `39935853893` succeeded.
 - PR #53 merged as `04e63edd995889b170eed6660e7010dd32e15fd3` (tree `3949ab645697d8c7c26dd5e5708c43bcdcd71cec`). This pass starts from exactly that commit/tree with a clean working tree.
-- This pass publishes the U7 provider/UI act and implementation, the U2 criterion-evidence and gate-status record, and this tracker reconciliation.
+- This pass published the U7 provider/UI act and implementation, the U2 criterion-evidence and gate-status record, and this tracker reconciliation in PR **#54**.
+
+### Publication receipt — PR #54 (verified against the remote)
+
+```text
+IPD main before:  04e63edd995889b170eed6660e7010dd32e15fd3  tree 3949ab645697d8c7c26dd5e5708c43bcdcd71cec
+PR #54 head:      0742a20a3903351a8306a9b6cc302b5135f25198
+PR #54 checks:    "typecheck · build · test" SUCCESS (run 39938245808)
+                  "executed test count" SUCCESS — 848 executed, 847 passed, 0 failed
+PR #54 merge:     MERGED 2026-10-23T10:20:04Z
+IPD main after:   88e434474c388fb397ad09878ec6139064fbfffd  tree 804ffa5511476ad6e84e2a2468a7844409d848e9
+ancestry:         0742a20a… verified an ancestor of origin/main after merge
+post-merge CI:    run 39938354292 (push, main) SUCCESS; check "executed test count"
+                  848 tests executed — 847 passed, 0 failed at 88e43447…
+changed paths:    10 — exactly the files below, no other path
+  M evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md
+  A evidence/cross-repository/IIPS_V3_CAP02_U2_CRITERION_EVIDENCE_AND_GATE_STATUS_2026-10-23.md
+  A evidence/cross-repository/IIPS_V3_CAP02_U7_IPD_PROVIDER_OUTCOME_ACT_EFFECTIVE_2026-10-23.md
+  M frontend/src/features/portfolio/BrokerImportModal.tsx
+  M frontend/src/features/portfolio/PortfolioWorkspace.tsx
+  M frontend/src/features/portfolio/import/ui-broker-import-view-model.ts
+  M frontend/src/features/portfolio/portfolioStorePort.ts
+  M tests/bi07_portfolio_store_port.test.ts
+  M tests/q1_broker_import_durability.test.ts
+  A tests/q1_cap02_u7_provider_outcomes.test.ts
+```
+
+A green CI run, a merged PR and this record are each publication facts — none of them is Gate 4
+qualification, result acceptance, Gate 5 admission, operational write authorization, or end-to-end
+integration evidence.
 
 ## Tracker workbook disposition
 
