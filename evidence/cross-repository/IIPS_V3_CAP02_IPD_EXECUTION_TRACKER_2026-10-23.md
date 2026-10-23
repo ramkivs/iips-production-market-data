@@ -623,3 +623,35 @@ All execution boundaries remain strictly intact: `H-12` remains **`NOT ADOPTED`*
 **`AUTHORIZED — NOT STARTED`**, Gate A′ provisioning remains **`NOT AUTHORIZED`**, and no host
 preflight, QE-1..QE-11 execution, result acceptance, Gate 5 admission, U6 authorization, operational
 write, or IRR modification occurred.
+
+## CAP-02 PR #74 publication and final remote-main verification receipt (2026-10-23)
+
+PR #74 published the formal `H-12` membership reconciliation & proposed PA corrective decision record,
+the pre-validated `v3-R2` candidate manifest, the executed `VAL-R2-01..VAL-R2-10` validation record,
+and the authoritative tracker update. All checks and artifact digests below were verified directly
+from fetched `origin/main` and the GitHub Contents API after merge.
+
+| Item | Independently verified value |
+|---|---|
+| PR #74 | `MERGED` at `2026-10-23T17:29:26Z`; URL https://github.com/ramkivs/iips-production-market-data/pull/74 |
+| PR head / candidate tree | `102294b359d6e5a9188f04a09c121448c885fa90` / `d1437ffb070aa7b23661a9fe3846ea23b90c3f34` |
+| Merge commit / root tree | `5b498e5590b77bb722ead39cf9205e1ab26aea01` / `d1437ffb070aa7b23661a9fe3846ea23b90c3f34` |
+| Merge parents | first `7e4f44534c1c3e2853a0a6b60ac109f75194cdff`; second `102294b359d6e5a9188f04a09c121448c885fa90` (`git diff --name-only 102294b3… 5b498e55…` empty) |
+| PR #74 CI | `typecheck · build · test`: `SUCCESS`, run `39995297697`, job `120557145380`; `executed test count`: `SUCCESS`, check `120557609745` (`892` executed, `891` passed, `0` failed, `1` skipped) |
+| Post-merge `main` push CI | run `39995485000` (`push`, head `5b498e5590b77bb722ead39cf9205e1ab26aea01`) **SUCCESS**; job `120557801311` and `executed test count` check `120558429817` both **SUCCESS** |
+| Read-only `IRR` remote re-verification | `ramkivs/iips-review-recovered` `refs/heads/main` remains `4740ba21ea6103f1a7ebc9768269ae7795920698`, tree `23c5ca4ae1bfd481bcfc911c70b9e7dc090e1162` (`0` edits, commits, branches, or PRs) |
+
+### Direct `origin/main` read-back table after PR #74 (`5b498e5590b77bb722ead39cf9205e1ab26aea01`)
+
+| Exact `origin/main` path | Git blob SHA-1 OID (`== GitHub API sha`) | Bytes | Lines | Raw SHA-256 |
+|---|---|---:|---:|---|
+| `evidence/cross-repository/IIPS_V3_CAP02_GATE4_TARGET_HOST_QUALIFICATION_ACT_EFFECTIVE_2026-10-23.md` | `66b56fd1584890525a7250aadd7da449def621e5` | 34316 | 420 | `c8c1378622657a320f14f34c008bb27fde2acaf57acc9a73a3489ea6be57c7b6` |
+| `evidence/cross-repository/IIPS_V3_CAP02_GATE_A_PRIME_SUCCESSOR_PROVISIONING_ACT_EFFECTIVE_2026-10-23.md` | `528de6aeddbc8e5f3191be8792f3937d77de4037` | 29856 | 354 | `df8e44f704814e2321b5134206b04f25097830bdc5dd53c4d907d1256e4c788d` |
+| `evidence/cross-repository/IIPS_V3_CAP02_G4_H12_MANIFEST_V3_CANDIDATE_2026-10-23.json` | `a169e1f7d8721860942807bad1b325ccc57d2404` | 482205 | 12796 | `344d1bd19c35231cc9d243c58f7e1ce22ccb7bfeda541966a71c1355a17d0594` |
+| `evidence/cross-repository/IIPS_V3_CAP02_G4_H12_MANIFEST_V3_CANDIDATE_VALIDATION_2026-10-23.md` | `64d04e78750878f2bd35e06ef30d4d2ba25c2674` | 3918 | 59 | `ff9d97f9c7047dd2fafdd0b6c8d1256bc722240768403153bee00d72f73f5ed1` |
+| `evidence/cross-repository/IIPS_V3_CAP02_G4_H12_MEMBERSHIP_RECONCILIATION_DECISION_PROPOSED_2026-10-23.md` | `336276fecdc1df651c716c2e5ec1e43852c2e014` | 71164 | 299 | `e69fa6e9915dca94259876d949687b5945ee78e7d67feeec28b0fd45c8d5eba4` |
+| `evidence/cross-repository/IIPS_V3_CAP02_G4_H12_MANIFEST_V3_RECONCILED_CANDIDATE_2026-10-23.json` | `9382d4b0bf6d085616f781221daa5b6a4d03b2bc` | 498153 | 12974 | `3afce627b92b05f6e0b27cc06719d9849dcd72946927f07e768ed631f8c471f2` |
+| `evidence/cross-repository/IIPS_V3_CAP02_G4_H12_MANIFEST_V3_RECONCILED_VALIDATION_2026-10-23.md` | `456d08e8c8933250c1feb98986bbd32d548226bc` | 5733 | 42 | `aba6fc73b9a881ceb79f1a10a91b0c9f49b75fd644ba7f4be1dd547a130c831a` |
+| `evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` *(at PR #74 merge)* | `05894952f2bc22bb30afa9155035ac2769841227` | 63389 | 625 | `734dfc15602995bd33048e8d6862cb168e71968b21045f5b3e2ecdd572db0ac7` |
+
+**Handover & gate state:** Proposed corrective record `IIPS-V3-CAP02-G4-H12-MEMBERSHIP-RECONCILIATION-PROPOSAL-2026-10-23-01` remains **`PROPOSED — NOT EFFECTIVE`** until **Ramki — Program Authority** renders an express determination on `Q-H12-1..Q-H12-4`. `H-12` remains **`NOT ADOPTED`**; Gate 4 remains **`AUTHORIZED — NOT STARTED`**; Gate A′ provisioning remains **`NOT AUTHORIZED`**; `IRR` remains strictly read-only at `4740ba21ea6103f1a7ebc9768269ae7795920698`.
