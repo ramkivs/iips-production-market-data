@@ -431,3 +431,81 @@ file set.
 root tree `04f53910…`; the candidate implementation is on session branch
 `arena/7b9e7a9d-iips-production-market-data` and is not yet a remote-main result until its own
 publication receipt is appended.
+
+## CAP-02 PR #68 publication and remote verification (2026-10-23)
+
+PR #68 carried out the next authorized implementation slice; it is not a replay of PR #67. The
+publication was independently reconciled after merge.
+
+| Item | Independently verified value |
+|---|---|
+| PR #68 | `MERGED` at `2026-10-23T16:34:51Z`; URL https://github.com/ramkivs/iips-production-market-data/pull/68 |
+| PR head / candidate tree | `c62dee81748aaed6416956b2e323ce77d1ff1f3c` / `1467802e9b9497f84acb1bc6bb3ddd386792499a` |
+| Merge commit / root tree | `a52b47b0f8ca448c8c9c195cf261e83ecf813ba3` / `1467802e9b9497f84acb1bc6bb3ddd386792499a` |
+| Merge parents | first `7f64d37afe8e70adec9c05d80aa74aca5498a194`; second `c62dee81748aaed6416956b2e323ce77d1ff1f3c` |
+| Tree/ancestry reconciliation | PR head is merge parent 2; candidate tree equals merge tree; `git diff --name-only c62dee8… a52b47b…` is empty. |
+| PR #68 changes | 8 files, 1223 additions, 14 deletions; exactly the two permitted slices plus this tracker. |
+| PR #68 CI | `typecheck · build · test`: `SUCCESS`, PR run `39987751219`, job `120531246174`; `executed test count`: `SUCCESS`, check `120531784013`. |
+| Post-merge `main` CI | run `39987949877` (`push`, head `a52b47b…`) **SUCCESS**; job `120531926834` and executed-count job `120532505749` both **SUCCESS**. |
+| Authoritative remote ref | `refs/heads/main` now `a52b47b0f8ca448c8c9c195cf261e83ecf813ba3`, tree `1467802e9b9497f84acb1bc6bb3ddd386792499a`. |
+
+### Final remote-read-back identities for this pass
+
+The two acts remain byte-identical to PR #67. Their final remote-main identities, plus the reconciled
+tracker and implementation identities, are:
+
+| Exact `origin/main` path | Git blob ID | Bytes | Lines | Raw SHA-256 |
+|---|---|---:|---:|---|
+| `evidence/cross-repository/IIPS_V3_CAP02_GATE4_TARGET_HOST_QUALIFICATION_ACT_EFFECTIVE_2026-10-23.md` | `66b56fd1584890525a7250aadd7da449def621e5` | 34316 | 420 | `c8c1378622657a320f14f34c008bb27fde2acaf57acc9a73a3489ea6be57c7b6` |
+| `evidence/cross-repository/IIPS_V3_CAP02_GATE_A_PRIME_SUCCESSOR_PROVISIONING_ACT_EFFECTIVE_2026-10-23.md` | `528de6aeddbc8e5f3191be8792f3937d77de4037` | 29856 | 354 | `df8e44f704814e2321b5134206b04f25097830bdc5dd53c4d907d1256e4c788d` |
+| `evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` | `973e91ddfd9e98a2479bc526dd22ef8c36f93d73` | 42087 | 433 | `f100735bea98e148c5dcd0588b66d834c71d431232f7ce682f599d05c6d7b6da` |
+| `scripts/run-tests.mjs` | `05a0ea56f62d4f3b614480858c968a728bc24ca4` | 5015 | 129 | `f467445321ba64162992ec6a4938b48495d6922205582d80cd50c96fe6a0eefd` |
+| `scripts/test-summary-parser.mjs` | `15c849fa739765af501182919748e4610acc4157` | 682 | 19 | `a88e2289c0f052198af500de88ccac516444fb20f7901d472f7933dcdb37ef13` |
+| `src/persistence/gateAPrimeProvisioning.ts` | `1fe6e6b3e87a4fbe082271be150c517e5e445423` | 14107 | 402 | `7f717b8302f0682e7d5c207667ad1540178eefceb0822882cb9113b2fc429f6e` |
+| `src/persistence/gateAPrimeValidation.ts` | `be9ce404fd8077b9f57a71a846636d4fdc3e1769` | 14469 | 382 | `92416eba01b2f44cfa26fb4352b77ca8478f706483a2c609dd3a6f1f98881a17` |
+| `tests/g3_gate_a_prime_successor_provisioning.test.ts` | `c13a52ec34e81e0a14f5f821b7d1a1a9d5670694` | 7375 | 191 | `4ec84a9b9a7ea1ac562c21b904719eeed746d9a18648f989d8289abb25126498` |
+| `tests/g3_startup_validation.test.ts` | `edd0305e3e5891020b2b045ab2cf082cd6cf788f` | 15072 | 381 | `d6bfd728c871267732bfc31f307b3fc1bed90b5b09c0bc88ad3999b05548f6e4` |
+| `tests/g4_run_tests_summary_parsing.test.ts` | `49e901b6ca957a5cc705b42e96cdeaf0365cfbc9` | 5627 | 125 | `7907087f13053e232e1ae537d6b75de5f5b280728ce9af1e210041c4660b633d` |
+
+The remote tree and PR-head tree are identical. No file outside the explicitly authorized Gate A′ and
+Gate 4 path sets (plus this tracker) changed; no IRR publication or mutation was performed.
+
+### Resulting state and handover after PR #68
+
+- Gate A′ bounded entrypoint/validator authority is now **published and remote-verified**. Its execute
+  path is intentionally inert: `principal_label`, `tenantId` and `canonicalOwnerId` compile as `null`,
+  so it refuses with `IDENTITY_VALUES_UNRESOLVED`; no provisioning, store, row or host execution occurred.
+- Gate 4 Limb A is **published and remote-verified**. The final IPD QE execution pin is now the exact
+  `a52b47b0f8ca448c8c9c195cf261e83ecf813ba3` / tree
+  `1467802e9b9497f84acb1bc6bb3ddd386792499a` merge result, subject to the act's designation/read-back
+  rule. This publication does not start Gate 4 or execute QE.
+- The effective Gate 4 prerequisites remain: separate H-12 v3 regeneration/full validation and
+  express PA adoption; separate Gate A′ identity-value determination; then target-host preflight on
+  `desktop-no0nhtp`. The sandbox cannot supply native-Windows evidence or select identity values.
+
+**Durable handover state after this publication:** authoritative IPD `main` is
+`a52b47b0f8ca448c8c9c195cf261e83ecf813ba3`, root tree `1467802e9b9497f84acb1bc6bb3ddd386792499a`.
+The next concrete action is the documented H-12 membership reconciliation below; no QE or provisioning
+may start before that decision, separate Gate A′ identity selection, and the named host prerequisites.
+
+## CAP-02 H-12 v3 preparation — content verified, adoption stopped at a material membership conflict
+
+Prepared in IPD (IRR remained read-only):
+
+- Machine-readable candidate: `evidence/cross-repository/IIPS_V3_CAP02_G4_H12_MANIFEST_V3_CANDIDATE_2026-10-23.json`, raw SHA-256 `344d1bd19c35231cc9d243c58f7e1ce22ccb7bfeda541966a71c1355a17d0594`.
+- Validation/stop record: `evidence/cross-repository/IIPS_V3_CAP02_G4_H12_MANIFEST_V3_CANDIDATE_VALIDATION_2026-10-23.md`.
+- IPD final Limb A pin: `a52b47b0f8ca448c8c9c195cf261e83ecf813ba3` / tree `1467802e9b9497f84acb1bc6bb3ddd386792499a`; current IRR consumer read-only pin: `4740ba21ea6103f1a7ebc9768269ae7795920698` / tree `23c5ca4ae1bfd481bcfc911c70b9e7dc090e1162`.
+- Verified observed set: 32 IPD path records present (including the newly published parser test), 24 IRR consumer paths, 9 criteria references, 10 frozen anchors, the conditional parser helper present, and 1,140 generated `dist/**` files captured by SHA-256. The QE evidence-deposit set is explicitly not generated because QE has not executed.
+
+**Material stop — do not adopt or silently repair.** Effective Gate 4 act §8 requires **33 mandatory
+IPD paths** (“the candidate's 32 + the mandatory parser test”). The preserved D-7/§4.7 packet defines
+**32 mandatory IPD paths** and already treats `tests/g4_run_tests_summary_parsing.test.ts` as the
+required future path. The machine-readable v2 candidate enumerates 32 IPD records total: 31 present
+at its old pin plus that absent parser-test record. At the final Limb A commit, the same records yield
+32 present paths, not 33. No authoritative record names a distinct 33rd path.
+
+This pass therefore does **not** invent a path, duplicate the parser test, downgrade the effective act
+to 32, adopt H-12, perform host preflight, or start QE. The required closure is a **separate Program
+Authority corrective membership determination/adoption-boundary decision** naming the exact 33-path set
+(or reconciling the effective act's count) and its status. Until that decision is durably published
+and independently read back, H-12 remains **NOT ADOPTED** and Gate 4 remains **AUTHORIZED — NOT STARTED**.
