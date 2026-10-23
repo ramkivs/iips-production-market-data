@@ -143,3 +143,10 @@ Identity provisioning:             not performed
 IRR:                               read-only; no files, refs, PRs, issues, comments or tracker changed
 E2E:                               not claimed
 ```
+
+## 8. Publication receipt — IPD PR #56 (remote-verified)
+
+- PR #56 merged at `2026-10-23T11:32:19Z`; PR head `07cd274ba2b6836888c81c3c1396aeaebe9f1127`; merge commit `70323867619d4270bc94cad6ae8d622c0579eb4e`; tree `32890138c6c11ab91ec75c6f4d72f4c26e093b49`.
+- Remote `main` changed exactly the two intended documentation paths: this record (blob `6be7a5e28088b0b27d4f575bc5a47cb1ce3e7e58`) and the CAP-02 tracker (blob `34d7f4d76fc53e6b9ccca05f53f667e7cc320bc5`). Remote blob IDs match the committed local contents.
+- PR checks passed: CI run `39946635397` and executed-test-count check reported 848 executed, 847 passed, 0 failed. Post-merge `main` CI run `39946778715` and check `120391517271` also passed (848 executed, 847 passed, 0 failed).
+- Comparing assessed baseline `24e62c80…` to merge `70323867…`, there are no changes to package manifests, TypeScript/package build config, source, tests or CI. The post-merge main head is a documentation-only successor and still is **not an eligible B-1R pin**.
