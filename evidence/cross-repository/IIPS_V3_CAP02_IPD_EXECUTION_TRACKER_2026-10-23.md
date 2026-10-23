@@ -549,3 +549,23 @@ The two H-12 artifacts are **preparation evidence only**. The machine-readable c
 Next action is the separate PA correction/reconciliation of the H-12 path-membership conflict. Gate A′
 identity values remain unresolved; provisioning, host preflight, QE-1…QE-11, H-12 adoption, result
 acceptance and W-1/U6 write authorization remain unperformed/not granted as applicable.
+
+## CAP-02 PR #70 publication receipt (2026-10-23)
+
+PR #70 was the tracker-only publication of the prior H-12 receipt. It was independently fetched and
+verified before this final tracker update.
+
+| Item | Verified value |
+|---|---|
+| PR #70 | `MERGED` at `2026-10-23T16:43:37Z`; URL https://github.com/ramkivs/iips-production-market-data/pull/70 |
+| PR head / tree | `963b0d70cf910181ea8e046c344204bf61b165b5` / `da09fd3cb43a938cff1b7b4cf7e4b636a57bdebf` |
+| Merge commit / tree | `7c51d25d8e702fc62eaaf0bbcf2fc023fad28398` / `da09fd3cb43a938cff1b7b4cf7e4b636a57bdebf` |
+| Merge parents | first `6804e17d04373ccc5fed82ecfc5153afdc6f0b3e`; second `963b0d70cf910181ea8e046c344204bf61b165b5`; tree and ancestry match, no diff from PR head |
+| PR #70 CI | `typecheck · build · test`: `SUCCESS`, run `39988979415`, job `120535503473`; `executed test count`: `SUCCESS`, check `120536038566` |
+| Post-merge `main` CI | run `39989171432` (`push`, head `7c51d25…`) **SUCCESS**; job `120536155243` and executed-count job `120536728240` both **SUCCESS** |
+| Remote `main` at this receipt | `7c51d25d8e702fc62eaaf0bbcf2fc023fad28398`, tree `da09fd3cb43a938cff1b7b4cf7e4b636a57bdebf` |
+| Final read-back H-12 identities | JSON blob `a169e1f7d8721860942807bad1b325ccc57d2404` / SHA-256 `344d1bd19c35231cc9d243c58f7e1ce22ccb7bfeda541966a71c1355a17d0594`; validation blob `64d04e78750878f2bd35e06ef30d4d2ba25c2674` / SHA-256 `ff9d97f9c7047dd2fafdd0b6c8d1256bc722240768403153bee00d72f73f5ed1` |
+
+This receipt does not change any decision status: H-12 remains **NOT ADOPTED** at the explicit
+33-versus-32 membership conflict; Gate 4 remains **AUTHORIZED — NOT STARTED**; Gate A′ execution
+remains **NOT AUTHORIZED** pending its separate identity-value act and host conditions.
