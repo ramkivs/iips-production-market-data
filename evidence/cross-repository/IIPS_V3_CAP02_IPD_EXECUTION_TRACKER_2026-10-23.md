@@ -130,3 +130,23 @@ The publication receipt verifies documentation and current-main state only. It d
 - **Evidence:** `IIPS_V3_CAP02_B1R_IPD_COMPATIBILITY_EXECUTION_EVIDENCE_2026-10-23.md` and `IIPS_V3_CAP02_B1R_IPD_COMPATIBILITY_FINAL_REPORT_2026-10-23.md`.
 - **Publication status:** candidate only at this entry; no local commit, open PR or merge is called published. PR/check/merge/remote receipt is to be appended after verification.
 - **Gate state:** unchanged. This is not Gate 4, U4/U5/U6, Gate A′ provisioning, durability, operational-write, IRR-repin or cross-repository E2E evidence. `WRITE_NOT_AUTHORIZED`, `SESSION_ONLY` and `durable:false` remain operative.
+
+### Publication receipt — CAP-02 B-1R IPD compatibility, PR #58
+
+```text
+PR head:              b613d4f984fa1cc72cae9b6dfeee6f4bc393f06a
+PR checks:            CI 39950883166 SUCCESS; executed-test-count 120405152716 SUCCESS
+PR merge:             MERGED 2026-10-23T12:08:01Z
+IPD main after:       16459f465024ca1eb4da4953d8e178eba4269f8e
+Root tree:            0c088282d69a03eced2f33533b19ff647179145a (same as PR-head tree)
+Remote read-back:     27/27 changed-path blobs match; PR head is an ancestor of main
+Merged-commit pack:   PASS from detached 16459f4…; 121 files; all three subpaths/declarations
+                      and browser closure verified; five actual IRR importers compiled;
+                      real IRR composition/adapter runtime PASS (8 fixture / 20 combined)
+Post-merge CI:        push run 39951277310 SUCCESS; consumer step SUCCESS
+                      executed-test-count 120406562857 SUCCESS — 875 executed, 874 passed, 0 failed
+```
+
+**CAP-02 B-1R IPD package/API prerequisite: PUBLISHED AND REMOTE-VERIFIED on IPD `main`.** The separate
+IRR repin remains unexecuted and IRR remains read-only. This receipt does not qualify Gate 4, render U4,
+grant U5/U6, provision Gate A′, enable operational/durable writes, or establish IRR/production E2E.
