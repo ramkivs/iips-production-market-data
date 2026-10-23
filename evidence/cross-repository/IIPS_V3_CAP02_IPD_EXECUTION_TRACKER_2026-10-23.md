@@ -251,3 +251,22 @@ post-merge CI:      push run 39964246325 SUCCESS; 875 executed / 0 failed at e2f
 
 This receipt verifies documentation and remote state only. It does not qualify Gate 4, render U4, grant
 U5/U6, provision Gate A′, enable operational writes, or change any gate status above.
+
+## CAP-02 successor execution — standing-approval reconciliation and desktop-evidence preparation (2026-10-23, third pass)
+
+Record: `IIPS_V3_CAP02_SUCCESSOR_EXECUTION_AUTHORITY_RECONCILIATION_AND_DESKTOP_EVIDENCE_2026-10-23.md`
+(`IIPS-V3-CAP02-SUCCESSOR-EXECUTION-2026-10-23-01`); evidence:
+`cap02_2026-10-23_successor_execution_evidence/`. Baseline IPD `main@bb4101b…` (tree `b02ef11c…`),
+IRR read-only `409604e4…`. The global standing approval (F-3 §1.2) was reconciled clause-by-clause
+**before** any item was treated as PA-blocked: all covered work (investigation, probes, tests,
+documentation, publication) was executed without further approval. The provisioning entrypoint,
+successor Gate A′ rendering, Limb A, and Gate 4 effectiveness remain stopped only by named
+**effective** reservations (G3-AMEND-01 §6.4(1); Q1 act; Gate E §5; F-3 no-value-selection + DEC-06
+R-2) — the prior pass's reliance on *proposed* Gate 4 §14.6 is expressly not carried forward.
+Fresh evidence at `bb4101b…`: Gate A′ probe 4/4 refused, 0 mutations; parser probe (TAP+CRLF safe,
+spec fail-closed); Gate 4 pin now 33 commits stale (no new source drift); `npm test` 875/874/0/1.
+Added: re-pinned Q1–Q12 determination sheet and the exact `desktop-no0nhtp` operator runbook
+(host again unreachable; QE remains 0 executed / 11 BLOCKED). Gate state unchanged:
+Gate A′ successor PROPOSED, Gate 4 NOT AUTHORIZED, U4 not rendered, U5 not granted, U6 denied;
+`WRITE_NOT_AUTHORIZED` / `SESSION_ONLY` / `durable:false` preserved. No `src/`, `tests/`,
+`scripts/`, CI, manifest or IRR change.

@@ -1,0 +1,15 @@
+UTC 2026-10-23T14:03:14Z host e2b.local platform Linux 6.1.158+ x86_64 node v22.22.3
+IPD HEAD bb4101b5d16546a1327227258a947e9cbe463900 tree b02ef11c61bb87e64c3effb5d252566f43ef26c5 clean=0
+--- Gate4 pin drift ---
+pin NOT in local clone (fetch)
+NA
+--- Gate A basis ref ---
+2ded0e981407b38c73bdea164153f53856aa7217	refs/heads/gate-a/local-principal-enablement-2026-10-16
+--- provisioning blob now ---
+dc844189a1c92f00acc3d7572c22f3e28e138eb6
+4a90d935bc74bac03902d43906ddef32e582c7b7
+--- host ---
+ping: desktop-no0nhtp: Name or service not known
+DNS: unresolved
+--- run-tests diff accepted vs main ---
+1cceacfff40f22dbc9cd64906bf26a5feac1075e:scripts/run-tests.mjs

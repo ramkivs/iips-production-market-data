@@ -1,0 +1,7 @@
+tap -> 875
+tap_crlf -> 875
+spec -> NULL(fail-closed)
+spec_cr -> NULL(fail-closed)
+zero -> 0
+none -> NULL(fail-closed)
+parser regex: /^# tests (\d+)$/m  runner forces --test-reporter=tap, child stdout=pipe

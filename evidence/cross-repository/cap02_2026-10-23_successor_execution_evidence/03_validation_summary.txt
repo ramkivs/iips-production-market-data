@@ -1,0 +1,14 @@
+validation at bb4101b5d16546a1327227258a947e9cbe463900 2026-10-23T14:03Z Linux x86_64 Node v22.22.3
+npm ci exit 0 | npx tsc --noEmit exit 0 | npm run build exit 0
+[test-guard] files=66 (source suite files: 66)
+# tests 875
+# pass 874
+# fail 0
+# cancelled 0
+# skipped 1
+[test-guard] OK — 875 test(s) executed, 874 passed, exit 0
+npm test exit 0
+focused: g3_write_gate 9/0, g3_caller_authority 103/0, g3_binding_resolution 13/0, g3_durability_vocabulary 6/0, g3_startup_validation 20/0, q1_broker_import_durability 18/0 (pass/fail)
+Gate4 pin 1cceacff tree b2dd2deb; GitHub compare pin...bb4101b ahead_by=33 behind_by=0
+src/tests/scripts/package.json diff 2d9130e..bb4101b: EMPTY (13 doc/evidence paths only)
+provisioning.ts blob dc844189a1c92f00acc3d7572c22f3e28e138eb6; run-tests.mjs blob 4a90d935 (pin fe1ab1a3)
