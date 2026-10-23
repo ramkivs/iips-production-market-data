@@ -99,4 +99,23 @@ End-to-end integration: not claimed
 - **Consumer/package outcome:** five IRR files actually import the PIT/D114 subpaths; the sixth register-listed path is comment-only. Both subpaths fail ESM package resolution (`ERR_PACKAGE_PATH_NOT_EXPORTED`) and TypeScript consumer resolution (TS2307). Current-main PIT/D114 APIs also do not satisfy the securityId-addressed service/store and D114 helper imports. There is no eligible compatible main pin in the evaluated baseline.
 - **Independent Gate 4 preparation:** local build/test and refusal/authority/binding checks were revalidated, but no target Windows host, real operator store, operator path or IPC endpoint was used. Gate 4 remains **NOT QUALIFIED**; U4/U5/U6, provisioning and E2E remain unchanged and are not inferred from package/CI checks. Preserve `WRITE_NOT_AUTHORIZED`, `SESSION_ONLY` and `durable:false`.
 - **Workbook:** worksheet cells were read via the workbook relationships/XML. The 12-sheet P00–P17 roadmap has no explicit CAP-02/U2/U7/B-1R/Gate-4 work item; the workbook was not edited.
-- **Detailed evidence and handoff:** `IIPS_V3_CAP02_B1R_PACKAGE_AND_GATE4_PREPARATION_2026-10-23.md`. IRR may inspect IPD `main@24e62c80…` as the authoritative evaluated baseline, but must not pin it for B-1R until the effective IPD package/API prerequisite is met and remotely verified.
+- **Detailed evidence and handoff:** `IIPS_V3_CAP02_B1R_PACKAGE_AND_GATE4_PREPARATION_2026-10-23.md`. The source/API assessment is against IPD `main@24e62c80…`; PR #56 then moved `main` to the documentation-only successor `70323867619d4270bc94cad6ae8d622c0579eb4e` (tree `32890138c6c11ab91ec75c6f4d72f4c26e093b49`). IRR may inspect that latest verified head, but must not pin it for B-1R until the effective IPD package/API prerequisite is met and remotely verified.
+
+### Publication receipt — PR #56 (verified against IPD `main`)
+
+```text
+IPD main before:    24e62c80f37e8a55c34747581a68209c67b775a3
+PR #56 head:        07cd274ba2b6836888c81c3c1396aeaebe9f1127
+PR checks:          CI run 39946635397 SUCCESS; executed-test-count SUCCESS — 848 executed,
+                    847 passed, 0 failed
+PR #56 merge:       MERGED 2026-10-23T11:32:19Z
+IPD main after:     70323867619d4270bc94cad6ae8d622c0579eb4e
+root tree:          32890138c6c11ab91ec75c6f4d72f4c26e093b49
+changed paths:      exactly 2 documentation paths (the preparation report and this tracker)
+remote read-back:   both file blobs match the committed contents
+post-merge CI:      run 39946778715 SUCCESS; executed-test-count check 120391517271
+                    reports 848 executed, 847 passed, 0 failed
+package/source diff: none from evaluated baseline 24e62c80…
+```
+
+The publication receipt verifies documentation and current-main state only. It does not resolve B-1R, qualify Gate 4, render U4, grant U5/U6, provision identity, enable writes or establish E2E.
