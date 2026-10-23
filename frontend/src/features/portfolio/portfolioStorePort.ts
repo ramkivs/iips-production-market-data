@@ -52,6 +52,8 @@ export type PortfolioPortRefusalCode =
   | 'REFUSED_STORE_GUARD' // Existing store guards (empty vector, weight sum, invalid fields)
   | 'REVISION_CONFLICT'
   | 'INVALID_REQUEST'
+  | 'WRITE_NOT_AUTHORIZED'
+  | 'RESOURCE_UNAVAILABLE'
   | 'UNAVAILABLE';
 
 export interface PortfolioPortRefusedHolding {

@@ -367,8 +367,12 @@ describe('CAP-02 Increment A — T-PKG-4: package manifest and built artifacts',
   const builtEntry = resolve(REPO_ROOT, exportEntry?.import ?? '');
   const builtTypes = resolve(REPO_ROOT, exportEntry?.types ?? '');
 
-  it('declares exactly one public subpath, ./portfolio-ui', () => {
-    assert.deepEqual(Object.keys(PACKAGE_JSON.exports ?? {}), ['./portfolio-ui']);
+  it('declares exactly the three authorized public subpaths', () => {
+    assert.deepEqual(Object.keys(PACKAGE_JSON.exports ?? {}), [
+      './portfolio-ui',
+      './pit',
+      './d114-non-production',
+    ]);
   });
 
   it('publishes only the built package directory', () => {

@@ -13,6 +13,7 @@ import { MarketQuotePayload, validateMarketQuotePayload } from '../contracts/d01
 import { OHLCVCandle, validateOHLCVCandle } from '../contracts/d02_ohlcv.js';
 import { CanonicalEnvelope, createCanonicalEnvelope } from '../contracts/envelope.js';
 import { computeLineageHash } from '../contracts/provenance.js';
+import { isD114SecurityIdentity } from '../contracts/types.js';
 
 export interface ArchiveIngestionResult {
   success: boolean;
@@ -296,7 +297,19 @@ export class HistoricalPitIngestionLoader {
         continue;
       }
 
-      const sigD01 = `D01:${quote.companyId}:${dateIso}:${quote.ltp}:${quote.volume}`;
+      // Parser-produced D114 records must carry one valid source-derived
+      // identity. Missing or malformed identity is quarantined, never treated
+      // as a company-only fallback.
+      const quoteIdentity = quote.securityIdentity;
+      if (!isD114SecurityIdentity(quoteIdentity)) {
+        this.rejectedRecords++;
+        this.malformedRecords++;
+        batchQuarantined++;
+        continue;
+      }
+      const securityId = quoteIdentity.securityId;
+
+      const sigD01 = `D01:${quote.companyId}:${dateIso}:${quote.ltp}:${quote.volume}:${securityId}`;
       if (this.ingestedSignatures.has(sigD01)) {
         this.duplicateRecords++;
         this.idempotentlySkipped++;
@@ -308,10 +321,11 @@ export class HistoricalPitIngestionLoader {
       this.symbols.add(quote.symbol);
 
       const envelopeD01: CanonicalEnvelope<MarketQuotePayload> = createCanonicalEnvelope({
-        envelopeId: `env-d01-${quote.companyId}-${dateIso}-${sigD01.length}`,
+        envelopeId: `env-d01-${quote.companyId}-${dateIso}-${sigD01.length}-${securityId}`,
         domain: 'D01_QUOTES',
         mode: 'PIT',
         companyId: quote.companyId,
+        securityId,
         payload: quote,
         provenance: {
           sourceClassification: 'CANONICAL_MARKET_DATA',
@@ -348,7 +362,16 @@ export class HistoricalPitIngestionLoader {
         continue;
       }
 
-      const sigD02 = `D02:${candle.companyId}:${dateIso}:${candle.open}:${candle.close}:${candle.volume}`;
+      const candleIdentity = candle.securityIdentity;
+      if (!isD114SecurityIdentity(candleIdentity)) {
+        this.rejectedRecords++;
+        this.malformedRecords++;
+        batchQuarantined++;
+        continue;
+      }
+      const securityId = candleIdentity.securityId;
+
+      const sigD02 = `D02:${candle.companyId}:${dateIso}:${candle.open}:${candle.close}:${candle.volume}:${securityId}`;
       if (this.ingestedSignatures.has(sigD02)) {
         this.duplicateRecords++;
         this.idempotentlySkipped++;
@@ -359,10 +382,11 @@ export class HistoricalPitIngestionLoader {
       this.ingestedSignatures.add(sigD02);
 
       const envelopeD02: CanonicalEnvelope<OHLCVCandle> = createCanonicalEnvelope({
-        envelopeId: `env-d02-${candle.companyId}-${dateIso}-${sigD02.length}`,
+        envelopeId: `env-d02-${candle.companyId}-${dateIso}-${sigD02.length}-${securityId}`,
         domain: 'D02_OHLCV',
         mode: 'PIT',
         companyId: candle.companyId,
+        securityId,
         payload: candle,
         provenance: {
           sourceClassification: 'CANONICAL_MARKET_DATA',
@@ -401,6 +425,21 @@ export class HistoricalPitIngestionLoader {
   }
 
   /**
+   * Diagnostic-only company sample. Multiple series correctly make this query
+   * ambiguous; the diagnostic then omits its sample rather than choosing one.
+   */
+  private sampleQuoteForReport(
+    companyId: string,
+    asOf: string,
+  ): CanonicalEnvelope<MarketQuotePayload> | undefined {
+    try {
+      return this.quoteStore.queryAsOf({ companyId, domain: 'D01_QUOTES', asOf });
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
    * Generates a formal Stage-5 Ingestion Validation Report.
    */
   public generateValidationReport(options?: Stage5ValidationReportOptions): Stage5IngestionValidationReport {
@@ -411,22 +450,14 @@ export class HistoricalPitIngestionLoader {
     let sampleCompanyId = 'INE467B01029';
     let sampleMatchedQuoteLtp: number | undefined;
 
-    const sampleQuote = this.quoteStore.queryAsOf({
-      companyId: sampleCompanyId,
-      domain: 'D01_QUOTES',
-      asOf: sampleQueryAsOf,
-    });
+    const sampleQuote = this.sampleQuoteForReport(sampleCompanyId, sampleQueryAsOf);
     if (sampleQuote) {
       sampleMatchedQuoteLtp = sampleQuote.payload.ltp;
     } else {
       // Fallback to first available symbol
       const firstSym = Array.from(this.symbols)[0] || 'TCS';
       sampleCompanyId = firstSym;
-      const q = this.quoteStore.queryAsOf({
-        companyId: sampleCompanyId,
-        domain: 'D01_QUOTES',
-        asOf: '2026-09-20T23:59:59.000Z',
-      });
+      const q = this.sampleQuoteForReport(sampleCompanyId, '2026-09-20T23:59:59.000Z');
       sampleMatchedQuoteLtp = q?.payload.ltp;
     }
 

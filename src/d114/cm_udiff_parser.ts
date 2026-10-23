@@ -10,6 +10,7 @@ import * as crypto from 'crypto';
 import * as zlib from 'zlib';
 import { MarketQuotePayload } from '../contracts/d01_quotes.js';
 import { OHLCVCandle } from '../contracts/d02_ohlcv.js';
+import { buildD114SecurityIdentity } from '../contracts/types.js';
 
 export interface CmUdiffRawRecord {
   TradDt: string;
@@ -234,6 +235,14 @@ export class CmUdiffParser {
         errors.push({ row: i + 1, field: 'TckrSymb', error: 'Missing ticker symbol' });
         rowValid = false;
       }
+      if (buildD114SecurityIdentity(row.ISIN, row.SctySrs) === null) {
+        errors.push({
+          row: i + 1,
+          field: 'ISIN/SctySrs',
+          error: 'Missing or malformed series-aware security identity',
+        });
+        rowValid = false;
+      }
       if (isNaN(parseFloat(row.ClsPric))) {
         errors.push({ row: i + 1, field: 'ClsPric', error: `Non-numeric closing price: ${row.ClsPric}` });
         rowValid = false;
@@ -266,6 +275,7 @@ export class CmUdiffParser {
     const prevClose = parseFloat(row.PrvsClsgPric || '0');
     const change = Number((ltp - prevClose).toFixed(2));
     const pctChange = prevClose !== 0 ? Number(((change / prevClose) * 100).toFixed(2)) : 0;
+    const securityIdentity = buildD114SecurityIdentity(row.ISIN, row.SctySrs);
 
     return {
       companyId: row.TckrSymb,
@@ -282,6 +292,7 @@ export class CmUdiffParser {
       volume: parseInt(row.TtlTradgVol || row.TtlTrfVal || '0', 10),
       change,
       pctChange,
+      ...(securityIdentity ? { securityIdentity } : {}),
     };
   }
 
@@ -294,6 +305,7 @@ export class CmUdiffParser {
     const high = parseFloat(row.HghPric || row.ClsPric || '0');
     const low = parseFloat(row.LwPric || row.ClsPric || '0');
     const volume = parseInt(row.TtlTradgVol || '0', 10);
+    const securityIdentity = buildD114SecurityIdentity(row.ISIN, row.SctySrs);
 
     const candleStart = `${row.TradDt}T09:15:00.000Z`;
     const candleEnd = `${row.TradDt}T15:30:00.000Z`;
@@ -310,6 +322,7 @@ export class CmUdiffParser {
       close,
       volume,
       isAdjusted: false,
+      ...(securityIdentity ? { securityIdentity } : {}),
     };
   }
 }

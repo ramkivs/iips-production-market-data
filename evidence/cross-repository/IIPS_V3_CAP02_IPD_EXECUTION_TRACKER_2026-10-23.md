@@ -119,3 +119,14 @@ package/source diff: none from evaluated baseline 24e62c80…
 ```
 
 The publication receipt verifies documentation and current-main state only. It does not resolve B-1R, qualify Gate 4, render U4, grant U5/U6, provision identity, enable writes or establish E2E.
+
+## CAP-02 B-1R IPD compatibility implementation candidate — 2026-10-23
+
+- **Authority:** `IIPS_V3_CAP02_B1R_IPD_COMPATIBILITY_IMPLEMENTATION_ACT_EFFECTIVE_2026-10-23.md` is the narrow IPD-owned act for the exact PIT/D114/package/U7 manifest. Increment A was not stretched; the IRR composition act was used only as read-only consumer evidence.
+- **Baseline:** `main@b3428f3f431eceb1dcde60e3b120bbd1888622bb`; read-only IRR consumer source `98cd56a9a568f431ea31d5515e515a1b6cbb91ba`.
+- **Implementation state:** series-qualified identity propagation, fail-closed PIT keys/queries, read-only `PitReadService`, admitted-key enumeration, frozen offline D114 population, `./pit` and `./d114-non-production` exports, and the three U7 type exports/two refusal codes are implemented on the session branch. No production or privileged capability was added.
+- **Local qualification:** typecheck and full build PASS; guarded full suite **875 executed / 874 passed / 0 failed / 1 skipped**; focused compatibility suite 99/99; `npm pack --dry-run` and `git diff --check` PASS.
+- **Packed consumer:** the installed tarball passed standalone runtime/strict declaration checks and browser closure scanning. All five verbatim IRR importer files at `98cd56a9…` compiled against the pack; the real IRR production composition/adapter executed with 8 fixture records and 20 combined records. The two IRR route test files were compile-checked only, not run as E2E.
+- **Evidence:** `IIPS_V3_CAP02_B1R_IPD_COMPATIBILITY_EXECUTION_EVIDENCE_2026-10-23.md` and `IIPS_V3_CAP02_B1R_IPD_COMPATIBILITY_FINAL_REPORT_2026-10-23.md`.
+- **Publication status:** candidate only at this entry; no local commit, open PR or merge is called published. PR/check/merge/remote receipt is to be appended after verification.
+- **Gate state:** unchanged. This is not Gate 4, U4/U5/U6, Gate A′ provisioning, durability, operational-write, IRR-repin or cross-repository E2E evidence. `WRITE_NOT_AUTHORIZED`, `SESSION_ONLY` and `durable:false` remain operative.

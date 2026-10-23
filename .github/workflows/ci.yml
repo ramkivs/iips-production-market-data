@@ -52,6 +52,11 @@ jobs:
       - name: Test (guarded — zero tests is a failure)
         run: npm test 2>&1 | tee test-output.log
 
+      # Verifies the actual packed public subpaths, emitted declarations and the
+      # five verbatim IRR importer files; this is package evidence, not Gate 4.
+      - name: Public package consumer (pack + IRR importers)
+        run: npm run test:package-consumer 2>&1 | tee package-consumer-output.log
+
       # Records the executed test count against the exact head commit, so "tests passed" is
       # checkable from the API instead of resting on a job's green badge.
       - name: Publish executed test count
