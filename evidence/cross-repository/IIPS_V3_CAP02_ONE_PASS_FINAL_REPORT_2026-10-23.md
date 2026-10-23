@@ -168,14 +168,25 @@ No prerequisite of U6 is satisfied, and no write-authority change was made or im
 
 ## 14. PR, commits, tree SHAs, blob verification, post-merge CI
 
-Publication receipt is appended after the PR is merged and verified; nothing below is claimed until the
-values exist.
+### Publication receipt — PR #60 (verified against the remote)
 
 ```text
 IPD main before:   2d9130e76bb0dc89daeefabaf297e27bdaa84250  tree 4658699180ef161aae3c1b33d3946e918d6fb9b2
-PR:                (this pass, documentation only)
-changed paths:     8 — 4 new records, 1 tracker, 1 new evidence directory with 6 artifacts
+PR #60 head:       448b097c299278bb4b165c44ad2a5eb397ba5b77  tree 384f1cb10023565551ff4485ee6c58b102427e91
+PR #60 checks:     "typecheck · build · test" SUCCESS (run 39964047320)
+                   "executed test count" SUCCESS — 875 tests executed, 0 failed
+PR #60 merge:      MERGED 2026-10-23T13:48:16Z
+IPD main after:    e2f332638bbf6cf6e848cc85fa74994141deb50f  tree 384f1cb10023565551ff4485ee6c58b102427e91
+                   (merge tree == PR-head tree)
+ancestry:          448b097c… verified an ancestor of origin/main after merge
+changed paths:     13 — exactly the files listed in §15 and the raw-evidence directory
+blob verification: 5/5 record blobs read back from the remote merge commit byte-identically
+post-merge CI:     push run 39964246325 SUCCESS at e2f33263…; "executed test count" 875 / 0 failed
 ```
+
+A green CI run, a merged PR and this receipt are publication facts. They are **not** Gate 4
+qualification, result acceptance, Gate 5 admission, operational write authorization, provisioning
+evidence, or end-to-end integration evidence. No source, test, CI, manifest or IRR change was made.
 
 ## 15. Tracker and evidence paths
 

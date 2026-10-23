@@ -234,3 +234,20 @@ Gate 5 / U5:                       not granted
 U6 operational writes:             denied
 IRR:                               read-only; no file, branch, PR, issue, comment or tracker modified
 ```
+
+### Publication receipt — PR #60 (verified against IPD `main`)
+
+```text
+IPD main before:    2d9130e76bb0dc89daeefabaf297e27bdaa84250  tree 4658699180ef161aae3c1b33d3946e918d6fb9b2
+PR #60 head:        448b097c299278bb4b165c44ad2a5eb397ba5b77  tree 384f1cb10023565551ff4485ee6c58b102427e91
+PR checks:          CI run 39964047320 SUCCESS; executed-test-count SUCCESS — 875 executed, 0 failed
+PR #60 merge:       MERGED 2026-10-23T13:48:16Z
+IPD main after:     e2f332638bbf6cf6e848cc85fa74994141deb50f  tree 384f1cb10023565551ff4485ee6c58b102427e91
+ancestry:           448b097c… is an ancestor of origin/main; merge tree == PR-head tree
+changed paths:      13 — 4 new records, this tracker, and 8 raw-evidence artifacts
+remote read-back:   5/5 record blobs byte-identical at the merge commit
+post-merge CI:      push run 39964246325 SUCCESS; 875 executed / 0 failed at e2f33263…
+```
+
+This receipt verifies documentation and remote state only. It does not qualify Gate 4, render U4, grant
+U5/U6, provision Gate A′, enable operational writes, or change any gate status above.
