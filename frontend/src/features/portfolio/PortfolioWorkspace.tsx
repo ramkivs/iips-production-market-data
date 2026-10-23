@@ -90,13 +90,18 @@ export const PortfolioWorkspace: React.FC<PortfolioWorkspaceProps> = ({
     try {
       const [record, summary, revision] = await Promise.all([
         storePort.getPortfolio(portfolioId),
-        storePort.getAnalytics(portfolioId),
+        // `getAnalytics` is OPTIONAL on the port (CAP-02 U7): a host whose
+        // `portfolio.analytics` operation is reserved simply omits it, and the
+        // workspace then renders no analytics rather than inventing them.
+        storePort.getAnalytics
+          ? storePort.getAnalytics(portfolioId)
+          : Promise.resolve(null),
         storePort.getRevision(portfolioId),
       ]);
       if (record) {
         setPortfolio({ ...record, holdings: [...record.holdings] });
       }
-      setAnalytics(summary);
+      if (summary) setAnalytics(summary);
       setStoreRevision(revision);
       setLoadError(null);
       setLoadedOnce(true);

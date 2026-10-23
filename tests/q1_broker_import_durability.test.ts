@@ -43,6 +43,8 @@ import {
 } from '../src/persistence/portfolio_store.js';
 import { DurablePortfolioStorePort } from '../src/persistence/durablePortfolioStorePort.js';
 import { resolveActiveBindingInCurrentTransaction } from '../src/persistence/binding.js';
+import { createGovernedBrokerObservationResolver } from '../src/identity/broker_observation_resolver.js';
+import { SecurityMaster } from '../src/identity/security_master.js';
 import {
   computeBrokerImportProvenance,
   evaluateBrokerImportIdentityGate,
@@ -164,6 +166,15 @@ describe('q1 / durable broker-ingestion persistence boundary', () => {
       const gate = evaluateBrokerImportIdentityGate([holding({ exchange: undefined })]);
       assert.equal(gate.saveable, false);
       assert.match(gate.refusedHoldings[0].reason, /MISSING_EXCHANGE/);
+    });
+
+    it('refuses to resolve identity against a non-governed source', () => {
+      // The resolver may only be constructed over the governed D05 master
+      // revision; an ungoverned or fixture master fails closed at construction.
+      assert.throws(
+        () => createGovernedBrokerObservationResolver(new SecurityMaster()),
+        /not the governed D05 master revision/,
+      );
     });
 
     it('accepts a fully resolved raw vector without receiving any canonical identity claim', () => {
@@ -416,6 +427,158 @@ describe('q1 / durable broker-ingestion persistence boundary', () => {
       assert.equal(outcome.ok, false);
       assert.equal(outcome.ok === false && outcome.code, 'RESOURCE_UNAVAILABLE');
       assert.equal(countRows(db), before, 'revoked owner request has no store effect');
+    });
+
+    it('T-U2-5: serializes a competing revocation against the ACTUAL import transaction', () => {
+      // The earlier assertion checked a hand-made transaction. This one races the
+      // revocation against a real `withBrokerImportTransaction` call, so the
+      // serialization guarantee is proven on the path the import actually uses.
+      const db = openFixture();
+      // An earlier test in this suite revokes the shared fixture binding; restore
+      // the ACTIVE shape this test needs.
+      db.prepare("UPDATE local_principal_bindings SET status = 'ACTIVE' WHERE binding_id = 'binding-test'").run();
+      db.prepare("UPDATE local_principal_memberships SET status = 'ACTIVE' WHERE membership_id = 'membership-test'").run();
+      const competitor = new DatabaseSync(dbPath);
+      let revokeAttempt: { threw: boolean; message: string } | undefined;
+      let activeDuringTransaction: string | undefined;
+
+      const store = new DurablePortfolioStore(db);
+      const revision = store.withBrokerImportTransaction(OWNER, (writer) => {
+        const active = resolveActiveBindingInCurrentTransaction(db);
+        activeDuringTransaction = active.membershipId;
+        // A concurrent revoker on an INDEPENDENT connection must not be able to
+        // commit a revocation inside this transaction window.
+        try {
+          competitor
+            .prepare("UPDATE local_principal_memberships SET status = 'REVOKED' WHERE membership_id = 'membership-test'")
+            .run();
+          revokeAttempt = { threw: false, message: 'revocation was NOT serialized' };
+        } catch (error) {
+          revokeAttempt = { threw: true, message: error instanceof Error ? error.message : String(error) };
+        }
+        return writer.create(OWNER, 'P-RACE', {
+          holdings: mapBrokerImportHoldings(
+            (() => {
+              const request = importRequest({ portfolioId: 'P-RACE' });
+              const gate = evaluateBrokerImportIdentityGate(request.holdings);
+              assert.equal(gate.saveable, true);
+              return request.holdings.map((h) => ({
+                ...h,
+                companyId: h.symbol === 'RELIANCE' ? 'EQ_RELIANCE_IN' : 'EQ_TCS_IN',
+                identityStatus: 'RESOLVED' as const,
+                resolutionDisposition: 'CANONICAL_P04' as const,
+              }));
+            })(),
+          ),
+          provenanceDigest: 'race-provenance',
+          contentDigest: 'sha256:race',
+        });
+      });
+
+      assert.equal(revokeAttempt?.threw, true, 'the competing revocation must be refused while the import holds the lock');
+      assert.match(revokeAttempt?.message ?? '', /locked|busy/i);
+      assert.equal(activeDuringTransaction, 'membership-test');
+      assert.equal(revision, 1, 'the import committed');
+      assert.equal(store.get(OWNER, 'P-RACE').holdings.length, 2);
+
+      // After the import commits, the revocation succeeds and the NEXT import is
+      // refused with zero store effect — a stale authorization cannot be reused.
+      competitor
+        .prepare("UPDATE local_principal_memberships SET status = 'REVOKED' WHERE membership_id = 'membership-test'")
+        .run();
+      competitor.close();
+
+      const before = countRows(db);
+      const afterRevocation = persistBrokerImport(store, OWNER, importRequest({ portfolioId: 'P-AFTER-REVOKE' }));
+      assert.equal(afterRevocation.ok, false);
+      assert.equal(afterRevocation.ok === false && afterRevocation.code, 'RESOURCE_UNAVAILABLE');
+      assert.equal(afterRevocation.storeEffect, 'NONE');
+      assert.equal(countRows(db), before, 'a revoked owner cannot write');
+    });
+
+    it('fails closed on absent, duplicated and inconsistent ACTIVE binding data', () => {
+      const owner = OWNER;
+
+      // (a) no ACTIVE binding at all
+      const absentPath = join(root, 'bindings', 'absent.db');
+      mkdirSync(join(root, 'bindings'), { recursive: true });
+      const absentDb = new DatabaseSync(absentPath);
+      absentDb.exec('PRAGMA foreign_keys = ON;');
+      ensureMigrations(absentDb, GATE3_MIGRATIONS);
+      const absentBefore = countRows(absentDb);
+      const absent = persistBrokerImport(new DurablePortfolioStore(absentDb), owner, importRequest());
+      assert.equal(absent.ok, false);
+      assert.equal(absent.ok === false && absent.code, 'RESOURCE_UNAVAILABLE');
+      assert.equal(countRows(absentDb), absentBefore, 'no binding means no store effect');
+      absentDb.close();
+
+      // (b) a second ACTIVE binding is refused by the schema itself: the single
+      // ACTIVE binding invariant is enforced by a unique index, not only by the
+      // resolver. The resolver's own multi-binding branch stays as defence in
+      // depth should that index ever be relaxed.
+      const multiPath = join(root, 'bindings', 'multi.db');
+      const multiDb = new DatabaseSync(multiPath);
+      multiDb.exec('PRAGMA foreign_keys = ON;');
+      ensureMigrations(multiDb, GATE3_MIGRATIONS);
+      multiDb
+        .prepare(
+          `INSERT INTO local_principal_bindings (binding_id, principal_label, status, created_at, updated_at, revoked_at)
+           VALUES ('binding-1', 'principal-1', 'ACTIVE', 't0', 't0', NULL)`,
+        )
+        .run();
+      assert.throws(
+        () =>
+          multiDb
+            .prepare(
+              `INSERT INTO local_principal_bindings (binding_id, principal_label, status, created_at, updated_at, revoked_at)
+               VALUES ('binding-2', 'principal-2', 'ACTIVE', 't0', 't0', NULL)`,
+            )
+            .run(),
+        /UNIQUE constraint failed/i,
+        'the database enforces at most one ACTIVE local principal binding',
+      );
+      multiDb.close();
+
+      // (c) ACTIVE membership attached to a different binding
+      const mismatchedPath = join(root, 'bindings', 'mismatched.db');
+      const mismatchedDb = new DatabaseSync(mismatchedPath);
+      mismatchedDb.exec('PRAGMA foreign_keys = ON;');
+      ensureMigrations(mismatchedDb, GATE3_MIGRATIONS);
+      mismatchedDb
+        .prepare(
+          `INSERT INTO local_principal_bindings (binding_id, principal_label, status, created_at, updated_at, revoked_at)
+           VALUES ('binding-a', 'principal-a', 'ACTIVE', 't0', 't0', NULL)`,
+        )
+        .run();
+      mismatchedDb
+        .prepare(
+          `INSERT INTO local_principal_bindings (binding_id, principal_label, status, created_at, updated_at, revoked_at)
+           VALUES ('binding-b', 'principal-b', 'REVOKED', 't0', 't0', 't0')`,
+        )
+        .run();
+      mismatchedDb
+        .prepare(
+          `INSERT INTO local_principal_memberships (membership_id, binding_id, tenant_id, canonical_owner_id, status, created_at, updated_at, revoked_at)
+           VALUES ('membership-b', 'binding-b', 'tenant-local', 'owner-local', 'ACTIVE', 't0', 't0', NULL)`,
+        )
+        .run();
+      const mismatchBefore = countRows(mismatchedDb);
+      const mismatched = persistBrokerImport(new DurablePortfolioStore(mismatchedDb), owner, importRequest());
+      assert.equal(mismatched.ok, false);
+      assert.equal(mismatched.ok === false && mismatched.code, 'RESOURCE_UNAVAILABLE');
+      assert.equal(
+        countRows(mismatchedDb),
+        mismatchBefore,
+        'a membership detached from the ACTIVE binding means no store effect',
+      );
+      mismatchedDb.close();
+
+      // (d) the resolver refuses to run outside a caller-held transaction
+      const plainDb = openFixture();
+      assert.throws(
+        () => resolveActiveBindingInCurrentTransaction(plainDb),
+        /requires an active transaction/,
+      );
     });
 
     it('upgrades an existing 001–003 database without inventing historical provenance', () => {

@@ -13,7 +13,11 @@ import {
   PortfolioBrokerImportController,
   PortfolioBrokerImportViewModel,
 } from './index.js';
-import { PortfolioStorePort, SessionPortfolioStorePort } from './portfolioStorePort.js';
+import {
+  PortfolioCommitReceipt,
+  PortfolioStorePort,
+  SessionPortfolioStorePort,
+} from './portfolioStorePort.js';
 import { SecurityMaster } from '../../../../src/identity/security_master.js';
 
 /**
@@ -29,7 +33,23 @@ export const DEFAULT_ALLOW_NON_PRODUCTION_BYPASS = false;
 export interface BrokerImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSaveSuccess: (result: PortfolioSaveResult) => void;
+  /**
+   * Invoked ONLY when the save outcome carries an authoritative
+   * `PortfolioSaveResult`. A governed v1 adapter that reports only the minimal
+   * commit receipt does not supply one, so this callback is optional.
+   */
+  onSaveSuccess?: (result: PortfolioSaveResult) => void;
+  /**
+   * Invoked with the authoritative post-commit receipt (CAP-02 U7). This is the
+   * only committed-result signal a host needs; it is never derived from preview
+   * data or from the port's declared capability.
+   */
+  onCommitReceipt?: (receipt: PortfolioCommitReceipt) => void;
+  /**
+   * Invoked when the commit outcome could not be established. Distinct from a
+   * refusal: no retry is performed by this component.
+   */
+  onOutcomeUnknown?: (info: { message: string; portfolioId: string; reconciliationRequired: true }) => void;
   portfolioStore: PortfolioStore;
   /** Optional store port; defaults to the session-only port over `portfolioStore`. */
   storePort?: PortfolioStorePort;
@@ -46,6 +66,8 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
   isOpen,
   onClose,
   onSaveSuccess,
+  onCommitReceipt,
+  onOutcomeUnknown,
   portfolioStore,
   storePort: optionalStorePort,
   expectedRevision,
@@ -166,8 +188,13 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
       });
       setViewModel(vm);
 
-      if (vm.state === 'SAVE_SUCCESS' && vm.saveResult?.success) {
-        onSaveSuccess(vm.saveResult);
+      // Only an authoritative receipt may announce a commit. A legacy result is
+      // forwarded only when the outcome actually carried one.
+      if (vm.state === 'SAVE_SUCCESS' && vm.commitReceipt) {
+        onCommitReceipt?.(vm.commitReceipt);
+        if (vm.saveResult) onSaveSuccess?.(vm.saveResult);
+      } else if (vm.state === 'OUTCOME_UNKNOWN' && vm.outcomeUnknown) {
+        onOutcomeUnknown?.(vm.outcomeUnknown);
       } else if (vm.portRefusal?.code === 'REVISION_CONFLICT' && onRevisionConflict) {
         onRevisionConflict(vm.portRefusal.message);
       }
@@ -179,7 +206,16 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
     } finally {
       setIsSaving(false);
     }
-  }, [controller, storePort, expectedRevision, onRevisionConflict, securityMaster, onSaveSuccess]);
+  }, [
+    controller,
+    storePort,
+    expectedRevision,
+    onRevisionConflict,
+    securityMaster,
+    onSaveSuccess,
+    onCommitReceipt,
+    onOutcomeUnknown,
+  ]);
 
   // Clean close handler
   const handleClose = useCallback(() => {
@@ -573,7 +609,7 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
             </div>
           )}
 
-          {/* SAVE_SUCCESS State */}
+          {/* SAVE_SUCCESS State — receipt-driven, no preview fallbacks */}
           {viewModel.state === 'SAVE_SUCCESS' && (
             <div className="rounded-xl border border-emerald-900/70 bg-emerald-950/30 p-8 space-y-5 text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-900/50 text-emerald-300 text-3xl font-bold border border-emerald-500 shadow-sm">
@@ -581,21 +617,28 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
               </div>
               <div>
                 <h3 className="text-xl font-bold text-emerald-200">
-                  {viewModel.durable ? 'Holdings Successfully Persisted' : 'Holdings Saved (Session-Scoped)'}
+                  {viewModel.durable ? 'Holdings Committed Durably' : 'Holdings Saved (Session-Scoped)'}
                 </h3>
                 <p className="text-sm text-slate-300 mt-1">
-                  {viewModel.saveResult?.holdingsSavedCount ?? viewModel.acceptedHoldingsCount}{' '}
-                  {viewModel.durable
-                    ? 'holdings committed durably to'
-                    : 'holdings saved to the session-scoped store (not durable) in'}{' '}
-                  <span className="font-semibold text-white">
-                    {viewModel.saveResult?.portfolio.portfolioName || 'Institutional Flagship Portfolio'}
-                  </span>
-                  .
+                  {viewModel.commitReceipt?.disposition === 'ALREADY_IMPORTED_NO_OP'
+                    ? 'This broker file was already imported. State was preserved without duplication.'
+                    : 'The save was acknowledged by the store port.'}
                 </p>
               </div>
 
               <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-5 text-left text-xs space-y-3 shadow-inner">
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="font-medium">Commit Outcome:</span>
+                  <span className="text-white font-mono text-[11px]">
+                    {viewModel.commitReceipt?.disposition ?? 'UNREPORTED'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span className="font-medium">Revision:</span>
+                  <span className="text-white font-mono text-[11px]">
+                    {viewModel.commitReceipt ? String(viewModel.commitReceipt.revision) : 'UNREPORTED'}
+                  </span>
+                </div>
                 <div className="flex justify-between items-center text-slate-400">
                   <span className="font-medium">Persistence Mode:</span>
                   <span
@@ -605,40 +648,96 @@ export const BrokerImportModal: React.FC<BrokerImportModalProps> = ({
                         : 'text-amber-300 bg-amber-950/60 border-amber-700'
                     }`}
                   >
-                    {viewModel.durable
-                      ? 'COMMITTED (Durable)'
-                      : 'SAVED (SESSION ONLY - NOT DURABLE)'}
+                    {viewModel.durable ? 'COMMITTED (Durable)' : 'SAVED (SESSION ONLY - NOT DURABLE)'}
                   </span>
                 </div>
                 {!viewModel.durable && (
                   <p className="text-[11px] text-amber-300/80">
-                    Durability: session-only. No durable commit exists in this build; this state is held in memory
-                    and is lost on reload or restart.
+                    Durability is taken from the commit receipt, not from a store capability declaration. No durable
+                    commit is available in this build; this state is held in memory and is lost on reload or restart.
                   </p>
                 )}
-                <div className="flex justify-between items-center text-slate-400">
-                  <span className="font-medium">Total Portfolio Value:</span>
-                  <span className="text-white font-mono text-sm font-bold">
-                    ₹{(viewModel.saveResult?.totalMarketValue ?? viewModel.totalMarketValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-slate-400">
-                  <span className="font-medium">Total Allocation Weight:</span>
-                  <span className="text-teal-300 font-mono text-sm font-bold">
-                    {(viewModel.saveResult?.weightSumPercentage ?? viewModel.totalNormalizedWeight).toFixed(4)}%
-                  </span>
-                </div>
-                <div className="flex flex-col text-slate-400 pt-2 border-t border-slate-800 space-y-1">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
-                    Cryptographic Provenance Digest (FIPS 180-4 SHA-256):
-                  </span>
-                  <span className="font-mono text-[11px] text-teal-400 break-all select-all bg-slate-900 p-2 rounded border border-slate-800">
-                    {viewModel.saveResult?.provenanceDigest || viewModel.lineageDigest}
-                  </span>
-                </div>
+                {/* Detail rows render ONLY from an authoritative store result. A
+                    preview total, preview count or preview digest is never
+                    substituted into a committed panel. */}
+                {viewModel.saveResult && (
+                  <>
+                    <div className="flex justify-between items-center text-slate-400">
+                      <span className="font-medium">Holdings Saved:</span>
+                      <span className="text-white font-mono text-sm font-bold">
+                        {viewModel.saveResult.holdingsSavedCount}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-400">
+                      <span className="font-medium">Total Portfolio Value:</span>
+                      <span className="text-white font-mono text-sm font-bold">
+                        ₹
+                        {viewModel.saveResult.totalMarketValue.toLocaleString('en-IN', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-400">
+                      <span className="font-medium">Total Allocation Weight:</span>
+                      <span className="text-teal-300 font-mono text-sm font-bold">
+                        {viewModel.saveResult.weightSumPercentage.toFixed(4)}%
+                      </span>
+                    </div>
+                    {viewModel.saveResult.provenanceDigest && (
+                      <div className="flex flex-col text-slate-400 pt-2 border-t border-slate-800 space-y-1">
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+                          Cryptographic Provenance Digest (FIPS 180-4 SHA-256):
+                        </span>
+                        <span className="font-mono text-[11px] text-teal-400 break-all select-all bg-slate-900 p-2 rounded border border-slate-800">
+                          {viewModel.saveResult.provenanceDigest}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+                {!viewModel.saveResult && (
+                  <p className="text-[11px] text-slate-400 pt-2 border-t border-slate-800">
+                    This save path reported only the minimal commit receipt. No portfolio totals, holding counts or
+                    provenance digest are claimed, because none were authoritatively returned.
+                  </p>
+                )}
               </div>
             </div>
           )}
+
+          {/* OUTCOME_UNKNOWN State — distinct from success and from refusal */}
+          {viewModel.state === 'OUTCOME_UNKNOWN' && (
+            <div className="rounded-xl border border-amber-800/70 bg-amber-950/30 p-6 space-y-4 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-900/50 text-amber-300 text-2xl font-bold border border-amber-700">
+                ?
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-amber-200">Import Outcome Unknown</h3>
+                <p className="text-xs text-amber-200/90 mt-1">
+                  The commit result could not be established. This is not a refusal and not a success: no rollback is
+                  claimed, no durable commit is claimed, and no automatic retry was attempted.
+                </p>
+              </div>
+              {viewModel.outcomeUnknown && (
+                <div className="rounded-lg border border-amber-800/60 bg-slate-950/80 p-4 text-left text-xs text-amber-100 space-y-1">
+                  <div className="font-semibold text-amber-200">{viewModel.outcomeUnknown.message}</div>
+                  <p>
+                    Portfolio <span className="font-mono">{viewModel.outcomeUnknown.portfolioId}</span> must be
+                    reconciled by an authorised read before any user-initiated retry.
+                  </p>
+                </div>
+              )}
+              {viewModel.errors.length > 0 && (
+                <div className="rounded-lg border border-amber-900/50 bg-slate-950/80 p-4 text-left text-xs font-mono text-amber-300 space-y-1">
+                  {viewModel.errors.map((err, idx) => (
+                    <div key={idx}>{err}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
 
         {/* Modal Footer */}
