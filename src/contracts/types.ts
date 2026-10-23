@@ -62,3 +62,73 @@ export interface ValidationResult {
   errors: ValidationIssue[];
   anomalyCodes: string[];
 }
+
+/* ------------------------------------------------------------------ *
+ * D114 series-aware security identity
+ *
+ * This is market-data identity, not company, tenant, owner or human identity.
+ * Structural ISIN validation identifies a record; it does not certify issuer
+ * truth, eligibility or entitlement.
+ * ------------------------------------------------------------------ */
+
+export const D114_SECURITY_ID_PREFIX = 'ISIN' as const;
+export const D114_ISIN_AUTHORITY = 'NON_AUTHORITATIVE' as const;
+export const D114_ISIN_LENGTH = 12;
+export const D114_ISIN_PATTERN = /^[A-Za-z0-9]{12}$/;
+
+export type D114IsinAuthority = typeof D114_ISIN_AUTHORITY;
+
+export interface D114SecurityIdentity {
+  readonly securityId: string;
+  readonly isin: string;
+  readonly series: string;
+  readonly isinAuthority: D114IsinAuthority;
+}
+
+/** Validates the exact canonical `ISIN:<isin>:<series>` grammar. */
+export function isD114SecurityId(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const segments = value.split(':');
+  if (segments.length !== 3) return false;
+  const [prefix, isin, series] = segments as [string, string, string];
+  return (
+    prefix === D114_SECURITY_ID_PREFIX &&
+    isin.length === D114_ISIN_LENGTH &&
+    D114_ISIN_PATTERN.test(isin) &&
+    series.length > 0 &&
+    series === series.trim()
+  );
+}
+
+/**
+ * Builds an identity only from explicit source values. Missing or malformed
+ * input returns null; no series is inferred and no companyId is consulted.
+ */
+export function buildD114SecurityIdentity(
+  isin: unknown,
+  series: unknown,
+): D114SecurityIdentity | null {
+  if (typeof isin !== 'string' || typeof series !== 'string') return null;
+  const normalizedIsin = isin.trim();
+  const normalizedSeries = series.trim();
+  const securityId = `${D114_SECURITY_ID_PREFIX}:${normalizedIsin}:${normalizedSeries}`;
+  if (!isD114SecurityId(securityId)) return null;
+  return Object.freeze({
+    securityId,
+    isin: normalizedIsin,
+    series: normalizedSeries,
+    isinAuthority: D114_ISIN_AUTHORITY,
+  });
+}
+
+/** Validates both the identity components and their canonical reconstruction. */
+export function isD114SecurityIdentity(value: unknown): value is D114SecurityIdentity {
+  if (typeof value !== 'object' || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  if (candidate.isinAuthority !== D114_ISIN_AUTHORITY) return false;
+  if (typeof candidate.securityId !== 'string' || !isD114SecurityId(candidate.securityId)) {
+    return false;
+  }
+  const rebuilt = buildD114SecurityIdentity(candidate.isin, candidate.series);
+  return rebuilt !== null && rebuilt.securityId === candidate.securityId;
+}

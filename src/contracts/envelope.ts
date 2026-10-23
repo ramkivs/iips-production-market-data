@@ -13,6 +13,8 @@ export interface CanonicalEnvelope<T> {
   domain: DataDomain;
   mode: OperatingMode;
   companyId: string;
+  /** Optional series-aware market-data identity; never derived from companyId. */
+  securityId?: string;
   payload: T;
   provenance: DataProvenanceDTO;
   timestamp: string; // ISO-8601 UTC
@@ -24,6 +26,7 @@ export function createCanonicalEnvelope<T>(params: {
   domain: DataDomain;
   mode: OperatingMode;
   companyId: string;
+  securityId?: string;
   payload: T;
   provenance: DataProvenanceDTO;
   timestamp?: string;
@@ -34,6 +37,7 @@ export function createCanonicalEnvelope<T>(params: {
     domain: params.domain,
     mode: params.mode,
     companyId: params.companyId,
+    ...(params.securityId !== undefined ? { securityId: params.securityId } : {}),
     payload: params.payload,
     provenance: params.provenance,
     timestamp: params.timestamp || new Date().toISOString(),

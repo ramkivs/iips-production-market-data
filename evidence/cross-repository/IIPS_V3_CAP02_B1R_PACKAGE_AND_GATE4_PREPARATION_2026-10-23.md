@@ -150,3 +150,49 @@ E2E:                               not claimed
 - Remote `main` changed exactly the two intended documentation paths: this record (blob `6be7a5e28088b0b27d4f575bc5a47cb1ce3e7e58`) and the CAP-02 tracker (blob `34d7f4d76fc53e6b9ccca05f53f667e7cc320bc5`). Remote blob IDs match the committed local contents.
 - PR checks passed: CI run `39946635397` and executed-test-count check reported 848 executed, 847 passed, 0 failed. Post-merge `main` CI run `39946778715` and check `120391517271` also passed (848 executed, 847 passed, 0 failed).
 - Comparing assessed baseline `24e62c80…` to merge `70323867…`, there are no changes to package manifests, TypeScript/package build config, source, tests or CI. The post-merge main head is a documentation-only successor and still is **not an eligible B-1R pin**.
+
+## 9. B-1R IPD compatibility implementation candidate — 2026-10-23
+
+The exact IPD compatibility act is now rendered at
+`IIPS_V3_CAP02_B1R_IPD_COMPATIBILITY_IMPLEMENTATION_ACT_EFFECTIVE_2026-10-23.md` from verified
+`main@b3428f3f431eceb1dcde60e3b120bbd1888622bb`. It authorizes only the consumer-required additive
+PIT/D114 APIs, offline population, package/declaration wiring and narrow U7 vocabulary. It does not
+promote off-main code or infer authority from the IRR composition act.
+
+### Implemented and locally verified
+
+- Source-derived `ISIN:<isin>:<series>` identity at all four D114 normalization seams; no company/security
+  namespace collapse and no fallback for malformed or missing D114 series.
+- Explicit series-qualified PIT storage, sole-key legacy compatibility, ambiguity refusal, admitted-key
+  enumeration, strict UTC/calendar reads, typed misses, future-vintage exclusion and provenance projection.
+- Three frozen local archives through both real parser eras and the existing loader into one supplied
+  store: 12 D114 records, 12 same-loader replay skips, deterministic EQ/BL isolation and three vintages.
+- Exactly three package subpaths, including the preserved `./portfolio-ui`; 22 UI runtime exports remain.
+  The U7 package surface now includes the three existing receipt/outcome types and the two established
+  Class A refusal codes without changing write behavior.
+
+Final local typecheck/build passed; the guarded suite executed 875 tests with 874 passed, zero failed and
+one skipped. The focused compatibility set passed 99/99. `npm pack --dry-run` and `git diff --check` passed.
+
+### Actual packed-consumer result
+
+The verification script installed the real tarball into an isolated consumer, resolved runtime and strict
+TypeScript declarations, and browser-bundled the installed UI entry with an empty forbidden-closure hit
+list. It also copied the five actual IRR package importers verbatim from read-only commit
+`98cd56a9a568f431ea31d5515e515a1b6cbb91ba`: all five typechecked against the installed pack. The three
+IRR production composition modules and adapter executed, yielding 8 fixture records, 20 combined records,
+correct D114 selection and `INVALID_IDENTITY` for malformed input. The two IRR route test files were not
+executed; no IRR E2E or repin is claimed.
+
+A first verbatim compile caught a generic store/service constructor incompatibility. The read facade's
+payload-only type projection was corrected without changing runtime semantics, and all checks were rerun.
+This is recorded instead of hiding the compatibility failure or weakening the consumer.
+
+### Status and unchanged Gate 4 boundary
+
+This entry is a locally validated **candidate**, not a publication receipt. PR/check/merge/remote facts
+will be appended only after they occur. No Windows target host, real operator store, privileged IPC
+endpoint, production acquisition or operational write was used. Gate 4 remains **NOT QUALIFIED**; U4 is
+unrendered, U5/U6 are ungranted, Gate A′ is unprovisioned, and durability/E2E remain unclaimed.
+`WRITE_NOT_AUTHORIZED`, `SESSION_ONLY` and `durable:false` remain enforced. Detailed evidence and the
+consolidated report are the sibling `IIPS_V3_CAP02_B1R_IPD_COMPATIBILITY_*_2026-10-23.md` records.

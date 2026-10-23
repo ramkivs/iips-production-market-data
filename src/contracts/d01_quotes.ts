@@ -6,6 +6,7 @@
  */
 
 import { ValidationResult, ValidationIssue } from './types.js';
+import type { D114SecurityIdentity } from './types.js';
 
 export interface MarketQuotePayload {
   companyId: string;
@@ -26,6 +27,8 @@ export interface MarketQuotePayload {
   change: number;
   pctChange: number;
   tradeCount?: number;
+  /** Optional series-aware D114 identity; companyId remains distinct. */
+  securityIdentity?: D114SecurityIdentity;
 }
 
 export function validateMarketQuotePayload(payload: MarketQuotePayload): ValidationResult {

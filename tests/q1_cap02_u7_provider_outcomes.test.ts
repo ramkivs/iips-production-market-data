@@ -42,6 +42,12 @@ import {
 } from '../frontend/src/features/portfolio/portfolioStorePort.js';
 import { PortfolioBrokerImportController } from '../frontend/src/features/portfolio/import/ui-broker-import-view-model.js';
 import { SecurityMaster } from '../src/identity/security_master.js';
+import type {
+  PortfolioCommitDisposition as PublicCommitDisposition,
+  PortfolioCommitReceipt as PublicCommitReceipt,
+  PortfolioPortRefusalCode as PublicPortRefusalCode,
+  PortfolioPortSaveOutcomeUnknown as PublicOutcomeUnknown,
+} from '../src/ui/portfolio_ui_package.js';
 
 /* ------------------------------------------------------------------ *
  * Fixtures — a governed master and a fully resolved broker file
@@ -442,5 +448,27 @@ describe('CAP-02 U7 — IPD provider/UI outcome semantics', () => {
       !portSource.includes('public readonly durability: PortfolioDurability = \'DURABLE\''),
       'the only shipped adapter must not declare a durable capability',
     );
+  });
+
+  it('T-U7-8: the public entry carries receipt/unknown types and established Class A refusal codes', () => {
+    const disposition: PublicCommitDisposition = 'SAVED_NEW_BATCH';
+    const receipt: PublicCommitReceipt = {
+      disposition,
+      revision: 1,
+      durability: 'SESSION_ONLY',
+      durable: false,
+    };
+    const unknown: PublicOutcomeUnknown = {
+      ok: 'unknown',
+      code: 'OUTCOME_UNKNOWN',
+      message: 'transport outcome unavailable',
+      portfolioId: 'DEFAULT_PORTFOLIO',
+      reconciliationRequired: true,
+    };
+    const codes: PublicPortRefusalCode[] = ['WRITE_NOT_AUTHORIZED', 'RESOURCE_UNAVAILABLE'];
+
+    assert.strictEqual(receipt.durable, false);
+    assert.strictEqual(unknown.reconciliationRequired, true);
+    assert.deepStrictEqual(codes, ['WRITE_NOT_AUTHORIZED', 'RESOURCE_UNAVAILABLE']);
   });
 });
