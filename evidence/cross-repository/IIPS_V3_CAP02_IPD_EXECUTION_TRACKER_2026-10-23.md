@@ -865,3 +865,116 @@ IRR `docs/integration/IIPS_v3.0_G4_DETERMINATION_RESOLUTION_PACKET_D1_TO_D12_202
 | Gate 4 / QE | **AUTHORIZED — NOT STARTED — 0/11** |
 | U4 / Gate C / Gate 5 / U6 | not rendered / not accepted / not granted / not authorized; `SESSION_ONLY`, `durable:false`, W-1 hard-false unchanged |
 | IRR | strictly read-only; **0** mutations; designated pin `4740ba21…` unchanged |
+
+---
+
+## CAP-02 S1 identity-value determination and binding commit — one-pass execution (2026-10-24)
+
+**Session branch:** `arena/7c8457a2-iips-production-market-data`. **Baseline verified before any
+mutation:** IPD `origin/main` = `6d8f161118a26ddb1486b3c5f1365f391cfaed8c`, root tree
+`6c8cb2afff91a2cb92b52e69ad528f3377e557e3` (PR #79 merge; clean worktree; `git fetch --unshallow`
+because the workspace clone was shallow — ancestry checks were not trusted before that). The predecessor
+S1 decision request is preserved byte-identically at blob `b11cc457…`; this pass answers it and rewrites
+nothing.
+
+### 1. Governance outcome of this pass
+
+| Item | Result |
+|---|---|
+| PA S1 identity-value determination | **RENDERED — EFFECTIVE ON PUBLICATION** — `IIPS-V3-CAP02-S1-IDENTITY-VALUE-DETERMINATION-2026-10-24-01`, `evidence/cross-repository/IIPS_V3_CAP02_S1_IDENTITY_VALUE_DETERMINATION_EFFECTIVE_2026-10-24.md` (ID census before this pass: **`0`** hits) |
+| Discharged reservation | successor act §4 (`IIPS-V3-CAP02-GATE-A-PRIME-SUCCESSOR-PROVISIONING-ACT-2026-10-23-01`), preserved unmodified (blob `528de6ae…`) |
+| `principal_label` | **`ramki-personal-local`** |
+| `tenantId` | **`ipd-personal-local`** |
+| `canonicalOwnerId` | **`ipd-owner-ramki-personal`** |
+| Deterministic ids | `binding_id` = `c5808abaffd072d6401ce63ad86c6ac0`; `membership_id` = `d25dcc5370100b00766efc5166f65cf3` |
+| Value provenance | PA designation for this personal, local, single-user application. **`0`** prior occurrences of any of the three strings in the tree; **not** from an identity provider, **not** derived, **not** copied from IRR (`owner-7f3a91c2` / `irr-domain-4b82d6e1`), the offline marker `IIPS_OFFLINE_BOOTSTRAP`, the spent 2026-10-16 Gate A values, or any fixture |
+
+### 2. Authorization inventory for this pass (dependency-aware)
+
+| # | Task | Authority | Dependency | Class | Result |
+|---|---|---|---|---|---|
+| 1 | Record the S1 identity-value determination | PA explicit selection 2026-10-24; successor act §4 | none | **A** | **DONE** |
+| 2 | Binding commit: constants + T-1…T-9 | successor act §4 last paragraph + §5.1/§5.2 | task 1 | **B** | **DONE** |
+| 3 | Complete T-1…T-9 coverage (T-6, T-7, T-8 in the designated file; T-2 split; T-4 re-expressed) | successor act §5.4 | task 2 | **B** | **DONE** |
+| 4 | Reconcile stale tracker/S1/Gate A′/H-12 status text additively | standing preparation/publication grant | none | **C** | **DONE** (this section) |
+| 5 | Re-measure H-12 R2 staleness after the binding commit | Gate 4 act §8 / amendment; read-only | task 2 | **C** | **DONE** — `3` post-G3 entries + `10` of `1,140` dist files changed; R2 unadoptable as-is, measured |
+| 6 | Integrity sweep: write guard, durability markers, import edges, no operational state | standing grant; W-1 / durability rules | none | **C** | **DONE** — all unchanged |
+| 7 | H-12 regeneration at the final execution commit | successor act §8; Gate 4 act §8 (amended) | needs the *final execution commit*, which is fixed only when the provisioning/QE sequence runs | **D** | **NOT DONE — premature; would create a third stale candidate** |
+| 8 | H-12 adoption | **separate express PA adoption act** | 7 + S2 native-Windows `npm test` + S1 P-1 provisioning | **D** | **NOT DONE — NOT ADOPTED** |
+| 9 | Gate A′ P-1 provisioning execution | successor act §8 (value blocker now discharged) | designated host `desktop-no0nhtp` unreachable; no Node `>=22.13.0 <23` preflight; no P-1 path | **D** | **NOT EXECUTED** |
+| 10 | Gate 4 / QE-1…QE-11 | Gate 4 act (effective) | Gate E §4 ordering: after provisioning; host-gated | **D** | **0/11** |
+| 11 | U4 acceptance / Gate 5 / U6 writes | separate PA acts | executed QE evidence | **D** | **not rendered / not granted / not authorized** |
+| 12 | CAP-03 DR-2 / DR-3 / DR-4r | PA decisions | none available | **D** | **UNRESOLVED — unchanged** |
+| 13 | IRR B-1R repin | IRR's own act | IRR is read-only to this pass; IPD package prerequisite already published | **D** | **not executed — out of IPD scope** |
+
+No task was invented; each row is traceable to an effective instrument or an existing tracker row.
+
+### 3. Implementation scope — exactly the successor act §5.1 file set
+
+| Path | Change |
+|---|---|
+| `src/persistence/gateAPrimeValidation.ts` | `PRINCIPAL_LABEL` / `TENANT_ID` / `CANONICAL_OWNER_ID`: `null` → the three determined values, with a provenance comment; `string \| null` retained so the null guard stays meaningful |
+| `src/persistence/gateAPrimeProvisioning.ts` | identity gate extracted as the pure exported `assertIdentityValuesResolved(supplied, compiled)`, called by `authorizeExecution` with the module constants; check order, refusal codes and the module-private brand unchanged; **no injectable bypass** (single production caller) |
+| `tests/g3_gate_a_prime_successor_provisioning.test.ts` | T-2 split (absent / mismatch), T-4 re-expressed, T-6 / T-7 / T-8 added, `args()` default now the determined triple |
+| `tests/g3_startup_validation.test.ts` | **unchanged** (its static import-edge regression already covers both modules and still passes) |
+
+Not changed: `package.json`, `package-lock.json`, `tsconfig*`, `vite.config.ts`,
+`.github/workflows/**`, any migration, `provisioning.ts`, `binding.ts`, `audit.ts`, `connection.ts`,
+`portfolio_store.ts`, `dispatch.ts`, any other test, any frontend path, any IRR path.
+`BASIS_COMMIT`/`BASIS_TREE`/`GATE_A_PRIME_ACT_ID` stay exactly as the act fixed them (they identify the
+act's selected basis, not the current tip).
+
+### 4. T-1 … T-9 execution results (Linux, Node v22.22.3 — repository evidence, not host qualification)
+
+| # | Result |
+|---|---|
+| T-1 wrong act id | **PASS** — `ACT_ID_MISMATCH`, store never created |
+| T-2 absent / differing values | **PASS** — three absent shapes + whitespace ⇒ `IDENTITY_VALUES_UNRESOLVED`; three differing shapes ⇒ `IDENTITY_VALUE_MISMATCH`; store never created |
+| T-3 environment-supplied value | **PASS** — `GATE_A_PRIME_TENANT_ID` ⇒ `ENVIRONMENT_VALUES_NOT_AUTHORIZED` |
+| T-4 unbound build | **PASS (re-expressed)** — shipped triple is exactly the determined values and all-string (never partially bound); the surviving null guard refuses both all-null and partially-null compiled triples with `IDENTITY_VALUES_UNRESOLVED`; a refusal creates no store. Justification recorded in determination §8 |
+| T-5 pre-existing rows | **PASS** — read-only classification of a provisioned store, SHA-256 unchanged; `ALREADY_PROVISIONED` path retained |
+| T-6 non-win32 / wrong runtime | **PASS** — `linux` and `darwin` ⇒ `PLATFORM_UNSUPPORTED`; Node `24.14.0` on `win32` ⇒ `RUNTIME_UNSUPPORTED`; no store |
+| T-7 forged brand shapes | **PASS** — `undefined`, `{}`, structural `{act:'gate-a-prime'}`, foreign-symbol forgery ⇒ 4/4 `ProvisioningNotAuthorizedError`, rows `0` before and after |
+| T-8 static import edges | **PASS** — no guarded path imports either module; full `src/**` + `frontend/src/**` scan yields `0` importers of `provisioning.js` / `gateAPrimeProvisioning.js` |
+| T-9 read-only validation | **PASS** — empty store ⇒ `FAIL` with zero bindings/memberships and identical bytes; valid fixture pair ⇒ `PASS`, identical bytes |
+
+Focused suite: **12 tests / 12 pass / 0 fail** (was 7).
+
+### 5. Full validation of this pass
+
+`npm ci` exit `0` · `npx tsc --noEmit` exit `0` · `npm run build` exit `0` · `npm test` exit `0` —
+**897 tests, 896 pass, 0 fail, 1 skipped** (`[test-guard] OK`; baseline before the change was
+892/891/0/1) · `npm run test:package-consumer` `"result": "PASS"`, shasum
+`cc2aa70186b8fd7bc7255452ac8d8b00d094f53e`, `SESSION_ONLY`, `durable:false` · focused regressions
+`g3_startup_validation` 20, `g3_binding_resolution` 13, `g3_write_gate` 9,
+`q1_ownership_source_readiness` 4, `g3_caller_authority` 103 — all pass.
+
+Refusal probes on the built entrypoint (all exit `1`, probe directory **empty** afterwards):
+`PLATFORM_UNSUPPORTED` with the correct values on Linux · `ACT_ID_MISMATCH` · `IDENTITY_VALUE_MISMATCH` ·
+`ENVIRONMENT_VALUES_NOT_AUTHORIZED` · `--mode=validate` on a non-existent path. No `*.sqlite`/`*.db`
+exists anywhere in the tree.
+
+### 6. Measured effect on the H-12 R2 candidate (it remains NOT ADOPTED)
+
+`IIPS_V3_CAP02_G4_H12_MANIFEST_V3_RECONCILED_CANDIDATE_2026-10-23.json` blob `9382d4b0…` was verified
+at the pre-publication baseline as `7/7` post-G3 entries, `10/10` anchors and `32/32` mandatory IPD
+entries present and matching. After the binding commit: **`3`** of the `7` `post_g3_cap02_qualified_surface_entries`
+(`gateAPrimeProvisioning.ts`, `gateAPrimeValidation.ts`, `tests/g3_gate_a_prime_successor_provisioning.test.ts`)
+and **`10`** of the `1,140` `runtime_dist_set` files differ (`1,130/1,140` byte-identical, `0` missing).
+`R2` was already a pre-amendment candidate; it is now also content-stale. **It cannot be adopted as-is,
+by measurement.** Regeneration is deferred to the final execution commit (inventory row 7, class D).
+
+### 7. Gate state after this pass
+
+| Item | State |
+|---|---|
+| S1 identity values | **DETERMINED — `ramki-personal-local` / `ipd-personal-local` / `ipd-owner-ramki-personal`**; effective on publication of this PR |
+| Gate A′ provisioning | **value blocker discharged · NOT EXECUTED** — still gated by successor act §8 (designated `win32` host, Node `>=22.13.0 <23`, non-existent P-1 store); `win32` restriction empirically enforced on Linux |
+| H-12 | **NOT ADOPTED** — `R1`/`R2` preserved candidates; `R2` now measurably content-stale |
+| Gate 4 / QE | **AUTHORIZED — NOT STARTED — 0/11** |
+| U4 / Gate C / Gate 5 / U6 | not rendered / not accepted / not granted / not authorized |
+| W-1 guard | hard-false: `["W-1(3): Gate 4 qualification not accepted","W-1(4): Gate 5 admission not accepted"]` |
+| `SESSION_ONLY` / `durable:false` | unchanged in the shipped UI port and in the package-consumer report |
+| Schema / migrations | unchanged (`001 f594a182…`, `002 932af8e6…`, `003 32b125bf…`, `004 6bad5a50…`) |
+| IRR | not contacted; read-only; **0** mutations |
+| CAP-03 DR-2 / DR-3 / DR-4r | **UNRESOLVED — PA decisions required** (unchanged) |
