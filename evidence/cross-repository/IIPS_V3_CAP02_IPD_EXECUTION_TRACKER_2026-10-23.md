@@ -819,3 +819,49 @@ hard-false W-1(3)/(4); host probe → name not resolvable. Full census in decisi
 | U4 / Gate C / Gate 5 / U6 | not rendered / not accepted / not granted / not authorized; `SESSION_ONLY`, `durable:false`, W-1 hard-false unchanged |
 | IRR | strictly read-only; **0** mutations |
 | Smallest next authorized action | **PA:** render the S1 three-value determination specified in decision record §6. **Preparation (standing grant):** keep entrypoint inert; once rendered, prepare the binding commit and H-12 regeneration as normal PR/CI/read-back candidates |
+
+---
+
+## CAP-02 PR #78 publication and remote read-back receipt — S1 identity-authority / H-12 readiness decision-request (2026-10-24)
+
+### 1. Pull request and commits (verified against the remote)
+
+| Item | Value |
+|---|---|
+| PR | [#78](https://github.com/ramkivs/iips-production-market-data/pull/78) — `CAP-02: S1 identity-authority and H-12 readiness decision-request (2026-10-24)`, base `main`, head `arena/3d7e0b42-iips-production-market-data` |
+| Head commit | `d3a0fcf212213d31089589812b8dd5a95bce6e68`, tree `da624ea3a53211f8660e4fb4ebbe90afb92b7270` — 2 files changed, 615 insertions, 0 deletions outside the tracker append |
+| Merge commit | **`4b84dc8178ad46f8ac0a6d51d5ca1db6412d6309`** (MERGED `2026-10-24T05:18:50Z`), parents `5e4e54db…` + `d3a0fcf…`; post-merge `main` tree `da624ea3a53211f8660e4fb4ebbe90afb92b7270` (clean merge; content tree identical to the reviewed head) |
+| Files | new `IIPS_V3_CAP02_S1_IDENTITY_VALUE_AUTHORITY_H12_READINESS_DECISION_REQUEST_2026-10-24.md`; append-only edit to this tracker (78 lines, zero deletions) |
+
+### 2. CI results
+
+| Run | Ref | Checks | Result |
+|---|---|---|---|
+| `40065610153` | PR head `d3a0fcf…` (pre-merge) | `typecheck · build · test` (1 m 4 s); `executed test count` | **both SUCCESS** |
+| `40065760217` | `main` push `4b84dc81…` (post-merge) | `typecheck · build · test`; `executed test count` | **both SUCCESS** |
+
+The `executed test count` github-script gate (fail on zero tests or non-zero failures) passed; the local guarded suite on the identical tree was independently measured at **892 tests / 891 pass / 0 fail / 1 skipped / 123 suites**, `[test-guard] OK`, package-consumer PASS (shasum `cc2aa701…`, `durable:false`).
+
+### 3. Independent remote read-back (GitHub Contents API, not the local object store)
+
+| File | Git blob SHA-1 (remote == local) | Bytes | Raw SHA-256 (remote-decoded == local file) |
+|---|---|---|---|
+| `IIPS_V3_CAP02_S1_IDENTITY_VALUE_AUTHORITY_H12_READINESS_DECISION_REQUEST_2026-10-24.md` | `b11cc457805a7947bd2d90c9d8185b225c5722ff` | 52,212 | `f3d58c28f1b6f72eb195f3674ef813f05099fd430b55ad0cc1f2c818337ae9b3` |
+| `IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` | `e55ab50f78f6c80ad1e4298c29d2a538681f6f1f` | 84,527 | `27cdc898b09ff030d7ae7a331a8d9f4839b580e2710c53d79dc34bea81b802c9` |
+
+Both paths resolve at `refs/heads/main@4b84dc81…`; blob IDs also match `git rev-parse origin/main:<path>` after a fresh `git fetch`. Every other identity cited inside the new record was re-derived live this pass and matches (12 Gate A′ designated blobs; manifest/validation/act/amendment blobs; IRR `a576e5af…`/`296dd5e3…`).
+
+### 4. Cross-check against the IRR D-7 packet (read-only)
+
+IRR `docs/integration/IIPS_v3.0_G4_DETERMINATION_RESOLUTION_PACKET_D1_TO_D12_2026-10-22.md` (blob `7d3b143e…`, recommendations-only) independently corroborates the new record: Q5/D-5 require Gate A′ evidence + Node `>=22.13.0 <23` + full H-12 validation and **express PA adoption** before any host preflight/QE; Q7/D-7 require manifest regeneration at the exact final execution commit and forbid silent re-pin; §7.2 confirms the Node 22 major requirement; §7.5 states Gate A′ is an external hard prerequisite needing its own provisioning record; DR-V4 records "zero identity-resolution matches in persistence/ipc". No identity value is named in that packet. No IRR object was modified.
+
+### 5. Gate state after PR #78 (unchanged where authority is withheld)
+
+| Item | State |
+|---|---|
+| S1 `principal_label` / `tenantId` / `canonicalOwnerId` | **UNRESOLVED — AUTHORITY REQUIRED**; decision-ready request published, no determination rendered, no value selected |
+| Gate A′ provisioning | **NOT AUTHORIZED** — inert entrypoint (`IDENTITY_VALUES_UNRESOLVED` reproduced), no store/row/audit event |
+| H-12 | **NOT ADOPTED** — R1/R2 preserved candidates; amended Alternative A membership byte-verified |
+| Gate 4 / QE | **AUTHORIZED — NOT STARTED — 0/11** |
+| U4 / Gate C / Gate 5 / U6 | not rendered / not accepted / not granted / not authorized; `SESSION_ONLY`, `durable:false`, W-1 hard-false unchanged |
+| IRR | strictly read-only; **0** mutations; designated pin `4740ba21…` unchanged |
