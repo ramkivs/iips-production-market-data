@@ -1237,3 +1237,57 @@ anchor, or claim that no further external documentation movement can occur. No I
 this pass.
 
 *End of the PR #84 receipt and final observed IRR snapshot.*
+
+---
+
+## IIPS v3.0 one-pass re-verification and reconciliation (2026-10-24, session branch `arena/e5901db8-iips-production-market-data`)
+
+**Status:** re-verification, one bounded documentation artifact, and tracker reconciliation only. No
+implementation, freeze, H-12 adoption, provisioning, host action, write, fence change, PA decision, Gate
+4/5 progression, or IRR mutation is made or claimed by this pass.
+
+### 1. Step 0 result
+
+IPD `main` / `origin/main` / session branch HEAD were re-verified equal to the reference coordinate
+`1b8eea4de3cb60f60550e0172d8fe9b4cc629f84` (tree `78d40cddac3e0c4580f1c0a8c4da79661bd05d71`) — **zero
+drift**. Main CI (`40073000043`) is green. PR #42 is unchanged (`DRAFT`/`DIRTY`/`CONFLICTING`, head
+`afa43090…`). Package pins, G24 reference-only non-ancestry, and all four fence/contract anchors were
+independently re-verified unchanged. The full guarded suite, typecheck, build, and the package-consumer
+check were re-executed on the unmodified tree and reproduced figures identical to the existing DQ/host
+readiness pass (`897`/`896`/`0`/`1`, `1,140` `dist` files, shasum `cc2aa70186b8fd7bc7255452ac8d8b00d094f53e`,
+`SESSION_ONLY`/`durable:false`). The designated host `desktop-no0nhtp` remains unreachable. Full detail is
+in `IIPS_V3_CAP03_IRR_POST_BASELINE_MOVEMENT_RECEIPT_2_2026-10-24.md` §1.
+
+IRR `main` (read-only) was found to have advanced again, from `a5e72dc4…` (the `-01` receipt's snapshot)
+to **`991d8c1b…`**, through five further external, documentation-only PRs (#236–#240), one of which added
+an IRR-authored counterpart document explicitly labelled `PROPOSED - NOT EFFECTIVE`. No DQ act, fence
+change, pin change, or IRR open PR resulted. This is recorded as receipt `-02` (same path's base name,
+suffixed `_2`), extending the `-01` receipt without editing it.
+
+### 2. Classification of every item named for this pass
+
+| Item | Initial status (this pass's Step 0) | Classification | Disposition this pass |
+|---|---|---|---|
+| **G-04 — H-12 adoption** | `H-12` remains **NOT ADOPTED**; `R2` is content-stale (3 post-G3 entries; 10/1,140 `dist` files) | **PARK** | No action. Adoption requires the DQ-1…DQ-7 PA act (amended §8 contract + freeze) and a final-execution-commit regeneration that passes `AC-H12-01…AC-H12-10`. Neither exists. Not performed. |
+| **I-04 — H-12 regeneration** | Regeneration template (host readiness packet §P-1/V-A2/digest procedure) already published PR #82; no new regeneration performed | **PARK** (dry-run template already complete; nothing further to prepare without a designated host and DQ-4/DQ-5 answers) | Re-verified the existing template is still current against unchanged pins/fences; no new artifact needed; regeneration itself not performed (requires host + freeze). |
+| **Q-03 — Windows S2 / PR #42** | PR #42 unchanged: `OPEN`/`DRAFT`/`DIRTY`/`CONFLICTING`, head `afa43090…`, not an ancestor of `main` | **PREPARE NOW (re-verification only)** | Re-verified PR #42 state via live GitHub API this pass (§1 above); confirmed DQ-6's A/B/C/D disposition options remain the only recorded path and none is selected. No merge, rebase, or canonical Windows S2 claim made. |
+| **A-03 — W-1 write authorization boundaries** | `evaluatePortSaveGuard()` hard-false; `WRITE_NOT_AUTHORIZED` enforced pre-mutation; `SESSION_ONLY`/`durable:false` | **PREPARE NOW (re-verification only)** | Re-ran the guarded write-path tests (`g3_write_gate`, `g3_durability_vocabulary`, `q1_broker_import_durability`, full suite) on the unmodified tree; reproduced identical hard-false result. No guard, flag, or boundary changed. |
+| **Contract implementation / provisioning / host QE / conformance (I-03, Q-01, Q-02, Q-05 referents)** | Gate 4 `AUTHORIZED — NOT STARTED`; QE `0/11`; no store/endpoint exists | **PARK** | Inspected; no independent action is available beyond what PR #76–#85 already published (Gate A′ successor act, S1 determination, host-readiness packet). The single next step is host-side P-1 execution by the Program Authority/operator, which this Linux sandbox cannot perform and this pass does not simulate. |
+| **Acceptance / Gate 5 (G-06, A-01 referents)** | Not rendered / not granted | **PARK** | No evidence or authority act exists to record. Not touched. |
+| **DQ-1…DQ-7 PA decision packet** | `PROPOSED — NOT EFFECTIVE` (PR #82) | **PARK** | Re-verified still proposed, both in IPD and in IRR's own counterpart document. No PA act rendered by, or on behalf of, this pass. |
+| **IRR post-baseline movement (cross-repository, read-only)** | IRR `main` advanced past the `-01` receipt's snapshot | **EXECUTE NOW** (documentation receipt, no IRR mutation, no authority exercised) | Published `IIPS_V3_CAP03_IRR_POST_BASELINE_MOVEMENT_RECEIPT_2_2026-10-24.md` (receipt `-02`) recording the new IRR tip, the five accounting PRs, and re-confirmed fence/pin/PR-42/W-1 integrity. |
+
+### 3. What this pass does and does not establish
+
+**Establishes:** IPD `main` has not drifted from the reference coordinate; PR #42 remains unmerged and
+unmerge-able as-is; the W-1 guard and `SESSION_ONLY`/`durable:false` posture are re-verified by direct test
+execution, not assumption; IRR's further documentation-only movement is accounted for without inspecting,
+reproducing, or reverting any IRR content; every item this pass could legitimately classify EXECUTE NOW
+(a dated, read-only cross-repository receipt) has been published and is the only new committed artifact.
+
+**Does not establish:** any PA decision on DQ-1…DQ-7; any H-12 adoption or regeneration; any PR #42
+disposition, merge, or canonical Windows S2 validation; any host contact, QE result, acceptance, or Gate 5
+admission; any change to W-1, `WRITE_NOT_AUTHORIZED`, `SESSION_ONLY`, or `durable:false`; any IRR file,
+branch, PR, issue, or comment change.
+
+*End of the IIPS v3.0 one-pass re-verification and reconciliation entry.*
