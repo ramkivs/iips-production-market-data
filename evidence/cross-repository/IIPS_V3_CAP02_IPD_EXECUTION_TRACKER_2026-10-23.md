@@ -2,7 +2,7 @@
 
 **Repository:** `ramkivs/iips-production-market-data`
 
-**Session branch:** `arena/f960b85e-iips-production-market-data`
+**Session branch:** `arena/8347c24e-iips-production-market-data` (this pass; earlier passes in this file ran from `arena/f960b85e-iips-production-market-data` and `arena/7b9e7a9d-iips-production-market-data`, whose receipts are preserved below)
 **Status semantics:** implementation progress only; this tracker does not accept results or promote gates.
 
 | Workstream | Current evidence | Status | Next gate / blocker |
@@ -12,7 +12,7 @@
 | U2 Part B provenance/schema | Effective separate schema act `IIPS_V3_CAP02_U2_PROVENANCE_SCHEMA_ACT_EFFECTIVE_2026-10-23.md`; additive migration `004_portfolio_contribution_provenance` merged in PR #52; all six fields asserted on insert and after restart; pre-existing rows keep six SQL `NULL`s; migration 001 blob `f594a182…` unchanged; ledger idempotent. | **Implemented and verified** | Retain NULL for historical facts not recorded; Gate 4/5 unchanged. |
 | U2 write-port wrapper | Supplemental exact-scope authority published in PR #51; merged as `7145a2cea0b2d7d9d8a401e57db3f9ce20a8f0a7`; pre-merge checks and post-merge CI run `39934639130` succeeded. Wrapper merged in PR #52; `assertWritable()` still refuses before any transaction or callback. | Authority and implementation merged; no write enabled | Existing W-1 guard still refuses first. |
 | U2 evidence gaps closed this pass | (a) governed-source rejection: a resolver built over a non-governed master now has an executed fail-closed test; (b) T-U2-5 upgraded to race a revocation against the **actual** `withBrokerImportTransaction` path, plus absent / duplicate-ACTIVE / mismatched-membership binding shapes and the caller-transaction precondition. | **Closed** | None; no defect or regression found in the merged implementation. |
-| U3 / Gate 4 qualification | **PA act rendered 2026-10-23 — effective on merge (receipt below records the merge)**: `IIPS-V3-G4-TARGET-HOST-QUALIFICATION-AUTHORITY-ACT-2026-10-23-01` — `IIPS_V3_CAP02_GATE4_TARGET_HOST_QUALIFICATION_ACT_EFFECTIVE_2026-10-23.md` (blob `66b56fd1…`, preserved unchanged). Q1–Q12 determined; pins re-derived live (IPD `5fc74085…`/tree `7226ef00…`; IRR consumer `4740ba21…`/tree `23c5ca4a…`, with Gate 3 acceptance identity `d355d904…` retained separately); Limb A boundary reconciled with `G3-AMEND-01` §6.4(1) and merged `--test-reporter=tap` **ratified prospectively**; D-4 three-tier mechanism adopted; bounded Limb A implementation published and remote-verified by PR #68 (`a52b47b0…`). H-12 `R1` stopped at the §8 `33`-vs-`32` conflict (`PR #69`). **Membership conflict now fully investigated and reconciled in `IIPS_V3_CAP02_G4_H12_MEMBERSHIP_RECONCILIATION_DECISION_PROPOSED_2026-10-23.md` (`IIPS-V3-CAP02-G4-H12-MEMBERSHIP-RECONCILIATION-PROPOSAL-2026-10-23-01`, `PROPOSED — NOT EFFECTIVE`) + companion pre-validated candidate `G4-H12-MANIFEST-v3-CANDIDATE-2026-10-23-R2` (`IIPS_V3_CAP02_G4_H12_MANIFEST_V3_RECONCILED_CANDIDATE_2026-10-23.json`) + validation record (`IIPS_V3_CAP02_G4_H12_MANIFEST_V3_RECONCILED_VALIDATION_2026-10-23.md`)**: proves §8 double-counted `entries[23]` (`tests/g4_run_tests_summary_parsing.test.ts`, already inside `v2` `entries[0..31]` & `D-7` `32`), identifies secondary stale `ci.yml` parenthetical (`aeee464f…` → `4614ee0e…`), inventories all `7` post-`1cceacff` CAP-02 IPD files, and stages decision-ready PA options (`Alt A: 32` [recommended], `Alt B: 39`, `Alt C: 33` via helper reclassification). **H-12 remains `NOT ADOPTED`.** | **`AUTHORIZED — NOT STARTED`** | Execution blocked pending: (1) express PA corrective determination on `Q-H12-1..Q-H12-4` (`Gate 4 Act` §§13, 15.3, 16), (2) S1 Gate A′ identity-value act + commit & final H-12 re-pin, (3) S2 native-Windows canonical `npm test` + S1 P-1 provisioning on `desktop-no0nhtp`, (4) separate express PA H-12 adoption act → S3 host preflight. **0/11 QE executed.** |
+| U3 / Gate 4 qualification | **PA act rendered 2026-10-23 — effective on merge (receipt below records the merge)**: `IIPS-V3-G4-TARGET-HOST-QUALIFICATION-AUTHORITY-ACT-2026-10-23-01` — `IIPS_V3_CAP02_GATE4_TARGET_HOST_QUALIFICATION_ACT_EFFECTIVE_2026-10-23.md` (blob `66b56fd1…`, preserved unchanged). Q1–Q12 determined; pins re-derived live (IPD `5fc74085…`/tree `7226ef00…`; IRR consumer `4740ba21…`/tree `23c5ca4a…`, with Gate 3 acceptance identity `d355d904…` retained separately); Limb A boundary reconciled with `G3-AMEND-01` §6.4(1) and merged `--test-reporter=tap` **ratified prospectively**; D-4 three-tier mechanism adopted; bounded Limb A implementation published and remote-verified by PR #68 (`a52b47b0…`). H-12 `R1` stopped at the §8 `33`-vs-`32` conflict (`PR #69`); the conflict was then fully investigated and reconciled in `IIPS_V3_CAP02_G4_H12_MEMBERSHIP_RECONCILIATION_DECISION_PROPOSED_2026-10-23.md` (`IIPS-V3-CAP02-G4-H12-MEMBERSHIP-RECONCILIATION-PROPOSAL-2026-10-23-01`, preserved as `PROPOSED — NOT EFFECTIVE`), which proved §8 double-counted `entries[23]` (`tests/g4_run_tests_summary_parsing.test.ts`, already inside `v2` `entries[0..31]` and `D-7`'s `32`), identified the secondary stale `ci.yml` parenthetical (`aeee464f…` → `4614ee0e…`), and inventoried all `7` post-`1cceacff` CAP-02 IPD files. **The Program Authority has now rendered the separate corrective amendment on Alternative A** — `IIPS-V3-CAP02-G4-AMEND-01-H12-MEMBERSHIP-2026-10-23` (`IIPS_V3_CAP02_G4_AMEND_01_H12_MEMBERSHIP_EFFECTIVE_2026-10-24.md`, blob `21a0f9eb6cd7b1bbc4849d6dfd26c6c8025d60b8`, SHA-256 `ad20b02bb1c4d27417e0b3b43f98ac1257369cfd26339ca37cda8d6f6579c045`, `43,608` B, PR #76, merge `00cad5c3c18552422f816d1b9a486d1057c78e43`) — **EFFECTIVE**: §8 now reads **32 mandatory IPD paths** (`entries[0..31]`, already containing the parser test at `entries[23]`) **+ 1 conditional helper** (`scripts/test-summary-parser.mjs`, never a mandatory core path) **+ 24 IRR = 56 core entries**, with the **7** post-G3 CAP-02 paths kept separate in `post_g3_cap02_qualified_surface_entries`, the `1,140` `dist/**` verification requirement preserved, and `ci.yml` corrected to `4614ee0e…`. Companion candidate `G4-H12-MANIFEST-v3-CANDIDATE-2026-10-23-R2` (`IIPS_V3_CAP02_G4_H12_MANIFEST_V3_RECONCILED_CANDIDATE_2026-10-23.json`) and its validation record are unchanged and remain **`NOT ADOPTED`**; Alternatives B and C were **not** selected. **H-12 remains `NOT ADOPTED`.** | **`AUTHORIZED — NOT STARTED`** | Execution blocked pending: (1) ✔ **satisfied** — express PA corrective determination on `Q-H12-1..Q-H12-4` rendered by `IIPS-V3-CAP02-G4-AMEND-01-H12-MEMBERSHIP-2026-10-23` (PR #76); (2) S1 Gate A′ identity-value act + commit & final H-12 re-pin, (3) S2 native-Windows canonical `npm test` + S1 P-1 provisioning on `desktop-no0nhtp`, (4) separate express PA H-12 adoption act → S3 host preflight. **0/11 QE executed.** |
 | U4 result acceptance | Not rendered; no acceptance act exists in either repository. | **Not rendered** | Requires executed QE-1…QE-11 on the designated host at a fixed commit. Green CI, a merged PR and local fixtures are not acceptance. |
 | U5 Gate 5 admission | Not granted. | **Not granted** | Depends on effective U4 acceptance and its own act; not inferable from U2 implementation or package publication. |
 | U6 operational write authorization | W-1(3) and W-1(4) unmet; `evaluatePortSaveGuard()` returns hard-false with both reasons; `WRITE_NOT_AUTHORIZED` enforced before mutation; shipped UI port declares `SESSION_ONLY` / `durable:false`. Re-verified by executed tests this pass (9 + 6 tests). | **Not authorized** | Effective U6 decision satisfying W-1. No code change can supply it; provisioning does not supply it. |
@@ -84,6 +84,8 @@ Durable adapter capability marker: durable:false preserved; durable:true unreach
 Durability display: receipt-driven only (U7) — a static capability declaration is never commit evidence
 Gate 3 scope: unchanged except the exact effective U2 Part A/Part B/addendum and U7 provider acts
 Gate 4 qualification / result acceptance: not claimed
+Gate 4 §8 H-12 membership: amended — 32 mandatory IPD paths + 1 conditional helper + 24 IRR = 56 core entries
+  (IIPS-V3-CAP02-G4-AMEND-01-H12-MEMBERSHIP-2026-10-23; effective on publication, PR #76) — no gate moved
 Gate 5 admission: not granted
 Operational writes: denied
 Binding provisioning: not performed, not authorized
@@ -655,3 +657,87 @@ from fetched `origin/main` and the GitHub Contents API after merge.
 | `evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` *(at PR #74 merge)* | `05894952f2bc22bb30afa9155035ac2769841227` | 63389 | 625 | `734dfc15602995bd33048e8d6862cb168e71968b21045f5b3e2ecdd572db0ac7` |
 
 **Handover & gate state:** Proposed corrective record `IIPS-V3-CAP02-G4-H12-MEMBERSHIP-RECONCILIATION-PROPOSAL-2026-10-23-01` remains **`PROPOSED — NOT EFFECTIVE`** until **Ramki — Program Authority** renders an express determination on `Q-H12-1..Q-H12-4`. `H-12` remains **`NOT ADOPTED`**; Gate 4 remains **`AUTHORIZED — NOT STARTED`**; Gate A′ provisioning remains **`NOT AUTHORIZED`**; `IRR` remains strictly read-only at `4740ba21ea6103f1a7ebc9768269ae7795920698`.
+
+## CAP-02 PR #76 publication and final remote-main verification receipt — Gate 4 `H-12` membership amendment (Alternative A) (2026-10-24)
+
+PR #76 published the formal amendment act `IIPS-V3-CAP02-G4-AMEND-01-H12-MEMBERSHIP-2026-10-23`, rendered by
+**Ramki — Program Authority** on the express selection of **Alternative A — Narrow Arithmetic Amendment** (Alternatives B
+and C expressly not selected). It is the separate express act that Gate 4 Act §§13, 15.3 and 16 require, and it corrects
+§8 of that effective act while preserving the act itself byte-identically. Every value below was read back from the
+fetched remote after merge and, independently, from the GitHub Contents and blob APIs.
+
+### 1. Publication coordinates
+
+| Item | Independently verified value |
+|---|---|
+| PR #76 | `MERGED` at `2026-10-24T04:33:26Z`; https://github.com/ramkivs/iips-production-market-data/pull/76 |
+| Starting baseline (pre-merge `origin/main`) | `09d547f7ced040748ba27f438b01cae822119618`, tree `7af592b1ad7042caf9c4cb0ffbf9d56f2ccf4dfb` — unchanged from the reported baseline; `git rev-list --left-right --count main...origin/main` = `0 0` |
+| PR head | `0dd13f80155d98f95125310dfa0d09919bccbbc9` |
+| Merge commit / root tree | `00cad5c3c18552422f816d1b9a486d1057c78e43` / `9ff07e488043af38b82bedebc57ddc2bd37a3d69` |
+| Merge parents | first `09d547f7ced040748ba27f438b01cae822119618`; second `0dd13f80155d98f95125310dfa0d09919bccbbc9` |
+| PR #76 CI | `typecheck · build · test`: `SUCCESS`, run `40062687234`, job `120779371873`; `executed test count`: `SUCCESS`, check `120779616139` (`892` executed, `891` passed, `0` failed) |
+| Post-merge `main` push CI | run `40062811790` (`push`, head `00cad5c3…`) **SUCCESS**; job `120779746962` and `executed test count` check `120779931218` both **SUCCESS** (`892` / `891` / `0`) |
+| Changed paths in the merge | exactly **one** added path — the amendment file; **`0`** non-`evidence/` paths (`git diff --name-only 09d547f7… 00cad5c3… -- . ':(exclude)evidence/'` = `0`) |
+
+### 2. Amendment artifact identity (remote read-back at `main@00cad5c3…`)
+
+| Item | Value |
+|---|---|
+| Path | `evidence/cross-repository/IIPS_V3_CAP02_G4_AMEND_01_H12_MEMBERSHIP_EFFECTIVE_2026-10-24.md` |
+| Act ID | `IIPS-V3-CAP02-G4-AMEND-01-H12-MEMBERSHIP-2026-10-23` (identifier reserved in the proposal; census before this pass: `0` assignments in either repository) |
+| Rendered / decision date | `2026-10-24` (UTC) — actual date; the `-2026-10-23` suffix is the reserved identifier string, not a backdated decision |
+| Git blob SHA-1 OID (`== ` GitHub Contents API `sha`) | `21a0f9eb6cd7b1bbc4849d6dfd26c6c8025d60b8` |
+| Raw SHA-256 | `ad20b02bb1c4d27417e0b3b43f98ac1257369cfd26339ca37cda8d6f6579c045` — reproduced from the API-decoded blob bytes, not only from the worktree |
+| Byte length / lines | `43,608` B / `367` |
+| Status | **`RENDERED — EFFECTIVE`** on this publication; §8 read as amended per its §3.3 |
+| Receipt locus | this section (`§13.1` of the amended act); the act body is not edited after merge |
+
+### 3. Preservation read-back (byte-identical before and after PR #76)
+
+| Artifact | Git blob SHA-1 | Raw SHA-256 | Bytes |
+|---|---|---|---:|
+| `IIPS_V3_CAP02_GATE4_TARGET_HOST_QUALIFICATION_ACT_EFFECTIVE_2026-10-23.md` (amended act) | `66b56fd1584890525a7250aadd7da449def621e5` | `c8c1378622657a320f14f34c008bb27fde2acaf57acc9a73a3489ea6be57c7b6` | 34,316 |
+| `IIPS_V3_CAP02_G4_H12_MEMBERSHIP_RECONCILIATION_DECISION_PROPOSED_2026-10-23.md` (proposal) | `336276fecdc1df651c716c2e5ec1e43852c2e014` | `e69fa6e9915dca94259876d949687b5945ee78e7d67feeec28b0fd45c8d5eba4` | 71,164 |
+| `IIPS_V3_CAP02_G4_H12_MANIFEST_V3_CANDIDATE_2026-10-23.json` (`R1`) | `a169e1f7d8721860942807bad1b325ccc57d2404` | `344d1bd19c35231cc9d243c58f7e1ce22ccb7bfeda541966a71c1355a17d0594` | 482,205 |
+| `IIPS_V3_CAP02_G4_H12_MANIFEST_V3_CANDIDATE_VALIDATION_2026-10-23.md` (`R1` validation) | `64d04e78750878f2bd35e06ef30d4d2ba25c2674` | `ff9d97f9c7047dd2fafdd0b6c8d1256bc722240768403153bee00d72f73f5ed1` | 3,918 |
+| `IIPS_V3_CAP02_G4_H12_MANIFEST_V3_RECONCILED_CANDIDATE_2026-10-23.json` (`R2`) | `9382d4b0bf6d085616f781221daa5b6a4d03b2bc` | `3afce627b92b05f6e0b27cc06719d9849dcd72946927f07e768ed631f8c471f2` | 498,153 |
+| `IIPS_V3_CAP02_G4_H12_MANIFEST_V3_RECONCILED_VALIDATION_2026-10-23.md` (`R2` validation) | `456d08e8c8933250c1feb98986bbd32d548226bc` | `aba6fc73b9a881ceb79f1a10a91b0c9f49b75fd644ba7f4be1dd547a130c831a` | 5,733 |
+| `IIPS_V3_CAP02_GATE_A_PRIME_SUCCESSOR_PROVISIONING_ACT_EFFECTIVE_2026-10-23.md` | `528de6aeddbc8e5f3191be8792f3937d77de4037` | `df8e44f704814e2321b5134206b04f25097830bdc5dd53c4d907d1256e4c788d` | 29,856 |
+| `.github/workflows/ci.yml` (corrected anchor) | `4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5` | `a2dba24f47aaead2b6b5c235ae9f33dc8a98641a5bcd1d5080bb3e202d724f86` | 4,054 |
+
+### 4. Validation executed for the amendment (summary of the act's §9 `VM-1…VM-16`)
+
+| Check | Result |
+|---|---|
+| Baseline identity and advance | `origin/main` = `09d547f7…` / tree `7af592b1…`; **no advance** since the reported baseline; post-merge `main` = `00cad5c3…` / tree `9ff07e48…` |
+| Content drift since the final Limb A merge `a52b47b0…` | **`0`** non-`evidence/` paths; the Gate 4 Act's selected basis `5fc74085…` advanced `18` commits, all of them the authorised Limb A and Gate A′ implementations and their evidence records |
+| `R2` manifest integrity, IPD side | **`56/56`** entries byte-exact (blob SHA-1, raw SHA-256, byte length, LF/CRLF/bare-CR); `0` duplicates, `0` `ABSENT` |
+| `R2` manifest integrity, IRR side | **`27/27`** match the designated pin `4740ba21…`; `0` changed at the live IRR tip |
+| The `32` IPD core paths, the helper and the `7` post-G3 paths at the current tip | all identical to the recorded blobs |
+| `D-7` §4.7 arithmetic | `27` (which already includes the parser test) `+ 5` = **`32`**; present at `1cceacff…`: **`31` of `32`**, the only absent path being the parser test; union cardinality **`32`**, never `33` |
+| Fresh `npm ci` → `npx tsc --noEmit` → `npm run build` at `09d547f7…` | exit `0` / `0` / `0`; **`1,140`** `dist/**` files; `1,140/1,140` byte-identical against `runtime_dist_set` (`0` missing, `0` mismatched, `0` extra) |
+| `npm test` / `npm run test:package-consumer` | `892` tests, `891` pass, `0` fail, `1` skipped, `[test-guard] OK`; package consumer `PASS`, shasum `cc2aa70186b8fd7bc7255452ac8d8b00d094f53e`, `durable: false` |
+| Identifier census | Act ID previously unassigned: present only as a *reserved* string in the proposal and in `R2`; **`0`** hits in `ramkivs/iips-review-recovered` |
+| Documentation-only diff | **`1`** added file; `0` source, test, script, package, build-config or CI-workflow changes |
+
+### 5. Read-only `IRR` state
+
+| Item | Value |
+|---|---|
+| Designated consumer pin (unchanged) | `main@4740ba21ea6103f1a7ebc9768269ae7795920698`, tree `23c5ca4ae1bfd481bcfc911c70b9e7dc090e1162` |
+| Live `IRR` `main` observed | `4d14780f0db66a891f552926ee2badaf56acfa2d`, tree `742ac4d4c8817bab9aa2cbeaac138d9a72c2934e` |
+| Drift from the pin | `4` commits, **`1` file** (`IIPS_V3_E2E_MASTER_TRACKER_AND_IRR_IPD_DECISION_REGISTER_2026-10-13.md`) — **documentation only**; **`0`** of the `24` consumer and `3` criteria paths changed, byte-identical at the live tip |
+| Effect of the amendment on the pin | **none** — the amendment changes no IRR identity and authorises no re-pin |
+| IRR writes by this pass | **`0`** — no branch, commit, file, issue, comment or PR created or modified |
+
+### 6. Gate state after publication
+
+| Item | State |
+|---|---|
+| `IIPS-V3-G4-TARGET-HOST-QUALIFICATION-AUTHORITY-ACT-2026-10-23-01` | **In force, unmodified** (blob `66b56fd1…`); §8 now read as amended (`32` mandatory IPD + `1` conditional helper + `24` IRR = `56` core entries; `ci.yml` `4614ee0e…`) |
+| `IIPS-V3-CAP02-G4-AMEND-01-H12-MEMBERSHIP-2026-10-23` | **RENDERED — EFFECTIVE** (PR #76) |
+| `H-12` manifest | **`NOT ADOPTED`** — `R1` (`a169e1f7…`) and `R2` (`9382d4b0…`) both remain candidates |
+| Gate 4 | **`AUTHORIZED — NOT STARTED`** — `0` of `11` QE items executed |
+| Gate A′ provisioning | **`NOT AUTHORIZED`** — `principal_label` / `tenantId` / `canonicalOwnerId` remain unresolved and unselected |
+| U4 / Gate C / Gate 5 / U6 | **not rendered / not accepted / not granted / not authorized** — no operational write, `SESSION_ONLY` / `durable:false` unchanged |
+| Remaining prerequisites for `H-12` adoption | S1 Gate A′ identity-value act + binding commit; final execution-commit regeneration at that commit; S2 native-Windows canonical `npm test` on `desktop-no0nhtp` under Node `>=22.13.0 <23`; S1 P-1 provisioning with V-A2 acceptance evidence; direct remote read-back; and a **separate express PA adoption act**. None is claimed as complete |
