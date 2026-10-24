@@ -1135,3 +1135,45 @@ no store/endpoint/final pin/adopted H-12 exists, so Track C did not start. QE re
 actions are then the exact-manifest implementations (DQ-1/2/3), followed by DQ-4 freeze/pin designation
 and DQ-5 host/store confirmation. No host action, write, fence lift, adoption, acceptance or admission is
 authorized by this append.
+
+---
+
+## CAP-03 PR #82 publication and remote read-back receipt — DQ packet and host readiness (2026-10-24)
+
+### 1. Pull request and merge
+
+| Item | Value |
+|---|---|
+| PR | [#82](https://github.com/ramkivs/iips-production-market-data/pull/82) — `CAP-03: DQ-1..DQ-7 PA decision packet and host readiness blocker (PROPOSED)` |
+| Head commit / tree | `a4fc8c0630cbf75d50c9f4fef5450dfb64c29036` / `07b51a74e61230ad22a73a3fce4bbd209eca40a8` |
+| Merge commit / tree | **`793e0f96f612a0bf76325163110d5f87b6fed88d`** / `07b51a74e61230ad22a73a3fce4bbd209eca40a8` (`2026-10-24T06:58:15Z`) — merge tree identical to the reviewed head tree |
+| Prior IPD `main` | `1864f908b26322071a866cc3a3dab074faa536fd` / `4a28a3b819e00fe999079727d3cdf8a1d8fb5155` |
+| Changed paths | **exactly 3**, all documentation: the two CAP-03 records added; tracker append `+79/−0`. No source, test, script, package, CI, migration, manifest or pin change |
+| PR-head CI | run `40072184337` — `typecheck · build · test` **SUCCESS**; `executed test count` (check `120808053075`) **SUCCESS — 897 executed / 896 passed / 0 failed** |
+| Post-merge CI | run `40072288312` — **SUCCESS**; `executed test count` (check `120808369255`) **SUCCESS — 897 / 896 / 0** at `793e0f96…` |
+
+### 2. Remote read-back at authoritative `main@793e0f96…`
+
+| Path | Git blob SHA-1 | Bytes | Raw SHA-256 |
+|---|---|---:|---|
+| `IIPS_V3_CAP03_PA_DECISION_PACKET_DQ1_DQ7_2026-10-24.md` | `f96492c1124c0e1d30d7474575ec76d58a0c7c3d` | 46,359 | `0dda89e8e38cdc95dcf01a7db4ae77e0dcaf4a5d495c83f77ebbd071f9c095c8` |
+| `IIPS_V3_CAP03_HOST_READINESS_PACKET_2026-10-24.md` | `9d9c5970f66b1c901a2b5d28c02e8c9562078cf2` | 20,923 | `1ea2637f29a0c42497a0ef2232514b977147131afebfa6f557295b4706a90360` |
+| `IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` (as published by PR #82) | `877f88845631b021620f49ee3b97025fdace7275` | 110,577 | `cc66a3637eaad8b84dedcfe7acc6a558e2f3247a9d7f1fa7c8c2ab9b7c205ec9` |
+
+Each blob resolved at `refs/heads/main` through the GitHub Contents API and matched the local object
+byte-for-byte. This receipt append necessarily produces a later tracker blob; that later blob is a
+separate publication fact and is not claimed here.
+
+### 3. What this receipt establishes and does not establish
+
+**Establishes:** the DQ-1…DQ-7 packet and the host readiness/blocker packet are published as
+**PROPOSED — NOT EFFECTIVE** / **NOT READY — NOT EXECUTED** on the authoritative ref; A1 was verified and
+skipped; Step 0 checks passed; the documentation-only tree executed 897 tests with zero failures.
+
+**Does not establish:** any PA decision or option selection; any contract implementation; any final pin
+or H-12 adoption; any provisioning, store, binding, membership or audit row; any host contact, preflight,
+canonical host test or QE result (`0/11`); any U4/Gate C acceptance; any Gate 5 admission; any write,
+fence lift, `SESSION_ONLY`/`durable:false` change, production eligibility, production `durable:true` or
+`TD-7b`; any Reports/D115/F6 action; any IRR mutation.
+
+*End of the PR #82 receipt.*
