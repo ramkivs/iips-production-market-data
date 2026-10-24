@@ -1177,3 +1177,26 @@ fence lift, `SESSION_ONLY`/`durable:false` change, production eligibility, produ
 `TD-7b`; any Reports/D115/F6 action; any IRR mutation.
 
 *End of the PR #82 receipt.*
+
+---
+
+## CAP-03 — IRR post-baseline movement receipt (2026-10-24)
+
+**Record:** `IIPS-V3-CAP03-IRR-POST-BASELINE-MOVEMENT-RECEIPT-2026-10-24-01`
+(`evidence/cross-repository/IIPS_V3_CAP03_IRR_POST_BASELINE_MOVEMENT_RECEIPT_2026-10-24.md`). Dated
+cross-repository receipt only; **no Program Authority decision and no IRR mutation**.
+
+| Fact | Value |
+|---|---|
+| IRR baseline at this pass's Step 0 | `4d14780f0db66a891f552926ee2badaf56acfa2d` / tree `742ac4d4…` |
+| IRR `main` after the pass | **`d6d25197b6f3c16e7e1adb12ca2522aa947992ba` / tree `600301b3807135eb14ea27fa9c4b4ef0e3520742`** |
+| Movement | external PRs #233 (merge `9b62979…`, `2026-10-24T06:53:31Z`) and #234 (merge `d6d2519…`, `2026-10-24T06:58:38Z`); old main is an ancestor; one changed path — the master tracker |
+| Current IRR tracker identity | blob `8205bc168693c217e9e0e0f1cb1b9b822fb7829e`, 1,766,761 B, raw SHA-256 `4944acc6a060d79947fe8754455f433a43da846f9d52d816f63b1e3f2b357eec` |
+| New IRR main CI | run `40072312965` **success** |
+| IRR PR #204 | **CLOSED externally** `2026-10-24T06:48:22Z`, not merged; head `dee114ae…` not an ancestor of `main`; IRR open PRs now `[]` |
+| Preserved at new tip | fence/contract blobs `51704c12…`, `cb8db45d…`, `e6b57bb8…`, `98147054…`; package manifests `6274537a…`/`05ade78c…` — all unchanged |
+| DQ acts | **none** appeared; the new §16.95 content records DR-2/DR-3/DR-4r unresolved, P04 host-gated, H-12 NOT ADOPTED, Gate 4 AUTHORIZED—NOT STARTED, QE 0/11 |
+
+The published DQ packet remains valid as a preparation record; its IRR coordinate is historical as of
+Step 0 and is not rewritten. This movement does not move any DQ answer, designate a final pin, change a
+fence/pin or alter the host blocker. No IRR file, branch, PR, issue or comment was modified by this pass.
