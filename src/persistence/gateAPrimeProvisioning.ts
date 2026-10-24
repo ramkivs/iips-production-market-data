@@ -3,8 +3,10 @@
  *
  * This is the only act-bound execution path. The authorization brand below is
  * module-private and is minted only after every preflight condition succeeds.
- * The shipped state has null identity constants, so the execute mode is
- * intentionally inert until a separate Program Authority value-selection act.
+ * The three identity constants are populated by the Program Authority
+ * determination `IIPS-V3-CAP02-S1-IDENTITY-VALUE-DETERMINATION-2026-10-24-01`;
+ * execution still requires the designated Windows host, the required Node
+ * major and a non-existent P-1 store, so no Linux/CI path can provision.
  *
  * No IPC, startup, frontend or composition module imports this file.
  */
@@ -149,37 +151,76 @@ function assertCommonArguments(args: GateAPrimeArguments, options: GateAPrimeExe
   }
 }
 
-/**
- * All execute-mode checks that must happen before a database connection is
- * opened. The current null constants intentionally make this stop at identity
- * resolution, before platform or path side effects.
- */
-function authorizeExecution(args: GateAPrimeArguments, options: GateAPrimeExecutionOptions): GateAPrimeExecutionAuthorization {
-  assertCommonArguments(args, options);
+export interface GateAPrimeCompiledIdentityValues {
+  readonly principalLabel: string | null;
+  readonly tenantId: string | null;
+  readonly canonicalOwnerId: string | null;
+}
 
-  if (!nonEmpty(args.principalLabel) || !nonEmpty(args.tenantId) || !nonEmpty(args.canonicalOwnerId)) {
+/**
+ * Pure, side-effect-free identity gate (act §5.3 items 2 and 3).
+ *
+ * It is exported so that the null-constant refusal (T-4) remains executable
+ * after the Program Authority determination populated the shipped constants.
+ * There is no injectable bypass: `authorizeExecution` — the only production
+ * caller — always passes this module's compiled constants, so a caller cannot
+ * substitute a different triple to weaken the act binding.
+ */
+export function assertIdentityValuesResolved(
+  supplied: {
+    readonly principalLabel?: string;
+    readonly tenantId?: string;
+    readonly canonicalOwnerId?: string;
+  },
+  compiled: GateAPrimeCompiledIdentityValues,
+): { principalLabel: string; tenantId: string; canonicalOwnerId: string } {
+  if (!nonEmpty(supplied.principalLabel) || !nonEmpty(supplied.tenantId) || !nonEmpty(supplied.canonicalOwnerId)) {
     throwRefusal(
       'IDENTITY_VALUES_UNRESOLVED',
       'principal_label, tenantId and canonicalOwnerId must be supplied verbatim by a separate PA determination',
     );
   }
-  if (
-    PRINCIPAL_LABEL === null ||
-    TENANT_ID === null ||
-    CANONICAL_OWNER_ID === null
-  ) {
+  if (compiled.principalLabel === null || compiled.tenantId === null || compiled.canonicalOwnerId === null) {
     throwRefusal(
       'IDENTITY_VALUES_UNRESOLVED',
       'the compiled identity constants are null; provisioning execution is not authorized',
     );
   }
   if (
-    args.principalLabel !== PRINCIPAL_LABEL ||
-    args.tenantId !== TENANT_ID ||
-    args.canonicalOwnerId !== CANONICAL_OWNER_ID
+    supplied.principalLabel !== compiled.principalLabel ||
+    supplied.tenantId !== compiled.tenantId ||
+    supplied.canonicalOwnerId !== compiled.canonicalOwnerId
   ) {
     throwRefusal('IDENTITY_VALUE_MISMATCH', 'supplied identity values differ from the act-bound constants');
   }
+  return {
+    principalLabel: supplied.principalLabel,
+    tenantId: supplied.tenantId,
+    canonicalOwnerId: supplied.canonicalOwnerId,
+  };
+}
+
+/**
+ * All execute-mode checks that must happen before a database connection is
+ * opened. Identity resolution runs first: while any compiled constant is null
+ * (a partially-bound or unbound build) execution stops there, before platform
+ * or path side effects.
+ */
+function authorizeExecution(args: GateAPrimeArguments, options: GateAPrimeExecutionOptions): GateAPrimeExecutionAuthorization {
+  assertCommonArguments(args, options);
+
+  assertIdentityValuesResolved(
+    {
+      principalLabel: args.principalLabel,
+      tenantId: args.tenantId,
+      canonicalOwnerId: args.canonicalOwnerId,
+    },
+    {
+      principalLabel: PRINCIPAL_LABEL,
+      tenantId: TENANT_ID,
+      canonicalOwnerId: CANONICAL_OWNER_ID,
+    },
+  );
 
   const platform = options.platform ?? process.platform;
   if (platform !== 'win32') {

@@ -25,10 +25,31 @@ export const GATE_A_PRIME_ACT_ID =
 export const BASIS_COMMIT = '5fc74085ade980846ff4a07b36415b6d49446486';
 export const BASIS_TREE = '7226ef0033b3a7049169d8fcf9bcbc9908e2590b';
 
-/** The values are intentionally inert until a separate PA value-selection act. */
-export const PRINCIPAL_LABEL: string | null = null;
-export const TENANT_ID: string | null = null;
-export const CANONICAL_OWNER_ID: string | null = null;
+/**
+ * The three identity values for the single local principal of this personal,
+ * local, single-user IPD application.
+ *
+ * Source of authority: Program Authority determination
+ * `IIPS-V3-CAP02-S1-IDENTITY-VALUE-DETERMINATION-2026-10-24-01`
+ * (`evidence/cross-repository/IIPS_V3_CAP02_S1_IDENTITY_VALUE_DETERMINATION_EFFECTIVE_2026-10-24.md`),
+ * rendered under §4 of the effective Gate A′ successor provisioning act
+ * `IIPS-V3-CAP02-GATE-A-PRIME-SUCCESSOR-PROVISIONING-ACT-2026-10-23-01`.
+ *
+ * The values are PA-designated IPD-owned strings for this local environment.
+ * They are not derived from a host, Windows account, SID, e-mail, machine id,
+ * credential, portfolio identifier, fixture or any other identity domain, and
+ * none is copied from IRR (`owner-7f3a91c2` / `irr-domain-4b82d6e1`), from the
+ * offline provenance marker `IIPS_OFFLINE_BOOTSTRAP`, or from the spent
+ * 2026-10-16 Gate A execution. Changing any of them requires a new Program
+ * Authority determination and a new commit.
+ *
+ * The `string | null` type is deliberate: the null guard in the entrypoint
+ * stays meaningful, so a partially-populated triple still fails closed with
+ * `IDENTITY_VALUES_UNRESOLVED` before any database connection is opened.
+ */
+export const PRINCIPAL_LABEL: string | null = 'ramki-personal-local';
+export const TENANT_ID: string | null = 'ipd-personal-local';
+export const CANONICAL_OWNER_ID: string | null = 'ipd-owner-ramki-personal';
 
 /** Migration blob identities fixed by the successor act's §2.1. */
 export const DESIGNATED_MIGRATION_BLOBS = Object.freeze({
