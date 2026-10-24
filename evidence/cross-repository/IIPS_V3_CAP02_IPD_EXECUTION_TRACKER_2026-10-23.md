@@ -978,3 +978,81 @@ by measurement.** Regeneration is deferred to the final execution commit (invent
 | Schema / migrations | unchanged (`001 f594a182…`, `002 932af8e6…`, `003 32b125bf…`, `004 6bad5a50…`) |
 | IRR | not contacted; read-only; **0** mutations |
 | CAP-03 DR-2 / DR-3 / DR-4r | **UNRESOLVED — PA decisions required** (unchanged) |
+
+---
+
+## CAP-02 PR #80 publication and remote read-back receipt — S1 identity-value determination and binding commit (2026-10-24)
+
+### 1. Pull request and merge (verified against the remote)
+
+| Item | Value |
+|---|---|
+| PR | [#80](https://github.com/ramkivs/iips-production-market-data/pull/80) — `CAP-02: S1 identity-value determination and binding commit (2026-10-24)`, base `main`, head `arena/7c8457a2-iips-production-market-data` |
+| Head commit | `f9ec0c5fd4c689360264b4f7a8b85fdf823d4374`, tree `fcf7cb85ad7f53c20d5cfd8721bfecf7fc13a129` |
+| Merge commit | **`d8568b0ebe2bec2a7a2f38ed758e1f877f861704`** (`2026-10-24T06:15:53Z`), tree `fcf7cb85ad7f53c20d5cfd8721bfecf7fc13a129` — identical to the reviewed head tree (clean merge) |
+| Ancestry | `f9ec0c5f…` verified an ancestor of `origin/main` after merge |
+| Prior `main` | `6d8f161118a26ddb1486b3c5f1365f391cfaed8c` / tree `6c8cb2afff91a2cb92b52e69ad528f3377e557e3` |
+| Changed paths | **exactly `5`**, listed below — no other path |
+
+```text
+added     evidence/cross-repository/IIPS_V3_CAP02_S1_IDENTITY_VALUE_DETERMINATION_EFFECTIVE_2026-10-24.md   410 +  0 -
+modified  evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md                        113 +  0 -
+modified  src/persistence/gateAPrimeProvisioning.ts                                                            58 + 17 -
+modified  src/persistence/gateAPrimeValidation.ts                                                              25 +  4 -
+modified  tests/g3_gate_a_prime_successor_provisioning.test.ts                                                 201 + 12 -
+```
+
+The tracker edit is **append-only** (`113` insertions, `0` deletions). No earlier evidence record was
+edited, and the predecessor S1 decision request is byte-identical at blob `b11cc457…`.
+
+### 2. CI results
+
+| Run | Ref | Checks | Result |
+|---|---|---|---|
+| `40069388650` | PR head `f9ec0c5f…` (pre-merge) | `typecheck · build · test`; `executed test count` (`120799588077`) | **both SUCCESS** |
+| `40069514698` | `main` push `d8568b0e…` (post-merge) | `typecheck · build · test`; `executed test count` (`120799946074`) | **both SUCCESS** |
+
+The post-merge `executed test count` check reports: **897 tests executed — 896 passed, 0 failed** at
+head `d8568b0ebe2bec2a7a2f38ed758e1f877f861704`. The `typecheck · build · test` job's steps all
+succeeded, including `Install (locked)`, `Typecheck`, `Build`, `Test (guarded — zero tests is a
+failure)` and `Public package consumer (pack + IRR importers)`.
+
+### 3. Independent remote read-back (GitHub Contents API at `refs/heads/main`, not the local object store)
+
+| Path | Git blob SHA-1 (remote) | Bytes | Raw SHA-256 (remote-decoded) | remote == local |
+|---|---|---|---|---|
+| `IIPS_V3_CAP02_S1_IDENTITY_VALUE_DETERMINATION_EFFECTIVE_2026-10-24.md` | `b7746b5ed955abcf689ec57ca4a0748c0241ed09` | 35,936 | `554741c70e3a24a794be297f463707894c4ce7e0e2a4f5aad0c97dd6b3c5f12c` | **true** |
+| `src/persistence/gateAPrimeValidation.ts` | `df5d48a583c9aaed51af90a90225c15c408fbd33` | 15,688 | `c307549a38033f9b2ce03973bc0a5e0eacbf7e9132695ea1fc7ae09fa9bbe3ce` | **true** |
+| `src/persistence/gateAPrimeProvisioning.ts` | `2cbce83f6572d211630ce0620dae49fa02fe4622` | 15,727 | `0bd6d134405dbcab27f5639c3e22a856c778daa9fd414d2cb0e26e5b03919aa3` | **true** |
+| `tests/g3_gate_a_prime_successor_provisioning.test.ts` | `f2d0ab37ad4fbdae6db69a4316affc0a33704bf3` | 16,160 | `d45140f2727651da3d69f0655ad5a8fd8621ffaa45c52f0633920d34e7a74873` | **true** |
+| `IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` | `027f39eb9fa2d504b9ba3dfc84f08f1d4a265557` | 98,966 | `c32db72ddb95caaacf1402f12e8dcc0be1dfe19a027852d9812be89b6d9b559d` | **true** |
+
+Every path resolved at `refs/heads/main@d8568b0e…`. The determination is therefore **EFFECTIVE** on the
+terms of its §13. Remote content contains the three values verbatim; the compiled constants at `main`
+are exactly `ramki-personal-local` / `ipd-personal-local` / `ipd-owner-ramki-personal`.
+
+*(The tracker blob in this table is the one published by PR #80. This receipt append necessarily
+produces a later tracker blob; the receipt for that append, if any, is a separate publication fact and
+is not claimed here.)*
+
+### 4. What this receipt does and does not establish
+
+**Establishes:** the S1 identity-value determination and the binding commit are published and remotely
+verified on the authoritative ref; the three values are effective for this personal, local,
+single-user application; T-1…T-9 pass on the merged tree; CI is green on the merge commit.
+
+**Does not establish:** any provisioning execution or store/row/binding/membership/audit event (none
+exists); any host preflight, native-Windows QE or Gate 4 qualification (0/11); any H-12 adoption or
+manifest promotion (`R2` is now measurably content-stale — `3` post-G3 entries and `10` of `1,140`
+`dist` files); any U4 acceptance, Gate 5 admission or U6 write authorization; any change to W-1,
+`SESSION_ONLY` or `durable:false`; any IRR mutation; any CAP-03 DR-2/DR-3/DR-4r resolution.
+
+### 5. Smallest next authorized action
+
+**Program Authority / operator of `desktop-no0nhtp`:** run the successor act §8 P-1 sequence on the
+designated Windows host (Node `>=22.13.0 <23`, flag-free `node:sqlite`, non-existent absolute store
+outside every Git worktree), publishing the V-A2-1…V-A2-8 receipt. That single execution is the next
+dependent step; it cannot be performed from a Linux workspace, and the `win32` restriction is enforced
+by the entrypoint itself (empirically: `PLATFORM_UNSUPPORTED` on Linux with the correct values).
+Everything downstream — H-12 regeneration at the final execution commit, native-Windows `npm test`,
+QE-1…QE-11, U4/U5/U6 — remains blocked behind it.
