@@ -1291,3 +1291,58 @@ admission; any change to W-1, `WRITE_NOT_AUTHORIZED`, `SESSION_ONLY`, or `durabl
 branch, PR, issue, or comment change.
 
 *End of the IIPS v3.0 one-pass re-verification and reconciliation entry.*
+## CAP-03 — IPD PR #42 Program Authority disposition: **CLOSED WITH RECORD** (2026-10-24)
+
+**Status:** disposition rendered and published; **closure act executed and receipted in the addendum below**.
+No merge, no rebase, no cherry-pick, no content transfer, no gate movement, no pin change, no admission.
+
+### 1. Decision
+
+The Program Authority's approved disposition of 2026-10-24 — recorded in
+`IIPS-V3-IPD-PR42-CLOSE-WITH-RECORD-PA-DISPOSITION-2026-10-24-01`
+(`evidence/cross-repository/IIPS_V3_CAP03_PR42_CLOSE_WITH_RECORD_PA_DISPOSITION_2026-10-24.md`) — is:
+
+1. **PR #42 is closed as a historical candidate, without merging.** Head `afa430900c3e928773bd35a3718bf3d6c94ccff5`
+   and tree `f0b27857574e651f42a848deb137bc050f0f2b74` are preserved on the record as candidate identity.
+2. **No admission path is opened.** No byte of PR #42 is admitted; closing grants nothing.
+3. **No rebase, cherry-pick, force-push or content transfer** is authorized; the branch is not a basis for any work.
+4. **Conditional future trigger, not activated:** a bounded port **re-derived on current `main`** (limited to
+   `src/ipc/endpoint.ts`, `src/ipc/entrypoint.ts` and the three corresponding tests) may be considered **only under a
+   separate PA act** if Gate 4 host execution identifies a Windows pipe-collision defect. Not authorized, not scheduled.
+5. **Preserved:** Gate 3 acceptance `IIPS-V3-G3-ACCEPTANCE-2026-10-22-01` and the accepted implementation; PR #41/#34
+   history; Gate A′/4/5, Gate C; `SESSION_ONLY`/`durable:false`; `WRITE_NOT_AUTHORIZED`; all `503` fences;
+   provisioning (not executed); H-12 (NOT ADOPTED); DR-2/DR-3/DR-4r (UNRESOLVED); DQ-1…DQ-7 (PROPOSED — NOT EFFECTIVE).
+6. **DQ-6b untouched** — both package pins unchanged; the dual-pin question stays sequenced at the DQ-4 freeze.
+
+### 2. Identity and disambiguation (recorded because it has caused confusion)
+
+| | IPD PR #42 (this record) | IRR historical PR #42 (untouched) |
+|---|---|---|
+| Repo | `ramkivs/iips-production-market-data` | `ramkivs/iips-review-recovered` |
+| Subject | Gate 3 IPC candidate, 22 files `+5,137/−0` | 2026-10-06 Reports-domain paths |
+| Disposition | **closed with record (this act)** | `R4-B` (CV-09) + H-4/H-16 errata `9303ae5c…` (IRR PR #154 `c6240fa4…`) — CLOSED documentarily; **not re-opened** |
+
+### 3. Step 0 — state re-verified before preparation (read-only)
+
+| Item | Value |
+|---|---|
+| IPD `main` / `origin/main` | `5a34fa880c441cc21c1dee653784308beb2265d3`, tree `5e239c7338c2016ce12fc7d3ae9254cbdbfadd60` — instruction baseline, **zero drift** |
+| PR #42 | `OPEN`, draft, `CONFLICTING`/`DIRTY`, head `afa43090…`, tree `f0b27857…`, `22` files `+5,137/−0`, 2 commits, created `2026-10-22T10:43:47Z`, last update `2026-10-22T10:53:06Z` |
+| Distance | **2 ahead / 89 behind** `main@5a34fa88…` (full history); merge-base `c0e1b56…` |
+| Content vs current `main` | **12 of 22 blobs byte-identical**; **10 differ** (6 source + 4 test); `main` carries 4 persistence files #42 lacks |
+| Unique residual substance | `main`'s `src/ipc/endpoint.ts` `e565aa5b…` has `EndpointCollisionError` but **no** `EACCES`/`EPERM`/`EBUSY` mapping; #42's `fe49c783…` does — observable only on Windows |
+| Evidence class | **Zero Gate 3 contribution**; native Windows **NOT RUN**; PR #41's Windows result **non-transferable** (`Q3-A`) |
+
+### 4. What this disposition does and does not establish
+
+**Establishes:** that PR #42 was a superseded candidate whose content is now 12/22 identical to `main`, whose remaining
+differences are overwhelmingly `main`-side advancement, and whose only unique substance is Windows-specific collision-code
+hardening that has never been validated on Windows; and that the candidate surface stops being misstated.
+
+**Does not establish:** any admission, any gate or acceptance movement, any qualification, any Windows result, any pin
+change, any answer to DQ-1…DQ-7 (including DQ-6b), or any authority in the IRR locus.
+
+### 5. Closure act and receipt
+
+*Appended additively below as the closure receipt after execution, with the verified post-state (`state`, `merged`,
+`closedAt`, `mergedAt`, head/tree immutability) and remote read-back.*
