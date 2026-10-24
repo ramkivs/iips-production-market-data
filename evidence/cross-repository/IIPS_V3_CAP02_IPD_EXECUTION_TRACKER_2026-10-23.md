@@ -1056,3 +1056,82 @@ dependent step; it cannot be performed from a Linux workspace, and the `win32` r
 by the entrypoint itself (empirically: `PLATFORM_UNSUPPORTED` on Linux with the correct values).
 Everything downstream — H-12 regeneration at the final execution commit, native-Windows `npm test`,
 QE-1…QE-11, U4/U5/U6 — remains blocked behind it.
+
+---
+
+## CAP-03 dependency-aware one-pass — A1 verification, DQ-1…DQ-7 packet and host readiness (2026-10-24)
+
+**Session branch:** `arena/e3526bec-iips-production-market-data`. **Status:** preparation only. This
+append records no Program Authority decision, no implementation, no freeze, no H-12 adoption, no
+provisioning, no QE result, no acceptance or admission, and no write authorization. Full text of the two
+records is in their own immutable artifacts; this entry is the tracker pointer.
+
+### 1. Step 0 — re-verified before mutation
+
+| Item | Measured value |
+|---|---|
+| IPD `main` / tree | `1864f908b26322071a866cc3a3dab074faa536fd` / `4a28a3b819e00fe999079727d3cdf8a1d8fb5155`; full history; clean worktree |
+| IPD main CI | run `40069710927` **success** (`typecheck · build · test`, executed-test-count check) |
+| IRR `main` / tree (read-only) | `4d14780f0db66a891f552926ee2badaf56acfa2d` / `742ac4d4c8817bab9aa2cbeaac138d9a72c2934e`; full-history bare clone |
+| IRR main CI | run `39999128417` **success** |
+| Open PRs | IPD draft #42 head `afa43090…` (`DIRTY/CONFLICTING`); IRR #204 head `dee114ae…` (`MERGEABLE/CLEAN`). Both heads non-ancestors of their `main`; neither used as a base or merged |
+| Fence / contract anchors | all four blobs byte-identical at IRR `main`: `51704c12…`, `cb8db45d…`, `e6b57bb8…`, `98147054…`; no mismatch, no edit |
+| Package pins | primary `2d9130e7…` (tree `46586991…`) guarded; alias `70b24f02…` (tree `cc0f0117…`) unguarded; **both** full-history ancestors of IPD `main`; no re-pin |
+| G24 | reference-only ancestry re-checked on full history: `6828155e…`, `c1b955b4…`, `2ded0e98…` are **not** ancestors of IPD `main`; IRR `470cc698…`, `5eba01b6…` are **not** ancestors of IRR `main`; no merge/cherry-pick/port/promotion |
+
+**A1 result:** the PR #80 substantive record and PR #81 receipt already exist on `main` with green
+exact-head and post-merge CI and remote read-back of the S1 determination (blob `b7746b5e…`, 35,936 B) and
+the tracker (blob `e131d428…`, 104,742 B). No receipt was missing; nothing was published for A1.
+
+### 2. Authoritative label reconciliation applied
+
+- **P01/P02/P03 are discharged** by the effective successor act, the S1 determination/binding commit and
+  PR #80/#81. They are **not** re-opened as pending PA decisions.
+- **P04 moves from G to Q.** The remaining condition is host execution of the single P-1, not another
+  identity-value decision.
+- **P08/O-02:** Gate 4 is **`AUTHORIZED — NOT STARTED`**, not unauthorized. Remaining: DQ-4 sequencing,
+  DQ-5 host/store confirmation, final pins and H-12 adoption.
+- **P07/DR-4:** the IPD schema half is closed by effective migration `004`; only the CAP-03 consumer half
+  (DR-4r) is open.
+- **CV-52 is Gate 5 portfolio admission, not a Reports item.** Reports remains CV-21/CV-51.
+- **O-07 splits F6 from TD-7b.** `F6_INVENTORY_AUTHORIZED` is a discrete question; **TD-7b is production
+  and outside this non-production pass**.
+- Rows 8, 14, 16, 21, 23, 29, 33, 40, 41, 44, 51 remain closed/deferred/OOS; row 34 remains correct
+  `503` behaviour. No row was moved by this pass.
+
+### 3. Records published as PROPOSED / readiness only
+
+| Record ID | Path | Status |
+|---|---|---|
+| `IIPS-V3-CAP03-PA-DECISION-PACKET-DQ1-DQ7-2026-10-24-01` | `evidence/cross-repository/IIPS_V3_CAP03_PA_DECISION_PACKET_DQ1_DQ7_2026-10-24.md` | **PROPOSED — NOT EFFECTIVE**; options, evidence, recommendations, consequences and proposed manifests for DQ-1…DQ-7 |
+| `IIPS-V3-CAP03-HOST-READINESS-PACKET-2026-10-24-01` | `evidence/cross-repository/IIPS_V3_CAP03_HOST_READINESS_PACKET_2026-10-24.md` | **NOT READY — NOT EXECUTED**; preflight checklist, P-1 procedure template, V-A2 template, QE tier-labelled matrix at undesignated pins, digest procedure, blocker list |
+
+Both record IDs and filenames returned **0** prior hits in IPD and IRR before allocation.
+
+### 4. Validation executed on this documentation-only tree
+
+| Check | Command | Result |
+|---|---|---|
+| Install | `npm ci --no-audit --no-fund` | exit `0` |
+| Typecheck | `npx tsc --noEmit` | exit `0` |
+| Build | `npm run build` | exit `0`; **1,140** files under `dist/**` |
+| Full guarded suite | `npm test` | exit `0` — **897 tests / 896 pass / 0 fail / 1 skipped**, `[test-guard] OK`; 68 source suite files |
+| Package consumer | `npm run test:package-consumer` | `"result": "PASS"`, pack 121 files / 239,032 B, shasum `cc2aa70186b8fd7bc7255452ac8d8b00d094f53e`, `"durability":"SESSION_ONLY"`, `"durable":false` |
+| Focused Gate A′ | `g3_gate_a_prime_successor_provisioning` | 12/12 pass |
+| Focused startup / binding / write / durability / caller | `g3_*` | 20/20 · 13/13 · 9/9 · 6/6 · 103/103 |
+| Focused contract / ownership / broker durability / Limb A | `q1_*`, `g4_*` | 3/3 · 4/4 · 18/18 · 10/10 |
+| Store census | `find` for `*.sqlite` / `*.db` outside `node_modules` | **0** files |
+| Documentation scope | `git diff --check`; no source/test/package/CI/migration change | clean; documentation only |
+
+These are **repository implementation checks**, not host qualification, QE, provisioning or acceptance.
+
+### 5. Exact stop and next condition
+
+No rendered DQ act exists, so Track B implementation/freeze and the PR #42/Reports/D115 dispositions did
+not start. The designated host is unreachable (`ping desktop-no0nhtp` → `Name or service not known`) and
+no store/endpoint/final pin/adopted H-12 exists, so Track C did not start. QE remains **0/11**.
+
+**Next condition:** the Program Authority renders the separable DQ-1…DQ-7 answers. The first dependent
+actions are then the exact-manifest implementations (DQ-1/2/3), followed by DQ-4 freeze/pin designation
+and DQ-5 host/store confirmation. No host action, write, fence lift, adoption, acceptance or admission is
+authorized by this append.
