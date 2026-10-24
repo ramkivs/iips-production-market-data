@@ -741,3 +741,81 @@ fetched remote after merge and, independently, from the GitHub Contents and blob
 | Gate A′ provisioning | **`NOT AUTHORIZED`** — `principal_label` / `tenantId` / `canonicalOwnerId` remain unresolved and unselected |
 | U4 / Gate C / Gate 5 / U6 | **not rendered / not accepted / not granted / not authorized** — no operational write, `SESSION_ONLY` / `durable:false` unchanged |
 | Remaining prerequisites for `H-12` adoption | S1 Gate A′ identity-value act + binding commit; final execution-commit regeneration at that commit; S2 native-Windows canonical `npm test` on `desktop-no0nhtp` under Node `>=22.13.0 <23`; S1 P-1 provisioning with V-A2 acceptance evidence; direct remote read-back; and a **separate express PA adoption act**. None is claimed as complete |
+
+---
+
+## CAP-02 S1 identity-value authority, Gate A′ readiness and H-12 adoption-readiness — decision-request one-pass (2026-10-24)
+
+**Session branch:** `arena/3d7e0b42-iips-production-market-data`. **Scope:** take the S1 identity
+question and the H-12 adoption question to the furthest evidence-supported point without crossing any
+authority boundary. No value was selected, derived, copied, defaulted or fabricated; no provisioning,
+host contact, QE, adoption, schema/migration/source/test/CI/package change, or IRR mutation occurred.
+Full argument, matrix and evidence:
+`IIPS_V3_CAP02_S1_IDENTITY_VALUE_AUTHORITY_H12_READINESS_DECISION_REQUEST_2026-10-24.md`
+(record `IIPS-V3-CAP02-S1-IDENTITY-AUTHORITY-H12-READINESS-DECISION-REQUEST-2026-10-24-01`,
+**PROPOSED — NOT EFFECTIVE**; working blob `b11cc457805a7947bd2d90c9d8185b225c5722ff`, raw SHA-256
+`f3d58c28f1b6f72eb195f3674ef813f05099fd430b55ad0cc1f2c818337ae9b3`, 52,212 B — final identities
+confirmed by post-commit/remote read-back below).
+
+### 1. Live baselines re-verified this pass
+
+| Item | Value |
+|---|---|
+| IPD `origin/main` | `5e4e54db752060f75c945eb437ab317b7b9f04bf`, tree `9de03c775dbbc19f9e68b5e4931a94a6c70fa054`; clean worktree; Limb A merge `a52b47b0…` is an ancestor, `18` commits intervene, **all evidence-only** (`0` non-`evidence/` paths) |
+| Gate A′ act §2.1 blobs | **12/12** designated blobs (provisioning `dc844189…`, binding `96d0079d…`, audit `273ccd3b…`, connection `5169e402…`, migrations 001–004 `f594a182…/932af8e6…/32b125bf…/6bad5a50…`, dispatch `27becc76…`, portfolio_store `4a005b73…`, package.json `51796e63…`, g3 test `edd0305e…`) unchanged at the current tip |
+| IRR (read-only) | live tip `4d14780f0db66a891f552926ee2badaf56acfa2d` / tree `742ac4d4…`; designated pin `4740ba21…`; `27/27` manifest entries byte-identical at both; drift = one tracker document; **zero** IRR mutations |
+| Record-ID census | the new decision-request string/filename had **0** prior hits in either repository |
+
+### 2. S1 identity-field determination (all three UNRESOLVED — AUTHORITY REQUIRED)
+
+| Field | Classification | Authority | Candidate classes rejected (all located to exact blobs) |
+|---|---|---|---|
+| `principal_label` | **UNRESOLVED — AUTHORITY REQUIRED** | PA-only separate S1 determination (Gate A′ act §4); standing grant withholds value selection | no candidate at all — the spent Gate A schema used `endpointId`, not a label |
+| `tenantId` | **UNRESOLVED — AUTHORITY REQUIRED** | PA-only; tenant administration NOT AUTHORIZED / source of truth D115-deferred (G24 governance) | IRR `irr-domain-4b82d6e1` (cross-domain, no equivalence); `IIPS_OFFLINE_BOOTSTRAP` (offline provenance marker, different schema); spent `t-1c568b7e…` (old/absent tables); `*-not-selected`/`fixture-*` tests |
+| `canonicalOwnerId` | **UNRESOLVED — AUTHORITY REQUIRED** | PA-only; F-3 carrier refused as principal (OC-7, F-3 §5.7, CV-20) | IRR `owner-7f3a91c2`; spent `applicationUserId 4f423263…` (absent table, different concept); fixtures |
+
+Compiled constants remain `PRINCIPAL_LABEL = TENANT_ID = CANONICAL_OWNER_ID = null`; `binding_id` and
+`membership_id` are deterministic SHA-256 functions of these values, so a single verbatim three-value
+PA determination is the only unblock; no env/default/placeholder path is permitted or exists.
+
+### 3. Gate A′, H-12 and CAP-03 DR dispositions
+
+- **Gate A′:** basis/entrypoint authority EFFECTIVE and published (PR #67/#68); execution still
+  **NOT AUTHORIZED**; no `src/`/`frontend/` importer of the mutator; host `desktop-no0nhtp` remains
+  unreachable (fresh DNS/ping failure) and its Node 22-range preflight is unproven; no P-1 path, no
+  store, no V-A2 receipt; V-A2-1…V-A2-8 read-only fail-closed logic re-read and empirically confirmed.
+- **H-12:** remains **NOT ADOPTED**. Amendment Alternative A is EFFECTIVE and byte-verified: R2
+  structure = **56** core entries (32 IPD incl. parser test at `entries[23]` blob `49e901b6…`, 24 IRR)
+  + 1 conditional helper + 7 post-G3 + 1,140 dist; this pass re-verified **50/50** IPD and **27/27**
+  IRR manifest blobs and **1,140/1,140** dist bytes at current tips. Adoption still requires the S1
+  act + binding commit, regeneration at the resulting final execution commit (R2 is a preserved
+  pre-amendment candidate and cannot be adopted as-is), native-Windows evidence, and a separate
+  express PA adoption act.
+- **CAP-03 (IRR read-only):** tracker L7900 re-confirms DR-2 / DR-3 / DR-4r **UNRESOLVED — PA
+  decisions required** (DR-4 IPD schema half CLOSED via migration 004 `6bad5a50…`). **None blocks S1,
+  Gate A′ provisioning or H-12** (they are P05–P07 after identity P02/provisioning P04); they bound
+  Gate 4 QE (PASS vs recorded limitation under the Q4 tiers) and gate Gate 5 read admission.
+  DR-1 is now EFFECTIVE (successor act); the capability-matrix O-01 "PROPOSED" wording is preserved
+  point-in-time text, not a live conflict.
+
+### 4. Non-mutating checks executed (Linux Node v22.22.3; repository evidence, not host qualification)
+
+`npm ci` exit 0; `npx tsc --noEmit` exit 0; `npm run build` exit 0 (1,140 dist, chunk advisory only);
+`npm test` **892 tests / 891 pass / 0 fail / 1 skipped / 123 suites**, `[test-guard] OK`;
+package-consumer **PASS**, shasum `cc2aa701…`, `durable:false`; focused suites — Gate A′ 7/7, parser
+10/10, write-gate + startup 29/29. Refusal probes: execute → `IDENTITY_VALUES_UNRESOLVED` (no file
+created); env-supplied value → `ENVIRONMENT_VALUES_NOT_AUTHORIZED`; wrong act → `ACT_ID_MISMATCH`;
+validate empty temp store → read-only `FAIL` V-A2-1/STORE_SCHEMA with zero mutation; write guard
+hard-false W-1(3)/(4); host probe → name not resolvable. Full census in decision record §12.
+
+### 5. Gate state after this pass (unchanged where authority is withheld)
+
+| Item | State |
+|---|---|
+| S1 identity values | **all three UNRESOLVED — AUTHORITY REQUIRED**; decision-ready PA request rendered (this pass), no determination performed |
+| Gate A′ provisioning | **NOT AUTHORIZED** — inert entrypoint; no store/row/audit event |
+| H-12 | **NOT ADOPTED** — R1/R2 preserved candidates; content verified under the effective amendment |
+| Gate 4 / QE | **AUTHORIZED — NOT STARTED — 0/11**; host-gated and downstream of S1 |
+| U4 / Gate C / Gate 5 / U6 | not rendered / not accepted / not granted / not authorized; `SESSION_ONLY`, `durable:false`, W-1 hard-false unchanged |
+| IRR | strictly read-only; **0** mutations |
+| Smallest next authorized action | **PA:** render the S1 three-value determination specified in decision record §6. **Preparation (standing grant):** keep entrypoint inert; once rendered, prepare the binding commit and H-12 regeneration as normal PR/CI/read-back candidates |
