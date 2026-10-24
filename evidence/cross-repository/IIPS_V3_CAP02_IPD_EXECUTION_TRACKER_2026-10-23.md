@@ -1200,3 +1200,40 @@ cross-repository receipt only; **no Program Authority decision and no IRR mutati
 The published DQ packet remains valid as a preparation record; its IRR coordinate is historical as of
 Step 0 and is not rewritten. This movement does not move any DQ answer, designate a final pin, change a
 fence/pin or alter the host blocker. No IRR file, branch, PR, issue or comment was modified by this pass.
+
+---
+
+## CAP-03 PR #84 publication and remote read-back receipt; final observed IRR snapshot (2026-10-24)
+
+### 1. PR #84
+
+| Item | Value |
+|---|---|
+| PR | [#84](https://github.com/ramkivs/iips-production-market-data/pull/84) — `CAP-03: dated IRR post-baseline movement receipt` |
+| Head / tree | `b827c0bcb12219422778f65a24166fa5685942ba` / `232472ae01424c33f3c6f705a70a04d5ba019aae` |
+| Merge / tree | **`6a056c0e677b3754eb56bf45635f531892a41c17`** / `232472ae01424c33f3c6f705a70a04d5ba019aae` (`2026-10-24T07:05:40Z`); merge tree = head tree |
+| Prior `main` | `7b310af4cff0351dd26f52b91064383188059781` / `472ce73592d0a97144461da4ce988ec43d763f57` |
+| Changed paths | exactly 2: movement receipt added; tracker append `+23/−0` |
+| PR-head CI | run `40072688768` **success**; check `120809570600` — **897 / 896 / 0** |
+| Post-merge CI | run `40072783369` **success**; check `120809767717` — **897 / 896 / 0** at `6a056c0e…` |
+| Read-back | movement receipt blob `e25dc1701827bafa4bca8df07a0cd71b3f97e2f8`, 6,975 B, raw SHA-256 `82831cfee9dc39b7081201267b2d16d73fe142db1e60610a272d4c83b22b61d6`; tracker-as-merged blob `e010b1e00ddb5b872e35871efaad9a821095bf79`, 115,467 B, raw SHA-256 `12b5995c8d46aedcd0a2b99e18349d81acca03a6d9fcf9fd378a16a2b54cc5e0` |
+
+### 2. Final observed IRR coordinate for this pass
+
+At preparation of this receipt, IRR `main` was observed at **`a5e72dc4d7b1e76ad19e591f427ef3b58d6f9ac8`**,
+tree **`49aab1feda71278e259e9f9bd7f997b46588871e`**, after external documentation-only PR #235
+(`docs(runbook): re-stamp pin and §8 figures at measured head values (§16.96, CV-CORR-79)`) merged at
+`2026-10-24T07:05:13Z` with main CI `40072753782` **success**. PR #235 changed exactly the IRR master
+tracker and `docs/OPERATOR_RUNBOOK.md`; it is the routine O-09 runbook re-stamp and creates no DQ act.
+
+The earlier movement receipt's `d6d25197…`/tree `600301b3…` remains accurate for its stated snapshot;
+`a5e72dc4…` is the later observation. IRR open PRs were `[]` at this snapshot. Fence/contract blobs
+(`51704c12…`, `cb8db45d…`, `e6b57bb8…`, `98147054…`) and package manifests (`6274537a…`, `05ade78c…`)
+remained byte-identical at the observed tip. No DQ act, final pin, H-12 adoption, provisioning, QE result,
+acceptance or admission appeared; **DR-2/DR-3/DR-4r remain unresolved**, QE remains **0/11**.
+
+This snapshot is observation only. It does not make the IRR tip a final consumer pin, move any CAP-03
+anchor, or claim that no further external documentation movement can occur. No IRR mutation was made by
+this pass.
+
+*End of the PR #84 receipt and final observed IRR snapshot.*
