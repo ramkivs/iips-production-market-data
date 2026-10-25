@@ -1,0 +1,13 @@
+typecheck / build / package-consumer — FINAL run
+npx tsc --noEmit              exit 0   (no output; sha256 of empty log e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855)
+npm run build                 exit 0   (log sha256 9d74d9fea18d5fac5433d4bf03f06974f8a0644d58a1b2214ff8dfb1dda8de30)
+dist-frontend/assets/index-DESzrqsS.js   1,489.05 kB │ gzip: 189.37 kB │ map: 4,072.70 kB
+npm run test:package-consumer exit 0   (log sha256 3bea67f94bc20376f7fe7228e7284945c1967bb7c8466f1b6a250eb6c405c00b)
+  "result": "PASS",
+      "result": "PASS",
+    "forbiddenHits": []
+    "strict": true,
+    "skipLibCheck": false,
+    "result": "PASS"
+git diff --check              exit 0   (no output)
+dist file count: 1140 (unchanged; no new source file added)

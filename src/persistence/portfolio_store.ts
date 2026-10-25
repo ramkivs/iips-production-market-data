@@ -49,6 +49,24 @@ export class CommitOutcomeUnknownError extends Error {
   }
 }
 
+/**
+ * CAP-03 DR-2 / DQ-1 Option A — a stored read row cannot be projected without
+ * inventing a value. Missing, null, non-finite, wrong-typed or otherwise
+ * non-conforming required values throw before any read result is built.
+ *
+ * This is deliberately NOT `ResourceUnavailableError`: that error is reserved
+ * for missing, foreign-owned and tombstoned portfolios, which the dispatcher
+ * reports as `RESOURCE_UNAVAILABLE`. The dispatcher maps this error to the
+ * generic Class A `UNAVAILABLE` outcome, which the IRR adapter maps to
+ * `UPSTREAM_UNAVAILABLE` — the established contract-envelope refusal.
+ */
+export class ContractEnvelopeViolationError extends Error {
+  constructor(detail: string) {
+    super(`contract-envelope violation: ${detail}`);
+    this.name = 'ContractEnvelopeViolationError';
+  }
+}
+
 export interface HoldingInput {
   symbol: string;
   companyId: string;
@@ -104,10 +122,13 @@ export interface OwnerRef {
  * ------------------------------------------------------------------ */
 
 /**
- * `PortfolioSummary` (contract v1 §6, `portfolio.list`).
+ * `PortfolioSummary` (contract v1 §6, `portfolio.list`) plus the three CAP-03
+ * DR-2 / DQ-1 Option A stored values.
  *
  * The list projection WITHOUT holdings or contributions. A list item is never
- * a substitute for a full view.
+ * a substitute for a full view. The v1 wire names are preserved exactly: the
+ * only authorized `holdingsCount` -> `totalHoldingsCount` rename happens at
+ * the IRR adapter boundary, never here.
  */
 export interface PortfolioSummary {
   readonly portfolioId: string;
@@ -116,6 +137,12 @@ export interface PortfolioSummary {
   readonly holdingsCount: number;
   readonly totalMarketValue: number;
   readonly lastUpdated: string;
+  /** The current revision's stored `weight_sum_percentage`. */
+  readonly weightSumPercentage: number;
+  /** The current revision's stored `provenance_digest` (empty is a stored fact). */
+  readonly provenanceDigest: string;
+  /** Materialized state of the CURRENT revision's operation only. */
+  readonly isSaved: boolean;
 }
 
 /**
@@ -142,18 +169,21 @@ export interface PortfolioContribution {
 /**
  * `PortfolioDetail` (contract v1 §6, `portfolio.get`).
  *
- * Summary fields plus the holdings snapshot, the contribution ledger, the
- * weight sum and the revision provenance digest.
+ * Summary fields (including the DR-2 current-revision values and `isSaved`)
+ * plus the holdings snapshot and the contribution ledger. `durability` and
+ * `durable` remain absent under DR-3 / DQ-2; neither a claim nor a sentinel
+ * is emitted here.
  */
 export interface PortfolioDetail extends PortfolioSummary {
-  readonly weightSumPercentage: number;
-  readonly provenanceDigest: string;
   readonly holdings: HoldingInput[];
   readonly contributions: PortfolioContribution[];
 }
 
 /**
- * `RevisionEntry` (contract v1 §6, `portfolio.revisions`).
+ * `RevisionEntry` (contract v1 §6, `portfolio.revisions`) plus the three
+ * DR-2 / DQ-1 stored-row values. Every value comes from THIS historical row;
+ * no current-revision value is borrowed and `isSaved` is deliberately absent
+ * from the frozen history-entry shape.
  */
 export interface RevisionEntry {
   readonly revision: number;
@@ -162,10 +192,17 @@ export interface RevisionEntry {
    * The commit timestamp of the revision (contract v1 §6 `RevisionEntry`
    * field `committedAt`). The stored column is `portfolio_revisions.created_at`;
    * the wire property name is fixed by contract v1 and by the effective Gate 3
-   * act, and is `committedAt`.
+   * act, and is `committedAt`. The only authorized rename to `createdAt`
+   * happens at the IRR adapter boundary.
    */
   readonly committedAt: string;
   readonly contentDigest?: string;
+  /** This revision's stored `total_market_value`. */
+  readonly totalMarketValue: number;
+  /** This revision's stored `provenance_digest` (empty is a stored fact). */
+  readonly provenanceDigest: string;
+  /** This revision's stored `holdings_count` (NOT the G2 summary rename). */
+  readonly holdingsCount: number;
 }
 
 /**
@@ -186,6 +223,99 @@ export function computeLineageHash(holdings: readonly HoldingInput[]): string {
     .sort()
     .join('\n');
   return createHash('sha256').update(canonical, 'utf8').digest('hex');
+}
+
+/* ------------------------------------------------------------------ *
+ * CAP-03 DR-2 / DQ-1 read projections — validate or refuse, never default
+ * ------------------------------------------------------------------ */
+
+/** The closed stored operation vocabulary (contract v1 §6). */
+const STORED_OPERATIONS: readonly string[] = ['INITIAL', 'MERGE', 'REPLACE', 'RESET', 'DELETE'];
+
+type StoredRow = Record<string, unknown>;
+
+function refuseStoredValue(shape: string, field: string, requirement: string): never {
+  throw new ContractEnvelopeViolationError(
+    `${shape} has a missing, null or non-conforming ${field}; ${requirement} is required and no default may be fabricated`,
+  );
+}
+
+function storedFiniteNumber(row: StoredRow, field: string, shape: string): number {
+  const value = row[field];
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    refuseStoredValue(shape, field, 'a finite stored number');
+  }
+  return value;
+}
+
+function storedNonNegativeInteger(row: StoredRow, field: string, shape: string): number {
+  const value = storedFiniteNumber(row, field, shape);
+  if (!Number.isInteger(value) || value < 0) {
+    refuseStoredValue(shape, field, 'a non-negative stored integer');
+  }
+  return value;
+}
+
+function storedString(row: StoredRow, field: string, shape: string, nonBlank = false): string {
+  const value = row[field];
+  if (typeof value !== 'string' || (nonBlank && value.trim().length === 0)) {
+    refuseStoredValue(shape, field, nonBlank ? 'a non-blank stored string' : 'a stored string');
+  }
+  return value;
+}
+
+function storedOperation(row: StoredRow, field: string, shape: string): string {
+  const value = storedString(row, field, shape, true);
+  if (!STORED_OPERATIONS.includes(value)) {
+    refuseStoredValue(shape, field, 'a stored operation in the closed contract vocabulary');
+  }
+  return value;
+}
+
+/**
+ * The DQ-1 current-revision materialized-state rule, and NOTHING else:
+ * MERGE/REPLACE => true, INITIAL/RESET => false. A DELETE or unknown current
+ * operation has no lawful `isSaved` value, so no result is emitted at all.
+ */
+function isSavedForCurrentOperation(operation: string, shape: string): boolean {
+  if (operation === 'MERGE' || operation === 'REPLACE') return true;
+  if (operation === 'INITIAL' || operation === 'RESET') return false;
+  return refuseStoredValue(shape, 'operation', 'a current INITIAL/MERGE/REPLACE/RESET operation');
+}
+
+interface ProjectionBase {
+  readonly portfolioId: string;
+  readonly portfolioName: string;
+  readonly revision: number;
+  readonly lastUpdated: string;
+}
+
+interface CurrentRevisionProjection {
+  readonly holdingsCount: number;
+  readonly totalMarketValue: number;
+  readonly weightSumPercentage: number;
+  readonly provenanceDigest: string;
+  readonly isSaved: boolean;
+}
+
+function projectPortfolioBase(row: StoredRow, shape: string): ProjectionBase {
+  return {
+    portfolioId: storedString(row, 'portfolio_id', shape, true),
+    portfolioName: storedString(row, 'portfolio_name', shape, true),
+    revision: storedNonNegativeInteger(row, 'current_revision', shape),
+    lastUpdated: storedString(row, 'updated_at', shape, true),
+  };
+}
+
+function projectCurrentRevision(row: StoredRow, shape: string): CurrentRevisionProjection {
+  return {
+    holdingsCount: storedNonNegativeInteger(row, 'holdings_count', shape),
+    totalMarketValue: storedFiniteNumber(row, 'total_market_value', shape),
+    weightSumPercentage: storedFiniteNumber(row, 'weight_sum_percentage', shape),
+    // An empty digest is a legitimate stored fact. Only a non-string is refused.
+    provenanceDigest: storedString(row, 'provenance_digest', shape),
+    isSaved: isSavedForCurrentOperation(storedOperation(row, 'operation', shape), shape),
+  };
 }
 
 const IDENTITY_KEY_PATTERN = /(owner|tenant|user|principal|membership|credential|password|secret|token|auth|claim|scope|role|identity|session)/i;
@@ -276,6 +406,13 @@ export class DurablePortfolioStore {
     });
   }
 
+  /**
+   * `portfolio.list`: every value comes from the ACTIVE portfolio row and its
+   * OWN current revision row. The LEFT JOIN is retained so a portfolio whose
+   * current revision row is absent is not silently dropped from the list: the
+   * joined NULLs are refused as a contract-envelope violation instead of being
+   * collapsed to zero by `COALESCE`. No owner/tenant value is disclosed.
+   */
   list(owner: OwnerRef): PortfolioSummary[] {
     const rows = this.db
       .prepare(
@@ -283,8 +420,11 @@ export class DurablePortfolioStore {
                 p.portfolio_name     AS portfolio_name,
                 p.current_revision   AS current_revision,
                 p.updated_at         AS updated_at,
-                COALESCE(r.holdings_count, 0)     AS holdings_count,
-                COALESCE(r.total_market_value, 0) AS total_market_value
+                r.holdings_count     AS holdings_count,
+                r.total_market_value AS total_market_value,
+                r.weight_sum_percentage AS weight_sum_percentage,
+                r.provenance_digest  AS provenance_digest,
+                r.operation          AS operation
            FROM portfolios p
            LEFT JOIN portfolio_revisions r
              ON r.canonical_owner_id = p.canonical_owner_id
@@ -293,63 +433,69 @@ export class DurablePortfolioStore {
           WHERE p.canonical_owner_id = ? AND p.tenant_id = ? AND p.status = 'ACTIVE'
           ORDER BY p.portfolio_id`,
       )
-      .all(owner.canonicalOwnerId, owner.tenantId) as unknown as Array<{
-      portfolio_id: string;
-      portfolio_name: string;
-      current_revision: number;
-      updated_at: string;
-      holdings_count: number;
-      total_market_value: number;
-    }>;
+      .all(owner.canonicalOwnerId, owner.tenantId) as unknown as StoredRow[];
     return rows.map((row) => ({
-      portfolioId: row.portfolio_id,
-      portfolioName: row.portfolio_name,
-      revision: Number(row.current_revision),
-      holdingsCount: Number(row.holdings_count),
-      totalMarketValue: Number(row.total_market_value),
-      lastUpdated: row.updated_at,
+      ...projectPortfolioBase(row, 'portfolio.list'),
+      ...projectCurrentRevision(row, 'portfolio.list'),
     }));
   }
 
   private resolvePortfolio(
     owner: OwnerRef,
     portfolioId: string,
-  ): { currentRevision: number; portfolioName: string; updatedAt: string } {
+  ): { portfolioId: string; currentRevision: number; portfolioName: string; updatedAt: string } {
     const row = this.db
       .prepare(
-        `SELECT current_revision, status, portfolio_name, updated_at FROM portfolios
+        `SELECT portfolio_id, current_revision, status, portfolio_name, updated_at FROM portfolios
           WHERE canonical_owner_id = ? AND tenant_id = ? AND portfolio_id = ?`,
       )
       .get(owner.canonicalOwnerId, owner.tenantId, portfolioId) as
-      | { current_revision: number; status: string; portfolio_name: string; updated_at: string }
+      | { portfolio_id: string; current_revision: number; status: string; portfolio_name: string; updated_at: string }
       | undefined;
     if (!row || row.status === 'TOMBSTONED') {
       // Missing, foreign and tombstoned are deliberately indistinguishable.
+      // This check happens BEFORE any stored-value projection, so an
+      // unavailable portfolio never emits `isSaved` or any other field.
       throw new ResourceUnavailableError();
     }
     return {
+      portfolioId: row.portfolio_id,
       currentRevision: Number(row.current_revision),
       portfolioName: row.portfolio_name,
       updatedAt: row.updated_at,
     };
   }
 
+  /**
+   * `portfolio.get`: the current revision's OWN stored row supplies the seven
+   * approved values and the lifecycle flag. A missing current-revision row is
+   * refused, not replaced with zeros/empty string (the former `?? 0` / `?? ''`
+   * defaults are removed). `durable`/`durability` are not emitted.
+   */
   get(owner: OwnerRef, portfolioId: string): PortfolioDetail {
     const resolved = this.resolvePortfolio(owner, portfolioId);
+    const base = projectPortfolioBase(
+      {
+        portfolio_id: resolved.portfolioId,
+        portfolio_name: resolved.portfolioName,
+        current_revision: resolved.currentRevision,
+        updated_at: resolved.updatedAt,
+      },
+      'portfolio.get',
+    );
     const revisionRow = this.db
       .prepare(
-        `SELECT holdings_count, total_market_value, weight_sum_percentage, provenance_digest
+        `SELECT holdings_count, total_market_value, weight_sum_percentage, provenance_digest, operation
            FROM portfolio_revisions
           WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`,
       )
-      .get(owner.canonicalOwnerId, portfolioId, resolved.currentRevision) as
-      | {
-          holdings_count: number;
-          total_market_value: number;
-          weight_sum_percentage: number;
-          provenance_digest: string;
-        }
-      | undefined;
+      .get(owner.canonicalOwnerId, portfolioId, resolved.currentRevision) as StoredRow | undefined;
+    if (!revisionRow) {
+      throw new ContractEnvelopeViolationError(
+        'portfolio.get has no stored row for the current revision; no value may be fabricated',
+      );
+    }
+    const current = projectCurrentRevision(revisionRow, 'portfolio.get');
     const rows = this.db
       .prepare(
         `SELECT holding_key, symbol, company_id, quantity, average_buy_price, current_price,
@@ -361,14 +507,8 @@ export class DurablePortfolioStore {
       )
       .all(owner.canonicalOwnerId, portfolioId, resolved.currentRevision) as unknown as Array<Record<string, unknown>>;
     return {
-      portfolioId,
-      portfolioName: resolved.portfolioName,
-      revision: resolved.currentRevision,
-      holdingsCount: Number(revisionRow?.holdings_count ?? 0),
-      totalMarketValue: Number(revisionRow?.total_market_value ?? 0),
-      lastUpdated: resolved.updatedAt,
-      weightSumPercentage: Number(revisionRow?.weight_sum_percentage ?? 0),
-      provenanceDigest: revisionRow?.provenance_digest ?? '',
+      ...base,
+      ...current,
       holdings: rows.map((r) => this.holdingFromRow(r)),
       contributions: this.contributions(owner, portfolioId),
     };
@@ -418,25 +558,45 @@ export class DurablePortfolioStore {
     }));
   }
 
+  /**
+   * `portfolio.revisions`: each entry is projected from ITS OWN stored row.
+   * The current revision is consulted for availability only; no current value
+   * is borrowed for a historical entry, and `isSaved` is not part of the frozen
+   * history-entry shape. `committedAt` stays the v1 wire name.
+   */
   revisions(owner: OwnerRef, portfolioId: string): RevisionEntry[] {
     this.resolvePortfolio(owner, portfolioId);
     const rows = this.db
       .prepare(
-        `SELECT revision, operation, created_at, content_digest FROM portfolio_revisions
+        `SELECT revision, operation, created_at, content_digest, total_market_value,
+                provenance_digest, holdings_count
+           FROM portfolio_revisions
           WHERE canonical_owner_id = ? AND portfolio_id = ? ORDER BY revision`,
       )
-      .all(owner.canonicalOwnerId, portfolioId) as unknown as Array<{
-      revision: number | bigint;
-      operation: string;
-      created_at: string;
-      content_digest: string | null;
-    }>;
-    return rows.map((row) => ({
-      revision: Number(row.revision),
-      operation: row.operation,
-      committedAt: row.created_at,
-      contentDigest: row.content_digest ?? undefined,
-    }));
+      .all(owner.canonicalOwnerId, portfolioId) as unknown as StoredRow[];
+    return rows.map((row) => {
+      const shape = 'portfolio.revisions';
+      const revision = storedNonNegativeInteger(row, 'revision', shape);
+      const operation = storedOperation(row, 'operation', shape);
+      const committedAt = storedString(row, 'created_at', shape, true);
+      const totalMarketValue = storedFiniteNumber(row, 'total_market_value', shape);
+      const provenanceDigest = storedString(row, 'provenance_digest', shape);
+      const holdingsCount = storedNonNegativeInteger(row, 'holdings_count', shape);
+      const rawDigest = row.content_digest;
+      if (rawDigest !== null && rawDigest !== undefined && typeof rawDigest !== 'string') {
+        refuseStoredValue(shape, 'content_digest', 'a stored string or SQL NULL');
+      }
+      return {
+        revision,
+        operation,
+        committedAt,
+        // SQL NULL means the optional v1 property is genuinely absent.
+        ...(typeof rawDigest === 'string' ? { contentDigest: rawDigest } : {}),
+        totalMarketValue,
+        provenanceDigest,
+        holdingsCount,
+      };
+    });
   }
 
   private holdingFromRow(r: Record<string, unknown>): HoldingInput {

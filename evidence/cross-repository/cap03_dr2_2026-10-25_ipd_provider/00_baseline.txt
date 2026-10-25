@@ -1,0 +1,30 @@
+=== STEP 0 BASELINE (2026-10-25 UTC) ===
+2026-10-25T12:43:46Z
+repo: ramkivs/iips-production-market-data
+origin	https://github.com/ramkivs/iips-production-market-data.git (fetch)
+origin	https://github.com/ramkivs/iips-production-market-data.git (push)
+branch: arena/dff844a3-iips-production-market-data
+head: 4b5c65a731a66a6fa1260146a55df9ed772953a5
+tree: cf5e85856009360de3ffb9614970c383a26d73ba
+origin/main: 4b5c65a731a66a6fa1260146a55df9ed772953a5	refs/heads/main
+## arena/dff844a3-iips-production-market-data
+--- frozen source blob hashes (git hash-object) ---
+4a005b737de26443e261156a3102d553dd90b726  src/persistence/portfolio_store.ts
+a0b65ff482128526fea87739eef117f653614ca4  tests/q1_ipc_read_contract_conformance.test.ts
+f4dc72b12ed9d618d1cfde836160f992ff1be9a5  src/ipc/protocol.ts
+27becc76749f5b11a37ca4e6254d58132620f57f  src/ipc/dispatch.ts
+f594a18264c45ccdcbfa2381592820a72d3c453b  src/persistence/migrations/001_initial_schema.ts
+932af8e603c4be41c9f0d8a6b051f41836c1fee8  src/persistence/migrations/002_audit_event_sequence.ts
+32b125bf962bb76a6ae59d3b262203dbbb988197  src/persistence/migrations/003_local_principal_bindings.ts
+6bad5a5095b6bb94ce91a86a4b65f7ab915c516c  src/persistence/migrations/004_portfolio_contribution_provenance.ts
+ae3edd12e1199845f6b5fe059fa79fed6245ae32  src/ipc/entrypoint.ts
+51796e63280c1abb368c27bf8811cc6bad46e132  package.json
+4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5  .github/workflows/ci.yml
+--- migration checksums ---
+001_initial_schema 08e712fd323f547413618f0443ec361015b136285c28b519d967f02b6d9580ab
+002_audit_event_sequence 01892a862c8a877c97403a938123fb575cb43f9445d4c5345aa209f5adae47ed
+003_local_principal_bindings 7967acc06584811df9cf37e05b84d78d6126b6dae979ee79e0523dfce924004e
+004_portfolio_contribution_provenance 0dbf90c129154d8c547b6c5876157877c5e12790ebf2b35c741640751ea7b0ac
+--- IRR references ---
+IRR impl commit 51ce168306b67f208d026cf6178a72d170d5052c
+IRR PR#265 head c059c326c355b80c3224ad861dfecfb93963f112

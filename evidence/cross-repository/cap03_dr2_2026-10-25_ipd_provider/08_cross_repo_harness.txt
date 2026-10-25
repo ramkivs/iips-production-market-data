@@ -1,0 +1,19 @@
+(node:4961) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS | list maps the frozen G2PortfolioSummary key set | isSaved,lastUpdated,portfolioId,portfolioName,provenanceDigest,revision,totalHoldingsCount,totalMarketValue,weightSumPercentage
+PASS | list maps the seven approved values (initial: count/total/weight/digest/isSaved) | {"totalHoldingsCount":2,"totalMarketValue":2150,"weightSumPercentage":100,"provenanceDigest":"prov-x-initial","isSaved":false}
+PASS | isSaved lifecycle P-INITIAL === false | observed false
+PASS | isSaved lifecycle P-MERGED === true | observed true
+PASS | isSaved lifecycle P-REPLACED === true | observed true
+PASS | isSaved lifecycle P-RESET === false | observed false
+PASS | tombstoned portfolio is absent from list | 5 rows
+PASS | get maps the frozen G2PortfolioView (eleven fields, empty ledger) | 11 keys; isSaved=false; contributions=0
+PASS | populated contribution ledger is refused under DR-4r/DQ-3 | UPSTREAM_UNAVAILABLE: The portfolio view contains non-empty contributions outside the authorized DR-4r
+PASS | history maps each stored revision row and renames committedAt → createdAt only | [[1,"INITIAL",1000,1],[2,"MERGE",1500,2],[3,"REPLACE",700,1],[4,"RESET",0,1]]
+PASS | tombstoned portfolio → G2 NOT_FOUND with no portfolio object | NOT_FOUND
+PASS | missing portfolio → G2 NOT_FOUND with no portfolio object | NOT_FOUND
+PASS | malformed stored value → frozen UPSTREAM_UNAVAILABLE refusal, no value disclosed | UPSTREAM_UNAVAILABLE: The upstream refused portfolio.get with outcome UNAVAILABLE.
+PASS | one malformed row refuses the whole list (never a fabricated or dropped row) | UPSTREAM_UNAVAILABLE: The upstream refused portfolio.list with outcome UNAVAILABLE.
+PASS | IRR-local tenant hint never transmitted (adapter invariant held) | no refusal triggered
+
+SUMMARY | checks=15 pass=15 fail=0
