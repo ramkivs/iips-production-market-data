@@ -1676,3 +1676,85 @@ skipped, `0` failed** (guard line reproduced verbatim; per-test TAP body elided 
 byte count and SHA-256 recorded); `npm run test:package-consumer` exit `0` (`PASS`); `git diff --check` exit
 `0`. These are publication-hygiene facts about this PR and carry **zero** `S2`, Gate 4, QE or acceptance
 credit.
+
+## CAP-03 — H-12 R5 IPD mirror receipt: PR #94 publication, merge and independent remote-verification receipt (2026-10-25)
+
+**Receipt:** `IIPS-V3-CAP03-G4-H12-R5-ADOPTION-IPD-MIRROR-PUBLICATION-RECEIPT-2026-10-25-01` (census before
+this record: `0` occurrences in either repository). Documentation-only reconciliation of verified remote
+facts; it renders no decision, changes no pin, moves no gate, and is **not** a second mirror act — the
+mirror act is `IIPS-V3-CAP03-G4-H12-R5-ADOPTION-IPD-MIRROR-RECEIPT-2026-10-25-01`, published by PR #94.
+
+| Item | Value |
+|---|---|
+| PR | [#94](https://github.com/ramkivs/iips-production-market-data/pull/94) — `CAP-03: mirror H-12 R5 adoption receipt into IPD and record S2 host-precondition stop` |
+| Base | `c6b540afd1fd3da5f18d029a54d1d89331916ead` / tree `b18b5d8d2fbd5bf11a174f0e5578314ead5cbf76` (= `origin/main` at Step 0, zero drift) |
+| PR head / tree | `cddee5910309576ecfbe99099359e5fa54602fb1` / tree `7a1ef7b89e69e08a8287ef31d28e91b959c4e5f9` |
+| PR-head CI | run `40230413693` **success** (`typecheck · build · test`, `1m14s`); executed-test check `121280995476` **success** — **`924` tests executed, `0` failed** at `cddee59…` |
+| Merge | **MERGED** `2026-10-25T20:23:30Z` as `9efbf83a74297d54dc392fa60efcd966ca52d486` (2-parent `--merge`; parents `c6b540afd1fd3da5f18d029a54d1d89331916ead` + `cddee5910309576ecfbe99099359e5fa54602fb1`) |
+| Merge tree | `7a1ef7b89e69e08a8287ef31d28e91b959c4e5f9` — **identical** to the tested head tree |
+| Post-merge `main` CI | run `40230541846` at `9efbf83a…` — **success**; checks `121281099917` (typecheck · build · test) and `121281384578` (executed test count) both **success** |
+| Ancestry | `cddee59…` verified an **ancestor** of `origin/main` after the merge (`git merge-base --is-ancestor`, exit `0`) |
+| Changed paths | **exactly 17**, all under `evidence/cross-repository/`: the mirror receipt, the S2 precondition blocker record, the append-only tracker block and `14` annex paths. **No** source, test, script, package manifest, export, `files` entry, schema, migration, protocol, route, CI workflow, fence or pin |
+| Compare API `c6b540af…9efbf83a` | `status=ahead`, `ahead_by=2`, `behind_by=0`, `files=17` |
+| Open PRs after merge | **`0`** |
+
+### 1. Independent remote read-back (not inferred from the API summary or the merge badge)
+
+Each published blob was downloaded through the GitHub Contents API at `ref=9efbf83a…`, hashed
+independently, and compared both to the local object store and to the local file on disk.
+
+| Published path | Remote blob | Bytes | SHA-256 | Local | Result |
+|---|---|---:|---|---|---|
+| `…/IIPS_V3_CAP03_G4_H12_R5_ADOPTION_IPD_MIRROR_RECEIPT_2026-10-25.md` | `1e71504f776152ea9200f3a6ce9250872edbee93` | 15,310 | `c20f6e04c90d3ed0139a1cc5b5c88cb6a2d37b42556c88dc4fac989721807c1e` | identical | **MATCH** |
+| `…/IIPS_V3_CAP03_S2_HOST_PRECONDITION_BLOCKER_2026-10-25.md` | `3bf58cee7dd299f39d4b6de5aa470f0400433071` | 7,705 | `d5c5787f6d99681d8297db170098118e8b5d09608f3b0212074da88388778e09` | identical | **MATCH** |
+| `…/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` (at the merge) | `983807c49248020f1e310f266bf33d0fd93df6b2` | 155,433 | `5d7574bb94031e8a90f4ee5489e28e63c7358786271f58daea7af9b1ff450ca2` | identical | **MATCH** |
+| `…/cap03_h12r5_2026-10-25_adoption_mirror/SHA256SUMS.txt` (as merged in PR #94) | `e38f45925875d57091aa41d44c32b4d1e5a70f90` | 1,263 | `0267dbdde47d526969e82cdd7b60bd65e5cfd6191ae8ad05bb681514847dcbf9` | identical | **MATCH** |
+
+The annex `SHA256SUMS.txt` as merged was **re-verified against the downloaded remote blobs**:
+**13 / 13 OK**. The file is **re-issued by this receipt PR** to cover `50`–`51`; the version merged in
+PR #94 keeps its identity above and is not overwritten silently.
+
+**Frozen anchors re-read at the new `main`:** `package.json` `51796e63…`, `src/persistence/portfolio_store.ts`
+`540d49f2…`, `.github/workflows/ci.yml` `4614ee0e…`, `src/ipc/protocol.ts` `f4dc72b1…`,
+`src/ipc/dispatch.ts` `27becc76…`, `src/persistence/migrations/001_initial_schema.ts` `f594a182…` — **all
+unchanged**, so this publication wrote nothing into the qualified surface.
+
+### 2. Zero qualified-surface drift (DQ-4.4) at the post-publication tip
+
+| Check | Result |
+|---|---|
+| Intervening paths `8eec74ae…` → `9efbf83a…` | **31**, all under `evidence/cross-repository/`; **`0`** outside it |
+| H-12 core entries among the PR's changed paths | **NONE** — `0` of `56` |
+| `32/32` IPD core + `1/1` helper + `7/7` post-G3 entries at the new `main` | **byte-identical** to the designated pin (re-measured inside the PR, annex `10`) |
+| Designated pins | **unchanged** — primary `8eec74ae…`/tree `4eba2902…`, alias `70b24f02…`/tree `cc0f0117…`, IRR consumer `ba64b2d5…`/tree `5e4262f1…`. The publication moved `main` **ahead of** the designated pin; a pin is a named commit, so **no re-pin occurs and none is made here** |
+
+This is **publication movement, not qualified drift.**
+
+### 3. What this publication establishes, and what it does not
+
+**Establishes:** the effective IRR H-12 R5 adoption act is registered in the IPD locus at a named path and
+blob, merged to `main` by 2-parent merge commit with green exact-head and post-merge CI and a machine-recorded
+`924`-executed count, and independently read back by blob id, byte length and SHA-256; and the S2 stop is
+recorded at the same locus as a first-class evidence fact rather than an omission.
+
+**Does not establish:** H-12 adoption by IPD (adoption is the IRR act's determination and is mirrored, not
+re-decided, here); the DQ-4 final QE freeze (still `PREPARED AND VALIDATED — NOT ESTABLISHED`, `8/10`);
+Gate 4 start (`AUTHORIZED — NOT STARTED`); any QE credit (`0/11`); Gate 5 initiation or admission; any write
+authorization, `503` fence lift, durable-read acceptance or production eligibility; `S2` (`NOT EXECUTED`),
+`P-1` (`NOT EXECUTED`) or `S3` (`NOT REACHED`); any host, native-Windows, `dist/**` or package-consumer
+evidence; any pin change.
+
+### 4. IRR-locus registration status (not performed here, not claimed complete)
+
+This session is **IPD-bound**: **zero IRR writes** were made. The IRR master tracker's §16.123.7 and
+§16.123.11 still describe the IPD mirror receipt as **prepared**; it is now **published and independently
+verified** in IPD at blob `1e71504f…`. Reconciling that sentence — and any §16.123 status cell that should
+read `PUBLISHED` — is bookkeeping in the other locus and requires an IRR-capable session. Cross-repository
+bookkeeping is therefore **not** claimed complete; the IPD-side fact is complete and verified, the IRR-side
+sentence is stale-until-reconciled.
+
+### 5. Evidence
+
+`evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/` — `50_remote_readback.txt` (merge
+identity, ancestry, per-file blob/bytes/SHA-256 read-back, annex checksum re-verification from downloaded
+remote blobs, frozen anchors) and `51_ci_runs.txt` (exact-head and post-merge run ids and check-runs).

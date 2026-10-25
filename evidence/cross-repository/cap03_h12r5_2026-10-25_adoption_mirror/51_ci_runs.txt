@@ -1,0 +1,13 @@
+== CI runs (exact-head PR and post-merge main) ==
+observed_utc=2026-10-25T20:24:52Z
+-- PR #94 exact-head run --
+{"conclusion":"success","created_at":"2026-10-25T20:21:54Z","event":"pull_request","head_sha":"cddee5910309576ecfbe99099359e5fa54602fb1","id":40230413693,"status":"completed","updated_at":"2026-10-25T20:23:11Z"}
+{"conclusion":"success","name":"executed test count","title":"924 tests executed, 0 failed"}
+-- post-merge main run at 9efbf83a… --
+{"conclusion":"success","created_at":"2026-10-25T20:23:32Z","event":"push","head_sha":"9efbf83a74297d54dc392fa60efcd966ca52d486","id":40230541846,"status":"completed","updated_at":"2026-10-25T20:24:45Z"}
+{"conclusion":"success","id":121281384578,"name":"executed test count","status":"completed"}
+{"conclusion":"success","id":121281099917,"name":"typecheck · build · test","status":"completed"}
+-- open PRs after merge --
+open_prs=0
+-- prior H-12 designated-pin CI (unchanged reference) --
+{"conclusion":"success","head_sha":"8eec74ae27cda09f3c368b9c299895eae41554db","id":40196407747,"status":"completed"}
