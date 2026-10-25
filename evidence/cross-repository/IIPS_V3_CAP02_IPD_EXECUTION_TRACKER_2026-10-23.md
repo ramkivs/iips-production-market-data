@@ -1451,6 +1451,9 @@ verified remote facts; it renders no decision and moves no gate.
 | Frozen, byte-unchanged | `src/ipc/protocol.ts` `f4dc72b1…`, `src/ipc/dispatch.ts` `27becc76…`, `src/ipc/entrypoint.ts` `ae3edd12…`, migration `001` `f594a182…`, migration `004` `6bad5a50…`, `package.json` `51796e63…`, `.github/workflows/ci.yml` `4614ee0e…` |
 | `SHA256SUMS.txt` re-verified against the **downloaded remote blobs** | **12 / 12 OK** |
 | Compare API `4b5c65a…79d06e3` | `status=ahead`, `ahead_by=2`, `behind_by=0`, 17 files |
+| Exact verification log | `evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/11_remote_verification.txt` (annex `SHA256SUMS.txt` re-issued to cover it) |
+| Final `main` after the receipt PR | `743a284069d2d1eefd3cc36abdc889478f927961` / tree `e63a741482bf9e64f50a004c0cc087c0d0ddfbf7`; PR #90 CI `40196019173` success, post-merge CI `40196130030` success, **924 / 923 / 0** at the merge commit |
+| Implementation blobs at final `main` | `portfolio_store.ts` `540d49f2…`, `q1_ipc_read_contract_conformance.test.ts` `eddedd56…` — unchanged by the receipt PR |
 
 ### 2. IRR locus untouched
 
