@@ -1,0 +1,13 @@
+H-12 R5: 56 entries (32 IPD + 24 IRR); status: PROPOSED CANDIDATE — NOT ADOPTED; NOT AN EFFECTIVE QUALIFICATION BASELINE
+changed paths published by this receipt: 12
+changed paths that are H-12 entries: NONE
+IPD H-12 entries byte-identical at the post-publication tip: 32/32
+split_baseline keys: ['authority', 'ipd_coordinates', 'alias_raw_source_count', 'alias_raw_sources_identical_at_both_coordinates', 'alias_raw_sources_divergent_at_coordinates', 'alias_raw_sources', 'overlap_finding', 'lineage_note']
+alias raw sources unchanged at the tip: 0/14
+RECORD: this publication touched none of the 56 H-12 entries -> publication movement, not qualified drift (DQ-4.4).
+
+alias coordinate recorded: [{'role': 'primary', 'commit': '8eec74ae27cda09f3c368b9c299895eae41554db', 'tree': '4eba29029f8d95cfe483e615a7047426b298ce50', 'ancestry_of_ipd_main': 'IS main'}, {'role': 'broker-import compatibility alias', 'commit': '70b24f029842a7e9b7f615e4d9df7376fd4ff817', 'tree': 'cc0f0117822850f9046e9a51bd05c1d45f80cd57', 'ancestry_of_ipd_main': 'ANCESTOR, 214 commits behind'}]
+alias raw sources byte-identical at the alias coordinate 70b24f02…: 14/14
+alias raw sources byte-identical at the primary coordinate 8eec74ae…: 14/14
+drift found: NONE
+alias coordinate is an ancestor of the post-publication tip: True

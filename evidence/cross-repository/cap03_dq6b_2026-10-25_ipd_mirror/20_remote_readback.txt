@@ -1,0 +1,30 @@
+=== INDEPENDENT REMOTE READ-BACK at IPD main@76d0f2d68e4a3e03ff48e9c2dd75ae1e813bd79e ===
+method: GitHub Contents API (base64 blob download), compared against the local working tree
+timestamp: 2026-10-25T19:13:06Z
+
+evidence/cross-repository/IIPS_V3_CAP03_DQ6B_DECISION_MIRROR_RECEIPT_2026-10-25.md      
+  remote blob 3430df5ec1c10cf5cab8b764577aae2a3503d09b     14292 B  sha256 03b90f2edd30d629628c1f905dbb9fc6a74966d7a17d3dc10ba93a4b2493e0f6
+  local  blob 3430df5ec1c10cf5cab8b764577aae2a3503d09b     14292 B  sha256 03b90f2edd30d629628c1f905dbb9fc6a74966d7a17d3dc10ba93a4b2493e0f6
+  -> MATCH
+evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md             
+  remote blob 33704dd8ab232678c9f43f9bbd59aa623a7fce04    141530 B  sha256 3fa7d06fc4eb5434ecbd84ef44799bf1559005aa2afe3ae03da4f3e23e508e47
+  local  blob 33704dd8ab232678c9f43f9bbd59aa623a7fce04    141530 B  sha256 3fa7d06fc4eb5434ecbd84ef44799bf1559005aa2afe3ae03da4f3e23e508e47
+  -> MATCH
+evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/SHA256SUMS.txt               
+  remote blob f0a4c3dfb21bff76f29fa4d53c12d9b2b3d3cb21       852 B  sha256 bbaa6ad6347c05588f05cd5843495829e44ea5e141aeb40b3a7f118b7a9cc59b
+  local  blob f0a4c3dfb21bff76f29fa4d53c12d9b2b3d3cb21       852 B  sha256 bbaa6ad6347c05588f05cd5843495829e44ea5e141aeb40b3a7f118b7a9cc59b
+  -> MATCH
+
+--- frozen anchors unchanged at the new main (remote blob ids) ---
+package.json                               51796e63280c1abb368c27bf8811cc6bad46e132
+src/persistence/portfolio_store.ts         540d49f2deb2c8d600b5b866675d145cf76a1e46
+.github/workflows/ci.yml                   4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5
+
+--- alias coordinate still intact ---
+commit
+cc0f0117822850f9046e9a51bd05c1d45f80cd57
+alias-ancestor-of-main exit=0
+distance alias..main = 216
+
+--- Compare API 8eec74a..76d0f2d ---
+{"ahead_by":2,"behind_by":0,"files":12,"status":"ahead","total_commits":2}

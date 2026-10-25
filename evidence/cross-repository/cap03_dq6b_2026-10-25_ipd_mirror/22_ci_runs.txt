@@ -1,0 +1,8 @@
+=== post-merge CI and check runs at 76d0f2d68e4a3e03ff48e9c2dd75ae1e813bd79e (2026-10-25T19:14:20Z) ===
+run 40224953361  status=completed conclusion=success  headSha=76d0f2d…  created 2026-10-25T19:12:54Z, updated 2026-10-25T19:14:09Z
+check "typecheck · build · test"   conclusion=success
+check "executed test count"       conclusion=success  title="924 tests executed, 0 failed"
+
+=== PR #92 exact-head CI at 6689ba38aec9850e9d4d37dc746829bf7894bb54 ===
+run 40224757268  typecheck · build · test  success (1m8s, all 8 steps success)
+check 121263923459  executed test count  success — "924 tests executed, 0 failed"
