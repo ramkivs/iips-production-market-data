@@ -1,0 +1,15 @@
+== working tree / changed paths for this publication (pre-commit snapshot) ==
+observed_utc=2026-10-25T20:21:35Z
+-- git status --porcelain --
+ M evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md
+?? evidence/cross-repository/IIPS_V3_CAP03_G4_H12_R5_ADOPTION_IPD_MIRROR_RECEIPT_2026-10-25.md
+?? evidence/cross-repository/IIPS_V3_CAP03_S2_HOST_PRECONDITION_BLOCKER_2026-10-25.md
+?? evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/
+
+changed_paths=4
+-- confirm no implementation/source/test/package/workflow path changed --
+-- git diff --check --
+diff_check_exit=0
+-- build artifacts ignored (dist/ and node_modules/ untracked and gitignored) --
+ignored: .gitignore:2:dist/	dist
+ignored: .gitignore:1:node_modules/	node_modules

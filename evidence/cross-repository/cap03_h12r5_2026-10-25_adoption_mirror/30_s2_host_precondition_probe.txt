@@ -1,0 +1,78 @@
+== S2 host-precondition probe (read-only) ==
+observed_utc=2026-10-25T20:18:18Z
+
+-- PF-01 host identity --
+hostname=e2b.local
+hostname_fqdn=e2b.local
+designated_host_expected=desktop-no0nhtp
+
+-- PF-02 OS edition --
+uname_s=Linux
+uname_a=Linux e2b.local 6.1.158+ #1 SMP PREEMPT_DYNAMIC Mon May 11 18:48:24 UTC 2026 x86_64 GNU/Linux
+os_release:
+  PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+  NAME="Debian GNU/Linux"
+  VERSION_ID="12"
+  VERSION="12 (bookworm)"
+  VERSION_CODENAME=bookworm
+  ID=debian
+  HOME_URL="https://www.debian.org/"
+  SUPPORT_URL="https://www.debian.org/support"
+  BUG_REPORT_URL="https://bugs.debian.org/"
+windows_edition_query: Windows CIM/PowerShell unavailable on this platform
+
+-- PF-03 operator / elevation state --
+user=user
+uid=1001
+groups=user sudo users
+elevated_context=SHELL_IS_UID_0_IF_uid_is_0
+designated_operator_expected=Ramki (non-elevated Windows account)
+
+-- PF-04 platform/runtime --
+{"platform":"linux","node":"v22.22.3","arch":"x64","v8":"12.4.254.21-node.56"}
+node_path=/usr/local/bin/node
+npm_version=10.9.8
+
+-- PF-05 flag-free node:sqlite --
+  DatabaseSync=function
+  (node:2678) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+  (Use `node --trace-warnings ...` to show where the warning was created)
+
+-- Host reachability (designated host) --
+getent_hosts_desktop-no0nhtp: NO_RESOLUTION (exit=2)
+dns_a_record_via_getent_ahostsv4: NO_IPV4_RECORD (exit=2)
+-- ping --
+  ping: desktop-no0nhtp: Name or service not known
+ping_exit=2
+-- TCP reachability to designated host (WinRM 5985/5986, RDP 3389, SSH 22) --
+  tcp/5985 exit=1 (non-zero = not reachable / name not resolved)
+  tcp/5986 exit=1 (non-zero = not reachable / name not resolved)
+  tcp/3389 exit=1 (non-zero = not reachable / name not resolved)
+  tcp/22 exit=1 (non-zero = not reachable / name not resolved)
+
+-- Windows-shell availability --
+  powershell=ABSENT
+  pwsh=ABSENT
+  pwsh.exe=ABSENT
+  powershell.exe=ABSENT
+  cmd.exe=ABSENT
+
+-- PF-09/PF-10 environment fence variables (must be unset for any run) --
+  IIPS_FREEZE_WORKTREE=__UNSET__
+  IIPS_RAW_EVIDENCE_ROOT=__UNSET__
+  IIPS_G3_IPC_BINDING_PROVISIONED=__UNSET__
+  IIPS_ENABLE_WRITES=__UNSET__
+  IIPS_G3_ENABLE_WRITES=__UNSET__
+  GATE_E_OVERRIDE=__UNSET__
+
+-- Checkout state of the IPD worktree in this environment (informational only; not S2 evidence) --
+  git rev-parse HEAD = c6b540afd1fd3da5f18d029a54d1d89331916ead
+  designated S2 pin  = 8eec74ae27cda09f3c368b9c299895eae41554db
+  git rev-parse HEAD^{tree} = b18b5d8d2fbd5bf11a174f0e5578314ead5cbf76
+  designated S2 tree = 4eba29029f8d95cfe483e615a7047426b298ce50
+  is_shallow = false
+
+== S2 DISPOSITION ==
+result=NOT EXECUTED
+reason=MANDATORY PRECONDITION FAILED — designated native-Windows host desktop-no0nhtp is not reachable and this environment is not that host
+substitution=REFUSED — no Linux/WSL/elevated-shell/alternate-commit execution was performed for S2

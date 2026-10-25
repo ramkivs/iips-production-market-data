@@ -1,0 +1,22 @@
+== Step 0 baseline: IPD authoritative locus, read-only ==
+observed_utc=2026-10-25T20:19:21Z
+-- local worktree --
+HEAD=c6b540afd1fd3da5f18d029a54d1d89331916ead
+HEAD_tree=b18b5d8d2fbd5bf11a174f0e5578314ead5cbf76
+porcelain_lines=2
+is_shallow=false
+full_history_commit_count=314
+-- remote main --
+origin_main=c6b540afd1fd3da5f18d029a54d1d89331916ead
+{"message":"Merge pull request #93 from ramkivs/arena/d677a106-iips-production-market-data","parents":["76d0f2d68e4a3e03ff48e9c2dd75ae1e813bd79e","0a5a4b85bb36f444ed63fa2f9712dfef6ebb5903"],"sha":"c6b540afd1fd3da5f18d029a54d1d89331916ead","tree":"b18b5d8d2fbd5bf11a174f0e5578314ead5cbf76"}
+-- open PRs (IPD) --
+open_prs=0
+-- latest CI runs (IPD main) --
+{"conclusion":"success","created_at":"2026-10-25T19:16:41Z","event":"push","head_sha":"c6b540afd1fd3da5f18d029a54d1d89331916ead","id":40225262938,"status":"completed"}
+{"conclusion":"success","created_at":"2026-10-25T19:12:54Z","event":"push","head_sha":"76d0f2d68e4a3e03ff48e9c2dd75ae1e813bd79e","id":40224953361,"status":"completed"}
+{"conclusion":"success","created_at":"2026-10-25T13:10:32Z","event":"push","head_sha":"8eec74ae27cda09f3c368b9c299895eae41554db","id":40196407747,"status":"completed"}
+{"conclusion":"success","created_at":"2026-10-25T13:06:49Z","event":"push","head_sha":"743a284069d2d1eefd3cc36abdc889478f927961","id":40196130030,"status":"completed"}
+
+-- note: the 2 untracked paths at Step 0 are this pass's own two new documentation files (mirror receipt + S2 blocker record); no tracked modification existed at Step 0 --
+?? evidence/cross-repository/IIPS_V3_CAP03_G4_H12_R5_ADOPTION_IPD_MIRROR_RECEIPT_2026-10-25.md
+?? evidence/cross-repository/IIPS_V3_CAP03_S2_HOST_PRECONDITION_BLOCKER_2026-10-25.md

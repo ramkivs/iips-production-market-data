@@ -1,0 +1,28 @@
+== IRR locus read-back (independent, read-only) ==
+observed_utc=2026-10-25T20:19:24Z
+irr_main=c23069013965226c0ee3bdbd82fcfe2e0f7aa1db
+irr_open_prs=0
+-- governed IRR artifacts at IRR main: blob / bytes / sha256 (recomputed from downloaded bytes) --
+docs/integration/IIPS_v3.0_CAP03_G4_H12_R5_PA_ADOPTION_ACT_EFFECTIVE_2026-10-25.md
+  blob=9f3aa377ab6468e8a27ec2d30bb2fc6d9395e1ff bytes=30278 sha256=d29781bc5be47498a12caf00b797d9adbb3f0d55209039aa2755ebbaf8f5c1fd
+docs/integration/IIPS_v3.0_CAP03_G4_H12_R5_ADOPTION_IPD_MIRROR_RECEIPT_PREPARED_2026-10-25.md
+  blob=d84549515d299397db879c2e96ad33de9b430fd2 bytes=4686 sha256=604f39c23292be416ec27f5de9cdb6e28580e5113591900c8b1b5cdc837a0784
+docs/integration/G4-H12-MANIFEST-v2-CANDIDATE-2026-10-25-R5.json
+  blob=f4649e36a81c7013287810cd3202b99586dbd951 bytes=143813 sha256=d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76
+evidence/integration/cap03-h12-r5-adoption-2026-10-25/20-amended-s8-supplemental-inventory.json
+  blob=6c777de6f36bfd06ff89373540d755cc367744f2 bytes=287101 sha256=87442b0adbd061a700aa468bdd97e8b049819cc599f5ae50d7a94cfc2f33fdbf
+-- tracker §16.123.12 presence and adoption-act effectiveness statement --
+tracker_bytes=2248821
+tracker_blob=633e507a05ef3023d5e7b228452f05b214c63810
+occurrences_section_16_123_12=1
+dq4_not_established_mentions=6
+-- PR #279 --
+{"baseRefName":"main","headRefOid":"19e5e28a540a00b2af458e4475529ab9b4f1c99b","mergeCommit":{"oid":"ae82be857a554d96e6c2cffc0d519e99135effdd"},"mergedAt":"2026-10-25T20:03:37Z","number":279,"state":"MERGED","title":"docs(cap03): adopt Gate 4 H-12 R5 manifest by PA act and reconcile DQ-6b element 6"}
+
+-- tracker identity at IRR main (GitHub blob sha) --
+{"sha":"633e507a05ef3023d5e7b228452f05b214c63810","size":2248821}
+-- effectiveness sentence in the tracker (corrected grep) --
+IIPS-V3-CAP03-G4-H12-R5-PA-ADOPTION-ACT-2026-10-25-01` is hereby EFFECTIVE in the governing IRR locus
+-- tracker statement on IPD mirror receipt preparation (pre-publication state) --
+IPD tracker mirror receipt prepared (`IIPS-V3-CAP03-G4-H12-R5-ADOPTION-IPD-MIRROR-RECEIPT-2026-10-25-01`)
+-- note: §16.123.12 records the tracker blob d2bc665f… as at merge ae82be85…; PR #280 (c2306901…) subsequently updated this tracker, so the blob above is the current one, not a mismatch --

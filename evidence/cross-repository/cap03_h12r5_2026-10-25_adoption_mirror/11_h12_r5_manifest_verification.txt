@@ -1,0 +1,383 @@
+PASS  manifest byte_length == 143,813  [143813]
+PASS  manifest raw SHA-256 == d0be8bef…  [d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76]
+PASS  manifest git blob OID == f4649e36…  [f4649e36a81c7013287810cd3202b99586dbd951]
+PASS  entry_count == 56  [56]
+PASS  present_entry_count == 56  [56]
+PASS  absent_required_or_future_count == 0  [0]
+PASS  ipd 32 / irr 24  [32/24]
+PASS  len(entries) == 56  [56]
+PASS  32 IPD core entries  [32]
+PASS  24 IRR core entries  [24]
+PASS  all 56 core entries marked PRESENT
+PASS  no duplicate core entries  [56]
+PASS  entries[23] is the parser test  [tests/g4_run_tests_summary_parsing.test.ts]
+PASS  entries[23] blob 49e901b6…  [49e901b6ca957a5cc705b42e96cdeaf0365cfbc9]
+PASS  1 conditional helper == scripts/test-summary-parser.mjs
+PASS  helper blob 15c849fa…  [15c849fa739765af501182919748e4610acc4157]
+PASS  9 criteria_basis entries  [9]
+PASS  10 preserved Gate 3 anchors  [10]
+PASS  10 re-measured Gate 3 anchors  [10]
+PASS  17 historical Gate C entries  [17]
+PASS  primary pin == 8eec74ae…
+PASS  primary tree == 4eba2902…
+PASS  alias pin == 70b24f02…
+PASS  alias tree == cc0f0117…
+PASS  IRR consumer pin == ba64b2d5…
+PASS  IRR consumer tree == 5e4262f1…
+PASS  14 alias raw sources  [14]
+PASS  10 alias sources identical
+PASS  4 alias sources divergent
+
+-- IPD object verification: 59 recorded entries + 14 alias raw sources --
+PASS  blob 8eec74ae:src/ipc/dispatch.ts  [27becc76749f5b11a37ca4e6254d58132620f57f vs 27becc76749f5b11a37ca4e6254d58132620f57f]
+PASS  len  src/ipc/dispatch.ts  [12670 vs 12670]
+PASS  sha  src/ipc/dispatch.ts  [62e6f424a85971338d1436af0d65fb4f26b4981188863aeece10f21aaedaa1ce]
+PASS  LF/LF-only src/ipc/dispatch.ts
+PASS  blob 8eec74ae:src/ipc/endpoint.ts  [e565aa5b343266f62ffd411d17d74c89b9f29324 vs e565aa5b343266f62ffd411d17d74c89b9f29324]
+PASS  len  src/ipc/endpoint.ts  [13292 vs 13292]
+PASS  sha  src/ipc/endpoint.ts  [e0675f46ebf8c1a06d665a942445662d3e304b81a6ba20d0706688b58399734e]
+PASS  LF/LF-only src/ipc/endpoint.ts
+PASS  blob 8eec74ae:src/ipc/entrypoint.ts  [ae3edd12e1199845f6b5fe059fa79fed6245ae32 vs ae3edd12e1199845f6b5fe059fa79fed6245ae32]
+PASS  len  src/ipc/entrypoint.ts  [5146 vs 5146]
+PASS  sha  src/ipc/entrypoint.ts  [cb84c19177fe8ddebd300c39a4d6a3f869f5d56b95b4f87bde7e51f6def3abd6]
+PASS  LF/LF-only src/ipc/entrypoint.ts
+PASS  blob 8eec74ae:src/ipc/protocol.ts  [f4dc72b12ed9d618d1cfde836160f992ff1be9a5 vs f4dc72b12ed9d618d1cfde836160f992ff1be9a5]
+PASS  len  src/ipc/protocol.ts  [18089 vs 18089]
+PASS  sha  src/ipc/protocol.ts  [596afe131c81c45003b08c55a423564dfbd189cd3cea7724a1b169b518e63f7b]
+PASS  LF/LF-only src/ipc/protocol.ts
+PASS  blob 8eec74ae:src/persistence/audit.ts  [273ccd3be29d7aca971933b6a28a4b4703504bf2 vs 273ccd3be29d7aca971933b6a28a4b4703504bf2]
+PASS  len  src/persistence/audit.ts  [3851 vs 3851]
+PASS  sha  src/persistence/audit.ts  [3a11b42e18ec3116ef85e4333e06bb5f017f79b0e12adc4ee3695207db1f6525]
+PASS  LF/LF-only src/persistence/audit.ts
+PASS  blob 8eec74ae:src/persistence/binding.ts  [96d0079dd04b75c6f257a2001c8f7eff1ffc560a vs 96d0079dd04b75c6f257a2001c8f7eff1ffc560a]
+PASS  len  src/persistence/binding.ts  [4112 vs 4112]
+PASS  sha  src/persistence/binding.ts  [5e9e3dd8fe705f0235baeab77894636e94cdfbc0df7dd5d42037100ae114a61b]
+PASS  LF/LF-only src/persistence/binding.ts
+PASS  blob 8eec74ae:src/persistence/connection.ts  [5169e402707cf1a73f16bfb15ffe0b1d395165ff vs 5169e402707cf1a73f16bfb15ffe0b1d395165ff]
+PASS  len  src/persistence/connection.ts  [3888 vs 3888]
+PASS  sha  src/persistence/connection.ts  [51beab4e7b06ce4c44043ca04d678c4b193dd43fe3a0e53e895e481365e38a67]
+PASS  LF/LF-only src/persistence/connection.ts
+PASS  blob 8eec74ae:src/persistence/durablePortfolioStorePort.ts  [d95608d90b6abe0535f82373b7e621d95aecbae8 vs d95608d90b6abe0535f82373b7e621d95aecbae8]
+PASS  len  src/persistence/durablePortfolioStorePort.ts  [3360 vs 3360]
+PASS  sha  src/persistence/durablePortfolioStorePort.ts  [bea117ba3f6159fad5cf2c55c3723410a2405dd1a1db505e97c04b4d0547276d]
+PASS  LF/LF-only src/persistence/durablePortfolioStorePort.ts
+PASS  blob 8eec74ae:src/persistence/migration_ledger.ts  [88198b44531777bd6a42bdc4e1094b695c25c270 vs 88198b44531777bd6a42bdc4e1094b695c25c270]
+PASS  len  src/persistence/migration_ledger.ts  [3468 vs 3468]
+PASS  sha  src/persistence/migration_ledger.ts  [c4b702401c2ecdf23bcd13bf4431eee2a1d550a0e3b5999065df1ad9b6cf33f4]
+PASS  LF/LF-only src/persistence/migration_ledger.ts
+PASS  blob 8eec74ae:src/persistence/migrations/001_initial_schema.ts  [f594a18264c45ccdcbfa2381592820a72d3c453b vs f594a18264c45ccdcbfa2381592820a72d3c453b]
+PASS  len  src/persistence/migrations/001_initial_schema.ts  [3548 vs 3548]
+PASS  sha  src/persistence/migrations/001_initial_schema.ts  [6aaff75c60053feed639617f42025ef8d58e5a8c8f7d987dd1804e0e2bdab4d3]
+PASS  LF/LF-only src/persistence/migrations/001_initial_schema.ts
+PASS  blob 8eec74ae:src/persistence/migrations/002_audit_event_sequence.ts  [932af8e603c4be41c9f0d8a6b051f41836c1fee8 vs 932af8e603c4be41c9f0d8a6b051f41836c1fee8]
+PASS  len  src/persistence/migrations/002_audit_event_sequence.ts  [940 vs 940]
+PASS  sha  src/persistence/migrations/002_audit_event_sequence.ts  [bac1fa890eb460c76e380f5e1d4e19067a5b48a9f2b002ca7449d9da484f6056]
+PASS  LF/LF-only src/persistence/migrations/002_audit_event_sequence.ts
+PASS  blob 8eec74ae:src/persistence/migrations/003_local_principal_bindings.ts  [32b125bf962bb76a6ae59d3b262203dbbb988197 vs 32b125bf962bb76a6ae59d3b262203dbbb988197]
+PASS  len  src/persistence/migrations/003_local_principal_bindings.ts  [1649 vs 1649]
+PASS  sha  src/persistence/migrations/003_local_principal_bindings.ts  [30b5eab65f24267e9b7f9992fc5a7fe2978f613a979f033265a228831656df28]
+PASS  LF/LF-only src/persistence/migrations/003_local_principal_bindings.ts
+PASS  blob 8eec74ae:src/persistence/portfolio_store.ts  [540d49f2deb2c8d600b5b866675d145cf76a1e46 vs 540d49f2deb2c8d600b5b866675d145cf76a1e46]
+PASS  len  src/persistence/portfolio_store.ts  [34084 vs 34084]
+PASS  sha  src/persistence/portfolio_store.ts  [f6e44c8eb2518b57fcd79679dfa2c93593d9cafb1d839685b45f0cdfe72877a5]
+PASS  LF/LF-only src/persistence/portfolio_store.ts
+PASS  blob 8eec74ae:src/persistence/provisioning.ts  [dc844189a1c92f00acc3d7572c22f3e28e138eb6 vs dc844189a1c92f00acc3d7572c22f3e28e138eb6]
+PASS  len  src/persistence/provisioning.ts  [4330 vs 4330]
+PASS  sha  src/persistence/provisioning.ts  [7f04f86a9c23bd0c94def29d829bb0c54033bed941a8c77e35365c30bdbdba30]
+PASS  LF/LF-only src/persistence/provisioning.ts
+PASS  blob 8eec74ae:tests/g3_binding_resolution.test.ts  [c3e130a404b2cf43c368e672aeb7916dfb66f7d9 vs c3e130a404b2cf43c368e672aeb7916dfb66f7d9]
+PASS  len  tests/g3_binding_resolution.test.ts  [13584 vs 13584]
+PASS  sha  tests/g3_binding_resolution.test.ts  [ffbce91821ec8b6a01e0c2e4c3d79899b28ab0543041c8c77c892522022dbd55]
+PASS  LF/LF-only tests/g3_binding_resolution.test.ts
+PASS  blob 8eec74ae:tests/g3_caller_authority.test.ts  [ef76ad744e380aeeea01b7a41646b5defc348daf vs ef76ad744e380aeeea01b7a41646b5defc348daf]
+PASS  len  tests/g3_caller_authority.test.ts  [5990 vs 5990]
+PASS  sha  tests/g3_caller_authority.test.ts  [378312ff41015749c2e81d4bd351973359553dd8bc597c17e91eb5ad6feadc78]
+PASS  LF/LF-only tests/g3_caller_authority.test.ts
+PASS  blob 8eec74ae:tests/g3_durability_vocabulary.test.ts  [8a87c33d6ee1a742ec6947ec6829254ff21dbb1c vs 8a87c33d6ee1a742ec6947ec6829254ff21dbb1c]
+PASS  len  tests/g3_durability_vocabulary.test.ts  [4472 vs 4472]
+PASS  sha  tests/g3_durability_vocabulary.test.ts  [d4acfdf26291a86dd0db97725dd752c4ce2dc18f7c7ab54f3d91edec31a3fd24]
+PASS  LF/LF-only tests/g3_durability_vocabulary.test.ts
+PASS  blob 8eec74ae:tests/g3_ipc_framing.test.ts  [c4a4a88a88052451c69b5b2ae277fa5d85ee7ea5 vs c4a4a88a88052451c69b5b2ae277fa5d85ee7ea5]
+PASS  len  tests/g3_ipc_framing.test.ts  [30969 vs 30969]
+PASS  sha  tests/g3_ipc_framing.test.ts  [6ae6a2ac41de1d05022bc8ebc1e950fed675cebe4a43e3512e45da7d5a3506b8]
+PASS  LF/LF-only tests/g3_ipc_framing.test.ts
+PASS  blob 8eec74ae:tests/g3_no_network_listener.test.ts  [b1e48c70b111c5ef49db8924faeb2728ce093b5e vs b1e48c70b111c5ef49db8924faeb2728ce093b5e]
+PASS  len  tests/g3_no_network_listener.test.ts  [9248 vs 9248]
+PASS  sha  tests/g3_no_network_listener.test.ts  [9f835f8be79f3cc1bee4d57ae479d9a293bc3316698a7bbede873e7c9d59e39f]
+PASS  LF/LF-only tests/g3_no_network_listener.test.ts
+PASS  blob 8eec74ae:tests/g3_portfolio_read_isolation.test.ts  [69e36f68dc6c3adbd370654cd54e7d3ae83dbba1 vs 69e36f68dc6c3adbd370654cd54e7d3ae83dbba1]
+PASS  len  tests/g3_portfolio_read_isolation.test.ts  [7256 vs 7256]
+PASS  sha  tests/g3_portfolio_read_isolation.test.ts  [a7cfb0422138107b71d786260d1f93c186aec89a2a877fcee2528d36a831884a]
+PASS  LF/LF-only tests/g3_portfolio_read_isolation.test.ts
+PASS  blob 8eec74ae:tests/g3_startup_validation.test.ts  [edd0305e3e5891020b2b045ab2cf082cd6cf788f vs edd0305e3e5891020b2b045ab2cf082cd6cf788f]
+PASS  len  tests/g3_startup_validation.test.ts  [15072 vs 15072]
+PASS  sha  tests/g3_startup_validation.test.ts  [d6bfd728c871267732bfc31f307b3fc1bed90b5b09c0bc88ad3999b05548f6e4]
+PASS  LF/LF-only tests/g3_startup_validation.test.ts
+PASS  blob 8eec74ae:tests/g3_write_gate.test.ts  [9035cbf129d4c1182d3a85f61eabc821b86433bc vs 9035cbf129d4c1182d3a85f61eabc821b86433bc]
+PASS  len  tests/g3_write_gate.test.ts  [9054 vs 9054]
+PASS  sha  tests/g3_write_gate.test.ts  [7b8ed49990154525fb4d050ca3e46763a902ee0f5873daf2e996b863752dbd5d]
+PASS  LF/LF-only tests/g3_write_gate.test.ts
+PASS  blob 8eec74ae:scripts/run-tests.mjs  [05a0ea56f62d4f3b614480858c968a728bc24ca4 vs 05a0ea56f62d4f3b614480858c968a728bc24ca4]
+PASS  len  scripts/run-tests.mjs  [5015 vs 5015]
+PASS  sha  scripts/run-tests.mjs  [f467445321ba64162992ec6a4938b48495d6922205582d80cd50c96fe6a0eefd]
+PASS  LF/LF-only scripts/run-tests.mjs
+PASS  blob 8eec74ae:tests/g4_run_tests_summary_parsing.test.ts  [49e901b6ca957a5cc705b42e96cdeaf0365cfbc9 vs 49e901b6ca957a5cc705b42e96cdeaf0365cfbc9]
+PASS  len  tests/g4_run_tests_summary_parsing.test.ts  [5627 vs 5627]
+PASS  sha  tests/g4_run_tests_summary_parsing.test.ts  [7907087f13053e232e1ae537d6b75de5f5b280728ce9af1e210041c4660b633d]
+PASS  LF/LF-only tests/g4_run_tests_summary_parsing.test.ts
+PASS  blob 8eec74ae:package.json  [51796e63280c1abb368c27bf8811cc6bad46e132 vs 51796e63280c1abb368c27bf8811cc6bad46e132]
+PASS  len  package.json  [2025 vs 2025]
+PASS  sha  package.json  [41079f64d3f7a87e92b32ee3d0be34291941ee32398926ff24b6f3528f838363]
+PASS  LF/LF-only package.json
+PASS  blob 8eec74ae:package-lock.json  [98ae3c63f403d88b5b13afbc9d9c32676b4716fe vs 98ae3c63f403d88b5b13afbc9d9c32676b4716fe]
+PASS  len  package-lock.json  [32128 vs 32128]
+PASS  sha  package-lock.json  [c77775af60ad24bbbd55df024bb92cbcf0f8b3c2bf14f938a5910d2264b216eb]
+PASS  LF/LF-only package-lock.json
+PASS  blob 8eec74ae:tsconfig.json  [6d696ec21b50beddd063376c6f4cdb4463993c23 vs 6d696ec21b50beddd063376c6f4cdb4463993c23]
+PASS  len  tsconfig.json  [548 vs 548]
+PASS  sha  tsconfig.json  [ecdcea2f07cacbda5f70b036144e41b893bf7cfbc79cfbf6b0b7f017d07cb119]
+PASS  LF/LF-only tsconfig.json
+PASS  blob 8eec74ae:src/identity/security_master.ts  [60030e0c17f8b2a31977ce598c80b18dc52d6727 vs 60030e0c17f8b2a31977ce598c80b18dc52d6727]
+PASS  len  src/identity/security_master.ts  [4595 vs 4595]
+PASS  sha  src/identity/security_master.ts  [00d85e594441d8d1ed737b16a00049fe5f982efbc66e0ab550cc4cb7de8f2ff6]
+PASS  LF/LF-only src/identity/security_master.ts
+PASS  blob 8eec74ae:src/identity/mapping_store.ts  [eec60c09e08ec45a29979abf25b21efddef448ae vs eec60c09e08ec45a29979abf25b21efddef448ae]
+PASS  len  src/identity/mapping_store.ts  [3462 vs 3462]
+PASS  sha  src/identity/mapping_store.ts  [41e6d2ca8f8e2dcaa5d352cb00e7eae0b064de7261b5bfcc4b33339ff946c650]
+PASS  LF/LF-only src/identity/mapping_store.ts
+PASS  blob 8eec74ae:src/identity/quarantine.ts  [70c6f6580f6ade66eb31e7dee3adc4b52b10b010 vs 70c6f6580f6ade66eb31e7dee3adc4b52b10b010]
+PASS  len  src/identity/quarantine.ts  [919 vs 919]
+PASS  sha  src/identity/quarantine.ts  [257999e6b7db640d375e6deed445f34b83ebfa1a9354c2f88531b13db1de7f22]
+PASS  LF/LF-only src/identity/quarantine.ts
+PASS  blob 8eec74ae:frontend/src/features/portfolio/portfolioStorePort.ts  [fd01731fa3f25cffffd6ac4590ad13c1564c9ef3 vs fd01731fa3f25cffffd6ac4590ad13c1564c9ef3]
+PASS  len  frontend/src/features/portfolio/portfolioStorePort.ts  [19997 vs 19997]
+PASS  sha  frontend/src/features/portfolio/portfolioStorePort.ts  [5fe9a4e49c76f43bf9515a12b919c702a771a998f0d1b431d2160ead46b00fdf]
+PASS  LF/LF-only frontend/src/features/portfolio/portfolioStorePort.ts
+PASS  blob 8eec74ae:frontend/src/features/portfolio/portfolio-store.ts  [b900a2481b73ed7bd00406b18a39c8f493b4c0cc vs b900a2481b73ed7bd00406b18a39c8f493b4c0cc]
+PASS  len  frontend/src/features/portfolio/portfolio-store.ts  [20161 vs 20161]
+PASS  sha  frontend/src/features/portfolio/portfolio-store.ts  [10fbb6b9d2f19880419bba351775483773c526d44a76b8cd5b014827613e331f]
+PASS  LF/LF-only frontend/src/features/portfolio/portfolio-store.ts
+PASS  blob 8eec74ae:scripts/test-summary-parser.mjs  [15c849fa739765af501182919748e4610acc4157 vs 15c849fa739765af501182919748e4610acc4157]
+PASS  len  scripts/test-summary-parser.mjs  [682 vs 682]
+PASS  sha  scripts/test-summary-parser.mjs  [a88e2289c0f052198af500de88ccac516444fb20f7901d472f7933dcdb37ef13]
+PASS  LF/LF-only scripts/test-summary-parser.mjs
+PASS  blob 8eec74ae:evidence/cross-repository/IIPS_V3_G2_GATE_E_PORTFOLIO_WRITE_POLICY_2026-10-18.md  [4a9501bffb49abbbc0ba5b5c4f81d2841812913e vs 4a9501bffb49abbbc0ba5b5c4f81d2841812913e]
+PASS  len  evidence/cross-repository/IIPS_V3_G2_GATE_E_PORTFOLIO_WRITE_POLICY_2026-10-18.md  [16908 vs 16908]
+PASS  sha  evidence/cross-repository/IIPS_V3_G2_GATE_E_PORTFOLIO_WRITE_POLICY_2026-10-18.md  [6385345b98fe33dc294212b37592ff455589b7656aa42bf05fdb29e04c57e7cf]
+PASS  LF/LF-only evidence/cross-repository/IIPS_V3_G2_GATE_E_PORTFOLIO_WRITE_POLICY_2026-10-18.md
+PASS  blob 8eec74ae:evidence/np04/IIPS_v3.0_G2_IPD_LOCAL_PRINCIPAL_OS_IPC_SECURITY_CONTRACT_PROPOSAL_2026-10-16.md  [fc8d1cbc9ec96f4f93fce8afbbb659b044f6268f vs fc8d1cbc9ec96f4f93fce8afbbb659b044f6268f]
+PASS  len  evidence/np04/IIPS_v3.0_G2_IPD_LOCAL_PRINCIPAL_OS_IPC_SECURITY_CONTRACT_PROPOSAL_2026-10-16.md  [61993 vs 61993]
+PASS  sha  evidence/np04/IIPS_v3.0_G2_IPD_LOCAL_PRINCIPAL_OS_IPC_SECURITY_CONTRACT_PROPOSAL_2026-10-16.md  [be56e6fdfc21f6382780f6d272e9f3b03d9f612671520e2994bc25b4f135f613]
+PASS  LF/LF-only evidence/np04/IIPS_v3.0_G2_IPD_LOCAL_PRINCIPAL_OS_IPC_SECURITY_CONTRACT_PROPOSAL_2026-10-16.md
+PASS  blob 8eec74ae:evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_AUTHORITY_ACT_2026-10-17.md  [91a952a291afe4a766801247bc2b12f7ed96ccb2 vs 91a952a291afe4a766801247bc2b12f7ed96ccb2]
+PASS  len  evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_AUTHORITY_ACT_2026-10-17.md  [33709 vs 33709]
+PASS  sha  evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_AUTHORITY_ACT_2026-10-17.md  [8c12bc00de15f2d3b736d3aec169a9d1cd77b89329d1ebfdfcae808b32eb208c]
+PASS  LF/LF-only evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_AUTHORITY_ACT_2026-10-17.md
+PASS  blob 8eec74ae:evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_AUTHORITY_DECISION_RENDERED_2026-10-17.md  [9befe6d888f6205d8d3df6ed3d873b0c71ee6336 vs 9befe6d888f6205d8d3df6ed3d873b0c71ee6336]
+PASS  len  evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_AUTHORITY_DECISION_RENDERED_2026-10-17.md  [26914 vs 26914]
+PASS  sha  evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_AUTHORITY_DECISION_RENDERED_2026-10-17.md  [3e5a66b8678ee5fbf37a9fffdb05e19b382a66a7def3a49be41947993d4fae70]
+PASS  LF/LF-only evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_AUTHORITY_DECISION_RENDERED_2026-10-17.md
+PASS  blob 8eec74ae:evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_PROCEDURE_2026-10-17.md  [a263a05ca45e7304f016013ce78a338808ab04c0 vs a263a05ca45e7304f016013ce78a338808ab04c0]
+PASS  len  evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_PROCEDURE_2026-10-17.md  [31648 vs 31648]
+PASS  sha  evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_PROCEDURE_2026-10-17.md  [13f8d0b3d77d4b942ebe5d5dbe2d9678fe81e4b8b8a1daf9fd0cec16af00c425]
+PASS  LF/LF-only evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_PROCEDURE_2026-10-17.md
+PASS  blob 8eec74ae:evidence/np04/IIPS_v3.0_G2_GATE_V_EVIDENCE_RECONCILIATION_AND_PA_WAIVER_RECORD_2026-10-16.md  [8731a86cff5ae8463c59e4d68cf708cb2b706f96 vs 8731a86cff5ae8463c59e4d68cf708cb2b706f96]
+PASS  len  evidence/np04/IIPS_v3.0_G2_GATE_V_EVIDENCE_RECONCILIATION_AND_PA_WAIVER_RECORD_2026-10-16.md  [25766 vs 25766]
+PASS  sha  evidence/np04/IIPS_v3.0_G2_GATE_V_EVIDENCE_RECONCILIATION_AND_PA_WAIVER_RECORD_2026-10-16.md  [f98a8d6b5a1c37ac88c6bc6a27c5ae55d04327dd44834e677e66f0f977530f97]
+PASS  LF/LF-only evidence/np04/IIPS_v3.0_G2_GATE_V_EVIDENCE_RECONCILIATION_AND_PA_WAIVER_RECORD_2026-10-16.md
+PASS  blob 1cceacff:frontend/src/features/portfolio/portfolioStorePort.ts  [d61f18dfdce12a7f0c4377a3c6d410026d454089 vs d61f18dfdce12a7f0c4377a3c6d410026d454089]
+PASS  len  frontend/src/features/portfolio/portfolioStorePort.ts  [16205 vs 16205]
+PASS  sha  frontend/src/features/portfolio/portfolioStorePort.ts  [213da6dc5b71673456a1fc99c84954572e3556c91bb3fa0d20518d4d734ad35d]
+PASS  LF/LF-only frontend/src/features/portfolio/portfolioStorePort.ts
+PASS  blob 1cceacff:frontend/src/features/portfolio/portfolio-store.ts  [b900a2481b73ed7bd00406b18a39c8f493b4c0cc vs b900a2481b73ed7bd00406b18a39c8f493b4c0cc]
+PASS  len  frontend/src/features/portfolio/portfolio-store.ts  [20161 vs 20161]
+PASS  sha  frontend/src/features/portfolio/portfolio-store.ts  [10fbb6b9d2f19880419bba351775483773c526d44a76b8cd5b014827613e331f]
+PASS  LF/LF-only frontend/src/features/portfolio/portfolio-store.ts
+PASS  blob 1cceacff:src/identity/mapping_store.ts  [eec60c09e08ec45a29979abf25b21efddef448ae vs eec60c09e08ec45a29979abf25b21efddef448ae]
+PASS  len  src/identity/mapping_store.ts  [3462 vs 3462]
+PASS  sha  src/identity/mapping_store.ts  [41e6d2ca8f8e2dcaa5d352cb00e7eae0b064de7261b5bfcc4b33339ff946c650]
+PASS  LF/LF-only src/identity/mapping_store.ts
+PASS  blob 1cceacff:src/identity/security_master.ts  [60030e0c17f8b2a31977ce598c80b18dc52d6727 vs 60030e0c17f8b2a31977ce598c80b18dc52d6727]
+PASS  len  src/identity/security_master.ts  [4595 vs 4595]
+PASS  sha  src/identity/security_master.ts  [00d85e594441d8d1ed737b16a00049fe5f982efbc66e0ab550cc4cb7de8f2ff6]
+PASS  LF/LF-only src/identity/security_master.ts
+PASS  blob 1cceacff:src/identity/quarantine.ts  [70c6f6580f6ade66eb31e7dee3adc4b52b10b010 vs 70c6f6580f6ade66eb31e7dee3adc4b52b10b010]
+PASS  len  src/identity/quarantine.ts  [919 vs 919]
+PASS  sha  src/identity/quarantine.ts  [257999e6b7db640d375e6deed445f34b83ebfa1a9354c2f88531b13db1de7f22]
+PASS  LF/LF-only src/identity/quarantine.ts
+PASS  blob 1cceacff:package.json  [0a3eec22a39048498601aa7b5672a40ede840d34 vs 0a3eec22a39048498601aa7b5672a40ede840d34]
+PASS  len  package.json  [995 vs 995]
+PASS  sha  package.json  [f43a6ff1d7d214b5e1ccb3be95a97a1c9a3caff20af6bebe3ab11201ec86be9a]
+PASS  LF/LF-only package.json
+PASS  blob 1cceacff:package-lock.json  [98ae3c63f403d88b5b13afbc9d9c32676b4716fe vs 98ae3c63f403d88b5b13afbc9d9c32676b4716fe]
+PASS  len  package-lock.json  [32128 vs 32128]
+PASS  sha  package-lock.json  [c77775af60ad24bbbd55df024bb92cbcf0f8b3c2bf14f938a5910d2264b216eb]
+PASS  LF/LF-only package-lock.json
+PASS  blob 1cceacff:tsconfig.json  [6d696ec21b50beddd063376c6f4cdb4463993c23 vs 6d696ec21b50beddd063376c6f4cdb4463993c23]
+PASS  len  tsconfig.json  [548 vs 548]
+PASS  sha  tsconfig.json  [ecdcea2f07cacbda5f70b036144e41b893bf7cfbc79cfbf6b0b7f017d07cb119]
+PASS  LF/LF-only tsconfig.json
+PASS  blob 1cceacff:.github/workflows/ci.yml  [aeee464feb76e2d1e9d104e1cae4e5dde37700ad vs aeee464feb76e2d1e9d104e1cae4e5dde37700ad]
+PASS  len  .github/workflows/ci.yml  [3749 vs 3749]
+PASS  sha  .github/workflows/ci.yml  [0f7cdc1b1e9805a0e2e66819a09e7f07d043b154ab239d6cc709bd9c587b342c]
+PASS  LF/LF-only .github/workflows/ci.yml
+PASS  blob 1cceacff:vite.config.ts  [5563e1bcfadda4b9d443522481029e7f092851ad vs 5563e1bcfadda4b9d443522481029e7f092851ad]
+PASS  len  vite.config.ts  [615 vs 615]
+PASS  sha  vite.config.ts  [74cd29e5b5d6b3a8e5ce17f93026c1ba60eef8653102450b53fa697668c608db]
+PASS  LF/LF-only vite.config.ts
+PASS  blob 8eec74ae:frontend/src/features/portfolio/portfolioStorePort.ts  [fd01731fa3f25cffffd6ac4590ad13c1564c9ef3 vs fd01731fa3f25cffffd6ac4590ad13c1564c9ef3]
+PASS  len  frontend/src/features/portfolio/portfolioStorePort.ts  [19997 vs 19997]
+PASS  sha  frontend/src/features/portfolio/portfolioStorePort.ts  [5fe9a4e49c76f43bf9515a12b919c702a771a998f0d1b431d2160ead46b00fdf]
+PASS  LF/LF-only frontend/src/features/portfolio/portfolioStorePort.ts
+PASS  blob 8eec74ae:frontend/src/features/portfolio/portfolio-store.ts  [b900a2481b73ed7bd00406b18a39c8f493b4c0cc vs b900a2481b73ed7bd00406b18a39c8f493b4c0cc]
+PASS  len  frontend/src/features/portfolio/portfolio-store.ts  [20161 vs 20161]
+PASS  sha  frontend/src/features/portfolio/portfolio-store.ts  [10fbb6b9d2f19880419bba351775483773c526d44a76b8cd5b014827613e331f]
+PASS  LF/LF-only frontend/src/features/portfolio/portfolio-store.ts
+PASS  blob 8eec74ae:src/identity/mapping_store.ts  [eec60c09e08ec45a29979abf25b21efddef448ae vs eec60c09e08ec45a29979abf25b21efddef448ae]
+PASS  len  src/identity/mapping_store.ts  [3462 vs 3462]
+PASS  sha  src/identity/mapping_store.ts  [41e6d2ca8f8e2dcaa5d352cb00e7eae0b064de7261b5bfcc4b33339ff946c650]
+PASS  LF/LF-only src/identity/mapping_store.ts
+PASS  blob 8eec74ae:src/identity/security_master.ts  [60030e0c17f8b2a31977ce598c80b18dc52d6727 vs 60030e0c17f8b2a31977ce598c80b18dc52d6727]
+PASS  len  src/identity/security_master.ts  [4595 vs 4595]
+PASS  sha  src/identity/security_master.ts  [00d85e594441d8d1ed737b16a00049fe5f982efbc66e0ab550cc4cb7de8f2ff6]
+PASS  LF/LF-only src/identity/security_master.ts
+PASS  blob 8eec74ae:src/identity/quarantine.ts  [70c6f6580f6ade66eb31e7dee3adc4b52b10b010 vs 70c6f6580f6ade66eb31e7dee3adc4b52b10b010]
+PASS  len  src/identity/quarantine.ts  [919 vs 919]
+PASS  sha  src/identity/quarantine.ts  [257999e6b7db640d375e6deed445f34b83ebfa1a9354c2f88531b13db1de7f22]
+PASS  LF/LF-only src/identity/quarantine.ts
+PASS  blob 8eec74ae:package.json  [51796e63280c1abb368c27bf8811cc6bad46e132 vs 51796e63280c1abb368c27bf8811cc6bad46e132]
+PASS  len  package.json  [2025 vs 2025]
+PASS  sha  package.json  [41079f64d3f7a87e92b32ee3d0be34291941ee32398926ff24b6f3528f838363]
+PASS  LF/LF-only package.json
+PASS  blob 8eec74ae:package-lock.json  [98ae3c63f403d88b5b13afbc9d9c32676b4716fe vs 98ae3c63f403d88b5b13afbc9d9c32676b4716fe]
+PASS  len  package-lock.json  [32128 vs 32128]
+PASS  sha  package-lock.json  [c77775af60ad24bbbd55df024bb92cbcf0f8b3c2bf14f938a5910d2264b216eb]
+PASS  LF/LF-only package-lock.json
+PASS  blob 8eec74ae:tsconfig.json  [6d696ec21b50beddd063376c6f4cdb4463993c23 vs 6d696ec21b50beddd063376c6f4cdb4463993c23]
+PASS  len  tsconfig.json  [548 vs 548]
+PASS  sha  tsconfig.json  [ecdcea2f07cacbda5f70b036144e41b893bf7cfbc79cfbf6b0b7f017d07cb119]
+PASS  LF/LF-only tsconfig.json
+PASS  blob 8eec74ae:.github/workflows/ci.yml  [4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5 vs 4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5]
+PASS  len  .github/workflows/ci.yml  [4054 vs 4054]
+PASS  sha  .github/workflows/ci.yml  [a2dba24f47aaead2b6b5c235ae9f33dc8a98641a5bcd1d5080bb3e202d724f86]
+PASS  LF/LF-only .github/workflows/ci.yml
+PASS  blob 8eec74ae:vite.config.ts  [5563e1bcfadda4b9d443522481029e7f092851ad vs 5563e1bcfadda4b9d443522481029e7f092851ad]
+PASS  len  vite.config.ts  [615 vs 615]
+PASS  sha  vite.config.ts  [74cd29e5b5d6b3a8e5ce17f93026c1ba60eef8653102450b53fa697668c608db]
+PASS  LF/LF-only vite.config.ts
+
+-- split baseline: both designated coordinates --
+PASS  alias-source recorded OIDs frontend/src/features/portfolio/import/broker-format-detector.ts  [primary 8887457bcd01679381a4f4d9cd2c57f4b6da435d alias 8887457bcd01679381a4f4d9cd2c57f4b6da435d]
+PASS  divergence classification frontend/src/features/portfolio/import/broker-format-detector.ts  [identical=True recorded=True]
+PASS  alias-source recorded OIDs frontend/src/features/portfolio/import/broker-holdings-mapper.ts  [primary 297e4a593bb575a5f3f8616788f3aa9e599707a4 alias 6c8ab71dc9230d22d0d3fe9a13e1809371f396e4]
+PASS  divergence classification frontend/src/features/portfolio/import/broker-holdings-mapper.ts  [identical=False recorded=False]
+PASS  alias-source recorded OIDs frontend/src/features/portfolio/import/broker-import-ingress.ts  [primary 0742401fe2a9bf7a497e94e6bc3973e4327979e0 alias 12824fbb5bd7323e106616d0a03de76d408321fc]
+PASS  divergence classification frontend/src/features/portfolio/import/broker-import-ingress.ts  [identical=False recorded=False]
+PASS  alias-source recorded OIDs frontend/src/features/portfolio/import/types.ts  [primary cac1a58fc1ff2e088c89b6c95e657af3f5881f7e alias cac1a58fc1ff2e088c89b6c95e657af3f5881f7e]
+PASS  divergence classification frontend/src/features/portfolio/import/types.ts  [identical=True recorded=True]
+PASS  alias-source recorded OIDs frontend/src/features/portfolio/import/adapters/csv-parser-helper.ts  [primary eb36ce4c0bd82bd6901c2a547511e616ac80c766 alias eb36ce4c0bd82bd6901c2a547511e616ac80c766]
+PASS  divergence classification frontend/src/features/portfolio/import/adapters/csv-parser-helper.ts  [identical=True recorded=True]
+PASS  alias-source recorded OIDs frontend/src/features/portfolio/import/adapters/dhan-holdings-adapter.ts  [primary 067ce99328b35acf05a46e37feb4b5abd9908d04 alias 067ce99328b35acf05a46e37feb4b5abd9908d04]
+PASS  divergence classification frontend/src/features/portfolio/import/adapters/dhan-holdings-adapter.ts  [identical=True recorded=True]
+PASS  alias-source recorded OIDs frontend/src/features/portfolio/import/adapters/groww-holdings-adapter.ts  [primary 6f7c97fc4321e9dd25f395cbf967065946411d23 alias 6f7c97fc4321e9dd25f395cbf967065946411d23]
+PASS  divergence classification frontend/src/features/portfolio/import/adapters/groww-holdings-adapter.ts  [identical=True recorded=True]
+PASS  alias-source recorded OIDs frontend/src/features/portfolio/import/adapters/index.ts  [primary ae5422d3ddb6bfc72247b49cda17e1de15575eee alias ae5422d3ddb6bfc72247b49cda17e1de15575eee]
+PASS  divergence classification frontend/src/features/portfolio/import/adapters/index.ts  [identical=True recorded=True]
+PASS  alias-source recorded OIDs frontend/src/features/portfolio/import/adapters/zerodha-holdings-adapter.ts  [primary d16bebcd14972faca22c9571a99f77af7767f4ae alias d16bebcd14972faca22c9571a99f77af7767f4ae]
+PASS  divergence classification frontend/src/features/portfolio/import/adapters/zerodha-holdings-adapter.ts  [identical=True recorded=True]
+PASS  alias-source recorded OIDs src/identity/security_master.ts  [primary 60030e0c17f8b2a31977ce598c80b18dc52d6727 alias e260fd90d05e5bfcd4bdc037524722c6fccee16d]
+PASS  divergence classification src/identity/security_master.ts  [identical=False recorded=False]
+PASS  alias-source recorded OIDs src/identity/mapping_store.ts  [primary eec60c09e08ec45a29979abf25b21efddef448ae alias eec60c09e08ec45a29979abf25b21efddef448ae]
+PASS  divergence classification src/identity/mapping_store.ts  [identical=True recorded=True]
+PASS  alias-source recorded OIDs src/identity/quarantine.ts  [primary 70c6f6580f6ade66eb31e7dee3adc4b52b10b010 alias 70c6f6580f6ade66eb31e7dee3adc4b52b10b010]
+PASS  divergence classification src/identity/quarantine.ts  [identical=True recorded=True]
+PASS  alias-source recorded OIDs src/contracts/provenance.ts  [primary 459c77a430f00e5b20fa1f80cc1a3b780165444a alias 459c77a430f00e5b20fa1f80cc1a3b780165444a]
+PASS  divergence classification src/contracts/provenance.ts  [identical=True recorded=True]
+PASS  alias-source recorded OIDs src/contracts/types.ts  [primary a644c83351b030b0e76d76642475420ea7ef07c0 alias 11f86dca633bed33da738f525bb8e5c2bb435498]
+PASS  divergence classification src/contracts/types.ts  [identical=False recorded=False]
+alias record keys: ['alias_blob_oid_sha1', 'alias_byte_length', 'alias_line_endings_in_git_blob', 'alias_raw_file_sha256', 'identity', 'path', 'primary_blob_oid_sha1', 'primary_raw_file_sha256']
+
+-- IRR remote blob verification: 24 core entries + 3 IRR-repo criteria/anchor entries at their recorded pins --
+PASS  IRR blob frontend/server/user-portfolio/ipcClient.ts  [c1b885e3173132685090bcd2cbfa4aa8c87fa4ca vs c1b885e3173132685090bcd2cbfa4aa8c87fa4ca]
+PASS  IRR len frontend/server/user-portfolio/ipcClient.ts  [26182 vs 26182]
+PASS  IRR sha frontend/server/user-portfolio/ipcClient.ts
+PASS  IRR blob frontend/server/user-portfolio/ownerContextFromBinding.ts  [296dd5e361bf3a8bac4f45981f667edb344a6e79 vs 296dd5e361bf3a8bac4f45981f667edb344a6e79]
+PASS  IRR len frontend/server/user-portfolio/ownerContextFromBinding.ts  [10050 vs 10050]
+PASS  IRR sha frontend/server/user-portfolio/ownerContextFromBinding.ts
+PASS  IRR blob frontend/server/user-portfolio/ipcPortAdapter.ts  [1e20e98023f20f80ed61d8d32d070fdde677d3c7 vs 1e20e98023f20f80ed61d8d32d070fdde677d3c7]
+PASS  IRR len frontend/server/user-portfolio/ipcPortAdapter.ts  [27511 vs 27511]
+PASS  IRR sha frontend/server/user-portfolio/ipcPortAdapter.ts
+PASS  IRR blob frontend/server/user-portfolio/firstPartySignal.ts  [d2f0ae721db303af9b23ee8a2a32e4cf72477d57 vs d2f0ae721db303af9b23ee8a2a32e4cf72477d57]
+PASS  IRR len frontend/server/user-portfolio/firstPartySignal.ts  [14243 vs 14243]
+PASS  IRR sha frontend/server/user-portfolio/firstPartySignal.ts
+PASS  IRR blob frontend/server/user-portfolio/ipcClient.test.ts  [33bcd1dbe197c2da42ee26ff3fcf9cf6067a9308 vs 33bcd1dbe197c2da42ee26ff3fcf9cf6067a9308]
+PASS  IRR len frontend/server/user-portfolio/ipcClient.test.ts  [28307 vs 28307]
+PASS  IRR sha frontend/server/user-portfolio/ipcClient.test.ts
+PASS  IRR blob frontend/server/user-portfolio/ownerContextFromBinding.test.ts  [01cd2ec02190db66dbb3cdb50ad7093682a1ac38 vs 01cd2ec02190db66dbb3cdb50ad7093682a1ac38]
+PASS  IRR len frontend/server/user-portfolio/ownerContextFromBinding.test.ts  [10558 vs 10558]
+PASS  IRR sha frontend/server/user-portfolio/ownerContextFromBinding.test.ts
+PASS  IRR blob frontend/server/user-portfolio/ipcPortAdapter.test.ts  [46243a7a79ba3b19cd4d2b8a56df8905aba220f8 vs 46243a7a79ba3b19cd4d2b8a56df8905aba220f8]
+PASS  IRR len frontend/server/user-portfolio/ipcPortAdapter.test.ts  [45566 vs 45566]
+PASS  IRR sha frontend/server/user-portfolio/ipcPortAdapter.test.ts
+PASS  IRR blob frontend/server/user-portfolio/fenceUnchanged.test.ts  [359ed7cf495b4226268b92a7c5f0a820b7b028e4 vs 359ed7cf495b4226268b92a7c5f0a820b7b028e4]
+PASS  IRR len frontend/server/user-portfolio/fenceUnchanged.test.ts  [24549 vs 24549]
+PASS  IRR sha frontend/server/user-portfolio/fenceUnchanged.test.ts
+PASS  IRR blob frontend/server/user-portfolio/userPortfolioContract.ts  [e6b57bb8a021d8eb4b9b7572d12affc7de66be0b vs e6b57bb8a021d8eb4b9b7572d12affc7de66be0b]
+PASS  IRR len frontend/server/user-portfolio/userPortfolioContract.ts  [31585 vs 31585]
+PASS  IRR sha frontend/server/user-portfolio/userPortfolioContract.ts
+PASS  IRR blob frontend/server/executive-transport.ts  [a438eec0c02287ceb734f6377dca08ce22fa247d vs a438eec0c02287ceb734f6377dca08ce22fa247d]
+PASS  IRR len frontend/server/executive-transport.ts  [49611 vs 49611]
+PASS  IRR sha frontend/server/executive-transport.ts
+PASS  IRR blob frontend/vite.config.ts  [a4614f498f6d5239af789e2f69b5410f2536d803 vs a4614f498f6d5239af789e2f69b5410f2536d803]
+PASS  IRR len frontend/vite.config.ts  [1023 vs 1023]
+PASS  IRR sha frontend/vite.config.ts
+PASS  IRR blob frontend/server/owner-context-unavailable.ts  [cb8db45d668d28cee7e0a52721001d579a872733 vs cb8db45d668d28cee7e0a52721001d579a872733]
+PASS  IRR len frontend/server/owner-context-unavailable.ts  [684 vs 684]
+PASS  IRR sha frontend/server/owner-context-unavailable.ts
+PASS  IRR blob frontend/server/user-portfolio-transport.ts  [51704c12a467cd2f718a030b5036bc55c9afa73f vs 51704c12a467cd2f718a030b5036bc55c9afa73f]
+PASS  IRR len frontend/server/user-portfolio-transport.ts  [2716 vs 2716]
+PASS  IRR sha frontend/server/user-portfolio-transport.ts
+PASS  IRR blob frontend/server/user-portfolio/userPortfolioPort.ts  [ba0001e88c83b070e4f16a3cdb35d34c82ec0200 vs ba0001e88c83b070e4f16a3cdb35d34c82ec0200]
+PASS  IRR len frontend/server/user-portfolio/userPortfolioPort.ts  [4501 vs 4501]
+PASS  IRR sha frontend/server/user-portfolio/userPortfolioPort.ts
+PASS  IRR blob frontend/server/user-portfolio/option2F.test.ts  [0dc7fd98bd3a2e46e0fda9d08b9ebf8dbabb97fd vs 0dc7fd98bd3a2e46e0fda9d08b9ebf8dbabb97fd]
+PASS  IRR len frontend/server/user-portfolio/option2F.test.ts  [9279 vs 9279]
+PASS  IRR sha frontend/server/user-portfolio/option2F.test.ts
+PASS  IRR blob frontend/server/user-portfolio/userPortfolioContract.test.ts  [400fe351438c7de794c9b045567ebd7e3f276976 vs 400fe351438c7de794c9b045567ebd7e3f276976]
+PASS  IRR len frontend/server/user-portfolio/userPortfolioContract.test.ts  [12411 vs 12411]
+PASS  IRR sha frontend/server/user-portfolio/userPortfolioContract.test.ts
+PASS  IRR blob frontend/server/user-portfolio-transport.test.ts  [73329e798fb0985bc1358d33e757b96d4e95bb82 vs 73329e798fb0985bc1358d33e757b96d4e95bb82]
+PASS  IRR len frontend/server/user-portfolio-transport.test.ts  [2984 vs 2984]
+PASS  IRR sha frontend/server/user-portfolio-transport.test.ts
+PASS  IRR blob frontend/server/user-portfolio/translationBoundary.ts  [93f602fd7e78395d3cedb77ff504388a4e65012f vs 93f602fd7e78395d3cedb77ff504388a4e65012f]
+PASS  IRR len frontend/server/user-portfolio/translationBoundary.ts  [7217 vs 7217]
+PASS  IRR sha frontend/server/user-portfolio/translationBoundary.ts
+PASS  IRR blob frontend/server/user-portfolio/translationBoundary.test.ts  [5c3805676c436bdd687606b48ecc523df1ee7ae4 vs 5c3805676c436bdd687606b48ecc523df1ee7ae4]
+PASS  IRR len frontend/server/user-portfolio/translationBoundary.test.ts  [2903 vs 2903]
+PASS  IRR sha frontend/server/user-portfolio/translationBoundary.test.ts
+PASS  IRR blob frontend/server/user-portfolio/userPortfolioBoundary.ts  [b8024c6b6d7a75591a77d032813c7312876a0612 vs b8024c6b6d7a75591a77d032813c7312876a0612]
+PASS  IRR len frontend/server/user-portfolio/userPortfolioBoundary.ts  [7808 vs 7808]
+PASS  IRR sha frontend/server/user-portfolio/userPortfolioBoundary.ts
+PASS  IRR blob frontend/server/user-portfolio/userPortfolioBoundary.test.ts  [c4e604d04d7fd371303644a077fa56d8cee7072e vs c4e604d04d7fd371303644a077fa56d8cee7072e]
+PASS  IRR len frontend/server/user-portfolio/userPortfolioBoundary.test.ts  [7392 vs 7392]
+PASS  IRR sha frontend/server/user-portfolio/userPortfolioBoundary.test.ts
+PASS  IRR blob frontend/package.json  [83058ea202ece8ec60b2674b05b7532ce9a8684b vs 83058ea202ece8ec60b2674b05b7532ce9a8684b]
+PASS  IRR len frontend/package.json  [1888 vs 1888]
+PASS  IRR sha frontend/package.json
+PASS  IRR blob frontend/package-lock.json  [744355e903135fc3ebc0f75b0e122bdf1bbc8358 vs 744355e903135fc3ebc0f75b0e122bdf1bbc8358]
+PASS  IRR len frontend/package-lock.json  [128442 vs 128442]
+PASS  IRR sha frontend/package-lock.json
+PASS  IRR blob .github/workflows/ci.yml  [b95a502a5056dea49d18a34b67b298181b5b98b6 vs b95a502a5056dea49d18a34b67b298181b5b98b6]
+PASS  IRR len .github/workflows/ci.yml  [4338 vs 4338]
+PASS  IRR sha .github/workflows/ci.yml
+PASS  IRR blob docs/integration/IIPS_v3.0_G3_GATE3_IMPLEMENTATION_AUTHORITY_ACT_EFFECTIVE_2026-10-19-02.md  [4744e6f44e0caea55e980756aeef90a5046ec87e vs 4744e6f44e0caea55e980756aeef90a5046ec87e]
+PASS  IRR len docs/integration/IIPS_v3.0_G3_GATE3_IMPLEMENTATION_AUTHORITY_ACT_EFFECTIVE_2026-10-19-02.md  [51662 vs 51662]
+PASS  IRR sha docs/integration/IIPS_v3.0_G3_GATE3_IMPLEMENTATION_AUTHORITY_ACT_EFFECTIVE_2026-10-19-02.md
+PASS  IRR blob docs/integration/IIPS_v3.0_G3_AMEND_01_AMENDMENT_AND_PA_DETERMINATION_2026-10-22.md  [85ba78e6cbfe20ed146a53abbfa23a3350140fcf vs 85ba78e6cbfe20ed146a53abbfa23a3350140fcf]
+PASS  IRR len docs/integration/IIPS_v3.0_G3_AMEND_01_AMENDMENT_AND_PA_DETERMINATION_2026-10-22.md  [47104 vs 47104]
+PASS  IRR sha docs/integration/IIPS_v3.0_G3_AMEND_01_AMENDMENT_AND_PA_DETERMINATION_2026-10-22.md
+PASS  IRR blob docs/integration/IIPS_v3.0_G3_GATE3_ACCEPTANCE_RECORD_2026-10-22.md  [f3a6c9a3d15985a78a0945ecfc96019b3a5c425a vs f3a6c9a3d15985a78a0945ecfc96019b3a5c425a]
+PASS  IRR len docs/integration/IIPS_v3.0_G3_GATE3_ACCEPTANCE_RECORD_2026-10-22.md  [41277 vs 41277]
+PASS  IRR sha docs/integration/IIPS_v3.0_G3_GATE3_ACCEPTANCE_RECORD_2026-10-22.md
+
+=== 374 checks executed, 0 failures ===

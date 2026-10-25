@@ -1,0 +1,32 @@
+== 4. canonical guarded npm test (publication check; NOT S2) ==
+started_utc=2026-10-25T20:20:11Z
+
+> iips-production-market-data@1.0.0 test
+> node scripts/run-tests.mjs
+
+[test-guard] files=68 (source suite files: 68)
+TAP version 13
+# Subtest: BI-03: Broker Adapter Foundation & Holdings Mapper Contract
+    # Subtest: BI03-01: maps standard FINAPP holding array to normalized UserHoldingInput records
+    ok 1 - BI03-01: maps standard FINAPP holding array to normalized UserHoldingInput records
+      ---
+
+… per-test TAP body elided. Full unedited transcript: 4,657,681 bytes, 53530 lines, SHA-256 29592e5a7e9f6930e56676efdddc8cc64d32636dc6744f580a8e8b663d25dd60 — retained outside every Git worktree and not committed (Q11); the guard summary below is reproduced verbatim from that transcript.
+
+  ---
+  duration_ms: 165.087605
+  type: 'suite'
+  ...
+1..106
+# tests 924
+# suites 124
+# pass 923
+# fail 0
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 17252.747058
+
+[test-guard] OK — 924 test(s) executed, 923 passed, exit 0
+npm_test_exit=0
+

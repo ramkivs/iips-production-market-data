@@ -1,0 +1,58 @@
+== publication checks (documentation-only change) — NOT S2, NOT QE ==
+started_utc=2026-10-25T20:19:35Z
+-- 1. npm ci --no-audit --no-fund --
+
+> iips-production-market-data@1.0.0 prepare
+> npm run build:portfolio-ui-package && npm run build:pit-package
+
+
+> iips-production-market-data@1.0.0 build:portfolio-ui-package
+> tsc -p tsconfig.portfolio-ui-package.json
+
+
+> iips-production-market-data@1.0.0 build:pit-package
+> tsc -p tsconfig.pit-package.json
+
+
+added 33 packages in 9s
+npm notice
+npm notice New major version of npm available! 10.9.8 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice
+npm_ci_exit=0
+
+-- 2. npx tsc --noEmit --
+tsc_exit=0
+
+-- 3. npm run build --
+
+> iips-production-market-data@1.0.0 build
+> tsc && vite build && npm run build:portfolio-ui-package && npm run build:pit-package
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 73 modules transformed.
+rendering chunks...
+computing gzip size...
+dist-frontend/index.html                     0.58 kB │ gzip:   0.38 kB
+dist-frontend/assets/index-DRxJRl4Q.css     14.17 kB │ gzip:   3.80 kB
+dist-frontend/assets/index-DESzrqsS.js   1,489.05 kB │ gzip: 189.37 kB │ map: 4,072.70 kB
+
+✓ built in 446ms
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+> iips-production-market-data@1.0.0 build:portfolio-ui-package
+> tsc -p tsconfig.portfolio-ui-package.json
+
+
+> iips-production-market-data@1.0.0 build:pit-package
+> tsc -p tsconfig.pit-package.json
+
+build_exit=0
+-- dist file count --
+dist_files=1140
