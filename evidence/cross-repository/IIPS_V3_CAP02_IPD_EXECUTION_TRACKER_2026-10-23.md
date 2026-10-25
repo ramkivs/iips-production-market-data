@@ -1526,3 +1526,95 @@ An IRR-locus act is required to update IRR tracker §16.122 rows `16.122.6` (ele
 (freeze criterion (a)). It is bookkeeping in the other locus and is **not** performed here: this session
 is IPD-bound and made **zero IRR writes**. The IRR tracker therefore still reads element 6
 `OUTSTANDING` until that act lands, although element 6 is satisfied in fact by this publication.
+
+## CAP-03 — DQ-6b mirror receipt: PR #92 publication, merge and independent remote-verification receipt (2026-10-25)
+
+**Receipt:** `IIPS-V3-CAP03-DQ6B-IPD-MIRROR-PUBLICATION-RECEIPT-2026-10-25-01` (census before this
+record: `0` occurrences in either repository). Documentation-only reconciliation of verified remote
+facts. It renders no decision, changes no pin, moves no gate, and is not a second mirror act — the
+mirror act is `IIPS-V3-CAP03-DQ6B-IPD-MIRROR-RECEIPT-2026-10-25-01`, published by PR #92.
+
+| Item | Value |
+|---|---|
+| PR | [#92](https://github.com/ramkivs/iips-production-market-data/pull/92) — `CAP-03: publish IPD-locus DQ-6b decision mirror receipt (effectiveness element 6)` |
+| Base | `8eec74ae27cda09f3c368b9c299895eae41554db` / tree `4eba29029f8d95cfe483e615a7047426b298ce50` (= `origin/main` at Step 0, zero drift) |
+| PR head / tree | `6689ba38aec9850e9d4d37dc746829bf7894bb54` / tree `2be963aed662816c8d7abb9d432f4e14eeba0c23` |
+| PR-head CI | run `40224757268` **success** — `typecheck · build · test`, all 8 steps success (1m8s) |
+| PR-head executed-test check | `121263923459` **success** — **924 tests executed, 0 failed** at `6689ba3…` |
+| Merge | **MERGED** `2026-10-25T19:12:52Z` as `76d0f2d68e4a3e03ff48e9c2dd75ae1e813bd79e` (merge commit, `--merge`; not squash, not rebase) |
+| Merge tree | `2be963aed662816c8d7abb9d432f4e14eeba0c23` — **identical** to the tested head tree; nothing lost or added by the merge |
+| Post-merge `main` CI | run `40224953361` at `76d0f2d…` — **success**; check `121264532755` **924 tests executed, 0 failed** |
+| Ancestry | `6689ba3…` verified an **ancestor** of `origin/main` after the merge (`git merge-base --is-ancestor`, exit `0`) |
+| Changed paths | **exactly 12**, all under `evidence/cross-repository/`: the new receipt, the append-only tracker entry, and 10 annex files. **No** source, test, script, package manifest, export, `files` entry, schema, migration, protocol, route, CI workflow, fence or pin |
+| Compare API `8eec74a…76d0f2d` | `status=ahead`, `ahead_by=2`, `behind_by=0`, `files=12` |
+
+### 1. Independent remote read-back (not inferred from the API summary or the merge badge)
+
+Each blob was **downloaded through the GitHub Contents API at `ref=76d0f2d…`**, hashed independently and
+compared both to the local object store and to the local file on disk.
+
+| Published path | Remote blob | Bytes | SHA-256 | Local blob + bytes + SHA-256 | Result |
+|---|---|---:|---|---|---|
+| `evidence/cross-repository/IIPS_V3_CAP03_DQ6B_DECISION_MIRROR_RECEIPT_2026-10-25.md` | `3430df5ec1c10cf5cab8b764577aae2a3503d09b` | 14,292 | `03b90f2edd30d629628c1f905dbb9fc6a74966d7a17d3dc10ba93a4b2493e0f6` | identical | **MATCH** |
+| `evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` (at the merge) | `33704dd8ab232678c9f43f9bbd59aa623a7fce04` | 141,530 | `3fa7d06fc4eb5434ecbd84ef44799bf1559005aa2afe3ae03da4f3e23e508e47` | identical | **MATCH** |
+| `…/cap03_dq6b_2026-10-25_ipd_mirror/SHA256SUMS.txt` (as merged) | `f0a4c3dfb21bff76f29fa4d53c12d9b2b3d3cb21` | 852 | `bbaa6ad6347c05588f05cd5843495829e44ea5e141aeb40b3a7f118b7a9cc59b` | identical | **MATCH** |
+
+**Frozen anchors re-read from the remote at the new `main`:** `package.json`
+`51796e63280c1abb368c27bf8811cc6bad46e132`, `src/persistence/portfolio_store.ts`
+`540d49f2deb2c8d600b5b866675d145cf76a1e46`, `.github/workflows/ci.yml`
+`4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5` — **all unchanged**, so the mirror act published nothing
+into the qualified surface.
+
+### 2. The mirrored content is the prepared IRR text, verbatim
+
+§§1–§5 of the published receipt were diffed against
+`docs/integration/IIPS_v3.0_CAP03_DQ6B_IPD_MIRROR_RECEIPT_PREPARED_2026-10-25.md` at IRR
+`main@ac6d45b6…` (blob `e1558f2c…`, SHA-256 `a8cf94ea…`): **identical, 56 lines, zero differences**.
+The determination identity, its wording, both IPD commit/tree coordinates, the alias disposition, the
+lineage values and every cited IRR coordinate therefore cross the locus boundary unchanged. Only the
+status front matter and §§6–9 (Step 0 verification, the registration act, the six-element effect,
+attestation) are new.
+
+### 3. Drift check (DQ-4.4) at the post-publication tip
+
+| Check | Result |
+|---|---|
+| Changed paths that are H-12 R5 entries | **NONE** — 0 of 56 |
+| The 32 IPD H-12 entries at `76d0f2d…` vs the R5 manifest identities | **32/32 byte-identical** |
+| The 14 alias raw sources at both designated coordinates | **14/14 identical at the alias** (`70b24f02…`) and **14/14 at the primary** (`8eec74ae…`); no drift |
+| Alias ancestry | `70b24f02…` still an **ancestor** of `main`; distance **216** (it was 214 at designation — the +2 is this publication's own two commits, not alias movement) |
+| Designated pins | **unchanged** — primary `8eec74ae…`/tree `4eba2902…`, alias `70b24f02…`/tree `cc0f0117…`, IRR consumer `ba64b2d…`/tree `5e4262f1…`. The publication moved `main` **ahead of** the designated primary pin; the pin is a named commit, not "current `main`", so **no re-pin occurs and none is made here** |
+
+This is **publication movement, not qualified drift.**
+
+### 4. What this publication establishes
+
+- Effectiveness element **6** of `IIPS-V3-CAP03-DQ6B-PA-DECISION-2026-10-25-01` is **satisfied**: a dated
+  receipt mirroring the determination exists in the IPD locus, merged to `main` by merge commit with
+  green exact-head CI and independently read back by blob id and SHA-256.
+- **All six effectiveness elements are therefore complete**, elements 1–5 having been satisfied in the
+  IRR locus at `c5037613…` (IRR tracker §16.122.14). The DQ-6b decision is effective in **both** loci.
+- Nothing else. The mirror act renders **no** IPD decision and grants **nothing**.
+
+**Not established, and not performed by this pass:** the DQ-4 final QE freeze (still `PREPARED AND
+VALIDATED — NOT ESTABLISHED`; remaining conditions are the H-12 adoption act, the host sequence
+S2 → one P-1 provisioning execution → S3 preflight, and native-Windows canonical evidence); H-12
+adoption (R5 remains `NOT ADOPTED`); Gate 4 start (still `AUTHORIZED — NOT STARTED`, QE `0/11`); Gate 5
+(not initiated, not admitted); any write authorization, `503` fence lift, durable-read acceptance or
+production eligibility; any alias modernization, re-pin, retirement or lineage reclassification; any
+change to the approved DQ-6b decision or its pin values.
+
+### 5. IRR-locus registration (not performed here)
+
+This session is **IPD-bound**: **zero IRR writes** were made. The IRR tracker rows `16.122.6`
+(element 6) and `16.122.9` (freeze criterion (a)) still read `OUTSTANDING`/unmet until an IRR-locus act
+records this publication. That is bookkeeping in the other locus; it does not qualify element 6, which
+is satisfied in fact by this publication.
+
+### 6. Annex
+
+`evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/` — `00`–`02` (Step 0 baseline, alias
+source census, IRR locus read-back), `10`–`15` (ci/typecheck/build/test-summary/package-consumer and
+the pre-commit tree), `20`–`22` (independent remote read-back, H-12 drift check, CI run ids).
+`SHA256SUMS.txt` is **re-issued** by this receipt PR to cover `20`–`22` and to drop a self-referential
+line from the version merged in PR #92; the merged version's identity is preserved in §1 above.
