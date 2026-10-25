@@ -1,0 +1,90 @@
+== Independent remote read-back at IPD main 9efbf83a74297d54dc392fa60efcd966ca52d486 (PR #94 merge) ==
+observed_utc=2026-10-25T20:23:41Z
+-- merge commit --
+{"message":"Merge pull request #94 from ramkivs/arena/cb25c625-iips-production-market-data","parents":["c6b540afd1fd3da5f18d029a54d1d89331916ead","cddee5910309576ecfbe99099359e5fa54602fb1"],"sha":"9efbf83a74297d54dc392fa60efcd966ca52d486","tree":"7a1ef7b89e69e08a8287ef31d28e91b959c4e5f9"}
+-- ancestry of tested head --
+head_is_ancestor_of_main_exit=0
+-- merged tree identity (tested head tree vs merge tree) --
+7a1ef7b89e69e08a8287ef31d28e91b959c4e5f9
+7a1ef7b89e69e08a8287ef31d28e91b959c4e5f9
+-- changed paths 8eec74ae...PR#94-merge (qualified-surface drift) --
+  evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md
+  evidence/cross-repository/IIPS_V3_CAP03_DQ6B_DECISION_MIRROR_RECEIPT_2026-10-25.md
+  evidence/cross-repository/IIPS_V3_CAP03_G4_H12_R5_ADOPTION_IPD_MIRROR_RECEIPT_2026-10-25.md
+  evidence/cross-repository/IIPS_V3_CAP03_S2_HOST_PRECONDITION_BLOCKER_2026-10-25.md
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/00_baseline.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/01_alias_source_census.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/02_irr_locus_readback.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/10_npm_ci.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/11_typecheck.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/12_build.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/13_test_summary.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/14_package_consumer.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/15_working_tree.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/20_remote_readback.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/21_h12_drift_check.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/22_ci_runs.txt
+  evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/SHA256SUMS.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/00_baseline.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/01_identifier_census.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/02_irr_locus_readback.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/10_h12_r5_drift_and_supplement_verification.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/11_h12_r5_manifest_verification.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/12_h12_r5_manifest_verify.py
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/13_h12_r5_drift_and_supplement_verify.py
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/20_irr_effectiveness_checks.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/30_s2_host_precondition_probe.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/40_publication_checks.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/41_publication_test_summary.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/42_publication_package_consumer.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/43_publication_tree.txt
+  evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/SHA256SUMS.txt
+  intervening_paths=31
+  non_evidence_intervening=0
+-- PR #94 changed paths (merge diff) --
+{"ahead_by":2,"behind_by":0,"files":17,"paths":["evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md","evidence/cross-repository/IIPS_V3_CAP03_G4_H12_R5_ADOPTION_IPD_MIRROR_RECEIPT_2026-10-25.md","evidence/cross-repository/IIPS_V3_CAP03_S2_HOST_PRECONDITION_BLOCKER_2026-10-25.md","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/00_baseline.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/01_identifier_census.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/02_irr_locus_readback.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/10_h12_r5_drift_and_supplement_verification.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/11_h12_r5_manifest_verification.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/12_h12_r5_manifest_verify.py","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/13_h12_r5_drift_and_supplement_verify.py","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/20_irr_effectiveness_checks.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/30_s2_host_precondition_probe.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/40_publication_checks.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/41_publication_test_summary.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/42_publication_package_consumer.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/43_publication_tree.txt","evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/SHA256SUMS.txt"],"status":"ahead","total_commits":2}
+
+-- per-file remote blob / bytes / SHA-256 (downloaded at ref=9efbf83a...) vs local --
+evidence/cross-repository/IIPS_V3_CAP03_G4_H12_R5_ADOPTION_IPD_MIRROR_RECEIPT_2026-10-25.md
+  remote: blob=1e71504f776152ea9200f3a6ce9250872edbee93 bytes=15310 sha256=c20f6e04c90d3ed0139a1cc5b5c88cb6a2d37b42556c88dc4fac989721807c1e
+  local : blob=1e71504f776152ea9200f3a6ce9250872edbee93 bytes=15310 sha256=c20f6e04c90d3ed0139a1cc5b5c88cb6a2d37b42556c88dc4fac989721807c1e
+  result: MATCH
+evidence/cross-repository/IIPS_V3_CAP03_S2_HOST_PRECONDITION_BLOCKER_2026-10-25.md
+  remote: blob=3bf58cee7dd299f39d4b6de5aa470f0400433071 bytes=7705 sha256=d5c5787f6d99681d8297db170098118e8b5d09608f3b0212074da88388778e09
+  local : blob=3bf58cee7dd299f39d4b6de5aa470f0400433071 bytes=7705 sha256=d5c5787f6d99681d8297db170098118e8b5d09608f3b0212074da88388778e09
+  result: MATCH
+evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md
+  remote: blob=983807c49248020f1e310f266bf33d0fd93df6b2 bytes=155433 sha256=5d7574bb94031e8a90f4ee5489e28e63c7358786271f58daea7af9b1ff450ca2
+  local : blob=983807c49248020f1e310f266bf33d0fd93df6b2 bytes=155433 sha256=5d7574bb94031e8a90f4ee5489e28e63c7358786271f58daea7af9b1ff450ca2
+  result: MATCH
+evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/SHA256SUMS.txt
+  remote: blob=e38f45925875d57091aa41d44c32b4d1e5a70f90 bytes=1263 sha256=0267dbdde47d526969e82cdd7b60bd65e5cfd6191ae8ad05bb681514847dcbf9
+  local : blob=e38f45925875d57091aa41d44c32b4d1e5a70f90 bytes=1263 sha256=0267dbdde47d526969e82cdd7b60bd65e5cfd6191ae8ad05bb681514847dcbf9
+  result: MATCH
+-- re-verify annex SHA256SUMS from the DOWNLOADED remote blobs --
+00_baseline.txt: OK
+01_identifier_census.txt: OK
+02_irr_locus_readback.txt: OK
+10_h12_r5_drift_and_supplement_verification.txt: OK
+11_h12_r5_manifest_verification.txt: OK
+12_h12_r5_manifest_verify.py: OK
+13_h12_r5_drift_and_supplement_verify.py: OK
+20_irr_effectiveness_checks.txt: OK
+30_s2_host_precondition_probe.txt: OK
+40_publication_checks.txt: OK
+41_publication_test_summary.txt: OK
+42_publication_package_consumer.txt: OK
+43_publication_tree.txt: OK
+-- frozen anchors unchanged at the new main --
+  51796e63280c1abb368c27bf8811cc6bad46e132 package.json
+  540d49f2deb2c8d600b5b866675d145cf76a1e46 src/persistence/portfolio_store.ts
+  4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5 .github/workflows/ci.yml
+  f4dc72b12ed9d618d1cfde836160f992ff1be9a5 src/ipc/protocol.ts
+  27becc76749f5b11a37ca4e6254d58132620f57f src/ipc/dispatch.ts
+fatal: path 'src/persistence/migrations/001_init.ts' does not exist in '9efbf83a74297d54dc392fa60efcd966ca52d486'
+  9efbf83a74297d54dc392fa60efcd966ca52d486:src/persistence/migrations/001_init.ts src/persistence/migrations/001_init.ts
+
+-- migration 001 path correction --
+path=src/persistence/migrations/001_initial_schema.ts
+blob_at_new_main=f594a18264c45ccdcbfa2381592820a72d3c453b
+blob_at_designated_pin=f594a18264c45ccdcbfa2381592820a72d3c453b
