@@ -1,0 +1,11 @@
+== Pre-rendering identifier census ==
+observed_utc=2026-10-25T20:18:08Z
+--- IIPS-V3-CAP03-G4-H12-R5-ADOPTION-IPD-MIRROR-RECEIPT-2026-10-25-01 ---
+IPD worktree occurrences: 0
+IRR main occurrences: 7
+--- IIPS-V3-CAP03-G4-H12-R5-S2-HOST-PRECONDITION-BLOCKER-2026-10-25-01 ---
+IPD worktree occurrences: 0
+IRR main occurrences: 0
+--- IIPS-V3-CAP03-G4-H12-R5-ADOPTION-IPD-MIRROR-PUBLICATION-RECEIPT-2026-10-25-01 ---
+IPD worktree occurrences: 0
+IRR main occurrences: 0

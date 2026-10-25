@@ -1,0 +1,15 @@
+== IRR adoption act effectiveness checks (independent) ==
+observed_utc=2026-10-25T20:17:34Z
+-- IRR run 40228792767 (exact-head CI for PR #279) --
+{"conclusion":"success","created_at":"2026-10-25T20:01:27Z","event":"pull_request","head_sha":"19e5e28a540a00b2af458e4475529ab9b4f1c99b","id":40228792767,"status":"completed","updated_at":"2026-10-25T20:03:21Z","workflow":"CI"}
+-- IRR run 40228968888 (post-merge main CI) --
+{"conclusion":"success","created_at":"2026-10-25T20:03:40Z","event":"push","head_sha":"ae82be857a554d96e6c2cffc0d519e99135effdd","id":40228968888,"status":"completed","updated_at":"2026-10-25T20:05:33Z","workflow":"CI"}
+-- IRR workflow runs at main tip c2306901 --
+{"conclusion":"success","created_at":"2026-10-25T20:09:56Z","event":"push","head_sha":"c23069013965226c0ee3bdbd82fcfe2e0f7aa1db","id":40229467244,"status":"completed"}
+{"conclusion":"success","created_at":"2026-10-25T20:03:40Z","event":"push","head_sha":"ae82be857a554d96e6c2cffc0d519e99135effdd","id":40228968888,"status":"completed"}
+{"conclusion":"success","created_at":"2026-10-25T16:35:52Z","event":"push","head_sha":"ac6d45b695bf9b79c0ec7af7d4656dc914ffccb2","id":40212439673,"status":"completed"}
+{"conclusion":"success","created_at":"2026-10-25T16:31:41Z","event":"push","head_sha":"c5037613295f826638e4b73a996c157e9749e66c","id":40212105501,"status":"completed"}
+-- IRR merge commit parents --
+{"message":"Merge pull request #279 from ramkivs/arena/38ee41e5-iips-review-recovered","parents":["ac6d45b695bf9b79c0ec7af7d4656dc914ffccb2","19e5e28a540a00b2af458e4475529ab9b4f1c99b"],"sha":"ae82be857a554d96e6c2cffc0d519e99135effdd","tree":"8339a3b70d23113ea317ec1d2dd78269d832f7ab"}
+-- IRR open PRs --
+0

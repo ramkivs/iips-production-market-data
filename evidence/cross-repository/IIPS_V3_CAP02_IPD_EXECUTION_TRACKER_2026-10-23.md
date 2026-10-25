@@ -1618,3 +1618,61 @@ source census, IRR locus read-back), `10`–`15` (ci/typecheck/build/test-summar
 the pre-commit tree), `20`–`22` (independent remote read-back, H-12 drift check, CI run ids).
 `SHA256SUMS.txt` is **re-issued** by this receipt PR to cover `20`–`22` and to drop a self-referential
 line from the version merged in PR #92; the merged version's identity is preserved in §1 above.
+
+## CAP-03 — Gate 4 H-12 R5 adoption mirrored into the IPD locus (2026-10-25)
+
+**Receipt:** `IIPS-V3-CAP03-G4-H12-R5-ADOPTION-IPD-MIRROR-RECEIPT-2026-10-25-01` —
+`evidence/cross-repository/IIPS_V3_CAP03_G4_H12_R5_ADOPTION_IPD_MIRROR_RECEIPT_2026-10-25.md`.
+Registration only: it renders no IPD decision, adopts nothing on IPD's behalf, moves no pin, relaxes no
+guard, credits no QE item and admits nothing.
+
+| Item | Value |
+|---|---|
+| Governing PA act (IRR locus) | `IIPS-V3-CAP03-G4-H12-R5-PA-ADOPTION-ACT-2026-10-25-01` — IRR `docs/integration/IIPS_v3.0_CAP03_G4_H12_R5_PA_ADOPTION_ACT_EFFECTIVE_2026-10-25.md`, blob `9f3aa377ab6468e8a27ec2d30bb2fc6d9395e1ff`, `30,278` B, SHA-256 `d29781bc5be47498a12caf00b797d9adbb3f0d55209039aa2755ebbaf8f5c1fd` — **EFFECTIVE** |
+| IRR publication coordinates (independently re-read) | PR **#279**, tested head `19e5e28a540a00b2af458e4475529ab9b4f1c99b`, exact-head CI `40228792767` success, **2-parent `--merge`** `ae82be857a554d96e6c2cffc0d519e99135effdd` at `2026-10-25T20:03:37Z`, post-merge CI `40228968888` success; IRR `main` `c2306901…` (PR #280), tip CI `40229467244` success; `0` open IRR PRs |
+| Adopted manifest (byte-unmodified) | `G4-H12-MANIFEST-v2-CANDIDATE-2026-10-25-R5` — blob `f4649e36a81c7013287810cd3202b99586dbd951`, `143,813` B, SHA-256 `d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76`; its own `validation_state.adoption_status` still reads `NOT ADOPTED` because adoption is the act's determination, not an edit to the manifest |
+| Bound Amended-§8 supplement | `IIPS-V3-CAP03-G4-H12-R5-AMENDED-S8-SUPPLEMENT-2026-10-25-01` — blob `6c777de6f36bfd06ff89373540d755cc367744f2`, `287,101` B, SHA-256 `87442b0adbd061a700aa468bdd97e8b049819cc599f5ae50d7a94cfc2f33fdbf` |
+| Membership mirrored | **`32` IPD + `24` IRR = `56` core `PRESENT`** (`G4-AMEND-01` Alternative A) **+ `1` conditional helper** `scripts/test-summary-parser.mjs` (`15c849fa…`) + `7` post-Gate-3 CAP-02 surface entries + `11` companion CAP-03 guards + `14` alias raw sources (`10` identical / `4` divergent) + `9` criteria basis + `10` preserved and `10` re-measured Gate 3 anchors + `17` historical Gate C entries |
+| Independent verification executed this pass | **`374` checks / `0` failures** (manifest byte identity + every act-recorded term + per-entry re-hash from the local IPD object store and the IRR Contents API) and **`138` checks / `0` failures** (designated-pin and live-`main` zero-drift, supplemental sets, alias classification re-derived); transcripts `cap03_h12r5_2026-10-25_adoption_mirror/10`–`13` |
+| IPD Step 0 baseline | `c6b540afd1fd3da5f18d029a54d1d89331916ead` / tree `b18b5d8d2fbd5bf11a174f0e5578314ead5cbf76`; `0` open PRs; `main` CI `40225262938` success; non-shallow full-history worktree; all `15` paths intervening since `8eec74ae…` are under `evidence/cross-repository/` and **none** is an H-12 core entry |
+| Designated pins | **unchanged** — primary `8eec74ae…`/tree `4eba2902…`, alias `70b24f02…`/tree `cc0f0117…`, IRR consumer `ba64b2d5…`/tree `5e4262f1…` |
+| Changed IPD paths | this append-only tracker block, the mirror receipt, the S2 precondition blocker record, and `13` annex files under `evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/`. **No** source, test, script, package manifest, export, `files` entry, schema, migration, protocol, route, CI workflow, fence or pin |
+| Effect | the effective IRR H-12 R5 adoption act is registered in the IPD locus at a named blob; **no gate moves** |
+
+### Status after registration
+
+```text
+Gate 4 H-12 authorized manifest: R5, ADOPTED by effective IRR act, NOW REGISTERED IN IPD
+DQ-4 final QE freeze: PREPARED AND VALIDATED — NOT ESTABLISHED (8/10; criteria 7 and 8 NOT MET)
+Gate 4: AUTHORIZED — NOT STARTED; QE 0/11 executed
+Gate 5: NOT INITIATED / NOT ADMITTED; durable reads NOT GRANTED; production NOT ADMITTED
+Pins: unchanged (no re-pin by this publication)
+```
+
+## CAP-03 — `S2` dispatched to the designated native-Windows host: **NOT EXECUTED** (2026-10-25)
+
+**Record:** `IIPS-V3-CAP03-G4-H12-R5-S2-HOST-PRECONDITION-BLOCKER-2026-10-25-01` —
+`evidence/cross-repository/IIPS_V3_CAP03_S2_HOST_PRECONDITION_BLOCKER_2026-10-25.md`.
+
+| Item | Value |
+|---|---|
+| Host requirement | `desktop-no0nhtp`, native Windows 11, non-elevated operator **Ramki**, `process.platform === 'win32'`, operator-supplied Node `>=22.13.0 <23`, flag-free `node:sqlite` |
+| Executing environment | `e2b.local` — Linux `6.1.158+` x86_64, Debian 12, uid `1001`, Node `v22.22.3`, no PowerShell/`pwsh`/`cmd.exe` |
+| Host reachability | `getent hosts desktop-no0nhtp` exit `2`; `ping` → `Name or service not known`; TCP `5985`/`5986`/`3389`/`22` unreachable |
+| Mandatory preconditions | **`5` of `7` FAIL** (host, OS, platform, operator, checkout commit); Node and flag-free `node:sqlite` **unverified on host** — this runtime additionally emits `ExperimentalWarning` for `node:sqlite`, which is not the designated observation |
+| Commands executed | **`0` of `5`** — `npm ci --no-audit --no-fund`, `npx tsc --noEmit`, `npm run build`, canonical guarded `npm test`, `npm run test:package-consumer` all **NOT RUN** |
+| Substitution | **REFUSED** — no Linux, WSL, elevated shell, alternate commit or alternate runtime used; no `dist/**` count or test total claimed as host evidence; no failed run to preserve because the sequence never started |
+| Downstream | `P-1` **NOT EXECUTED** (still one bounded execution, strictly after `S2` passes); `S3` **NOT REACHED** (still requires `PF-15` endpoint/local-state designation) |
+
+`S2` remains the single next dependency-respecting action, on the designated host, at
+`8eec74ae27cda09f3c368b9c299895eae41554db` / tree `4eba29029f8d95cfe483e615a7047426b298ce50`.
+
+### Publication checks for this documentation-only pass (explicitly not `S2`, not QE)
+
+Executed on the IPD worktree in this Linux environment so the publication itself is sound, and recorded in
+annex `40`–`43`: `npm ci --no-audit --no-fund` exit `0`; `npx tsc --noEmit` exit `0`; `npm run build` exit
+`0` with `1,140` `dist/**` files; canonical guarded `npm test` exit `0` — **`924` executed, `923` passed, `1`
+skipped, `0` failed** (guard line reproduced verbatim; per-test TAP body elided with the full transcript's
+byte count and SHA-256 recorded); `npm run test:package-consumer` exit `0` (`PASS`); `git diff --check` exit
+`0`. These are publication-hygiene facts about this PR and carry **zero** `S2`, Gate 4, QE or acceptance
+credit.
