@@ -1420,3 +1420,54 @@ The next action is the PA's separate decision on **DR-4r / DQ-3** for full `port
 implementation-side DR in the CAP-03 sequence), followed by the DQ-4 freeze once DR-2…DR-4r have all landed
 in their loci. Everything after the freeze (H-12 regeneration → S2 → one P-1 execution → separate H-12
 adoption → S3 → QE) requires the designated native-Windows host, which this Linux sandbox cannot substitute.
+
+---
+
+## CAP-03 — PR #89 publication, merge and independent remote-verification receipt (2026-10-25)
+
+**Receipt:** `IIPS-V3-CAP03-DR2-IPD-PUBLICATION-RECEIPT-2026-10-25-01`. Documentation-only reconciliation of
+verified remote facts; it renders no decision and moves no gate.
+
+| Item | Value |
+|---|---|
+| PR | [#89](https://github.com/ramkivs/iips-production-market-data/pull/89) — `CAP-03: implement DR-2 Option A IPD provider read envelope (7 values + isSaved lifecycle, fail-closed)` |
+| Base | `4b5c65a731a66a6fa1260146a55df9ed772953a5` / tree `cf5e85856009360de3ffb9614970c383a26d73ba` (= `origin/main`, zero drift) |
+| PR head | `bc144b95649aec88c3bfd0fc2a9c68e828d4839a` / tree **`e8d361c97ba4fc24f18ecc0245f81332cc31ec92`** |
+| PR-head CI | run `40195714981` **success** — `typecheck · build · test` success + `executed test count` success |
+| PR-head executed-test check | **924 executed — 923 passed, 0 failed** at `bc144b9…` |
+| Merge | `79d06e3c5da60da2a234b7ac18c35df848bf9d11` / tree **`e8d361c97ba4fc24f18ecc0245f81332cc31ec92`** (`2026-10-25T13:03:28Z`); merge tree = head tree |
+| Post-merge `main` CI | run `40195881282` **success**; executed-test check **924 / 923 / 0** at `79d06e3…` |
+| Ancestry | `bc144b9…` verified an ancestor of `origin/main` after the merge |
+| Changed paths | **exactly 17** — the 2 authorized source/test paths, the execution record, 13 annex artefacts, and the append-only tracker block. No other path |
+| Branch ref | `refs/heads/arena/dff844a3-iips-production-market-data` = `bc144b9…` (verified by `git ls-remote`) |
+
+### 1. Independent remote read-back (not inferred from the API summary)
+
+| Check | Result |
+|---|---|
+| Remote blob id vs local `git hash-object` for the 2 changed source/test paths + 7 frozen paths | **9 / 9 MATCH** |
+| `src/persistence/portfolio_store.ts` | blob `540d49f2deb2c8d600b5b866675d145cf76a1e46`, 34,084 B |
+| `tests/q1_ipc_read_contract_conformance.test.ts` | blob `eddedd56449d6d0ac27dd394bd2a7262d0cb0c24`, 61,324 B |
+| Frozen, byte-unchanged | `src/ipc/protocol.ts` `f4dc72b1…`, `src/ipc/dispatch.ts` `27becc76…`, `src/ipc/entrypoint.ts` `ae3edd12…`, migration `001` `f594a182…`, migration `004` `6bad5a50…`, `package.json` `51796e63…`, `.github/workflows/ci.yml` `4614ee0e…` |
+| `SHA256SUMS.txt` re-verified against the **downloaded remote blobs** | **12 / 12 OK** |
+| Compare API `4b5c65a…79d06e3` | `status=ahead`, `ahead_by=2`, `behind_by=0`, 17 files |
+
+### 2. IRR locus untouched
+
+| Item | Observed |
+|---|---|
+| PR #265 | `OPEN`, head `c059c326c355b80c3224ad861dfecfb93963f112`, `mergedAt: null`, `closedAt: null`, `updatedAt: 2026-10-25T12:26:32Z` (unchanged by this pass) |
+| IRR adapter / contract blobs at that head | `1e20e980…` (27,511 B) / `e6b57bb8…` (31,585 B) — both unchanged |
+| IRR `main` | `04f299146e234c47d451ef81044674ef20d5c13f` — not read-modified, not repinned |
+
+### 3. What this receipt establishes, and what it does not
+
+**Establishes:** the IPD provider half of DR-2 / DQ-1 is implemented, tested at the exact published tree,
+merged to `main`, green on both PR-head and post-merge CI with a machine-recorded 924/923/0 executed-test
+count, independently re-read from the remote by blob id and SHA-256, with no frozen file and no unrelated
+path touched.
+
+**Does not establish:** DR-2 closure (IRR PR #265 remains unmerged, DR-4r / DQ-3 keeps a populated
+contribution view refused by decision, and no DQ-4 freeze exists); any gate, acceptance or admission
+movement; any write authorization; any durability value; any H-12 action; any provisioning, host action or
+native-Windows qualification; any user-portfolio route or fence change.
