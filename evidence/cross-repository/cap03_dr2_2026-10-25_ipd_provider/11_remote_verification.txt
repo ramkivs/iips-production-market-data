@@ -1,0 +1,54 @@
+=== INDEPENDENT REMOTE VERIFICATION LOG (exact, as executed) ===
+captured 2026-10-25T13:08:16Z on Linux 6.1.158+ / node v22.22.3
+
+--- A. remote ref of the published branch ---
+7d098811ac78e3ce45ff6e8cffab63f0ba92eea4	refs/heads/arena/dff844a3-iips-production-market-data
+
+--- B. commit + tree as stored by GitHub (PR #89 head) ---
+{"date":"2026-10-25T13:01:02Z","parents":["4b5c65a731a66a6fa1260146a55df9ed772953a5"],"sha":"bc144b95649aec88c3bfd0fc2a9c68e828d4839a","tree":"e8d361c97ba4fc24f18ecc0245f81332cc31ec92"}
+
+--- C. changed-file manifest (compare 4b5c65a...bc144b9) ---
+{"ahead_by":1,"behind_by":0,"file_count":17,"files":[{"additions":74,"deletions":0,"filename":"evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md","status":"modified"},{"additions":274,"deletions":0,"filename":"evidence/cross-repository/IIPS_V3_CAP03_DR2_IPD_PROVIDER_EXECUTION_2026-10-25.md","status":"added"},{"additions":30,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/00_baseline.txt","status":"added"},{"additions":10,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/01_baseline_validation_summary.txt","status":"added"},{"additions":278,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/02_q1_iteration1_failure.txt","status":"added"},{"additions":206,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/03_q1_final.txt","status":"added"},{"additions":11,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/04_focused_suites_summary.txt","status":"added"},{"additions":17,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/05_full_suite_summary.txt","status":"added"},{"additions":4,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/05b_migration_checksums.txt","status":"added"},{"additions":13,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/06_typecheck_build_package_summary.txt","status":"added"},{"additions":9,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/07_frozen_source_sha256.txt","status":"added"},{"additions":19,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/08_cross_repo_harness.txt","status":"added"},{"additions":398,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/09_cross_repo_harness.mjs","status":"added"},{"additions":12,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/10_irr_consumer_provenance.txt","status":"added"},{"additions":12,"deletions":0,"filename":"evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/SHA256SUMS.txt","status":"added"},{"additions":217,"deletions":57,"filename":"src/persistence/portfolio_store.ts","status":"modified"},{"additions":1264,"deletions":121,"filename":"tests/q1_ipc_read_contract_conformance.test.ts","status":"modified"}],"status":"ahead","total_commits":1}
+
+--- D. remote blob read-back vs local git blob ids ---
+MATCH  540d49f2deb2c8d600b5b866675d145cf76a1e46  src/persistence/portfolio_store.ts  (34084 B)
+MATCH  eddedd56449d6d0ac27dd394bd2a7262d0cb0c24  tests/q1_ipc_read_contract_conformance.test.ts  (61324 B)
+MATCH  f4dc72b12ed9d618d1cfde836160f992ff1be9a5  src/ipc/protocol.ts  (18089 B)
+MATCH  27becc76749f5b11a37ca4e6254d58132620f57f  src/ipc/dispatch.ts  (12670 B)
+MATCH  ae3edd12e1199845f6b5fe059fa79fed6245ae32  src/ipc/entrypoint.ts  (5146 B)
+MATCH  f594a18264c45ccdcbfa2381592820a72d3c453b  src/persistence/migrations/001_initial_schema.ts  (3548 B)
+MATCH  6bad5a5095b6bb94ce91a86a4b65f7ab915c516c  src/persistence/migrations/004_portfolio_contribution_provenance.ts  (817 B)
+MATCH  51796e63280c1abb368c27bf8811cc6bad46e132  package.json  (2025 B)
+MATCH  4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5  .github/workflows/ci.yml  (4054 B)
+
+--- E. SHA256SUMS verified against the DOWNLOADED remote blobs ---
+  00_baseline.txt: OK
+  01_baseline_validation_summary.txt: OK
+  02_q1_iteration1_failure.txt: OK
+  03_q1_final.txt: OK
+  04_focused_suites_summary.txt: OK
+  05_full_suite_summary.txt: OK
+  05b_migration_checksums.txt: OK
+  06_typecheck_build_package_summary.txt: OK
+  07_frozen_source_sha256.txt: OK
+  08_cross_repo_harness.txt: OK
+  10_irr_consumer_provenance.txt: OK
+  09_cross_repo_harness.mjs: OK
+
+--- F. merge and post-merge CI ---
+PR #89 merge:      79d06e3c5da60da2a234b7ac18c35df848bf9d11  tree e8d361c97ba4fc24f18ecc0245f81332cc31ec92 (2026-10-25T13:03:28Z)
+PR #89 head CI:    run 40195714981 success  (typecheck · build · test + executed test count)
+PR #89 head count: 924 tests executed - 923 passed, 0 failed at bc144b9
+post-merge main CI: run 40195881282 success; 924/923/0 at 79d06e3
+PR #90 merge:      743a284069d2d1eefd3cc36abdc889478f927961  tree e63a741482bf9e64f50a004c0cc087c0d0ddfbf7 (2026-10-25T13:06:46Z)
+PR #90 head CI:    run 40196019173 success; 924 tests executed, 0 failed at 7d09881
+final main CI:     run 40196130030 success; 924/923/0 at 743a284
+
+--- G. final main implementation blobs (unchanged by the receipt-only PR) ---
+portfolio_store.ts  540d49f2deb2c8d600b5b866675d145cf76a1e46
+q1 conformance     eddedd56449d6d0ac27dd394bd2a7262d0cb0c24
+
+--- H. IRR locus unchanged by this pass ---
+{"closedAt":null,"headRefOid":"c059c326c355b80c3224ad861dfecfb93963f112","mergedAt":null,"number":265,"state":"OPEN","updatedAt":"2026-10-25T12:26:32Z"}
+adapter blob 1e20e98023f20f80ed61d8d32d070fdde677d3c7
+contract blob e6b57bb8a021d8eb4b9b7572d12affc7de66be0b
