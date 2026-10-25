@@ -1,0 +1,17 @@
+full guarded suite — FINAL run on the exact tree recorded in §3 of the execution record
+host: Linux 6.1.158+ x86_64 | node v22.22.3 | npm 10.9.8
+command: npm test   (scripts/run-tests.mjs guard)
+exit 0
+[test-guard] files=68 (source suite files: 68)
+[test-guard] OK — 924 test(s) executed, 923 passed, exit 0
+# tests 924
+# suites 124
+# pass 923
+# fail 0
+# cancelled 0
+# skipped 1
+# todo 0
+delta vs baseline: +27 tests (897 -> 924), 0 failures, 1 pre-existing skip
+sha256 33_final_full_test.txt 1e67713795a6c1ea4ca3c067299788a5fb99a3bb04514475f33276678a47d9ca
+(an earlier run of the identical tree produced 924/923/0/1 with log sha256 8484d0d340449fc4119c3bdc31ea1afe5882d72f3d2bfcff3d25af9a5b9706ab;
+ TAP timing fields differ between runs, so the whole-log hashes differ by design)

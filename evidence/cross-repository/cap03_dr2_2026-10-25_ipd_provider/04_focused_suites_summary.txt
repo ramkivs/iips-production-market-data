@@ -1,0 +1,11 @@
+focused persistence / user-portfolio suites
+command: node --test --test-reporter=tap dist/tests/{q1_ipc_read_contract_conformance,g3_portfolio_read_isolation,g3_write_gate,g3_durability_vocabulary,g3_binding_resolution,g3_caller_authority,g3_startup_validation,g3_gate_a_prime_successor_provisioning,q1_broker_import_durability,q1_cap02_u7_provider_outcomes,q1_ownership_source_readiness,bi07_portfolio_store_port,bi07_portfolio_ui_integration,bi07_repeat_import_lifecycle,portfolio_ui_package}.test.js
+exit 0
+# tests 316
+# suites 27
+# pass 316
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+sha256 14_focused_suites.txt 48de1d3745c61f48376c77eb0e4548a631900671c573219625f7a36a4769aeb1

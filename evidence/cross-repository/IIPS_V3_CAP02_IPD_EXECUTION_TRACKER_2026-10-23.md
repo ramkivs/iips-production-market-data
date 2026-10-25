@@ -1346,3 +1346,77 @@ change, any answer to DQ-1…DQ-7 (including DQ-6b), or any authority in the IRR
 
 *Appended additively below as the closure receipt after execution, with the verified post-state (`state`, `merged`,
 `closedAt`, `mergedAt`, head/tree immutability) and remote read-back.*
+
+---
+
+## CAP-03 DR-2 / DQ-1 — IPD provider half: **IMPLEMENTED, TESTED, PUBLISHED** (2026-10-25)
+
+**Record:** `IIPS-V3-CAP03-DR2-IPD-PROVIDER-EXECUTION-2026-10-25-01`
+(`evidence/cross-repository/IIPS_V3_CAP03_DR2_IPD_PROVIDER_EXECUTION_2026-10-25.md`; annex
+`evidence/cross-repository/cap03_dr2_2026-10-25_ipd_provider/`). Implementation pass only — **no gate
+movement, no acceptance, no admission, no freeze, no host action, no IRR mutation.**
+
+### 1. Step 0 — authoritative baseline re-verified live
+
+| Item | Value |
+|---|---|
+| IPD `origin/main` / local base | `4b5c65a731a66a6fa1260146a55df9ed772953a5` / tree `cf5e85856009360de3ffb9614970c383a26d73ba` — **zero drift** |
+| Session branch | `arena/dff844a3-iips-production-market-data` at the same commit, clean worktree |
+| Effective DR-2 decision | PA `IIPS-V3-CAP03-DR2-DQ1-PA-DECISION-2026-10-25-01` §2 — **Option A** (seven approved values, three authorized IRR renames, frozen G2 preserved) |
+| IRR reference | impl `51ce1683…`; PR #265 head `c059c326…`, adapter blob `1e20e980…`, frozen contract blob `e6b57bb8…`; **OPEN / UNMERGED** |
+| Pre-change baseline | `tsc --noEmit` 0 · `build` 0 · old Q1 3/3 · `npm test` **897/896/0/1** · package-consumer 0 |
+
+### 2. Implementation — exactly the authorized manifest
+
+`src/persistence/portfolio_store.ts` + `tests/q1_ipc_read_contract_conformance.test.ts`. The seven approved
+values are now projected from the row that owns each one; `isSaved` implements the DQ-1 materialized-state
+rule (`MERGE`/`REPLACE` → true, `INITIAL`/`RESET` → false, any other stored operation → refusal); all three
+former fabrication sites (`COALESCE(…,0)`, `COALESCE(…,0)`, `?? 0` / `?? ''`) are removed; a malformed stored
+value raises `ContractEnvelopeViolationError` → Class A `UNAVAILABLE` → IRR `UPSTREAM_UNAVAILABLE`, never a
+default. Missing/foreign/tombstoned records still refuse first with `ResourceUnavailableError`
+(`RESOURCE_UNAVAILABLE`) and therefore never emit `isSaved`. No schema, migration, protocol, dispatch,
+entrypoint, route, package or workflow file changed.
+
+### 3. Validation (Linux x86_64, Node v22.22.3)
+
+| Check | Result |
+|---|---|
+| Focused Q1 conformance | **30 tests, 30 pass, 0 fail** |
+| Persistence + user-portfolio suites (15 files) | **316 tests, 316 pass, 0 fail** |
+| `npm test` (guarded) | **924 executed, 923 pass, 0 fail, 1 skip** (+27 vs baseline; guard OK) |
+| `npx tsc --noEmit` / `npm run build` / `npm run test:package-consumer` | 0 / 0 / 0 |
+| `git diff --check` | 0 |
+| `dist` file count | 1,140 (unchanged) |
+| Cross-repository harness (real IRR adapter ↔ real IPD endpoint) | **15/15 PASS, exit 0** |
+
+The retained first-run failure (24/5) and its four root causes are recorded in the execution record §4.1.
+
+### 4. Cross-repository DR-2 conformance
+
+Field-by-field and lifecycle conformance is **established at the tested commits**: seven values, three
+renames at the IRR boundary only, the four-value `isSaved` lifecycle, per-row history values with no
+historical `isSaved`, unwidened unavailability, and refusal-not-fabrication on malformed input.
+
+**DR-2 is NOT closed by this pass.** Three independent reasons, none of them a defect in this change:
+PR #265 is unmerged, so the IRR determinations are not yet effective by their own rule; DR-4r / DQ-3
+(Option B) keeps `G2Contribution` projection out of the first Gate 5 admission, so a view with a populated
+contribution ledger is refused **by decision**; and no final pin exists because DQ-4 designates the freeze
+only after the DR-2…DR-4r implementations land.
+
+### 5. State after this pass
+
+| Item | State |
+|---|---|
+| CAP-03 DR-2 — IPD provider half | **IMPLEMENTED / TESTED / PUBLISHED / REMOTE-VERIFIED** |
+| CAP-03 DR-2 — cross-repository closure | **OPEN** (IRR merge effectiveness + DR-4r/DQ-3 + DQ-4 freeze) |
+| CAP-03 DR-2 — documentation set | `PROPOSED — NOT EFFECTIVE` remains the packet's status; this pass renders no new decision |
+| Gate 4 / QE / Gate 5 | `AUTHORIZED — NOT STARTED` / **0/11** / **NOT ADMITTED** |
+| Writes / `durable:true` / fences / provisioning / H-12 | unchanged: refused / not emitted / none lifted / NOT EXECUTED / NOT ADOPTED |
+| PR #265 (IRR) | **OPEN / UNMERGED**, untouched |
+
+### 6. Next executable CAP-03 action
+
+The next action is the PA's separate decision on **DR-4r / DQ-3** for full `portfolio.get` views (the last
+implementation-side DR in the CAP-03 sequence), followed by the DQ-4 freeze once DR-2…DR-4r have all landed
+in their loci. Everything after the freeze (H-12 regeneration → S2 → one P-1 execution → separate H-12
+adoption → S3 → QE) requires the designated native-Windows host, which this Linux sandbox cannot substitute.

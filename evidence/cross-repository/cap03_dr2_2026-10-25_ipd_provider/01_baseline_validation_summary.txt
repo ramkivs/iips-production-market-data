@@ -1,0 +1,10 @@
+validation summary — IPD DR-2 provider half — 2026-10-25T12:58:21Z
+host: Linux 6.1.158+ x86_64 | node v22.22.3 | npm 10.9.8
+
+--- Step 0 baseline (pre-change, commit 4b5c65a / tree cf5e858) ---
+npx tsc --noEmit                exit 0   (11 bytes of output)
+npm run build                   exit 0   21 lines
+Q1 conformance (old contract)   exit 0   # tests 3
+npm test                        exit 0   # tests 897 | 897 executed / 896 pass / 0 fail / 1 skip
+npm run test:package-consumer   exit 0
+sha256 03_baseline_npm_test.txt bf8c3079f31852bb3792b66e9353f369649659e2750583124fbf5a981e78a8ea

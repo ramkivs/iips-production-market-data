@@ -1,0 +1,12 @@
+IRR consumer-half provenance (read-only reference; no IRR file was modified)
+repository:        ramkivs/iips-review-recovered
+implementation:    51ce168306b67f208d026cf6178a72d170d5052c  (Execute CAP-03 DR-2 Option A IRR mapping)
+PR #265 head:      c059c326c355b80c3224ad861dfecfb93963f112   state OPEN / UNMERGED (unchanged)
+PA decision record: docs/integration/IIPS_v3.0_CAP03_ONE_PASS_PA_DECISION_AND_IRR_EXECUTION_2026-10-25.md
+adapter blob:      1e20e98023f20f80ed61d8d32d070fdde677d3c7  frontend/server/user-portfolio/ipcPortAdapter.ts (27511 B)
+contract blob:     e6b57bb8a021d8eb4b9b7572d12affc7de66be0b  frontend/server/user-portfolio/userPortfolioContract.ts (frozen, unchanged)
+adapter test blob: 46243a7a79ba3b19cd4d2b8a56df8905aba220f8
+
+The cross-repository harness compiles those five IRR modules unmodified (tsc,
+NodeNext/ES2022) and drives the real IpcUserPortfolioPort against the real IPD
+endpoint. Source: 09_cross_repo_harness.mjs. Log: 08_cross_repo_harness.txt.

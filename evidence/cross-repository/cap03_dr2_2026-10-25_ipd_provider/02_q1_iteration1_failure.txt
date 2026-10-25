@@ -1,0 +1,278 @@
+TAP version 13
+# (node:2830) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: q1 / IPC read path conforms to CAP-03 DR-2 Option A
+    # Subtest: portfolio.list supplies all seven approved values from the current revision row
+    ok 1 - portfolio.list supplies all seven approved values from the current revision row
+      ---
+      duration_ms: 15.652767
+      type: 'test'
+      ...
+    # Subtest: portfolio.get supplies the same current-revision values plus the single view addition
+    ok 2 - portfolio.get supplies the same current-revision values plus the single view addition
+      ---
+      duration_ms: 3.393821
+      type: 'test'
+      ...
+    # Subtest: portfolio.revisions supplies the three stored-row values for the current revision
+    not ok 3 - portfolio.revisions supplies the three stored-row values for the current revision
+      ---
+      duration_ms: 3.490114
+      type: 'test'
+      location: '/home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:534:5'
+      failureType: 'testCodeFailure'
+      error: |-
+        Expected values to be strictly equal:
+        + actual - expected
+        
+        + 'f7c5e24186e707ef8f01fcb5ba22eeb02b891f7e26200508c5f15f80ace21e27'
+        - 'digest-initial'
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 'digest-initial'
+      actual: 'f7c5e24186e707ef8f01fcb5ba22eeb02b891f7e26200508c5f15f80ace21e27'
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (file:///home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:546:16)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: a stored empty provenance digest is passed through as stored, never replaced
+    ok 4 - a stored empty provenance digest is passed through as stored, never replaced
+      ---
+      duration_ms: 6.396582
+      type: 'test'
+      ...
+    # Subtest: keeps the v1 wire names: the three renames exist only at the IRR boundary
+    ok 5 - keeps the v1 wire names: the three renames exist only at the IRR boundary
+      ---
+      duration_ms: 5.336743
+      type: 'test'
+      ...
+    # Subtest: the seven additions are exactly seven — no extra field was admitted
+    ok 6 - the seven additions are exactly seven — no extra field was admitted
+      ---
+      duration_ms: 6.409995
+      type: 'test'
+      ...
+    # Subtest: isSaved is true exactly for a MERGE current revision
+    ok 7 - isSaved is true exactly for a MERGE current revision
+      ---
+      duration_ms: 2.854986
+      type: 'test'
+      ...
+    # Subtest: isSaved is true for a REPLACE current revision
+    ok 8 - isSaved is true for a REPLACE current revision
+      ---
+      duration_ms: 2.742924
+      type: 'test'
+      ...
+    # Subtest: isSaved is false for an INITIAL current revision
+    ok 9 - isSaved is false for an INITIAL current revision
+      ---
+      duration_ms: 2.642165
+      type: 'test'
+      ...
+    # Subtest: isSaved is false for a RESET current revision — a positive revision does not imply saved
+    ok 10 - isSaved is false for a RESET current revision — a positive revision does not imply saved
+      ---
+      duration_ms: 4.122342
+      type: 'test'
+      ...
+    # Subtest: a tombstoned portfolio is unavailable and emits no field, including no isSaved
+    ok 11 - a tombstoned portfolio is unavailable and emits no field, including no isSaved
+      ---
+      duration_ms: 5.096441
+      type: 'test'
+      ...
+    # Subtest: a missing portfolio is unavailable and emits no field
+    ok 12 - a missing portfolio is unavailable and emits no field
+      ---
+      duration_ms: 3.108397
+      type: 'test'
+      ...
+    # Subtest: a foreign-owned portfolio is unavailable and byte-identical to the missing case
+    ok 13 - a foreign-owned portfolio is unavailable and byte-identical to the missing case
+      ---
+      duration_ms: 6.211844
+      type: 'test'
+      ...
+    # Subtest: each historical revision is projected from its own stored row, never the current one
+    ok 14 - each historical revision is projected from its own stored row, never the current one
+      ---
+      duration_ms: 1.982279
+      type: 'test'
+      ...
+    # Subtest: the current-revision projection reports only the last history row
+    ok 15 - the current-revision projection reports only the last history row
+      ---
+      duration_ms: 2.267535
+      type: 'test'
+      ...
+    # Subtest: the real list/get/revisions envelopes are accepted by the IRR adapter rules
+    not ok 16 - the real list/get/revisions envelopes are accepted by the IRR adapter rules
+      ---
+      duration_ms: 3.139989
+      type: 'test'
+      location: '/home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:719:5'
+      failureType: 'testCodeFailure'
+      error: 'The portfolio view contains non-empty contributions outside the authorized DR-4r scope.'
+      code: 'ERR_TEST_FAILURE'
+      stack: |-
+        irrMapView (file:///home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:303:15)
+        TestContext.<anonymous> (file:///home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:732:26)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: the IRR adapter refuses the LEGACY pre-DR-2 shapes, so the change is observable
+    ok 17 - the IRR adapter refuses the LEGACY pre-DR-2 shapes, so the change is observable
+      ---
+      duration_ms: 0.86567
+      type: 'test'
+      ...
+    # Subtest: the migration set and its SQL checksums are unchanged — no schema change
+    ok 18 - the migration set and its SQL checksums are unchanged — no schema change
+      ---
+      duration_ms: 0.224902
+      type: 'test'
+      ...
+    # Subtest: the closed IPC operation set is unchanged — no new operation or route
+    ok 19 - the closed IPC operation set is unchanged — no new operation or route
+      ---
+      duration_ms: 0.175943
+      type: 'test'
+      ...
+    # Subtest: no user-portfolio HTTP route exists in this repository — the fence is structural
+    ok 20 - no user-portfolio HTTP route exists in this repository — the fence is structural
+      ---
+      duration_ms: 0.894681
+      type: 'test'
+      ...
+    # Subtest: the write gate, the durable vocabulary and the read projections keep their boundaries
+    ok 21 - the write gate, the durable vocabulary and the read projections keep their boundaries
+      ---
+      duration_ms: 0.832739
+      type: 'test'
+      ...
+    1..21
+not ok 1 - q1 / IPC read path conforms to CAP-03 DR-2 Option A
+  ---
+  duration_ms: 134.67006
+  type: 'suite'
+  location: '/home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:347:1'
+  failureType: 'subtestsFailed'
+  error: '2 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: q1 / DR-2 provider refusal: no fabricated zeros, strings or lifecycles
+    # Subtest: refuses a portfolio whose current revision row is missing instead of fabricating zeros
+    ok 1 - refuses a portfolio whose current revision row is missing instead of fabricating zeros
+      ---
+      duration_ms: 4.049
+      type: 'test'
+      ...
+    # Subtest: refuses null, non-finite, wrong-typed and fractional values in the list projection
+    not ok 2 - refuses null, non-finite, wrong-typed and fractional values in the list projection
+      ---
+      duration_ms: 46.985901
+      type: 'test'
+      location: '/home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:916:5'
+      failureType: 'testCodeFailure'
+      error: 'list / text provenance_digest: expected a refusal, but a value was returned'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        expectRefusal (file:///home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:899:16)
+        TestContext.<anonymous> (file:///home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:934:31)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: refuses blank or non-string identity and timestamp columns in the base projection
+    ok 3 - refuses blank or non-string identity and timestamp columns in the base projection
+      ---
+      duration_ms: 28.809997
+      type: 'test'
+      ...
+    # Subtest: refuses malformed values in the get projection
+    not ok 4 - refuses malformed values in the get projection
+      ---
+      duration_ms: 27.116064
+      type: 'test'
+      location: '/home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:967:5'
+      failureType: 'testCodeFailure'
+      error: "CHECK constraint failed: operation IN ('INITIAL', 'MERGE', 'REPLACE', 'RESET', 'DELETE')"
+      code: 'ERR_SQLITE_ERROR'
+      stack: |-
+        updateRevision (file:///home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:871:91)
+        TestContext.<anonymous> (file:///home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:979:13)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: refuses malformed values in the history projection
+    not ok 5 - refuses malformed values in the history projection
+      ---
+      duration_ms: 54.432539
+      type: 'test'
+      location: '/home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:988:5'
+      failureType: 'testCodeFailure'
+      error: 'revisions / text provenance_digest: expected a refusal, but a value was returned'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        expectRefusal (file:///home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:899:16)
+        TestContext.<anonymous> (file:///home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:1009:17)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: accepts a NULL content_digest as an absent optional property, not a malformed value
+    ok 6 - accepts a NULL content_digest as an absent optional property, not a malformed value
+      ---
+      duration_ms: 6.123498
+      type: 'test'
+      ...
+    # Subtest: still reports a missing, foreign or tombstoned portfolio as RESOURCE_UNAVAILABLE, unwidened
+    ok 7 - still reports a missing, foreign or tombstoned portfolio as RESOURCE_UNAVAILABLE, unwidened
+      ---
+      duration_ms: 6.740264
+      type: 'test'
+      ...
+    # Subtest: fails closed over the endpoint: a malformed row yields Class A UNAVAILABLE with no result
+    ok 8 - fails closed over the endpoint: a malformed row yields Class A UNAVAILABLE with no result
+      ---
+      duration_ms: 23.863828
+      type: 'test'
+      ...
+    1..8
+not ok 2 - q1 / DR-2 provider refusal: no fabricated zeros, strings or lifecycles
+  ---
+  duration_ms: 214.346156
+  type: 'suite'
+  location: '/home/user/iips-production-market-data/dist/tests/q1_ipc_read_contract_conformance.test.js:822:1'
+  failureType: 'subtestsFailed'
+  error: '3 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..2
+# tests 29
+# suites 2
+# pass 24
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 450.756206
