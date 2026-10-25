@@ -1,0 +1,25 @@
+=== IRR locus read-only verification (2026-10-25T19:07:22Z) ===
+IRR origin/main: ac6d45b695bf9b79c0ec7af7d4656dc914ffccb2  tree 0aadf7b3056ce50c66484505d88dc15760408ab6
+
+--- published IRR records (blob / bytes / sha256) ---
+IIPS_v3.0_CAP03_DQ6B_PA_DECISION_PATH_A_EFFECTIVE_2026-10-25.md                                 b41c76f7ddbacc0caa0a86877561a83d2ba1c2a6    23808 c82c569ad8830ed8c69e44d765a7afc765bab39846e6f916ea21a16933a44b1a
+IIPS_v3.0_CAP03_DQ6B_IPD_MIRROR_RECEIPT_PREPARED_2026-10-25.md                                  e1558f2c1233919e5d5c62d77ed1305f6d3b177f     5470 a8cf94ea66c60cc280e7c1e0eaa2a5dab7d78ad34c6ee693c4d2d2752a47f120
+IIPS_v3.0_CAP03_DQ4_QE_FREEZE_MANIFEST_2026-10-25.md                                            f74628950c0dd328ea007dcb96eda60c1c9313ae    14918 467b24f9fe84eb3018732196fd5195d15b9d64f79deb760f82d2fd10e4f7f001
+G4-H12-MANIFEST-v2-CANDIDATE-2026-10-25-R5.json                                                 f4649e36a81c7013287810cd3202b99586dbd951   143813 d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76
+G4-H12-MANIFEST-v2-CANDIDATE-VALIDATION-2026-10-25-R5.md                                        3d54861052ab85e4e79cf302fec2242e832a2909    11053 f2a80ddd198af72271c99f042d1ac986948d1cba07d052dfbae3468c2efaab25
+IIPS_V3_E2E_MASTER_TRACKER_AND_IRR_IPD_DECISION_REGISTER_2026-10-13.md                          f3b31446a71c8ede1ad1afb8deec7a0d8a521b8a  2216288 146c4885a4c4c1296cd3555eaa53e1b7c097a4913731bdb198e8d1e2fe402460
+
+--- merge/publication commits ---
+ac6d45b Merge pull request #278 from ramkivs/arena/311c687c-iips-review-recovered
+89de770 docs(cap03): record DQ-6b decision publication receipt (§16.122.14, PR #277)
+c503761 Merge pull request #277 from ramkivs/arena/311c687c-iips-review-recovered
+d88d923 docs(cap03): record DQ-6b PA decision Path A, designate final QE pins, publish validated freeze manifest and H-12 R5
+ba64b2d Merge pull request #276 from ramkivs/arena/d1487caa-iips-review-recovered
+2be068a docs(cap03): CAP-03 DQ-6b freeze-disposition investigation, decision brief and blocker record (§16.121, CV-CORR-101)
+
+--- ancestor: c5037613 (decision merge) -> ac6d45b ---
+exit=0
+exit=0
+
+--- IRR consumer pin ba64b2d tree ---
+5e4262f1cd75bf13b76ced5b45058f31434b5dad
