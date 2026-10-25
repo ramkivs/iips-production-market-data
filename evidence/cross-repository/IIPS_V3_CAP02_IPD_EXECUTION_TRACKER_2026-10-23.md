@@ -1474,3 +1474,55 @@ path touched.
 contribution view refused by decision, and no DQ-4 freeze exists); any gate, acceptance or admission
 movement; any write authorization; any durability value; any H-12 action; any provisioning, host action or
 native-Windows qualification; any user-portfolio route or fence change.
+
+## CAP-03 — DQ-6b decision mirrored into the IPD locus: **effectiveness element 6** (2026-10-25)
+
+**Receipt:** `IIPS-V3-CAP03-DQ6B-IPD-MIRROR-RECEIPT-2026-10-25-01` —
+`evidence/cross-repository/IIPS_V3_CAP03_DQ6B_DECISION_MIRROR_RECEIPT_2026-10-25.md`. Registration only:
+it renders no IPD decision, answers no DQ, moves no pin, relaxes no guard, adopts nothing and admits
+nothing.
+
+| Item | Value |
+|---|---|
+| Subject decision (IRR locus) | `IIPS-V3-CAP03-DQ6B-PA-DECISION-2026-10-25-01` — **Path A**, interim, guarded; blob `b41c76f7ddbacc0caa0a86877561a83d2ba1c2a6`, **23,808 B**, SHA-256 `c82c569ad8830ed8c69e44d765a7afc765bab39846e6f916ea21a16933a44b1a` |
+| IRR publication of the decision | head `d88d923df24257208945727390afcc92cae7de17` → merge `c5037613295f826638e4b73a996c157e9749e66c`, CI `40211930571`; IRR `main` now `ac6d45b695bf9b79c0ec7af7d4656dc914ffccb2` |
+| Mirror text (prepared in IRR) | `docs/integration/IIPS_v3.0_CAP03_DQ6B_IPD_MIRROR_RECEIPT_PREPARED_2026-10-25.md`, blob `e1558f2c1233919e5d5c62d77ed1305f6d3b177f`, **5,470 B**, SHA-256 `a8cf94ea66c60cc280e7c1e0eaa2a5dab7d78ad34c6ee693c4d2d2752a47f120` |
+| IPD baseline (Step 0) | `8eec74ae27cda09f3c368b9c299895eae41554db` / tree `4eba29029f8d95cfe483e615a7047426b298ce50`; CI `40196407747` success; **0** open PRs — **zero drift** |
+| Primary pin (unchanged) | `8eec74ae…` / tree `4eba2902…` — IPD `main`, **0 behind** |
+| Alias pin (unchanged) | `70b24f029842a7e9b7f615e4d9df7376fd4ff817` / tree `cc0f0117822850f9046e9a51bd05c1d45f80cd57` — ancestor, **214 behind**; **preserved**, not modernized, re-pinned or retired |
+| Lineage (unchanged) | `REAL` ×3 at the alias mapper (`6c8ab71d…`), `UNCLASSIFIED` ×3 at the primary (`297e4a59…`) |
+| Split census (unchanged) | 14 alias raw sources: **10 identical / 4 divergent** — identical to the decision record §4.1 |
+| Changed paths | **2** — this append-only tracker block and the new receipt file. No IPD source, test, package, export, `files` entry, schema, migration, protocol, route, workflow, fence or pin |
+| Effect | effectiveness element **6** of the DQ-6b decision satisfied on publication; **all six elements complete** |
+
+### Step 0 and the mirrored content
+
+Every anchor required by the mirror text's stop condition was re-measured at the IPD remote before
+writing: `package.json` `51796e63…` and `src/persistence/portfolio_store.ts` `540d49f2…` unchanged; all
+four divergent alias sources unchanged; the alias remains an ancestor 214 commits behind; the IRR
+decision record and the prepared receipt text re-read at IRR `main` at the recorded blob ids and
+SHA-256. **§1–§5 of the published receipt are the prepared IRR text reproduced verbatim** (verified by
+diff); only the status front matter and §§6–9 are new. One discrepancy is recorded rather than
+smoothed: the prepared text's "three divergent alias sources" versus the decision's and this pass's
+**four** — the "three" is the lineage-site count, and the four-file census governs. No stop condition
+was triggered.
+
+### Scope of this entry
+
+**Establishes:** the IRR DQ-6b determination is registered in the IPD locus at a named blob, merged to
+`main` by merge commit with green exact-head CI and independently read back; the six effectiveness
+elements are complete.
+
+**Does not establish, and does not perform:** the DQ-4 final QE freeze (still `PREPARED AND VALIDATED —
+NOT ESTABLISHED`; its remaining conditions are the separate H-12 adoption act, the host sequence
+S2 → one P-1 provisioning execution → S3 preflight, and native-Windows canonical evidence); H-12
+adoption; Gate 4 start; any QE credit (`0/11`); Gate 5 initiation or admission; any write
+authorization; any `503` fence lift; durable-read acceptance; production eligibility; any alias
+modernization, re-pin, retirement or lineage reclassification.
+
+### Registration of this act in the IRR locus
+
+An IRR-locus act is required to update IRR tracker §16.122 rows `16.122.6` (element 6) and `16.122.9`
+(freeze criterion (a)). It is bookkeeping in the other locus and is **not** performed here: this session
+is IPD-bound and made **zero IRR writes**. The IRR tracker therefore still reads element 6
+`OUTSTANDING` until that act lands, although element 6 is satisfied in fact by this publication.

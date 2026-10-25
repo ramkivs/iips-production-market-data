@@ -1,0 +1,20 @@
+=== working tree status (pre-commit) ===
+ M evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md
+?? evidence/cross-repository/IIPS_V3_CAP03_DQ6B_DECISION_MIRROR_RECEIPT_2026-10-25.md
+?? evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/
+
+=== diffstat vs origin/main ===
+ ...PS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md | 52 ++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
+
+=== untracked ===
+?? evidence/cross-repository/IIPS_V3_CAP03_DQ6B_DECISION_MIRROR_RECEIPT_2026-10-25.md
+?? evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/00_baseline.txt
+?? evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/01_alias_source_census.txt
+?? evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/02_irr_locus_readback.txt
+?? evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/10_npm_ci.txt
+?? evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/11_typecheck.txt
+?? evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/12_build.txt
+?? evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/13_test.txt
+?? evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/14_package_consumer.txt
+?? evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/15_working_tree.txt

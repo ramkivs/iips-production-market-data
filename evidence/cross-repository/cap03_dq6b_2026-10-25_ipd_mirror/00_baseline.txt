@@ -1,0 +1,23 @@
+=== IPD baseline verification — 2026-10-25T19:07:10Z ===
+--- refs ---
+8eec74ae27cda09f3c368b9c299895eae41554db
+8eec74ae27cda09f3c368b9c299895eae41554db
+8eec74ae27cda09f3c368b9c299895eae41554db
+tree 4eba29029f8d95cfe483e615a7047426b298ce50
+parent 743a284069d2d1eefd3cc36abdc889478f927961
+parent 4c0a0da92378211fa626251cb7086b0b97c5826b
+author ramkivs <sairam260573@gmail.com> 1792933829 +0530
+--- base commit/tree ---
+8eec74ae27cda09f3c368b9c299895eae41554db
+4eba29029f8d95cfe483e615a7047426b298ce50
+--- alias coordinate ---
+70b24f029842a7e9b7f615e4d9df7376fd4ff817
+cc0f0117822850f9046e9a51bd05c1d45f80cd57
+--- ancestry (0 = yes) ---
+alias-is-ancestor exit=0
+primary-is-ancestor-of-alias exit=1
+--- distance alias..primary ---
+214
+--- receipt stop-condition anchors ---
+package.json                          51796e63280c1abb368c27bf8811cc6bad46e132
+src/persistence/portfolio_store.ts    540d49f2deb2c8d600b5b866675d145cf76a1e46
