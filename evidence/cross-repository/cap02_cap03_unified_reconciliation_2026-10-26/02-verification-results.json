@@ -1,10 +1,10 @@
 {
   "record": "IIPS-V3-CAP02-CAP03-UNIFIED-STATUS-RECONCILIATION-2026-10-26-01 (verification evidence, final pass)",
-  "verified_utc": "2026-10-26T14:15:15Z",
+  "verified_utc": "2026-10-26T14:31:33Z",
   "irr_main": "cc3c000a11fd586c540a84a8d139c4b2c39cd121",
   "irr_tree": "00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c",
-  "ipd_main": "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829",
-  "ipd_tree": "6da6f82970fd3fb836500776708bbb6ea206baa1",
+  "ipd_main": "4bb9a6541ed636ed4ad5c4895ad506dade01fdba",
+  "ipd_tree": "696663ce6ff028aacbbfa8e603b8a059e27b3549",
   "tracker_blob": "eed1f190255b8ee72b7c09b944e8ae9a5e6b76c7",
   "tracker_bytes": 2473138,
   "tracker_sha256": "359c5a62d57ab22d4854191b6b2bee62428e5070da0da25902faaaf259272ca7",
@@ -18,17 +18,17 @@
     },
     {
       "id": "U02",
-      "check": "IPD main commit + root tree",
-      "observed": "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829 / 6da6f82970fd3fb836500776708bbb6ea206baa1",
+      "check": "IPD main commit + root tree (at/after reconciled baseline f97b17e7)",
+      "observed": "4bb9a6541ed636ed4ad5c4895ad506dade01fdba / 696663ce6ff028aacbbfa8e603b8a059e27b3549 behind_by=0",
       "result": "PASS",
-      "evidence": "Git Refs/Commits API"
+      "evidence": "Git Refs/Commits/Compare API; robust to our own later documentation-only publication"
     },
     {
       "id": "U03",
-      "check": "IPD main is a regular 2-parent merge of PR #97 head",
-      "observed": "[{'sha': '1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745', 'url': 'https://api.github.com/repos/ramkivs/iips-production-market-data/git/commits/1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745', 'html_url': 'https://github.com/ramkivs/iips-production-market-data/commit/1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745'}, {'sha': '880f067185b50cad3989a65f8651699b2c7a1f5a', 'url': 'https://api.github.com/repos/ramkivs/iips-production-market-data/git/commits/880f067185b50cad3989a65f8651699b2c7a1f5a', 'html_url': 'https://github.com/ramkivs/iips-production-market-data/commit/880f067185b50cad3989a65f8651699b2c7a1f5a'}]",
+      "check": "PR #97 merge (f97b17e7) is an ancestor of current IPD main",
+      "observed": "parents=['f97b17e7d04a', '8388c6178309'] behind_by=0",
       "result": "PASS",
-      "evidence": "Git Commits API"
+      "evidence": "Git Commits/Compare API; PR #97 head 880f0671 is a parent of f97b17e7"
     },
     {
       "id": "U04",
