@@ -1,0 +1,8 @@
+=== §16.135 legacy current-state/PF-15 validator ===
+PASS — 91 assertions verified; PF-15=NOT DESIGNATED (0 effective acts); PR #298/#299 + IPD #94/#95/#96/#97 blobs verified; 51-path census & H-12 R5 zero-drift confirmed.
+=== readiness validator (62 assertions) ===
+PASS — 62 assertions; PF 17/17; QE 11/11 NOT RUN; 15 prior evidence files SHA-256 verified
+H-12 R5 manifest SHA-256: d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76
+Output: evidence/integration/cap03-pf15-readiness-reconciliation-2026-10-26/03-readiness-audit.json
+=== H-12 legacy validators (981/466) ===
+NOT RE-RUN SUCCESSFULLY IN THIS CHECKOUT: hardcoded /home/user/iips-review-recovered + /tmp/ipd paths and gh executable resolution; independent H-12 R5 blob/SHA-256 re-hash is in 02-verification-results.json U17, and PR #300 evidence records 981/981 + 466/466 at the same coordinate.

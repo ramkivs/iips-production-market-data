@@ -1,0 +1,20 @@
+PF-15 act -01 vs corrected act -02: F1-F6 table row byte comparison
+act -01 F rows: 6; act -02 F rows: 6
+IDENTICAL (all operative literals unchanged): True
+
+-01 | **F1 — endpoint design** | **Option A — explicit Windows named-pipe endpoint.** Use the explicit named-pipe namespace; do not use a state-directory-derived resolution mechanism. | **RENDERED** |
+-01 | **F2 — `IIPS_G2_IPC_ENDPOINT`** | `\\.\pipe\iips-user-portfolio-v1` | **RENDERED — exact literal preserved** |
+-01 | **F3 — `IIPS_G3_LOCAL_STATE_DIR`** | **`N/A`** for Option A; this setting is not used for endpoint resolution. No state-directory requirement is inferred. | **RENDERED**, subject to the condition th
+-01 | **F4 — `IIPS_G3_DATABASE_PATH` / P-1 `$StorePath`** | `C:\iips-data\iips\user-portfolio.sqlite` | **RENDERED as intended stable path** for the single P-1 store and subsequent S3/QE. It must be absol
+-01 | **F5 — external `$EvidenceRoot`** | `C:\iips-evidence\cap03-gate4` | **RENDERED as intended Gate 4 evidence root.** It must be local fixed NTFS, outside Git worktrees and cloud-synchronized location
+-01 | **F6 — scope** | **Shared CAP-03 + CAP-02 scope** for the relevant same-host IPC and IPD persistence boundary on `desktop-no0nhtp`. | **RENDERED**; the repository evidence for the shared boundary is
+-02 | **F1 — endpoint design** | **Option A — explicit Windows named-pipe endpoint.** Use the explicit named-pipe namespace; do not use a state-directory-derived resolution mechanism. | **RENDERED** |
+-02 | **F2 — `IIPS_G2_IPC_ENDPOINT`** | `\\.\pipe\iips-user-portfolio-v1` | **RENDERED — exact literal preserved** |
+-02 | **F3 — `IIPS_G3_LOCAL_STATE_DIR`** | **`N/A`** for Option A; this setting is not used for endpoint resolution. No state-directory requirement is inferred. | **RENDERED**, subject to the condition th
+-02 | **F4 — `IIPS_G3_DATABASE_PATH` / P-1 `$StorePath`** | `C:\iips-data\iips\user-portfolio.sqlite` | **RENDERED as intended stable path** for the single P-1 store and subsequent S3/QE. It must be absol
+-02 | **F5 — external `$EvidenceRoot`** | `C:\iips-evidence\cap03-gate4` | **RENDERED as intended Gate 4 evidence root.** It must be local fixed NTFS, outside Git worktrees and cloud-synchronized location
+-02 | **F6 — scope** | **Shared CAP-03 + CAP-02 scope** for the relevant same-host IPC and IPD persistence boundary on `desktop-no0nhtp`. | **RENDERED**; the repository evidence for the shared boundary is
+
+Only title, status notice, act ID, a 'Correction and supersession' section and footer differ.
+Consequence: if act -01's F2/F4/F5 code spans were defective, act -02's are identically defective.
+Only the PA can confirm the exact approved code points; no agent normalization is authorized.
