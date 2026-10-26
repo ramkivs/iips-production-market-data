@@ -32,7 +32,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as pkg from '../src/ui/portfolio_ui_package.js';
 import * as modalModule from '../frontend/src/features/portfolio/BrokerImportModal.js';
@@ -416,7 +416,7 @@ describe('CAP-02 Increment A — T-PKG-4: package manifest and built artifacts',
   });
 
   it('the built entry point loads and exposes the same public names', async () => {
-    const built = (await import(builtEntry)) as Record<string, unknown>;
+    const built = (await import(pathToFileURL(builtEntry).href)) as Record<string, unknown>;
     for (const name of REQUIRED_VALUE_EXPORTS) {
       assert.notEqual(built[name], undefined, `built artifact does not export ${name}`);
     }
