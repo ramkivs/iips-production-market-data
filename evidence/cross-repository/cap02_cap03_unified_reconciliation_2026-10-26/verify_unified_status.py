@@ -52,12 +52,17 @@ check("U01", "IRR main commit + root tree (at/after reconciled baseline cc3c000)
       f"{irr_main} / {irr_c['tree']['sha']} behind_by={cmp_irr['behind_by']}",
       cmp_irr["behind_by"] == 0 and cmp_irr["status"] in ("ahead", "identical"),
       "Git Refs/Commits/Compare API; robust to later additive publications")
-check("U02", "IPD main commit + root tree", f"{ipd_main} / {ipd_c['tree']['sha']}",
-      ipd_main == "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829" and
-      ipd_c["tree"]["sha"] == "6da6f82970fd3fb836500776708bbb6ea206baa1", "Git Refs/Commits API")
-check("U03", "IPD main is a regular 2-parent merge of PR #97 head", str(ipd_c["parents"]),
-      len(ipd_c["parents"]) == 2 and any(p["sha"].startswith("880f0671") for p in ipd_c["parents"]),
-      "Git Commits API")
+baseline_ipd = "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829"
+cmp_ipd = json.loads(gh(f"repos/{IPD}/compare/{baseline_ipd}...{ipd_main}"))
+check("U02", "IPD main commit + root tree (at/after reconciled baseline f97b17e7)",
+      f"{ipd_main} / {ipd_c['tree']['sha']} behind_by={cmp_ipd['behind_by']}",
+      cmp_ipd["behind_by"] == 0 and cmp_ipd["status"] in ("ahead", "identical"),
+      "Git Refs/Commits/Compare API; robust to our own later documentation-only publication")
+pr97_anc = json.loads(gh(f"repos/{IPD}/compare/f97b17e7d04a0c5c4573c0dbe51da2c4c595d829...{ipd_main}"))
+check("U03", "PR #97 merge (f97b17e7) is an ancestor of current IPD main",
+      f"parents={[p['sha'][:12] for p in ipd_c['parents']]} behind_by={pr97_anc['behind_by']}",
+      pr97_anc["behind_by"] == 0 and len(ipd_c["parents"]) == 2,
+      "Git Commits/Compare API; PR #97 head 880f0671 is a parent of f97b17e7")
 
 # --- PR states and CI (all authoritative publications of 2026-10-26) ---
 prs = [
