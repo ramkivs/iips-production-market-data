@@ -1,0 +1,1328 @@
+diff --git a/IIPS_V3_E2E_MASTER_TRACKER_AND_IRR_IPD_DECISION_REGISTER_2026-10-13.md b/IIPS_V3_E2E_MASTER_TRACKER_AND_IRR_IPD_DECISION_REGISTER_2026-10-13.md
+index eed1f19..8b5b7ea 100644
+--- a/IIPS_V3_E2E_MASTER_TRACKER_AND_IRR_IPD_DECISION_REGISTER_2026-10-13.md
++++ b/IIPS_V3_E2E_MASTER_TRACKER_AND_IRR_IPD_DECISION_REGISTER_2026-10-13.md
+@@ -11,7 +11,8 @@
+ | Current CAP-03 DR-2 publication status (`2026-10-25`; §§16.117–16.118) | IPD Option A provider/test is merged at PR #89; IRR Option A consumer is merged by PR #265 as `e590ca40d950052e32b2813027f0d1027b9e65ec` (tree `97530e48…`). PR-head CI `40199009657` and post-merge `main` CI `40199212799` passed; current-base local full suite 106 files / 1,349 passed / 0 failed. Bilateral source/test implementation and conformance evidence is published across both repos; this is **not** CAP-03 operational completion, final pin/freeze, Gate 5 admission, durability acceptance, or production eligibility. See §16.118. |
+ | Previous IPD baseline (historical; superseded as current state) | Superseded value **`c0e1b5662264651246db1ccde2945eb5e13f3524`** verified 2026-10-22 (§16.75; superseded by the PR #41 merge recorded in §16.76) — 2 open PRs (**#34** superseded Gate 3 lineage; **#41** conformant candidate), agent write capability `HTTP 403`. Earlier: `ramkivs/iips-production-market-data` (`refs/heads/main` verified at **`15465e45adfc1dd58fba17e80365b729599aef6b`** on 2026-10-21 (`CV-CORR-53`, §16.70) — PR #37 merge `2026-10-21T15:57:34Z` (DEC-06 P11 main-admission decision package + A5 refresh; documentation only, no admission); **2 open PRs (#34 Gate 3 candidate; #36 DEC-06 P11 candidate — neither for merge)**, **0 releases**, both annotated pin tags re-peeled; superseded banner value `3d44e0a123f2495f3b88ce0ab8b47fbc5bf072db` verified 2026-10-21 — PR #33 merge 2026-10-19T19:46:48Z; earlier superseded value `be32d8c95a86b3f03bd382ccde5b6398efb351c6` verified 2026-10-18 — PR #24 merge (2026-10-18T19:12:01Z; documentation-only cross-repository reconciliation; 0 open IPD PRs; §16.55/§16.56), preceded by PR #23 `0158b7a1…` (documentation-only handoff/§14 record; IPD CI run `39147879645` passed); G3-D0 disposition published by PRs #20/#21 (`8b65971f…`/`e76bb2ed…`), G3-D1…D7 classification by PR #22 (`9310b1a…`); PR #8 merge `467eb529…` remains an ancestor; previous banner value `9130c259…` (PR #11) retained historically in §§16.49–16.53; refreshed by `CV-CORR-37`, §16.54) |
+ | Pre-REG-08 IRR Baseline | Commit `f970028cf633f561c225d66ae4b3864f48afe656`; root tree `bab9782ed104567e571abccc350c75760ff35dca` (merge of PR #75) |
+-| **Last Updated** | `2026-10-26` (UTC) — **PF-15 decision transcription defect found; corrected successor act prepared (`CV-CORR-117`, §16.137, `CHG-2026-10-26-16`, `V873`–`V880`):** the first publication, IRR PR #302, had excess literal backslashes in the F2/F4/F5 Markdown values and therefore did not byte-represent the PA-approved strings. The original act remains preserved. Corrected distinct PA act `...-02` records the original approved values exactly and supersedes `...-01` only upon its own effective publication. **STOP: do not use the act #01 path literals** until corrected publication and read-back complete. No host or implementation action occurred. |
++| **Last Updated** | `2026-10-26` (UTC) — **CAP-02 + CAP-03 unified authoritative status reconciliation (`CV-CORR-119`, §16.139, `CHG-2026-10-26-19`, `V889`–`V906`):** verified IRR `main@cc3c000a11fd586c540a84a8d139c4b2c39cd121` (tree `00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c`, PR #307) and IPD `main@f97b17e7d04a0c5c4573c0dbe51da2c4c595d829` (tree `6da6f82970fd3fb836500776708bbb6ea206baa1`, PR #97); all PRs #299–#307 and #97 merge/CI and §§16.133/16.134/16.135/16.136/16.137/16.138 publications + receipts independently re-read (**44 PASS / 0 FAIL**). **S2 Windows `924/920/0/4` + consumer `PASS` and the user-reported 47-entry manifest `PASS` are reused, not rerun**; §16.138.7 receipt publication is COMPLETE but **raw Windows evidence-byte read-back is PENDING and full S2 evidence acceptance is NOT RENDERED** — this is the exact deficiency and the **single next action is the read-only transfer of the 47 manifest files + independent SHA-256 verification + dated addendum/acceptance record**. **PF-15 is DESIGNATED / EFFECTIVE (act `-02`)** but its F2/F4/F5 literals are byte-identical to the declared-defective act `-01`, so exact code-point confirmation remains a genuine PA boundary; the S1 identity-value PA decision is already discharged (no new act needed). **P-1 remains unspent and is NOT YET ADMISSIBLE** until S2 evidence acceptance, F4 confirmation and the host session exist. Preserved: CAP-02 PARTIAL; DQ-4 `8/10`; S3 not reached; QE `0/11`; Gate 4 AUTHORIZED — NOT STARTED; Gate 5 NOT INITIATED / NOT ADMITTED; 12 `503` fences, `WRITE_NOT_AUTHORIZED`, `durable:false`; `CV-*` `35`/`5`; 0 IPD `main` writes; 0 host commands. |
++| Previous update summary (`2026-10-26`; §§16.136–16.138 / PF-15 + S2 receipt — superseded as current state by §16.139) | `2026-10-26` (UTC) — **PF-15 decision transcription defect found; corrected successor act prepared (`CV-CORR-117`, §16.137, `CHG-2026-10-26-16`, `V873`–`V880`):** the first publication, IRR PR #302, had excess literal backslashes in the F2/F4/F5 Markdown values and therefore did not byte-represent the PA-approved strings. The original act remains preserved. Corrected distinct PA act `...-02` records the original approved values exactly and supersedes `...-01` only upon its own effective publication. **STOP: do not use the act #01 path literals** until corrected publication and read-back complete. No host or implementation action occurred. |
+ | **Current PF-15 status** | **CORRECTION PENDING — DO NOT USE THE PRIOR PUBLISHED PATH LITERALS.** Act `...-01` remains preserved but its F2/F4/F5 literal serialization failed the approved-value integrity check. Corrected successor act `IIPS-V3-CAP03-PF15-ENDPOINT-LOCAL-STATE-DESIGNATION-PA-ACT-2026-10-26-02` is pending governed publication, CI, and remote read-back. See §16.137. |
+ | **Current S2 evidence-publication state** (`2026-10-26`; §16.138) | **S2 execution COMPLETE as reported from Windows; final 47-entry manifest verification COMPLETE AND CLOSED on the user's reported Windows `PASS`** (nine required filenames present and verified; `windows-session-transcript.txt` excluded as locked during hashing, **not** in the 47 entries) — receipt `IIPS-V3-CAP03-S2-EVIDENCE-MANIFEST-VERIFICATION-RECEIPT-2026-10-26-01` at `docs/integration/IIPS_v3.0_CAP03_S2_EVIDENCE_MANIFEST_VERIFICATION_RECEIPT_2026-10-26.md`. **S2 evidence receipt publication COMPLETE** — published by IRR PR #306 (merge `83c6219becfeefb51055af9edfa20227e8ae3891`), green exact-head/post-merge CI, 7/7 remote read-back (§16.138.7); **raw Windows evidence-byte read-back PENDING / NOT COMPLETE** (bytes on `C:\iips-evidence\cap03-s2\` outside Git; Arena did not inspect or recompute them); **full S2 evidence acceptance NOT RENDERED** (existing criteria outstanding — §16.138.4). No S2/test/build/manifest rerun or regeneration; approved-baseline `8eec74ae…` and corrected-candidate `001c3c80…` records remain distinct. |
+ | Previous update summary (`2026-10-26`; `CV-CORR-111`–`CV-CORR-114`, §§16.131–16.134 — preserved; receipts for PRs #298/#299 populated at §16.132.7, §16.133.8, §16.134.6) | `2026-10-26` (UTC) — **CAP-02 QE-8 `RV-1` rendered EFFECTIVE: the Program Authority expressly selected Option A (disposable-copy revocation); act `IIPS-V3-CAP02-QE8-RV1-REVOCATION-PROCEDURE-PA-ACT-2026-10-26-01` adopts decision-request §3.1–§3.7 verbatim and fixes an explicit disposable-copy boundary (byte-identical copy, copy-only mutating connection, authoritative-store delta-zero proof, `storePathRole='disposable-copy'`) with a Tier 2 component-only evidence ceiling — never a full-path PASS. The authoritative binding `c5808…` is untouched and QE-8 moves from AWAITING PROGRAM AUTHORITY to `PROCEDURE APPROVED (RV-1, Option A) — NOT EXECUTED`; nothing is executed (`CV-CORR-111`, §16.131, `CHG-2026-10-26-08`, `V806`–`V811`), followed by CAP-03 S2 Windows ESM/launch correction reconciliation (`CV-CORR-112`, §16.132, PR #298 `c493c5d3…`), CAP-03 DQ-4 + PF-15 P-1-independent advancement (`CV-CORR-113`, §16.133, PR #299 `e47b5896…`), and CAP-03 S2 `924/923/1` vs `924/920/4` count reconciliation (`CV-CORR-114`, §16.134, PR #299 `e47b5896…`). Preserved: QE 0/11; U3 AUTHORIZED — NOT STARTED; U2-14/P-1 BLOCKED — unspent; S2 remains the designated-Windows operator task; P-1 remains blocked until S2 passes; PF-15 remains a separate PA decision, NOT DESIGNATED, required before S3; U4 NOT RENDERED; U5 NOT GRANTED / NOT INITIATED; U6/W-1 NOT AUTHORIZED; all twelve 503 fences and `WRITE_NOT_AUTHORIZED` intact; zero IPD writes; zero host commands; no store or copy created. Preceding state (same day, PR #295, §16.129.4, `CHG-2026-10-26-07`, `V803`–`V805`): PF-15 PA-response boundary recorded — the authorized PA rendered no A/B or value determination; the existing PF-15 request was updated with the exact seven missing contents and required decision-maker; PF-15 remains NOT DESIGNATED and S2/P-1 remain independent. Preceding state:** CAP-02 QE-8 governance gap resolved to its authority boundary: a decision-ready revocation-procedure request (`RV-1`, four alternatives, no approval rendered) is published (`CV-CORR-110`, §16.130, `CHG-2026-10-26-06`). |
+@@ -335,6 +336,7 @@ The following completed baselines on `ramkivs/iips-review-recovered @ refs/heads
+ | `2026-10-26` | `CHG-2026-10-26-16` | **PF-15 PA act literal-integrity correction (`CV-CORR-117`, §16.137, `V873`–`V880`):** post-publication code-point comparison found that act `...-01` did not preserve the approved F2/F4/F5 values exactly because Markdown literals contained excess backslashes. The initial act is preserved, not edited. Corrected distinct PA act `IIPS-V3-CAP03-PF15-ENDPOINT-LOCAL-STATE-DESIGNATION-PA-ACT-2026-10-26-02` re-renders the same user-approved F1–F6 values and supersedes act `...-01` only upon its effective publication. **STOP: prior literals are not to be used.** No host execution, code change, P-1, S3, QE, or gate movement. Publication receipt follows in §16.137.8. |
+ | `2026-10-26` | `CHG-2026-10-26-17` | **S2 evidence-manifest verification receipt — user-reported Windows 47-entry `PASS` durably recorded; raw-byte read-back pending (`CV-CORR-118`, §16.138, `V881`–`V887`):** Publishes [`docs/integration/IIPS_v3.0_CAP03_S2_EVIDENCE_MANIFEST_VERIFICATION_RECEIPT_2026-10-26.md`](docs/integration/IIPS_v3.0_CAP03_S2_EVIDENCE_MANIFEST_VERIFICATION_RECEIPT_2026-10-26.md) (`IIPS-V3-CAP03-S2-EVIDENCE-MANIFEST-VERIFICATION-RECEIPT-2026-10-26-01`) + evidence `evidence/integration/cap03-s2-evidence-manifest-verification-2026-10-26/`. Records, as **User-reported Windows verification**: final manifest `PASS`, 47 entries, nine required filenames present and verified, all-listed-files existed/hash-matched, `windows-session-transcript.txt` excluded (locked), post-run pin clean at approved baseline, distribution 1,140 matched — with previously recorded `924/920/0/4` (`C5DDFFA24393AED2E391EF8A72E8BFF1F8ECD9576C4349E182B288785F1B2941`) and consumer `PASS` (`9F7C64073A849E57D472C9CA30BB7616D04D1951626E90587241D61A470A85B1`) preserved exactly. Arena-independent verification limited to live remote facts (IRR `main@d9345004…` superseding the supplied `11270b85…` snapshot; IPD `main@f97b17e7…`; baseline/candidate/tree/parent/two-file set; IPD PR #96 `MERGED`). **No** S2/test/build/manifest rerun; **0** IPD writes; raw-byte read-back **PENDING / NOT COMPLETE**; full S2 evidence acceptance **NOT RENDERED**; no gate movement. Publication receipt follows at §16.138.7 (`CHG-2026-10-26-18`, `V888`). |
+ | `2026-10-26` | `CHG-2026-10-26-18` | **Publication receipt for §16.138 (`CV-CORR-118`, `V888`): IRR PR #306 `MERGED`** — 2-parent `--merge` **`83c6219becfeefb51055af9edfa20227e8ae3891`** (`2026-10-26T14:03:10Z`, root tree `c1fa341f1e238889aa249bfd83f06c0249fce7e9`, tested head `ef01799b9f7c9dc322d7142332580ffcd717df24`); exact-head CI **`40335814340`** (job `121616945859`) and post-merge `main` CI **`40336047364`** (job `121617785595`) **`SUCCESS`**; independent GitHub Git Blobs API read-back **7/7 MATCH** (receipt `81d789b8a41454246551e34f8624620206fb9836` [`14,975` B, SHA-256 `3d6b58ca…43b7`], tracker-at-merge `0223157a63dabb9704cae6213071aeb4c1d261be` [`2,469,861` B, SHA-256 `4252ab8a…d081`], + 5/5 evidence blobs; `02-publication-readback.json`). Recorded at §16.138.7. **S2 evidence receipt publication is COMPLETE**; raw Windows evidence-byte read-back remains **PENDING / NOT COMPLETE** and full S2 evidence acceptance remains **NOT RENDERED** — durability of this receipt confers no acceptance. |
++| `2026-10-26` | `CHG-2026-10-26-19` | **CAP-02 + CAP-03 unified authoritative status reconciliation (`CV-CORR-119`, §16.139; `V889`–`V906`):** publishes [`docs/integration/IIPS_v3.0_CAP02_CAP03_UNIFIED_AUTHORITATIVE_STATUS_RECONCILIATION_2026-10-26.md`](docs/integration/IIPS_v3.0_CAP02_CAP03_UNIFIED_AUTHORITATIVE_STATUS_RECONCILIATION_2026-10-26.md) and `evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/` (**44 PASS / 0 FAIL**). Reconciles PRs #299–#307 + IPD #97, reuses (no rerun) the Windows S2 `924/920/0/4` + consumer `PASS` and the §16.138 47-entry manifest `PASS`, identifies the **S2 raw-byte read-back + full evidence acceptance gap** as the single next action, records **PF-15 act `-02` effective** with a byte-level exact-literal integrity defect reserved to the PA, and corrects the false §16.136/§16.137 P-1 identity-value blocker (effective S1 determination + compiled constants). Documentation/evidence/tracker only; zero gate, fence, pin, source, test, workflow or IPD `main` change (companion receipt at §16.139.7, `CHG-2026-10-26-20`, `V906`). |
+ 
+ ---
+ 
+@@ -12184,3 +12186,183 @@ Canonical S2 tracker statuses (single entry reconciled; no competing tracker; un
+ 
+ *End of §16.138 (`CV-CORR-118`; `CHG-2026-10-26-17` and `-18`; `V881`–`V888`; receipt at §16.138.7). S2 evidence receipt publication COMPLETE (PR #306, 7/7 remote read-back); Reported 47-entry manifest `PASS` + nine-file verification recorded as User-reported Windows verification; Arena-independent verification limited to live remote facts; raw-byte read-back PENDING / NOT COMPLETE; full S2 evidence acceptance NOT RENDERED; baseline/candidate distinct; no execution repeated; no gate moved.*
+ 
++---
++
++## §16.139 — `CV-CORR-119`: CAP-02 + CAP-03 **unified authoritative status reconciliation** — S2 evidence-acceptance gap identified as the exact next action; PF-15 designation effective with an exact-literal PA boundary; S1 identity-value blocker corrected (`2026-10-26`; `CHG-2026-10-26-19`, `V889`–`V906`)
++
++> **Current-state overlay; prior history preserved.** Full dispositions, evidence, dependency sequence,
++> authority boundaries and the replayable **44 PASS / 0 FAIL** verification are in
++> [`docs/integration/IIPS_v3.0_CAP02_CAP03_UNIFIED_AUTHORITATIVE_STATUS_RECONCILIATION_2026-10-26.md`](docs/integration/IIPS_v3.0_CAP02_CAP03_UNIFIED_AUTHORITATIVE_STATUS_RECONCILIATION_2026-10-26.md)
++> (`IIPS-V3-CAP02-CAP03-UNIFIED-STATUS-RECONCILIATION-2026-10-26-01`) and
++> `evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/`. This section renders **no PA
++> decision**, executes **no host command**, consumes **no P-1 attempt**, credits **no QE item**, accepts
++> **no gate result**, admits **no Gate 5**, lifts **no fence**, changes **no pin** and writes **no IPD
++> `main` object**.
++
++### 16.139.1 Verified baseline and mid-pass supersession (`V889`–`V901`)
++
++| Repository | Verified remote `main` | Root tree | Open PRs | Latest `main` CI |
++|---|---|---|---:|---|
++| IRR | **`cc3c000a11fd586c540a84a8d139c4b2c39cd121`** (PR #307, 2-parent merge `2026-10-26T14:09Z`) | **`00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c`** | 0 | `40336047364` chain green |
++| IPD (read-only) | **`f97b17e7d04a0c5c4573c0dbe51da2c4c595d829`** (PR #97) | **`6da6f82970fd3fb836500776708bbb6ea206baa1`** | 0 | `40315422170` `success` |
++
++At the first read of this pass IRR `main` was `e47b589…` (PR #299). Eleven further authoritative
++publications landed while reconciling and were each fetched and inspected: **#300/#301** (§16.135 +
++receipt, prepared PF-15 act `PROPOSED`), **#302/#303** (PF-15 act `-01` §16.136 + receipt),
++**#304/#305** (corrected PF-15 act `-02` §16.137 + receipt), **#306/#307** (§16.138 S2
++evidence-manifest verification receipt + §16.138.7 receipt). All exact-head and post-merge CI for
++#299–#307 and IPD #97 are `success`. **IR P #299** (head `429eca37…` → `e47b589…`; CI `40315801301`/
++`40316031598`) published tracker **§16.133 and §16.134**; **IPD PR #97** (head `880f0671…` →
++`f97b17e7…`, parents `1e76f4cf…` + head; CI `40315257221`/`40315422170`) published `16/16` byte-matched
++evidence and receipt comment `6414952274`. Tracker at verification ends **§16.138.7** (`CV-CORR-118`,
++`CHG-2026-10-26-18`, `V888`), remote blob `eed1f190…`, `2,473,138` B, SHA-256 `359c5a62…`.
++
++**Supersession rules (labels only):** (i) the "S2 NOT EXECUTED / 0 of 5" statements in §§16.125–16.131,
++the IPD S2 blocker and the CAP-02 QE matrix are dated snapshots; current state is **S2 executed on native
++Windows at `001c3c80…` (`924/920/0/4`, consumer `PASS`), plus a user-reported 47-entry final-manifest
++`PASS`** — **reused, not rerun** (§16.138). (ii) "PF-15 NOT DESIGNATED" in §§16.128–16.135 is superseded
++by the effective act `-02` (§16.137.6). (iii) §16.136.4/§16.136.7, §16.137.3/§16.137.5 and §16.137.6
++state that P-1 is blocked by unresolved `principal_label`/`tenantId`/`canonicalOwnerId`; that reads the
++successor act §4 at its own 2026-10-23 baseline and is **corrected as current state** by §16.139.3. No
++historical text, act, decision, gate, fence, pin or manifest is rewritten.
++
++### 16.139.2 CAP-02 and CAP-03 current status (`V902`–`V904`)
++
++**CAP-02: PARTIAL / NOT COMPLETE.** Completed and remotely verified: DB-C1 preview (PR #114),
++U0/B-1/B-1R/U1, U2-1…U2-12, U7 bounded contract, S1 identity values (effective determination
++`b7746b5e…`; compiled constants `ramki-personal-local` / `ipd-personal-local` /
++`ipd-owner-ramki-personal` at IPD `main` `src/persistence/gateAPrimeValidation.ts:50–52`), Gate A′
++authority, Gate 4 host authority, H-12 Alt A, H-12 R5 adoption + IPD mirror, QE-8 `RV-1` Option A
++effective PA act, QE matrix/R1–R7/runbook. Outstanding: U2-14/**P-1** (unspent, authority satisfied),
++U3/QE `0/11`, U4 acceptance, U5 Gate 5, U6/W-1. No outstanding CAP-02 item is a hard prerequisite for
++CAP-03 S2 (§16.124 `V723`); the CAP-02-origin prerequisites CAP-03 uses are satisfied at authority level.
++
++**CAP-03:** DQ-1…3/5/6a/6b/7 complete; H-12 R5 adopted; DQ-4 criteria 1–6/9/10 complete (**`8/10`,
++NOT ESTABLISHED**, criteria 7/8 outstanding); S2 Linux `924/923/0/1` baseline complete; S2 Windows
++component validation + package-consumer `PASS` complete; **§16.138 receipt publication COMPLETE** with
++user-reported 47-entry `PASS`; **PF-15 DESIGNATED / EFFECTIVE** (act `-02`, §§16.136–16.137). Still
++outstanding: **raw Windows evidence-byte read-back PENDING / NOT COMPLETE**; **full S2 evidence
++acceptance NOT RENDERED** (§16.138.4); **P-1 NOT EXECUTED** (single attempt unspent, not yet admissible);
++**S3 NOT REACHED**; **QE-1…QE-11 `0/11`** (QE-8 procedure approved, not executed); **Gate 4 AUTHORIZED —
++NOT STARTED**; **Gate 5 NOT INITIATED / NOT ADMITTED**; W-1/12 `503` fences/`durable:false` intact.
++
++### 16.139.3 S2 evidence determination and the two integrity corrections (`V903`–`V904`)
++
++**S2 evidence satisfies its execution prerequisite but NOT its evidence prerequisite.** Provenance:
++native Windows `desktop-no0nhtp` at `001c3c80…`/`399fa44a…` (parent `8eec74ae…`), IPD PR #96 →
++`1e76f4cf…`, ancestor of IPD `main`. Integrity: suite SHA `C5DDFFA2…` (`924/920/0/4`) and consumer
++SHA `9F7C6407…` (`PASS`) recorded; §16.138.3 adds a user-reported 47-entry manifest `PASS` with all nine
++required S2 files, clean pin and `1,140` `dist` files. **Raw bytes remain outside Git** (`C:\iips-evidence\cap03-s2\`),
++absent from both main trees and 0 Actions artifacts — independent re-hash **NOT COMPLETE**. Acceptance:
++component validation only, not full qualification; §16.138.4 states **full S2 evidence acceptance NOT
++RENDERED**, and S2 runbook §5.2 requires evidence accepted into the record before continuing. Exact
++deficiencies: **D1** raw-byte read-back of the 47 manifest files; **D4** the missing distinct acceptance
++record; **D3** coordinate note `8eec74ae…`↔`001c3c80…` (no silent re-pin); **D2** (only 2 of 5 commands)
++is **closed as a user-reported fact** by §16.138.3, not independently re-hashed. **No rerun is needed or
++authorized.**
++
++**Correction A — PF-15 exact-literal integrity (new finding).** Direct Git-Blobs byte comparison
++(`05-pf15-literal-integrity.txt`) shows corrected act `-02`'s F1–F6 rows — including F2/F4/F5 path
++literals — are **byte-identical** to act `-01`, which §16.137 declares defective for "excess literal
++backslashes"; act `-02` changed only title, status notice, act ID, a correction section and footer.
++If `-01`'s literals were defective, `-02`'s are identically defective. §16.137.6's "exact code-point
++checks passed" is not sufficient evidence that the operative bytes match the PA-approved literals. Only
++**Ramki (PA)** may confirm the exact code points or render a genuinely corrected act; agents must not
++unescape, normalize or invent Windows pipe/store/evidence paths. Until that confirmation, F2/F4/F5 are
++**STOP for host use**.
++
++**Correction B — no new PA identity-value decision is outstanding.** The effective
++`IIPS-V3-CAP02-S1-IDENTITY-VALUE-DETERMINATION-2026-10-24-01` (IPD PR #80) names all three values and
++discharges the successor act §4 reservation; the compiled constants are present at IPD `main`.
++§16.125.1, §16.128.4 and §16.133.5 independently record P-1 authority as issued (single-use, unspent).
++The §16.136/§16.137 "identity values unresolved" statements are historical mis-readings and must not add
++a new PA gate.
++
++### 16.139.4 Unified CAP-02/CAP-03 dependency matrix (`V889`–`V905`)
++
++Status vocabulary: **C** = completed and remotely verified; **EA** = executed, evidence acceptance
++outstanding; **PNE** = prepared but not executed; **PC** = partially complete; **TI** = blocked by
++technical/integrity issue; **AD** = blocked by outstanding authority decision; **NS** = not started;
++**S/NA** = superseded or no longer applicable.
++
++| # | Work item / gate | Current verified status | Authoritative evidence | Dependencies | Outstanding work | Blocks which downstream items? | Can authorized work proceed now? | Exact next action |
++|---|---|---|---|---|---|---|---|---|
++| 1 | CAP-02 DB-C1 / PR #114 preview | **C** (bounded) | §16.91/§16.124; `271ca527…`, CI `39955624531` | none | none | none | n/a | preserve; no restart |
++| 2 | U0/B-1/B-1R/U1/U2-1…12/U7 | **C** | §§16.85–16.92; IPD tracker `8a2a4e45…` | none | none | none | n/a | preserve; no restart |
++| 3 | S1 values, Gate A′ authority, Gate 4 host authority, H-12 Alt A | **C — effective; discharges successor §4** | IPD #67/#68/#76/#77/#80/#81; S1 blob `b7746b5e…`; `gateAPrimeValidation.ts:50–52` | none | none | P-1/QE | n/a | do not reopen (§3.2c) |
++| 4 | H-12 R5 adoption + IPD mirror | **C** | IRR #279/#280; IPD #94/#95; `f4649e36…`/`d0be8bef…` | DQ-6b | none | Gate 4/QE | n/a | preserve zero drift |
++| 5 | `RV-1` / QE-8 procedure PA act | **C — effective; not executed** | IRR #296/#297; `eaf8dda5…` | none | one Tier-2 disposable-copy run | QE-8 only | n/a | do not reopen |
++| 6 | CAP-02 QE matrix + R1–R7 + host runbook | **C (preparation)** | IRR #287/#288/#292/#294 | none | QE execution | Gate 4 | n/a | preserve |
++| 7 | DQ-1…3/5/6a/6b/7 decisions | **C** | §§16.117–16.123; IPD #89/#92/#93 | none | none | DQ-4 1–6 | n/a | preserve |
++| 8 | §16.133/§16.134 publication + PR #299 receipt | **C** | `e47b589…`, CI `40315801301`/`40316031598`; §16.133.8/§16.134.6 | none | none | baseline | n/a | preserve |
++| 9 | IPD PR #97 evidence (`16/16`) | **C** | `f97b17e7…`/`6da6f829…`, CI `40315257221`/`40315422170`, comment `6414952274` | none | none | baseline | n/a | preserve |
++| 10 | IRR #300/#301 — §16.135 + receipt | **C** | `dbe9874…`/`11270b8…`; CI `40324552331`/`40324807938`/`40325596271` | none | none | baseline | n/a | preserve |
++| 11 | **PF-15 designation (F1–F6)** | **C — DESIGNATED / EFFECTIVE (act `-02`)** | IRR #302/#303/#304/#305; §§16.136/16.137; CI `40330588730`/`40330902302`/`40332489138`/`40332807775` | PA directive (satisfied) | none at designation level | S3/QE prerequisite removed | n/a | do not re-render values |
++| 12 | **PF-15 exact F2/F4/F5 literals** | **TI + PA confirmation boundary** — act `-02` F rows byte-identical to declared-defective act `-01` | `05-pf15-literal-integrity.txt`; §16.137.1 vs §16.137.6 | PA code-point confirmation | genuinely corrected act or explicit PA byte confirmation | P-1 store creation (F4), S3/QE endpoint (F2), evidence root (F5) | **Arena: yes** (defect record, no value change); **PA: yes now** | PA confirms exact code points in a distinct effective act/statement |
++| 13 | S2 Linux baseline (`924/923/0/1`) | **C — non-host only** | §16.128.3/§16.134.1 | none | none | none | n/a | never cite as host qualification |
++| 14 | **S2 Windows validation** (`924/920/0/4` + consumer `PASS`) + 47-entry manifest `PASS` | **EA** — executed and receipt published; **full evidence acceptance NOT RENDERED** | IPD #96; §§16.132.3/16.134.3/16.135.4/16.138.3/16.138.7 | two-file fix, PR #96 | independent raw-byte read-back + acceptance record | **P-1 admissibility**; DQ-4 criterion 8 | **Arena: yes** (verification/addendum once bytes arrive); **operator: yes now** (read-only transfer) | **SINGLE NEXT ACTION — read-only transfer of the 47 manifest files (§5.2)** |
++| 15 | Approved pin `8eec74ae…`/`4eba2902…` | **C — unchanged** | §16.134.2/§16.135.3 | PA designation | coordinate-alignment note vs `001c3c80…` | DQ-4 establishment | Arena: yes (note); PA: re-pin only if promoted | record note at P-1/S3; no silent re-pin |
++| 16 | **P-1 single-use provisioning** | **PNE — unspent; authority satisfied; NOT YET ADMISSIBLE** (S2 evidence acceptance + F4 confirmation + host outstanding) | successor act §§8–9 + effective S1; no receipt; §16.138.4 | accepted S2 evidence; effective PF-15 with confirmed F4; host; PF-01…14/16/17; non-existent NTFS store | **one bounded host execution** | S3, QE-1…11, DQ-4 7/8, U3/U4/U5 | **Arena: no** (host-only); **operator: after #14 acceptance + F4 confirmation** | after #14: execute P-1 on `desktop-no0nhtp` |
++| 17 | **S3 preflight PF-01…PF-17** | **NS** | readiness matrix §5/§7 | P-1 receipt + effective PF-15 + confirmed F2 + host | host preflight evidence | QE-1…11, DQ-4 7/8 | no | after #16 and #12 |
++| 18 | QE-1…QE-7, QE-9…QE-11 | **NS (`0/11`)** | QE matrix; no deposits | S3 + Q11-before + H-12 + host | 10 host executions | U4/Gate C/Gate 5 | no | after #17 |
++| 19 | QE-8 | **PNE — procedure approved (`RV-1` Option A), Tier-2 ceiling** | §16.131; `eaf8dda5…` | P-1 store + S3 + disposable copy | one disposable-copy execution | U4 (component only) | no | after #17 |
++| 20 | DQ-4 criterion 7 (`S2→P-1→S3`) | **NS** | freeze manifest §7 | #14 acceptance/#16/#17 | ordered host sequence + receipts | DQ-4 establishment | after #14/#16/#17 | execute ordered sequence |
++| 21 | DQ-4 criterion 8 (canonical Windows evidence) | **TI** (raw-byte read-back PENDING + F2/F5 literals) | §16.135.4/§16.138.4; tree/artifact census | #14 D1/D4 + #12 + #17 + QE transcripts + `Q11-BEFORE/AFTER` + `MANIFEST.json` | read-only transfer/re-hash + full raw deposit | DQ-4 establishment | Arena: docs; host: yes | close D1/D4 at evidence deposit |
++| 22 | DQ-4 freeze establishment act | **AD/NS — `8/10` NOT ESTABLISHED** | freeze manifest §7 | criteria 7/8 | distinct PA freeze act | final designation stability | no | after #20/#21 |
++| 23 | Gate 4 (CAP-02 U3 / CAP-03) | **PC — AUTHORIZED, NOT STARTED; QE `0/11`** | Gate 4 act §15.3; §16.123.7 | #16–#19 | QE + result acceptance | U4, Gate 5 | **YES for independent docs/validation only** | no gate movement |
++| 24 | Gate C / U4 result acceptance | **NS — NOT RENDERED** | Gate 4 act §§7/14 | executed QE evidence | separate PA acceptance acts | Gate 5, W-1 | no | after QE |
++| 25 | Gate 5 / `CV-52` | **AD/NS — NOT INITIATED / NOT ADMITTED** | §16.123.7 | U4 | separate PA admission act | W-1, production | no | after #24 |
++| 26 | U6/W-1 writes, 12 `503` fences, `durable:false` | **S/NA — not authorized; intact** | fence blobs; environment probe | Gate 5 | separate PA act | production | no | preserve |
++| 27 | `CV-24` (`F6`/`TD-7b`) | **AD — separate, off critical path** | register §16.12 | none on this path | one combined PA act | none here | PA only, optional | no dependency change |
++| 28 | Executing environment / host boundary | **TI — Linux sandbox is not `desktop-no0nhtp`** | `01-executing-environment-probe.txt` | physical host access | operator Windows session | #16, #17–#21 | Arena: docs/validation only | operator opens host session |
++| 29 | **S2 raw-byte read-back + evidence acceptance** (§16.138.4 exact next action) | **TI — PENDING / NOT RENDERED** | §16.138.4/§16.138.7; 0 artifacts; no host route | read-only copy of 47 manifest files (≥ nine + final manifest + verification output) via approved artifact channel | Arena recomputes SHA-256 per file vs manifest, publishes dated addendum + distinct acceptance record | **P-1**, DQ-4 7/8, S3/QE | **Arena: yes once bytes arrive**; **operator: YES now** | **transfer read-only copies; no rerun** |
++
++### 16.139.5 Single next action (`V889`–`V905`)
++
++> **Provide read-only copies of the 47 manifest-listed Windows S2 evidence files — at minimum the nine
++> §16.138.3 required files, the final manifest and the manifest-verification output — from
++> `C:\iips-evidence\cap03-s2\` through an approved artifact channel, without altering the originals.
++> Arena then recomputes SHA-256 per file, compares to the manifest, publishes a dated verification
++> addendum, and only then renders the distinct S2 evidence-acceptance record. No S2 rerun, no test rerun,
++> no build, no manifest regeneration.**
++
++Prerequisites: the completed user-reported 47-entry `PASS` and the published §16.138.7 receipt already
++exist; the only missing input is an authorized read-only channel from `desktop-no0nhtp`. Governing
++procedure: §16.138.4 "Exact next action (no rerun)", S2 runbook §5, Gate 4 act §9, §16.130.6 publication
++protocol. Required evidence: the nine files in order (`s2-01-npm-ci.txt` … `s2-dist-sha256-after.txt`),
++the 47-entry manifest, the manifest-verification output; `windows-session-transcript.txt` is explicitly
++not one of the 47. Acceptance condition: independent SHA-256 match for every file, all nine present,
++`1,140` dist inventory/clean pin/`924/920/0/4`/consumer `PASS` corroborated, dated addendum + distinct
++S2 evidence-acceptance record published on IRR `main` with green exact-head + post-merge CI and remote
++read-back. **Subsequent strict order:** with accepted S2 evidence and PA-confirmed F4, the single bounded
++**P-1** (`V-A2-1`…`V-A2-8`) on `desktop-no0nhtp` → `S3` PF-01…PF-17 → `Q11-BEFORE` → `QE-1`…`QE-11`
++(QE-8 on a disposable copy) → `Q11-AFTER`/evidence integrity → separate Gate C/U4 acceptance PA acts →
++DQ-4 freeze establishment PA act → separate Gate 5 admission (`CV-52`). Arena cannot fetch the Windows
++bytes or execute host work (Linux sandbox, host unresolved, 0 artifacts); no host work is claimed here.
++
++### 16.139.6 Remaining blockers, authority boundaries and non-grants
++
++**Genuine PA-dependent items:** (1) **confirmation of the exact F2/F4/F5 code points** in a distinct
++effective act or statement (Correction A — a value-integrity boundary, not a new selection); (2) later
++DQ-4 freeze establishment, Gate C/U4 result acceptance, Gate 5 admission (`CV-52`), U6/W-1 write
++authorization, any promotion of `001c3c80…` to approved pin, and the separate off-path `CV-24`
++(`F6`/`TD-7b`). **PF-15 designation itself and the S1 identity values are no longer outstanding PA
++decisions.** **Non-PA blockers:** the read-only Windows S2 evidence transfer (operator), the designated
++host session (operator), and D1/D4 evidence acceptance. **Authorized work completed in this pass:** this
++two-locus reconciliation, tracker update, independent remote verification (`44 PASS / 0 FAIL`), and all
++replayable CI/validator checks. No gate, fence, pin, manifest, source, test, route, workflow or IPD
++`main` object moved; `CV-*` counts remain `35` total / `5` active outstanding.
++
++### 16.139.7 Publication receipt (`CHG-2026-10-26-20`; `V906`)
++
++*Per the §16.130.6 non-self-embedding protocol, the carrying PR number, tested head, regular 2-parent
++merge commit, exact-head CI, post-merge `main` CI and independent GitHub Blobs API byte + completeness
++read-back for this §16.139 publication are recorded **here** by the immediately following companion
++receipt PR, after those events occur. Until then this section is a current-state reconciliation pending
++its publication receipt; it grants no authority.*
++
++*End of §16.139 (`CV-CORR-119`; `CHG-2026-10-26-19`; `V889`–`V906`). S2 is reused, not rerun; the
++S2 evidence-acceptance gap is the exact next action; PF-15 is designated with an exact-literal PA
++boundary; P-1 remains unspent and not yet admissible; S3 not reached; QE `0/11`; DQ-4 `8/10` NOT
++ESTABLISHED; Gate 4 AUTHORIZED — NOT STARTED; Gate 5 NOT INITIATED / NOT ADMITTED; 12 `503` fences,
++W-1 and `durable:false` intact.*
+diff --git a/docs/integration/IIPS_v3.0_CAP02_CAP03_UNIFIED_AUTHORITATIVE_STATUS_RECONCILIATION_2026-10-26.md b/docs/integration/IIPS_v3.0_CAP02_CAP03_UNIFIED_AUTHORITATIVE_STATUS_RECONCILIATION_2026-10-26.md
+new file mode 100644
+index 0000000..a69dc23
+--- /dev/null
++++ b/docs/integration/IIPS_v3.0_CAP02_CAP03_UNIFIED_AUTHORITATIVE_STATUS_RECONCILIATION_2026-10-26.md
+@@ -0,0 +1,318 @@
++# IIPS v3.0 — CAP-02 + CAP-03 Unified Authoritative Status Reconciliation (`2026-10-26`, final pass)
++
++> **STATUS: CURRENT-STATE RECONCILIATION ONLY.** Renders **no Program Authority (PA) decision**, executes
++> **no host command**, consumes **no P-1 attempt**, credits **no QE item**, accepts **no gate result**,
++> admits **no Gate 5**, lifts **no fence**, changes **no pin** and writes **no IPD `main` object**.
++> It supersedes, **as current labels only**, stale "S2 NOT EXECUTED / 0 of 5" labels in §§16.125–16.129,
++> §§16.130–16.131, the IPD S2 precondition blocker and the CAP-02 QE matrix. The corrected-candidate
++> Windows S2 result (`924/920/0/4` + package-consumer `PASS`) is **reused, not rerun**.
++
++| Field | Value |
++|---|---|
++| Record ID | `IIPS-V3-CAP02-CAP03-UNIFIED-STATUS-RECONCILIATION-2026-10-26-01` |
++| Record type | Cross-workstream status/dependency/evidence reconciliation + component S2 evidence acceptance into the record (not a PA act, not gate acceptance) |
++| Tracker registration | Master tracker §16.139 (`CV-CORR-119`, `CHG-2026-10-26-19`, `V889`–`V905`) |
++| Governing locus | IRR `ramkivs/iips-review-recovered` `refs/heads/main`; IPD inspected read-only |
++| Reserved decision-maker | **Ramki — Program Authority**; the preparing capacity may not invent, select, default or infer PA-reserved values |
++| Verification evidence | `evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/` (IRR) and `evidence/cross-repository/cap02_cap03_unified_reconciliation_2026-10-26/` (IPD session-branch mirror) |
++
++---
++
++## 1. Verified baseline (A)
++
++Final verified remote state (`2026-10-26T14:11Z`; independent GitHub REST/Git/Actions/Blobs APIs,
++non-shallow local history, Git Blobs API byte read-back — replayable `verify_unified_status.py`,
++**44 PASS / 0 FAIL**):
++
++| Repository | `main` commit | Root tree | Open PRs | Latest `main` CI |
++|---|---|---|---:|---|
++| IRR | **`cc3c000a11fd586c540a84a8d139c4b2c39cd121`** (PR #307, 2-parent merge `2026-10-26T14:09Z`) | **`00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c`** | 0 | `40336047364` chain green |
++| IPD (read-only) | **`f97b17e7d04a0c5c4573c0dbe51da2c4c595d829`** (PR #97, 2-parent merge `2026-10-26T11:29:12Z`) | **`6da6f82970fd3fb836500776708bbb6ea206baa1`** | 0 | `40315422170` `success` |
++
++**Tracker version:** ends at **§16.138.7** (`CV-CORR-118`, `CHG-2026-10-26-18`, `V888`). Remote blob
++identity/size/SHA-256 read back from the Git Blobs API is in `02-verification-results.json`.
++
++### 1.1 Mid-pass remote movement — every newer authoritative record inspected
++
++The first read of this pass found IRR `main@e47b589…` (PR #299). Eleven further authoritative
++publications landed while reconciling; each was fetched and inspected before use:
++
++| PR(s) | Merge | Published |
++|---|---|---|
++| #300 / #301 | `dbe9874f…` / `11270b85…` | §16.135 + §16.135.8 receipt (prepared PF-15 act `PROPOSED`) |
++| #302 / #303 | `e15b7008…` / `1bae67d0…` | **PF-15 act `-01`** (§16.136) + receipt §16.136.8 |
++| #304 / #305 | `6e080f89…` / `d9345004…` | **corrected PF-15 act `-02`** (§16.137) + receipt §16.137.6 |
++| #306 / #307 | `83c6219b…` / `cc3c000a…` | **§16.138 S2 evidence-manifest verification receipt** + receipt §16.138.7 |
++
++All exact-head and post-merge CI runs for #299–#307 (and IPD #97) are `success` (verification log).
++§16.138/§16.138.7 record the **user-reported** Windows final-manifest verification (`PASS`, 47 entries,
++nine required S2 filenames, clean pin, 1,140 `dist` files), state that **S2 evidence receipt publication
++is COMPLETE**, and preserve two boundaries: **raw Windows evidence-byte read-back PENDING / NOT COMPLETE**
++and **full S2 evidence acceptance NOT RENDERED**. No S2 rerun, test rerun, build or manifest regeneration
++was performed.
++
++**Sources inspected:** master tracker §§16.91–16.95, 16.117–16.138; CAP-02 status/dependency record,
++one-pass/Gate 4 blocker, QE matrix + R1–R7 repair, host runbook, QE-8 decision packet + effective `RV-1`
++act; CAP-03 DQ-1…DQ-7 packet, DR-2/DQ-1 PA decision, DQ-4 pin reconciliation + freeze manifest §7,
++DQ-6b Path A + IPD mirror, H-12 R5 adoption + IPD mirror, S2 host-recovery blocker, readiness matrix,
++S2 operator runbook, PF-15 request + prepared act + both effective acts, S2 count reconciliation,
++S2 evidence-manifest verification receipt, IPD PR #97 record; IPD CAP-02 execution tracker, Gate 4 act
++Q1–Q12, Gate A′ successor act §§4/5/8/9, S1 determination + compiled constants, host readiness packet.
++The Windows host was not contacted (§6).
++
++## 2. CAP-02 status (B)
++
++**CAP-02 overall: PARTIAL / NOT COMPLETE** — bounded preview and all authorized implementation/evidence
++work complete; host qualification, result acceptance, Gate 5 admission and write authorization open.
++It is **not** a hard prerequisite for CAP-03 S2 (§16.124 `V723`).
++
++| CAP-02 item | Status | Evidence | Remaining gap / CAP-03 effect |
++|---|---|---|---|
++| DB-C1 bounded preview (PR #114) | **Completed and remotely verified** | merge `271ca527…`, CI `39955624531`, 14/14 blobs | preview only; no CAP-03 effect |
++| U0/B-1/B-1R/U1/U2-1…12/U7 implementation + evidence | **Completed and remotely verified** | §§16.85–16.92, IPD CAP-02 tracker blob `8a2a4e45…` (162,478 B) at IPD `main`, `7/7` post-G3 H-12 supplement | none at authorized manifest; repository-level, not host qualification |
++| S1 identity values + binding commit; Gate A′ successor act/entrypoint/validator; Gate 4 host authority; H-12 membership Alt A | **Completed and remotely verified (effective decisions)** | IPD PRs #67/#68/#76/#77/#80/#81; §16.125.1; S1 determination blob `b7746b5e…`; `src/persistence/gateAPrimeValidation.ts` lines 50–52 at IPD `main` hold `ramki-personal-local` / `ipd-personal-local` / `ipd-owner-ramki-personal` | **none** — this discharges the successor act §4 identity-value reservation (see §4.2 correction) |
++| H-12 R5 adoption + IPD mirror | **Completed and remotely verified** | IRR #279/#280, manifest `f4649e36…`/`d0be8bef…` re-hashed; IPD #94/#95 mirror `1e71504f…`; `56/56` core + `7/7` + `11/11` + `14/14` zero drift | none |
++| QE-8 `RV-1` Option A effective PA act | **Completed and remotely verified (procedure approved, not executed)** | IRR #296/#297, act `eaf8dda5…`, §16.131.7 `8/8` read-back | one Tier-2 disposable-copy QE-8 host run |
++| QE matrix + R1–R7 repair + host runbook/evidence structure | **Completed and remotely verified (preparation)** | IRR #287/#288/#292/#294; §16.127/§16.130 | all 11 QE items `HOST-ONLY`, `0/11` |
++| U2-13/W-1, U6 writes, 12 `503` fences, `durable:false` | **Not authorized / safety fence intact** | `WRITE_NOT_AUTHORIZED`, `evaluatePortSaveGuard()` hard-false, fence blobs `cb8db45d…`/`51704c12…`/`e6b57bb8…` | separate U6/W-1 + Gate 5 PA acts |
++| U2-14 / **P-1** single-use provisioning | **Prepared but NOT executed — unspent, single attempt; authority satisfied, eligible** | successor act §§8–9 + effective S1; no P-1 receipt in either main tree | one bounded host execution |
++| U3/Gate 4 QE-1…QE-11 | **AUTHORIZED — NOT STARTED; `0/11`** | no `gate-4-target-host-qualification-*` or `cap02_gate4_qe_*` deposits | all 11 host executions |
++| U4 acceptance, U5 Gate 5, Gate C acceptance | **NOT RENDERED / NOT INITIATED / NOT ADMITTED** | §16.123.7, §16.137.6 | separate PA acts after executed QE |
++| G2 full views, production, live broker, fence lift | **Superseded / not applicable** | effective U7 §2 | out of scope |
++
++**Cross-gate finding:** the CAP-02 items CAP-03 depends on (S1 values, Gate A′ authority, H-12, RV-1 and
++the shared P-1) are satisfied at authority/evidence level; only the shared P-1 **execution** remains.
++CAP-02 U3/U4/U5/U6 share the same host evidence but no CAP-02 gate movement is needed before CAP-03 S2/P-1.
++
++---
++
++## 3. CAP-03 status (C)
++
++| CAP-03 item | Status | Evidence |
++|---|---|---|
++| DQ-1/DR-2, DQ-2/DR-3, DQ-3/DR-4r | **Completed and remotely verified** | effective PA decision `IIPS-V3-CAP03-DR2-DQ1-PA-DECISION-2026-10-25-01`; IPD #89, IRR #265 |
++| DQ-5 host/operator/store-path process | **Completed** (names no endpoint) | §16.128.5, §16.123.6 |
++| DQ-6a (PR #42 closed), DQ-6b Path A `6/6`, DQ-7a/b/c off path | **Completed and remotely verified** | §§16.104/16.122/16.123; IPD #92/#93 |
++| DQ-4 freeze criteria 1–6, 9, 10 | **Completed (`8/10`)** — `PREPARED AND VALIDATED — NOT ESTABLISHED` | freeze manifest §7; §16.133.2 |
++| **DQ-4 criteria 7 and 8** | **NOT MET** | §16.133.2/§16.133.5; no host sequence or canonical evidence |
++| S2 Linux baseline | **Completed (non-host reproducibility)** — `924/923/0/1` | §16.128.3, §16.134.1; IPD PR #97 `12-tests.txt` SHA `39ff9da3…` |
++| **S2 Windows corrected candidate** | **Executed, component validation PASS; receipt published; full evidence acceptance NOT RENDERED** — `924/920/0/4`, consumer `PASS` | IPD #96; §§16.132.3/16.134.3/16.135.4/16.138.3; `C5DDFFA2…`, `9F7C6407…` |
++| **S2 final manifest verification (user-reported)** | **PASS — 47 entries, nine required files present, clean pin, 1,140 `dist` files; receipt publication COMPLETE; raw-byte read-back PENDING; full acceptance NOT RENDERED** | §16.138.3/§16.138.4/§16.138.7 (PRs #306/#307) |
++| Windows package-consumer | **PASS (operator-reported; raw bytes external)** | IPD #96; §16.132.3 |
++| Approved pin `8eec74ae…`/`4eba2902…` | **Unchanged; no re-pin** | §16.134.2/§16.135.3; candidate `001c3c80…` ancestor of IPD `main` (`ahead 13/behind 0`) |
++| **PF-15** | **DESIGNATED / EFFECTIVE** (act `-02`, PRs #302–#305) **with a residual literal-integrity defect** (§3.2) | §§16.136/16.137; act IDs `…-2026-10-26-01` and `-02` |
++| **P-1** | **NOT EXECUTED — single attempt unspent; authority satisfied; gated by S2 evidence acceptance + F4 literal confirmation + host** | §16.133.5/§16.135.6/§16.138.4; no receipt (tree census) |
++| **S3** preflight PF-01…PF-17 | **NOT REACHED** | readiness matrix §5/§7 |
++| **QE-1…QE-11** | **`0/11` executed**; QE-8 `PROCEDURE APPROVED (RV-1, Option A) — NOT EXECUTED` | QE matrix; §16.131; no deposits |
++| Gate 4 | **AUTHORIZED — NOT STARTED**; independent doc/validation work complete | §16.123.7/§16.135.8 |
++| Gate 5 / `CV-52` | **NOT INITIATED / NOT ADMITTED — BLOCKED (ACTIVE)** | §16.123.7 |
++| W-1/fences/`durable:false` | **Intact** | §16.137.6; environment probe (`U`-checks) |
++| §16.133/§16.134 + IPD PR #97 publications | **Completed and remotely verified** | PR #299/#97 merge+CI; §16.133.8/§16.134.6 receipts |
++
++### 3.1 S2 evidence — provenance, integrity, acceptance, limitations
++
++| Aspect | Verified fact |
++|---|---|
++| Provenance | Native Windows `desktop-no0nhtp` at `001c3c80618f2ee1d40e9a90912237e1a06e7b58` / tree `399fa44a5f1953c0f61b452420fefb5985426ef1` (parent `8eec74ae…`), merged by IPD PR #96 → `1e76f4cf…`, ancestor of `f97b17e7…`. |
++| Integrity | Suite SHA-256 `C5DDFFA24393AED2E391EF8A72E8BFF1F8ECD9576C4349E182B288785F1B2941` (`924/920/0/4`); consumer SHA-256 `9F7C64073A849E57D472C9CA30BB7616D04D1951626E90587241D61A470A85B1` (`PASS`). **Raw bytes are outside Git** (`C:\iips-evidence\cap03-s2\…095613Z.txt`); neither main tree contains them and IPD Actions artifacts = **0** → independent re-hash **NOT COMPLETE**. |
++| Acceptance | Component validation only: proves the Windows ESM/`npm` launch fix and that no test was silently dropped; **not** full CAP-03 qualification, **not** QE, **not** Gate 4 acceptance. This §16.138 publishes its acceptance **into the record for P-1 ordering only** per S2 runbook §5 (governed IRR PR → green CI → regular merge → green post-merge CI → remote read-back). |
++| Limitations | **D1 — CONTROLLING:** raw-byte verification of the 47 manifest-listed Windows files (at minimum the nine §16.138.3 files, the final manifest and the manifest-verification output) is **PENDING / NOT COMPLETE**; Arena has no read-only route to `C:\iips-evidence\cap03-s2\` and both repos have 0 Actions artifacts. **D2 (closed as reported):** §16.138.3 records all nine S2 command/evidence files present and verified against the 47-entry manifest — the earlier "only 2 of 5 commands" gap is superseded as a *reported* fact, not independently re-hashed. **D3:** coordinate differs from approved pin `8eec74ae…` (two changed paths are non-H-12 harness/test files; no silent re-pin). **D4 — CONTROLLING:** **full S2 evidence acceptance is NOT RENDERED** (§16.138.4); receipt publication alone is not acceptance, and the S2 runbook §5.2 requires evidence accepted into the record before continuing. |
++| Determination | **The S2 execution itself satisfies its technical prerequisite — do not rerun it.** But the **evidence prerequisite is NOT yet satisfied**: D1 (independent raw-byte read-back) and D4 (full evidence acceptance) remain; D2 is closed only as a user-reported fact. Therefore **P-1 is not yet admissible** and **DQ-4 criterion 8 is not met**. The exact deficiency is an evidence-provenance/integrity gap, not a failed test: §16.138.4 names the exact next action — operator supplies read-only copies of the 47 manifest-listed files through an approved artifact channel; Arena recomputes SHA-256 per file, compares to the manifest, and publishes a dated addendum; only then can a distinct S2 evidence-acceptance record be rendered. No S2/test/build/manifest regeneration is authorized. |
++
++### 3.2 Two integrity corrections to the newest PF-15 records (material to admissibility)
++
++**(a) PF-15 was rendered effective during this pass.** Ramki supplied F1–F6 in the 2026-10-26 execution
++directive; act `-01` (PR #302/#303, §16.136) and the corrected successor act `-02` (PR #304/#305, §16.137)
++are effective on IRR `main` with green exact-head/post-merge CI and independent remote read-back. Current
++determinations: **F1** Option A (explicit Windows named pipe); **F2** `IIPS_G2_IPC_ENDPOINT` — the pipe
++literal recorded in the act; **F3** `IIPS_G3_LOCAL_STATE_DIR = N/A`; **F4** `IIPS_G3_DATABASE_PATH`/
++`$StorePath` — the `C:\iips-data\iips\user-portfolio.sqlite` literal recorded in the act; **F5**
++`$EvidenceRoot` — the `C:\iips-evidence\cap03-gate4` literal recorded in the act; **F6** shared
++CAP-03 + CAP-02 host IPC/persistence scope. **No PF-15 value is invented, selected or normalized here**;
++host use must copy the operative act bytes verbatim.
++
++**(b) Residual literal-integrity defect (new finding, evidence-backed).** §16.137 declares act `-01`'s
++F2/F4/F5 Markdown code spans contained "excess literal backslashes" and that act `-02` re-records "the
++exact literal characters". A direct byte-level diff of the two published acts shows **the F1–F6 table rows
++— including all three path literals — are byte-identical**; act `-02` changed only the title, status
++notice, act ID, a "Correction and supersession" section and the footer (`diff` evidence in
++`05-pf15-literal-integrity.txt`). Therefore, **if act `-01`'s literals were defective, act `-02`'s are
++identically defective**. §16.137.6's "exact F2/F4/F5 code-point checks passed" is not sufficient evidence
++that the operative bytes match the PA-approved literals. Only **Ramki (PA)** can confirm the exact code
++points or render a genuinely corrected act; the preparing capacity must not normalize, unescape or guess a
++Windows pipe/store/evidence path. Until that confirmation is published, the F2/F4/F5 literals are
++**STOP for host use**: P-1 must not create a store at an unconfirmed F4, and S3/QE must not bind an
++unconfirmed F2. This is a **technical/integrity blocker with a PA confirmation boundary**, not a new
++value-selection request and not a reason to rerun S2.
++
++**(c) False P-1 identity-value blocker corrected.** §16.136.4/§16.136.7, §16.137.3/§16.137.5 and
++§16.137.6 state that P-1 execution "remains NOT AUTHORIZED while `principal_label`, `tenantId`,
++`canonicalOwnerId` are unresolved" and ask for a fresh PA identity-value determination. That reading uses
++the successor act §4 at its own 2026-10-23 baseline and ignores the later effective
++`IIPS-V3-CAP02-S1-IDENTITY-VALUE-DETERMINATION-2026-10-24-01` (IPD PR #80, determination blob
++`b7746b5e…`), which names all three values, and the compiled constants at IPD `main`
++(`src/persistence/gateAPrimeValidation.ts` lines 50–52: `ramki-personal-local`, `ipd-personal-local`,
++`ipd-owner-ramki-personal`). §16.125.1, §16.128.4 and §16.133.5 independently record that the S1 value
++blocker is discharged and that P-1 authority is issued (single-use, unspent). **No new PA identity-value
++decision is outstanding.** This is a dated current-state correction only; the earlier sections are
++preserved unedited as historical snapshots.
++
++---
++
++## 4. Unified dependency matrix (D)
++
++Status vocabulary: **C** = completed and remotely verified; **EA** = executed, evidence acceptance
++outstanding; **PNE** = prepared but not executed; **PC** = partially complete; **TI** = blocked by
++technical/integrity issue; **AD** = blocked by outstanding authority decision; **NS** = not started;
++**S/NA** = superseded or no longer applicable.
++
++| # | Work item / gate | Current verified status | Authoritative evidence | Dependencies | Outstanding work | Blocks which downstream items? | Can authorized work proceed now? | Exact next action |
++|---|---|---|---|---|---|---|---|---|
++| 1 | CAP-02 DB-C1 / PR #114 preview | **C** (bounded) | §16.91/§16.124; `271ca527…`, CI `39955624531` | none | none | none | n/a | preserve; no restart |
++| 2 | U0/B-1/B-1R/U1/U2-1…12/U7 | **C** | §§16.85–16.92; IPD tracker `8a2a4e45…` | none | none | none | n/a | preserve; no restart |
++| 3 | S1 values, Gate A′ authority, Gate 4 host authority, H-12 Alt A | **C — effective; discharges successor §4** | IPD #67/#68/#76/#77/#80/#81; S1 blob `b7746b5e…`; `gateAPrimeValidation.ts:50–52` | none | none | P-1/QE | n/a | do not reopen (§3.2c) |
++| 4 | H-12 R5 adoption + IPD mirror | **C** | IRR #279/#280; IPD #94/#95; `f4649e36…`/`d0be8bef…` | DQ-6b | none | Gate 4/QE | n/a | preserve zero drift |
++| 5 | `RV-1` / QE-8 procedure PA act | **C — effective; not executed** | IRR #296/#297; `eaf8dda5…` | none | one Tier-2 disposable-copy run | QE-8 only | n/a | do not reopen |
++| 6 | CAP-02 QE matrix + R1–R7 + host runbook | **C (preparation)** | IRR #287/#288/#292/#294 | none | QE execution | Gate 4 | n/a | preserve |
++| 7 | DQ-1…3/5/6a/6b/7 decisions | **C** | §§16.117–16.123; IPD #89/#92/#93 | none | none | DQ-4 1–6 | n/a | preserve |
++| 8 | §16.133/§16.134 publication + PR #299 receipt | **C** | `e47b589…`, CI `40315801301`/`40316031598`; §16.133.8/§16.134.6 | none | none | baseline | n/a | preserve |
++| 9 | IPD PR #97 evidence (`16/16`) | **C** | `f97b17e7…`/`6da6f829…`, CI `40315257221`/`40315422170`, comment `6414952274` | none | none | baseline | n/a | preserve |
++| 10 | IRR #300/#301 — §16.135 + receipt | **C** | `dbe9874…`/`11270b8…`; CI `40324552331`/`40324807938`/`40325596271` | none | none | baseline | n/a | preserve |
++| 11 | **PF-15 designation (F1–F6)** | **C — DESIGNATED / EFFECTIVE (act `-02`)** | IRR #302/#303/#304/#305; §§16.136/16.137; CI `40330588730`/`40330902302`/`40332489138`/`40332807775` | PA directive (satisfied) | none at designation level | S3/QE prerequisite removed | n/a | do not re-render values |
++| 12 | **PF-15 exact F2/F4/F5 literals** | **TI + PA confirmation boundary** — act `-02` F rows byte-identical to declared-defective act `-01` | `05-pf15-literal-integrity.txt`; §16.137.1 vs §16.137.6 | PA code-point confirmation | genuinely corrected act or explicit PA byte confirmation | P-1 store creation (F4), S3/QE endpoint (F2), evidence root (F5) | **Arena: yes** (defect record, no value change); **PA: yes now** | PA confirms exact code points in a distinct effective act/statement |
++| 13 | S2 Linux baseline (`924/923/0/1`) | **C — non-host only** | §16.128.3/§16.134.1 | none | none | none | n/a | never cite as host qualification |
++| 14 | **S2 Windows validation** (`924/920/0/4` + consumer `PASS`) + 47-entry manifest `PASS` | **EA** — executed and receipt published; **full evidence acceptance NOT RENDERED** | IPD #96; §§16.132.3/16.134.3/16.135.4/16.138.3/16.138.7 | two-file fix, PR #96 | independent raw-byte read-back + acceptance record | **P-1 admissibility**; DQ-4 criterion 8 | **Arena: yes** (verification/addendum once bytes arrive); **operator: yes now** (read-only transfer) | **SINGLE NEXT ACTION — read-only transfer of the 47 manifest files (§5.2)** |
++| 15 | Approved pin `8eec74ae…`/`4eba2902…` | **C — unchanged** | §16.134.2/§16.135.3 | PA designation | coordinate-alignment note vs `001c3c80…` | DQ-4 establishment | Arena: yes (note); PA: re-pin only if promoted | record note at P-1/S3; no silent re-pin |
++| 16 | **P-1 single-use provisioning** | **PNE — unspent; authority satisfied; NOT YET ADMISSIBLE** (S2 evidence acceptance + F4 confirmation + host outstanding) | successor act §§8–9 + effective S1; no receipt; §16.138.4 | accepted S2 evidence; effective PF-15 with confirmed F4; host; PF-01…14/16/17; non-existent NTFS store | **one bounded host execution** | S3, QE-1…11, DQ-4 7/8, U3/U4/U5 | **Arena: no** (host-only); **operator: after #14 acceptance + F4 confirmation** | after #14: execute P-1 on `desktop-no0nhtp` |
++| 17 | **S3 preflight PF-01…PF-17** | **NS** | readiness matrix §5/§7 | P-1 receipt + effective PF-15 + confirmed F2 + host | host preflight evidence | QE-1…11, DQ-4 7/8 | no | after #16 and #12 |
++| 18 | QE-1…QE-7, QE-9…QE-11 | **NS (`0/11`)** | QE matrix; no deposits | S3 + Q11-before + H-12 + host | 10 host executions | U4/Gate C/Gate 5 | no | after #17 |
++| 19 | QE-8 | **PNE — procedure approved (`RV-1` Option A), Tier-2 ceiling** | §16.131; `eaf8dda5…` | P-1 store + S3 + disposable copy | one disposable-copy execution | U4 (component only) | no | after #17 |
++| 20 | DQ-4 criterion 7 (`S2→P-1→S3`) | **NS** | freeze manifest §7 | #14 acceptance/#16/#17 | ordered host sequence + receipts | DQ-4 establishment | after #14/#16/#17 | execute ordered sequence |
++| 21 | DQ-4 criterion 8 (canonical Windows evidence) | **TI** (raw-byte read-back PENDING + F2/F5 literals) | §16.135.4/§16.138.4; tree/artifact census | #14 D1/D4 + #12 + #17 + QE transcripts + `Q11-BEFORE/AFTER` + `MANIFEST.json` | read-only transfer/re-hash + full raw deposit | DQ-4 establishment | Arena: docs; host: yes | close D1/D4 at evidence deposit |
++| 22 | DQ-4 freeze establishment act | **AD/NS — `8/10` NOT ESTABLISHED** | freeze manifest §7 | criteria 7/8 | distinct PA freeze act | final designation stability | no | after #20/#21 |
++| 23 | Gate 4 (CAP-02 U3 / CAP-03) | **PC — AUTHORIZED, NOT STARTED; QE `0/11`** | Gate 4 act §15.3; §16.123.7 | #16–#19 | QE + result acceptance | U4, Gate 5 | **YES for independent docs/validation only** | no gate movement |
++| 24 | Gate C / U4 result acceptance | **NS — NOT RENDERED** | Gate 4 act §§7/14 | executed QE evidence | separate PA acceptance acts | Gate 5, W-1 | no | after QE |
++| 25 | Gate 5 / `CV-52` | **AD/NS — NOT INITIATED / NOT ADMITTED** | §16.123.7 | U4 | separate PA admission act | W-1, production | no | after #24 |
++| 26 | U6/W-1 writes, 12 `503` fences, `durable:false` | **S/NA — not authorized; intact** | fence blobs; environment probe | Gate 5 | separate PA act | production | no | preserve |
++| 27 | `CV-24` (`F6`/`TD-7b`) | **AD — separate, off critical path** | register §16.12 | none on this path | one combined PA act | none here | PA only, optional | no dependency change |
++| 28 | Executing environment / host boundary | **TI — Linux sandbox is not `desktop-no0nhtp`** | `01-executing-environment-probe.txt` | physical host access | operator Windows session | #16, #17–#21 | Arena: docs/validation only | operator opens host session |
++| 29 | **S2 raw-byte read-back + evidence acceptance** (§16.138.4 exact next action) | **TI — PENDING / NOT RENDERED** | §16.138.4/§16.138.7; 0 artifacts; no host route | read-only copy of 47 manifest files (≥ nine + final manifest + verification output) via approved artifact channel | Arena recomputes SHA-256 per file vs manifest, publishes dated addendum + distinct acceptance record | **P-1**, DQ-4 7/8, S3/QE | **Arena: yes once bytes arrive**; **operator: YES now** | **transfer read-only copies; no rerun** |
++
++---
++
++## 5. Cross-gate dependency sequence and the single next action (E)
++
++### 5.1 Answers to the nine dependency questions
++
++1. **CAP-02 outstanding:** U3/QE, U4 acceptance, U5 Gate 5, U6/W-1 and the shared P-1 execution. All
++   CAP-02 decisions, implementation, H-12, RV-1 and publication work is complete.
++2. **CAP-02 prerequisites for CAP-03:** S1 values, Gate A′ authority, H-12, RV-1 — **all satisfied**;
++   the shared P-1 execution is the only unsatisfied CAP-02-origin prerequisite.
++3. **Completed CAP-03 work not to repeat:** DQ-1…7, H-12 R5, DQ-4 1–6/9/10, S2 Linux and Windows
++   component runs, package-consumer fix, PR #97 evidence, the 47-entry Windows manifest verification
++   (user-reported `PASS`) and its receipt, §§16.133–16.138 publications, **PF-15 F1–F6 designation
++   (PRs #302–#305)**.
++4. **P-1 eligibility:** **NO — not yet admissible.** Authority is satisfied (S1 discharged, PF-15
++   designated, single attempt unspent), but the S2 evidence prerequisite is not: full S2 evidence
++   acceptance is NOT RENDERED and raw-byte read-back is PENDING (§16.138.4/§16.138.7). Add the host
++   session and PA confirmation of the exact F4 literal (§3.2b). Arena can execute none of these.
++5. **PF-15:** **no longer an outstanding PA designation decision** — rendered effective during this pass.
++   The residual **exact-literal code-point confirmation** is a genuine PA boundary (§3.2b); agents may not
++   normalize or invent path bytes.
++6. **S3 / QE-1…QE-11 admissibility:** **NO** — require accepted S2 evidence, P-1 receipt, effective
++   PF-15 with confirmed F2, green S3 preflight, Q11-before digests, host evidence root, and (QE-8) a
++   disposable copy.
++7. **DQ-4 criteria 7/8:** criterion 7 = ordered `S2→P-1→S3` host sequence with receipts; criterion 8 =
++   canonical native-Windows evidence including D1–D4 closures, QE transcripts, `Q11-BEFORE/AFTER`, and
++   `MANIFEST.json` with verbatim (PA-confirmed) endpoint/store/evidence paths. Then a distinct PA freeze act.
++8. **Gate 4 / Gate 5 independent work:** Gate 4 documentation/validation/manifest evidence is complete and
++   can continue; no gate movement or QE credit without host execution. Gate 5 has no independent execution
++   work — only future record preparation.
++9. **Other dependency changes:** §16.138 (PRs #306/#307) is the newest authoritative S2 record and
++   supersedes the earlier "S2 satisfies its prerequisite / P-1 next" inference: **S2 evidence acceptance
++   is the controlling gate**. The §16.136/§16.137 claim of an unresolved S1 identity-value PA decision is
++   **incorrect** (§3.2c). The PF-15 literal defect (§3.2b) is a second admissibility condition. `CV-24`
++   remains off-path; all 12 fences remain intact.
++
++### 5.2 Single next action
++
++> **Provide read-only copies of the 47 manifest-listed Windows S2 evidence files — at minimum the nine
++> §16.138.3 required files, the final manifest and the manifest-verification output — from
++> `C:\iips-evidence\cap03-s2\` through an approved artifact channel, without altering the originals.
++> Arena then recomputes SHA-256 per file, compares each digest to the manifest, publishes a dated
++> verification addendum, and only then renders the distinct S2 evidence-acceptance record.
++> No S2 rerun, test rerun, build or manifest regeneration.**
++
++- **Prerequisites:** the completed, user-reported 47-entry `PASS` (§16.138.3) and the published receipt
++  (§16.138.7) already exist; no new execution is needed. An authorized read-only channel from
++  `desktop-no0nhtp` to an Arena-inspectable location (e.g. a repository evidence deposit or an approved
++  artifact upload) is the only missing input. Both repositories currently hold **0** Actions artifacts and
++  no copy of the nine Windows files.
++- **Governing procedure:** §16.138.4 "Exact next action (no rerun)"; S2 operator runbook §5 (evidence
++  accepted into the record before continuing); Gate 4 act §9 (raw evidence, immutability, provenance,
++  integrity, `INVALID` on digest drift); §16.130.6 publication protocol (no self-embedded coordinates).
++- **Required evidence:** the nine files in order — `s2-01-npm-ci.txt`, `s2-02-tsc-noemit.txt`,
++  `s2-03-build.txt`, `s2-03-dist-count.txt`, `s2-03-dist-sha256-before.txt`,
++  `s2-04-guarded-npm-test.txt`, `s2-05-package-consumer.txt`, `s2-post-run-pin.txt`,
++  `s2-dist-sha256-after.txt` — plus the final 47-entry manifest and the manifest-verification output;
++  `windows-session-transcript.txt` is explicitly **not** one of the 47 entries (locked during hashing).
++- **Acceptance condition:** every file's independently recomputed SHA-256 equals its manifest entry; all
++  nine required files present; `1,140` `dist` inventory, clean pin/tree, `924/920/0/4` guard tail and
++  consumer `PASS` corroborated; a dated addendum plus a **distinct S2 evidence-acceptance record** is
++  published on IRR `main` with green exact-head + post-merge CI and independent remote read-back. Until
++  then DQ-4 criterion 8 remains NOT MET and P-1 is not admissible.
++- **Subsequent step (strict order):** with accepted S2 evidence and PA-confirmed F4, execute the **single
++  bounded P-1** (`V-A2-1`…`V-A2-8`) on `desktop-no0nhtp`; then `S3` PF-01…PF-17 (confirmed F2) →
++  `Q11-BEFORE` → `QE-1`…`QE-11` (QE-8 on a disposable copy) → `Q11-AFTER` + evidence integrity →
++  separate Gate C/U4 acceptance acts → DQ-4 freeze establishment PA act → separate Gate 5 admission.
++- **Why this is next and why nothing is repeated:** §16.138.4 (the newest authoritative record, published
++  mid-pass by PRs #306/#307) explicitly names this read-only transfer as the exact next action.
++  The 47-entry manifest verification is **reported complete**; repeating S2, the guarded suite, the build
++  or the manifest would duplicate completed work. P-1, PF-15 and S3 are *not* automatically next:
++  PF-15 has been rendered effective, S1 values are discharged, and the remaining gate is **S2 evidence
++  acceptance**, which the runbook §5.2 makes a precondition of P-1. Arena cannot fetch the bytes itself
++  (Linux sandbox, host unresolved, 0 artifacts) — no host work is claimed here.
++
++---
++
++## 6. Remaining blockers and authority boundaries (G)
++
++| Blocker | Type | Who/what resolves it | Authorized work that can continue |
++|---|---|---|---|
++| Exact F2/F4/F5 code points in the PF-15 acts (§3.2b) | **Technical/integrity + PA confirmation boundary** — act `-02` did not change the operative literals | **Ramki (PA)** confirms bytes or publishes a genuinely corrected act; agents must not unescape/normalize | this reconciliation and byte-diff evidence (published here); no host use of the literals |
++| ~~New PA identity-value determination for P-1~~ | **Superseded / not a blocker** (§3.2c) | already discharged by effective S1 determination + merged constants | none required |
++| Native Windows host `desktop-no0nhtp` (non-elevated Ramki) | **Host boundary** — Linux sandbox, host unresolved | physical operator session | all repository-side documentation, CI/validator and tracker work |
++| **S2 raw-byte read-back + full evidence acceptance** (D1/D4) | **Evidence integrity / technical** — **blocks P-1 and DQ-4 criterion 8** | operator supplies read-only copies of the 47 manifest files; Arena re-hashes + publishes addendum + distinct acceptance record | Arena publishes the disposition (this record); **no S2 rerun** |
++| DQ-4 criteria 7/8 + freeze establishment | **Prerequisite-dependent + later PA act** | P-1 + S3 + QE evidence, then distinct PA freeze act | freeze manifest/validators/classification already complete |
++| Gate C/U4 acceptance, Gate 5 (`CV-52`), W-1/U6 | **Reserved PA acts** | Ramki (PA) after executed, accepted QE evidence | record preparation only; no fence/pin/route change |
++| Approved-pin promotion `8eec74ae…` → `001c3c80…` (only if ever needed) | **PA-governed determination** | Ramki (PA), explicit re-designation | coordinate note suffices for P-1/S3 |
++| `CV-24` (`F6`/`TD-7b`) | **Separate PA decision, off critical path** | Ramki (PA), optional/scheduled | does not affect this next action |
++| ~~New PA identity-value determination for P-1~~ | **Superseded / not a blocker** (§3.2c) | already discharged by effective S1 determination + merged constants | none required |
++
++---
++
++## 7. Scope, non-grants and verification log (F/H)
++
++This pass changed **documentation/evidence/tracker only**. It executed **no** S2/P-1/S3/QE command,
++created **no** store, binding, membership, copy, endpoint or evidence root, wrote **no** IPD `main`
++object, changed **no** `src/`/`tests/`/`scripts/`/manifest/lockfile/pin/fence/route/workflow path,
++rendered **no** PA decision, moved **no** gate, credited **no** QE item and claimed **no**
++acceptance/admission/production eligibility. All 12 `/api/user-portfolios*` `503` fences,
++`WRITE_NOT_AUTHORIZED`, `durable:false`/`SESSION_ONLY` and the `CV-*` register counts (`35` total,
++`5` active outstanding) remain unchanged.
++
++| ID | Check | Result |
++|---|---|---|
++| `V889`–`V891` | IRR/IPD remote refs, commit+tree SHAs, PR #97 2-parent ancestry | **PASS** |
++| `V892`–`V899` | IRR #299–#307 + IPD #97 merged state/heads/merge commits/CI | **PASS** |
++| `V900`–`V901` | Tracker remote blob identity/size/SHA-256 + completeness (§§16.133–16.138 + receipts) | **PASS** |
++| `V902` | H-12 R5 manifest + IPD mirror integrity | **PASS** |
++| `V903` | S2 provenance/digests/raw-byte absence + §16.138 receipt/47-entry report + PR #96/candidate ancestry | **PASS** |
++| `V904` | Negative P-1/QE/freeze searches; S1 determination + compiled constants; PF-15 act `-01`/`-02` byte diff | **PASS as evidence of defect** |
++| `V905` | Host/environment boundary + `git diff --check` + identifier census | **PASS** |
++| — | Replayable verification suite | **44 PASS / 0 FAIL** (`02-verification-results.json`, `03-verification-summary.txt`) |
++
++*End of `IIPS-V3-CAP02-CAP03-UNIFIED-STATUS-RECONCILIATION-2026-10-26-01` — current-state reconciliation
++only: S2 reused and its evidence-acceptance gap identified as the exact next action, PF-15 designated
++(with an exact-literal PA confirmation boundary), no gate,
++fence, pin or write changed.*
+diff --git a/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/01-executing-environment-probe.txt b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/01-executing-environment-probe.txt
+new file mode 100644
+index 0000000..4e1c9a2
+--- /dev/null
++++ b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/01-executing-environment-probe.txt
+@@ -0,0 +1,17 @@
++UTC=2026-10-26T13:03:48Z
++hostname=e2b.local
++uname=Linux e2b.local 6.1.158+ #1 SMP PREEMPT_DYNAMIC Mon May 11 18:48:24 UTC 2026 x86_64 GNU/Linux
++node=v22.22.3
++platform=linux
++getent_hosts_desktop_no0nhtp=
++getent_exit=2
++powershell=ABSENT
++pwsh=ABSENT
++cmd_exe=ABSENT
++IIPS_G3_IPC_BINDING_PROVISIONED=ABSENT
++IIPS_ENABLE_WRITES=ABSENT
++IIPS_G3_ENABLE_WRITES=ABSENT
++GATE_E_OVERRIDE=ABSENT
++IIPS_G2_IPC_ENDPOINT=ABSENT
++IIPS_G3_LOCAL_STATE_DIR=ABSENT
++IIPS_G3_DATABASE_PATH=ABSENT
+diff --git a/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/02-verification-results.json b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/02-verification-results.json
+new file mode 100644
+index 0000000..57d1003
+--- /dev/null
++++ b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/02-verification-results.json
+@@ -0,0 +1,325 @@
++{
++  "record": "IIPS-V3-CAP02-CAP03-UNIFIED-STATUS-RECONCILIATION-2026-10-26-01 (verification evidence, final pass)",
++  "verified_utc": "2026-10-26T14:15:15Z",
++  "irr_main": "cc3c000a11fd586c540a84a8d139c4b2c39cd121",
++  "irr_tree": "00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c",
++  "ipd_main": "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829",
++  "ipd_tree": "6da6f82970fd3fb836500776708bbb6ea206baa1",
++  "tracker_blob": "eed1f190255b8ee72b7c09b944e8ae9a5e6b76c7",
++  "tracker_bytes": 2473138,
++  "tracker_sha256": "359c5a62d57ab22d4854191b6b2bee62428e5070da0da25902faaaf259272ca7",
++  "checks": [
++    {
++      "id": "U01",
++      "check": "IRR main commit + root tree (at/after reconciled baseline cc3c000)",
++      "observed": "cc3c000a11fd586c540a84a8d139c4b2c39cd121 / 00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c behind_by=0",
++      "result": "PASS",
++      "evidence": "Git Refs/Commits/Compare API; robust to later additive publications"
++    },
++    {
++      "id": "U02",
++      "check": "IPD main commit + root tree",
++      "observed": "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829 / 6da6f82970fd3fb836500776708bbb6ea206baa1",
++      "result": "PASS",
++      "evidence": "Git Refs/Commits API"
++    },
++    {
++      "id": "U03",
++      "check": "IPD main is a regular 2-parent merge of PR #97 head",
++      "observed": "[{'sha': '1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745', 'url': 'https://api.github.com/repos/ramkivs/iips-production-market-data/git/commits/1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745', 'html_url': 'https://github.com/ramkivs/iips-production-market-data/commit/1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745'}, {'sha': '880f067185b50cad3989a65f8651699b2c7a1f5a', 'url': 'https://api.github.com/repos/ramkivs/iips-production-market-data/git/commits/880f067185b50cad3989a65f8651699b2c7a1f5a', 'html_url': 'https://github.com/ramkivs/iips-production-market-data/commit/880f067185b50cad3989a65f8651699b2c7a1f5a'}]",
++      "result": "PASS",
++      "evidence": "Git Commits API"
++    },
++    {
++      "id": "U04",
++      "check": "iips-review-recovered PR #299 merged/head/merge commit",
++      "observed": "merged=True head=429eca37396a5a534987cb6bfc33166449691bfe merge=e47b58967621377ca92c2123c432a5eb5c5959ad",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API"
++    },
++    {
++      "id": "U05",
++      "check": "iips-production-market-data PR #97 merged/head/merge commit",
++      "observed": "merged=True head=880f067185b50cad3989a65f8651699b2c7a1f5a merge=f97b17e7d04a0c5c4573c0dbe51da2c4c595d829",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API"
++    },
++    {
++      "id": "U06",
++      "check": "iips-review-recovered PR #300 merged/head/merge commit",
++      "observed": "merged=True head=87390f6dffaad37111fa8c2c88d9128d338122c7 merge=dbe9874f28f03b31cca4c8b996d3e822a4cf2b29",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API"
++    },
++    {
++      "id": "U07",
++      "check": "iips-review-recovered PR #301 merged/head/merge commit",
++      "observed": "merged=True head=912b387a759d571bccd0cbd7e95a0342fe979c5b merge=11270b85db1354d8bce9c8278ff97a93e81c66f0",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API"
++    },
++    {
++      "id": "U08",
++      "check": "iips-review-recovered PR #302 merged/head/merge commit",
++      "observed": "merged=True head=59bd3790c13267c4f6d3c8fc7842b1bb11b5ffd8 merge=e15b70089dca1d0853f0b9640175d305b3d99171",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API"
++    },
++    {
++      "id": "U09",
++      "check": "iips-review-recovered PR #303 merged/head/merge commit",
++      "observed": "merged=True head=4218345cf74c11e5d5055bb60aab319de893819a merge=1bae67d05fb11bc8a24090bff815a96fa4e28b97",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API"
++    },
++    {
++      "id": "U10",
++      "check": "iips-review-recovered PR #304 merged/head/merge commit",
++      "observed": "merged=True head=8ca8e874155193142bf1393011c9c64629d6a7fd merge=6e080f89d0cec40ebbc0656f27435588c97a7278",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API"
++    },
++    {
++      "id": "U11",
++      "check": "iips-review-recovered PR #305 merged/head/merge commit",
++      "observed": "merged=True head=af8558b5ee8a42444495dcfb99bfdd6fb6eb36af merge=d9345004f5897ecb33fa532599b51a6ec799aa7a",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API"
++    },
++    {
++      "id": "U12",
++      "check": "PR #299 exact-head CI",
++      "observed": "['success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U13",
++      "check": "PR #299 post-merge CI",
++      "observed": "['success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U14",
++      "check": "PR #97 exact-head CI",
++      "observed": "['success', 'success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U15",
++      "check": "PR #97 post-merge CI",
++      "observed": "['success', 'success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U16",
++      "check": "PR #300 exact-head CI",
++      "observed": "['success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U17",
++      "check": "PR #300 post-merge CI",
++      "observed": "['success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U18",
++      "check": "PR #301 post-merge CI",
++      "observed": "['success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U19",
++      "check": "PR #302 exact-head CI",
++      "observed": "['success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U20",
++      "check": "PR #302 post-merge CI",
++      "observed": "['success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U21",
++      "check": "PR #304 exact-head CI",
++      "observed": "['success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U22",
++      "check": "PR #304 post-merge CI",
++      "observed": "['success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U23",
++      "check": "PR #305 post-merge CI",
++      "observed": "['success']",
++      "result": "PASS",
++      "evidence": "GitHub Actions Check-Runs API"
++    },
++    {
++      "id": "U24",
++      "check": "Tracker remote blob identity / size / SHA-256",
++      "observed": "blob=eed1f190255b8ee72b7c09b944e8ae9a5e6b76c7 size=2473138 sha256=359c5a62d57ab22d4854191b6b2bee62428e5070da0da25902faaaf259272ca7",
++      "result": "PASS",
++      "evidence": "GitHub Git Blobs API (base64 decode, not inline Contents)"
++    },
++    {
++      "id": "U25",
++      "check": "Tracker completeness: §§16.133–16.137 + receipts + S2 digests",
++      "observed": "missing=[]",
++      "result": "PASS",
++      "evidence": "Remote tracker bytes decoded/searched"
++    },
++    {
++      "id": "U26",
++      "check": "Adopted H-12 R5 manifest unchanged",
++      "observed": "blob=f4649e36a81c7013287810cd3202b99586dbd951 sha256=d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76",
++      "result": "PASS",
++      "evidence": "Contents + Git Blobs API"
++    },
++    {
++      "id": "U27",
++      "check": "IPD H-12 R5 adoption mirror receipt published",
++      "observed": "blob=1e71504f776152ea9200f3a6ce9250872edbee93",
++      "result": "PASS",
++      "evidence": "Contents API"
++    },
++    {
++      "id": "U28",
++      "check": "IPD PR #96 records Windows 924/920/0/4 + consumer PASS",
++      "observed": "920=True 0failed=True 4skipped=True",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API (operator-reported, retained outside repo)"
++    },
++    {
++      "id": "U29",
++      "check": "Corrected candidate tree/parent and ancestor relation to IPD main",
++      "observed": "tree=399fa44a5f1953c0f61b452420fefb5985426ef1 parent=8eec74ae27cda09f3c368b9c299895eae41554db",
++      "result": "PASS",
++      "evidence": "Git Commits/Compare API; approved pin not re-pinned"
++    },
++    {
++      "id": "U30",
++      "check": "No Windows S2 raw transcript bytes in iips-review-recovered main",
++      "observed": "matches=[] truncated=False",
++      "result": "PASS",
++      "evidence": "recursive Git Trees API"
++    },
++    {
++      "id": "U31",
++      "check": "No Windows S2 raw transcript bytes in iips-production-market-data main",
++      "observed": "matches=[] truncated=False",
++      "result": "PASS",
++      "evidence": "recursive Git Trees API"
++    },
++    {
++      "id": "U32",
++      "check": "No GitHub Actions artifacts hold the Windows S2 raw transcripts",
++      "observed": "total_count=0",
++      "result": "PASS",
++      "evidence": "Actions Artifacts API"
++    },
++    {
++      "id": "U33",
++      "check": "No executed P-1 provisioning receipt in either main tree",
++      "observed": "matches=[]",
++      "result": "PASS",
++      "evidence": "recursive Git Trees API"
++    },
++    {
++      "id": "U34",
++      "check": "No executed Gate-4/QE evidence deposits in either main tree",
++      "observed": "matches=[]",
++      "result": "PASS",
++      "evidence": "recursive Git Trees API"
++    },
++    {
++      "id": "U35",
++      "check": "Tracker still records DQ-4 8/10, P-1 NOT EXECUTED, QE 0/11, Gate 5 NOT ADMITTED",
++      "observed": "8/10 / NOT EXECUTED / 0/11 / NOT INITIATED",
++      "result": "PASS",
++      "evidence": "Remote tracker bytes"
++    },
++    {
++      "id": "U36",
++      "check": "Prepared PF-15 instrument remains PROPOSED — NOT EFFECTIVE (historical)",
++      "observed": "proposed=True",
++      "result": "PASS",
++      "evidence": "Git Blobs API"
++    },
++    {
++      "id": "U37",
++      "check": "Both value-bearing PF-15 acts are published on IRR main",
++      "observed": "act01=True act02=True f1=True",
++      "result": "PASS",
++      "evidence": "Git Blobs API"
++    },
++    {
++      "id": "U38",
++      "check": "INTEGRITY FINDING: corrected act -02 F1–F6 rows are byte-identical to declared-defective act -01",
++      "observed": "rows_identical=True rows=6",
++      "result": "PASS",
++      "evidence": "Direct Git Blobs API byte comparison of both acts (05-pf15-literal-integrity.txt)"
++    },
++    {
++      "id": "U39",
++      "check": "Effective S1 identity determination + compiled constants discharge successor act §4",
++      "observed": "values_in_act=True values_in_source=True",
++      "result": "PASS",
++      "evidence": "Git Blobs API: IPD determination + src/persistence/gateAPrimeValidation.ts"
++    },
++    {
++      "id": "U40",
++      "check": "CAP-02 completed anchors (DB-C1 PR #114, U2 tracker, RV-1 act) intact",
++      "observed": "[('PR #114', True), ('U2 tracker', True), ('RV-1 act', True)]",
++      "result": "PASS",
++      "evidence": "Pulls/Contents/Git Blobs API"
++    },
++    {
++      "id": "U41",
++      "check": "Executing environment is not the designated Windows host; no enabling flags",
++      "observed": "linux / unresolved / powershell absent / flags absent",
++      "result": "PASS",
++      "evidence": "01-executing-environment-probe.txt"
++    },
++    {
++      "id": "U42",
++      "check": "IRR PR #306 published §16.138 S2 manifest-verification receipt",
++      "observed": "merged=True merge=83c6219becfeefb51055af9edfa20227e8ae3891",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API"
++    },
++    {
++      "id": "U43",
++      "check": "IRR PR #307 populated §16.138.7 publication receipt",
++      "observed": "merged=True base=83c6219becfe",
++      "result": "PASS",
++      "evidence": "GitHub Pulls API + remote tracker bytes"
++    },
++    {
++      "id": "U44",
++      "check": "S2 receipt records user-reported 47-entry PASS + nine filenames + PENDING raw-byte boundary",
++      "observed": "47=True nine=True pending=True",
++      "result": "PASS",
++      "evidence": "Git Blobs API: S2 manifest-verification receipt + remote tracker"
++    }
++  ],
++  "totals": {
++    "passed": 44,
++    "failed": 0
++  }
++}
+\ No newline at end of file
+diff --git a/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/03-verification-summary.txt b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/03-verification-summary.txt
+new file mode 100644
+index 0000000..7bfce07
+--- /dev/null
++++ b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/03-verification-summary.txt
+@@ -0,0 +1,95 @@
++CAP-02/CAP-03 unified verification (final pass) 2026-10-26T14:15:15Z
++IRR main cc3c000a11fd586c540a84a8d139c4b2c39cd121 tree 00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c
++IPD main f97b17e7d04a0c5c4573c0dbe51da2c4c595d829 tree 6da6f82970fd3fb836500776708bbb6ea206baa1
++tracker blob eed1f190255b8ee72b7c09b944e8ae9a5e6b76c7 2473138 B sha256 359c5a62d57ab22d4854191b6b2bee62428e5070da0da25902faaaf259272ca7
++
++U01  PASS IRR main commit + root tree (at/after reconciled baseline cc3c000)
++      observed: cc3c000a11fd586c540a84a8d139c4b2c39cd121 / 00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c behind_by=0
++U02  PASS IPD main commit + root tree
++      observed: f97b17e7d04a0c5c4573c0dbe51da2c4c595d829 / 6da6f82970fd3fb836500776708bbb6ea206baa1
++U03  PASS IPD main is a regular 2-parent merge of PR #97 head
++      observed: [{'sha': '1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745', 'url': 'https://api.github.com/repos/ramkivs/iips-production-market-data/git/commits/1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745', 'html_url': 'https://github.com/ramkivs/iips-production-market-data/commit/1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745'}, {'sha': '880f067185b50cad3989a65f8651699b2c7a1f5a', 'url': 'https://api.github.com/repos/ramkivs/iips-production-market-data/git/commits/880f067185b50cad3989a65f8651699b2c7a1f5a', 'html_url': 'https://github.com/ramkivs/iips-production-market-data/commit/880f067185b50cad3989a65f8651699b2c7a1f5a'}]
++U04  PASS iips-review-recovered PR #299 merged/head/merge commit
++      observed: merged=True head=429eca37396a5a534987cb6bfc33166449691bfe merge=e47b58967621377ca92c2123c432a5eb5c5959ad
++U05  PASS iips-production-market-data PR #97 merged/head/merge commit
++      observed: merged=True head=880f067185b50cad3989a65f8651699b2c7a1f5a merge=f97b17e7d04a0c5c4573c0dbe51da2c4c595d829
++U06  PASS iips-review-recovered PR #300 merged/head/merge commit
++      observed: merged=True head=87390f6dffaad37111fa8c2c88d9128d338122c7 merge=dbe9874f28f03b31cca4c8b996d3e822a4cf2b29
++U07  PASS iips-review-recovered PR #301 merged/head/merge commit
++      observed: merged=True head=912b387a759d571bccd0cbd7e95a0342fe979c5b merge=11270b85db1354d8bce9c8278ff97a93e81c66f0
++U08  PASS iips-review-recovered PR #302 merged/head/merge commit
++      observed: merged=True head=59bd3790c13267c4f6d3c8fc7842b1bb11b5ffd8 merge=e15b70089dca1d0853f0b9640175d305b3d99171
++U09  PASS iips-review-recovered PR #303 merged/head/merge commit
++      observed: merged=True head=4218345cf74c11e5d5055bb60aab319de893819a merge=1bae67d05fb11bc8a24090bff815a96fa4e28b97
++U10  PASS iips-review-recovered PR #304 merged/head/merge commit
++      observed: merged=True head=8ca8e874155193142bf1393011c9c64629d6a7fd merge=6e080f89d0cec40ebbc0656f27435588c97a7278
++U11  PASS iips-review-recovered PR #305 merged/head/merge commit
++      observed: merged=True head=af8558b5ee8a42444495dcfb99bfdd6fb6eb36af merge=d9345004f5897ecb33fa532599b51a6ec799aa7a
++U12  PASS PR #299 exact-head CI
++      observed: ['success']
++U13  PASS PR #299 post-merge CI
++      observed: ['success']
++U14  PASS PR #97 exact-head CI
++      observed: ['success', 'success']
++U15  PASS PR #97 post-merge CI
++      observed: ['success', 'success']
++U16  PASS PR #300 exact-head CI
++      observed: ['success']
++U17  PASS PR #300 post-merge CI
++      observed: ['success']
++U18  PASS PR #301 post-merge CI
++      observed: ['success']
++U19  PASS PR #302 exact-head CI
++      observed: ['success']
++U20  PASS PR #302 post-merge CI
++      observed: ['success']
++U21  PASS PR #304 exact-head CI
++      observed: ['success']
++U22  PASS PR #304 post-merge CI
++      observed: ['success']
++U23  PASS PR #305 post-merge CI
++      observed: ['success']
++U24  PASS Tracker remote blob identity / size / SHA-256
++      observed: blob=eed1f190255b8ee72b7c09b944e8ae9a5e6b76c7 size=2473138 sha256=359c5a62d57ab22d4854191b6b2bee62428e5070da0da25902faaaf259272ca7
++U25  PASS Tracker completeness: §§16.133–16.137 + receipts + S2 digests
++      observed: missing=[]
++U26  PASS Adopted H-12 R5 manifest unchanged
++      observed: blob=f4649e36a81c7013287810cd3202b99586dbd951 sha256=d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76
++U27  PASS IPD H-12 R5 adoption mirror receipt published
++      observed: blob=1e71504f776152ea9200f3a6ce9250872edbee93
++U28  PASS IPD PR #96 records Windows 924/920/0/4 + consumer PASS
++      observed: 920=True 0failed=True 4skipped=True
++U29  PASS Corrected candidate tree/parent and ancestor relation to IPD main
++      observed: tree=399fa44a5f1953c0f61b452420fefb5985426ef1 parent=8eec74ae27cda09f3c368b9c299895eae41554db
++U30  PASS No Windows S2 raw transcript bytes in iips-review-recovered main
++      observed: matches=[] truncated=False
++U31  PASS No Windows S2 raw transcript bytes in iips-production-market-data main
++      observed: matches=[] truncated=False
++U32  PASS No GitHub Actions artifacts hold the Windows S2 raw transcripts
++      observed: total_count=0
++U33  PASS No executed P-1 provisioning receipt in either main tree
++      observed: matches=[]
++U34  PASS No executed Gate-4/QE evidence deposits in either main tree
++      observed: matches=[]
++U35  PASS Tracker still records DQ-4 8/10, P-1 NOT EXECUTED, QE 0/11, Gate 5 NOT ADMITTED
++      observed: 8/10 / NOT EXECUTED / 0/11 / NOT INITIATED
++U36  PASS Prepared PF-15 instrument remains PROPOSED — NOT EFFECTIVE (historical)
++      observed: proposed=True
++U37  PASS Both value-bearing PF-15 acts are published on IRR main
++      observed: act01=True act02=True f1=True
++U38  PASS INTEGRITY FINDING: corrected act -02 F1–F6 rows are byte-identical to declared-defective act -01
++      observed: rows_identical=True rows=6
++U39  PASS Effective S1 identity determination + compiled constants discharge successor act §4
++      observed: values_in_act=True values_in_source=True
++U40  PASS CAP-02 completed anchors (DB-C1 PR #114, U2 tracker, RV-1 act) intact
++      observed: [('PR #114', True), ('U2 tracker', True), ('RV-1 act', True)]
++U41  PASS Executing environment is not the designated Windows host; no enabling flags
++      observed: linux / unresolved / powershell absent / flags absent
++U42  PASS IRR PR #306 published §16.138 S2 manifest-verification receipt
++      observed: merged=True merge=83c6219becfeefb51055af9edfa20227e8ae3891
++U43  PASS IRR PR #307 populated §16.138.7 publication receipt
++      observed: merged=True base=83c6219becfe
++U44  PASS S2 receipt records user-reported 47-entry PASS + nine filenames + PENDING raw-byte boundary
++      observed: 47=True nine=True pending=True
++
++TOTAL 44 PASS / 0 FAIL
+diff --git a/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/04-legacy-validator-output.txt b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/04-legacy-validator-output.txt
+new file mode 100644
+index 0000000..3980fa6
+--- /dev/null
++++ b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/04-legacy-validator-output.txt
+@@ -0,0 +1,8 @@
++=== §16.135 legacy current-state/PF-15 validator ===
++PASS — 91 assertions verified; PF-15=NOT DESIGNATED (0 effective acts); PR #298/#299 + IPD #94/#95/#96/#97 blobs verified; 51-path census & H-12 R5 zero-drift confirmed.
++=== readiness validator (62 assertions) ===
++PASS — 62 assertions; PF 17/17; QE 11/11 NOT RUN; 15 prior evidence files SHA-256 verified
++H-12 R5 manifest SHA-256: d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76
++Output: evidence/integration/cap03-pf15-readiness-reconciliation-2026-10-26/03-readiness-audit.json
++=== H-12 legacy validators (981/466) ===
++NOT RE-RUN SUCCESSFULLY IN THIS CHECKOUT: hardcoded /home/user/iips-review-recovered + /tmp/ipd paths and gh executable resolution; independent H-12 R5 blob/SHA-256 re-hash is in 02-verification-results.json U17, and PR #300 evidence records 981/981 + 466/466 at the same coordinate.
+diff --git a/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/05-pf15-literal-integrity.txt b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/05-pf15-literal-integrity.txt
+new file mode 100644
+index 0000000..cc55910
+--- /dev/null
++++ b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/05-pf15-literal-integrity.txt
+@@ -0,0 +1,20 @@
++PF-15 act -01 vs corrected act -02: F1-F6 table row byte comparison
++act -01 F rows: 6; act -02 F rows: 6
++IDENTICAL (all operative literals unchanged): True
++
++-01 | **F1 — endpoint design** | **Option A — explicit Windows named-pipe endpoint.** Use the explicit named-pipe namespace; do not use a state-directory-derived resolution mechanism. | **RENDERED** |
++-01 | **F2 — `IIPS_G2_IPC_ENDPOINT`** | `\\.\pipe\iips-user-portfolio-v1` | **RENDERED — exact literal preserved** |
++-01 | **F3 — `IIPS_G3_LOCAL_STATE_DIR`** | **`N/A`** for Option A; this setting is not used for endpoint resolution. No state-directory requirement is inferred. | **RENDERED**, subject to the condition th
++-01 | **F4 — `IIPS_G3_DATABASE_PATH` / P-1 `$StorePath`** | `C:\iips-data\iips\user-portfolio.sqlite` | **RENDERED as intended stable path** for the single P-1 store and subsequent S3/QE. It must be absol
++-01 | **F5 — external `$EvidenceRoot`** | `C:\iips-evidence\cap03-gate4` | **RENDERED as intended Gate 4 evidence root.** It must be local fixed NTFS, outside Git worktrees and cloud-synchronized location
++-01 | **F6 — scope** | **Shared CAP-03 + CAP-02 scope** for the relevant same-host IPC and IPD persistence boundary on `desktop-no0nhtp`. | **RENDERED**; the repository evidence for the shared boundary is
++-02 | **F1 — endpoint design** | **Option A — explicit Windows named-pipe endpoint.** Use the explicit named-pipe namespace; do not use a state-directory-derived resolution mechanism. | **RENDERED** |
++-02 | **F2 — `IIPS_G2_IPC_ENDPOINT`** | `\\.\pipe\iips-user-portfolio-v1` | **RENDERED — exact literal preserved** |
++-02 | **F3 — `IIPS_G3_LOCAL_STATE_DIR`** | **`N/A`** for Option A; this setting is not used for endpoint resolution. No state-directory requirement is inferred. | **RENDERED**, subject to the condition th
++-02 | **F4 — `IIPS_G3_DATABASE_PATH` / P-1 `$StorePath`** | `C:\iips-data\iips\user-portfolio.sqlite` | **RENDERED as intended stable path** for the single P-1 store and subsequent S3/QE. It must be absol
++-02 | **F5 — external `$EvidenceRoot`** | `C:\iips-evidence\cap03-gate4` | **RENDERED as intended Gate 4 evidence root.** It must be local fixed NTFS, outside Git worktrees and cloud-synchronized location
++-02 | **F6 — scope** | **Shared CAP-03 + CAP-02 scope** for the relevant same-host IPC and IPD persistence boundary on `desktop-no0nhtp`. | **RENDERED**; the repository evidence for the shared boundary is
++
++Only title, status notice, act ID, a 'Correction and supersession' section and footer differ.
++Consequence: if act -01's F2/F4/F5 code spans were defective, act -02's are identically defective.
++Only the PA can confirm the exact approved code points; no agent normalization is authorized.
+diff --git a/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/INDEX.md b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/INDEX.md
+new file mode 100644
+index 0000000..26a6b04
+--- /dev/null
++++ b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/INDEX.md
+@@ -0,0 +1,21 @@
++# Evidence index — CAP-02 + CAP-03 unified reconciliation (`§16.139` / `CV-CORR-119`)
++
++Read-only verification bundle for
++[`docs/integration/IIPS_v3.0_CAP02_CAP03_UNIFIED_AUTHORITATIVE_STATUS_RECONCILIATION_2026-10-26.md`](../../docs/integration/IIPS_v3.0_CAP02_CAP03_UNIFIED_AUTHORITATIVE_STATUS_RECONCILIATION_2026-10-26.md).
++
++| File | Purpose |
++|---|---|
++| `01-executing-environment-probe.txt` | Fresh measurement: Linux `e2b.local`, `platform=linux`, `desktop-no0nhtp` unresolved (exit 2), PowerShell absent, all endpoint/store/write-enable variables absent. Proves no host work was possible or claimed. |
++| `verify_unified_status.py` | Replayable **44-check** independent verification over GitHub REST/Git/Actions/Blobs APIs; robust to later additive IRR `main` movement by ancestry comparison. Read-only; no repository mutation. |
++| `02-verification-results.json` | Machine-readable results, baselines, tracker blob identity/SHA-256, per-check observed values and evidence sources. |
++| `03-verification-summary.txt` | Human-readable verification transcript. |
++| `04-legacy-validator-output.txt` | Supplemental re-runs: §16.135 current-state/PF-15 validator (91 assertions PASS), readiness validator (62 PASS); the two path-bound H-12 validators (981/466) recorded as not re-runnable here rather than falsely claimed. |
++| `05-pf15-literal-integrity.txt` | Direct byte comparison of PF-15 act `-01` vs corrected act `-02`: F1–F6 rows (including F2/F4/F5 path literals) are **identical**; only title/status/ID/correction-section/footer changed. Evidence for the exact-literal PA boundary. |
++| `SHA256SUMS.txt` | SHA-256 digests of the six files above. |
++
++Result: **44 PASS / 0 FAIL** at IRR `main` at/after `cc3c000a11fd586c540a84a8d139c4b2c39cd121`
++(tree `00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c`) and IPD
++`main@f97b17e7d04a0c5c4573c0dbe51da2c4c595d829` (tree `6da6f82970fd3fb836500776708bbb6ea206baa1`).
++
++The bundle verifies facts only. It does not render a PA decision, accept a gate result, execute
++S2/P-1/S3/QE, or change any pin, fence, manifest, source or test.
+diff --git a/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/SHA256SUMS.txt b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/SHA256SUMS.txt
+new file mode 100644
+index 0000000..76907bd
+--- /dev/null
++++ b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/SHA256SUMS.txt
+@@ -0,0 +1,6 @@
++84dce5b0b9383401c2e4f4711a6f10107406c47ce17fb4c8433d0aac4db7d179  01-executing-environment-probe.txt
++48aa0badc0d4e16a9fdf0052333dd9ef0a2e054e9d0011bf807d0627c7501b6b  02-verification-results.json
++df613eb04a0d86d7ec3ac0465044f934fde98f5ce9ebeada8e964631563b82af  03-verification-summary.txt
++70264b58fe8af8c7c4116121aa7079f08d55cb3d027cb040b11eb5948f3cefec  04-legacy-validator-output.txt
++bbfb1d54a47ddc4ec9e820ac6afde93c3540cafd0cf15d8e2b0a662d8439bd62  05-pf15-literal-integrity.txt
++37334e03e894a1ceddbda10ffd35d94ed2758dd796f8107b1fd02a9673a42f5a  verify_unified_status.py
+diff --git a/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/verify_unified_status.py b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/verify_unified_status.py
+new file mode 100644
+index 0000000..d7436c8
+--- /dev/null
++++ b/evidence/integration/cap02-cap03-unified-reconciliation-2026-10-26/verify_unified_status.py
+@@ -0,0 +1,257 @@
++#!/usr/bin/env python3
++"""Replayable, read-only verification for the CAP-02/CAP-03 unified reconciliation (§16.138).
++
++Uses the existing `gh` connection and Git/GitHub APIs only. No repository mutation, no host
++command, no authority determination. Records 40 checks in 02-verification-results.json.
++"""
++import base64
++import hashlib
++import json
++import os
++import subprocess
++import sys
++from datetime import datetime, timezone
++
++IRR = "ramkivs/iips-review-recovered"
++IPD = "ramkivs/iips-production-market-data"
++TRACKER = "IIPS_V3_E2E_MASTER_TRACKER_AND_IRR_IPD_DECISION_REGISTER_2026-10-13.md"
++HERE = os.path.dirname(os.path.abspath(__file__))
++results = []
++
++
++def gh(path, jq=None):
++    cmd = ["gh", "api", path] + (["--jq", jq] if jq else [])
++    p = subprocess.run(cmd, capture_output=True, text=True)
++    if p.returncode != 0:
++        raise RuntimeError(f"gh api failed: {path}: {p.stderr.strip()}")
++    return p.stdout.strip()
++
++
++def check(cid, desc, observed, ok, evidence):
++    results.append(dict(id=cid, check=desc, observed=observed,
++                        result="PASS" if ok else "FAIL", evidence=evidence))
++
++
++def blob(repo, oid):
++    raw = gh(f"repos/{repo}/git/blobs/{oid}", ".content")
++    return base64.b64decode("".join(raw.splitlines()))
++
++
++def content(repo, path, ref):
++    return blob(repo, gh(f"repos/{repo}/contents/{path}?ref={ref}", ".sha"))
++
++
++# --- refs and commits ---
++irr_main = gh(f"repos/{IRR}/git/ref/heads/main", ".object.sha")
++ipd_main = gh(f"repos/{IPD}/git/ref/heads/main", ".object.sha")
++irr_c = json.loads(gh(f"repos/{IRR}/git/commits/{irr_main}"))
++ipd_c = json.loads(gh(f"repos/{IPD}/git/commits/{ipd_main}"))
++baseline_irr = "cc3c000a11fd586c540a84a8d139c4b2c39cd121"
++cmp_irr = json.loads(gh(f"repos/{IRR}/compare/{baseline_irr}...{irr_main}"))
++check("U01", "IRR main commit + root tree (at/after reconciled baseline cc3c000)",
++      f"{irr_main} / {irr_c['tree']['sha']} behind_by={cmp_irr['behind_by']}",
++      cmp_irr["behind_by"] == 0 and cmp_irr["status"] in ("ahead", "identical"),
++      "Git Refs/Commits/Compare API; robust to later additive publications")
++check("U02", "IPD main commit + root tree", f"{ipd_main} / {ipd_c['tree']['sha']}",
++      ipd_main == "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829" and
++      ipd_c["tree"]["sha"] == "6da6f82970fd3fb836500776708bbb6ea206baa1", "Git Refs/Commits API")
++check("U03", "IPD main is a regular 2-parent merge of PR #97 head", str(ipd_c["parents"]),
++      len(ipd_c["parents"]) == 2 and any(p["sha"].startswith("880f0671") for p in ipd_c["parents"]),
++      "Git Commits API")
++
++# --- PR states and CI (all authoritative publications of 2026-10-26) ---
++prs = [
++    ("U04", IRR, 299, "e47b58967621377ca92c2123c432a5eb5c5959ad", "429eca37396a5a534987cb6bfc33166449691bfe"),
++    ("U05", IPD, 97, "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829", "880f067185b50cad3989a65f8651699b2c7a1f5a"),
++    ("U06", IRR, 300, "dbe9874f28f03b31cca4c8b996d3e822a4cf2b29", "87390f6dffaad37111fa8c2c88d9128d338122c7"),
++    ("U07", IRR, 301, "11270b85db1354d8bce9c8278ff97a93e81c66f0", "912b387a759d571bccd0cbd7e95a0342fe979c5b"),
++    ("U08", IRR, 302, "e15b70089dca1d0853f0b9640175d305b3d99171", "59bd3790c13267c4f6d3c8fc7842b1bb11b5ffd8"),
++    ("U09", IRR, 303, "1bae67d05fb11bc8a24090bff815a96fa4e28b97", "4218345cf74c11e5d5055bb60aab319de893819a"),
++    ("U10", IRR, 304, "6e080f89d0cec40ebbc0656f27435588c97a7278", "8ca8e874155193142bf1393011c9c64629d6a7fd"),
++    ("U11", IRR, 305, "d9345004f5897ecb33fa532599b51a6ec799aa7a", "af8558b5ee8a42444495dcfb99bfdd6fb6eb36af"),
++]
++for cid, repo, num, merge, head in prs:
++    pr = json.loads(gh(f"repos/{repo}/pulls/{num}"))
++    check(cid, f"{repo.split('/')[-1]} PR #{num} merged/head/merge commit",
++          f"merged={pr['merged']} head={pr['head']['sha']} merge={pr['merge_commit_sha']}",
++          pr["merged"] is True and pr["merge_commit_sha"] == merge and pr["head"]["sha"] == head,
++          "GitHub Pulls API")
++
++cis = [
++    ("U12", IRR, "429eca37396a5a534987cb6bfc33166449691bfe", "PR #299 exact-head CI"),
++    ("U13", IRR, "e47b58967621377ca92c2123c432a5eb5c5959ad", "PR #299 post-merge CI"),
++    ("U14", IPD, "880f067185b50cad3989a65f8651699b2c7a1f5a", "PR #97 exact-head CI"),
++    ("U15", IPD, "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829", "PR #97 post-merge CI"),
++    ("U16", IRR, "87390f6dffaad37111fa8c2c88d9128d338122c7", "PR #300 exact-head CI"),
++    ("U17", IRR, "dbe9874f28f03b31cca4c8b996d3e822a4cf2b29", "PR #300 post-merge CI"),
++    ("U18", IRR, "11270b85db1354d8bce9c8278ff97a93e81c66f0", "PR #301 post-merge CI"),
++    ("U19", IRR, "59bd3790c13267c4f6d3c8fc7842b1bb11b5ffd8", "PR #302 exact-head CI"),
++    ("U20", IRR, "e15b70089dca1d0853f0b9640175d305b3d99171", "PR #302 post-merge CI"),
++    ("U21", IRR, "8ca8e874155193142bf1393011c9c64629d6a7fd", "PR #304 exact-head CI"),
++    ("U22", IRR, "6e080f89d0cec40ebbc0656f27435588c97a7278", "PR #304 post-merge CI"),
++    ("U23", IRR, "d9345004f5897ecb33fa532599b51a6ec799aa7a", "PR #305 post-merge CI"),
++]
++for cid, repo, sha, label in cis:
++    concl = [r["conclusion"] for r in json.loads(gh(f"repos/{repo}/commits/{sha}/check-runs"))["check_runs"]]
++    check(cid, label, str(concl), len(concl) > 0 and all(c == "success" for c in concl),
++          "GitHub Actions Check-Runs API")
++
++# --- tracker identity and completeness ---
++tree = json.loads(gh(f"repos/{IRR}/git/trees/{irr_c['tree']['sha']}"))["tree"]
++tracker_oid = next(e["sha"] for e in tree if e["path"] == TRACKER)
++data = blob(IRR, tracker_oid)
++text = data.decode("utf-8", "replace")
++t_sha = hashlib.sha256(data).hexdigest()
++check("U24", "Tracker remote blob identity / size / SHA-256",
++      f"blob={tracker_oid} size={len(data)} sha256={t_sha}", len(data) > 2_450_000,
++      "GitHub Git Blobs API (base64 decode, not inline Contents)")
++need = ["§16.132.7", "§16.133.8", "§16.134.6", "§16.135.8", "§16.136.8", "§16.137.6",
++        "§16.138.7", "CV-CORR-118", "NOT ACCEPTED", "47",
++        "CV-CORR-113", "CV-CORR-114", "CV-CORR-115", "CV-CORR-116", "CV-CORR-117", "V880",
++        "924/920/0/4", "9F7C64073A849E57D472C9CA30BB7616D04D1951626E90587241D61A470A85B1",
++        "C5DDFFA24393AED2E391EF8A72E8BFF1F8ECD9576C4349E182B288785F1B2941"]
++missing = [s for s in need if s not in text]
++check("U25", "Tracker completeness: §§16.133–16.137 + receipts + S2 digests",
++      f"missing={missing}", not missing, "Remote tracker bytes decoded/searched")
++
++# --- H-12 R5 and IPD mirror ---
++h12_sha = gh(f"repos/{IRR}/contents/docs/integration/G4-H12-MANIFEST-v2-CANDIDATE-2026-10-25-R5.json?ref={irr_main}", ".sha")
++h12_bytes = blob(IRR, h12_sha)
++check("U26", "Adopted H-12 R5 manifest unchanged", f"blob={h12_sha} sha256={hashlib.sha256(h12_bytes).hexdigest()}",
++      h12_sha == "f4649e36a81c7013287810cd3202b99586dbd951" and
++      hashlib.sha256(h12_bytes).hexdigest() == "d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76",
++      "Contents + Git Blobs API")
++mirror = gh(f"repos/{IPD}/contents/evidence/cross-repository/IIPS_V3_CAP03_G4_H12_R5_ADOPTION_IPD_MIRROR_RECEIPT_2026-10-25.md?ref={ipd_main}", ".sha")
++check("U27", "IPD H-12 R5 adoption mirror receipt published", f"blob={mirror}",
++      mirror == "1e71504f776152ea9200f3a6ce9250872edbee93", "Contents API")
++
++# --- S2 evidence provenance / integrity boundary ---
++pr96 = json.loads(gh(f"repos/{IPD}/pulls/96"))
++body = pr96.get("body") or ""
++check("U28", "IPD PR #96 records Windows 924/920/0/4 + consumer PASS",
++      f"920={('920 passed' in body)} 0failed={('0 failed' in body)} 4skipped={('4 skipped' in body)}",
++      all(s in body for s in ["924 tests", "920 passed", "0 failed", "4 skipped", "PASS"]),
++      "GitHub Pulls API (operator-reported, retained outside repo)")
++cand = json.loads(gh(f"repos/{IPD}/git/commits/001c3c80618f2ee1d40e9a90912237e1a06e7b58"))
++check("U29", "Corrected candidate tree/parent and ancestor relation to IPD main",
++      f"tree={cand['tree']['sha']} parent={cand['parents'][0]['sha']}",
++      cand["tree"]["sha"] == "399fa44a5f1953c0f61b452420fefb5985426ef1" and
++      cand["parents"][0]["sha"] == "8eec74ae27cda09f3c368b9c299895eae41554db" and
++      json.loads(gh(f"repos/{IPD}/compare/001c3c80618f2ee1d40e9a90912237e1a06e7b58...{ipd_main}"))["behind_by"] == 0,
++      "Git Commits/Compare API; approved pin not re-pinned")
++for repo, cid in ((IRR, "U30"), (IPD, "U31")):
++    t = json.loads(gh(f"repos/{repo}/git/trees/{irr_main if repo == IRR else ipd_main}?recursive=1"))
++    found = [e["path"] for e in t["tree"] if "s2-npm-launch-fix" in e["path"].lower()]
++    check(cid, f"No Windows S2 raw transcript bytes in {repo.split('/')[-1]} main",
++          f"matches={found} truncated={t.get('truncated')}", not found and not t.get("truncated"),
++          "recursive Git Trees API")
++check("U32", "No GitHub Actions artifacts hold the Windows S2 raw transcripts",
++      f"total_count={gh(f'repos/{IPD}/actions/artifacts?per_page=100', '.total_count')}",
++      gh(f"repos/{IPD}/actions/artifacts?per_page=100", ".total_count") == "0", "Actions Artifacts API")
++
++# --- negative execution / authority searches ---
++paths = [e["path"] for e in json.loads(gh(f"repos/{IRR}/git/trees/{irr_main}?recursive=1"))["tree"]]
++paths += [e["path"] for e in json.loads(gh(f"repos/{IPD}/git/trees/{ipd_main}?recursive=1"))["tree"]]
++p1 = [p for p in paths if "p1-03-execute" in p]
++qe = [p for p in paths if "gate-4-target-host-qualification" in p or "cap02_gate4_qe" in p]
++check("U33", "No executed P-1 provisioning receipt in either main tree", f"matches={p1}", not p1, "recursive Git Trees API")
++check("U34", "No executed Gate-4/QE evidence deposits in either main tree", f"matches={qe}", not qe, "recursive Git Trees API")
++check("U35", "Tracker still records DQ-4 8/10, P-1 NOT EXECUTED, QE 0/11, Gate 5 NOT ADMITTED",
++      "8/10 / NOT EXECUTED / 0/11 / NOT INITIATED",
++      all(s in text for s in ["8/10", "NOT EXECUTED", "0/11", "NOT INITIATED / NOT ADMITTED"]),
++      "Remote tracker bytes")
++
++# --- PF-15 acts + literal-integrity finding ---
++prep = content(IRR, "docs/integration/IIPS_v3.0_CAP03_PF15_PA_DECISION_ACT_PREPARED_2026-10-26.md", irr_main).decode()
++act01 = content(IRR, "docs/integration/IIPS_v3.0_CAP03_PF15_ENDPOINT_LOCAL_STATE_DESIGNATION_PA_ACT_2026-10-26.md", irr_main).decode()
++act02 = content(IRR, "docs/integration/IIPS_v3.0_CAP03_PF15_ENDPOINT_LOCAL_STATE_DESIGNATION_PA_ACT_CORRECTED_2026-10-26.md", irr_main).decode()
++check("U36", "Prepared PF-15 instrument remains PROPOSED — NOT EFFECTIVE (historical)",
++      f"proposed={'PROPOSED — NOT EFFECTIVE' in prep}", "PROPOSED — NOT EFFECTIVE" in prep, "Git Blobs API")
++check("U37", "Both value-bearing PF-15 acts are published on IRR main",
++      f"act01={'-2026-10-26-01' in act01} act02={'-2026-10-26-02' in act02} f1={'Option A' in act02}",
++      "-2026-10-26-01" in act01 and "-2026-10-26-02" in act02 and "Option A" in act02, "Git Blobs API")
++
++
++def f_rows(s):
++    return [l for l in s.splitlines() if l.startswith("| **F") and " — " in l]
++
++
++identical = f_rows(act01) == f_rows(act02)
++check("U38", "INTEGRITY FINDING: corrected act -02 F1–F6 rows are byte-identical to declared-defective act -01",
++      f"rows_identical={identical} rows={len(f_rows(act01))}", identical,
++      "Direct Git Blobs API byte comparison of both acts (05-pf15-literal-integrity.txt)")
++
++# --- S1 identity values (rebuts the new §16.136/§16.137 P-1 blocker claim) ---
++s1 = content(IPD, "evidence/cross-repository/IIPS_V3_CAP02_S1_IDENTITY_VALUE_DETERMINATION_EFFECTIVE_2026-10-24.md", ipd_main).decode()
++const = content(IPD, "src/persistence/gateAPrimeValidation.ts", ipd_main).decode()
++check("U39", "Effective S1 identity determination + compiled constants discharge successor act §4",
++      f"values_in_act={all(v in s1 for v in ['ramki-personal-local','ipd-personal-local','ipd-owner-ramki-personal'])} "
++      f"values_in_source={all(v in const for v in ['ramki-personal-local','ipd-personal-local','ipd-owner-ramki-personal'])}",
++      all(v in s1 and v in const for v in ["ramki-personal-local", "ipd-personal-local", "ipd-owner-ramki-personal"]),
++      "Git Blobs API: IPD determination + src/persistence/gateAPrimeValidation.ts")
++cap02 = [
++    ("PR #114", json.loads(gh(f"repos/{IRR}/pulls/114"))["merge_commit_sha"] == "271ca5273e76e0eb28594dc5675f11094622c902"),
++    ("U2 tracker", gh(f"repos/{IPD}/contents/evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md?ref={ipd_main}", ".sha") == "8a2a4e45615b84e517b65fe2700d4a09cde8c3f7"),
++    ("RV-1 act", "Option A" in content(IRR, "docs/integration/IIPS_v3.0_CAP02_QE8_RV1_REVOCATION_PROCEDURE_PA_ACT_EFFECTIVE_2026-10-26.md", irr_main).decode()),
++]
++check("U40", "CAP-02 completed anchors (DB-C1 PR #114, U2 tracker, RV-1 act) intact",
++      str(cap02), all(ok for _, ok in cap02), "Pulls/Contents/Git Blobs API")
++
++# --- environment boundary ---
++probe = open(os.path.join(HERE, "01-executing-environment-probe.txt"), encoding="utf-8").read()
++check("U41", "Executing environment is not the designated Windows host; no enabling flags",
++      "linux / unresolved / powershell absent / flags absent",
++      all(s in probe for s in ["platform=linux", "getent_exit=2", "powershell=ABSENT",
++                               "IIPS_ENABLE_WRITES=ABSENT", "IIPS_G2_IPC_ENDPOINT=ABSENT"]),
++      "01-executing-environment-probe.txt")
++
++# --- §16.138 S2 evidence-manifest receipt (PR #306/#307) ---
++pr306 = json.loads(gh(f"repos/{IRR}/pulls/306"))
++pr307 = json.loads(gh(f"repos/{IRR}/pulls/307"))
++check("U42", "IRR PR #306 published §16.138 S2 manifest-verification receipt",
++      f"merged={pr306['merged']} merge={pr306['merge_commit_sha']}",
++      pr306["merged"] is True and pr306["merge_commit_sha"] == "83c6219becfeefb51055af9edfa20227e8ae3891",
++      "GitHub Pulls API")
++check("U43", "IRR PR #307 populated §16.138.7 publication receipt",
++      f"merged={pr307['merged']} base={pr307['base']['sha'][:12]}",
++      pr307["merged"] is True and "§16.138.7" in text and "S2 EVIDENCE RECEIPT PUBLICATION COMPLETE" in text,
++      "GitHub Pulls API + remote tracker bytes")
++receipt = content(IRR, "docs/integration/IIPS_v3.0_CAP03_S2_EVIDENCE_MANIFEST_VERIFICATION_RECEIPT_2026-10-26.md", irr_main).decode()
++check("U44", "S2 receipt records user-reported 47-entry PASS + nine filenames + PENDING raw-byte boundary",
++      f"47={'47' in receipt} nine={all(n in receipt for n in ['s2-01-npm-ci.txt','s2-05-package-consumer.txt','s2-dist-sha256-after.txt'])} pending={'PENDING' in receipt}",
++      "47" in receipt and all(n in receipt for n in ["s2-01-npm-ci.txt", "s2-05-package-consumer.txt", "s2-dist-sha256-after.txt"])
++      and "PENDING" in receipt and "NOT ACCEPTED" in text,
++      "Git Blobs API: S2 manifest-verification receipt + remote tracker")
++
++out = {
++    "record": "IIPS-V3-CAP02-CAP03-UNIFIED-STATUS-RECONCILIATION-2026-10-26-01 (verification evidence, final pass)",
++    "verified_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
++    "irr_main": irr_main, "irr_tree": irr_c["tree"]["sha"],
++    "ipd_main": ipd_main, "ipd_tree": ipd_c["tree"]["sha"],
++    "tracker_blob": tracker_oid, "tracker_bytes": len(data), "tracker_sha256": t_sha,
++    "checks": results,
++    "totals": {"passed": sum(1 for r in results if r["result"] == "PASS"),
++               "failed": sum(1 for r in results if r["result"] == "FAIL")},
++}
++with open(os.path.join(HERE, "02-verification-results.json"), "w", encoding="utf-8") as f:
++    json.dump(out, f, indent=2, ensure_ascii=False)
++with open(os.path.join(HERE, "03-verification-summary.txt"), "w", encoding="utf-8") as f:
++    f.write(f"CAP-02/CAP-03 unified verification (final pass) {out['verified_utc']}\n")
++    f.write(f"IRR main {irr_main} tree {irr_c['tree']['sha']}\n")
++    f.write(f"IPD main {ipd_main} tree {ipd_c['tree']['sha']}\n")
++    f.write(f"tracker blob {tracker_oid} {len(data)} B sha256 {t_sha}\n\n")
++    for r in results:
++        f.write(f"{r['id']:4s} {r['result']:4s} {r['check']}\n      observed: {r['observed']}\n")
++    f.write(f"\nTOTAL {out['totals']['passed']} PASS / {out['totals']['failed']} FAIL\n")
++with open(os.path.join(HERE, "05-pf15-literal-integrity.txt"), "w", encoding="utf-8") as f:
++    f.write("PF-15 act -01 vs corrected act -02: F1-F6 table row byte comparison\n")
++    f.write(f"act -01 F rows: {len(f_rows(act01))}; act -02 F rows: {len(f_rows(act02))}\n")
++    f.write(f"IDENTICAL (all operative literals unchanged): {identical}\n\n")
++    for label, s in (("-01", act01), ("-02", act02)):
++        for l in f_rows(s):
++            f.write(f"{label} {l[:200]}\n")
++    f.write("\nOnly title, status notice, act ID, a 'Correction and supersession' section and footer differ.\n")
++    f.write("Consequence: if act -01's F2/F4/F5 code spans were defective, act -02's are identically defective.\n")
++    f.write("Only the PA can confirm the exact approved code points; no agent normalization is authorized.\n")
++print(f"{out['totals']['passed']} PASS / {out['totals']['failed']} FAIL")
++sys.exit(0 if out["totals"]["failed"] == 0 else 1)

@@ -1,0 +1,325 @@
+{
+  "record": "IIPS-V3-CAP02-CAP03-UNIFIED-STATUS-RECONCILIATION-2026-10-26-01 (verification evidence, final pass)",
+  "verified_utc": "2026-10-26T14:15:15Z",
+  "irr_main": "cc3c000a11fd586c540a84a8d139c4b2c39cd121",
+  "irr_tree": "00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c",
+  "ipd_main": "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829",
+  "ipd_tree": "6da6f82970fd3fb836500776708bbb6ea206baa1",
+  "tracker_blob": "eed1f190255b8ee72b7c09b944e8ae9a5e6b76c7",
+  "tracker_bytes": 2473138,
+  "tracker_sha256": "359c5a62d57ab22d4854191b6b2bee62428e5070da0da25902faaaf259272ca7",
+  "checks": [
+    {
+      "id": "U01",
+      "check": "IRR main commit + root tree (at/after reconciled baseline cc3c000)",
+      "observed": "cc3c000a11fd586c540a84a8d139c4b2c39cd121 / 00f55e4ecbf9a7b09acb97051c59e3bb2a1de31c behind_by=0",
+      "result": "PASS",
+      "evidence": "Git Refs/Commits/Compare API; robust to later additive publications"
+    },
+    {
+      "id": "U02",
+      "check": "IPD main commit + root tree",
+      "observed": "f97b17e7d04a0c5c4573c0dbe51da2c4c595d829 / 6da6f82970fd3fb836500776708bbb6ea206baa1",
+      "result": "PASS",
+      "evidence": "Git Refs/Commits API"
+    },
+    {
+      "id": "U03",
+      "check": "IPD main is a regular 2-parent merge of PR #97 head",
+      "observed": "[{'sha': '1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745', 'url': 'https://api.github.com/repos/ramkivs/iips-production-market-data/git/commits/1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745', 'html_url': 'https://github.com/ramkivs/iips-production-market-data/commit/1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745'}, {'sha': '880f067185b50cad3989a65f8651699b2c7a1f5a', 'url': 'https://api.github.com/repos/ramkivs/iips-production-market-data/git/commits/880f067185b50cad3989a65f8651699b2c7a1f5a', 'html_url': 'https://github.com/ramkivs/iips-production-market-data/commit/880f067185b50cad3989a65f8651699b2c7a1f5a'}]",
+      "result": "PASS",
+      "evidence": "Git Commits API"
+    },
+    {
+      "id": "U04",
+      "check": "iips-review-recovered PR #299 merged/head/merge commit",
+      "observed": "merged=True head=429eca37396a5a534987cb6bfc33166449691bfe merge=e47b58967621377ca92c2123c432a5eb5c5959ad",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API"
+    },
+    {
+      "id": "U05",
+      "check": "iips-production-market-data PR #97 merged/head/merge commit",
+      "observed": "merged=True head=880f067185b50cad3989a65f8651699b2c7a1f5a merge=f97b17e7d04a0c5c4573c0dbe51da2c4c595d829",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API"
+    },
+    {
+      "id": "U06",
+      "check": "iips-review-recovered PR #300 merged/head/merge commit",
+      "observed": "merged=True head=87390f6dffaad37111fa8c2c88d9128d338122c7 merge=dbe9874f28f03b31cca4c8b996d3e822a4cf2b29",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API"
+    },
+    {
+      "id": "U07",
+      "check": "iips-review-recovered PR #301 merged/head/merge commit",
+      "observed": "merged=True head=912b387a759d571bccd0cbd7e95a0342fe979c5b merge=11270b85db1354d8bce9c8278ff97a93e81c66f0",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API"
+    },
+    {
+      "id": "U08",
+      "check": "iips-review-recovered PR #302 merged/head/merge commit",
+      "observed": "merged=True head=59bd3790c13267c4f6d3c8fc7842b1bb11b5ffd8 merge=e15b70089dca1d0853f0b9640175d305b3d99171",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API"
+    },
+    {
+      "id": "U09",
+      "check": "iips-review-recovered PR #303 merged/head/merge commit",
+      "observed": "merged=True head=4218345cf74c11e5d5055bb60aab319de893819a merge=1bae67d05fb11bc8a24090bff815a96fa4e28b97",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API"
+    },
+    {
+      "id": "U10",
+      "check": "iips-review-recovered PR #304 merged/head/merge commit",
+      "observed": "merged=True head=8ca8e874155193142bf1393011c9c64629d6a7fd merge=6e080f89d0cec40ebbc0656f27435588c97a7278",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API"
+    },
+    {
+      "id": "U11",
+      "check": "iips-review-recovered PR #305 merged/head/merge commit",
+      "observed": "merged=True head=af8558b5ee8a42444495dcfb99bfdd6fb6eb36af merge=d9345004f5897ecb33fa532599b51a6ec799aa7a",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API"
+    },
+    {
+      "id": "U12",
+      "check": "PR #299 exact-head CI",
+      "observed": "['success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U13",
+      "check": "PR #299 post-merge CI",
+      "observed": "['success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U14",
+      "check": "PR #97 exact-head CI",
+      "observed": "['success', 'success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U15",
+      "check": "PR #97 post-merge CI",
+      "observed": "['success', 'success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U16",
+      "check": "PR #300 exact-head CI",
+      "observed": "['success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U17",
+      "check": "PR #300 post-merge CI",
+      "observed": "['success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U18",
+      "check": "PR #301 post-merge CI",
+      "observed": "['success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U19",
+      "check": "PR #302 exact-head CI",
+      "observed": "['success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U20",
+      "check": "PR #302 post-merge CI",
+      "observed": "['success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U21",
+      "check": "PR #304 exact-head CI",
+      "observed": "['success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U22",
+      "check": "PR #304 post-merge CI",
+      "observed": "['success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U23",
+      "check": "PR #305 post-merge CI",
+      "observed": "['success']",
+      "result": "PASS",
+      "evidence": "GitHub Actions Check-Runs API"
+    },
+    {
+      "id": "U24",
+      "check": "Tracker remote blob identity / size / SHA-256",
+      "observed": "blob=eed1f190255b8ee72b7c09b944e8ae9a5e6b76c7 size=2473138 sha256=359c5a62d57ab22d4854191b6b2bee62428e5070da0da25902faaaf259272ca7",
+      "result": "PASS",
+      "evidence": "GitHub Git Blobs API (base64 decode, not inline Contents)"
+    },
+    {
+      "id": "U25",
+      "check": "Tracker completeness: §§16.133–16.137 + receipts + S2 digests",
+      "observed": "missing=[]",
+      "result": "PASS",
+      "evidence": "Remote tracker bytes decoded/searched"
+    },
+    {
+      "id": "U26",
+      "check": "Adopted H-12 R5 manifest unchanged",
+      "observed": "blob=f4649e36a81c7013287810cd3202b99586dbd951 sha256=d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76",
+      "result": "PASS",
+      "evidence": "Contents + Git Blobs API"
+    },
+    {
+      "id": "U27",
+      "check": "IPD H-12 R5 adoption mirror receipt published",
+      "observed": "blob=1e71504f776152ea9200f3a6ce9250872edbee93",
+      "result": "PASS",
+      "evidence": "Contents API"
+    },
+    {
+      "id": "U28",
+      "check": "IPD PR #96 records Windows 924/920/0/4 + consumer PASS",
+      "observed": "920=True 0failed=True 4skipped=True",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API (operator-reported, retained outside repo)"
+    },
+    {
+      "id": "U29",
+      "check": "Corrected candidate tree/parent and ancestor relation to IPD main",
+      "observed": "tree=399fa44a5f1953c0f61b452420fefb5985426ef1 parent=8eec74ae27cda09f3c368b9c299895eae41554db",
+      "result": "PASS",
+      "evidence": "Git Commits/Compare API; approved pin not re-pinned"
+    },
+    {
+      "id": "U30",
+      "check": "No Windows S2 raw transcript bytes in iips-review-recovered main",
+      "observed": "matches=[] truncated=False",
+      "result": "PASS",
+      "evidence": "recursive Git Trees API"
+    },
+    {
+      "id": "U31",
+      "check": "No Windows S2 raw transcript bytes in iips-production-market-data main",
+      "observed": "matches=[] truncated=False",
+      "result": "PASS",
+      "evidence": "recursive Git Trees API"
+    },
+    {
+      "id": "U32",
+      "check": "No GitHub Actions artifacts hold the Windows S2 raw transcripts",
+      "observed": "total_count=0",
+      "result": "PASS",
+      "evidence": "Actions Artifacts API"
+    },
+    {
+      "id": "U33",
+      "check": "No executed P-1 provisioning receipt in either main tree",
+      "observed": "matches=[]",
+      "result": "PASS",
+      "evidence": "recursive Git Trees API"
+    },
+    {
+      "id": "U34",
+      "check": "No executed Gate-4/QE evidence deposits in either main tree",
+      "observed": "matches=[]",
+      "result": "PASS",
+      "evidence": "recursive Git Trees API"
+    },
+    {
+      "id": "U35",
+      "check": "Tracker still records DQ-4 8/10, P-1 NOT EXECUTED, QE 0/11, Gate 5 NOT ADMITTED",
+      "observed": "8/10 / NOT EXECUTED / 0/11 / NOT INITIATED",
+      "result": "PASS",
+      "evidence": "Remote tracker bytes"
+    },
+    {
+      "id": "U36",
+      "check": "Prepared PF-15 instrument remains PROPOSED — NOT EFFECTIVE (historical)",
+      "observed": "proposed=True",
+      "result": "PASS",
+      "evidence": "Git Blobs API"
+    },
+    {
+      "id": "U37",
+      "check": "Both value-bearing PF-15 acts are published on IRR main",
+      "observed": "act01=True act02=True f1=True",
+      "result": "PASS",
+      "evidence": "Git Blobs API"
+    },
+    {
+      "id": "U38",
+      "check": "INTEGRITY FINDING: corrected act -02 F1–F6 rows are byte-identical to declared-defective act -01",
+      "observed": "rows_identical=True rows=6",
+      "result": "PASS",
+      "evidence": "Direct Git Blobs API byte comparison of both acts (05-pf15-literal-integrity.txt)"
+    },
+    {
+      "id": "U39",
+      "check": "Effective S1 identity determination + compiled constants discharge successor act §4",
+      "observed": "values_in_act=True values_in_source=True",
+      "result": "PASS",
+      "evidence": "Git Blobs API: IPD determination + src/persistence/gateAPrimeValidation.ts"
+    },
+    {
+      "id": "U40",
+      "check": "CAP-02 completed anchors (DB-C1 PR #114, U2 tracker, RV-1 act) intact",
+      "observed": "[('PR #114', True), ('U2 tracker', True), ('RV-1 act', True)]",
+      "result": "PASS",
+      "evidence": "Pulls/Contents/Git Blobs API"
+    },
+    {
+      "id": "U41",
+      "check": "Executing environment is not the designated Windows host; no enabling flags",
+      "observed": "linux / unresolved / powershell absent / flags absent",
+      "result": "PASS",
+      "evidence": "01-executing-environment-probe.txt"
+    },
+    {
+      "id": "U42",
+      "check": "IRR PR #306 published §16.138 S2 manifest-verification receipt",
+      "observed": "merged=True merge=83c6219becfeefb51055af9edfa20227e8ae3891",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API"
+    },
+    {
+      "id": "U43",
+      "check": "IRR PR #307 populated §16.138.7 publication receipt",
+      "observed": "merged=True base=83c6219becfe",
+      "result": "PASS",
+      "evidence": "GitHub Pulls API + remote tracker bytes"
+    },
+    {
+      "id": "U44",
+      "check": "S2 receipt records user-reported 47-entry PASS + nine filenames + PENDING raw-byte boundary",
+      "observed": "47=True nine=True pending=True",
+      "result": "PASS",
+      "evidence": "Git Blobs API: S2 manifest-verification receipt + remote tracker"
+    }
+  ],
+  "totals": {
+    "passed": 44,
+    "failed": 0
+  }
+}
