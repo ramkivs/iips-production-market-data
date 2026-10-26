@@ -16,7 +16,11 @@ import { fileURLToPath } from 'node:url';
 import { build as viteBuild } from 'vite';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npm = process.platform === 'win32' ? process.execPath : 'npm';
+const npmPrefix = process.platform === 'win32'
+  ? [resolve(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')]
+  : [];
+check(process.platform !== 'win32' || existsSync(npmPrefix[0]), 'Node-bundled npm CLI is missing');
 const expectedExports = ['./portfolio-ui', './pit', './d114-non-production'];
 const IRR_PIN = '98cd56a9a568f431ea31d5515e515a1b6cbb91ba';
 const IRR_IMPORTERS = [
@@ -172,7 +176,7 @@ try {
   }
 
   console.log('[package-consumer] packing built artifacts');
-  const packOutput = run(npm, ['pack', '--ignore-scripts', '--json', '--pack-destination', temporary], repoRoot);
+  const packOutput = run(npm, [...npmPrefix, 'pack', '--ignore-scripts', '--json', '--pack-destination', temporary], repoRoot);
   const pack = JSON.parse(packOutput)[0];
   check(pack && Array.isArray(pack.files), 'npm pack returned no inspectable file list');
   for (const file of pack.files) {
@@ -211,7 +215,7 @@ try {
   }, null, 2));
 
   console.log('[package-consumer] installing tarball into isolated consumer');
-  run(npm, [
+  run(npm, [...npmPrefix,
     'install', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', '--save=false',
     tarball,
     'react@18.3.1',
