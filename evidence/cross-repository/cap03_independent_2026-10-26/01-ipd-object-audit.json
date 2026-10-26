@@ -1,0 +1,528 @@
+{
+  "audit": "IPD-only source integrity; not full H-12 validation, freeze, S2, S3 or QE",
+  "current_commit": "1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745",
+  "current_tree": "7003a2828bde51985393348fa6e657a6cb8d4eed",
+  "primary": "8eec74ae27cda09f3c368b9c299895eae41554db",
+  "alias": "70b24f029842a7e9b7f615e4d9df7376fd4ff817",
+  "manifest_sha256": "d0be8bef3281ae6a296b8700265fe134b5088dd84b102b77ca8a157c8275cb76",
+  "verified_records": 59,
+  "verified_alias_sources": 14,
+  "core_unchanged": 32,
+  "core_total": 32,
+  "changed_paths_from_primary": [
+    "evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md",
+    "evidence/cross-repository/IIPS_V3_CAP03_DQ6B_DECISION_MIRROR_RECEIPT_2026-10-25.md",
+    "evidence/cross-repository/IIPS_V3_CAP03_G4_H12_R5_ADOPTION_IPD_MIRROR_RECEIPT_2026-10-25.md",
+    "evidence/cross-repository/IIPS_V3_CAP03_S2_HOST_PRECONDITION_BLOCKER_2026-10-25.md",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/00_baseline.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/01_alias_source_census.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/02_irr_locus_readback.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/10_npm_ci.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/11_typecheck.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/12_build.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/13_test_summary.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/14_package_consumer.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/15_working_tree.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/20_remote_readback.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/21_h12_drift_check.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/22_ci_runs.txt",
+    "evidence/cross-repository/cap03_dq6b_2026-10-25_ipd_mirror/SHA256SUMS.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/00_baseline.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/01_identifier_census.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/02_irr_locus_readback.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/10_h12_r5_drift_and_supplement_verification.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/11_h12_r5_manifest_verification.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/12_h12_r5_manifest_verify.py",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/13_h12_r5_drift_and_supplement_verify.py",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/20_irr_effectiveness_checks.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/30_s2_host_precondition_probe.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/40_publication_checks.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/41_publication_test_summary.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/42_publication_package_consumer.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/43_publication_tree.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/50_remote_readback.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/51_ci_runs.txt",
+    "evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/SHA256SUMS.txt",
+    "scripts/verify-public-package.mjs",
+    "tests/portfolio_ui_package.test.ts"
+  ],
+  "non_evidence_changes": [
+    "scripts/verify-public-package.mjs",
+    "tests/portfolio_ui_package.test.ts"
+  ],
+  "records": [
+    {
+      "group": "entries",
+      "path": "src/ipc/dispatch.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "27becc76749f5b11a37ca4e6254d58132620f57f",
+      "current_blob": "27becc76749f5b11a37ca4e6254d58132620f57f",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/ipc/endpoint.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "e565aa5b343266f62ffd411d17d74c89b9f29324",
+      "current_blob": "e565aa5b343266f62ffd411d17d74c89b9f29324",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/ipc/entrypoint.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "ae3edd12e1199845f6b5fe059fa79fed6245ae32",
+      "current_blob": "ae3edd12e1199845f6b5fe059fa79fed6245ae32",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/ipc/protocol.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "f4dc72b12ed9d618d1cfde836160f992ff1be9a5",
+      "current_blob": "f4dc72b12ed9d618d1cfde836160f992ff1be9a5",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/persistence/audit.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "273ccd3be29d7aca971933b6a28a4b4703504bf2",
+      "current_blob": "273ccd3be29d7aca971933b6a28a4b4703504bf2",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/persistence/binding.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "96d0079dd04b75c6f257a2001c8f7eff1ffc560a",
+      "current_blob": "96d0079dd04b75c6f257a2001c8f7eff1ffc560a",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/persistence/connection.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "5169e402707cf1a73f16bfb15ffe0b1d395165ff",
+      "current_blob": "5169e402707cf1a73f16bfb15ffe0b1d395165ff",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/persistence/durablePortfolioStorePort.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "d95608d90b6abe0535f82373b7e621d95aecbae8",
+      "current_blob": "d95608d90b6abe0535f82373b7e621d95aecbae8",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/persistence/migration_ledger.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "88198b44531777bd6a42bdc4e1094b695c25c270",
+      "current_blob": "88198b44531777bd6a42bdc4e1094b695c25c270",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/persistence/migrations/001_initial_schema.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "f594a18264c45ccdcbfa2381592820a72d3c453b",
+      "current_blob": "f594a18264c45ccdcbfa2381592820a72d3c453b",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/persistence/migrations/002_audit_event_sequence.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "932af8e603c4be41c9f0d8a6b051f41836c1fee8",
+      "current_blob": "932af8e603c4be41c9f0d8a6b051f41836c1fee8",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/persistence/migrations/003_local_principal_bindings.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "32b125bf962bb76a6ae59d3b262203dbbb988197",
+      "current_blob": "32b125bf962bb76a6ae59d3b262203dbbb988197",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/persistence/portfolio_store.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "540d49f2deb2c8d600b5b866675d145cf76a1e46",
+      "current_blob": "540d49f2deb2c8d600b5b866675d145cf76a1e46",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/persistence/provisioning.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "dc844189a1c92f00acc3d7572c22f3e28e138eb6",
+      "current_blob": "dc844189a1c92f00acc3d7572c22f3e28e138eb6",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "tests/g3_binding_resolution.test.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "c3e130a404b2cf43c368e672aeb7916dfb66f7d9",
+      "current_blob": "c3e130a404b2cf43c368e672aeb7916dfb66f7d9",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "tests/g3_caller_authority.test.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "ef76ad744e380aeeea01b7a41646b5defc348daf",
+      "current_blob": "ef76ad744e380aeeea01b7a41646b5defc348daf",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "tests/g3_durability_vocabulary.test.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "8a87c33d6ee1a742ec6947ec6829254ff21dbb1c",
+      "current_blob": "8a87c33d6ee1a742ec6947ec6829254ff21dbb1c",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "tests/g3_ipc_framing.test.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "c4a4a88a88052451c69b5b2ae277fa5d85ee7ea5",
+      "current_blob": "c4a4a88a88052451c69b5b2ae277fa5d85ee7ea5",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "tests/g3_no_network_listener.test.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "b1e48c70b111c5ef49db8924faeb2728ce093b5e",
+      "current_blob": "b1e48c70b111c5ef49db8924faeb2728ce093b5e",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "tests/g3_portfolio_read_isolation.test.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "69e36f68dc6c3adbd370654cd54e7d3ae83dbba1",
+      "current_blob": "69e36f68dc6c3adbd370654cd54e7d3ae83dbba1",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "tests/g3_startup_validation.test.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "edd0305e3e5891020b2b045ab2cf082cd6cf788f",
+      "current_blob": "edd0305e3e5891020b2b045ab2cf082cd6cf788f",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "tests/g3_write_gate.test.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "9035cbf129d4c1182d3a85f61eabc821b86433bc",
+      "current_blob": "9035cbf129d4c1182d3a85f61eabc821b86433bc",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "scripts/run-tests.mjs",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "05a0ea56f62d4f3b614480858c968a728bc24ca4",
+      "current_blob": "05a0ea56f62d4f3b614480858c968a728bc24ca4",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "tests/g4_run_tests_summary_parsing.test.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "49e901b6ca957a5cc705b42e96cdeaf0365cfbc9",
+      "current_blob": "49e901b6ca957a5cc705b42e96cdeaf0365cfbc9",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "package.json",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "51796e63280c1abb368c27bf8811cc6bad46e132",
+      "current_blob": "51796e63280c1abb368c27bf8811cc6bad46e132",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "package-lock.json",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "98ae3c63f403d88b5b13afbc9d9c32676b4716fe",
+      "current_blob": "98ae3c63f403d88b5b13afbc9d9c32676b4716fe",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "tsconfig.json",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "6d696ec21b50beddd063376c6f4cdb4463993c23",
+      "current_blob": "6d696ec21b50beddd063376c6f4cdb4463993c23",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/identity/security_master.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "60030e0c17f8b2a31977ce598c80b18dc52d6727",
+      "current_blob": "60030e0c17f8b2a31977ce598c80b18dc52d6727",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/identity/mapping_store.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "eec60c09e08ec45a29979abf25b21efddef448ae",
+      "current_blob": "eec60c09e08ec45a29979abf25b21efddef448ae",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "src/identity/quarantine.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "70c6f6580f6ade66eb31e7dee3adc4b52b10b010",
+      "current_blob": "70c6f6580f6ade66eb31e7dee3adc4b52b10b010",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "frontend/src/features/portfolio/portfolioStorePort.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "fd01731fa3f25cffffd6ac4590ad13c1564c9ef3",
+      "current_blob": "fd01731fa3f25cffffd6ac4590ad13c1564c9ef3",
+      "unchanged": true
+    },
+    {
+      "group": "entries",
+      "path": "frontend/src/features/portfolio/portfolio-store.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "b900a2481b73ed7bd00406b18a39c8f493b4c0cc",
+      "current_blob": "b900a2481b73ed7bd00406b18a39c8f493b4c0cc",
+      "unchanged": true
+    },
+    {
+      "group": "conditional_entries",
+      "path": "scripts/test-summary-parser.mjs",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "15c849fa739765af501182919748e4610acc4157",
+      "current_blob": "15c849fa739765af501182919748e4610acc4157",
+      "unchanged": true
+    },
+    {
+      "group": "criteria_basis",
+      "path": "evidence/cross-repository/IIPS_V3_G2_GATE_E_PORTFOLIO_WRITE_POLICY_2026-10-18.md",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "4a9501bffb49abbbc0ba5b5c4f81d2841812913e",
+      "current_blob": "4a9501bffb49abbbc0ba5b5c4f81d2841812913e",
+      "unchanged": true
+    },
+    {
+      "group": "criteria_basis",
+      "path": "evidence/np04/IIPS_v3.0_G2_IPD_LOCAL_PRINCIPAL_OS_IPC_SECURITY_CONTRACT_PROPOSAL_2026-10-16.md",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "fc8d1cbc9ec96f4f93fce8afbbb659b044f6268f",
+      "current_blob": "fc8d1cbc9ec96f4f93fce8afbbb659b044f6268f",
+      "unchanged": true
+    },
+    {
+      "group": "criteria_basis",
+      "path": "evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_AUTHORITY_ACT_2026-10-17.md",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "91a952a291afe4a766801247bc2b12f7ed96ccb2",
+      "current_blob": "91a952a291afe4a766801247bc2b12f7ed96ccb2",
+      "unchanged": true
+    },
+    {
+      "group": "criteria_basis",
+      "path": "evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_AUTHORITY_DECISION_RENDERED_2026-10-17.md",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "9befe6d888f6205d8d3df6ed3d873b0c71ee6336",
+      "current_blob": "9befe6d888f6205d8d3df6ed3d873b0c71ee6336",
+      "unchanged": true
+    },
+    {
+      "group": "criteria_basis",
+      "path": "evidence/np04/IIPS_v3.0_G2_IPD_GATE_C_QUALIFICATION_PROCEDURE_2026-10-17.md",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "a263a05ca45e7304f016013ce78a338808ab04c0",
+      "current_blob": "a263a05ca45e7304f016013ce78a338808ab04c0",
+      "unchanged": true
+    },
+    {
+      "group": "criteria_basis",
+      "path": "evidence/np04/IIPS_v3.0_G2_GATE_V_EVIDENCE_RECONCILIATION_AND_PA_WAIVER_RECORD_2026-10-16.md",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "8731a86cff5ae8463c59e4d68cf708cb2b706f96",
+      "current_blob": "8731a86cff5ae8463c59e4d68cf708cb2b706f96",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors",
+      "path": "frontend/src/features/portfolio/portfolioStorePort.ts",
+      "designated_commit": "1cceacfff40f22dbc9cd64906bf26a5feac1075e",
+      "designated_blob": "d61f18dfdce12a7f0c4377a3c6d410026d454089",
+      "current_blob": "fd01731fa3f25cffffd6ac4590ad13c1564c9ef3",
+      "unchanged": false
+    },
+    {
+      "group": "frozen_g3_anchors",
+      "path": "frontend/src/features/portfolio/portfolio-store.ts",
+      "designated_commit": "1cceacfff40f22dbc9cd64906bf26a5feac1075e",
+      "designated_blob": "b900a2481b73ed7bd00406b18a39c8f493b4c0cc",
+      "current_blob": "b900a2481b73ed7bd00406b18a39c8f493b4c0cc",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors",
+      "path": "src/identity/mapping_store.ts",
+      "designated_commit": "1cceacfff40f22dbc9cd64906bf26a5feac1075e",
+      "designated_blob": "eec60c09e08ec45a29979abf25b21efddef448ae",
+      "current_blob": "eec60c09e08ec45a29979abf25b21efddef448ae",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors",
+      "path": "src/identity/security_master.ts",
+      "designated_commit": "1cceacfff40f22dbc9cd64906bf26a5feac1075e",
+      "designated_blob": "60030e0c17f8b2a31977ce598c80b18dc52d6727",
+      "current_blob": "60030e0c17f8b2a31977ce598c80b18dc52d6727",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors",
+      "path": "src/identity/quarantine.ts",
+      "designated_commit": "1cceacfff40f22dbc9cd64906bf26a5feac1075e",
+      "designated_blob": "70c6f6580f6ade66eb31e7dee3adc4b52b10b010",
+      "current_blob": "70c6f6580f6ade66eb31e7dee3adc4b52b10b010",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors",
+      "path": "package.json",
+      "designated_commit": "1cceacfff40f22dbc9cd64906bf26a5feac1075e",
+      "designated_blob": "0a3eec22a39048498601aa7b5672a40ede840d34",
+      "current_blob": "51796e63280c1abb368c27bf8811cc6bad46e132",
+      "unchanged": false
+    },
+    {
+      "group": "frozen_g3_anchors",
+      "path": "package-lock.json",
+      "designated_commit": "1cceacfff40f22dbc9cd64906bf26a5feac1075e",
+      "designated_blob": "98ae3c63f403d88b5b13afbc9d9c32676b4716fe",
+      "current_blob": "98ae3c63f403d88b5b13afbc9d9c32676b4716fe",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors",
+      "path": "tsconfig.json",
+      "designated_commit": "1cceacfff40f22dbc9cd64906bf26a5feac1075e",
+      "designated_blob": "6d696ec21b50beddd063376c6f4cdb4463993c23",
+      "current_blob": "6d696ec21b50beddd063376c6f4cdb4463993c23",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors",
+      "path": ".github/workflows/ci.yml",
+      "designated_commit": "1cceacfff40f22dbc9cd64906bf26a5feac1075e",
+      "designated_blob": "aeee464feb76e2d1e9d104e1cae4e5dde37700ad",
+      "current_blob": "4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5",
+      "unchanged": false
+    },
+    {
+      "group": "frozen_g3_anchors",
+      "path": "vite.config.ts",
+      "designated_commit": "1cceacfff40f22dbc9cd64906bf26a5feac1075e",
+      "designated_blob": "5563e1bcfadda4b9d443522481029e7f092851ad",
+      "current_blob": "5563e1bcfadda4b9d443522481029e7f092851ad",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors_revalidated_at_qe_candidate",
+      "path": "frontend/src/features/portfolio/portfolioStorePort.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "fd01731fa3f25cffffd6ac4590ad13c1564c9ef3",
+      "current_blob": "fd01731fa3f25cffffd6ac4590ad13c1564c9ef3",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors_revalidated_at_qe_candidate",
+      "path": "frontend/src/features/portfolio/portfolio-store.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "b900a2481b73ed7bd00406b18a39c8f493b4c0cc",
+      "current_blob": "b900a2481b73ed7bd00406b18a39c8f493b4c0cc",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors_revalidated_at_qe_candidate",
+      "path": "src/identity/mapping_store.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "eec60c09e08ec45a29979abf25b21efddef448ae",
+      "current_blob": "eec60c09e08ec45a29979abf25b21efddef448ae",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors_revalidated_at_qe_candidate",
+      "path": "src/identity/security_master.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "60030e0c17f8b2a31977ce598c80b18dc52d6727",
+      "current_blob": "60030e0c17f8b2a31977ce598c80b18dc52d6727",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors_revalidated_at_qe_candidate",
+      "path": "src/identity/quarantine.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "70c6f6580f6ade66eb31e7dee3adc4b52b10b010",
+      "current_blob": "70c6f6580f6ade66eb31e7dee3adc4b52b10b010",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors_revalidated_at_qe_candidate",
+      "path": "package.json",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "51796e63280c1abb368c27bf8811cc6bad46e132",
+      "current_blob": "51796e63280c1abb368c27bf8811cc6bad46e132",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors_revalidated_at_qe_candidate",
+      "path": "package-lock.json",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "98ae3c63f403d88b5b13afbc9d9c32676b4716fe",
+      "current_blob": "98ae3c63f403d88b5b13afbc9d9c32676b4716fe",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors_revalidated_at_qe_candidate",
+      "path": "tsconfig.json",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "6d696ec21b50beddd063376c6f4cdb4463993c23",
+      "current_blob": "6d696ec21b50beddd063376c6f4cdb4463993c23",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors_revalidated_at_qe_candidate",
+      "path": ".github/workflows/ci.yml",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5",
+      "current_blob": "4614ee0e27fe8a8f0b4f4883bacc141e2d67aae5",
+      "unchanged": true
+    },
+    {
+      "group": "frozen_g3_anchors_revalidated_at_qe_candidate",
+      "path": "vite.config.ts",
+      "designated_commit": "8eec74ae27cda09f3c368b9c299895eae41554db",
+      "designated_blob": "5563e1bcfadda4b9d443522481029e7f092851ad",
+      "current_blob": "5563e1bcfadda4b9d443522481029e7f092851ad",
+      "unchanged": true
+    }
+  ],
+  "disposition": "INTEGRITY VERIFIED; publication movement enumerated; no re-designation"
+}

@@ -1,0 +1,88 @@
+
+> iips-production-market-data@1.0.0 test:package-consumer
+> npm run build:portfolio-ui-package && npm run build:pit-package && node scripts/verify-public-package.mjs
+
+
+> iips-production-market-data@1.0.0 build:portfolio-ui-package
+> tsc -p tsconfig.portfolio-ui-package.json
+
+
+> iips-production-market-data@1.0.0 build:pit-package
+> tsc -p tsconfig.pit-package.json
+
+[package-consumer] packing built artifacts
+[package-consumer] installing tarball into isolated consumer
+[package-consumer] TypeScript resolution and declaration validation
+[package-consumer] compiling executable consumer
+[package-consumer] runtime public-subpath consumer
+[package-consumer] compiling five verbatim IRR importers at 98cd56a9a568f431ea31d5515e515a1b6cbb91ba
+[package-consumer] executing verbatim IRR production composition and adapter
+[package-consumer] browser bundle and boundary scan
+{
+  "result": "PASS",
+  "pack": {
+    "files": 121,
+    "packedBytes": 239032,
+    "unpackedBytes": 2706254,
+    "shasum": "cc2aa70186b8fd7bc7255452ac8d8b00d094f53e"
+  },
+  "exports": {
+    "./portfolio-ui": {
+      "types": "./dist/package/src/ui/portfolio_ui_package.d.ts",
+      "import": "./dist/package/src/ui/portfolio_ui_package.js"
+    },
+    "./pit": {
+      "types": "./dist/package/src/pit/package.d.ts",
+      "import": "./dist/package/src/pit/package.js"
+    },
+    "./d114-non-production": {
+      "types": "./dist/package/src/d114/non_production_package.d.ts",
+      "import": "./dist/package/src/d114/non_production_package.js"
+    }
+  },
+  "runtime": {
+    "runtime": "PASS",
+    "declarations": "PASS",
+    "pitRecords": 1,
+    "d114Records": 12,
+    "replayDuplicates": 12,
+    "uiRuntimeExports": 22,
+    "durability": "SESSION_ONLY",
+    "durable": false,
+    "refusalCodes": [
+      "WRITE_NOT_AUTHORIZED",
+      "RESOURCE_UNAVAILABLE"
+    ]
+  },
+  "irrConsumers": {
+    "sourceCommit": "98cd56a9a568f431ea31d5515e515a1b6cbb91ba",
+    "importerFiles": [
+      "frontend/server/pit/ipdPitReadAdapter.ts",
+      "frontend/server/pit/nonProductionPitStore.ts",
+      "frontend/server/pit/nonProductionRuntimePitStore.ts",
+      "frontend/server/pit/pitD114RuntimeIntegration.test.ts",
+      "frontend/server/pit/pitRuntimeIntegration.test.ts"
+    ],
+    "verbatimCopies": true,
+    "packageImportsRewritten": false,
+    "typecheck": "PASS",
+    "productionModuleRuntime": {
+      "result": "PASS",
+      "fixtureRecords": 8,
+      "combinedRecords": 20,
+      "d114ResolvedAsOf": "2026-02-10T15:30:00.000Z",
+      "invalidReason": "INVALID_IDENTITY"
+    },
+    "routeIntegrationTests": "TYPECHECK_ONLY_NOT_IRR_E2E"
+  },
+  "browser": {
+    "platform": "browser",
+    "bytes": 1729910,
+    "forbiddenHits": []
+  },
+  "typecheck": {
+    "strict": true,
+    "skipLibCheck": false,
+    "result": "PASS"
+  }
+}
