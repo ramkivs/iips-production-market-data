@@ -1,0 +1,96 @@
+{
+  "repository": "ramkivs/iips-production-market-data",
+  "branch": "arena/8f07b78e-iips-production-market-data",
+  "verified_remote_commit": "0ee666b660bd9fd3b69bf221ace1d9093041565a",
+  "remote_tree": "742a4e7647c8ce1fdd99af1ea4dd1d3fe0350544",
+  "changed_files": 12,
+  "all_remote_bytes_equal_local": true,
+  "files": [
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/00-remote-baseline.txt",
+      "remote_blob": "1048809a6297f03471bbdc3145e0e04fd2f2a164",
+      "sha256": "5e84c91cee8fe57d51dfd76072fe6cef0c187069f0643924819f5b500e1ef9c4",
+      "bytes": 304
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/01-ipd-object-audit.json",
+      "remote_blob": "5be7de2b54d6ef0b09190b5ab7b5f6992554e177",
+      "sha256": "fb94ccc3d0a226441f7933aa40c8ad3306c988eeef9c6c98bb422dc9ed0a684f",
+      "bytes": 23529
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/02-baseline-ci.json",
+      "remote_blob": "4fef981c33582b07f2996d6da301f823fe966319",
+      "sha256": "bdd6a5b0cbc2363db841ba541ddf08b52b4e71c3b7e16ccb19337e1aef989c66",
+      "bytes": 117
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/03-negative-test.txt",
+      "remote_blob": "914f944d39b189371ad952e2e25cc8422debd32d",
+      "sha256": "2737a93c58666273067e9a21794ec40a3dec8ad44035e4fa1a0d3876787f0a32",
+      "bytes": 509
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/04-governance-sources.json",
+      "remote_blob": "d0882b8eb7b95ce4b344a22d5d54187794178c15",
+      "sha256": "8c33e2563513d8e376d21fc8b5bc6679bf64a170a20a5f2d78c04652d4fa6420",
+      "bytes": 2018
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/10-install.txt",
+      "remote_blob": "50097542179434956ba2a78f051733bccfaa5854",
+      "sha256": "11d122db967b341150c7d914c1f11ebd0f76902916b5b3b24c38b5fa25752f12",
+      "bytes": 545
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/11-build.txt",
+      "remote_blob": "8fdae8e88d2354447e4c9cfac661459bfd085e77",
+      "sha256": "e96c0f154694ec64733a096d892abb62aded0edd021645180e93c076bbc7919b",
+      "bytes": 1096
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/12-tests.txt",
+      "remote_blob": "c2e4f05bfbae975377cce1f22810cd96b29db5c7",
+      "sha256": "39ff9da38e852523f4c69ee56c5b4f3a21c96b3f27e0e8ee40972f985cd9d09d",
+      "bytes": 4657540
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/13-package-consumer.txt",
+      "remote_blob": "9fb672a0d0ba11072c8279a236c7f65878624f85",
+      "sha256": "3bea67f94bc20376f7fe7228e7284945c1967bb7c8466f1b6a250eb6c405c00b",
+      "bytes": 2793
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/README.md",
+      "remote_blob": "367bbcf9d6cae59e224e91fb4c825558d74d56b9",
+      "sha256": "94e434f103448cfe3b904c0271ce9898e3f13f46750d82c86bb7fb5b44d4540c",
+      "bytes": 9304
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/SHA256SUMS",
+      "remote_blob": "ae9a099328038263a372fb596b82051ca2297fbe",
+      "sha256": "b44b63b18975e62bd942e66d6b333867a4e84472405e36d3fb6dd595e9dbe927",
+      "bytes": 931
+    },
+    {
+      "path": "evidence/cross-repository/cap03_independent_2026-10-26/verify_ipd.py",
+      "remote_blob": "7eb4d3da446bab0d99601a61cd0933a1ebe585e9",
+      "sha256": "2d334db25ee92ac5c12f30bab1a54793de25d2551b4f38eef6ac5bf09ce6e039",
+      "bytes": 3438
+    }
+  ],
+  "pr": 97,
+  "validation": "Raw build/test/package-consumer logs and integrity audit independently downloaded and byte-compared; no qualification credit",
+  "ci": {
+    "run": 40312520599,
+    "head_sha": "0ee666b660bd9fd3b69bf221ace1d9093041565a",
+    "conclusion": "success",
+    "checks": [
+      "typecheck",
+      "build",
+      "guarded tests",
+      "public package consumer",
+      "executed test count"
+    ]
+  }
+}
