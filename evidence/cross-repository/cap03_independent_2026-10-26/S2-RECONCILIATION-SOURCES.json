@@ -1,0 +1,40 @@
+{
+  "irr_main": "c493c5d3e9fa611475373f1f6428e285841a9456",
+  "ipd_main": "1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745",
+  "pr96": {
+    "number": 96,
+    "state": "closed",
+    "merged": true,
+    "merge_commit_sha": "1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745",
+    "body": "## Purpose\nPromote the tested Windows compatibility corrections from the published CAP-03 candidate branch.\n\n## Exact implementation\n- Candidate commit: 001c3c80618f2ee1d40e9a90912237e1a06e7b58\n- Candidate tree: 399fa44a5f1953c0f61b452420fefb5985426ef1\n- Base commit: 8eec74ae27cda09f3c368b9c299895eae41554db\n- Changed files: scripts/verify-public-package.mjs; tests/portfolio_ui_package.test.ts\n\n## Validation evidence\n- Package-consumer validation: PASS, exit 0.\n- Guarded suite: 924 tests; 920 passed, 0 failed, 4 skipped.\n- Evidence is retained outside the repository under C:\\iips-evidence\\cap03-s2.\n\n## Qualification disposition\nThe corrected candidate's validation results control its current technical status. The earlier failure exposed the Windows-specific defects corrected by this commit; it does not classify the corrected implementation as failed. The designated baseline/pin is not silently rewritten by this PR.\n\n## Safety\nNo portfolio-store provisioning, write enablement, endpoint-fence change, or production admission is included.\r\n"
+  },
+  "candidate_checks": [
+    {
+      "name": "executed test count",
+      "conclusion": "success",
+      "summary": "**924 tests executed \u2014 923 passed, 0 failed.** Guard: a run that executes zero tests fails (CV-35). Head: `001c3c80618f2ee1d40e9a90912237e1a06e7b58`."
+    },
+    {
+      "name": "typecheck \u00b7 build \u00b7 test",
+      "conclusion": "success",
+      "summary": null
+    }
+  ],
+  "available_artifacts": {
+    "total_count": 0,
+    "artifacts": []
+  },
+  "irr_tracker": {
+    "blob": "5b51c4a1ad96f73897d2544ecb1e31f97d322fa6",
+    "sha256": "78f7cc3f7772e15d4dee1a2eb990cbf37b7d0bfcecb71b09a7fde7c69c01abfb",
+    "bytes": 2367388,
+    "latest_section": "16.132",
+    "excerpt": " Corrected-candidate validation evidence \u2014 Windows (V815\u2013V817)\n\nFresh native-Windows host validation was executed on `desktop-no0nhtp` by the designated operator against the corrected candidate checkout at `001c3c80618f2ee1d40e9a90912237e1a06e7b58`:\n\n| Validation | Result | Evidence path (native Windows, outside every worktree) | SHA-256 (evidence file) |\n|---|---|---|---|\n| **Package-consumer validation** | **PASS**; exit code `0` \u2014 consumer imports `dist/package` via file-URL dynamic import and validates public-package exports; purpose of fix verified | `C:\\iips-evidence\\cap03-s2\\s2-npm-launch-fix-consumer-20261026T095613Z.txt` | `9F7C64073A849E57D472C9CA30BB7616D04D1951626E90587241D61A470A85B1` |\n| **Guarded test suite** | **PASS** \u2014 `Total: 924 tests, Passed: 920, Failed: 0, Skipped: 4` \u2014 guard tail `[test-guard] OK` semantics preserved; Windows invocation via `npm.cmd` verified; no test silently dropped | `C:\\iips-evidence\\cap03-s2\\s2-npm-launch-fix-suite-20261026T095613Z.txt` | `C5DDFFA24393AED2E391EF8A72E8BFF1F8ECD9576C4349E182B288785F1B2941` |\n\nSupporting logs (native Windows, retained as durable evidence alongside the two validations):\n\n| Log | Path | Note |\n|---|---|---|\n| Previous reconciliation log (authoritative-merge) | `C:\\iips-evidence\\cap03-s2\\s2-authoritative-merge-20261026T101205Z.txt` | Records IPD merge of `001c3c80` via PR #96 to `1e76f4cf\u2026` and pre-reconciliation state |\n| Latest tracker-recovery log | `C:\\iips-evidence\\cap03-s2\\s2-tracker-recovery-20261026T154814Z.txt` | Records \u00a716.132 local modification attempt and heading-count `1` pass; candidate/evidence SHA assertions failed and are repaired here \u2014 **SHA-256 `334460227E63026A1FF18B16768D58F01C6A54814EC6566CA74BB0223004A696` is the earlier authoritative-merge log hash cited in the task summary; do not reuse a hash for a different file \u2014 the tracker-recovery log hash must be recomputed from the actual file bytes if needed as evidence** |\n| Fresh local clone creation (IRR) | `C:\\iips-work\\iips-review-recovered-cap03-s2-authoritative-20261026T101205Z` | Created from `610a4bd\u2026` for \u00a716.132 drafting; verified `\u00a716.132` heading count `1` |\n\nThe candidate commit `001c3c80618f2ee1d40e9a90912237e1a06e7b58` and its tree `399fa44a5f1953c0f61b452420fefb5985426ef1` and baseline `8eec74ae27cda09f3c368b9c299895eae41554db` are recorded verbatim in this section; the two evidence hashes `9F7C64073A849E57D472C9CA30BB7616D04D1951626E90587241D61A470A85B1` and `C5DDFFA24393AED2E391EF8A72E8BFF1F8ECD9576C4349E182B288785F1B2941` are present verbatim. Prior recovery attempt reported heading-count `1` PASS but the three SHA-bearing assertions failed \u2014 root cause was missing verbatim hash strings in the drafted section, not a host validation failure. Repaired by embedding the SHAs exactly as produced on the Windows host (uppercase hex, no whitespace normalization).\n\n"
+  },
+  "linux_transcript": {
+    "path": "evidence/cross-repository/cap03_independent_2026-10-26/12-tests.txt",
+    "sha256": "39ff9da38e852523f4c69ee56c5b4f3a21c96b3f27e0e8ee40972f985cd9d09d",
+    "digest_matches_existing_SHA256SUMS": true,
+    "tail": "\n# tests 924\n# suites 124\n# pass 923\n# fail 0\n# cancelled 0\n# skipped 1\n# todo 0\n# duration_ms 16214.370047\n\n[test-guard] OK \u2014 924 test(s) executed, 923 passed, exit 0\n"
+  }
+}
