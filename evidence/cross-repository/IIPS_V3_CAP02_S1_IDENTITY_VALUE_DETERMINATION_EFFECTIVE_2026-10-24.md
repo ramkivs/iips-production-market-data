@@ -333,6 +333,31 @@ Nothing here is host qualification, QE, provisioning or adoption.
 `portfolio_store.ts 4a005b73…` · `package.json 51796e63…` · `tests/g3_startup_validation.test.ts
 edd0305e…`. The four migration blobs also match `DESIGNATED_MIGRATION_BLOBS` in the validator.
 
+> **Dated pointer — added `2026-10-28` (UTC) under Program Authority ruling `A-GAP1` · record
+> `IIPS-V3-CAP03-S1-POINTER-ACT-01-2026-10-28-01`
+> (`evidence/cross-repository/IIPS_V3_CAP03_S1_POINTER_ACT_01_EFFECTIVE_2026-10-28.md`).**
+> **§12.2 above is preserved verbatim and is NOT corrected in place.**
+>
+> 1. **`act §6 row S1` governs S1.** The governing text for step S1 is the effective Gate 4
+>    target-host qualification act `IIPS-V3-G4-TARGET-HOST-QUALIFICATION-AUTHORITY-ACT-2026-10-23-01`,
+>    §6 *"Q5 — Required execution ordering and dependencies"*, row **S1**: *"**Gate A′ provisioning
+>    execution** on `desktop-no0nhtp` — **BLOCKED** …"*. This determination's §12.2 does **not**
+>    govern S1.
+> 2. **The `12/12` statement in §12.2 does not reproduce for items 10 and 12.** Measured at IPD
+>    `1ba0740a32e69284d7c524fd6ac8daf5455038d0` against act §2.1 as then designated: item 10
+>    `src/persistence/portfolio_store.ts` actual `540d49f2deb2c8d600b5b866675d145cf76a1e46` vs
+>    designated `4a005b737de26443e261156a3102d553dd90b726`; item 12
+>    `tests/g3_startup_validation.test.ts` actual `edd0305e3e5891020b2b045ab2cf082cd6cf788f` vs
+>    designated `9a5fd9e3b22693e95304a1cd2df812bbf9ea2299`. The measured result is **`10/12`**. The
+>    other ten items reproduce.
+> 3. **Current state.** Items 10 and 12 were re-designated to the actual blobs by the separate
+>    amendment act `IIPS-V3-CAP02-GATE-A-PRIME-AMEND-01-DESIGNATED-BLOBS-2026-10-28-01` (PA ruling
+>    `A-Q5`, mechanism `A-O3`), published at IPD `0edadb2d128c9cf85e1522f0b7828d9e99d6d5cf`. §12.2's
+>    enumeration remains a record of the pre-publication baseline and is not amended by this pointer.
+> 4. **No effect on any gate, status or designation.** This pointer re-designates nothing and executes
+>    nothing. S1 remains **`BLOCKED`**; Gate A′ provisioning remains **`NOT AUTHORIZED`**; Gate 4
+>    remains **`AUTHORIZED — NOT STARTED`**; `H-12` remains **`NOT ADOPTED`**.
+
 ### 12.3 After the binding change
 
 | Check | Command | Result |
