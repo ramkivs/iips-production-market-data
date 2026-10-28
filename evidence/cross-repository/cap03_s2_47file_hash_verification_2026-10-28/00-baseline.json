@@ -1,0 +1,73 @@
+{
+ "record_id": "IIPS-V3-CAP03-S2-47FILE-INDEPENDENT-HASH-VERIFICATION-IPD-RECORD-2026-10-28-01",
+ "verified_utc": "2026-10-28",
+ "ipd_main_commit": "aa43dec2df76cc5dd5077c9806b3c97ea8e428b6",
+ "ipd_main_tree": "244f87bfa13a060247e8dd6cd4cca07a0f71971e",
+ "ipd_pr103": {
+  "number": 103,
+  "state": "MERGED",
+  "merged_at": "2026-10-28T07:44:32Z",
+  "head": "753017d2487ff2c6125eda47719e2ce48b061901",
+  "merge_commit": "aa43dec2df76cc5dd5077c9806b3c97ea8e428b6"
+ },
+ "ipd_tracker_blob_at_baseline": {
+  "path": "evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md",
+  "git_blob": "dba9b80d87c564b362435a0a3db78526eaab9269",
+  "bytes": 186212,
+  "local_matches_remote": true
+ },
+ "irr_main_commit_at_read": "9130deadcdd929f6210a5e4275267f63afd07c3d",
+ "evidence_source_of_bytes": {
+  "repository": "ramkivs/iips-review-recovered",
+  "transfer_branch": "refs/heads/cap03-s2-evidence-publication",
+  "transfer_commit": "54d5a56fc8ffda72fa98020aaeb7b8a71bd6c5e0",
+  "transfer_tree": "698659d0013f151905826672814ea3454fc2b47b",
+  "directory": "evidence/integration/cap03-s2-evidence-manifest-verification-2026-10-26/",
+  "entries_at_published_commit": 57,
+  "deposit_pr": {
+   "number": 310,
+   "state": "closed",
+   "merged": true,
+   "merged_at": "2026-10-26T16:33:33Z",
+   "merge_commit": "47133fe489e80de2af5f1b537d67865a6a7235b9",
+   "base": "main",
+   "head": "54d5a56fc8ffda72fa98020aaeb7b8a71bd6c5e0"
+  },
+  "ci_on_transfer_commit": {
+   "workflow_run_id": 40359958909,
+   "name": "CI",
+   "event": "pull_request",
+   "conclusion": "success",
+   "check_run": {
+    "name": "Typecheck \u00b7 Test \u00b7 Build",
+    "conclusion": "success"
+   }
+  },
+  "ci_on_merge_commit_47133fe4": {
+   "check_run": {
+    "name": "Typecheck \u00b7 Test \u00b7 Build",
+    "conclusion": "success"
+   }
+  },
+  "blobs_identical_between_transfer_commit_and_irr_main": true,
+  "blob_identity_check": {
+   "on_transfer_commit": 57,
+   "on_irr_main": 57,
+   "identical": 57,
+   "differing": 0,
+   "only_on_branch": 0,
+   "only_on_main": 0
+  }
+ },
+ "manifest_of_record": {
+  "path": "evidence/integration/cap03-s2-evidence-manifest-verification-2026-10-26/SHA256SUMS.txt",
+  "git_blob": "b4ea1b779d",
+  "bytes": 5312,
+  "entries": 53,
+  "sha256_of_manifest_file": "E2118778D7B5D08CD6C346ADB038D54AFA5AA9756E20C243ADEB4DCCA4D9DF22",
+  "windows_evidence_entries": 47,
+  "irr_authored_entries": 6
+ },
+ "total_bytes_retrieved": 15400304,
+ "retrieval_method": "GitHub REST git/blobs API (read-only); base64 decoded to disk; no transformation applied"
+}

@@ -2046,3 +2046,115 @@ Appended-section table integrity and `git diff --check` verified in the publishi
 **P-1-C: NOT ESTABLISHED.** **P-1-D: DESIGNATED; NOT VERIFIED FOR THE ATTEMPT.** **P-1: NOT EXECUTED /
 UNSPENT / NOT AUTHORIZED.** No execution commit designated. The §5.1 scope question and the successor-act
 designated-blob conflict remain **UNRESOLVED** pending Program Authority disposition.
+
+## CAP-03 — S2 package-consumer evidence: independent hash verification of the 47 manifest-listed Windows files (2026-10-28)
+
+**Receipt:** `IIPS-V3-CAP03-S2-47FILE-INDEPENDENT-HASH-VERIFICATION-IPD-RECORD-2026-10-28-01`
+(census before this record: `0` occurrences in this repository). Append-only verification record.
+It renders no decision, re-pins nothing, moves no gate, grants no authority and accepts nothing.
+Evidence bundle: `evidence/cross-repository/cap03_s2_47file_hash_verification_2026-10-28/`.
+
+**Naming discipline.** This record concerns the **CAP-03 S2 package-consumer evidence requirement**.
+It makes no statement about the separate **Gate 4 Limb A native-Windows `npm test` requirement**,
+whose status is unchanged. Neither requirement is called merely "S2" here.
+
+### 1. The two statements this record corrects
+
+Two statements standing in this tracker are affected:
+
+| Standing statement | Where | Correction |
+|---|---|---|
+| "no read-only route to `C:\iips-evidence\cap03-s2\`" | §3.1 Limitations, D1 | Still true of the **Windows host path**, but a read-only route to the **transferred bytes** does exist: IRR `evidence/integration/cap03-s2-evidence-manifest-verification-2026-10-26/`, deposited to IRR `main` by **PR #310** (`54d5a56f…` → `47133fe4…`, `2026-10-26T16:33:33Z`) with green exact-head CI and green CI on the merge commit |
+| "independent raw-byte read-back of the 47 manifest-listed Windows files **PENDING / NOT COMPLETE**" | §3.1 Limitations, D1; line 2031 | The read-back is now **COMPLETE**: all 47 entries were obtained and independently hashed. Its **outcome** is that byte identity is **not** established for 46 of 47 — so D1's underlying concern stands, on a firmer evidential basis than before |
+
+The deposit itself was also reported as unsatisfied by the IRR read-back of `2026-10-26`
+("unmerged branch with `0` CI runs"). That is superseded: PR #310 merged the same commit with
+green CI, and the 57 blob SHAs on IRR `main` are **identical** to those on the transfer branch
+(`57` identical / `0` differing / `0` present on only one side).
+
+### 2. Method
+
+Read-only throughout. Blobs enumerated with the GitHub REST trees API and retrieved with the
+`git/blobs` API, base64-decoded to disk (`57` blobs, `15,400,304` bytes). SHA-256 computed over the
+decoded bytes **exactly as committed** — no normalisation, no line-ending change, no
+reserialisation. `verify_47file_record.py` re-derives every result from the remote bytes and
+returned exit `0` (`53` entries re-hashed from remote content).
+
+Manifest of record: `evidence/integration/cap03-s2-evidence-manifest-verification-2026-10-26/SHA256SUMS.txt`,
+blob `b4ea1b779d…`, `5,312` bytes, **53** entries (`47` Windows-evidence + `6` IRR-authored), own
+SHA-256 `E2118778D7B5D08CD6C346ADB038D54AFA5AA9756E20C243ADEB4DCCA4D9DF22`. `0` listed files absent;
+`4` present but unlisted; `windows-session-transcript.txt` absent, consistent with the reported
+locked-file exclusion.
+
+### 3. Result — all 47 entries verified
+
+| State (47 Windows-evidence entries) | Count |
+|---|---:|
+| `MATCH` — committed bytes hash to the recorded digest | **1** |
+| `MISMATCH` — committed bytes do not hash to the recorded digest | **46** |
+| of the `46`: line-termination difference only | **43** |
+| of the `46`: not reproduced by any tested transformation | **3** |
+| `MISSING` / `INACCESSIBLE` / `NOT_VERIFIED` | **0** / **0** / **0** |
+
+The committed copies are **LF-normalised**; the recorded digests are of the **host's CRLF bytes**.
+For `43` entries the CRLF-restored form reproduces the recorded digest exactly — **content equality
+modulo line termination**, which is *not* byte identity and is not asserted to be. No entry is
+marked `MATCH` on the strength of a transformation; the authoritative state is the as-committed
+result. The single `MATCH` is `s2-tracker-reconciliation-20261026T100434Z.txt`, already LF on the
+host. The `3` non-reproducing entries are `00-preflight-results-provided-in-chat.txt`,
+`s2-checkout-verification.txt` and `s2-ipd-pr-body-20261026T100850Z.md`.
+
+All **nine** required S2 filenames are present, were hashed, and are `MISMATCH` as committed, all in
+the line-termination-only class. The two previously reported Windows validation digests behave the
+same way:
+
+| File | Recorded | As committed | CRLF-restored |
+|---|---|---|---|
+| `s2-npm-launch-fix-suite-20261026T095613Z.txt` | `C5DDFFA2…` | `5B9FA852…` `MISMATCH` | `C5DDFFA2…` |
+| `s2-npm-launch-fix-consumer-20261026T095613Z.txt` | `9F7C6407…` | `E4B48EF0…` `MISMATCH` | `9F7C6407…` |
+
+Both have until now been carried in this repository only as reported values; both now reproduce from
+repository content modulo line termination.
+
+### 4. Sources searched
+
+`02-source-search.json` records eleven sources with a classification for each. In summary:
+IPD tracked files and IPD history for `evidence/integration` — **searched, no match** (`0` paths,
+`0` commits); IRR `main` and the transfer branch — **accessible and inspected**; IRR PR #310 —
+**accessible and inspected**, merged with green CI; IPD and IRR Actions artifacts — **searched, no
+match** (`total_count 0` in both); IPD tracker and PR #96 records — **accessible, references only**,
+no bytes; `C:\iips-evidence\cap03-s2\` — **not applicable, unreachable from this environment**,
+actually probed at `/mnt/c/…`, `C:\…`, `/c/…` and `/cygdrive/c/…`, all absent, `/mnt` empty, sandbox
+`Linux 6.1.158+`; the original host CRLF bytes — **referenced but inaccessible**.
+
+### 5. Acceptance — four states kept distinct
+
+| # | State | Status after this record |
+|---|---|---|
+| 1 | Component validation (the Windows ESM/`npm` launch fix, no test silently dropped) | **Established previously; unchanged** |
+| 2 | CAP-03 S2 package-consumer result | **Reported `PASS` at the corrected candidate; unchanged** |
+| 3 | Independent verification of the 47 manifest-listed files | **NOW COMPLETE** — performed and recorded; byte identity **not** established for 46 of 47 |
+| 4 | Formal CAP-03 S2 package-consumer evidence acceptance | **NOT RENDERED** — unchanged |
+
+State 4 is **not** inferred from state 3, from states 1–2, from CI success, or from any matching
+digest. Acceptance requires an explicit act by the designated acceptance authority and is not taken
+here. Separately, **Gate 4 Limb A** (native-Windows `npm test` at a designated commit) remains
+**not started**; this record neither advances nor comments on it.
+
+### 6. What this record does **not** do
+
+It does not mark any entry `MATCH` on a transformed hash; it does not reconstruct, rewrite or
+normalise any evidence byte; it does not regenerate the manifest or any evidence file; it does not
+rerun any S2 step, test or build; it does not alter the evidence manifest, any designated blob, the
+compiled basis, the execution pin or any execution receipt; it does not resolve the `48`-versus-`47`
+entry-count difference; it does not treat the mis-invoked `Manifest entries: 1148` / `Result: FAIL`
+artifact as either corroborating or refuting the reported `47`-entry `PASS`, which remains
+user-reported; it writes nothing to IRR.
+
+### 7. Next dependency-ready action
+
+The operator supplies, through the same governed channel and without rerunning anything:
+**(a)** the original host CRLF bytes of the 47 files — at minimum the `3` that do not reproduce;
+**(b)** the `47`-entry manifest-verification output that produced the reported `PASS`; and
+**(c)** a ruling on the `48`-versus-`47` difference. Only then can byte identity be established and
+a distinct acceptance determination be rendered by the designated authority.
