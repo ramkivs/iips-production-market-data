@@ -2508,3 +2508,66 @@ pointer under `A-GAP1`) is **not** performed here.
 
 **Matter A:** the IPD half is executed by this act. Closure completes when IRR records it in a
 separate pass.
+
+## CAP-03 — IPD-S1 pointer act executed: `A-GAP1` recorded — `act §6 row S1` governs S1 (2026-10-28)
+
+**Act:** `IIPS-V3-CAP03-S1-POINTER-ACT-01-2026-10-28-01` (census before this record: `0` occurrences
+in this repository). Instrument:
+`evidence/cross-repository/IIPS_V3_CAP03_S1_POINTER_ACT_01_EFFECTIVE_2026-10-28.md`. Prompt executed:
+`IPD-S1` (`docs/integration/IIPS_v3.0_CAP03_IPD_PROMPT_S1_POINTER_2026-10-28.md`, IRR blob
+`d6d4fbe658d0c172c1f79e59705728c7b047ff2d`, carried on open IRR PR #353 head `caca0213…`). This
+section is the publication receipt. It is a **documentation pointer**: no blob is re-designated, no
+code changes, no gate status moves.
+
+**What was recorded.** A dated pointer was added **under** determination §12.2 of
+`IIPS_V3_CAP02_S1_IDENTITY_VALUE_DETERMINATION_EFFECTIVE_2026-10-24.md`, stating (1) that
+`act §6 row S1` governs S1 — Gate 4 act
+`IIPS-V3-G4-TARGET-HOST-QUALIFICATION-AUTHORITY-ACT-2026-10-23-01` §6 "Q5 — Required execution
+ordering and dependencies", row **S1** — and (2) that §12.2's `12/12` statement does **not** reproduce
+for items 10 and 12. **§12.2 was not rewritten in place**: its heading and paragraph are
+byte-identical to the published text (verified by SHA-256 of lines 328–334 before and after). The
+determination grew 410 → 435 lines, purely additive.
+
+### 1. The separate IPD authority relied upon (confirmed before writing)
+
+The prompt's first prerequisite is that IPD authority for a documentation pointer be **held
+separately** and confirmed before writing. It is, and independently of both the `A-GAP1` ruling and
+the completed `A-Q5` amendment:
+
+| Element | Identity | Basis |
+|---|---|---|
+| Standing grant **F-3 §1.2** | IRR blob `c4c9f7d79ef181af96f6c4e5cc108288ef22fd02` (verbatim at `IIPS_V3_CAP02_SUCCESSOR_EXECUTION_AUTHORITY_RECONCILIATION_AND_DESKTOP_EVIDENCE_2026-10-23.md` §2) | covers *"the necessary decisions, governance records, implementation, testing, corrections, and publication within the established scope"*; *"Do not request repeated approval for individual decisions or routine implementation steps"* |
+| Construction **DEC-06** | `IIPS-V3-DEC06-AUTHORITY-RECONCILIATION-IRR-2026-10-21-01`, IRR blob `4be3ea578a51a1a949337e5d218b89841c04892d` | **R-1** four limits only, per-decision re-approval forbidden · **R-2** scope set by PA decisions · **R-3** authorization ≠ act ≠ proof; the act must be its own recorded instrument, proof is remote state · §3 later explicit acts interpret an earlier general grant |
+
+A governance-record correction and publication is squarely inside the grant. It renders **no** new
+decision — `A-GAP1` was already rendered by the Program Authority — and engages none of the four
+limits. This is the same authority basis the Gate 4 act and `G4-AMEND-01` cite. The prompt's second
+prerequisite is also satisfied: the `A-Q5` amendment is executed and published at `0edadb2d…`.
+
+### 2. Measurements behind the pointer
+
+| # | Path | §12.2 enumerates | Act §2.1 designated (pre-amendment; still the act's text) | Actual at `1ba0740a` **and** `0edadb2d` | Reproduces |
+|---|---|---|---|---|---|
+| 10 | `src/persistence/portfolio_store.ts` | `4a005b73…` | `4a005b73…` | `540d49f2deb2…` | **NO** — the file moved (DR-2, authorized by `A-Q1`) |
+| 12 | `tests/g3_startup_validation.test.ts` | `edd0305e…` | `9a5fd9e3…` | `edd0305e3e58…` | **NO** — the act's designation was stale (`c62dee81` under the act's own §5.1 item 4) |
+
+The other ten items reproduce. Measured result **`10/12`**, not `12/12`. Item 10 and item 12 were
+re-designated to the actual blobs by `IIPS-V3-CAP02-GATE-A-PRIME-AMEND-01-DESIGNATED-BLOBS-2026-10-28-01`
+at `0edadb2d`, so the amended list now reproduces `12/12`; that does not make §12.2's original
+sentence correct as a record of the pre-publication baseline, and it was not corrected in place.
+
+### 3. Not performed
+
+The Gate 4 act (blob `66b56fd1…`) and the Gate A′ act (blob `528de6ae…`) are both **unchanged**. No
+designated value changed. The `A-Q5` amendment was **not** recreated, re-amended or duplicated.
+`A-GAP1` was **not** re-opened — no contradictory authoritative evidence was found this pass. No code,
+test, script, migration, schema, manifest, lockfile, `tsconfig`, `vite.config`, CI workflow or IRR
+path changed. IRR PR #353 was **not** merged. No host operation, native Gate 4 acceptance, capture or
+P-1 step. S1 the *step* was **not** executed — only which text governs it was recorded.
+
+S1 remains **`BLOCKED`**; Gate A′ provisioning **`NOT AUTHORIZED`**; Gate 4
+**`AUTHORIZED — NOT STARTED`**; `H-12` **`NOT ADOPTED`**; Gate 5 **not granted**; operational writes
+**denied**.
+
+**P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED / UNSPENT
+/ NOT AUTHORIZED.**
