@@ -1,0 +1,59 @@
+{
+ "sources_searched": [
+  {
+   "source": "IPD repository tracked files (all refs, `git ls-files` pattern search for s2-01..s2-05, s2-post-run-pin, s2-dist-sha256, npm-launch-fix, s2-checkout-verification)",
+   "classification": "SEARCHED - NO MATCH",
+   "detail": "0 matching tracked paths; no evidence/integration directory exists in IPD"
+  },
+  {
+   "source": "IPD Git history for evidence/integration",
+   "classification": "SEARCHED - NO MATCH",
+   "detail": "0 commits have ever touched evidence/integration in IPD"
+  },
+  {
+   "source": "IRR repository tracked files at main - evidence/integration/cap03-s2-evidence-manifest-verification-2026-10-26/",
+   "classification": "ACCESSIBLE AND INSPECTED",
+   "detail": "57 entries; every blob downloaded and hashed; blob SHAs identical to the transfer commit"
+  },
+  {
+   "source": "IRR branch refs/heads/cap03-s2-evidence-publication @ 54d5a56f",
+   "classification": "ACCESSIBLE AND INSPECTED",
+   "detail": "branch still exists; 57 entries; same blobs"
+  },
+  {
+   "source": "IRR PR #310 (evidence deposit)",
+   "classification": "ACCESSIBLE AND INSPECTED",
+   "detail": "MERGED 2026-10-26T16:33:33Z to 47133fe4; green exact-head CI and green CI on the merge commit"
+  },
+  {
+   "source": "IPD GitHub Actions artifacts",
+   "classification": "SEARCHED - NO MATCH",
+   "detail": "total_count 0"
+  },
+  {
+   "source": "IRR GitHub Actions artifacts",
+   "classification": "SEARCHED - NO MATCH",
+   "detail": "total_count 0"
+  },
+  {
+   "source": "IPD tracker / index entries (IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md)",
+   "classification": "ACCESSIBLE AND INSPECTED - REFERENCES ONLY",
+   "detail": "references the 47-file manifest at lines 1988 and 2031; carries no evidence bytes"
+  },
+  {
+   "source": "IPD PR #96 body and merge records",
+   "classification": "ACCESSIBLE AND INSPECTED - REFERENCES ONLY",
+   "detail": "records the C:\\iips-evidence\\cap03-s2 retention paths and the two Windows digests; carries no evidence bytes"
+  },
+  {
+   "source": "Windows host path C:\\iips-evidence\\cap03-s2\\ on desktop-no0nhtp",
+   "classification": "NOT APPLICABLE - UNREACHABLE FROM THIS ENVIRONMENT",
+   "detail": "actually probed /mnt/c/iips-evidence/cap03-s2, C:\\iips-evidence\\cap03-s2, /c/iips-evidence, /cygdrive/c/iips-evidence: all absent; /mnt is empty; sandbox is Linux 6.1.158+ with no Windows filesystem mount"
+  },
+  {
+   "source": "Original host CRLF bytes for any of the 47 files",
+   "classification": "REFERENCED BUT INACCESSIBLE",
+   "detail": "the committed copies are LF-normalised; the CRLF originals exist only on the Windows host"
+  }
+ ]
+}
