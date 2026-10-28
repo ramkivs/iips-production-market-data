@@ -17,7 +17,7 @@
  */
 import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import type { DatabaseSync } from 'node:sqlite';
@@ -746,6 +746,41 @@ describe('CAP-02 Gate A′ successor provisioning boundary', () => {
     );
     assert.equal(result.executingCommit, executing.commit);
     assert.equal(result.executingTree, executing.tree);
+  });
+
+  it('T-17 reports a missing validation store as STORE_NOT_FOUND, not UNEXPECTED_FAILURE', () => {
+    // The read-only validator's own contract: a missing or non-file path is a
+    // refusal carrying a machine-readable code, never an empty fixture.
+    const missing = join(makeRoot(), 'store', 'absent.db');
+    assert.equal(existsSync(missing), false);
+    assert.throws(
+      () => validateStoreAtPath(missing),
+      (error: unknown) => (error as { code?: string }).code === 'STORE_NOT_FOUND',
+    );
+
+    // That outcome must also survive the CLI envelope. `GateAPrimeStoreError` is a
+    // sibling of `GateAPrimeRefusalError` rather than a subclass, so an envelope
+    // recognizing only the latter collapsed this normal "no store here yet" result
+    // into UNEXPECTED_FAILURE and misreported a routine state as a defect.
+    const cli = fileURLToPath(new URL('../src/persistence/gateAPrimeProvisioning.js', import.meta.url));
+    assert.equal(existsSync(cli), true, 'the compiled CLI must exist — run `npm run build` first');
+
+    const run = spawnSync(
+      process.execPath,
+      [cli, '--mode=validate', `--act-id=${GATE_A_PRIME_ACT_ID}`, `--store=${missing}`],
+      { encoding: 'utf8' },
+    );
+    assert.notEqual(run.status, 0, 'a missing store must exit non-zero');
+    const line = run.stderr
+      .split('\n')
+      .filter((entry) => entry.startsWith('{'))
+      .pop();
+    assert.ok(line, `the CLI must emit a JSON envelope on stderr, got: ${run.stderr}`);
+    const envelope = JSON.parse(line) as { ok?: boolean; code?: string; error?: string };
+    assert.equal(envelope.ok, false);
+    assert.equal(envelope.code, 'STORE_NOT_FOUND');
+    assert.equal(envelope.error, 'the validation store file does not exist');
+    assert.equal(existsSync(missing), false, 'validation must not create the store it was asked about');
   });
 });
 

@@ -45,6 +45,7 @@ import {
   GATE_A_PRIME_ACT_ID,
   PRINCIPAL_LABEL,
   TENANT_ID,
+  GateAPrimeStoreError,
   existingStoreHasProvisioningRows,
   validateStoreAtPath,
   type GateAPrimeValidationInput,
@@ -713,7 +714,18 @@ if (isMain()) {
   } catch (error) {
     const payload = {
       ok: false,
-      code: error instanceof GateAPrimeRefusalError ? error.code : 'UNEXPECTED_FAILURE',
+      /*
+       * Two refusal families carry a machine-readable `code`. `GateAPrimeRefusalError`
+       * is this module's own; `GateAPrimeStoreError` is raised by the read-only
+       * validator (`STORE_NOT_FOUND`, `STORE_NOT_READABLE`, `STORE_PATH_INVALID`).
+       * Both are expected, caller-actionable outcomes of `--mode=validate` and must
+       * reach the envelope with their own code — collapsing them into
+       * `UNEXPECTED_FAILURE` misreports a normal "no store here yet" as a defect.
+       */
+      code:
+        error instanceof GateAPrimeRefusalError || error instanceof GateAPrimeStoreError
+          ? error.code
+          : 'UNEXPECTED_FAILURE',
       error: error instanceof Error ? error.message : String(error),
     };
     process.stderr.write(`${JSON.stringify(payload)}\n`);
