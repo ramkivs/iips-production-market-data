@@ -2571,3 +2571,112 @@ S1 remains **`BLOCKED`**; Gate A′ provisioning **`NOT AUTHORIZED`**; Gate 4
 
 **P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED / UNSPENT
 / NOT AUTHORIZED.**
+
+## CAP-03 — Row 28 durable broker-import: admission prerequisite reconciled; consumer implementation **STOPPED at an authority boundary**; decision packet published (2026-10-28)
+
+**Work item.** Capability-matrix row 28 — *Broker ingestion chain (IPD)* — from
+`IIPS_V3_CAPABILITY_MATRIX_51x17_2026-10-28.xlsx`, record
+`IIPS-V3-CAPMATRIX-51X17-RECONCILIATION-2026-10-28-01`. **No implementation, wiring, provisioning, gate
+change or IRR write occurred in this pass.**
+
+**Basis.** IPD `refs/heads/main` @ `b9dd6fce48fafba8ca6095debefb62fd54234f85`, tree
+`34ee1a3b97b787a4bdbc6d27943c6c4cfb1f6f6f` (live remote read; `0` open PRs). Baseline re-executed at that
+head: `npm ci` exit `0`; `npx tsc` exit `0`; `npm test` → **932 tests / 124 suites / 931 pass / 0 fail /
+1 skipped**, `[test-guard] OK`, exit `0`; `npm run test:package-consumer` `PASS` (browser pack `1,729,910`
+B, `forbiddenHits: []`, strict typecheck `PASS`, exit `0`).
+
+### The identifier correction
+
+The recorded blocker for row 28 — *"`GOV-03`/`BI-08` admission act"* — **names no admission act**.
+Verified this pass:
+
+| Identifier | What it actually is |
+|---|---|
+| `GOV-03` | An **implementation work item** ("GOV-03 durable broker-import boundary"), published via IRR PR #197 on `2026-10-22`. IRR tracker §16.81.6: *"**Outstanding acts — GOV-03 is NOT complete, and is not marked complete.** Implementation authority is not qualification authority."* |
+| `BI-08` | The **idempotent-ingress contract** (`ALREADY_IMPORTED_NO_OP`) in `frontend/src/features/portfolio/portfolio-store.ts`, tested by `tests/bi08_idempotent_ingress.test.ts`. A behavioural contract, not a governance instrument |
+
+The governing instruments are the **Gate 4 result-acceptance act** and the **Gate 5 admission act
+(`CV-52`)** at step **S6** of `IIPS_V3_CAP02_GATE4_TARGET_HOST_QUALIFICATION_ACT_EFFECTIVE_2026-10-23.md`
+§6, which records them **`NOT GRANTED` — separate acts**, behind a chain stopped at **S1**.
+
+**Correction recorded:** the Gate 4 target-host qualification authority act
+(`IIPS-V3-G4-TARGET-HOST-QUALIFICATION-AUTHORITY-ACT-2026-10-23-01`) is **RENDERED / EFFECTIVE**
+(`AUTHORIZED — NOT STARTED`). IRR tracker §16.81.6 still calls it `PROPOSED — NOT EFFECTIVE`; that line is
+**stale**. Gate 4 *authority* exists; Gate 4 *execution* and *acceptance* do not.
+
+### The five states, kept separate
+
+| # | State | Disposition |
+|---|---|---|
+| 1 | Durable persistence implementation exists | **SATISFIED** — `portfolio_store.ts`, `durablePortfolioStorePort.ts` (89 L), `brokerImportPersistence.ts` (356 L) |
+| 2 | A runtime consumer is wired to the port | **NOT WIRED** — `0` non-test importers at `b9dd6fce`; only `tests/g3_durability_vocabulary.test.ts` and `tests/q1_broker_import_durability.test.ts` |
+| 3 | The consumer is authorized for the non-production scope | **NOT AUTHORIZED** — `evaluatePortSaveGuard()` (`portfolio_store.ts:213-217`) hard-`false`: `W-1(3)` Gate 4 qualification not accepted, `W-1(4)` Gate 5 admission not accepted; *"No environment flag, test result or operator assertion changes this."* |
+| 4 | Runtime qualification has passed | **NOT STARTED** — `QE 0/11`; S4 `BLOCKED` until S3, S3 `BLOCKED` until S1 + S2a |
+| 5 | The durable path has been accepted for that scope | **NOT GRANTED** — S6 dispositions are separate acts; `CV-52` `BLOCKED – ACTIVE`; Gate 5 `NOT INITIATED / NOT ADMITTED` |
+
+### What is already proven versus what is missing
+
+`persistBrokerImport(writer: BrokerImportWriter, …)` (`brokerImportPersistence.ts:239`) is writer-agnostic;
+both `DurablePortfolioStore` (no gate) and `DurablePortfolioStorePort` (W-1 gate on every mutation) satisfy
+`BrokerImportWriter` (`:195-201`). The two paths are therefore separately evidenced:
+
+- **Through the port** (the production path): every write refuses — `WRITE_NOT_AUTHORIZED`,
+  `storeEffect: 'NONE'`, row count unchanged, refusal **before** the transaction callback and **before** a
+  database transaction begins (`tests/q1_broker_import_durability.test.ts`). `tests/g3_write_gate.test.ts`
+  adds *"no environment flag combination can enable a write"*, the `1→2→3→4` lifecycle,
+  `RevisionConflictError`, idempotent no-op and tombstone collapse.
+- **Through the bare store** (qualification fixture, `new DurablePortfolioStore(db)` directly): the full
+  durable path — commit, **store restart and separate-process restart**, idempotency, earlier-file
+  duplicate policy, refused-identity exclusion, injected-fault rollback across all four statement classes,
+  `BrokerImportOutcomeUnknown` + `reconcileBrokerImportByRead`, in-transaction revocation, `T-U2-5`
+  serialized competing revocation, binding-integrity fail-closed, and honest `001`–`003` migration.
+
+**The gap is state 2 + state 3, not the durable logic.** No executed evidence exists — or can exist before
+admission — that the intended application flow reaches a durable persistence operation.
+
+### Why the consumer implementation was stopped
+
+Three independent reasons, each sufficient:
+
+1. State 3 is false and only a rendered act can change it. A consumer wired today would refuse every
+   write, so it could not demonstrate that the application flow reaches the durable persistence operation —
+   the explicit requirement, and the explicit prohibition against wiring a consumer merely to move an
+   import count.
+2. The chain is stopped at **S1** by a value no agent may select. The Gate 4 act states: *"The chain is
+   currently stopped at S1 by a value that no agent may select. This act cannot and does not work around
+   it."*
+3. **S6 dispositions are `NOT GRANTED` — separate acts.** Admission follows acceptance follows execution;
+   implementing ahead of the decision would treat technical implementation as admission, which is
+   prohibited.
+
+**This is an authority boundary, not a technical blocker.** The contracts already exist and the code needed
+is small; what is missing is the decision.
+
+### Published
+
+`evidence/cross-repository/IIPS_V3_CAP03_ROW28_DURABLE_BROKER_IMPORT_ADMISSION_DECISION_PACKET_2026-10-28.md`
+— **PROPOSED — NOT EFFECTIVE**. Requested decision ID
+`IIPS-V3-CAP03-ROW28-DURABLE_BROKER_IMPORT_ADMISSION_ACT-2026-10-28-01` (census before this record: `0`
+occurrences in either repository; reserved, not assigned). The packet carries the five-state separation, the
+corrected instrument identification, the proposed minimum-change scope, ten acceptance criteria (A-1…A-10,
+of which A-3/A-9/A-10 are unreachable before S1 unblocks), risks, the dependency chain, and register
+`V-R28-01`…`V-R28-11`.
+
+### IRR-owned follow-up (described, **not** performed)
+
+IRR was **read-only** in this pass and was not written. Required IRR-side corrections, recorded as a
+separate IRR work item with its dependency on this packet's publication:
+
+| IRR item | Change needed |
+|---|---|
+| Tracker §16.150.5 `O-05` boundary | Replace *"`GOV-03`/`BI-08` admission act"* with **Gate 4 result-acceptance act + Gate 5 admission act (`CV-52`)**, S1 as the structural blocker |
+| Tracker §16.81.6 act 2 | `PROPOSED — NOT EFFECTIVE` → **RENDERED / EFFECTIVE** as `IIPS-V3-G4-TARGET-HOST-QUALIFICATION-AUTHORITY-ACT-2026-10-23-01` |
+| Capability-matrix row 28 | Update the `Authority` cell (currently cites `GOV-03`/BI-08) and the `Evidence Anchor`. **The workbook is IRR-owned**; IPD must not edit it |
+
+### Verification
+
+`V-R28-01`…`V-R28-11` in the packet. Row 28 is **not** marked complete: states 2–5 remain outstanding.
+
+**No admission granted, no gate moved, no fence lifted, no write enabled, nothing provisioned, no IRR
+write.** **P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED /
+UNSPENT / NOT AUTHORIZED.**
