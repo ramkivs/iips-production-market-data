@@ -8,8 +8,15 @@
  * execution still requires the designated Windows host, the required Node
  * major and a non-existent P-1 store, so no Linux/CI path can provision.
  *
+ * CAP-03 D2 (PA-5 Option B): the execute receipt records the *executing* HEAD and
+ * tree, measured from `--repo-root`, separately from the compiled basis constants,
+ * and refuses before any connection when that measurement is unavailable or differs
+ * from the expected execution pin. `BASIS_COMMIT`/`BASIS_TREE` keep their existing
+ * meaning and value.
+ *
  * No IPC, startup, frontend or composition module imports this file.
  */
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { existsSync, statSync } from 'node:fs';
@@ -53,6 +60,19 @@ export interface GateAPrimeArguments extends GateAPrimeValidationInput {
   readonly actId: string;
   readonly store: string;
   readonly actor?: string;
+  /**
+   * Absolute path of the checkout whose `HEAD` is the executing identity.
+   * Required in `execute` mode; never read from the environment.
+   */
+  readonly repoRoot?: string;
+  /**
+   * Expected execution pin (commit) supplied by the governed authorization at
+   * execution time. Required in `execute` mode. It is an *expectation* only: the
+   * identity that is recorded is always the measured `HEAD`, never this value.
+   */
+  readonly executionCommit?: string;
+  /** Expected execution pin (tree); see `executionCommit`. */
+  readonly executionTree?: string;
 }
 
 export interface GateAPrimeExecutionOptions {
@@ -68,8 +88,20 @@ export interface GateAPrimeExecutionResult {
   readonly bindingId: string;
   readonly membershipId: string;
   readonly auditEventId: number;
+  /**
+   * Compiled basis of the successor act (`BASIS_COMMIT`/`BASIS_TREE`). These
+   * identify the act's selected basis and keep exactly that meaning; they are
+   * never the identity of the checkout that ran.
+   */
   readonly basisCommit: string;
   readonly basisTree: string;
+  /**
+   * CAP-03 D2 (PA-5 Option B): the executing `HEAD` and its tree, measured from
+   * `--repo-root` at run time. Recorded separately from the compiled basis so a
+   * receipt can never let one stand for the other (adopted DA-A1).
+   */
+  readonly executingCommit: string;
+  readonly executingTree: string;
 }
 
 export class GateAPrimeRefusalError extends Error {
@@ -83,6 +115,13 @@ export class GateAPrimeRefusalError extends Error {
 const GATE_A_PRIME_EXECUTION_BRAND: unique symbol = Symbol('gate-a-prime-successor-execution');
 interface GateAPrimeExecutionAuthorization {
   readonly actId: typeof GATE_A_PRIME_ACT_ID;
+  /**
+   * The measured executing identity, carried by the authorization itself so the
+   * value recorded in the receipt is the value that was verified before the
+   * connection was opened — not a value a caller can restate afterwards.
+   */
+  readonly executingCommit: string;
+  readonly executingTree: string;
   readonly [GATE_A_PRIME_EXECUTION_BRAND]: true;
 }
 
@@ -97,12 +136,140 @@ function membershipIdFor(tenantId: string, canonicalOwnerId: string): string {
     .slice(0, 32);
 }
 
+/* -------------------------------------------------------------------------- *
+ * CAP-03 D2 — executing identity (PA-5 Option B)
+ *
+ * Authority: IRR `IIPS-V3-CAP03-D2-IPD-RECEIPT-HANDOFF-2026-10-28-01` §4.1/§4.2/§4.4
+ * as adjusted by `IIPS_v3.0_CAP03_P1_PA_FORMAL_DECISION_RECORD_2026-10-28.md` §5.2,
+ * implementing the adopted DA-A1 requirement that a provisioning receipt record
+ * the executing HEAD and tree *separately from* the compiled basis.
+ *
+ * The executing identity is always measured. It is never `BASIS_COMMIT`, never a
+ * caller-restated value, and never read from the environment.
+ * -------------------------------------------------------------------------- */
+
+/** A resolved identity must be a full lowercase Git object id; anything else refuses. */
+const GIT_OBJECT_ID = /^[0-9a-f]{40}$/;
+
+const EXECUTING_HEAD_REVISION = 'HEAD^{commit}';
+const EXECUTING_TREE_REVISION = 'HEAD^{tree}';
+
+/**
+ * Only the variables a bare `git rev-parse` needs to run are kept. Every `GIT_*`
+ * name is dropped, so an inherited `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`,
+ * `GIT_OBJECT_DIRECTORY`, `GIT_ALTERNATE_OBJECT_DIRECTORIES`,
+ * `GIT_CEILING_DIRECTORIES` or `GIT_NAMESPACE` cannot silently redirect identity
+ * resolution to a different repository or worktree than `--repo-root` names.
+ * Dropping the whole prefix is a superset of those seven names and is strictly
+ * safer than enumerating them.
+ */
+function sanitizedGitEnvironment(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const requiredToRunGit = new Set([
+    'PATH',
+    'PATHEXT',
+    'SYSTEMROOT',
+    'SystemRoot',
+    'SYSTEMDRIVE',
+    'COMSPEC',
+    'USERPROFILE',
+    'HOMEDRIVE',
+    'HOMEPATH',
+    'HOME',
+    'APPDATA',
+    'LOCALAPPDATA',
+    'TMP',
+    'TEMP',
+    'TMPDIR',
+  ]);
+  const sanitized: NodeJS.ProcessEnv = {};
+  for (const key of Object.keys(env)) {
+    if (key.toUpperCase().startsWith('GIT_')) continue;
+    if (requiredToRunGit.has(key)) sanitized[key] = env[key];
+  }
+  return sanitized;
+}
+
+function resolveGitObject(repoRoot: string, revision: string, env: NodeJS.ProcessEnv): string | undefined {
+  try {
+    const output = execFileSync('git', ['-C', repoRoot, 'rev-parse', '--verify', revision], {
+      env: sanitizedGitEnvironment(env),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      windowsHide: true,
+    });
+    return output.trim();
+  } catch {
+    // A non-zero exit, an absent `git`, or an unusable `--repo-root` are one and the
+    // same condition here: the executing identity is not established. This helper
+    // never repairs, retries or substitutes a value.
+    return undefined;
+  }
+}
+
+/**
+ * Measures the executing `HEAD` and its tree from `repoRoot`. Refuses
+ * `EXECUTING_HEAD_UNRESOLVED` when either value is missing or malformed; the
+ * caller invokes this before any database connection is opened.
+ */
+function readExecutionHead(repoRoot: string, env: NodeJS.ProcessEnv): { commit: string; tree: string } {
+  const commit = resolveGitObject(repoRoot, EXECUTING_HEAD_REVISION, env);
+  const tree = resolveGitObject(repoRoot, EXECUTING_TREE_REVISION, env);
+  if (commit === undefined || !GIT_OBJECT_ID.test(commit) || tree === undefined || !GIT_OBJECT_ID.test(tree)) {
+    throwRefusal(
+      'EXECUTING_HEAD_UNRESOLVED',
+      `the executing HEAD or tree could not be resolved from --repo-root=${repoRoot}`,
+    );
+  }
+  return { commit, tree };
+}
+
+/**
+ * The three execute-mode identity arguments are mandatory and are never defaulted:
+ * `--repo-root` names the checkout to measure, and `--execution-commit` /
+ * `--execution-tree` carry the expected pin supplied by the governed authorization.
+ */
+function assertExecutionIdentityArguments(args: GateAPrimeArguments): {
+  repoRoot: string;
+  expectedCommit: string;
+  expectedTree: string;
+} {
+  const missing = [
+    ...(nonEmpty(args.repoRoot) ? [] : ['--repo-root']),
+    ...(nonEmpty(args.executionCommit) ? [] : ['--execution-commit']),
+    ...(nonEmpty(args.executionTree) ? [] : ['--execution-tree']),
+  ];
+  if (missing.length > 0) {
+    throwRefusal(
+      'ARGUMENT_INVALID',
+      `${missing.join(', ')} must be supplied verbatim in execute mode; no identity value is read from the environment`,
+    );
+  }
+  const repoRoot = (args.repoRoot as string).trim();
+  const expectedCommit = (args.executionCommit as string).trim();
+  const expectedTree = (args.executionTree as string).trim();
+  if (!isAbsolute(repoRoot)) {
+    throwRefusal('ARGUMENT_INVALID', '--repo-root must be an absolute path');
+  }
+  if (!GIT_OBJECT_ID.test(expectedCommit) || !GIT_OBJECT_ID.test(expectedTree)) {
+    throwRefusal(
+      'ARGUMENT_INVALID',
+      '--execution-commit and --execution-tree must each be a 40-character lowercase Git object id',
+    );
+  }
+  return { repoRoot, expectedCommit, expectedTree };
+}
+
 function isAuthorization(value: unknown): value is GateAPrimeExecutionAuthorization {
+  const candidate = value as GateAPrimeExecutionAuthorization;
   return (
     typeof value === 'object' &&
     value !== null &&
-    (value as GateAPrimeExecutionAuthorization).actId === GATE_A_PRIME_ACT_ID &&
-    (value as GateAPrimeExecutionAuthorization)[GATE_A_PRIME_EXECUTION_BRAND] === true
+    candidate.actId === GATE_A_PRIME_ACT_ID &&
+    candidate[GATE_A_PRIME_EXECUTION_BRAND] === true &&
+    typeof candidate.executingCommit === 'string' &&
+    GIT_OBJECT_ID.test(candidate.executingCommit) &&
+    typeof candidate.executingTree === 'string' &&
+    GIT_OBJECT_ID.test(candidate.executingTree)
   );
 }
 
@@ -204,7 +371,9 @@ export function assertIdentityValuesResolved(
  * All execute-mode checks that must happen before a database connection is
  * opened. Identity resolution runs first: while any compiled constant is null
  * (a partially-bound or unbound build) execution stops there, before platform
- * or path side effects.
+ * or path side effects. The executing HEAD is measured last, after every
+ * pre-existing refusal keeps its precedence, and only a matching measurement
+ * mints the authorization.
  */
 function authorizeExecution(args: GateAPrimeArguments, options: GateAPrimeExecutionOptions): GateAPrimeExecutionAuthorization {
   assertCommonArguments(args, options);
@@ -244,6 +413,20 @@ function authorizeExecution(args: GateAPrimeArguments, options: GateAPrimeExecut
     throwRefusal('STORE_ALREADY_EXISTS', 'P-1 requires the provisioning store file not to pre-exist');
   }
 
+  // CAP-03 D2: measure the executing identity and compare it with the expected
+  // execution pin carried by the arguments. Both happen here, before the second
+  // store-existence check and before any connection is opened, so every refusal
+  // leaves the store path untouched and writes zero rows.
+  const { repoRoot, expectedCommit, expectedTree } = assertExecutionIdentityArguments(args);
+  const executing = readExecutionHead(repoRoot, options.env ?? process.env);
+  if (executing.commit !== expectedCommit || executing.tree !== expectedTree) {
+    throwRefusal(
+      'EXECUTION_PIN_MISMATCH',
+      `the executing HEAD ${executing.commit} (tree ${executing.tree}) is not the expected execution pin ` +
+        `${expectedCommit} (tree ${expectedTree})`,
+    );
+  }
+
   // This is a second, explicit check immediately before the connection is
   // opened. It closes the time-of-check/time-of-use race without ever repairing
   // or deleting a path that appeared concurrently.
@@ -253,6 +436,8 @@ function authorizeExecution(args: GateAPrimeArguments, options: GateAPrimeExecut
 
   return Object.freeze({
     actId: GATE_A_PRIME_ACT_ID,
+    executingCommit: executing.commit,
+    executingTree: executing.tree,
     [GATE_A_PRIME_EXECUTION_BRAND]: true as const,
   });
 }
@@ -314,8 +499,13 @@ function executeWithAuthorization(
     bindingId,
     membershipId,
     auditEventId: audit!.id,
+    // Compiled basis: unchanged constant, unchanged meaning (successor act §5.2).
     basisCommit: BASIS_COMMIT,
     basisTree: BASIS_TREE,
+    // Executing identity: measured before the connection was opened and carried by
+    // the authorization, never restated from the arguments or from a constant.
+    executingCommit: authorization.executingCommit,
+    executingTree: authorization.executingTree,
   };
 }
 
@@ -392,6 +582,11 @@ export function parseGateAPrimeArguments(argv: readonly string[]): GateAPrimeArg
     '--tenant-id',
     '--canonical-owner-id',
     '--actor',
+    // CAP-03 D2: executing identity and expected execution pin. Supplied verbatim on
+    // the command line by the governed authorization; never read from the environment.
+    '--repo-root',
+    '--execution-commit',
+    '--execution-tree',
   ]);
   for (const argument of argv) {
     const name = argument.split('=', 1)[0];
@@ -410,6 +605,12 @@ export function parseGateAPrimeArguments(argv: readonly string[]): GateAPrimeArg
   if (!actId || !store) {
     throw new GateAPrimeRefusalError('ARGUMENT_INVALID', '--act-id and --store are required');
   }
+  if (mode === 'execute') {
+    const missing = ['--repo-root', '--execution-commit', '--execution-tree'].filter((name) => !values.has(name));
+    if (missing.length > 0) {
+      throw new GateAPrimeRefusalError('ARGUMENT_INVALID', `${missing.join(', ')} are required in execute mode`);
+    }
+  }
   const args: GateAPrimeArguments = {
     mode,
     actId,
@@ -418,6 +619,9 @@ export function parseGateAPrimeArguments(argv: readonly string[]): GateAPrimeArg
     ...(values.has('--tenant-id') ? { tenantId: values.get('--tenant-id') } : {}),
     ...(values.has('--canonical-owner-id') ? { canonicalOwnerId: values.get('--canonical-owner-id') } : {}),
     ...(values.has('--actor') ? { actor: values.get('--actor') } : {}),
+    ...(values.has('--repo-root') ? { repoRoot: values.get('--repo-root') } : {}),
+    ...(values.has('--execution-commit') ? { executionCommit: values.get('--execution-commit') } : {}),
+    ...(values.has('--execution-tree') ? { executionTree: values.get('--execution-tree') } : {}),
   };
   return args;
 }
