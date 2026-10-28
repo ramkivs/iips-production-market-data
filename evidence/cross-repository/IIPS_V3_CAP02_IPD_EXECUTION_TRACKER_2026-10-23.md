@@ -1926,3 +1926,123 @@ was not repeated and PR #101 was not recreated.
 **P-1 remains NOT EXECUTED / UNSPENT / NOT AUTHORIZED.** The successor-act designated-blob conflict
 remains **UNRESOLVED** pending the §6 disposition. S1/act consistency is **not** claimed: §2 records
 exactly where the published statements and the blob identities diverge.
+
+## CAP-03 — S2 Windows corrected candidate: the PR #96 two-file fix, recorded as historical evidence (2026-10-28)
+
+**Receipt:** `IIPS-V3-CAP03-S2-PR96-TWO-FILE-FIX-IPD-RECORD-2026-10-28-01` (census before this record: `0`
+occurrences in this repository). Append-only documentation record closing one specific gap found by the
+2026-10-28 read-only audit: the PR #96 two-file fix is an **ancestor of current `main`** yet had **no
+dedicated IPD tracker entry**. It renders no decision, re-pins nothing, moves no gate and grants no
+authority.
+
+### 1. The gap being closed
+
+Mention counts in this tracker **before** this record:
+
+| Subject | Mentions |
+|---|---:|
+| `PR #96` / `#96` | **0** |
+| `tests/portfolio_ui_package.test.ts` | **0** |
+| `scripts/verify-public-package.mjs` | `1` — line 622, an **unrelated** H-12 v3 R2 manifest-validation reference, not the S2 fix |
+
+The change was described only in the mirrored unified reconciliation and in IRR records; the IPD tracker,
+which is the authoritative IPD-side locus, carried no entry for it.
+
+### 2. PR #96 identity and ancestry (re-verified from the remote this pass)
+
+| Item | Value |
+|---|---|
+| PR | **#96** — *"Fix native Windows CAP-03 S2 package validation"* — **MERGED** `2026-10-26T10:12:18Z`, base `main` |
+| Candidate commit | **`001c3c80618f2ee1d40e9a90912237e1a06e7b58`** |
+| Tree | **`399fa44a5f1953c0f61b452420fefb5985426ef1`** |
+| Parent | `8eec74ae27cda09f3c368b9c299895eae41554db` (the CAP-03 / Path A approved pin `8eec74ae…`/`4eba2902…`) |
+| Commit message | *"Fix Windows S2 package-consumer execution"* |
+| Committer date | `2026-10-26T10:02:04Z` |
+| Merge commit | `1e76f4cf9e9ca7d385a8345c9b6f438ae1ad6745` / tree `7003a2828bde51985393348fa6e657a6cb8d4eed`; parents `f5eddbc20b944a098a9060a8e3349c6d10b7843e` + `001c3c80618f2ee1d40e9a90912237e1a06e7b58` |
+| Ancestry vs current `main` `a9cd18e8…` | compare `status=ahead`, `ahead_by=23`, `behind_by=0` → **ancestor**, `23` commits behind |
+
+The unified reconciliation §3 records this candidate as "ancestor of IPD `main` (`ahead 13/behind 0`)".
+That figure was correct at its own date (`2026-10-26`); the count is `23` at `a9cd18e8…`. Both are
+ancestry facts, not a conflict.
+
+### 3. The two-file diff — exact blob transitions
+
+| Path | Old blob (at parent `8eec74ae…`) | New blob (at `001c3c80…`) | At current `main` `a9cd18e8…` | Δ |
+|---|---|---|---|---|
+| `tests/portfolio_ui_package.test.ts` | `c6c38d4665b91894955df09b0290761b9d9492a8` | `ecbc365dbc6a35102ae1b8b43f2686a8f71437d1` | `ecbc365dbc…` — **unchanged since** | `+2 −2` |
+| `scripts/verify-public-package.mjs` | `f490ce6397e28fe427c24fb1eacbacde1b0b123c` | `e556afde3cca4a858c77a8ff7638cf6b7e4d888c` | `e556afde3c…` — **unchanged since** | `+7 −3` |
+
+The commit's file list contains **exactly these two paths and no others** — the "two-file fix" the unified
+reconciliation describes. Neither path is a successor-act §2.1 designated blob, and neither is in the act's
+§5.1 file set. The IRR PA formal decision record §4.5(3) records both as *"outside the Gate 4 §4.2 Limb A
+boundary"*.
+
+### 4. What was validated at the candidate — and what was not
+
+| Aspect | Recorded fact | Source |
+|---|---|---|
+| Work performed at the candidate | Native Windows host `desktop-no0nhtp` at `001c3c80…` / tree `399fa44a…`: the S2 canonical suite plus the package-consumer check | unified reconciliation §3.1 "Provenance" |
+| Component validation | **PASS** — suite `924/920/0/4`, SHA-256 `C5DDFFA24393AED2E391EF8A72E8BFF1F8ECD9576C4349E182B288785F1B2941` | §3.1 "Integrity"; §§16.132.3 / 16.134.3 / 16.135.4 / 16.138.3 |
+| Consumer result | **`PASS`** — SHA-256 `9F7C64073A849E57D472C9CA30BB7616D04D1951626E90587241D61A470A85B1`; **operator-reported, raw bytes external** | §3.1 "Integrity"; "Windows package-consumer" row |
+| Scope of that acceptance | *"Component validation only: proves the Windows ESM/`npm` launch fix and that no test was silently dropped; **not** full CAP-03 qualification, **not** QE, **not** Gate 4 acceptance."* Published *"into the record for P-1 ordering only"* | §3.1 "Acceptance" |
+| **Full evidence acceptance** | **NOT RENDERED.** **D1 — CONTROLLING:** independent raw-byte read-back of the 47 manifest-listed Windows files **PENDING / NOT COMPLETE**. **D4 — CONTROLLING:** full S2 evidence acceptance **NOT RENDERED**. **D2:** closed only as a *reported* fact. **D3:** coordinate differs from the approved pin `8eec74ae…`, no silent re-pin | §3.1 "Limitations" |
+| S2 Linux baseline (separate item) | Completed (non-host reproducibility) `924/923/0/1` — IPD PR #97 `12-tests.txt` SHA `39ff9da3…` | §3 status table |
+| Determination already on record | *"The S2 execution itself satisfies its technical prerequisite — do not rerun it. But the **evidence prerequisite is NOT yet satisfied**"* → P-1 not yet admissible; DQ-4 criterion 8 not met | §3.1 "Determination" |
+
+**Component validation and full evidence acceptance are distinct, and this record keeps them distinct.**
+It upgrades neither into the other, restates no result beyond what the source records publish, and supplies
+or infers no missing native-Windows or designated-commit evidence.
+
+### 5. Relation to DA-A1 and to the execution pin
+
+| Item | Value | Source (re-read at IRR `main` `f45cfaf1…`) |
+|---|---|---|
+| DA-A1 requirement (adopted as written `2026-10-28`) | *"Any provisioning receipt must record both the compiled basis and the executing HEAD and tree."* | IRR PA status matrix line 40 |
+| DA-A1 **pin of record** (candidate-scoped) | `001c3c80618f2ee1d40e9a90912237e1a06e7b58`, tree `399fa44a5f1953c0f61b452420fefb5985426ef1` | IRR PA formal decision record line 26 |
+| Procedure PF-08 IPD expectation | the same DA-A1 candidate pin; *"must be revised by a later procedure revision after `C′` is designated"* | IRR line 105 |
+| Execution commit for a future P-1 run (**L2a**) | **NOT DESIGNATED** — *"Designated only by a separate PA designation act after `C′` exists, with fresh S2 evidence at `C′`"* | IRR line 101 |
+| `C′` | exists as a **candidate** (IPD PR #100 → `a891802e…`; PR #101 → `db84ac12…`); still **undesignated** | IRR lines 307 / 312 / 314 |
+| Gate 4 QE / H-12 pin (**L2c**) | **NOT DESIGNATED**; choice C-1 / C-2 / C-3 outstanding | IRR §4.5 |
+
+PR #96's commit is therefore simultaneously **(a)** the DA-A1 candidate-scoped pin of record, **(b)** the
+provenance commit for the S2 Windows component validation, and **(c)** *not* a designated execution commit
+for any future run. These three are recorded together precisely because conflating them is the error this
+record prevents.
+
+### 6. Successor-act interaction — recorded, not resolved
+
+Neither changed path is a §2.1 designated blob and neither is in the §5.1 file set. §5.1's prohibition list
+does not name `scripts/` or `tests/portfolio_ui_package.test.ts`, but §5.1 declares its set *"exhaustive —
+no other path may change"*. Whether that clause is workstream-scoped or repository-scoped is the question
+returned to the Program Authority on 2026-10-28 as **Matter A Q4**, and it is **not** answered here. The
+act's §8.2 stop condition remains engaged on the grounds already recorded (basis drift, and `2/12`
+designated-blob drift) and is unaffected by this record.
+
+### 7. What this record does **not** do
+
+It is **historical evidence only**. It does **not**: grant new implementation authority; amend the
+successor act, the S1 determination, the designated-blob list, the §8.2 stop condition or the compiled-basis
+constants; resolve the §5.1 scope question; designate an execution commit, an execution pin or a Gate 4
+QE/H-12 pin; satisfy or substitute for the missing native-Windows or designated-commit evidence; render
+full S2 evidence acceptance; or authorize capture, host operation or P-1.
+
+### 8. Evidence that remains unverified after this record
+
+- The 47 manifest-listed Windows evidence files have **not** been independently re-hashed. The raw bytes
+  live outside Git at `C:\iips-evidence\cap03-s2\…095613Z.txt`; neither repository tree contains them and
+  IPD Actions artifacts = `0`. The two SHA-256 values in §4 are **reported**, not recomputed here.
+- No native-Windows run exists at any post-PR-#96 commit, including `db84ac12…` and `a9cd18e8…`.
+- Full S2 evidence acceptance (D4) remains **NOT RENDERED**; D1 remains **PENDING**.
+
+### 9. Validation of this change
+
+Changed paths: **exactly `1`** — this tracker file. No source, test, script, package manifest, export,
+schema, migration, protocol, route, CI workflow, compiled constant or pin. `evidence/` is outside every
+`tsconfig*.json` `include`, so `dist/**` membership is structurally unaffected (gate value `1,140`).
+Appended-section table integrity and `git diff --check` verified in the publishing PR record.
+
+### 10. Status after this record
+
+**P-1-C: NOT ESTABLISHED.** **P-1-D: DESIGNATED; NOT VERIFIED FOR THE ATTEMPT.** **P-1: NOT EXECUTED /
+UNSPENT / NOT AUTHORIZED.** No execution commit designated. The §5.1 scope question and the successor-act
+designated-blob conflict remain **UNRESOLVED** pending Program Authority disposition.
