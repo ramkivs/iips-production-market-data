@@ -7,11 +7,13 @@
  * constants are exactly the determined values, and no provisioning call made
  * from this (non-win32) environment can create a store or row.
  *
- * T-10…T-15 add the CAP-03 D2 coverage (PA-5 Option B; IRR D2 handoff §4.5 and
+ * T-10…T-16 add the CAP-03 D2 coverage (PA-5 Option B; IRR D2 handoff §4.5 and
  * formal decision record §5.3): the execute receipt records the *measured*
  * executing HEAD and tree separately from the unchanged compiled basis, and
  * refuses before any store is opened when that identity is unresolvable,
- * unpinned, malformed or mismatched.
+ * unpinned, malformed or mismatched. The measurement is taken from the repository
+ * containing the executing module, so `--repo-root` naming any other checkout is
+ * refused rather than recorded as the executing identity.
  */
 import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -419,55 +421,64 @@ describe('CAP-02 Gate A′ successor provisioning boundary', () => {
     return { platform: 'win32', nodeVersion: '22.22.3', env };
   }
 
+  /**
+   * The repository that actually contains the executing module — the checkout the
+   * compiled module under test was built from. This is the only `--repo-root` the
+   * module accepts, and the only repository whose `HEAD` it will record as the
+   * executing identity. It is measured here, independently of the module, so every
+   * assertion below compares against a value the module did not supply. It is a
+   * development checkout, NOT a designated execution pin.
+   */
+  function executingRepository(): { root: string; commit: string; tree: string } {
+    const root = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..');
+    const git = (...gitArgs: string[]): string =>
+      execFileSync('git', ['-C', root, ...gitArgs], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    return {
+      root,
+      commit: git('rev-parse', '--verify', 'HEAD^{commit}'),
+      tree: git('rev-parse', '--verify', 'HEAD^{tree}'),
+    };
+  }
+
   /** Well-formed but arbitrary object ids, used only as wrong expectations. */
   const NOT_A_PIN = 'a'.repeat(40);
   const NOT_A_TREE = 'b'.repeat(40);
 
-  it('T-10 refuses an unresolvable executing HEAD before opening a store', () => {
-    // (a) `--repo-root` names a directory that is not a repository at all.
+  it('T-10 refuses an unavailable executing identity before opening a store', () => {
+    const executing = executingRepository();
+
+    // (a) The executing repository is named correctly, but the executing identity
+    //     cannot be measured because `git` cannot run. Nothing is substituted.
     const storeA = join(makeRoot(), 'store', 'ipd.db');
     assert.throws(
       () =>
         executeProvisioning(
-          args(storeA, { repoRoot: makeRoot(), executionCommit: NOT_A_PIN, executionTree: NOT_A_TREE }),
-          executeOptions(gitCapableEnvironment()),
+          args(storeA, {
+            repoRoot: executing.root,
+            executionCommit: executing.commit,
+            executionTree: executing.tree,
+          }),
+          executeOptions(gitCapableEnvironment({ PATH: '' })),
         ),
       (error: unknown) => (error as { code?: string }).code === 'EXECUTING_HEAD_UNRESOLVED',
     );
     assert.equal(existsSync(storeA), false);
 
-    // (b) `--repo-root` names a repository whose HEAD has no commit yet.
-    const unborn = makeRoot();
-    execFileSync('git', ['-C', unborn, 'init', '--quiet', '--initial-branch=main'], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    });
+    // (b) A relative `--repo-root` is refused as an argument, before any measurement.
     const storeB = join(makeRoot(), 'store', 'ipd.db');
     assert.throws(
       () =>
         executeProvisioning(
-          args(storeB, { repoRoot: unborn, executionCommit: NOT_A_PIN, executionTree: NOT_A_TREE }),
-          executeOptions(gitCapableEnvironment()),
-        ),
-      (error: unknown) => (error as { code?: string }).code === 'EXECUTING_HEAD_UNRESOLVED',
-    );
-    assert.equal(existsSync(storeB), false);
-
-    // (c) A relative `--repo-root` is refused as an argument, before any measurement.
-    const storeC = join(makeRoot(), 'store', 'ipd.db');
-    assert.throws(
-      () =>
-        executeProvisioning(
-          args(storeC, { repoRoot: 'relative/path', executionCommit: NOT_A_PIN, executionTree: NOT_A_TREE }),
+          args(storeB, { repoRoot: 'relative/path', executionCommit: NOT_A_PIN, executionTree: NOT_A_TREE }),
           executeOptions(gitCapableEnvironment()),
         ),
       (error: unknown) => (error as { code?: string }).code === 'ARGUMENT_INVALID',
     );
-    assert.equal(existsSync(storeC), false);
+    assert.equal(existsSync(storeB), false);
   });
 
   it('T-11 records the measured executing identity separately from the compiled basis', () => {
-    const fixture = makeGitFixture('executing');
+    const fixture = executingRepository();
     const store = join(makeRoot(), 'p1-fixture', 'ipd.db');
 
     const result = executeProvisioning(
@@ -493,7 +504,8 @@ describe('CAP-02 Gate A′ successor provisioning boundary', () => {
       'mode',
       'store',
     ]);
-    // Executing identity is the fixture's measured identity — the actual source.
+    // Executing identity is the executing checkout's measured identity, independently
+    // measured above — the actual source, never the caller's restatement.
     assert.equal(result.executingCommit, fixture.commit);
     assert.equal(result.executingTree, fixture.tree);
     // Compiled basis is the unchanged constant, and is a different value.
@@ -536,7 +548,7 @@ describe('CAP-02 Gate A′ successor provisioning boundary', () => {
   });
 
   it('T-12 refuses an expected execution pin that differs from the measured HEAD', () => {
-    const fixture = makeGitFixture('pinned');
+    const fixture = executingRepository();
     assert.notEqual(fixture.commit, NOT_A_PIN);
     assert.notEqual(fixture.tree, NOT_A_TREE);
 
@@ -557,7 +569,7 @@ describe('CAP-02 Gate A′ successor provisioning boundary', () => {
   });
 
   it('T-13 resolves the executing HEAD from --repo-root even when Git variables point elsewhere', () => {
-    const executing = makeGitFixture('executing');
+    const executing = executingRepository();
     const decoy = makeGitFixture('decoy');
     assert.notEqual(executing.commit, decoy.commit, 'the two fixtures must differ for this test to mean anything');
 
@@ -588,6 +600,8 @@ describe('CAP-02 Gate A′ successor provisioning boundary', () => {
   });
 
   it('T-14 refuses execute mode when no expected execution pin is supplied', () => {
+    // Argument shape is refused before any repository is consulted, so a fixture is
+    // sufficient here; the values below are never accepted as an identity.
     const fixture = makeGitFixture('unpinned');
     const absentShapes: Array<[string, Partial<GateAPrimeArguments>]> = [
       ['--repo-root', { executionCommit: fixture.commit, executionTree: fixture.tree }],
@@ -653,8 +667,9 @@ describe('CAP-02 Gate A′ successor provisioning boundary', () => {
     assert.equal(BASIS_COMMIT, '5fc74085ade980846ff4a07b36415b6d49446486');
     assert.equal(BASIS_TREE, '7226ef0033b3a7049169d8fcf9bcbc9908e2590b');
 
-    // A checkout whose HEAD is not the basis still reports the basis verbatim.
-    const fixture = makeGitFixture('basis-immutability');
+    // The executing checkout's HEAD is not the basis, and the basis is still
+    // reported verbatim beside the measured identity.
+    const fixture = executingRepository();
     assert.notEqual(fixture.commit, BASIS_COMMIT);
     const store = join(makeRoot(), 'basis', 'ipd.db');
     const result = executeProvisioning(
@@ -669,6 +684,68 @@ describe('CAP-02 Gate A′ successor provisioning boundary', () => {
     assert.equal(result.basisTree, BASIS_TREE);
     assert.equal(result.executingCommit, fixture.commit);
     assert.notEqual(result.basisCommit, result.executingCommit);
+  });
+
+  it('T-16 refuses a --repo-root that is not the repository containing the executing module', () => {
+    const executing = executingRepository();
+
+    // (a) A different, perfectly valid repository whose own HEAD is offered as the
+    //     expected pin. Every other preflight passes, so only the binding can refuse.
+    const other = makeGitFixture('other-checkout');
+    assert.notEqual(other.commit, executing.commit);
+    const storeA = join(makeRoot(), 'store', 'ipd.db');
+    assert.throws(
+      () =>
+        executeProvisioning(
+          args(storeA, { repoRoot: other.root, executionCommit: other.commit, executionTree: other.tree }),
+          executeOptions(gitCapableEnvironment()),
+        ),
+      (error: unknown) => (error as { code?: string }).code === 'REPO_ROOT_MISMATCH',
+    );
+    assert.equal(existsSync(storeA), false, 'an unrelated checkout must create no store');
+
+    // (b) A directory that is not a repository at all.
+    const storeB = join(makeRoot(), 'store', 'ipd.db');
+    assert.throws(
+      () =>
+        executeProvisioning(
+          args(storeB, { repoRoot: makeRoot(), executionCommit: NOT_A_PIN, executionTree: NOT_A_TREE }),
+          executeOptions(gitCapableEnvironment()),
+        ),
+      (error: unknown) => (error as { code?: string }).code === 'REPO_ROOT_MISMATCH',
+    );
+    assert.equal(existsSync(storeB), false);
+
+    // (c) A repository whose HEAD has no commit yet.
+    const unborn = makeRoot();
+    execFileSync('git', ['-C', unborn, 'init', '--quiet', '--initial-branch=main'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    const storeC = join(makeRoot(), 'store', 'ipd.db');
+    assert.throws(
+      () =>
+        executeProvisioning(
+          args(storeC, { repoRoot: unborn, executionCommit: NOT_A_PIN, executionTree: NOT_A_TREE }),
+          executeOptions(gitCapableEnvironment()),
+        ),
+      (error: unknown) => (error as { code?: string }).code === 'REPO_ROOT_MISMATCH',
+    );
+    assert.equal(existsSync(storeC), false);
+
+    // (d) The binding is about location, not spelling: the same checkout named
+    //     through an equivalent path is accepted, and its identity is recorded.
+    const storeD = join(makeRoot(), 'equivalent-path', 'ipd.db');
+    const result = executeProvisioning(
+      args(storeD, {
+        repoRoot: join(executing.root, '.'),
+        executionCommit: executing.commit,
+        executionTree: executing.tree,
+      }),
+      executeOptions(gitCapableEnvironment()),
+    );
+    assert.equal(result.executingCommit, executing.commit);
+    assert.equal(result.executingTree, executing.tree);
   });
 });
 
