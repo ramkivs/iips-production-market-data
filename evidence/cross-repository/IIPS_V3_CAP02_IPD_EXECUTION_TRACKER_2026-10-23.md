@@ -1758,3 +1758,171 @@ sentence is stale-until-reconciled.
 `evidence/cross-repository/cap03_h12r5_2026-10-25_adoption_mirror/` — `50_remote_readback.txt` (merge
 identity, ancestry, per-file blob/bytes/SHA-256 read-back, annex checksum re-verification from downloaded
 remote blobs, frozen anchors) and `51_ci_runs.txt` (exact-head and post-merge run ids and check-runs).
+
+## CAP-03 — Gate A′ designated-blob factual correction, D2 executing-identity publication record, and the reserved designated-blob disposition (2026-10-28)
+
+**Receipt:** `IIPS-V3-CAP03-GATE-A-PRIME-BLOB-IDENTITY-CORRECTION-2026-10-28-01` (census before this
+record: `0` occurrences in `evidence/`). Append-only reconciliation of facts re-verified from the remote
+this pass. It renders **no** decision, re-pins **nothing**, moves **no** gate, changes **no** designated
+blob, changes **no** stop condition, changes **no** compiled-basis constant, and designates **no**
+execution pin. It does **not** amend the successor act or the S1 determination; the four overstated
+sentences it identifies are left in place as historical records and are corrected here.
+
+### 0. Authoritative ref at Step 0 (verified live, not assumed)
+
+| Item | Value | Evidence |
+|---|---|---|
+| IPD `origin/main` | `db84ac12f297eec2bb159ae785c3cc584f7d7e34` / tree `831f00e08c44dbee36943c0c53f8e164848e74b3` | `git ls-remote origin refs/heads/main` == local `HEAD`; `git log -1 --format='%H tree=%T'` |
+| Ancestry | parents `a891802e2691bd9c65a67d6abff20d8ce0c26d7d` + `d2782f235a9b11a9716128b8b8b70ddedf6775ab` | `gh api …/commits/db84ac12…` |
+| Worktree | clean (`git status --porcelain` empty) | this pass |
+| Open PRs | **`0`** | `gh pr list --state open` |
+| Session branch | `arena/24771bc4-iips-production-market-data` at `db84ac12…` | `git branch --show-current` |
+
+### 1. What the successor act actually designates, and what was true at its basis
+
+`IIPS_V3_CAP02_GATE_A_PRIME_SUCCESSOR_PROVISIONING_ACT_EFFECTIVE_2026-10-23.md` §2 basis is IPD `main`
+`5fc74085ade980846ff4a07b36415b6d49446486` / tree `7226ef0033b3a7049169d8fcf9bcbc9908e2590b` — the same
+two values compiled as `BASIS_COMMIT`/`BASIS_TREE`. §2.1 designates twelve blobs. All twelve were
+re-resolved **at that basis** through the GitHub Contents API this pass: **12/12 match the designation.**
+The act's §2.1 table is accurate for its own basis; nothing in this record disputes it.
+
+### 2. The factual error, stated precisely
+
+Act §2.1 item 12 designates `tests/g3_startup_validation.test.ts` = `9a5fd9e3b22693e95304a1cd2df812bbf9ea2299`.
+Commit **`c62dee81`** (`2026-10-23T16:33:13Z`, *"CAP-02: implement bounded Gate A prime and Limb A work"*,
+parent `7f64d37a`) modified that file to **`edd0305e3e5891020b2b045ab2cf082cd6cf788f`** — precisely the
+bounded modification act §5.1 item 4 authorizes ("extend the existing static import-edge regression to the
+new module"). From `c62dee81` onward, item 12 no longer resolved to its designated blob.
+
+Four published statements nevertheless characterize item 12 as designated/unchanged **while enumerating
+`edd0305e…` in the same breath**:
+
+| # | Record | Location | Statement | Enumerated item 12 |
+|---|---|---|---|---|
+| 1 | `…S1_IDENTITY_VALUE_AUTHORITY_H12_READINESS_DECISION_REQUEST_2026-10-24.md` | line 79 | "all `12/12` resolve at current `main` to the exact blob IDs recorded in the effective act" | §7.3 |
+| 2 | same | §7.3 (lines 281–286) | "The twelve act §2.1 designated blobs — all unchanged at current `main` … every ID resolved identically at `origin/main@5e4e54d…`" | `edd0305e…` |
+| 3 | `…S1_IDENTITY_VALUE_DETERMINATION_EFFECTIVE_2026-10-24.md` | line 79 | "Successor act §2.1 designated blobs (12) — **`12/12`** identical at this baseline" | §12.2 |
+| 4 | same | §12.2 (lines 330–334) | "`12/12` of the successor act §2.1 paths resolve **as designated**" | `edd0305e…` |
+| 5 | this tracker | line 765 | "**12/12** designated blobs (… g3 test `edd0305e…`) unchanged at the current tip" | `edd0305e…` |
+
+**Objectively correct statement.** At the tip those measurements were taken (`5e4e54db752060f75c945eb437ab317b7b9f04bf`,
+`2026-10-24T04:37:15Z`; `c62dee81` is an ancestor, `19` commits behind), **11/12** paths resolved to the
+designated blob exactly and **item 12 resolved to `edd0305e…`**, the act-authorized bounded modification —
+not to the designated `9a5fd9e3…`. Verified this pass through the Contents API at `ref=5e4e54d…`:
+`portfolio_store.ts` `4a005b73…` (as designated) and `g3_startup_validation.test.ts` `edd0305e…` (not as
+designated). The enumeration in each record was therefore **accurate**; the characterization
+("as designated" / "unchanged" / "the exact blob IDs recorded in the effective act") was **not**. No
+substantive act violation follows, because the modification was authorized by §5.1 item 4; the defect is
+one of statement, and it is corrected here rather than by rewriting an effective record.
+
+### 3. Designated-blob state at the current authoritative ref `db84ac12…` (measured this pass)
+
+| # | Path | Act §2.1 designated | At `db84ac12…` | Verdict |
+|---|---|---|---|---|
+| 1 | `src/persistence/provisioning.ts` | `dc844189…` | `dc844189…` | MATCH |
+| 2 | `src/persistence/binding.ts` | `96d0079d…` | `96d0079d…` | MATCH |
+| 3 | `src/persistence/audit.ts` | `273ccd3b…` | `273ccd3b…` | MATCH |
+| 4 | `src/persistence/connection.ts` | `5169e402…` | `5169e402…` | MATCH |
+| 5 | `…/migrations/001_initial_schema.ts` | `f594a182…` | `f594a182…` | MATCH |
+| 6 | `…/migrations/002_audit_event_sequence.ts` | `932af8e6…` | `932af8e6…` | MATCH |
+| 7 | `…/migrations/003_local_principal_bindings.ts` | `32b125bf…` | `32b125bf…` | MATCH |
+| 8 | `…/migrations/004_portfolio_contribution_provenance.ts` | `6bad5a50…` | `6bad5a50…` | MATCH |
+| 9 | `src/ipc/dispatch.ts` | `27becc76…` | `27becc76…` | MATCH |
+| 10 | `src/persistence/portfolio_store.ts` | `4a005b73…` | **`540d49f2…`** | **DIFFERS** |
+| 11 | `package.json` | `51796e63…` | `51796e63…` | MATCH |
+| 12 | `tests/g3_startup_validation.test.ts` | `9a5fd9e3…` | **`edd0305e…`** | **DIFFERS** |
+
+**`10/12` exact at the current tip.** Method: `git rev-parse HEAD:<path>` at `db84ac12…`.
+
+### 4. Causal history of the two differing blobs
+
+| Item | From → To | Commit | Date | Authority under which the change was made |
+|---|---|---|---|---|
+| 12 | `9a5fd9e3…` → `edd0305e…` | `c62dee81` | `2026-10-23T16:33:13Z` | **the successor act itself** — §5.1 item 4 "modified (bounded)" |
+| 10 | `4a005b73…` → `540d49f2…` | `bc144b95` | `2026-10-25T13:01:02Z` | **a different record** — `IIPS_V3_CAP03_DR2_IPD_PROVIDER_EXECUTION_2026-10-25.md` line 11 "Authorized change manifest: `src/persistence/portfolio_store.ts`, `tests/q1_ipc_read_contract_conformance.test.ts` — exactly these two source/test paths" |
+
+Item 10 was still `4a005b73…` at `5e4e54d…` (`2026-10-24T04:37:15Z`) and changed only on `2026-10-25`.
+The successor act §5.1 prohibits "any change to … any existing `src/` module (including …
+`portfolio_store.ts` …) **without a further act**". Whether the DR-2 disposition constitutes that further
+act **for the purposes of the successor act's designated-blob set** is not determined in this record.
+This tracker has already carried `540d49f2…` as a current frozen anchor since the PR #94 receipt
+("Frozen anchors re-read at the new `main`: … `src/persistence/portfolio_store.ts` `540d49f2…` — all
+unchanged"), so the drift is not newly discovered; what is new here is its statement **against the act's
+§2.1 designation**.
+
+### 5. The act's stop condition is engaged — recorded, not waived
+
+Act §8.2: *"Basis commit/tree or any designated blob differs · … In every case: stop, record, **do not
+proceed**."* At `db84ac12…` the basis differs (`5fc74085…` → `db84ac12…`) **and** 2 of 12 designated blobs
+differ. The condition is therefore **engaged**. This record narrows, re-interprets and waives nothing.
+
+### 6. Reserved Program Authority decision — **NOT** taken here
+
+The §2.1 designated-blob set is designated **by the act**. Whether to (a) re-pin item 10 (and/or item 12)
+to the current lineage by a further act, or (b) record the drift as a supersession requiring a fresh
+rendering of the successor act before any execution, is a disposition over the act's designated
+authority. **Smallest decision needed:** a single PA statement, per differing item, choosing
+*re-pin to the current blob* or *fresh act rendering* — together with the corresponding treatment of the
+four overstated sentences in §2 above (in-place amendment by their owning records, or permanent reliance
+on this appended correction). This pass performs the additive correction only and chooses neither.
+
+### 7. Identity taxonomy — five things that must not be conflated
+
+| Concept | Exact identity at this ref | What it is / is not |
+|---|---|---|
+| **Compiled basis** | `BASIS_COMMIT` `5fc74085ade980846ff4a07b36415b6d49446486` / `BASIS_TREE` `7226ef0033b3a7049169d8fcf9bcbc9908e2590b` (`gateAPrimeValidation.ts:25-26`) | A frozen historical constant recording the act's basis. **Not** the checkout that executes; unchanged by this record. |
+| **Candidate / designated execution identity** | **none designated** | The commit+tree a governed execution would run from. No pin exists. Equal **trees** are not interchangeable **commit** identities: `f722d7d4…` and `a891802e…` share tree `76f083d7…` yet are different commits, and the module measures both. |
+| **PR-head vs merge commit** | PR #100 head `f722d7d4…` vs merge `a891802e…`; PR #101 head `d2782f23…` vs merge `db84ac12…` | A merge commit has two parents and a different identity from the tested head, even when the trees coincide. CI receipts attach to each separately. |
+| **Designated file blobs** | act §2.1, twelve ids, `10/12` at `db84ac12…` | Per-path content identities under the act. Not commits, not trees, not pins. |
+| **PA authorization act** | the successor act, the S1 determination, the DR-2 disposition | A governance instrument. **Matching identity inputs are not authorization**: supplying an `--execution-commit` that equals the measured HEAD proves which checkout the caller named, not that execution was authorized. |
+
+### 8. D2 executing-identity correction — state on `main`, read back from the remote this pass
+
+| Item | Value |
+|---|---|
+| PR #100 | **MERGED** `2026-10-28T05:48:27Z`; head `f722d7d46e056d4eb3039e9d3df8045b1cce4e1c`; merge `a891802e2691bd9c65a67d6abff20d8ce0c26d7d` |
+| PR #101 | **MERGED** `2026-10-28T06:09:51Z`; head `d2782f235a9b11a9716128b8b8b70ddedf6775ab`; merge `db84ac12f297eec2bb159ae785c3cc584f7d7e34` |
+| Exact-head CI | `f722d7d4…` → *executed test count* **success**, `930 tests, 0 failed`; `d2782f23…` → **success**, `931 tests, 0 failed` |
+| Post-merge CI | `a891802e…` → **success**, `930/0`; `db84ac12…` → **success**, `931/0` |
+| Blobs at `db84ac12…` (Contents API == local `git hash-object`) | `gateAPrimeProvisioning.ts` `9b15eca3061bd023289794985b1a7367df592627` (29,005 B) · `g3_gate_a_prime_successor_provisioning.test.ts` `0ea47e8f6385a0af507ae07f4d1423a275fbb124` (33,169 B) · `gateAPrimeValidation.ts` `df5d48a583c9aaed51af90a90225c15c408fbd33` (15,688 B, **unchanged**) |
+| Fix elements present | `executingRepositoryRoot()` (`:245`, walks up from `import.meta.url` at `:246`) · `isSameRepositoryRoot()` (`:262`) with `realpathSync.native` canonicalization (`:264-265`) · `REPO_ROOT_MISMATCH` (`:489`) · `EXECUTING_HEAD_UNRESOLVED` (`:230`) · `EXECUTION_PIN_MISMATCH` (`:499`) · **T-16** (`test:689`) |
+| Local re-run at `db84ac12…` | `npm ci` → `npx tsc --noEmit` exit `0` → focused `g3_gate_a_prime_successor_provisioning` **19/19 pass, 0 fail** |
+
+**Expected-pin limitation confirmed still present** (measured, not assumed): `grep -nE "readFileSync|readdirSync|createReadStream|EXPECTED_EXECUTION|process\.env\.[A-Z_]*PIN"`
+over the merged module returns **no match**, and the only sources of the expected pin are
+`args.executionCommit` / `args.executionTree` (`:296-297`), populated from `--execution-commit` /
+`--execution-tree` (`:698-699`). **No governed act or pin artifact is read by the module.** The expected
+pin remains caller-attested; its authority can come only from a rendered P-1 authorization act naming the
+execution commit. Nothing in this record supplies one.
+
+### 9. Classification of what can and cannot be done now
+
+| Class | Work | Status |
+|---|---|---|
+| **A** | Documentation-only correction that alters no authority — this record | **DONE** this pass |
+| **B** | Any implementation/test change that depends on which blob the act's §2.1 set should name (e.g. re-baselining a designated-blob assertion, or re-pinning §2.1) | **BLOCKED** on the §6 reserved decision |
+| **C** | Any work requiring a designated execution commit/tree (capture-precondition dry runs against a named pin, execution-pin comparison evidence) | **BLOCKED** — no designation exists |
+| **D** | IRR capture-procedure re-pin of `gateAPrimeProvisioning.ts` (now `9b15eca3…`) and its test file; P-1 authorization; capture; host operations; PF-11/PowerShell | **Requires separate authorization** (and, for IRR, an IRR-capable session — this pass is IPD-bound) |
+
+### 10. Validation of this change
+
+`npm ci` exit `0` · `npx tsc --noEmit` exit `0` · `npm test` exit `0` — **`931` tests, `930` passed,
+`0` failed, `1` skipped**, `[test-guard] OK — 931 test(s) executed, 930 passed, exit 0` ·
+`npm run build` exit `0` with `dist` membership exactly **`1,140`** (unchanged; `evidence/` is outside
+every `tsconfig*.json` `include`) · appended-section table integrity checked (`7` tables, no ragged
+rows, no unbalanced fence) · `git diff --check` clean · changed paths: **exactly `1`**, this
+tracker file. No source, test, script, package manifest, export, schema, migration, protocol, route, CI
+workflow or pin.
+
+### 11. Explicitly not performed
+
+No P-1 execution, authorization or consumption. No capture, host preflight, PF-11 rerun, compatibility
+script, PowerShell diagnostic or Windows host-runtime test. The designated store was not probed or
+opened. No IRR read-for-write or write; **zero IRR mutations**. `BASIS_COMMIT`/`BASIS_TREE` unchanged in
+value and meaning. The successor act's designated-blob list, authority and §8.2 stop condition unchanged.
+No execution pin and no Gate 4 QE/H-12 pin designated. The D2 executing-repository identity correction
+was not repeated and PR #101 was not recreated.
+
+**P-1 remains NOT EXECUTED / UNSPENT / NOT AUTHORIZED.** The successor-act designated-blob conflict
+remains **UNRESOLVED** pending the §6 disposition. S1/act consistency is **not** claimed: §2 records
+exactly where the published statements and the blob identities diverge.
