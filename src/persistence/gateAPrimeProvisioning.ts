@@ -14,13 +14,22 @@
  * from the expected execution pin. `BASIS_COMMIT`/`BASIS_TREE` keep their existing
  * meaning and value.
  *
+ * CAP-03 D2 follow-up: `--repo-root` is a claim, not a grant. The identity is
+ * measured from the repository that actually contains this executing module, and the
+ * supplied `--repo-root` must resolve to that same repository (`REPO_ROOT_MISMATCH`
+ * otherwise), so a caller cannot record the HEAD of an unrelated checkout as the
+ * executing identity. The expected pin stays caller-attested and is deliberately
+ * not given a pin store, a signed artifact or a default here; the note beside the
+ * comparison in `authorizeExecution` states exactly what it is bound to.
+ *
  * No IPC, startup, frontend or composition module imports this file.
  */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, realpathSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   appendAuditEvent,
   type AuditEvent,
@@ -207,9 +216,11 @@ function resolveGitObject(repoRoot: string, revision: string, env: NodeJS.Proces
 }
 
 /**
- * Measures the executing `HEAD` and its tree from `repoRoot`. Refuses
- * `EXECUTING_HEAD_UNRESOLVED` when either value is missing or malformed; the
- * caller invokes this before any database connection is opened.
+ * Measures the executing `HEAD` and its tree from the repository at `repoRoot`.
+ * Refuses `EXECUTING_HEAD_UNRESOLVED` when either value is missing or malformed; the
+ * caller invokes this before any database connection is opened. `repoRoot` is the
+ * repository containing the executing module, resolved by `executingRepositoryRoot`,
+ * never the caller's string as supplied.
  */
 function readExecutionHead(repoRoot: string, env: NodeJS.ProcessEnv): { commit: string; tree: string } {
   const commit = resolveGitObject(repoRoot, EXECUTING_HEAD_REVISION, env);
@@ -217,16 +228,53 @@ function readExecutionHead(repoRoot: string, env: NodeJS.ProcessEnv): { commit: 
   if (commit === undefined || !GIT_OBJECT_ID.test(commit) || tree === undefined || !GIT_OBJECT_ID.test(tree)) {
     throwRefusal(
       'EXECUTING_HEAD_UNRESOLVED',
-      `the executing HEAD or tree could not be resolved from --repo-root=${repoRoot}`,
+      `the executing HEAD or tree could not be resolved from the repository at ${repoRoot}`,
     );
   }
   return { commit, tree };
 }
 
 /**
- * The three execute-mode identity arguments are mandatory and are never defaulted:
- * `--repo-root` names the checkout to measure, and `--execution-commit` /
- * `--execution-tree` carry the expected pin supplied by the governed authorization.
+ * The repository containing this executing module, found by walking up from the
+ * module's own file location. This is the only checkout whose `HEAD` can honestly be
+ * reported as the *executing* identity, because it is the checkout the running code
+ * came from. Returns `undefined` when no `.git` entry exists above the module, in
+ * which case the executing identity is not established and execution refuses rather
+ * than falling back to a caller-named path.
+ */
+function executingRepositoryRoot(): string | undefined {
+  let current = dirname(fileURLToPath(import.meta.url));
+  while (true) {
+    if (existsSync(resolve(current, '.git'))) return current;
+    const parent = dirname(current);
+    if (parent === current) return undefined;
+    current = parent;
+  }
+}
+
+/**
+ * Compares two repository roots as filesystem locations. Symlinks are resolved on
+ * both sides, so a `--repo-root` naming the same checkout through an equivalent path
+ * still satisfies the binding, while a different checkout never does. Windows paths
+ * compare case-insensitively because that filesystem does; the object ids returned
+ * by `rev-parse` are unaffected by the comparison mode.
+ */
+function isSameRepositoryRoot(supplied: string, executing: string): boolean {
+  try {
+    const left = realpathSync.native(resolve(supplied));
+    const right = realpathSync.native(resolve(executing));
+    return process.platform === 'win32' ? left.toLowerCase() === right.toLowerCase() : left === right;
+  } catch {
+    // An unresolvable `--repo-root` is not the repository now executing.
+    return false;
+  }
+}
+
+/**
+ * The three execute-mode identity arguments are mandatory and are never defaulted.
+ * `--repo-root` is the caller's claim about which checkout is executing and is
+ * verified against the repository containing this module before it is trusted;
+ * `--execution-commit` / `--execution-tree` carry the caller-attested expected pin.
  */
 function assertExecutionIdentityArguments(args: GateAPrimeArguments): {
   repoRoot: string;
@@ -418,7 +466,34 @@ function authorizeExecution(args: GateAPrimeArguments, options: GateAPrimeExecut
   // store-existence check and before any connection is opened, so every refusal
   // leaves the store path untouched and writes zero rows.
   const { repoRoot, expectedCommit, expectedTree } = assertExecutionIdentityArguments(args);
-  const executing = readExecutionHead(repoRoot, options.env ?? process.env);
+
+  // Provenance of the *expected* pin, stated plainly because it is the one value in
+  // this comparison that this module cannot authenticate. `--execution-commit` and
+  // `--execution-tree` are caller-attested: they are validated for shape, compared
+  // with the measurement, and refused on difference, but nothing inside the
+  // enforcing commit can bind them to a governed authorization, because a compiled
+  // constant here could never equal the commit that contains it. Their authority
+  // therefore comes only from the P-1 authorization act that names the execution
+  // commit for the checkout being executed. Until that act is rendered, a matching
+  // pin demonstrates that the checkout is the one the caller named — it does not
+  // demonstrate that the execution was authorized. This module deliberately adds no
+  // pin store, no signed artifact and no default.
+  //
+  // `--repo-root` is the caller's claim about which checkout is executing. The claim
+  // is verified against the repository that actually contains this module, and the
+  // measurement is then taken from that repository, so a caller cannot have the
+  // receipt record the HEAD of an unrelated checkout as the executing identity.
+  const executingRoot = executingRepositoryRoot();
+  if (executingRoot === undefined || !isSameRepositoryRoot(repoRoot, executingRoot)) {
+    throwRefusal(
+      'REPO_ROOT_MISMATCH',
+      executingRoot === undefined
+        ? `--repo-root=${repoRoot} cannot be bound: no repository containing the executing module was found`
+        : `--repo-root=${repoRoot} is not the repository containing the executing module (${executingRoot}); ` +
+            'the executing identity is measured only from the checkout now running',
+    );
+  }
+  const executing = readExecutionHead(executingRoot, options.env ?? process.env);
   if (executing.commit !== expectedCommit || executing.tree !== expectedTree) {
     throwRefusal(
       'EXECUTION_PIN_MISMATCH',
