@@ -2433,3 +2433,78 @@ UNSPENT / NOT AUTHORIZED.**
 | `IPD-S2REC` (any further step) | A PA ruling on **Q-S2-1** that requires more than the factual correction recorded here |
 | `IPD-C2` | **B-Q1** resolved *and* a separate IPD implementation prompt issued |
 | Any Gate 4 / P-1 dependent IPD step | A designated execution pin plus the relevant authorization act |
+
+## CAP-02 — Gate A′ designated-blob amendment act executed: `A-Q5` mechanism `A-O3`, items 10 and 12 re-designated at `a891802e` (2026-10-28)
+
+**Act:** `IIPS-V3-CAP02-GATE-A-PRIME-AMEND-01-DESIGNATED-BLOBS-2026-10-28-01`
+(census before this record: `0` occurrences in this repository). Instrument:
+`evidence/cross-repository/IIPS_V3_CAP02_GATE_A_PRIME_AMEND_01_DESIGNATED_BLOBS_EFFECTIVE_2026-10-28.md`.
+This section is the amendment pointer and publication record. It re-designates **two blob
+identities** and changes no code, no other designated item, no compiled basis, no execution pin and
+no receipt.
+
+**Amendment pointer.** §2.1 of
+`IIPS-V3-CAP02-GATE-A-PRIME-SUCCESSOR-PROVISIONING-ACT-2026-10-23-01` (act file blob
+`528de6aeddbc8e5f3191be8792f3937d77de4037`, **preserved byte-unchanged**) is to be read as amended
+for **items 10 and 12 only**:
+
+| # | Path | Superseded | Amended designation | Ruling |
+|---|---|---|---|---|
+| 10 | `src/persistence/portfolio_store.ts` | `4a005b737de26443e261156a3102d553dd90b726` | **`540d49f2deb2c8d600b5b866675d145cf76a1e46`** | `A-Q1` YES — DR-2 is the further act §5.1 requires |
+| 12 | `tests/g3_startup_validation.test.ts` | `9a5fd9e3b22693e95304a1cd2df812bbf9ea2299` | **`edd0305e3e5891020b2b045ab2cf082cd6cf788f`** | `A-Q2`; change made by `c62dee81` under the act's **own** §5.1 item 4 |
+
+Items **1–9 and 11 are unchanged**; the designated set remains **twelve** items. Mechanism `A-O5`
+(restore the original blobs) is **not** adopted. Approved basis: commit
+`a891802e2691bd9c65a67d6abff20d8ce0c26d7d`, tree `76f083d7058e170d8212455c03bad1033136ee68`.
+
+### 1. Verification performed at execution
+
+| Assertion | Result |
+|---|---|
+| `a891802e` resolves; tree `76f083d7…` | **PASS** — merge of PR #100, `2026-10-28T05:48:27Z` |
+| `a891802e` ancestor of `main` | **PASS** — `compare a891802e…1ba0740a` ahead `12`, behind `0` |
+| CI on `a891802e` green | **PASS** — `930 tests executed, 0 failed`; `typecheck · build · test` success |
+| Item 10 blob at basis and at `main` | **PASS** — `540d49f2deb2c8d600b5b866675d145cf76a1e46` at both |
+| Item 12 blob at basis and at `main` | **PASS** — `edd0305e3e5891020b2b045ab2cf082cd6cf788f` at both |
+| Act file blob matches the IPD prompt | **PASS** — `528de6aeddbc8e5f3191be8792f3937d77de4037` |
+| Superseded values are those the act carries | **PASS** — §2.1 rows read `4a005b73…` / `9a5fd9e3…` |
+
+No PA-approved target was altered to make a check pass; no identity was invented.
+
+### 2. Authority locus, recorded precisely
+
+The applied rulings (`A-Q1`, `A-Q2`, `A-Q3`, `A-GAP1`, `A-Q4`, `A-Q5` = `A-O3` at `a891802e`) are
+carried by three IRR records on **open, unmerged** IRR PR #353, head
+`caca0213162f220edfdfc3e0f37b580e6c77d829`: `IIPS_v3.0_CAP03_PA_RULINGS_RECORD_PASS2_2026-10-28.md`,
+`IIPS_v3.0_CAP03_PA_DESIGNATION_RECORD_PASS2_2026-10-28.md` §3 (Designation C) and
+`IIPS_v3.0_CAP03_IPD_PROMPT_A-Q5_2026-10-28.md`. They are **not on IRR `main`** (`82b3f4a5…`) at
+execution time. This act was executed against the ruling text as carried on that PR head, read
+read-only; IRR was not modified. IRR's own merge of PR #353 is a separate step and is not claimed
+here.
+
+### 3. Effect on §8.2 and on standing statuses
+
+This act clears the **designated-blob limb** of act §8.2 for items 10 and 12 only (ruling `A-Q6`).
+It does **not** clear, narrow or waive any other limb. The **basis** limb is untouched: the compiled
+basis remains `5fc74085ade980846ff4a07b36415b6d49446486` / `7226ef0033b3a7049169d8fcf9bcbc9908e2590b`,
+and a differing basis still triggers §8.2. Gate A′ provisioning remains **`NOT AUTHORIZED`**; Gate 4
+**`AUTHORIZED — NOT STARTED`**; `H-12` **`NOT ADOPTED`**; Gate 5 **not granted**; operational writes
+**denied**.
+
+Designation B (P-1 coordinate at `a891802e`) remains **not effective for reliance** — it needs Matter
+A closed **and** fresh S2 and H-12 evidence at `a891802e`. This act supplies the first condition and
+claims neither S2 nor H-12.
+
+**P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED / UNSPENT
+/ NOT AUTHORIZED.**
+
+### 4. Not performed
+
+No code, test, script, migration, schema, package manifest, lockfile, `tsconfig`, `vite.config`, CI
+workflow or IRR path changed. No other designated item touched. No `C′` or execution pin created,
+inferred or designated. No host operation, capture, native Gate 4 run, S3, QE, DQ-4, Gate 4 or Gate 5
+action. No P-1 step. No unrelated PR merged. The separate `IPD-S1` prompt (determination §12.2
+pointer under `A-GAP1`) is **not** performed here.
+
+**Matter A:** the IPD half is executed by this act. Closure completes when IRR records it in a
+separate pass.
