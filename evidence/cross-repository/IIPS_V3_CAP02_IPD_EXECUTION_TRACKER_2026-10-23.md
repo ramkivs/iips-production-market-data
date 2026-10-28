@@ -2158,3 +2158,141 @@ The operator supplies, through the same governed channel and without rerunning a
 **(b)** the `47`-entry manifest-verification output that produced the reported `PASS`; and
 **(c)** a ruling on the `48`-versus-`47` difference. Only then can byte identity be established and
 a distinct acceptance determination be rendered by the designated authority.
+
+## CAP-03 — IPD outstanding-work disposition, one CLI store-error correction, and the PA-5 determination (2026-10-28)
+
+**Receipt:** `IIPS-V3-CAP03-IPD-OUTSTANDING-WORK-DISPOSITION-AND-CLI-STORE-NOT-FOUND-2026-10-28-01`
+(census before this record: `0` occurrences in this repository). One-pass execution record. It
+assigns a disposition to every outstanding item, implements one authorized functional correction,
+and states the PA-5 position. It renders no reserved decision, designates no pin, moves no gate.
+
+**Naming discipline.** "CAP-03 S2 package-consumer evidence" and "Gate 4 Limb A native-Windows
+`npm test`" remain separate requirements with separate statuses; neither is called merely "S2".
+
+### 1. Authoritative state verified this pass
+
+| Item | Value |
+|---|---|
+| IPD `main` at Step 0 | `0616ba2d8466e0a6837ca06073b656486fc84f54`, tree `731cd2c64e50b6fe50aa4ba07439cfc6eaded634`; clean worktree; `0` open PRs |
+| IRR (read-only, boundary respected) | `82b3f4a5d31134e40fd3a1a23169a0ca8d638dfc`; `0` IRR writes |
+| Baseline validation | `npm ci` exit `0`; `tsc --noEmit` exit `0`; `npm run build` exit `0`; `dist/**` membership **`1,140`** |
+| Baseline suite | `931` executed, `930` passed, `0` failed, `1` skipped, `[test-guard] OK` |
+| The `1` skip | "the Windows endpoint is a named pipe with no filesystem artifact" — Windows-only by design, not a defect |
+
+The `dist/**` count of `1,140` was previously carried as **Reported** (recorded by the PR #102
+validation, not independently re-established). It is **independently re-established here** by a
+fresh `npm ci` and build at `0616ba2d`, and is unchanged by this pass's correction.
+
+### 2. One implemented correction — `--mode=validate` misreported a missing store
+
+**Defect, reproduced before the change.** `GateAPrimeStoreError` and `GateAPrimeRefusalError` are
+sibling classes (both `extends Error`), so the CLI envelope's single `instanceof
+GateAPrimeRefusalError` test could not see the validator's own refusal codes. A read-only
+validation of a store that does not exist yet — a routine state for a single-user application —
+reported a defect code instead of the true one:
+
+```text
+before: {"ok":false,"code":"UNEXPECTED_FAILURE","error":"the validation store file does not exist"}
+after : {"ok":false,"code":"STORE_NOT_FOUND","error":"the validation store file does not exist"}
+```
+
+Measured by running the compiled CLI at `0616ba2d` against a non-existent path and against a
+directory; both returned `UNEXPECTED_FAILURE` with a message that already said the file does not
+exist. `STORE_PATH_INVALID` was unaffected, because that refusal is raised by this module's own
+argument check rather than by the validator. A corrupt non-SQLite file was checked too and is
+**correctly** handled (`status: FAIL` with `V-A2-1` and `STORE_SCHEMA` detail) — no defect there.
+
+**Change.** Two files, both already inside the successor act's §5.1 file set and neither a §2.1
+designated blob:
+
+| Path | Change | Detail |
+|---|---|---|
+| `src/persistence/gateAPrimeProvisioning.ts` | +13/−1 | Import `GateAPrimeStoreError`; the CLI catch now surfaces a `code` from either refusal family |
+| `tests/g3_gate_a_prime_successor_provisioning.test.ts` | +36/−1 | **T-17** — asserts the validator contract *and* spawns the compiled CLI to assert the envelope carries `STORE_NOT_FOUND` |
+
+No new file. No change to persistence, audit detail, `gateAPrimeValidation.ts`, refusal precedence,
+the compiled basis, the execution pin, any receipt, or the `dist/**` count (still `1,140`).
+
+**T-17 is a real regression test, demonstrated.** With the correction temporarily reverted (catch
+block and import both), the suite reports `not ok 20 - T-17 …`, `# fail 1`, runner exit `1`, while
+T-16 stays `ok`. With the correction restored: `932` executed, `931` passed, `0` failed, `1`
+skipped, `[test-guard] OK`.
+
+### 3. Disposition of every outstanding item
+
+Dispositions: **BLOCKER** = key technical/functional blocker · **RESERVED** = required reserved
+decision, specific operation only · **ACTIONABLE** · **RESIDUAL** = minor, non-blocking ·
+**OUT OF SCOPE**.
+
+| Item | Verified status | Disposition | Practical impact / operation affected |
+|---|---|---|---|
+| CLI store-error code (§2) | was misreporting; corrected this pass | **ACTIONABLE — DONE** | None remaining |
+| `dist/**` count evidence | `1,140`, independently re-established | **ACTIONABLE — DONE** | None remaining |
+| Application suite health | `931`/`930`/`0`/`1` green at baseline; `932`/`931`/`0`/`1` after | **ACTIONABLE — DONE** | None remaining |
+| Successor-act §2.1 designated-blob disposition | `10/12` exact; items 10 and 12 differ; act §8.2 engaged | **RESERVED** | Only the operation of *executing provisioning under the act*. Blocks no other work |
+| PA-5 file-limit interpretation (§4) | three questions unresolved by the record | **RESERVED** | Only the retrospective scope question for PRs #100–#102. Blocks no other work |
+| P-1 provisioning execution | **NOT EXECUTED / UNSPENT / NOT AUTHORIZED** | **RESERVED** | Only the P-1 execution act. Needs a designated `C′` first |
+| Execution commit `C′` designation | not designated; not predeclared | **RESERVED** | Only pin designation. Blocks no other work |
+| CAP-03 S2 package-consumer evidence acceptance | **NOT RENDERED**; 47 files hashed, byte identity not established for 46 | **RESERVED** | Only formal evidence acceptance. Blocks P-1 admissibility, nothing else |
+| Original host CRLF bytes for the 47 files | not in either repository | **RESERVED** (operator) | Only byte-identity establishment |
+| Gate 4 / QE `0/11` | **AUTHORIZED — NOT STARTED**; native-Windows host required | **OUT OF SCOPE** here | Host operation; not an Arena-reachable task |
+| **Gate 4 Limb A native-Windows `npm test`** | not started | **OUT OF SCOPE** here | Host operation; separate from the S2 package-consumer requirement |
+| H-12 v3 adoption | **NOT ADOPTED**; `R1`/`R2` candidates only | **RESERVED** | Only H-12 adoption; needs a separate express PA act |
+| S3 / Gate 5 / U4 / U6 | not reached / not granted / not accepted / not authorized | **OUT OF SCOPE** | Downstream of the above |
+| `48`-vs-`47` manifest entry difference | recorded, unexplained | **RESIDUAL** | None on current operation |
+| `s2-checkout-verification.txt` non-reproducing digest | recorded | **RESIDUAL** | None on current operation |
+| Tracker line 741 "identity values remain unresolved and unselected" | **stale** — `PRINCIPAL_LABEL`/`TENANT_ID`/`CANONICAL_OWNER_ID` are populated at `gateAPrimeValidation.ts:50-52` | **RESIDUAL** | None; superseded by the S1 determination |
+| Tracker line 765 "12/12 designated blobs" | **stale** — measured `10/12` at `db84ac12` | **RESIDUAL** | None; already corrected by the appended 2026-10-28 section |
+| `V1102`, `PF-17` | `0` occurrences in this tracker | **OUT OF SCOPE** | IRR-owned; not IPD items |
+
+**No `KEY TECHNICAL/FUNCTIONAL BLOCKER` exists.** Nothing in the repository currently prevents a
+required workflow, produces materially incorrect results, risks data loss, breaks persistence,
+retrieval or recovery, or creates a material integrity problem. Every remaining open item is either
+a reserved decision that binds only its own operation, a host-bound operation outside this
+environment, or a minor residual.
+
+### 4. PA-5 / D2-REV position — genuinely ambiguous, brief supplied
+
+The D2-REV findings are reused and not re-investigated: the range `888eb375…a9cd18e8` is `6`
+commits and `3` paths, all `modified`, zero `added`; `gateAPrimeValidation.ts` is byte-identical
+across the range; PR #102's diff is +168/−0.
+
+The authoritative records **do not** clearly resolve the three questions, so no interpretation is
+asserted here. The evidence points both ways and is recorded without a decision:
+
+| Question | Bearing toward "within authority" | Bearing toward "exceeds authority" |
+|---|---|---|
+| Per-pass or cumulative limit? | §5.4 is framed as acceptance "for the IPD pass"; PR #100, the pass that made the correction, meets it exactly | §5.4 and prompt Step 8 are unconditional on their face, and the cumulative range has three paths |
+| Does the append-only tracker count? | §5.7 expressly contemplates "a separate tracker receipt"; prompt §2(2) distinguishes documentary from non-documentary movement; the edit is `M`, not `A`, so "New files: None" holds; §5.6's stop triggers do not list documentation | The path is not named in §5.2's "Files … only" row |
+| Was PR #101 a second authorized pass? | It changed only the two §5.2 paths and fixed a demonstrated defect (a decoy repository's HEAD was accepted as `executingCommit`) | §5 authorizes "the IPD pass" in the singular; no record grants a second pass |
+
+**Decision-ready brief — smallest sufficient ruling:** one PA statement per question, choosing
+(a) *per-pass* or (b) *cumulative*, and stating whether an append-only `evidence/` file counts.
+**Practical consequence of either answer: none for current implementation.** No revert,
+reimplementation or further modification of PRs #100–#102 is proposed or implied, and none was
+performed. The unresolved interpretation did not block the §2 correction, which proceeded under the
+paths §5.2 already authorizes.
+
+### 5. Two stale statements recorded, not rewritten
+
+Lines 741 and 765 are superseded by later measured facts. Both are recorded here rather than
+amended in place, because in-place amendment of another record's owning text is a disposition this
+pass does not take. Reliance on this section is sufficient.
+
+### 6. Validation of this change
+
+`npx tsc --noEmit` exit `0` · `npm run build` exit `0` with `dist/**` **`1,140`** (unchanged) ·
+`npm test` exit `0` — **`932` executed, `931` passed, `0` failed, `1` skipped**, `[test-guard] OK` ·
+T-17 regression demonstrated in both directions · `git diff --check` clean · changed paths exactly
+`2`, both inside act §5.1's file set · none of the twelve §2.1 designated blobs changed · no IRR
+write.
+
+### 7. What this record does not do
+
+No reserved decision rendered; no PA-5 interpretation created or waived; no pin or baseline
+designated; no `C′` implementation; no revert or further modification of PRs #100–#102; no host
+operation, capture, provisioning, P-1, S3, QE, DQ-4, Gate 4 or Gate 5 action; no evidence
+regenerated; no parallel tracker created.
+
+**P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED /
+UNSPENT / NOT AUTHORIZED.**
