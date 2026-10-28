@@ -2296,3 +2296,140 @@ regenerated; no parallel tracker created.
 
 **P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED /
 UNSPENT / NOT AUTHORIZED.**
+
+## CAP-03 — IPD execution-group reconciliation (G1–G14), one factual correction to the 47-file record, and IPD-owned item closures (2026-10-28)
+
+**Receipt:** `IIPS-V3-CAP03-IPD-G1-G14-RECONCILIATION-AND-S2REC-CORRECTION-2026-10-28-01`
+(census before this record: `0` occurrences in this repository). One-pass reconciliation. It closes
+the IPD-owned items that are complete, corrects one factual overstatement in an IPD-published
+record, and states precisely what remains eligible. It renders no reserved decision, designates no
+pin, creates no `C′`, moves no gate, and writes nothing to IRR.
+
+**Grouping source.** G1–G14 are defined by IRR
+`docs/integration/IIPS_v3.0_CAP03_P1_PA_RULING_SESSION_PACKAGE_2026-10-28.md` §3 (Table 2, 14
+groups) with the item register in §2 (Table 1, 77 rows; owner counts PA 38, Operator 21, IRR 11,
+**IPD 7**). IRR `main` at read time `82b3f4a5d31134e40fd3a1a23169a0ca8d638dfc`, read-only. That
+package's §4.2 records IPD `main` `0616ba2d`; IPD `main` has since advanced to `2d0cc005` (PR #105),
+so the package is one IPD PR stale and this section supplies the current IPD-side position.
+
+### 1. Verified baseline
+
+| Item | Value |
+|---|---|
+| IPD `main` = HEAD | `2d0cc00542448bdf730b1ab6a8b9ec35010d1209`, tree `6ce6dcf5e637d476800b49bdf631559d453de2ae`; clean worktree; `0` open PRs |
+| PR #105 | **MERGED** `2026-10-28T10:49:03Z`; head `e08d013d258035cc2db75aed4ccb496c12f1de58` → merge `2d0cc005…` |
+| CLI correction present | `src/persistence/gateAPrimeProvisioning.ts` — `GateAPrimeStoreError` ×3; catch recognizes both refusal families ×1 |
+| T-17 present | `tests/g3_gate_a_prime_successor_provisioning.test.ts` — `T-17 reports a missing validation store as STORE_NOT_FOUND` ×1 |
+| Validation reused | Not repeated: HEAD is byte-identical to the PR #105 merge and its recorded state (`932` executed, `931` passed, `0` failed, `1` skipped; exact-head CI `40674920747` and post-merge CI `40675105809` both **success**; remote read-back 3/3 blobs MATCH, 12/12 designated blobs identical). No material integrity concern was found, so no re-run was warranted |
+
+### 2. Factual correction — the 47-file record's "3 not reproduced" overstates
+
+The 2026-10-28 47-file verification record
+(`evidence/cross-repository/cap03_s2_47file_hash_verification_2026-10-28/`) states that **3** entries
+are "not reproduced by any tested transformation". That count is **wrong**. Re-hashing the same
+committed blobs this pass, against a wider disclosed variant set, shows **2 of the 3 do reproduce**:
+
+| File | Bytes | Expected digest | Reproduced by |
+|---|---:|---|---|
+| `00-preflight-results-provided-in-chat.txt` | 1,363 | `BEE567CB90ECDE6F174A…` | LF body with its trailing LF removed, then a single trailing CRLF → `BEE567CB90ECDE6F174A…` **MATCHES** |
+| `s2-ipd-pr-body-20261026T100850Z.md` | 1,050 | `DC54484A6FA8C87585AF…` | same transformation → `DC54484A6FA8C87585AF…` **MATCHES** |
+| `s2-checkout-verification.txt` | 1,427 | `3FD31FE6D3186C1DC76C…` | **none** of 8 disclosed variants — genuinely unreproduced |
+
+**Cause of the error, stated plainly:** the earlier pass gated the "remove one trailing LF" variants
+behind a test for a trailing *blank* line, which none of these files has, so those variants were
+never computed and the entries were misreported as unreproduced. The IRR read-back's
+`lf_body_with_single_trailing_crlf` classification was correct and this record's earlier
+characterization of it as "not corroborated" was wrong.
+
+**Corrected breakdown of the 46 as-committed `MISMATCH` entries:** `43` CRLF-restored + `2` LF body
+minus trailing LF plus a single trailing CRLF + `1` unreproduced = **`46`**.
+
+**What this correction does not change.** The as-committed states are unchanged (**`1` `MATCH`,
+`46` `MISMATCH`** of 47); every one of the 46 still requires a transformation, so **byte identity
+with the Windows host originals remains not established for 46 of 47**; no acceptance status, gate,
+pin or manifest is affected. The bundle files are published evidence at a fixed commit and are left
+**byte-unchanged**; reliance on this appended correction is sufficient. This resolves the register's
+`IPD-S2REC` **disputed** status as a matter of fact — the IRR characterization is the accurate one.
+
+### 3. G1–G14 reconciliation from the IPD side
+
+Only G13 is IPD-owned. G1, G2 and G12 are IRR-owned; G14 is IRR-owned and last; the remainder are
+PA- or Operator-owned. "Proceed now" means executable by IPD under existing authority today.
+
+| Group | Owner | Current state | IPD-owned next action | Proceed now? |
+|---|---|---|---|---|
+| **G1** Cross-repo discovery | IRR (read-only) | Refs re-verified this pass (IPD `2d0cc005`, IRR `82b3f4a5`, `0` open PRs) | None — read-only, no IPD artifact | n/a |
+| **G2** PA packet prep | IRR / PA | Packet ruling-ready; Q-N1 awaits PA | None | No |
+| **G3** S2 original-evidence retrieval and hash verification | PA / Operator / IPD (record only) | Hash verification **complete**; `IPD-S2REC` factual correction **made here**; Q-S2-1, Q-S2-2 (=Q-B7), Q-B5 await PA; `S2-ORIG` awaits PA scoping plus an operator | None further without a PA ruling | No |
+| **G4** Matter A and B post-ruling | PA / IPD (act only) | `A-IPD` not started; awaits **A-Q5** | IPD-side act for designated-blob items 10 and 12 **only if** PA chooses A-O3/A-O4 | No |
+| **G5** PF and host readiness (Matters C–F) | PA / IRR / Operator | All host items blocked; rulings pending | None — no host, `pwsh`, capture or store probe | No |
+| **G6** P-1 | PA / Operator | **NOT EXECUTED / UNSPENT / NOT AUTHORIZED** | None | No |
+| **G7** S3 | Operator | Not reached (needs P1-EXEC, S2a) | None | No |
+| **G8** QE-1…QE-11 | Operator / IRR | `0/11`, needs S3 | None | No |
+| **G9** DQ-4 and freeze | PA / Operator | Needs P1-EXEC, S2a, G4-S2 | None | No |
+| **G10** Gate 4 | Operator / IRR / PA | **AUTHORIZED — NOT STARTED**; S2 Limb A native run needs a designated pin | None | No |
+| **G11** Gate 5 | PA | Not admitted | None | No |
+| **G12** IRR-owned batches | IRR | Awaits the G2–G5 rulings | None — **no IRR write from this pass** | No |
+| **G13** IPD-owned batches | IPD / PA | See §4 — **2 items closed this and the prior pass; 4 remain PA-gated** | None eligible today | **No** |
+| **G14** Final cross-stage reconciliation | IRR | Depends on all G2–G13 | None | No |
+
+### 4. G13 — the six IPD-owned items, exactly
+
+| Item | Register status | Disposition now | Evidence |
+|---|---|---|---|
+| **D2-REV** — read-only review of PRs #100–#102 | eligible as a separate read-only pass | **COMPLETE** — review performed and returned; `888eb375…a9cd18e8` is `6` commits / `3` paths, all `modified`, zero `added`; `gateAPrimeValidation.ts` byte-identical; PR #102 +168/−0. No repository change, as that pass directed | Tracker §4 of the PR #105 section |
+| **IPD-DIST** — dist entry-count gate (1,140) not re-measured | pending; "measure only under separate authorization" | **COMPLETE** — measured under the authorization granted for that pass: fresh `npm ci` + `npm run build` at `0616ba2d`, `dist/**` = **`1,140`**, unchanged by the correction | PR #105 tracker §1 |
+| **IPD-S2REC** — the "3 unexplained" overstatement | disputed; correction only if PA requires | **FACTUALLY RESOLVED here** — the correct count is **`1`** (§2). Recorded as an appended correction; the published bundle is left byte-unchanged and the underlying acceptance question still belongs to PA under Q-S2-1 | This section §2 |
+| **IPD-S1** — S1 §12.2 / readiness-request `12/12` statements | disputed; correction only if PA requires | **NOT ELIGIBLE** — awaits A-Q2 and A-GAP1. The stale `12/12` at line 765 is already *recorded* (PR #105 §5) rather than rewritten, which preserves the option | PR #105 tracker §5 |
+| **A-IPD** — IPD-side act for designated-blob items 10 and 12 | not started | **NOT ELIGIBLE** — awaits **A-Q5**. No designated-blob or `gateAPrimeValidation.ts` change is made here | Register row 19 |
+| **IPD-C2** — future `C′` implementation | not started | **NOT ELIGIBLE** — requires B-Q1 and a **separate IPD prompt**. No `C′` is created, inferred or designated by recency or tree equivalence | Register row 74 |
+
+**No material IPD implementation work is currently executable.** G13's own "can start now" column
+names only `D2-REV`, which is complete. The application builds clean, typechecks clean and passes
+`931/931` non-skipped tests at `2d0cc005`; no further authorized implementation task is queued, and
+none is invented here.
+
+### 5. G3 determination — residuals separated from real dependencies
+
+**Non-blocking residuals for current IPD application functionality** (none affects a workflow,
+result, persistence, retrieval, recovery or data integrity):
+
+- the `48`-versus-`47` manifest entry-count difference;
+- the single genuinely unreproduced digest, `s2-checkout-verification.txt`;
+- the line-termination form of the transferred evidence (LF in the repository, CRLF on the host);
+- stale tracker wording at lines 741 and 765.
+
+**Genuine dependencies, each scoped to its own downstream operation only:**
+
+| Still required | Exactly what it unblocks | Nothing else |
+|---|---|---|
+| Original host **CRLF bytes** of the 47 files (at minimum `s2-checkout-verification.txt`) | Byte identity, and therefore **formal CAP-03 S2 package-consumer evidence acceptance** | — |
+| The **47-entry manifest-verification output** behind the reported `PASS` | The same acceptance determination | — |
+| **Q-S2-1**, then **Q-S2-2 (= Q-B7)**, then **Q-B5** | Which "S2" each requirement denotes; Matter B's option set | — |
+
+**Four things remain distinct and are not collapsed here:** current IPD functionality (working,
+green); formal CAP-03 S2 package-consumer evidence acceptance (**NOT RENDERED**); P-1 admissibility
+and authorization (**NOT AUTHORIZED**); and **Gate 4 S2 Limb A** native-Windows `npm test` (**NOT
+STARTED**, a separate requirement). **Q-S2-1 and Q-S2-2 are not IPD implementation blockers** and are
+not treated as such.
+
+### 6. Boundaries preserved
+
+No PA decision inferred or rendered; no PA-5 interpretation created; no designated-blob or
+`gateAPrimeValidation.ts` change; no `C′` or other execution pin created, inferred or designated; no
+host, PowerShell, capture, store-probe or P-1 activity; no S3, QE, DQ-4, Gate 4 or Gate 5 movement;
+no evidence regenerated; no historical acceptance record modified; no PR #100–#102 revert or
+modification; no IRR write; no parallel tracker. The PR #105 correction is left exactly as merged.
+
+**P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED /
+UNSPENT / NOT AUTHORIZED.**
+
+### 7. Precise events that would make the next IPD action eligible
+
+| IPD item | The single event that unblocks it |
+|---|---|
+| `IPD-S1` | A PA ruling on **A-Q2** and **A-GAP1** requiring the correction |
+| `A-IPD` | A PA ruling on **A-Q5** choosing A-O3 or A-O4 |
+| `IPD-S2REC` (any further step) | A PA ruling on **Q-S2-1** that requires more than the factual correction recorded here |
+| `IPD-C2` | **B-Q1** resolved *and* a separate IPD implementation prompt issued |
+| Any Gate 4 / P-1 dependent IPD step | A designated execution pin plus the relevant authorization act |
