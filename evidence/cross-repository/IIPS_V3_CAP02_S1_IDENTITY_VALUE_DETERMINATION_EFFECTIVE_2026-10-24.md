@@ -354,6 +354,14 @@ edd0305e…`. The four migration blobs also match `DESIGNATED_MIGRATION_BLOBS` i
 >    amendment act `IIPS-V3-CAP02-GATE-A-PRIME-AMEND-01-DESIGNATED-BLOBS-2026-10-28-01` (PA ruling
 >    `A-Q5`, mechanism `A-O3`), published at IPD `0edadb2d128c9cf85e1522f0b7828d9e99d6d5cf`. §12.2's
 >    enumeration remains a record of the pre-publication baseline and is not amended by this pointer.
+>    **Source-attribution correction 2026-10-29 (`IPD-AQ4-AQ5-SOURCE-ATTRIBUTION-2026-10-29-01`).** The phrase
+>    "(PA ruling `A-Q5`, mechanism `A-O3`)" above is **not supported by the IRR rulings record**. That record
+>    (blob `7c1fe112…` at IRR `main`) lists the A-Q5 mechanism as **open**, with `A-O3` **recommended, not
+>    ruled**; `06-recommendations.tsv` marks A-Q4/A-Q5/A-Q6 `RECOMMENDATION ONLY - NOT ADOPTED`. The amendment
+>    act's **executed content** — designated blobs for §2.1 items 10 and 12 at `a891802e` — is **unchanged and
+>    unaffected** (IRR `CV-CORR-178`, §16.198). Only the mechanism attribution is unverified; **A-Q5/A-O3 remain
+>    PA-reserved**. See the dated pointer in
+>    `IIPS_V3_CAP02_GATE_A_PRIME_AMEND_01_DESIGNATED_BLOBS_EFFECTIVE_2026-10-28.md`.
 > 4. **No effect on any gate, status or designation.** This pointer re-designates nothing and executes
 >    nothing. S1 remains **`BLOCKED`**; Gate A′ provisioning remains **`NOT AUTHORIZED`**; Gate 4
 >    remains **`AUTHORIZED — NOT STARTED`**; `H-12` remains **`NOT ADOPTED`**.
