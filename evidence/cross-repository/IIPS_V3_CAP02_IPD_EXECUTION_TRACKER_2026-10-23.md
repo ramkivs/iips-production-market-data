@@ -2680,3 +2680,91 @@ separate IRR work item with its dependency on this packet's publication:
 **No admission granted, no gate moved, no fence lifted, no write enabled, nothing provisioned, no IRR
 write.** **P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED /
 UNSPENT / NOT AUTHORIZED.**
+
+## CAP-03 — DR-2 / DQ-1 IPD provider envelope: independent closure verification, and correction of the IRR readiness blocker attribution (2026-10-29)
+
+**Record:** `IIPS-V3-CAP03-DR2-IPD-PROVIDER-ENVELOPE-VERIFICATION-2026-10-29-01` —
+`evidence/cross-repository/IIPS_V3_CAP03_DR2_IPD_PROVIDER_ENVELOPE_VERIFICATION_2026-10-29.md`.
+Verification, contract comparison and documentation only. **No IPD source or test file changed; no IRR
+write; no gate, fence, pin, write authorization or durability value moved.**
+
+**Basis.** IPD `main` `c3cfb7e690aefd2ceb0a8323052c9a6f38f4a032`, tree
+`e77aa335bbee9c60d3e3330a028fc985ccff83b4` (live read; `0` open IPD PRs). IRR read-only at `main`
+`8634643144799d231d54ab53751f6313d495c82b`, tree `3f2d0490bf071f0318e3e18538e29671c4e5138c`.
+
+### Finding: the IPD provider half is already closed; the IRR readiness attribution is stale
+
+IRR's readiness evidence published 2026-10-29
+(`evidence/integration/irr-nonprod-parallel-readiness-2026-10-29/01-readiness-verification-record.txt`,
+blob `0505b7ee…`) names as remaining blocker **(1)** *"IPD-provider half of the envelope closure (IPD
+locus)"*. **That attribution is stale.** The IPD provider half of DR-2 / DQ-1 Option A was implemented,
+tested, merged and remote-verified by **IPD PR #89** — *"CAP-03: implement DR-2 Option A IPD provider read
+envelope (7 values + isSaved lifecycle, fail-closed)"* — merge commit
+`79d06e3c5da60da2a234b7ac18c35df848bf9d11`, merged `2026-10-25T13:03:28Z`, and `compare 79d06e3c…c3cfb7e6`
+returns `status=ahead` with main **42 ahead / behind 0**, so it is on `main`. It predates the IRR record by
+four days. This pass re-verified that from live state rather than accepting this tracker's own L1410 claim.
+
+### Gap matrix — all 7 fields + 3 renames verified present, populated and tested
+
+Against IRR's frozen `V1_TO_G2_ENVELOPE_GAP` (`ipcPortAdapter.ts`, blob `1e20e980…`):
+
+| Element | IPD provider | Disposition |
+|---|---|---|
+| summary `weightSumPercentage` / `provenanceDigest` / `isSaved` | emitted from the **current** revision row; empty digest passed through, never defaulted; `isSaved` true only for MERGE/REPLACE | **CLOSED** |
+| view `isSaved` | inherited via `PortfolioDetail extends PortfolioSummary` | **CLOSED** |
+| revision `totalMarketValue` / `provenanceDigest` / `holdingsCount` | each from **its own** historical row; never borrowed from current | **CLOSED** |
+| renames `holdingsCount`→`totalHoldingsCount`, `committedAt`→`createdAt` | **correctly NOT applied provider-side** — they belong to the IRR adapter | **CLOSED** |
+
+Executed completeness assertion: *"the seven additions are exactly seven — no extra field was admitted."*
+
+### Envelope compatibility verified at the provider boundary
+
+Request key minimality (`v`/`op`/`payload`, `requestId` optional — `protocol.ts` L196/L214); success frame
+`{v,ok:true,op,result}` and Class A frame `{v,ok:false,op,outcome,detail?}` (`protocol.ts` L147–166);
+Class P **zero-byte** `socket.destroy()` (`dispatch.ts` L49–55); closed operation set (`UNKNOWN_OPERATION`);
+all `IPC_WRITE_OPERATIONS` refused **before any mutation** via the hard-false `evaluatePortSaveGuard()`
+(`dispatch.ts` L228–233).
+
+### Independent cross-check not previously covered
+
+IPD's conformance suite carries a **replica** of the IRR mapping rules (test L315–395). A replica can drift
+silently. This pass compared it against IRR's **actual** adapter source at `86346431` (L414–464, L529–531):
+**exact match on all three shapes — no drift.** The suite's conclusions therefore transfer to the real
+consumer.
+
+### What actually remains — none of it IPD provider-side
+
+Cross-repository DR-2 closure stays **OPEN** on governance- and IRR-owned dependencies only: **Gate 5
+admission (`CV-52` `BLOCKED – ACTIVE`, `NOT INITIATED / NOT ADMITTED`)**; **DR-4r / DQ-3** populated
+contribution view (**refused by decision**, not a defect); **no DQ-4 freeze**; **Gate A′ / P-1**
+(`NOT EXECUTED / UNSPENT / NOT AUTHORIZED`). IRR route wiring remains correctly held: IRR
+`frontend/server/user-portfolio-transport.ts` is still blob
+`51704c12a467cd2f718a030b5036bc55c9afa73f`, importing only `respondOwnerContextUnavailable` (L10) and
+calling it unconditionally (L68).
+
+**IRR-owned correction, described and NOT performed here:** readiness blocker (1) should read
+*"cross-repository closure of DR-2 — Gate 5 admission, DR-4r/DQ-3 and the DQ-4 freeze (governance/PA)"*,
+because the IPD-provider half is already closed by PR #89 (`79d06e3c`). Owner **IRR**; IRR was read-only.
+
+### Validation (exact)
+
+`npm ci` exit `0`; `npx tsc` exit `0`; `npm test` (the repository's own runner) → **932 tests / 124 suites /
+931 pass / 0 fail / 1 skipped**, `[test-guard] OK`, exit `0`; conformance suite isolated
+(`node --test dist/tests/q1_ipc_read_contract_conformance.test.js`) → **30 / 30 pass, 0 fail**;
+`npm run test:package-consumer` **PASS** (browser pack `1,729,910` B, `forbiddenHits: []`, strict typecheck
+`PASS`, `routeIntegrationTests: TYPECHECK_ONLY_NOT_IRR_E2E`). The one skip is the Windows-only named-pipe
+test. **Two invocation failures recorded honestly, both mine:** source-level single-file runs
+(`--import tsx`, `--experimental-strip-types`) fail `ERR_MODULE_NOT_FOUND: src/persistence/connection.js`
+because the TS sources import compiled `.js` specifiers; the repository's runner executes the compiled
+`dist/tests`, which is why both compiled runs succeed. No test, source file or assertion was altered.
+
+### Safety
+
+`evaluatePortSaveGuard()` unchanged and still hard-false (`W-1(3)` / `W-1(4)`); no durable write path
+created, widened or exercised; no owner-context change and no tenant hint; no Gate 4 / QE / Gate 5 / P-1 /
+DQ-4 / production movement; no host action; no PA decision made or inferred; no pin, designated blob,
+`BASIS_COMMIT` or `BASIS_TREE` change. IPD `src/` tree unchanged at
+`5e910c8f86df4dbec16427b8a7bfd3846214563d`. Register `V-DR2-01`…`V-DR2-12` in the record.
+
+**P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED / UNSPENT /
+NOT AUTHORIZED.**
