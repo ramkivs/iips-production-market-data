@@ -1,4 +1,6 @@
 # CAP-02 — Gate A′ Successor Provisioning Act: Designated-Blob Amendment (Act 01) — **RENDERED — EFFECTIVE ON PUBLICATION**
+>
+> **⚠ READ FIRST — source-attribution correction `IPD-AQ4-AQ5-SOURCE-ATTRIBUTION-2026-10-29-01` (2026-10-29), below at §"DATED SOURCE-ATTRIBUTION CORRECTION".** The `STATUS` line immediately following, and the `Rulings applied` / `Ruling locus` rows of the metadata table, assert that **`A-Q4`** was ruled and that **`A-Q5`'s mechanism was ruled `A-O3`**. **Neither is established by the cited locus**; both are **UNSUPPORTED BY THE CITED SOURCE — UNRESOLVED, PA-RESERVED**. The original text is preserved verbatim below. **The act's executed content — designated blobs for §2.1 items 10 and 12 at `a891802e` — is unaffected and is not reverted.**
 
 > ## STATUS: **RENDERED — EFFECTIVE ONLY ON PUBLICATION TO IPD `main` (§8) · MECHANISM `A-O3` SELECTED BY THE PROGRAM AUTHORITY · AMENDS §2.1 ITEMS 10 AND 12 ONLY · NO CODE CHANGED · NO OTHER DESIGNATED ITEM CHANGED · NOTHING EXECUTED**
 >
