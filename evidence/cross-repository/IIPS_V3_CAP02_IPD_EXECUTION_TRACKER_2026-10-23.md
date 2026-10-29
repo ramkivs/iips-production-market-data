@@ -2482,6 +2482,17 @@ execution time. This act was executed against the ruling text as carried on that
 read-only; IRR was not modified. IRR's own merge of PR #353 is a separate step and is not claimed
 here.
 
+> **Dated source-attribution correction — 2026-10-29 (`IPD-AQ4-AQ5-SOURCE-ATTRIBUTION-2026-10-29-01`; original
+> text preserved).** The paragraph above lists **`A-Q4`** and **`A-Q5` = `A-O3`** among "the applied rulings".
+> **Neither is established by the cited locus.** The rulings record at `caca0213…` (blob `a4a59bf0…`), §1 line 20,
+> states *"Not ruled in this pass (remain open): A-Q4 …, A-Q5 mechanism and target commit (recommended A-O3 …),
+> A-Q6"*; the sitting register records A-Q4 `unresolved` and A-Q5 `not yet eligible`; `06-recommendations.tsv`
+> marks all three `RECOMMENDATION ONLY - NOT ADOPTED`. Only **`A-Q1`, `A-Q2`, `A-Q3` and `A-GAP1`** are genuinely
+> ruled there. PR #353 has since merged (`fcc02270…`, `2026-10-29T10:41:19Z`) but the rulings record at merged IRR
+> `main` (blob `7c1fe112…`) still records both as open. **A-Q4 and the A-Q5 mechanism remain PA-RESERVED.** The
+> act's executed content — designated blobs for items 10 and 12 — is **unaffected** (IRR `CV-CORR-178`, §16.198).
+> Full reconciliation in the section "CAP-02 — PR #107 ruling-source attribution corrected" below.
+
 ### 3. Effect on §8.2 and on standing statuses
 
 This act clears the **designated-blob limb** of act §8.2 for items 10 and 12 only (ruling `A-Q6`).
@@ -2765,6 +2776,115 @@ created, widened or exercised; no owner-context change and no tenant hint; no Ga
 DQ-4 / production movement; no host action; no PA decision made or inferred; no pin, designated blob,
 `BASIS_COMMIT` or `BASIS_TREE` change. IPD `src/` tree unchanged at
 `5e910c8f86df4dbec16427b8a7bfd3846214563d`. Register `V-DR2-01`…`V-DR2-12` in the record.
+
+**P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED / UNSPENT /
+NOT AUTHORIZED.**
+
+## CAP-02 — PR #107 ruling-source attribution corrected: `A-Q4` and `A-Q5`/`A-O3` are NOT established by the cited locus (2026-10-29)
+
+**Correction:** `IPD-AQ4-AQ5-SOURCE-ATTRIBUTION-2026-10-29-01`. **Documentation and source reconciliation only.
+No code, test, script, pin, designated blob, gate, fence, write authorization or durability value changed. No IRR
+write. No PA ruling made, inferred or reopened.**
+
+**Basis.** IPD `main` `188a4ff943175fe6338485706cca12da3b0735ff`, tree `79bc8e50…` (live read; `0` open IPD PRs).
+IRR read-only at `main` `24e5b16eda382d285d1111c990ea317b3d4fb626`.
+
+### The defect
+
+IPD PR #107 (`0edadb2d128c9cf85e1522f0b7828d9e99d6d5cf`, merged `2026-10-28T15:30:43Z`) published act
+`IIPS-V3-CAP02-GATE-A-PRIME-AMEND-01-DESIGNATED-BLOBS-2026-10-28-01`. Its `Rulings applied` row lists six items,
+and its `Ruling locus` row cites IRR PR #353 head `caca0213162f220edfdfc3e0f37b580e6c77d829`. Two of the six are
+**not established by that locus**:
+
+| Claimed as applied | What the cited locus actually records | Verdict |
+|---|---|---|
+| `A-Q1` YES | Rulings record §1 row: **YES** | **SUPPORTED** |
+| `A-Q2` = `edd0305e…` | Rulings record §1 row: **`edd0305e`** | **SUPPORTED** |
+| `A-Q3` workstream-scoped | Rulings record §1 row | **SUPPORTED** |
+| `A-GAP1` act row S1 governs | Rulings record §1 row | **SUPPORTED** |
+| **`A-Q4` `521d5482…` authorizes the two PR #96 paths** | §1 line 20 *"Not ruled in this pass (remain open): A-Q4 …"*; §5 line 65 open question; register `unresolved` / `ready-with-gap` | **UNSUPPORTED — UNRESOLVED, PA-RESERVED** |
+| **`A-Q5` mechanism `A-O3` at `a891802e`** | §1 line 20 *"A-Q5 mechanism and target commit (**recommended** A-O3 …)"*; register `not yet eligible`, `depends_on A-Q1; A-Q2; A-Q3; A-Q4` | **UNSUPPORTED — UNRESOLVED, PA-RESERVED** |
+
+`06-recommendations.tsv` (blob `a2f9bcb8f4dcb8da673c0747762a30731cff6670`) marks **A-Q4, A-Q5 and A-Q6
+`RECOMMENDATION ONLY - NOT ADOPTED; Table 1 status unchanged`**, with `immediate_adoption_supported = NO` and
+`explicit_PA_choice_required = YES` — verified directly, all 43 rows.
+
+**Root cause is an IRR-internal source conflict at a single commit, not an IPD reading error.** The act's second
+cited source — `IIPS_v3.0_CAP03_PA_DESIGNATION_RECORD_PASS2_2026-10-28.md` §3 (blob `0f9df80b32da5f81839b91f733cd9239fb4ae425`)
+— asserts *"A-Q5 mechanism = A-O3 at a891802e; A-Q4 = YES"* while attributing both to *"rulings in"* the rulings
+record, which does not contain them. **IRR has since adjudicated it:** PR #371 (`CV-CORR-178`, §16.198, merge
+`e65e59e4f9ff0a21f119277f3904f1a08f517e28`, `2026-10-29T12:33:25Z`) annotated that designation record to say its
+basis *"is not supported by the rulings record"*, and its **finding 4** names this very defect: *"IPD PR #107
+(`0edadb2d`) cites an IRR ruling locus (`caca0213`) that does not contain the rulings it lists. IPD-side item; IRR
+does not modify IPD."* This pass is the IPD-side execution of that finding.
+
+### No later authoritative act resolves either ruling
+
+IRR PR #353 has since **merged** (head `0fbba337…`, merge `fcc02270ba9f71cfb6779b6b5f0698104e3183d5`,
+`2026-10-29T10:41:19Z`), so the act's `Ruling locus` note — correct when written — is now stale as to merge state.
+But the rulings record **at merged IRR `main`** (blob `7c1fe1127d76a17998815c8b41328e2471e54490`, 113 lines)
+**still** carries line 20 unchanged and still lists A-Q4 in §5; its only additions are §8 (recording this IPD act's
+publication as a fact) and a §9 pointer. `IIPS_v3.0_CAP03_IPD_A-Q5_RESULT_RECORD_2026-10-28.md` (blob
+`6017667c777d0e9991f670d57194edbd90307e08`) carries the `CV-CORR-178` pointer: *"The rulings record … records A-Q4
+and the A-Q5 mechanism as open and lists A-O3 as 'recommended', not ruled … Sequencing and mechanism remain
+PA-reserved."* **Both questions therefore remain OPEN and PA-RESERVED.**
+
+### The distinction that matters: the attribution defect does NOT affect the code's admissibility
+
+PR #107 **changed no code** — it was a documentation-only amendment act re-designating two §2.1 blob values. Those
+two designations rest on **`A-Q1` (YES)** and **`A-Q2` (`edd0305e`)**, both genuinely ruled, and were verified by
+blob identity at `a891802e` and at `0edadb2d`. IRR's pointer states expressly: *"This act's executed content
+(designated blobs for items 10 and 12) is not changed by this pointer."* **No code is reverted and none should
+be** — the defect is one of source attribution, not of authorization for what was executed.
+
+| Stands (unchanged) | Why |
+|---|---|
+| Item 10 = `540d49f2deb2…`, item 12 = `edd0305e3e58…` at `a891802e` | Rest on `A-Q1` / `A-Q2`; blob-identity verified |
+| §8.2 **designated-blob limb CLEARED** (items 10, 12 only) | Blob-identity fact, not ruling-dependent |
+| §8.2 **basis limb** cleared under PA reading (ii) | Separate ruling; `BASIS_COMMIT` `5fc74085…` / `BASIS_TREE` `7226ef00…` unchanged |
+| **Matter A CLOSED** as to the act's §7 closure test | IRR result record §4 |
+| No code changed; no other designated item touched; `A-O5` not adopted | Act §1–§2, §5 |
+
+| Withdrawn | Effect |
+|---|---|
+| "A-Q4 was ruled" | Now marked **UNRESOLVED / PA-RESERVED** |
+| "A-Q5 mechanism was ruled as A-O3" | Now marked **UNRESOLVED / PA-RESERVED**; `A-O3` is a *recommendation* |
+| Any reading of §4 treating **`A-Q6` sequencing** as decided | `A-Q6`'s designated-blob limb clearance stands on blob identity; `A-Q6` **as a ruling** remains PA-reserved |
+
+### Corrections applied (IPD-owned only)
+
+1. **Act document** `…_GATE_A_PRIME_AMEND_01_DESIGNATED_BLOBS_EFFECTIVE_2026-10-28.md` — dated correction pointer
+   inserted after the status block (`+57/−0`). Original `Rulings applied` / `Ruling locus` rows **preserved
+   verbatim**, per the dated-pointer convention used by IRR `CV-CORR-178` and by IPD PR #108.
+2. **S1 identity-value determination** `…_S1_IDENTITY_VALUE_DETERMINATION_EFFECTIVE_2026-10-24.md` §12.2 pointer —
+   annotation on the phrase "(PA ruling `A-Q5`, mechanism `A-O3`)" (`+8/−0`); original preserved.
+3. **This tracker** — inline pointer at the §"Authority locus, recorded precisely" paragraph, plus this section.
+
+**Not corrected (no defect):** `IIPS_V3_CAP03_S1_POINTER_ACT_01_EFFECTIVE_2026-10-28.md` — its `Ruling applied` row
+cites only **`A-GAP1`**, which the rulings record does establish; its `caca0213` reference is a prompt-blob locus,
+not a ruling locus. Tracker rows stating `A-IPD` "awaits **A-Q5**" / "only if PA chooses A-O3/A-O4" are correctly
+conditional and are left as written.
+
+### Resolving act required (identified, not performed)
+
+An express **PA source-confirmation act** for `A-Q4` and the `A-Q5` mechanism — the act IRR PR #371 **finding 1**
+names as needed: *"Source confirmation for G4P-1, B-1, A-O3 and A-Q4 = YES (rulings record does not contain them;
+06 marks them not adopted)."* Until that act exists, IPD records must not present A-Q4 or A-Q5/A-O3 as ruled.
+
+### Validation
+
+No executable path changed, so no product build or test-suite run was required. Exact commands and outcomes:
+
+| Command | Outcome |
+|---|---|
+| `git diff --numstat` | **`+185 / −0`** — `57` act document, `120` this tracker, `8` S1 determination. **Zero** changes under `src/`, `tests/`, `scripts/`, `frontend/` |
+| `git rev-parse HEAD:src` and working-tree check | `5e910c8f86df4dbec16427b8a7bfd3846214563d`, **unchanged**; `git status --porcelain -- src tests scripts frontend` returns empty |
+| `git grep -c IPD-AQ4-AQ5-SOURCE-ATTRIBUTION-2026-10-29-01 HEAD` | **`0`** files at `HEAD` before publication — correction ID is new |
+| `npm ci --no-audit --no-fund` | exit **`0`** (33 packages). Run only to repair a **missing devDependency** — the first `test:package-consumer` invocation failed `sh: 1: tsc: not found`. **Environment failure, not a product failure** |
+| `npm run test:package-consumer` | **PASS**, exit `0` — browser pack **`1,729,910`** B, `forbiddenHits: []`, strict typecheck `PASS` (`skipLibCheck: false`), `routeIntegrationTests: TYPECHECK_ONLY_NOT_IRR_E2E`. Run as a documentation-integrity regression guard, since this script scans the published package for forbidden content |
+
+`evaluatePortSaveGuard()` untouched and still hard-false. A full-project `npx tsc` was not run: no TypeScript
+path was modified, and the package-consumer step performs its own strict typecheck of the published package.
 
 **P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED / UNSPENT /
 NOT AUTHORIZED.**

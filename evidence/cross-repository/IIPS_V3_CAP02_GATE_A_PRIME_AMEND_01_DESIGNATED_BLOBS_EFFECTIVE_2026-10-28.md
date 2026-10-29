@@ -13,6 +13,63 @@
 >
 > The amendment corrects a designation/reality divergence only. It changes no source file, no test,
 > no script, no manifest, no compiled basis constant, no execution pin and no receipt.
+>
+> ## **DATED SOURCE-ATTRIBUTION CORRECTION — 2026-10-29 · `IPD-AQ4-AQ5-SOURCE-ATTRIBUTION-2026-10-29-01` · original text preserved · NO executed content changed**
+>
+> Two entries in the **`Rulings applied`** row of the table below — **`A-Q4` `521d5482…` authorizes the two
+> PR #96 paths** and **`A-Q5` mechanism `A-O3` at `a891802e`** — are **NOT SUPPORTED BY THE LOCUS THIS ACT
+> CITES**. Both are re-marked **UNSUPPORTED BY THE CITED SOURCE — UNRESOLVED, PA-RESERVED**. The original
+> wording is preserved unchanged above, per the dated-pointer convention.
+>
+> **What the cited locus actually says.** IRR `docs/integration/IIPS_v3.0_CAP03_PA_RULINGS_RECORD_PASS2_2026-10-28.md`
+> at the cited head `caca0213…` (blob `a4a59bf06c7d01fe66b05fd28545ed491a736574`), §1 line 20, verbatim: *"Not
+> ruled in this pass (remain open): A-Q4 (authorizing record for the two PR #96 paths; candidate `521d5482`),
+> A-Q5 mechanism and target commit (recommended A-O3 at C′ `a891802e`), A-Q6."* §5 line 65 lists A-Q4 as an
+> open question. `01-sitting-decision-register.tsv` (blob `3957ee690565e593d565a4f0d44ca24acbce9180`) records
+> **A-Q4 `unresolved`** and **A-Q5 `not yet eligible`**, `depends_on A-Q1; A-Q2; A-Q3; A-Q4`, with `A-O3` merely
+> one of three **options**. `06-recommendations.tsv` (blob `a2f9bcb8f4dcb8da673c0747762a30731cff6670`) marks
+> **A-Q4, A-Q5 and A-Q6 `RECOMMENDATION ONLY - NOT ADOPTED`**, `immediate_adoption_supported = NO`,
+> `explicit_PA_choice_required = YES`.
+>
+> **Why this act read otherwise — an IRR-internal source conflict, not an IPD reading error.** The second cited
+> source, `IIPS_v3.0_CAP03_PA_DESIGNATION_RECORD_PASS2_2026-10-28.md` §3 (blob
+> `0f9df80b32da5f81839b91f733cd9239fb4ae425`), asserts in its basis line *"A-Q5 mechanism = A-O3 at a891802e;
+> A-Q4 = YES"* and titles §3 *"Matter A designations (A-Q5 mechanism A-O3, target `a891802e`)"* — while
+> attributing both to *"rulings in"* the rulings record, which does not contain them. **IRR has since
+> adjudicated this:** PR #371 (`CV-CORR-178`, §16.198, merge `e65e59e4f9ff0a21f119277f3904f1a08f517e28`,
+> `2026-10-29T12:33:25Z`) annotated the designation record to state that its basis *"is not supported by the
+> rulings record"*, and its finding 4 records this exact IPD defect: *"IPD PR #107 (`0edadb2d`) cites an IRR
+> ruling locus (`caca0213`) that does not contain the rulings it lists. IPD-side item; IRR does not modify IPD."*
+>
+> **No later authoritative act resolves either ruling.** IRR PR #353 has since merged (head `0fbba337…`, merge
+> `fcc02270ba9f71cfb6779b6b5f0698104e3183d5`, `2026-10-29T10:41:19Z`), so the `Ruling locus` note below — correct
+> when written — is now stale as to merge state. But the rulings record **at merged IRR `main` `24e5b16e…`**
+> (blob `7c1fe1127d76a17998815c8b41328e2471e54490`) **still** carries line 20 unchanged and still lists A-Q4 in
+> §5; its only additions are §8 (recording this act's publication as a fact) and a §9 pointer.
+> `IIPS_v3.0_CAP03_IPD_A-Q5_RESULT_RECORD_2026-10-28.md` (blob `6017667c777d0e9991f670d57194edbd90307e08`)
+> carries the `CV-CORR-178` pointer: *"The rulings record … records A-Q4 and the A-Q5 mechanism as open and
+> lists A-O3 as 'recommended', not ruled … Sequencing and mechanism remain PA-reserved."*
+>
+> **Expressly NOT corrected** — the same pointer states *"This act's executed content (designated blobs for
+> items 10 and 12) is not changed by this pointer"*, and the IRR result record §3–§4 verifies:
+>
+> | Stands | Why |
+> |---|---|
+> | Item 10 = `540d49f2deb2…`, item 12 = `edd0305e3e58…` at `a891802e` | These rest on **`A-Q1` YES** and **`A-Q2` = `edd0305e`**, both genuinely ruled in the rulings record §1 — verified at `a891802e` and at `0edadb2d` |
+> | §8.2 **designated-blob limb CLEARED** (items 10 and 12 only) | A blob-identity fact, not ruling-dependent |
+> | §8.2 **basis limb** cleared under PA reading (ii) | A separate ruling; `BASIS_COMMIT` `5fc74085…` / `BASIS_TREE` `7226ef00…` unchanged |
+> | **Matter A CLOSED** as to the act's §7 closure test | IRR result record §4 |
+> | **No code changed**; no other designated item touched; `A-O5` not adopted | Act §1–§2, §5 |
+>
+> **What IS withdrawn:** the characterization that A-Q4 was ruled, and that A-Q5's mechanism was ruled as
+> `A-O3` — and with it any reading of §4 that treats **`A-Q6` sequencing** as decided. `A-Q6`'s
+> *designated-blob limb* clearance stands on blob identity; `A-Q6` **as a ruling** remains PA-reserved.
+>
+> **Authority boundary — this correction decides nothing.** It does not rule `A-Q4`, `A-Q5`, `A-Q6`, `G4-PIN`
+> or any reserved matter, and selects no P-1 coordinate. Resolving the attribution requires an express **PA
+> source-confirmation act** for `A-Q4` and the `A-Q5` mechanism — the act IRR PR #371 finding 1 names as needed.
+> Until then both remain **OPEN / PA-RESERVED**. No gate, QE, Gate 4/5, P-1, acceptance, qualification,
+> admission, authorization, pin, capability, `503` fence or runtime behaviour is changed by this pointer.
 
 | Field | Value |
 |---|---|
