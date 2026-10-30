@@ -30,6 +30,7 @@ import {
   type IpcHandle,
 } from './endpoint.js';
 import { createConnectionHandler } from './dispatch.js';
+import { createBrokerImportConsumer, type BrokerImportConsumer } from './brokerImportConsumer.js';
 
 export const DATABASE_PATH_SETTING = 'IIPS_G3_DATABASE_PATH';
 
@@ -48,6 +49,15 @@ export interface StartupOutcome {
   readonly error?: string;
   readonly target?: EndpointTarget;
   readonly handle?: IpcHandle;
+  /**
+   * O5-A (PA act `IIPS-V3-O05-PRODUCTION-CONSUMER-PA-DECISION-2026-10-30-01`
+   * clause 1(b)): the durable broker-import consumer this process constructed
+   * over its own handle. Present on success only. Its every write attempt is
+   * refused by the frozen Gate E W-1 conjunction with zero store effect; it
+   * exists to make the durable leg reachable from shipped code, not to enable a
+   * write. Nothing dispatches to it.
+   */
+  readonly brokerImportConsumer?: BrokerImportConsumer;
 }
 
 export interface StartupOptions {
@@ -105,6 +115,14 @@ export async function startIpcServer(options: StartupOptions = {}): Promise<Star
     return fail('verify', error);
   }
 
+  // 4b. O5-A single authorized call site (PA act `...-PA-DECISION-2026-10-30-01`
+  // clause 1(b)): construct the durable broker-import consumer over the handle
+  // this process already opened. Construction opens no file, begins no
+  // transaction and writes nothing; the consumer refuses every import at the
+  // write-gate boundary. No route, endpoint or operation is added, and no
+  // existing caller changes.
+  const brokerImportConsumer = createBrokerImportConsumer(db);
+
   // 5. bind the same-host endpoint
   try {
     // Windows named pipes cannot deliver a usable half-close EOF before the
@@ -115,7 +133,7 @@ export async function startIpcServer(options: StartupOptions = {}): Promise<Star
       platform,
       ...(options.serverFactory ? { serverFactory: options.serverFactory } : {}),
     });
-    return { ok: true, target: handle.target, handle };
+    return { ok: true, target: handle.target, handle, brokerImportConsumer };
   } catch (error) {
     if (
       error instanceof EndpointCollisionError ||
