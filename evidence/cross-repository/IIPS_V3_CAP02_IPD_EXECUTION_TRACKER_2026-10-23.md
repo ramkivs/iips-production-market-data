@@ -2888,3 +2888,93 @@ path was modified, and the package-consumer step performs its own strict typeche
 
 **P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 NOT EXECUTED / UNSPENT /
 NOT AUTHORIZED.**
+
+> **[2026-10-31 dated overlay — see the `P-20` section immediately below.]** The `NOT AUTHORIZED` limb of
+> the sentence above is **STALE**. The Program Authority rendered the `P1-F` authorization act
+> `IIPS-V3-CAP03-P1-AUTHORIZATION-ACT-2026-10-29-01` on **2026-10-29**, and IRR `main` (§16.206
+> `CV-CORR-186`; current-state pointer §16.229 `CV-CORR-209`) records P-1 as
+> **`AUTHORIZED — ONE ATTEMPT ONLY — NOT EXECUTED — UNSPENT`**. The `NOT EXECUTED / UNSPENT` limbs remain
+> accurate and are unchanged. This sentence is retained as the historical record of the `2026-10-29`
+> pass; the current authorization position is the dated section below, which **supersedes** the stale
+> limb only. IPD records the IRR decision and does not issue or interpret it.
+
+---
+
+## CAP-02/CAP-03 — `P-20`: the stale `P-1 … NOT AUTHORIZED` footer limb corrected by dated pointer to the effective IRR `P1-F` authorization (`2026-10-31`)
+
+**Record.** IPD-side documentation reconciliation only. This section is an append-only **dated overlay**.
+It records an authorization decision taken **in IRR by the Program Authority**. IPD does not issue,
+grant, condition, revoke, modify or independently interpret any P-1 authorization in this section, and
+nothing here confers implementation, provisioning or production authority on IPD. **The authorization
+authority is IRR's; the documentation responsibility is IPD's.** Those two are kept apart deliberately.
+
+**Why this section exists.** The IRR 51×17 capability-matrix reassessment of `2026-10-31` (record
+`IIPS-V3-CAPMATRIX-51X17-REASSESSMENT-2026-10-31-01`) raised pending item **`P-20`** — *"IPD tracker
+stale P-1 footer"* — because the closing footer of this tracker asserts a P-1 authorization limb that
+IRR `main` no longer supports.
+
+### 1. The conflict, precisely
+
+| Source | Assertion | Disposition |
+|---|---|---|
+| This tracker — closing footers of the dated pass records, the latest of which closes this file | `P-1 NOT EXECUTED / UNSPENT / NOT AUTHORIZED` | The `NOT EXECUTED` and `UNSPENT` limbs **remain TRUE**. Only the **`NOT AUTHORIZED`** limb is **STALE**. |
+| IRR `main` — `P1-F` act §6 and §8 | `P-1 IS AUTHORIZED — ONE ATTEMPT, NOT YET MADE` / `P-1: AUTHORIZED — NOT EXECUTED — UNSPENT` | **AUTHORITATIVE.** |
+
+Only the third limb is in conflict. This tracker's first two limbs are **confirmed**, not corrected.
+
+### 2. The authoritative IRR source (dated pointer)
+
+| Element | Value, as read from IRR `main` |
+|---|---|
+| Decision | **`P1-F`** — PA authorization act, **`RENDERED`** |
+| **Effective date** | **`2026-10-29`** |
+| Act identifier | `IIPS-V3-CAP03-P1-AUTHORIZATION-ACT-2026-10-29-01` |
+| Act text | IRR `docs/integration/IIPS_v3.0_CAP03_P1_AUTHORIZATION_ACT_AND_PREREQUISITE_DECISIONS_2026-10-29.md` — §6 (`P1-F`, the act as rendered) and §8 (status after this record) — blob `e49bdd4156453971ae6b2bc61c4d2ec1b070f59c` |
+| IRR tracker record | **§16.206** — `CV-CORR-186`: *"P-1 authorized — `PD-1` §4.6 designation, `PA-06` L2a admission, `PA-13` E10, `PA-15` identity limb, `P1-F` rendered; no attempt performed"* (`2026-10-29`; `CHG-2026-10-29-28`; `V1522`–`V1536`) |
+| Current-state pointer | **§16.229** — `CV-CORR-209` (`2026-10-31`; `CHG-2026-10-31-08`; `V1795`–`V1805`): *"`P1-F` remains **AUTHORIZED — ONE ATTEMPT ONLY — NOT EXECUTED — UNSPENT**"* |
+| IRR `main` read at | commit `11f064a3add34ab237735191df47eb8bea59e013`; master tracker blob `eee80b5310073438719d86924902b98e21b41053` |
+| Evidence references | `[E005]` this tracker, blob `31fd3b84746b7d47465f7cdf14e853c216ea71a5`; `[E011]` the `P1-F` act, blob `e49bdd4156453971ae6b2bc61c4d2ec1b070f59c` — both from the IRR reassessment evidence register at `evidence/integration/capability-matrix-51x17-reassessment-2026-10-31/` |
+| Act's own scope | *"P-1 provisioning execution only, as defined by the successor act, at the designated pin, one attempt."* |
+| Act's conditions, carried verbatim | one attempt, single-use — the act is **spent by the first attempt, whether it succeeds or fails**, and a failed or partial attempt is not re-run under it; pin equality enforced, not assumed (`EXECUTION_PIN_MISMATCH` before any connection is opened); runtime gates stay in force (`win32`, Node `>=22.13.0 <23`, flag-free `node:sqlite`, non-existent store, no pre-existing binding/membership row); the receipt is the record; no observation is presumed |
+
+### 3. What this correction does NOT establish
+
+- **P-1 has not executed.** `NOT EXECUTED` and `UNSPENT` are unchanged and remain accurate. No store,
+  row, binding, membership, receipt or audit event exists.
+- `P-1-C` remains **NOT ESTABLISHED**; `P-1-D` remains **DESIGNATED, NOT VERIFIED FOR THE ATTEMPT**.
+- Nothing downstream moved. Gate 4 remains **`AUTHORIZED — NOT STARTED`**; the Gate 4 QE/H-12 pin
+  remains **undesignated** (`PA-09` open); QE **`0/11`**; H-12 **NOT ADOPTED**, no baseline effective;
+  Gate 5 **NOT INITIATED / NOT ADMITTED**; S3 not started; the DQ-4 freeze not performed;
+  `durable:true`, the `503` lift, `V1295` and **production not granted**.
+- The **separate one-time capture-only Revision 7 Preflight authorization** (IRR act §10, `2026-10-31`)
+  remains **distinct and unused**. It is not the `P1-F` act and this section does not affect it.
+- **No IRR content was amended.** No IRR authorization, decision record or evidence was changed by this
+  pass, and IPD has no authority to do so.
+
+### 4. Supersession and scope
+
+- This section is the tracker's **current-state** position on the P-1 authorization limb.
+- Where any earlier dated pass record in this file states `P-1 … NOT AUTHORIZED`, that text **remains as
+  written**. Each such statement was accurate as of its own pass date — the latest being `2026-10-29`,
+  the same date on which the `P1-F` act was rendered — and is **superseded for current-state purposes by
+  this section**. Consistent with IRR practice, dated overlays govern historical text; historical
+  footers are not rewritten.
+- The closing footer of the `2026-10-29` pass above carries an **inline pointer** to this section so
+  that no reader can take the stale limb as the current position.
+- `31fd3b84…`, cited by the reassessment as "IPD tracker `31fd3b84`", is the **blob** SHA-1 of this file
+  as it stood at IPD `main` before this correction — not a commit SHA.
+
+### Validation
+
+Documentation-only change; no executable path was touched.
+
+| Command | Outcome |
+|---|---|
+| `git diff --numstat` | **`+76 / −0`** in this file only. **Zero** changes under `src/`, `tests/`, `scripts/`, `frontend/` |
+| `git rev-parse HEAD:src` and working-tree check | unchanged; `git status --porcelain -- src tests scripts frontend` returns empty |
+| `git grep -c 'P-20' HEAD -- evidence/cross-repository/IIPS_V3_CAP02_IPD_EXECUTION_TRACKER_2026-10-23.md` | **`0`** before publication — this correction record is new to this tracker |
+| IRR read-back | IRR `main` read-only at `11f064a3add34ab237735191df47eb8bea59e013`; **no IRR write attempted** |
+| Build / test suite | **Not required** — no TypeScript, JavaScript, script or configuration path was modified |
+
+**P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT. P-1 `AUTHORIZED` by IRR `P1-F`
+(`2026-10-29`) — ONE ATTEMPT ONLY — NOT EXECUTED — UNSPENT.**
