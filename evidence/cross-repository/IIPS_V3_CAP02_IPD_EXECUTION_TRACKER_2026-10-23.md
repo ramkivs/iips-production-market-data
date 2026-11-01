@@ -3111,3 +3111,125 @@ Documentation-only. No executable path, dependency, pin, guard, export map or co
 `DEFERRED`, fail-closed. No approved manual-ingestion product requirement exists; no express `REG-06`
 admission act exists; all four technical prerequisites are unsatisfied. This record is NOT product
 admission, NOT implementation completion, and confers no production authority.**
+
+---
+
+## CAP-02 — `P-08` / `REG-06` follow-up: exhaustive **all-branch** re-verification of the four technical admission findings, and correction of one of them (`2026-11-01`)
+
+**Record.** Read-only cross-branch investigation of the four technical findings recorded in the
+`P-08` section above. **This section corrects one of those four findings.** The `REG-06` governance
+position is **unchanged**: Operator Drop remains an internal IPD library primitive and product
+admission remains **`DEFERRED`**, fail-closed. No implementation, export, runtime-registration or
+product-admission change is made here, and PA ownership of the product requirement and the admission
+decision is unchanged.
+
+**Why this section exists.** The `P-08` findings were established against IPD `main` only. Absence
+from `main` is not absence from the repository, so all four were re-tested against **every** branch,
+tag and PR.
+
+### 1. Branch, tag and PR inventory examined
+
+| Population | Count | Notes |
+|---|---|---|
+| Remote branches | **104** | every tip scanned individually |
+| Tags | **6** | incl. `iips-pin-np04-2e11fa3b` → `2e11fa3b689d`, `iips-pin-g24-6828155e` → `6828155ec6e8` |
+| PRs (all states) | **111** | **110 merged, 1 unmerged, 0 open** |
+| Commits reachable | **898** | local clone unshallowed to enable full-history search |
+| The 1 unmerged PR | **#42** | `arena/feda2d8c…` — *"Gate 3: act-conformant IPC candidate"*, closed `2026-10-24T12:47:36Z`, draft, Gate 3 **BLOCKED / NOT ACCEPTED**. Unrelated to the four findings. |
+
+**The two off-main references named for investigation are both real, and both are tags.** Neither is
+obsolete or unrelated:
+
+| Reference | Branch | Tag | Author / date | Relation to `main` |
+|---|---|---|---|---|
+| `2e11fa3b689d` | `np04-governed-persistence-windows` | `iips-pin-np04-2e11fa3b` | Ramaki, `2026-10-02` — *"Expose NP-04 persistence package"* | **NOT an ancestor of `main`**; merge-base `4d3e1cdca3a3`; **26** commits ahead |
+| `6828155ec6e8` | `arena/01a0f308…` | `iips-pin-g24-6828155e` | `2026-09-30` — *"NP04-G32: canonical NP04 governance authority record"* | **NOT an ancestor of `main`**; merge-base `4d3e1cdca3a3`; **26** commits ahead |
+
+**Structural finding.** These sit on an off-main lineage rooted at `arena/01a0e6d9…`. PR **#5**
+(*IU-5A: publish PIT package boundary*, merge `c2b2f1985ff0`) and PR **#6** (*IU-6 — non-production
+D114 → authoritative IPD PIT store population*, merge `0dab1221fb0f`) were merged **into that branch,
+not into `main`**. Their commit `246cb94` is **not an ancestor of `main`** — which is why the IU test
+files are absent from `main` despite both PRs being merged. The equivalent *capability* later reached
+`main` by a different route: **PR #58** (*CAP-02: add compatible PIT and D114 package surfaces*,
+base `main`, merged `2026-10-23T12:08:01Z`, merge `16459f465024`).
+
+### 2. Corrected evidence-backed comparison
+
+| Requirement | `main` status | Other-branch status | Branch / commit / PR | Tests and evidence | Missing work | **Actual conclusion** |
+|---|---|---|---|---|---|---|
+| **1. PIT durable persistence** | **ABSENT for PIT.** `PointInTimeStore` (`src/pit/pit_store.ts:55-59`) is **in-memory** (`Map`); `src/pit/package.ts` states *"No persistence, IPC or provisioning exports."* Separately, `src/persistence/**` (14 files) **is** durable SQLite with real transactions (`binding.ts:71,74,77` `BEGIN IMMEDIATE`/`COMMIT`/`ROLLBACK`) + migrations 001–004 — but for portfolios/bindings/audit/provisioning, **not** PIT market data. | **Implemented + tested, unmerged, different domain.** `np04-governed-persistence-windows` has `src/persistence/{db,store,schema,identity,reportKey,errors,index,package}.ts` — `GovernedArtifactStore`, transactional (`store.ts:162,165,169`), exported as **`./persistence`**. G24 lineage has `{bootstrap,config,connection}` + migrations. | np04 `2e11fa3b689d` (tag `iips-pin-np04-2e11fa3b`); G24 `6828155ec6e8` (tag `iips-pin-g24-6828155e`); no PR to `main` | `tests/np04_governed_persistence.test.ts` — **22 tests**, incl. *"artifacts survive a process restart on the same durable path"*, *"a failed transaction leaves no partial artifact"*, *"durable writes are visible in the database file, not in process state"*. G24: `g24_a_persistence_foundation`, `g24_d_identity_mapping`. | It persists **governed report artifacts** (`governed_artifacts`: `report_id` PK, `report_key`, `report_type`, `artifact_version`, `supersedes_report_id`, tenant/user scoping) — **not** PIT market-data records. Never merged. | **Original finding STANDS, now qualified.** No durable **PIT market-data** store exists anywhere in the 898-commit history. Durable SQLite infrastructure *does* exist and is **reusable**; it must not be described as absent. |
+| **2. Series-qualified ISIN resolution** | **IMPLEMENTED, EXPORTED AND TESTED.** The canonical grammar is enforced in three places on `main`: `isD114SecurityId` (`src/contracts/types.ts:88`–`101`) — *"Validates the exact canonical `ISIN:<isin>:<series>` grammar"* (prefix, ISIN length, ISIN pattern, non-empty trimmed series); `buildD114SecurityIdentity` (`:103`–`122`) — *"no series is inferred and no `companyId` is consulted"*; and `PitReadService` (`src/pit/pit_read_service.ts`, 149 L) — *"never infers a series"*, returning typed fail-closed reasons `NOT_FOUND | AMBIGUOUS | INVALID_ASOF | INVALID_IDENTITY | INVALID_DOMAIN`. `PointInTimeStore` carries a `seriesIndex` and `listAdmittedSeriesKeys()` (`pit_store.ts:59`, `:167`). Exported via **`./pit`** (`src/pit/package.ts:2,10`). | Earlier parallel lineage, **not the same code**: `main`'s `pit_read_service.ts` is blob `ba3f25652b96e39b976d4c608284256903ec73aa`; the np04 copy is blob `9046a7caf68fcec387d8c0f2d6728ecd0a5a2b85` — **they diverged**. The np04 copy carries an *inline* `ISIN:<isin>:<series>` validator; `main`'s is a thinner read facade that delegates validation to `isD114SecurityId`. PR #58 therefore re-derived a **compatible** surface rather than merging the np04 file. IU-1/IU-2/IU-3 tests remain on **7** refs, never merged to `main`. | `main` via **PR #58** (`16459f465024`, `2026-10-23`): `pit_read_service.ts` +149, `pit_store.ts` +114/−46, `tests/cap02_pit_d114_package.test.ts` +383. Off-main: `wsi_iu1_pit_series_aware_keying`, `wsh_d114_iu2_series_aware_security_identity`, `wsj_iu3_pit_read_boundary` | `tests/cap02_pit_d114_package.test.ts` — *"isolates same-ISIN series and orders vintages without future leakage"*, *"never falls back to another series or a company-only record"*, *"fails closed when one security/domain maps to multiple company keys"*, malformed-identity rejection (bare ISIN, `ISIN:<isin>:`, `ISIN:<isin>:EQ:BL`) | **Only the Operator-Drop wiring.** `src/operator_drop/*` has **0** ISIN references and reads `record.companyId` (`parser.ts:95,99`). | ⚠️ **ORIGINAL FINDING #2 REQUIRES CORRECTION.** The capability is **not** absent — it exists on `main`, is package-exported and is tested. What is absent is the **connection between Operator Drop and it**. |
+| **3. Package-export admission** | **ABSENT.** `exports` = `./portfolio-ui`, `./pit`, `./d114-non-production`. `dist/package/src/` does not emit `operator_drop` (0). | **ABSENT on all 104 refs.** `operator_drop` in an export map on **0** refs; re-exported from any published package boundary (`pit`, `d114`, `persistence`, `portfolio-ui`) on **0** refs. Note `./persistence` exists on exactly **1** ref (np04) — a different capability, also unmerged. | — | export-map scan of all 104 `package.json` + all four package-boundary files | n/a | **Original finding CONFIRMED and strengthened** — now verified across every branch, not just `main`. The `src/index.ts` barrel re-export (91 refs) is not an export-map admission. |
+| **4. Product runtime integration + E2E** | **ABSENT.** Sole consumer is the OQ synthetic failover harness (`LOCAL_FIXTURE_AND_OFFLINE_DEV`). | **ABSENT on all 104 refs.** Across every ref, `OperatorDropParser` is imported by exactly **one** file — `src/oq/synthetic_failover.ts` (**91** refs) — plus the `src/index.ts` barrel (**91** refs). The other **13** refs predate the module. **0** `persistence/`, `pit/`, `ipc/`, engine or `frontend/` consumers anywhere; **0** refs wire it to any store. | — | exhaustive `git grep` for `OperatorDropParser` / `operator_drop/index` across all 104 refs | n/a | **Original finding CONFIRMED and strengthened** — no product runtime path or E2E qualification exists in any branch or PR. |
+
+### 3. Do the original `P-08` technical conclusions need correction?
+
+**Yes — one of four, materially.**
+
+| # | Original `P-08` finding | Verdict after all-branch verification |
+|---|---|---|
+| 1 | PIT write integration **ABSENT** | **Stands, with a required qualification.** True for PIT market data on every ref. But durable SQLite persistence exists (on `main` for portfolios/bindings/audit/provisioning; off-main as a tested governed-artifact store) and is reusable. |
+| 2 | Series-qualified ISIN resolution **ABSENT** | **REQUIRES CORRECTION.** Implemented, package-exported (`./pit`) and tested on `main` since PR #58 (`2026-10-23`). Only the Operator-Drop wiring is absent. |
+| 3 | Package-export admission **ABSENT** | **Confirmed** across all 104 refs. |
+| 4 | Product runtime callers + E2E **ABSENT** | **Confirmed** across all 104 refs. |
+
+The `P-08` conclusion of **continued deferral is unaffected**, because the deferral rests primarily on
+the two **governing** prerequisites — no approved manual-ingestion product requirement and no express
+`REG-06` admission act — and both remain absent. Finding #2 was nonetheless wrong as a statement about
+the repository and is corrected here.
+
+### 4. Reusable rather than reimplemented
+
+If a future PA admission act is ever rendered, the following already exists and must **not** be
+rebuilt:
+
+| Capability | Reuse from | State |
+|---|---|---|
+| Series-qualified `ISIN:<isin>:<series>` resolution, fail-closed, no series inference | `isD114SecurityId` + `buildD114SecurityIdentity` (`src/contracts/types.ts`), `PitReadService` (`src/pit/pit_read_service.ts`), `PointInTimeStore` series index — **on `main`**, exported via `./pit` | implemented, exported, tested |
+| Series-aware PIT keying / read-boundary semantics | `tests/cap02_pit_d114_package.test.ts` on `main`; earlier `wsi_iu1…`, `wsj_iu3…` on 7 off-main refs | tested |
+| Non-production D114 → PIT population | `src/d114/non_production_pit_population.ts`, `pit_ingestion_loader.ts`, `non_production_package.ts` — **on `main`** | implemented, exported via `./d114-non-production` |
+| Durable SQLite store with transactions, migrations, ownership scoping, restart survival | `main` `src/persistence/**`; off-main `np04` `GovernedArtifactStore` (22 durability tests) | implemented + tested; np04 line unmerged |
+
+### 5. Remaining genuine technical prerequisites
+
+Genuinely still required, and genuinely absent from all 898 commits:
+
+1. **Durable PIT market-data persistence** — the PIT store is in-memory on every ref; the `./pit`
+   boundary explicitly excludes persistence.
+2. **Operator Drop → series-qualified identity wiring** — replace `record.companyId` with
+   `ISIN:<isin>:<series>` resolution via the existing `PitReadService`.
+3. **Operator Drop → durable write path** — no ref connects the parser to any store.
+4. **Package-export admission for Operator Drop** — 0 of 104 refs.
+5. **Product runtime callers and end-to-end qualification** — 0 of 104 refs; only the OQ harness.
+
+All five remain **downstream of** the governing prerequisites: without an approved manual-ingestion
+product requirement and an express `REG-06` admission act, none of them is authorized work.
+
+### 6. Governance position — unchanged
+
+`REG-06` product admission remains **`DEFERRED`**, fail-closed. Operator Drop remains an **internal
+IPD library primitive**. Nothing here promotes it, adds a package export, integrates a runtime caller,
+or performs product implementation. Discovery of previously completed technical work is reported as
+**technical completion only** and is **not** product admission, product readiness or authorization.
+PA remains the accountable owner of the product requirement and the admission decision; IPD remains
+execution owner; `AD-17 / M-2` remains **NOT AUTHORIZED**.
+
+### Validation
+
+Read-only investigation. No file in this repository was modified by the investigation itself; the only
+change is this appended record.
+
+| Command / check | Outcome |
+|---|---|
+| `git fetch --unshallow` + all-branch fetch | shallow → **false**; **898** commits; **105** remote-tracking refs |
+| Branch-tip scan (exports, `src/persistence`, IU tests) | **104 / 104** refs scanned individually |
+| `operator_drop` in any export map | **0 / 104** refs |
+| `operator_drop` re-exported from a published package boundary | **0 / 104** refs |
+| Files importing `OperatorDropParser` across all refs | exactly **1** — `src/oq/synthetic_failover.ts` (**91** refs) |
+| Ancestry of `246cb94`, `2e11fa3b689d`, `6828155ec6e8` vs `main` | all three **NOT** ancestors of `main` |
+| PR census | **111** unique — **110** merged, **1** unmerged (`#42`), **0** open |
+| IRR write | **none attempted** — IRR not consulted for amendment |
+
+**`REG-06` product admission remains `DEFERRED`. This section corrects one technical finding of the
+`P-08` record above; it is not product admission, not implementation completion, and confers no
+production authority.**
