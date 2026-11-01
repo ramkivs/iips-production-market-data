@@ -3343,3 +3343,33 @@ compatibility; and the actual product runtime caller with end-to-end ingestion-t
 
 **`REG-06` Operator Drop product admission is GRANTED and technically executed on IPD `main`. This is
 not production admission, not `AD-17 / M-2` authorization, and confers no IRR acceptance.**
+
+---
+
+## Superseding Overlay — Direct P1 Local Provisioning Implementation (2026-11-01)
+
+- **Authority:** `IIPS-V3-CAP03-PA-BLANKET-WAIVER-ONE-PASS-AUTHORIZATION-2026-11-01-01` (*Final PA Order — Direct P1 Provisioning Implementation (IPD)*)
+- **Repository:** `ramkivs/iips-production-market-data` (`main` authoritative)
+- **Prior Baseline:** `eb9289222e2bdfd0e79381d4d81f7f81715e019b`
+
+### 1. Discontinuation of P1-F Ceremonial Prerequisites (Historical Records Preserved)
+
+1. By express Program Authority order (`IIPS-V3-CAP03-PA-BLANKET-WAIVER-ONE-PASS-AUTHORIZATION-2026-11-01-01`), **P1-F governance, certification, single-attempt claim/marker, confirmation-token, retry-reconciliation, historical S2 commit/tree-pin, external evidence-root, and standalone preflight workflows are discontinued as prerequisites** for local P1 SQLite database provisioning on the personal, single-user Windows installation.
+2. All prior sections of this tracker and all historical CAP-02 / CAP-03 / Gate A′ records and modules remain **preserved verbatim** as historical records and are neither rewritten nor falsified.
+
+### 2. Direct Local Provisioning Artifacts Delivered on IPD `main`
+
+1. **`src/persistence/directP1Provisioning.ts`** (`dist/src/persistence/directP1Provisioning.js`):
+   - Reuses existing IPD persistence primitives (`connection.ts`, `migration_ledger.ts`, `migrations/001..004`, `gateAPrimeValidation.ts` identity constants, `audit.ts`, `binding.ts`, `portfolio_store.ts`).
+   - Validates Node.js (`>= 22.13.0`), built-in `node:sqlite` (`DatabaseSync`), migration set `001`–`004` checksums, S1 identity triple (`ramki-personal-local` / `ipd-personal-local` / `ipd-owner-ramki-personal`), and destination path (`C:\iips-data\iips\user-portfolio.sqlite` default on Windows; outside Git worktrees; no symlinks/reparse points).
+   - Protects existing databases unconditionally: never overwrites, unlinks, truncates, or replaces an existing file; safely verifies an already-provisioned database read-only (`status: 'ALREADY_PROVISIONED'`, `mutated: false`, preserving user portfolio rows byte-for-byte) and fails closed (`EXISTING_DATABASE_PROTECTED`, `mutated: false`) on any non-SQLite, empty, foreign, partial, or tampered file.
+   - Applies migrations `001`–`004` in order within transactions, commits initial `local_principal_bindings`, `local_principal_memberships`, and genesis `audit_events` rows atomically in a single `BEGIN IMMEDIATE ... COMMIT` transaction, and verifies ledger, schema, indexes, constraints, `PRAGMA integrity_check`, `PRAGMA foreign_key_check`, active binding resolution, audit hash chain, and W-1 write guard.
+2. **`scripts/Invoke-DirectP1Provisioning.ps1`**:
+   - Complete Windows PowerShell 5.1 execution script (`#Requires -Version 5.1`, single outer `try/catch`, zero occurrences of `else`, `elseif`, `finally`, `exit`, or `break`, BOM-free UTF-8 diagnostic logs/JSON summary, standard user account execution with no elevation and no cloning, exact `-ExpectedCommit` verification, existing-database protection, and independent post-provisioning `--mode=verify` check).
+3. **`tests/direct_p1_provisioning.test.ts`**:
+   - Adds 22 automated tests covering runtime/dependency checks, destination validation, fresh provisioning, constraint enforcement, full G3 `startIpcServer` wire v1 `portfolio.list` compatibility, mid-transaction rollback, repeat invocation with populated user portfolio data, existing-database protection, CLI execution, zero P1-F coupling, and Windows PowerShell 5.1 syntax/parameter/constraint validation (`1,009` executed, `1,008` passed, `0` failed, `1` skipped).
+4. **Documentation & IRR Handoff**:
+   - `docs/DIRECT_P1_PROVISIONING.md`
+   - `docs/integration/IIPS_V3_DIRECT_P1_PROVISIONING_AND_IRR_HANDOFF_2026-11-01.md`
+   - **Execution Boundary:** Arena has **not** executed provisioning on the user's Windows laptop and makes **no** claim that the local Windows database has been initialized; local execution is performed solely by the operator on Windows using `scripts/Invoke-DirectP1Provisioning.ps1`.
+
