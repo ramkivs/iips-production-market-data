@@ -8,7 +8,8 @@
   },
   "files": [
     "src/pit/package.ts",
-    "src/d114/non_production_package.ts"
+    "src/d114/non_production_package.ts",
+    "src/operator_drop/package.ts"
   ],
   "include": [],
   "exclude": []

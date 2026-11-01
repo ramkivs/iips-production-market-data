@@ -6,7 +6,7 @@
 
 import { CanonicalEnvelope } from '../contracts/envelope.js';
 import { DataDomain, isD114SecurityId } from '../contracts/types.js';
-import { PointInTimeStore } from './pit_store.js';
+import type { PitSnapshotStore } from './pit_store.js';
 
 export type PitReadFailureReason =
   | 'NOT_FOUND'
@@ -78,16 +78,21 @@ function isValidAsOf(value: unknown): value is string {
 }
 
 export class PitReadService<T = unknown> {
-  private readonly store: PointInTimeStore<T>;
+  private readonly store: PitSnapshotStore<T>;
 
   /**
    * The store's payload type is not part of the security/query boundary. The
    * facade projects the caller-selected payload type without inspecting or
    * transforming payloads; accepting the unknown-payload store also supports
    * the existing IRR composition's explicit service specialization.
+   *
+   * The parameter is the `PitSnapshotStore` read surface, so the same facade
+   * serves the in-memory store and the durable store without a second
+   * implementation; `PointInTimeStore` satisfies this surface unchanged, so
+   * every existing composition keeps working without modification.
    */
-  constructor(store: PointInTimeStore<unknown>) {
-    this.store = store as PointInTimeStore<T>;
+  constructor(store: PitSnapshotStore<unknown>) {
+    this.store = store as PitSnapshotStore<T>;
   }
 
   public queryAsOf(request: PitReadRequest): PitReadResult<T> {

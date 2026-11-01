@@ -354,7 +354,17 @@ describe('CAP-02 B-1R deterministic non-production D114 population', () => {
 
 describe('CAP-02 B-1R public entry and manifest conformance', () => {
   it('exports exactly the intended runtime symbols from the source entries', () => {
-    assert.deepStrictEqual(Object.keys(pitPackage).sort(), ['PitReadService', 'PointInTimeStore'].sort());
+    // REG-06 admission (2026-11-01) extended the ./pit surface with durable PIT
+    // market-data persistence; the exact-surface assertion is updated to the
+    // newly authorized contract, not relaxed.
+    assert.deepStrictEqual(Object.keys(pitPackage).sort(), [
+      'DurablePointInTimeStore',
+      'PitDurableStoreError',
+      'PitReadService',
+      'PitSnapshotConflictError',
+      'PointInTimeStore',
+      'computeSnapshotDigest',
+    ].sort());
     assert.deepStrictEqual(Object.keys(d114Package).sort(), [
       'createNonProductionD114PitStore',
       'populateNonProductionD114Pit',
@@ -373,7 +383,13 @@ describe('CAP-02 B-1R public entry and manifest conformance', () => {
     const manifest = JSON.parse(readFileSync(resolve(REPO_ROOT, 'package.json'), 'utf8')) as {
       exports: Record<string, { import: string; types: string }>;
     };
-    assert.deepStrictEqual(Object.keys(manifest.exports), ['./portfolio-ui', './pit', './d114-non-production']);
+    // REG-06 admission (2026-11-01) added ./operator-drop to the authorized map.
+    assert.deepStrictEqual(Object.keys(manifest.exports), [
+      './portfolio-ui',
+      './pit',
+      './d114-non-production',
+      './operator-drop',
+    ]);
     for (const entry of Object.values(manifest.exports)) {
       assert.ok(existsSync(resolve(REPO_ROOT, entry.import)), `missing ${entry.import}`);
       assert.ok(existsSync(resolve(REPO_ROOT, entry.types)), `missing ${entry.types}`);
