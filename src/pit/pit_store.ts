@@ -52,7 +52,28 @@ function payloadSecurityIdentity(payload: unknown): unknown {
   return (payload as { securityIdentity?: unknown }).securityIdentity;
 }
 
-export class PointInTimeStore<T = unknown> {
+/**
+ * The read surface a PIT consumer depends on. Both the in-memory
+ * `PointInTimeStore` and the durable `DurablePointInTimeStore` satisfy it, so a
+ * read facade such as `PitReadService` is indifferent to where snapshots live.
+ *
+ * Additive: `PointInTimeStore` already had exactly these members, so widening
+ * `PitReadService` to this interface changes no existing caller.
+ */
+export interface PitSnapshotStore<T = unknown> {
+  queryAsOf(query: PITQuery): CanonicalEnvelope<T> | undefined;
+  queryRange(
+    companyId: string,
+    domain: DataDomain,
+    from: string,
+    to: string,
+    securityId?: string,
+  ): Array<CanonicalEnvelope<T>>;
+  getRecordCount(): number;
+  listAdmittedSeriesKeys(): ReadonlyArray<string>;
+}
+
+export class PointInTimeStore<T = unknown> implements PitSnapshotStore<T> {
   private store: Map<string, Array<CanonicalEnvelope<T>>> = new Map();
 
   /** company/domain prefix -> all actual admitted full keys under that prefix. */

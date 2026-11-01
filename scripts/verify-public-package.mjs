@@ -21,7 +21,7 @@ const npmPrefix = process.platform === 'win32'
   ? [resolve(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')]
   : [];
 check(process.platform !== 'win32' || existsSync(npmPrefix[0]), 'Node-bundled npm CLI is missing');
-const expectedExports = ['./portfolio-ui', './pit', './d114-non-production'];
+const expectedExports = ['./portfolio-ui', './pit', './d114-non-production', './operator-drop'];
 const IRR_PIN = '98cd56a9a568f431ea31d5515e515a1b6cbb91ba';
 const IRR_IMPORTERS = [
   'frontend/server/pit/ipdPitReadAdapter.ts',

@@ -367,11 +367,14 @@ describe('CAP-02 Increment A — T-PKG-4: package manifest and built artifacts',
   const builtEntry = resolve(REPO_ROOT, exportEntry?.import ?? '');
   const builtTypes = resolve(REPO_ROOT, exportEntry?.types ?? '');
 
-  it('declares exactly the three authorized public subpaths', () => {
+  it('declares exactly the authorized public subpaths', () => {
+    // REG-06 admission (2026-11-01) added ./operator-drop. The assertion still
+    // pins the map exactly, so any further subpath must be admitted explicitly.
     assert.deepEqual(Object.keys(PACKAGE_JSON.exports ?? {}), [
       './portfolio-ui',
       './pit',
       './d114-non-production',
+      './operator-drop',
     ]);
   });
 
