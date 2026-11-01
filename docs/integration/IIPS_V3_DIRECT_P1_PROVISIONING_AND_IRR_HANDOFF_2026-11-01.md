@@ -52,7 +52,7 @@ Once `C:\iips-data\iips\user-portfolio.sqlite` is provisioned locally via `scrip
 | Side | Environment Variable | Designated Windows Value | Notes |
 |---|---|---|---|
 | IPD Provider | `IIPS_G3_DATABASE_PATH` | `C:\iips-data\iips\user-portfolio.sqlite` | Must be an absolute path to the provisioned SQLite store. |
-| IPD Provider & IRR Consumer | `IIPS_G2_IPC_ENDPOINT` | `\\.\pipe\iips-user-portfolio-v1` | PF-15 Option A explicit Windows named pipe (or bare pipe name `iips-user-portfolio-v1`). `IIPS_G3_LOCAL_STATE_DIR` is unused on `win32`. |
+| IPD Provider & IRR Consumer | `IIPS_G2_IPC_ENDPOINT` | `\\.\pipe\iips-user-portfolio-v1` | PF-15 Option A explicit Windows named pipe. The **absolute** `\\.\pipe\iips-user-portfolio-v1` form needs nothing else. The **bare name** form (`iips-user-portfolio-v1`) additionally requires `IIPS_G3_LOCAL_STATE_DIR` to be set to an **absolute** path: `resolveEndpointTarget` validates its absoluteness on `win32` as well and refuses with `a bare endpoint name requires IIPS_G3_LOCAL_STATE_DIR`. The directory's *value* is not part of the kernel-managed pipe path, but in that form the setting is not optional. |
 | IRR Consumer | `IIPS_G3_IPC_BINDING_PROVISIONED` | `true` | IRR local consumer precondition flag (`ownerContextFromBinding.ts`). |
 | IRR Consumer *(optional)* | `IIPS_G2_IPC_TENANT_HINT` | `ipd-personal-local` | Optional local hint in IRR; **never** transmitted on the IPC wire. |
 
@@ -68,12 +68,51 @@ Once `C:\iips-data\iips\user-portfolio.sqlite` is provisioned locally via `scrip
 
 ### 3.3 Operations & DR-2 Option A Read Shapes
 
-| Operation (`op`) | Category | Request `payload` | Response (`ok: true` `result` or `ok: false` `outcome`) |
+Verified against the merged implementation at `279d1eed184f5e23bbabe5c6411085e120ce9e41`
+(`src/ipc/dispatch.ts`, `src/persistence/portfolio_store.ts`, `src/ipc/protocol.ts`) and pinned
+by `tests/q1_ipc_read_contract_conformance.test.ts` over the real endpoint. **This table
+supersedes the first-draft field list published earlier the same day, which named five
+`portfolio.list` fields that do not exist on the wire.**
+
+| Operation (`op`) | Category | Request `payload` | Response (`ok: true` `result`, or `ok: false` `outcome`) |
 |---|---|---|---|
-| `portfolio.list` | Read | `{}` | `PortfolioSummary[]` — exact 7 fields per item: `portfolioId`, `portfolioName`, `currentRevision`, `status`, `createdAt`, `updatedAt`, `deletedAt` (`canonicalOwnerId` and `tenantId` are intentionally omitted per DR-2 Option A). |
-| `portfolio.get` | Read | `{ portfolioId: string }` | `PortfolioRecord \| null` — 7 summary fields plus `holdings: PortfolioHoldingRecord[]` and `contributions: PortfolioContributionRecord[]`. |
-| `portfolio.revisions` | Read | `{ portfolioId: string }` | `PortfolioRevisionSummary[]` — `portfolioId`, `revision`, `operation`, `totalMarketValue`, `weightSumPercentage`, `holdingsCount`, `provenanceDigest`, `contentDigest`, `createdAt`. |
-| `portfolio.create` / `portfolio.save` / `portfolio.reset` / `portfolio.delete` | Write | Operation payload | Refused fail-closed with `{ ok: false, outcome: 'WRITE_NOT_AUTHORIZED' }` while Gate E W-1 write guard remains in effect. |
+| `portfolio.list` | Read | `{}` — may be omitted entirely | `PortfolioSummary[]` — **exactly 9 fields** per item: `portfolioId`, `portfolioName`, `revision`, `lastUpdated`, `holdingsCount`, `totalMarketValue`, `weightSumPercentage`, `provenanceDigest`, `isSaved`. |
+| `portfolio.get` | Read | `{ portfolioId?: string }` — **optional**; when omitted it defaults to `'DEFAULT_PORTFOLIO'` | `PortfolioDetail` — the same **9** summary fields plus `holdings: HoldingInput[]` and `contributions: PortfolioContribution[]` (**11 fields**). **Never `null`.** |
+| `portfolio.revisions` | Read | `{ portfolioId?: string }` — **optional**, same `'DEFAULT_PORTFOLIO'` default | `RevisionEntry[]` — **exactly 7 fields**: `revision`, `operation`, `committedAt`, `contentDigest` (present only when the stored column is non-NULL), `totalMarketValue`, `provenanceDigest`, `holdingsCount`. |
+| `portfolio.create` / `portfolio.save` / `portfolio.reset` / `portfolio.delete` | Write | Operation payload | Refused fail-closed with `{ ok: false, outcome: 'WRITE_NOT_AUTHORIZED' }` (no `detail`) while the Gate E W-1 write guard remains in effect. |
+
+**Corrected field-level facts** (each contradicted the superseded draft):
+
+1. `portfolio.list` carries **9** fields, not 7. The names `currentRevision`, `status`,
+   `createdAt`, `updatedAt` and `deletedAt` **do not exist** on the wire; the real names are
+   `revision` and `lastUpdated`, and `holdingsCount`, `totalMarketValue`,
+   `weightSumPercentage`, `provenanceDigest` and `isSaved` are all present.
+2. `portfolio.get` returns `PortfolioDetail`, **not** `PortfolioRecord`, and it is **never
+   `null`**. A missing, foreign-owned or tombstoned portfolio is refused as Class A
+   `{ ok: false, outcome: 'RESOURCE_UNAVAILABLE', detail: 'the requested resource is not
+   available' }`; missing, foreign and tombstoned are deliberately indistinguishable.
+3. The element types are `HoldingInput` (12 fields) and `PortfolioContribution` (10 fields),
+   **not** `PortfolioHoldingRecord` / `PortfolioContributionRecord`.
+4. `portfolio.revisions` returns `RevisionEntry[]`, **not** `PortfolioRevisionSummary[]`. It
+   carries **7** fields, has **no** `portfolioId` and **no** `weightSumPercentage`, and its
+   timestamp field is `committedAt`, **not** `createdAt`.
+5. `portfolioId` is **optional** on both `portfolio.get` and `portfolio.revisions`.
+
+**Class A error outcomes** (the draft documented only `WRITE_NOT_AUTHORIZED`):
+`RESOURCE_UNAVAILABLE` (missing, foreign or tombstoned — and also a portfolio whose current
+revision row is absent) and `UNAVAILABLE` (a non-conforming stored value, which the IRR adapter
+maps to `UPSTREAM_UNAVAILABLE`). Non-conforming stored values are refused; they are never
+defaulted to `0`, `''`, a generated identifier or an inferred lifecycle.
+
+**IRR-boundary renames — not IPD wire names.** Exactly two renames are authorized and both
+happen **only** in the IRR adapter, never in IPD: `holdingsCount` to `totalHoldingsCount`, and
+`committedAt` to `createdAt`. An IRR consumer must therefore read `committedAt` off the wire and
+must not expect `createdAt` from IPD. The superseded draft's `createdAt` for
+`portfolio.revisions` was this IRR-side name leaking into the provider contract.
+
+`canonicalOwnerId` and `tenantId` remain intentionally omitted from every read result per DR-2
+Option A, and `durability` / `durable` remain absent per DR-3 / DQ-2.
+
 
 ---
 

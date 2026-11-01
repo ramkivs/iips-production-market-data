@@ -100,3 +100,72 @@ Script parameters:
 - `-NodeExecutable` *(Optional)*: Auto-discovers `C:\Node22\node-v22.16.0-win-x64\node.exe` when present, falling back to `node.exe` on `PATH` (`>= 22.13.0`).
 - `-DiagnosticRoot` *(Optional)*: Defaults to `%TEMP%\iips-direct-p1-provisioning`; writes `provisioning.log`, child stdout/stderr captures, and `diagnostic-summary.json` (BOM-free UTF-8).
 - `-RequireFreshDatabase` *(Optional switch)*: Refuses if `-DatabasePath` already exists even when validly provisioned.
+
+
+---
+
+## 6. Starting the IPD IPC Provider on Windows (Post-Provisioning)
+
+Provisioning creates the database; it does **not** start a server. The same-host G3 IPC provider
+is a separate compiled entrypoint and is launched by the operator as a foreground process.
+
+### 6.1 Exact Supported Command
+
+```powershell
+$env:IIPS_G3_DATABASE_PATH = 'C:\iips-data\iips\user-portfolio.sqlite'
+$env:IIPS_G2_IPC_ENDPOINT  = '\\.\pipe\iips-user-portfolio-v1'
+
+& 'C:\Node22\node-v22.16.0-win-x64\node.exe' '<IPD_REPO_ROOT>\dist\src\ipc\entrypoint.js'
+```
+
+Substitute `<IPD_REPO_ROOT>` with the absolute path of the local IPD checkout. If Node is on
+`PATH` at `>= 22.13.0`, the bare form is equivalent:
+
+```powershell
+node "<IPD_REPO_ROOT>\dist\src\ipc\entrypoint.js"
+```
+
+### 6.2 Prerequisites
+
+| # | Prerequisite | Verified by |
+|---|---|---|
+| 1 | Node.js **>= 22.13.0** (flag-free `node:sqlite`). The provisioning script prefers `C:\Node22\node-v22.16.0-win-x64\node.exe` and falls back to `node.exe` on `PATH`. | `assertSupportedRuntime` in `src/persistence/connection.ts` (`MINIMUM_NODE_MAJOR/MINOR/PATCH = 22/13/0`) |
+| 2 | `npm ci` inside the IPD checkout (the build needs `node_modules\typescript`). | `scripts/Invoke-DirectP1Provisioning.ps1` throws `TYPESCRIPT_DEPENDENCY_MISSING` otherwise |
+| 3 | The compiled entrypoint `dist\src\ipc\entrypoint.js` exists. Run **`npm run build:tsc`** to emit it. | `tsconfig.json` `include` covers `src/**/*`; `build:tsc` is plain `tsc` |
+| 4 | The database is already provisioned at `IIPS_G3_DATABASE_PATH`. | Startup phase `verify` re-verifies the `audit_events` hash chain and refuses if it does not verify |
+| 5 | `IIPS_G3_DATABASE_PATH` is set and **absolute**. | Startup phase `validate`; otherwise `IIPS_G3_DATABASE_PATH must be set to an absolute path` |
+| 6 | `IIPS_G2_IPC_ENDPOINT` is set to the **absolute** named-pipe form `\\.\pipe\<name>`. | `resolveEndpointTarget`; a bare name additionally requires an absolute `IIPS_G3_LOCAL_STATE_DIR` |
+
+Prerequisite 3 is normally already satisfied: `Invoke-DirectP1Provisioning.ps1` step
+`05-ensure-compiled-entrypoint` runs `tsc -p tsconfig.json` when the compiled CLI is absent, and
+that same compilation emits `dist\src\ipc\entrypoint.js`.
+
+### 6.3 Two Operator-Relevant Facts
+
+1. **The provider is not published to npm.** `package.json#files` is `["dist/package"]`, and
+   `dist/package/` contains only the public package boundaries — it has **no** `ipc/` directory.
+   The provider must therefore be launched from a **local IPD checkout** built with
+   `npm run build:tsc`; installing `iips-production-market-data` from npm will not supply it.
+2. **The owner-only `0700` state-directory rule is POSIX-only.** It applies to AF_UNIX sockets and
+   is never invoked for a Windows named pipe, whose namespace is kernel-managed. Windows operators
+   do not need to create or chmod a state directory when using the absolute `\\.\pipe\...` form.
+
+### 6.4 Startup Order, Diagnostics and Exit Codes
+
+Startup order is fixed: **validate → connect → migrate → verify → bind**. There is no fallback,
+retry or downgrade; any fault returns a phase-coded outcome and creates no endpoint.
+
+- All diagnostics are written to **stderr**, never stdout.
+- Success prints `[g3] listening on windows-named-pipe \\.\pipe\iips-user-portfolio-v1` and the
+  process stays in the foreground serving one request per connection.
+- Refusal prints `[g3] startup refused at phase <phase>: <error>` and exits with code **1**.
+- A second provider on the same pipe fails at phase `bind` with
+  `the endpoint is already occupied: <path>`.
+
+### 6.5 What the Provider Does and Does Not Authorize
+
+The provider serves the three v1 read operations (`portfolio.list`, `portfolio.get`,
+`portfolio.revisions`) and refuses all four write operations with `WRITE_NOT_AUTHORIZED` before
+any store mutation, because Gate E W-1(3) and W-1(4) remain false. **Starting the provider does
+not authorize a durable portfolio write**, does not change Gate 4 or Gate 5 status, and does not
+constitute production activation.

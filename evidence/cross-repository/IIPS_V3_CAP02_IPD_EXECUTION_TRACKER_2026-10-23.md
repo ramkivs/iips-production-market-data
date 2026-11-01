@@ -3373,3 +3373,77 @@ not production admission, not `AD-17 / M-2` authorization, and confers no IRR ac
    - `docs/integration/IIPS_V3_DIRECT_P1_PROVISIONING_AND_IRR_HANDOFF_2026-11-01.md`
    - **Execution Boundary:** Arena has **not** executed provisioning on the user's Windows laptop and makes **no** claim that the local Windows database has been initialized; local execution is performed solely by the operator on Windows using `scripts/Invoke-DirectP1Provisioning.ps1`.
 
+
+---
+
+## Direct P1 Downstream Reconciliation — Windows provider startup documented, and the IRR handoff read shapes corrected (2026-11-01)
+
+- **Baseline:** IPD `main` @ `279d1eed184f5e23bbabe5c6411085e120ce9e41` (PR #118)
+- **Scope:** documentation and tests only. **No runtime contract, source behaviour, schema,
+  migration, guard or dispatch change.** IRR not modified.
+- **Authority:** existing PA order `IIPS-V3-CAP03-PA-BLANKET-WAIVER-ONE-PASS-AUTHORIZATION-2026-11-01-01`
+
+### 1. Handoff §3.3 read shapes were wrong; corrected against the merged implementation
+
+The handoff record's first draft published incorrect wire shapes for **all three** read
+operations. Each correction below was verified against `src/ipc/dispatch.ts`,
+`src/persistence/portfolio_store.ts` and `src/ipc/protocol.ts`, and independently confirmed by
+capturing real frames over a live `startIpcServer` endpoint.
+
+| Operation | Superseded draft | Verified actual |
+|---|---|---|
+| `portfolio.list` | "exact 7 fields": `portfolioId`, `portfolioName`, `currentRevision`, `status`, `createdAt`, `updatedAt`, `deletedAt` | **9 fields**: `portfolioId`, `portfolioName`, `revision`, `lastUpdated`, `holdingsCount`, `totalMarketValue`, `weightSumPercentage`, `provenanceDigest`, `isSaved`. Five drafted names do not exist. |
+| `portfolio.get` | `PortfolioRecord` or `null`; "7 summary fields"; `PortfolioHoldingRecord[]` / `PortfolioContributionRecord[]` | `PortfolioDetail`, **never null** — **11 fields** (9 summary + `holdings: HoldingInput[]` + `contributions: PortfolioContribution[]`). Missing/foreign/tombstoned is Class A `RESOURCE_UNAVAILABLE`. |
+| `portfolio.revisions` | `PortfolioRevisionSummary[]` with `portfolioId`, `weightSumPercentage`, `createdAt` | `RevisionEntry[]` — **7 fields**; no `portfolioId`, no `weightSumPercentage`; the timestamp is `committedAt`. |
+| `portfolio.get` / `.revisions` payload | `{ portfolioId: string }` | `portfolioId` is **optional**, defaulting to `'DEFAULT_PORTFOLIO'` |
+
+Also corrected: the draft documented only `WRITE_NOT_AUTHORIZED`; the provider also returns Class A
+`RESOURCE_UNAVAILABLE` and `UNAVAILABLE`. And it recorded that the two authorized renames
+(`holdingsCount` to `totalHoldingsCount`, `committedAt` to `createdAt`) occur **only** in the IRR
+adapter — the draft's `createdAt` was that IRR-side name leaking into the provider contract.
+
+### 2. Handoff §3.1 setting claim corrected
+
+The draft stated `IIPS_G3_LOCAL_STATE_DIR` is *"unused on `win32`"*. That holds only for the
+absolute `\\\\.\\pipe\\<name>` form. With the **bare name** form, `resolveEndpointTarget`
+requires the setting and validates its absoluteness on `win32` as well, refusing with
+`a bare endpoint name requires IIPS_G3_LOCAL_STATE_DIR`. Verified by direct invocation of the
+compiled `resolveEndpointTarget` with `platform: 'win32'`.
+
+### 3. Windows IPC provider startup — previously undocumented, now specified
+
+Provisioning creates the database but starts no server, and
+`scripts/Invoke-DirectP1Provisioning.ps1` covers only the *provisioning* entrypoint. A new §6 in
+`docs/DIRECT_P1_PROVISIONING.md` documents the exact supported command
+(`node <IPD_REPO_ROOT>\dist\src\ipc\entrypoint.js` with `IIPS_G3_DATABASE_PATH` and
+`IIPS_G2_IPC_ENDPOINT` set), six verified prerequisites, the fixed
+validate → connect → migrate → verify → bind startup order, the stderr-only diagnostic contract
+and exit code 1 on refusal.
+
+Two facts established by inspection and recorded for operators:
+
+1. **The provider is not published to npm.** `package.json#files` is `["dist/package"]` and
+   `dist/package/` contains **no** `ipc/` directory, so the provider must be launched from a local
+   IPD checkout built with `npm run build:tsc`.
+2. **The owner-only `0700` state-directory rule is POSIX-only** (`src/ipc/endpoint.ts`: *"POSIX-only:
+   never invoked for a"* named pipe), so it is not a Windows prerequisite.
+
+### 4. Verification
+
+| Check | Command | Outcome |
+|---|---|---|
+| Live wire capture | real `startIpcServer` + framed round trips for all three reads, one write, and a missing portfolio | shapes captured verbatim; write refused `WRITE_NOT_AUTHORIZED`; missing portfolio refused `RESOURCE_UNAVAILABLE` |
+| Compiled CLI fail-closed | `node dist/src/ipc/entrypoint.js` with no env | exit **1**, `[g3] startup refused at phase validate: IIPS_G2_IPC_ENDPOINT is not set` on stderr |
+| Provider startup | compiled entrypoint against a Direct-P1-provisioned store | `[g3] listening on unix-socket ...`, exit 124 at timeout (still listening) |
+| `win32` endpoint rules | compiled `resolveEndpointTarget(..., 'win32')`, four cases | absolute pipe OK; bare name without state dir **throws**; bare name with absolute dir OK; relative dir **throws** |
+| Build emission | `rm dist/src/ipc/entrypoint.js && npm run build:tsc` | artifact re-emitted — `build:tsc` alone produces the provider entrypoint |
+| Doc-conformance suite | `tests/direct_p1_handoff_doc_conformance.test.ts` | **20 / 20 passed**; negative control (re-injecting the original `PortfolioRevisionSummary` / `createdAt` drift) correctly **fails** |
+
+### 5. Boundaries preserved
+
+- **No runtime contract changed.** `src/ipc/**`, `src/persistence/**`, the migration set,
+  `DESIGNATED_MIGRATION_BLOBS`, the write guards and the closed dispatch operation set are
+  untouched; only `docs/**`, `tests/**` and this tracker changed.
+- **IRR not modified.** Reconciling the IRR-side record remains a separate IRR work item.
+- Starting the provider authorizes no durable portfolio write, changes no Gate 4 or Gate 5 status,
+  and is not production activation. `O-05` remains **OPEN**.
