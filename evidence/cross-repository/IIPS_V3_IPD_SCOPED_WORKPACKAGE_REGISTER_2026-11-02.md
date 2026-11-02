@@ -44,6 +44,47 @@ matched exactly (see §2). The IRR action identifiers carried into this register
 Per the IRR handoff, the following prior investigations were **not** repeated: IPD PRs #5, #6, #42,
 #56, #57, #88, #120, #121, #122; the 541-row PR census; Prompt 82641's project-wide E2E audit.
 
+## 0.1 Dated addendum (2026-11-02, post-publication) — IPD-4 partly superseded by PR #124
+
+**`main` advanced to `fb029f664618d4bce555b78a9576ef29e65c34d5` while this register was being
+published** (PR #124, merged `2026-11-02T10:31:19Z`, integration commit `0c65c6900b3f5c4f216f7e668050dc7cb782ae1b`).
+PR #124 published
+`evidence/cross-repository/IIPS_V3_IPD_P01-02_AND_RECOVERED_UI_RECONCILIATION_2026-11-02.md`, which
+**explicitly cites this register** and amends part of it. The amendment is recorded here as a dated
+overlay; the original rows are retained as the record of what was verified at `main@56959fc3`.
+
+**What changed, verified live this pass:**
+
+| Claim | Verification |
+|---|---|
+| `docs/p01/` (10 accepted specification documents) is **now on `main`** | `git ls-tree fb029f66:docs/p01` → **10 files**; `git cat-file -e 56959fc3:docs/p01` → **absent**, so PR #124 added it |
+| **P01-02 was ACCEPTED** by SAI (A3 acceptance act) | commit `a60ed703bb01feb0a8fb4aac867f203ee7e1e551`, 2026-09-28: *"P01-02 ACCEPTED BY SAI — A3 acceptance act recorded (DEP-P01-07 outstanding, non-blocking)"* |
+| Shell **structure** was already restored | commit `6b8afda`, 2026-09-23: *"feat(shell): PHASE-5 OPTION A — offline full-shell restoration (donor structure, fail-closed)"* |
+| Per-surface **functional** recovery is still absent | `CompanySurface.tsx`, `SectorSurface.tsx`, `CrossSectorSurface.tsx` all **ABSENT** at `fb029f66` |
+| PR #124 examined a **different ref** than this register | this register's IPD-4 ref `arena/01a0e30c` → `e716bf1f`; PR #124's `arena/01a0ae80` → `b0fdd8d` |
+
+**Consequences for this register — read these as governing:**
+
+1. **IPD-4 is amended, not merely deferred.** This register inspected `arena/01a0e30c` (the P01-01
+   declarative *canonical-id specification module*) and correctly recorded that **that ref's** commit
+   disclaimed acceptance. But P01-02 was executed and **accepted by SAI** on the separate
+   `arena/01a0ae80` family, and its accepted documentation package is **now on `main`**. The IPD-4
+   phrase *"acceptance-blocked"* is therefore **too strong for P01-02** and is superseded: the
+   specification is accepted and landed. What genuinely remains outstanding for P01-02 is
+   **`DEP-P01-07`** (contract tests + executable time-semantics validation), recorded by PR #124 as
+   **outstanding and non-blocking**.
+2. **IPD-6's DEFER stands for the *functional* surfaces.** Company / sector / cross-sector /
+   decision-matrix surfaces remain absent from `main`, so the per-surface scope/acceptance decision
+   (IPD-A07) is still required. PR #124 records that the *structural* shell was restored earlier
+   (`6b8afda`) — this register did not claim otherwise, since it assessed surfaces, not shell
+   scaffolding.
+3. **No other disposition changes.** IPD-1, IPD-2, IPD-3 and IPD-5 are unaffected: PR #124 touched
+   none of the files they cite.
+
+**Baseline note:** the register body below is stated against `main@56959fc3`, which was `main` at the
+time of investigation and remains the PR #123 base. Where the body says "absent from `main`" for
+`docs/p01/**`, that was true at `56959fc3` and is **no longer true** at `fb029f66` — see item 1.
+
 ## 1. Disposition summary
 
 | Package | Capability | Current-main status | Disposition |
@@ -155,7 +196,7 @@ All fifteen required fields are recorded per package below.
 | **Historical findings** | Branch adds `src/contracts/canonical_id_specification.ts` — explicitly a **declarative specification module**, whose own header states "Reuse declarations (evidence-based; these are **NOT reimplementations**)" and that cross-provider mapping is "a **NORMATIVE REFERENCE** to `src/identity/mapping_store.ts` … this module **declares them and does not reimplement them**". It exports `CANONICAL_ID_SPECIFICATION_ID`, `CANONICAL_ID_SPECIFICATION_VERSION`, `CanonicalIdKind`, `CanonicalIdValidationCode`. Also `docs/P01-01-CANONICAL-ID-SPECIFICATION.md`, `tests/fixtures/p01_01_canonical_id_fixtures.json`, `tests/p01_01_canonical_identifiers.contract.test.ts`, and 21 `evidence/target-shell-integration/**` acts/records (P00-02, P01-WAVE1, WATCHLISTS-*). **`src/contracts/canonical_id_specification.ts` is absent from `main`** |
 | **Governing decision** | Branch-local `P01-WAVE1-EXECUTION-AUTHORITY-DESIGNATION-ACT.md` and `P01-01-CANONICAL-IDENTIFIERS-EXECUTION-RECORD.md`. The branch's own commit states **acceptance/certification was not performed and P01-02 was not executed** |
 | **Confirmed gap** | The current-`main` identifier contract is complete. The spec module's **acceptance/certification path is not done**, which is an owner decision — **not** a missing implementation. Note the spec's normative dependencies **do** exist on `main` (8 `src/identity/**` files versus the branch's 6), so it is **acceptance-blocked, not dependency-blocked** |
-| **Disposition** | Current-main contract **COMPLETE**; branch spec module **DEFER** (acceptance/certification outstanding; owner decision required before adoption) |
+| **Disposition** | Current-main contract **COMPLETE**; branch spec module **DEFER** (acceptance/certification outstanding for **this ref**; owner decision required before adoption). **AMENDED by §0.1:** P01-02 was separately **accepted by SAI** (`a60ed703`) and its 10-document package is **now on `main`**; `DEP-P01-07` remains outstanding and non-blocking |
 | **IRR dependency** | None identified |
 | **Implementation status** | No change made. Adopting an uncertified normative contract would rewrite identifier semantics without acceptance, and the task forbids inferring P01-02 execution |
 | **Tests** | Branch-local contract test is not current-`main` acceptance. Main's identifier/envelope behaviour is covered by the existing contract and PIT identity suites |
@@ -191,7 +232,7 @@ All fifteen required fields are recorded per package below.
 | **Historical findings** | The three refs carry distinct `frontend/**` trees and branch-side transport/package changes: `executive-transport.ts`, `executive-dev-server.ts`, `research-sector-transport.ts`, `research-sector-dev-server.ts`, `api/{authFetch,company,crossSector,dataMode,decisionMatrix,evidence,executive,replay}.ts`, `features/company/CompanyTrustChain.tsx`, plus `app/App.tsx` and `app/navigation.ts` edits |
 | **Governing decision** | **No recovery authority record exists on `main`** — a tree-wide search for recovery records returns only this task's own test file. Prior records describe recovery as branch-only, partially verified and non-production; **D115 implementation authority was not granted** and AI advisory was deferred. The IRR register records these as IPD-owned branch artifacts and requires a per-surface scope/acceptance decision (IPD-A07) |
 | **Confirmed gap** | The surfaces are absent from `main`, **but no governing record establishes them as authorized requirements**. Per the standing rule, absence plus branch existence is not an authorized requirement |
-| **Disposition** | **DEFER** — scope/acceptance decision required per surface. Not IMPLEMENT |
+| **Disposition** | **DEFER** — scope/acceptance decision required per surface. Not IMPLEMENT. **Confirmed by §0.1:** the functional surfaces remain absent at `fb029f66`; PR #124 records the shell *structure* as restored earlier (`6b8afda`) |
 | **IRR dependency** | These are **IPD-owned** artifacts even though they live under `frontend/**`. They must **not** be copied or moved into IRR; any desired IRR surface needs its own IRR decision and implementation. No IRR file was modified |
 | **Implementation status** | No change made. A blanket port of three divergent UI trees would be a blind cherry-pick across unrelated acceptance states |
 | **Tests** | Branch-local acceptance records are not current-`main` acceptance. Main's `shell_intelligence_surface` and related suites cover the admitted surfaces |
