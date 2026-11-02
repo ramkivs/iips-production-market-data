@@ -4,6 +4,13 @@
 > Investigation and disposition register only. This is not an authority act, not a gate movement,
 > not a scope decision and not an acceptance. No product code, package, API, contract, migration,
 > test implementation, authorization or gate status is changed by this record.
+>
+> **Companion document:** [`IIPS_V3_DIRECT_P1_STATUS_RECONCILIATION_2026-11-01.md`](./IIPS_V3_DIRECT_P1_STATUS_RECONCILIATION_2026-11-01.md)
+> carries the **separate Direct P1 status and governance history** — what was provisioned on the
+> Windows host, by whom, and what that does **not** mean. Read the two together: this register
+> answers *"what is the scoped work-package state?"*; the companion answers *"what exactly was
+> provisioned, and why are durable writes still gated?"*. They are consistent by construction; see
+> its §8 for the explicit crosswalk.
 
 | Field | Value |
 |---|---|
@@ -100,7 +107,7 @@ All fifteen required fields are recorded per package below.
 | **Tests** | Restart durability is covered against `DurablePortfolioStore`/`DurablePortfolioStorePort` by `tests/q1_broker_import_durability.test.ts` (21 restart-related assertions; explicitly "survives a store restart and a SEPARATE PROCESS restart", including a separate OS process re-reading the same store file). Plus `g3_write_gate`, `g3_durability_vocabulary`, `g3_portfolio_read_isolation`, `g3_binding_resolution`, `q1_ipc_read_contract_conformance` |
 | **Execution evidence** | `npm ci` exit 0; `npm run build:tsc` exit 0; live `evaluatePortSaveGuard()` evaluation (above); full suite result in §5 |
 | **PR / Commit** | This register only (see §6) |
-| **Remaining action** | Gate 4 target-host qualification and Gate 5 admission (**not authorized**); native Windows provider startup and named-pipe smoke test on the designated host. **IPD-A01 gate-status reconfirmation is answered by this row: the branch family remains non-admitted and the pin remains consumer-only evidence** |
+| **Remaining action** | Gate 4 target-host qualification and Gate 5 admission (**not authorized**); native Windows provider startup and named-pipe smoke test on the designated host. **IPD-A01 gate-status reconfirmation is answered by this row: the branch family remains non-admitted and the pin remains consumer-only evidence.** The reason the write path stays gated — and the operator-reported provisioning that already happened behind it — is recorded in the **companion Direct P1 reconciliation** (§3, §5, §7) |
 
 ### IPD-2 — Dhan provider (D1/D2)
 
