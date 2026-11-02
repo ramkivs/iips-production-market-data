@@ -19,7 +19,7 @@
 | U7 provider-side outcome mapping | IRR's U7 read/result contract is now **EFFECTIVE** at IRR `main@30091d33ecf3c094cc25d78d4b66023ab3279759`, whose §5 names the exact IPD act. IPD act rendered: `IIPS_V3_CAP02_U7_IPD_PROVIDER_OUTCOME_ACT_EFFECTIVE_2026-10-23.md`. Implemented: minimal v1 receipt, no preview fallbacks in the committed panel, refusals with no mandatory record/timestamp/zero/durability, a distinct `OUTCOME_UNKNOWN` state with no retry, receipt-driven durability, optional `getAnalytics`. Tests `T-U7-1…T-U7-7` (10 tests) pass. | **Provider side executed** (IPD capacity) | IRR must repin to the IPD commit carrying this change, then create its `PortfolioStorePort` implementation, mount the surface and produce end-to-end evidence. No end-to-end claim is made here. |
 | Binding provisioning / active owner | **Successor PA act rendered 2026-10-23 — effective on merge**: `IIPS-V3-CAP02-GATE-A-PRIME-SUCCESSOR-PROVISIONING-ACT-2026-10-23-01` — `IIPS_V3_CAP02_GATE_A_PRIME_SUCCESSOR_PROVISIONING_ACT_EFFECTIVE_2026-10-23.md`. Successor basis selected: IPD `main@5fc74085…`/tree `7226ef00…`; the 2026-10-17 act's **execution basis** superseded (its record preserved byte-identically, `c04f8a30…`); bounded implementation authority granted for exactly 4 paths (entrypoint, read-only validator, new test, bounded static-regression addition); fail-closed/duplicate/no-unintended-mutation rules, P-1 desktop procedure and V-A2-1…V-A2-8 fixed. **Identity values `principal_label`/`tenantId`/`canonicalOwnerId` remain UNRESOLVED** — no authoritative IPD-owned source; IRR's `owner-7f3a91c2`/`irr-domain-4b82d6e1` may not be copied. The entrypoint and validator are now **published and remote-verified by PR #68**; execute remains inert and no provisioning occurred. | Basis + entrypoint authority **EFFECTIVE on merge**; implementation **PUBLISHED/REMOTE-VERIFIED**; provisioning **NOT AUTHORIZED** | Separate PA identity-value determination (§4 of the act), then the single P-1 execution on `desktop-no0nhtp`. |
 | IRR | Read-only inspection re-verified live at `main@4740ba21ea6103f1a7ebc9768269ae7795920698`, tree `23c5ca4ae1bfd481bcfc911c70b9e7dc090e1162` (historical Gate 3 code pin `d355d904aa52988e70a98324714886f6a1c0ea2a`, tree `e631cf3287fc19a2d1c8f73a0eb5f8d640370e27`): `24/24` mandatory consumer entries and `3/3` IRR criteria entries byte-verified; prior `main@3f628cbc…` observation preserved. | Unchanged | No IRR file, branch, PR, issue, comment or tracker modified. |
-| CAP-02 B-1R PIT/D114 package prerequisite | Evaluated IPD baseline `main@24e62c80…` exports only `./portfolio-ui`; both required subpaths fail runtime and TypeScript resolution, and its PIT/D114 APIs are missing or incompatible. See `IIPS_V3_CAP02_B1R_PACKAGE_AND_GATE4_PREPARATION_2026-10-23.md`. | **BLOCKED — no sufficiently scoped effective IPD-main act; no package/API change made** | Effective exact-scope IPD act and implementation/test/publication for compatible `./pit` and `./d114-non-production`; only then execute the already-authorized IRR B-1R repin and verification. |
+| CAP-02 B-1R PIT/D114 package prerequisite | **Historical 2026-10-23 assessment (preserved verbatim, evaluated baseline `main@24e62c80…`):** exports only `./portfolio-ui`; both required subpaths fail runtime and TypeScript resolution, and its PIT/D114 APIs are missing or incompatible. See `IIPS_V3_CAP02_B1R_PACKAGE_AND_GATE4_PREPARATION_2026-10-23.md`. **Current (corrected 2026-11-02):** closed by the exact-scope act `IIPS_V3_CAP02_B1R_IPD_COMPATIBILITY_IMPLEMENTATION_ACT_EFFECTIVE_2026-10-23.md` and PR #58 (`16459f465024ca1eb4da4953d8e178eba4269f8e`); current `main` exports `./pit` and `./d114-non-production` alongside `./portfolio-ui` and `./operator-drop`. | **PUBLISHED AND REMOTE-VERIFIED on IPD `main`** | None on the IPD side. Remaining is IRR's own already-authorized B-1R repin and route verification — IRR's own act, out of IPD scope; IRR is read-only to IPD passes. |
 
 ## Publication reconciliation
 
@@ -121,6 +121,38 @@ package/source diff: none from evaluated baseline 24e62c80…
 ```
 
 The publication receipt verifies documentation and current-main state only. It does not resolve B-1R, qualify Gate 4, render U4, grant U5/U6, provision identity, enable writes or establish E2E.
+
+### Dated correction — B-1R PIT/D114 package prerequisite status (2026-11-02)
+
+**Nature:** documentation-only status correction. No assessment above is rewritten or erased; no product
+code, package, API, migration, test, authorization or gate status is changed.
+
+**What was stale.** The live status row for `CAP-02 B-1R PIT/D114 package prerequisite` in the table at the
+head of this tracker still carried the status `BLOCKED — no sufficiently scoped effective IPD-main act; no
+package/API change made`, written by PR #56 on 2026-10-23 and accurate against its evaluated baseline
+`main@24e62c80f37e8a55c34747581a68209c67b775a`. That row was never advanced when the prerequisite closed,
+although the closure was recorded later in this same file and the neighbouring `U3 / Gate 4 qualification`
+and `IRR` rows in the same table were advanced by subsequent passes.
+
+**Closure evidence (all verified live against `main` on 2026-11-02).**
+
+| Item | Value |
+|---|---|
+| Exact-scope authority act | `IIPS_V3_CAP02_B1R_IPD_COMPATIBILITY_IMPLEMENTATION_ACT_EFFECTIVE_2026-10-23.md` (blob `75314314519e4f1c0f83d2c5dfb14e6f635933e5`) |
+| Implementing PR | **#58** — "CAP-02: add compatible PIT and D114 package surfaces"; head `b613d4f984fa1cc72cae9b6dfeee6f4bc393f06a`; base `main@b3428f3f431eceb1dcde60e3b120bbd1888622bb`; 27 files `+1,875/−65` |
+| Merged commit | `16459f465024ca1eb4da4953d8e178eba4269f8e`, merged `2026-10-23T12:08:01Z`, root tree `0c088282d69a03eced2f33533b19ff647179145a` |
+| Ancestry | `16459f46…` **is an ancestor of current `main`** |
+| Subpath introduction | `./pit` and `./d114-non-production` first appear in `package.json` at `b613d4f…`, PR #58's own head commit |
+| Current `main` exports | `./portfolio-ui`, `./pit`, `./d114-non-production`, `./operator-drop`; each resolves to a real source entry (`src/pit/package.ts`, `src/d114/non_production_package.ts`, `src/operator_drop/package.ts`) |
+| Corroborating entries in this file | `CAP-02 B-1R IPD package/API prerequisite: PUBLISHED AND REMOTE-VERIFIED on IPD main` (§ publication receipt, PR #58) and workstream row 13 (`IRR B-1R repin … IPD package prerequisite already published`) |
+| Preparation-record receipt | `IIPS_V3_CAP02_B1R_PACKAGE_AND_GATE4_PREPARATION_2026-10-23.md` §10 — "published on current IPD `main`, not merely implemented locally" |
+
+**What this correction does and does not establish.** It establishes only that the IPD-side B-1R
+package/API prerequisite is published and remote-verified, and that the head-of-tracker row now agrees with
+this file's own publication receipt. It does **not** qualify Gate 4, render U4, grant U5/U6, provision
+Gate A′, enable any durable or operational write, execute IRR's separate repin or route E2E, or reopen
+PR #56 or PR #57. **Gate 4 remains `AUTHORIZED — NOT STARTED` with `0/11 QE executed`, and the preparation
+record's `GATE 4 NOT QUALIFIED` remains accurate and is unchanged.**
 
 ## CAP-02 B-1R IPD compatibility implementation candidate — 2026-10-23
 
