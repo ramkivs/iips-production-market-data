@@ -3447,3 +3447,189 @@ Two facts established by inspection and recorded for operators:
 - **IRR not modified.** Reconciling the IRR-side record remains a separate IRR work item.
 - Starting the provider authorizes no durable portfolio write, changes no Gate 4 or Gate 5 status,
   and is not production activation. `O-05` remains **OPEN**.
+
+## CAP-02/CAP-03 — Historical reconciliation of IPD PRs #5, #6, #42 (+ #88) against current `main` (2026-11-02)
+
+**Nature:** read-only reconciliation plus one narrowly scoped test-only recovery. No runtime
+contract, migration, guard, protocol or authority boundary changed. No historical branch,
+commit or PR record was rewritten; no force-push, rebase or cherry-pick was performed.
+Appended additively; no prior entry above was edited.
+
+**Baseline.** `main` = `0a3b5f0f038e13305a3b927865acc349e19f043f`, tree
+`45159ce02f4a4c30380463ac15c4d2a7f78b2af6`; **0 open PRs**. Working branch
+`operator/ipd-pr5-6-42-reconciliation-20261102` off that baseline.
+
+**Method note (material).** The workspace clone was **shallow** (`.git/shallow` carried a single
+graft at `main`'s tip), so `git rev-list --max-parents=0 origin/main` returned `main` itself and
+`git merge-base --is-ancestor` returned a **false negative for every commit tested, including
+`4b5c65a7…`, a genuine `main` ancestor**. `git fetch --unshallow` was run before any ancestry
+conclusion was recorded (main: 368 commits, root `e93b14aa58b4`). All ancestry results below are
+post-unshallow. *Any future ancestry claim made on a shallow clone is void.*
+
+### 1. Dispositions
+
+| PR | Subject | Base (branch @ sha) | Head / merge | Merged? | Ancestor of `main`? | Disposition |
+|---|---|---|---|---|---|---|
+| **#5** | IU-5A: publish PIT package boundary | `arena/01a0e6d9-iips-production-market-data` @ `07613b58c216…` | head `46aaa59304ab…`; merge `c2b2f1985ff0…` 2026-09-29T08:28:35Z | yes | **NO** | merged into a **non-main Arena branch**; functionality **independently present on `main`** |
+| **#6** | IU-6 non-production D114 → PIT store population | `arena/01a0e6d9-…` @ `c2b2f1985ff0…` (= #5's merge, stacked) | head `246cb944e174…`; merge `0dab1221fb0f…` 2026-09-29T13:24:42Z | yes | **NO** | merged into the same **non-main Arena branch**; implementation present on `main`, **2 test invariants recovered here** |
+| **#42** | Gate 3: act-conformant IPC candidate with connection-slot release | `main` @ `c0e1b56622646…` (an ancestor of `main`) | head `afa430900c3e…`, tree `f0b27857574e…`; closed 2026-10-24T12:47:36Z | **no** | NO | **CLOSED WITH RECORD** by PA act `IIPS-V3-IPD-PR42-CLOSE-WITH-RECORD-PA-DISPOSITION-2026-10-24-01`; content 12/22 already on `main`; sole residual **withheld** |
+| **#88** | docs(ipd): reconcile PR #42 disposition receipt | `main` @ `e5a130fe5b68…` | head `e05638a90603…`; merge `4b5c65a731a6…` 2026-10-24T17:53:33Z | yes | **YES** | on `main`; receipt intact and corroborated by this pass |
+
+**#5/#6 never reached `main`** — their merge target was the Arena branch
+`arena/01a0e6d9-iips-production-market-data`, not `main`. That is the correct explanation for the
+"merged but absent" appearance; it is **not** evidence of a lost merge.
+
+**#42 is the only unmerged closed PR in the repository** (verified across the full closed-PR set;
+111 PRs, 110 merged). No other PR work is stranded.
+
+### 2. PR #5 — what it introduced and where it stands on `main`
+
+Introduced (3 files, +34/−2): `build:pit-package` / `prepack` / `prepare` scripts;
+`exports['./pit']`; `files: ["dist/package"]`; `src/pit/package.ts`; `tsconfig.pit-package.json`
+(`rootDir: ./src`, `outDir: ./dist/package`).
+
+| #5 element | On current `main` | Finding |
+|---|---|---|
+| `build:pit-package` | identical (`tsc -p tsconfig.pit-package.json`) | incorporated |
+| `prepack` / `prepare` | present, extended to `build:portfolio-ui-package && build:pit-package` | incorporated + advanced |
+| `files: ["dist/package"]` | identical | incorporated |
+| `exports['./pit']` | `./dist/package/src/pit/package.js` (was `./dist/package/pit/package.js`) | incorporated; path differs only because `tsconfig.pit-package.json` `rootDir` moved `./src` → `./` when 3 entries came to share one config |
+| `src/pit/package.ts` | present, 31 lines; `PitReadService`, `PitReadRequest`, `PitReadResult`, `PitReadHit`, `PitReadMiss`, `PitReadFailureReason`, `PointInTimeStore`, `PITQuery`, `CanonicalEnvelope`, `DataDomain`, `DataProvenanceDTO` all still exported, plus the REG-06 durable-store surface | incorporated + advanced |
+| `buildPitKey` export | **not** on the public boundary | **deliberate narrowing, not a loss** — still implemented at `src/pit/pit_store.ts:31`, still consumed by `src/pit/pit_durable_store.ts` and by `tests/cap02_pit_d114_package.test.ts` (which imports it from the internal module path). **No IRR importer references it**, and the PIT read API takes `securityId`/`domain` directly, so no consumer needs to construct keys. |
+
+**#5 action required: none.** Recorded as incorporated-and-narrowed.
+
+### 3. PR #6 — what it introduced, what is present, what was recovered
+
+Introduced (7 files, +818/−11): `./d114-non-production` export; `src/d114/non_production_package.ts`;
+`src/d114/non_production_pit_population.ts` (232 L); `src/d114/pit_ingestion_loader.ts` (+29/−10);
+`src/d114/index.ts`; `tests/wsk_iu6_d114_pit_population.test.ts` (514 L, **28 cases**).
+
+Six of the seven files exist on `main` and differ only by later advancement. Critically,
+**the exported symbol set of `src/d114/non_production_pit_population.ts` is identical** — the same
+17 top-level symbols (`createNonProductionD114PitStore`, `populateNonProductionD114Pit`,
+`ingestNonProductionD114Archives`, `NonProductionD114Population`, `NonProductionD114Archive`,
+`NON_PRODUCTION_D114_ARCHIVES`, the EQ/BL/ISIN/SYMBOL/date/vintage constants and
+`NON_PRODUCTION_D114_DISPOSITION`). The implementation is 118 L against 232 L; the public
+contract is unchanged.
+
+`tests/wsk_iu6_d114_pit_population.test.ts` is **absent from `main`**. Its 28 cases were compared
+one by one against `tests/cap02_pit_d114_package.test.ts` (26 cases). **26 of 28 are semantically
+covered**, including both D114 parser eras, series isolation, provenance verbatim, lineage
+distinctness, fail-closed `NOT_FOUND`, invalid identity/domain, impossible-date and
+malformed-archive quarantine, and idempotent replay.
+
+**Two invariants were asserted more weakly on `main` and are recovered by this pass:**
+
+| ID | Original (#6) | Current-main equivalent | Gap | Recovery |
+|---|---|---|---|---|
+| **R-1** | IU6-13a: two independent populations are byte-identical over the **full record set** (`queryRange` results) | `is deterministic and idempotent through the returned loader` compares **`listAdmittedSeriesKeys()` only** | a divergence in payload, provenance, lineage or timestamp **behind an identical key set** would pass | new `snapshotRecords()` compares all 12 full envelopes, with an in-test **negative control** that perturbs one payload and proves the snapshot changes while the key set does not |
+| **R-2** | IU6-14b: `loader.getD01Store()` and `getD02Store()` **are** the caller-supplied instance | `drives both real parser eras into one caller-supplied store` asserts only `population.store === store` | the **wrapper** exposing the caller's store does not prove the **loader** holds it — the actual "no second PIT authority" invariant | new test asserts loader D01/D02 store identity against the caller's instance |
+
+Recovered in **`tests/iu6_recovered_d114_population_invariants.test.ts`** (4 tests). Both are
+**test-only**: they exercise behaviour already present and already authorized on `main`, import
+nothing that is not already public, and change no `src/**` file.
+
+### 4. PR #42 / #88 — the withheld residual is deliberately **not** reintroduced
+
+PR #42's headline feature — the flush-guard connection-slot release adopted from PR #41 in commit
+`afa43090…` — **is on current `main`**, verified member by member in `src/ipc/dispatch.ts`:
+
+| Element | On `main` |
+|---|---|
+| `writeFrame()` — one frame, **no** writable half-close | present |
+| `endFrame()` — half-close for the AF_UNIX path only | present |
+| post-flush `socket.destroy()` releasing the `maxConnections = 1` slot | present |
+| `finally`-block flush-guard release (`reader.settlement === 'flush-guard' && !socket.destroyed`) | present |
+| `maxConnections = 1 (C5.4)` rationale | present |
+| response write racing `reader.whenGuardTripped` | present |
+| superseded `attachPostFlushWatch()` watchdog | **correctly absent** from both #42 and `main` |
+
+PR #88's receipt (§3) states "12 of 22 blobs byte-identical; 10 differ". **This pass re-derived
+that figure independently and obtained exactly 12 identical / 10 differing**, and re-verified the
+two blob identities the receipt cites: `main` `src/ipc/endpoint.ts` = `e565aa5b343266f62ffd411d17d74c89b9f29324`,
+PR #42's = `fe49c7835da671d8fa208f752f10b89a7b142046`.
+
+**PR #42's only unique residual substance** is `collisionCodeFor()` in its `src/ipc/endpoint.ts`:
+a platform-conditional bind-failure mapping — Windows named pipe
+`['EADDRINUSE','EEXIST','EACCES','EPERM','EBUSY']` versus POSIX `['EADDRINUSE','EEXIST']`. Current
+`main` maps **only** `EADDRINUSE`. That code has **never been validated on Windows**.
+
+**Not reintroduced.** PR #88 §1.4 withholds it explicitly: a bounded port re-derived on current
+`main`, limited to `src/ipc/endpoint.ts`, `src/ipc/entrypoint.ts` and the three corresponding
+tests, "may be considered **only under a separate PA act** if Gate 4 host execution identifies a
+Windows pipe-collision defect. **Not authorized, not scheduled.**" Reintroducing it would
+reimplement functionality a later effective decision explicitly withheld, on an unvalidated
+Windows-only assumption. **It stands as the sole precise unresolved dependency of PR #42**, with
+its governing record (`IIPS-V3-IPD-PR42-CLOSE-WITH-RECORD-PA-DISPOSITION-2026-10-24-01`) and its
+trigger (Gate 4 host execution) both named.
+
+### 5. Authority boundaries preserved
+
+- **No write guard touched.** `evaluatePortSaveGuard()` remains hard-false; `WRITE_NOT_AUTHORIZED`,
+  `SESSION_ONLY` / `durable:false`, the closed dispatch operation set and all `503` fences unchanged.
+- **No migration, schema, protocol or pin change.** `GATE3_MIGRATIONS`, `DESIGNATED_MIGRATION_BLOBS`
+  and `V-A2-1` untouched. DQ-6b untouched.
+- **No Gate movement.** Gate 3 acceptance, Gate 4 (AUTHORIZED — NOT STARTED), QE 0/11, Gate 5 /
+  `CV-52` (not initiated) all unchanged. H-12 still NOT ADOPTED.
+- **No durable portfolio write, no provisioning, no host execution.** Direct P1 provisioning was
+  **not** repeated. `P-1-C NOT ESTABLISHED. P-1-D DESIGNATED, NOT VERIFIED FOR THE ATTEMPT.`
+- **No architecture or technology introduced.** One new test file, reusing existing public APIs.
+- **IRR not modified.** The IRR-side record remains a separate IRR work item; the IRR/IPD boundary
+  is preserved (no SQLite persistence in IRR).
+- **No historical branch, commit or PR record altered.** #5, #6, #42, #88 heads and trees preserved.
+
+### 6. Tests executed and actual results
+
+| Check | Command | Result |
+|---|---|---|
+| Typecheck | `npx tsc --noEmit` | **exit 0** |
+| Build | `npm run build` | **exit 0** |
+| Recovered suite (targeted) | `node --test dist/tests/iu6_recovered_d114_population_invariants.test.js` | **4 tests / 4 pass / 0 fail** |
+| **Mutation control (R-2)** | temporarily gave the loader private D01/D02 stores, rebuilt | **4 tests / 0 pass / 4 fail** — proving the assertions bite; `src/` then restored (`git diff --stat src/` empty) and 4/4 pass re-confirmed |
+| Full suite | `npm test` | **1033 tests / 1032 pass / 0 fail / 1 skipped** |
+| Baseline comparison | `npm test` on `0a3b5f0f` | 1029 / 1028 / 0 / 1 skipped → **+4 tests, 0 regressions** |
+| Package boundary | `npm run test:package-consumer` | **PASS**; `forbiddenHits: []`; typecheck `PASS` (strict, `skipLibCheck: false`) |
+
+The 1 skip is the pre-existing baseline skip, unchanged.
+
+### 7. Remaining host verification (stated separately, not claimed)
+
+- **R-1 and R-2 require no Windows host.** The D114 population path is transport-independent: it
+  drives an in-memory `PointInTimeStore` through the real parsers and loader, with no socket,
+  pipe or filesystem endpoint. Their Linux `node:test` results are therefore complete for what
+  they assert.
+- **These are Linux/POSIX `node:test` results and are NOT Windows named-pipe verification.** No
+  claim of Windows pipe behaviour is made from them.
+- **Still outstanding on Windows:** native named-pipe verification of the Gate 3 provider, and —
+  only if Gate 4 host execution identifies a pipe-collision defect — the withheld
+  `collisionCodeFor` mapping, which requires the separate PA act named in §4.
+
+### 8. Branches, commits and PRs
+
+- Working branch: `operator/ipd-pr5-6-42-reconciliation-20261102` (off `0a3b5f0f…`).
+- Files added: `tests/iu6_recovered_d114_population_invariants.test.ts`; this tracker section.
+- Files changed in `src/**`: **none.**
+- Preserved as-is: `arena/01a0e6d9-…`, `arena/01a0ec3d-…`, `iu-6-d114-pit-population`,
+  `arena/feda2d8c-…`, `operator/ipd-pr42-tracker-20261024-181742`, and all merge commits above.
+
+### 9. FUTURE-ANALYSIS INSTRUCTION (binding)
+
+**Before treating IPD PR #5, #6 or #42 as "missing", "lost", "unmerged work to be reimplemented",
+or before recommending that any of them be re-applied, consult this entry.**
+
+1. **#5 and #6 are not lost merges.** They were merged into the Arena branch
+   `arena/01a0e6d9-iips-production-market-data`; their functionality is present on `main` by
+   independent re-landing. Do not re-apply either patch, and do not re-add `buildPitKey` to the
+   public `./pit` boundary without a consumer that requires it.
+2. **#42 is not rejected technology and not missing IPC.** 12 of its 22 files are byte-identical to
+   `main`, its connection-slot release is fully present, and its closure was a **deliberate
+   disposition**, not a technical rejection. Do not merge, rebase or cherry-pick it.
+3. **The one thing genuinely absent from `main` — the Windows `collisionCodeFor` mapping — is
+   absent by explicit authority decision**, not by oversight. Do not port it without the separate
+   PA act and the Gate 4 trigger.
+4. **IU-6's two weakened invariants are now recovered.** Do not report them as gaps.
+5. **Ancestry claims require a non-shallow clone.** Verify
+   `git rev-parse --is-shallow-repository` → `false` before using `merge-base --is-ancestor`.
+
+*End of the 2026-11-02 IPD PR #5 / #6 / #42 / #88 historical reconciliation entry.*
