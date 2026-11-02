@@ -350,3 +350,19 @@ CI checks:              ___________________________ (required: npm ci, tsc, buil
 
 *End of reconciliation. P01-02's specification stranded on a historical branch is now on the candidate branch and proposed to `main` as documentation; the four recovered UI surfaces' compatible offline form was already on `main` and remains verified. No new governance decision, gate, or admission was manufactured.*
 
+
+## ADDENDUM — Final authoritative main commit (2026-11-02 10:30 UTC)
+
+This addendum closes the placeholder in §5.3 after the integration PR merged.
+
+| Field | Value |
+|---|---|
+| **Post-merge `main` SHA** | `0c65c6900b3f5c4f216f7e668050dc7cb782ae1b` |
+| **Post-merge `main` tree** | `ee18c309a6792dd5d001757d02a9f956a6aa69a4` |
+| **PR #** | `124` — `docs(p01): recover accepted P01 canonical contract package — P01-02 time semantics (10 verbatim docs) + recovered UI reconciliation` |
+| **Merge commit SHA** | `0c65c6900b3f5c4f216f7e668050dc7cb782ae1b` (Merge PR #124, `56959fc` + `992f546`) |
+| **PR URL** | `https://github.com/ramkivs/iips-production-market-data/pull/124` |
+| **Merged at** | `2026-11-02T10:30:15Z` |
+| **Remote read-back** | `gh api repos/ramkivs/iips-production-market-data/branches/main` → commit `0c65c69` / tree `ee18c30` matches; CI `typecheck·build·test` PASS + `executed test count` PASS |
+| **Candidate branch SHA** | `992f546a0b5...` (arena/6f4fc303) — 11 files, 1891 insertions, 0 src/tests/package change for P01-02 doc slice |
+| **Validation on new main** | `npm ci` 0, `npx tsc --noEmit` 0, `npm run build` 0, `npm test` 1032/1032 pass 0 fail 1 skipped (identical to 56959fc baseline) |
