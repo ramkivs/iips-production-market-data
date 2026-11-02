@@ -1,6 +1,6 @@
 # IIPS v3.0 — CAP-02 B-1R Package Reconciliation and Gate 4 Preparation Record
 
-> **STATUS: INVESTIGATION AND PERMITTED PREPARATION COMPLETE — PACKAGE BLOCKER OPEN; GATE 4 NOT QUALIFIED.**
+> **STATUS: INVESTIGATION AND PERMITTED PREPARATION COMPLETE — PACKAGE BLOCKER CLOSED (PUBLISHED AND REMOTE-VERIFIED on IPD `main`; see §10 and the dated 2026-11-02 correction in the CAP-02 tracker); GATE 4 NOT QUALIFIED.**
 > Evidence/reconciliation record only. This is not an authority act, package implementation, gate execution or acceptance.
 
 | Field | Value |
