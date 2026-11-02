@@ -3473,7 +3473,12 @@ post-unshallow. *Any future ancestry claim made on a shallow clone is void.*
 | **#5** | IU-5A: publish PIT package boundary | `arena/01a0e6d9-iips-production-market-data` @ `07613b58c216…` | head `46aaa59304ab…`; merge `c2b2f1985ff0…` 2026-09-29T08:28:35Z | yes | **NO** | merged into a **non-main Arena branch**; functionality **independently present on `main`** |
 | **#6** | IU-6 non-production D114 → PIT store population | `arena/01a0e6d9-…` @ `c2b2f1985ff0…` (= #5's merge, stacked) | head `246cb944e174…`; merge `0dab1221fb0f…` 2026-09-29T13:24:42Z | yes | **NO** | merged into the same **non-main Arena branch**; implementation present on `main`, **2 test invariants recovered here** |
 | **#42** | Gate 3: act-conformant IPC candidate with connection-slot release | `main` @ `c0e1b56622646…` (an ancestor of `main`) | head `afa430900c3e…`, tree `f0b27857574e…`; closed 2026-10-24T12:47:36Z | **no** | NO | **CLOSED WITH RECORD** by PA act `IIPS-V3-IPD-PR42-CLOSE-WITH-RECORD-PA-DISPOSITION-2026-10-24-01`; content 12/22 already on `main`; sole residual **withheld** |
-| **#88** | docs(ipd): reconcile PR #42 disposition receipt | `main` @ `e5a130fe5b68…` | head `e05638a90603…`; merge `4b5c65a731a6…` 2026-10-24T17:53:33Z | yes | **YES** | on `main`; receipt intact and corroborated by this pass |
+| **#88** | docs(ipd): reconcile PR #42 disposition receipt | `main` @ `e5a130fe5b68…` | head `e05638a90603…`; landed as **squash** commit `4b5c65a731a6…` 2026-10-24T17:53:33Z | yes | **YES** | on `main`; receipt intact and corroborated by this pass |
+
+> The "Ancestor of `main`?" column tests the **commit that landed on `main`**, not the PR head.
+> PR #5 (`c2b2f198…`) and PR #6 (`0dab1221…`) are true 2-parent merge commits; PR #88 landed as a
+> **1-parent squash commit**, so its head `e05638a9…` is *not* an ancestor of `main` even though the
+> PR is merged and its content is on `main`. See the merge-topology note in §8.
 
 **#5/#6 never reached `main`** — their merge target was the Arena branch
 `arena/01a0e6d9-iips-production-market-data`, not `main`. That is the correct explanation for the
@@ -3610,8 +3615,28 @@ The 1 skip is the pre-existing baseline skip, unchanged.
 - Working branch: `operator/ipd-pr5-6-42-reconciliation-20261102` (off `0a3b5f0f…`).
 - Files added: `tests/iu6_recovered_d114_population_invariants.test.ts`; this tracker section.
 - Files changed in `src/**`: **none.**
-- Preserved as-is: `arena/01a0e6d9-…`, `arena/01a0ec3d-…`, `iu-6-d114-pit-population`,
-  `arena/feda2d8c-…`, `operator/ipd-pr42-tracker-20261024-181742`, and all merge commits above.
+- **Historical refs actually verified present on the remote** (4 of 5):
+  `arena/01a0e6d9-iips-production-market-data` @ `c1b955b427486dbce6d6a159a448065b9db45dc9`,
+  `arena/01a0ec3d-iips-production-market-data` @ `46aaa59304ab…`,
+  `iu-6-d114-pit-population` @ `246cb944e174…`,
+  `arena/feda2d8c-iips-production-market-data` @ `afa430900c3e…`.
+  All six commits examined (`c2b2f198`, `0dab1221`, `afa43090`, `46aaa593`, `246cb944`, `4b5c65a7`)
+  are present in the object store.
+- **Correction to an earlier draft of this section:** the branch
+  `operator/ipd-pr42-tracker-20261024-181742` (PR #88's head branch) is **not** preserved — the
+  GitHub branches API returns **404 Branch not found**; it was deleted after PR #88 merged. This
+  pass did not delete it and performed no branch deletion of any kind. PR #88's head commit
+  `e05638a90603c88084526e61b95146549930777d` is **no longer referenced by any ref** but remains
+  retrievable from GitHub by SHA, and its content is fully carried by the commit now on `main`.
+  No content was lost.
+
+**Merge-topology nuance (recorded because "PR head ≠ commit actually merged").** PR #5
+(`c2b2f198…`) and PR #6 (`0dab1221…`) are **true merge commits with 2 parents**. PR #88's
+`4b5c65a7…` has **exactly 1 parent** (`e5a130fe…`, the then-current `main`): it is a **squash
+commit**, not a merge commit. Its head `e05638a9…` is therefore *not* an ancestor of `main` even
+though the PR is merged and its content is on `main` — which is precisely why ancestry testing of a
+PR head can mislead and why the merged commit, not the head, must be tested.
+
 
 ### 9. FUTURE-ANALYSIS INSTRUCTION (binding)
 
