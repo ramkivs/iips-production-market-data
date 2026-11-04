@@ -48,7 +48,23 @@ export const ROUTES = {
   screener: '/screener',
   screenerGoverned: '/screener/governed',
   search: '/search',
-  // ── Donor intelligence children (Decision Matrix route; O/R/R remain future) ─────────
+  // ── Donor intelligence children (Decision Matrix route; O/R/R future IN IPD ONLY) ──
+  //
+  //  SCOPE OF THE `future` DESIGNATION — read this before inferring anything about IIPS:
+  //  the three constants below are retained for donor route-model fidelity and are
+  //  deliberately NOT bound in App.tsx, so `/intelligence/*` resolves them to the honest
+  //  FeaturePlaceholder. That is a statement about THIS repository's frontend scope ONLY.
+  //
+  //  Opportunities, Risks and Rankings are FULLY IMPLEMENTED, TESTED AND OWNED BY IRR
+  //  (`ramkivs/iips-review-recovered`) under NP-18 — admitted to IRR `main` by PR #115
+  //  (merge `b6a11ec0`): `IntelligenceOpportunities/Risks/Rankings.tsx`, bound at
+  //  `App.tsx:59-61`, navigable, and served live by IRR's own `/api/cross-sector`.
+  //  Their `future` status here must NOT be read as future, unavailable or unimplemented
+  //  across IIPS. No IPD implementation is required and none is planned; duplicating the
+  //  IRR surfaces here is explicitly out of scope.
+  //  Evidence: evidence/cross-repository/
+  //    IIPS_V3_IRR_INTELLIGENCE_SCREENS_IPD_SUPPORT_VERIFICATION_2026-11-04.md (§8.1)
+  //    IIPS_V3_IPD_SCOPED_WORKPACKAGE_REGISTER_2026-11-02.md (§0.3)
   intelligenceDecisionMatrix: '/intelligence/decision-matrix',
   intelligenceOpportunities: '/intelligence/opportunities',
   intelligenceRisks: '/intelligence/risks',

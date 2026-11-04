@@ -5,6 +5,10 @@
 > not a scope decision and not an acceptance. No product code, package, API, contract, migration,
 > test implementation, authorization or gate status is changed by this record.
 >
+> **Superseding record for IPD-A07:** [`IIPS_V3_IRR_INTELLIGENCE_SCREENS_IPD_SUPPORT_VERIFICATION_2026-11-04.md`](./IIPS_V3_IRR_INTELLIGENCE_SCREENS_IPD_SUPPORT_VERIFICATION_2026-11-04.md)
+> closes **IPD-A07** for the four IRR intelligence screens on executed evidence — see **§0.2** below. The P11 Row 26
+> `CertifiedSectorEngineId` bridge remains a **Program Authority decision pending** and is **not** closed by it.
+>
 > **Companion document:** [`IIPS_V3_DIRECT_P1_STATUS_RECONCILIATION_2026-11-01.md`](./IIPS_V3_DIRECT_P1_STATUS_RECONCILIATION_2026-11-01.md)
 > carries the **separate Direct P1 status and governance history** — what was provisioned on the
 > Windows host, by whom, and what that does **not** mean. Read the two together: this register
@@ -84,6 +88,99 @@ overlay; the original rows are retained as the record of what was verified at `m
 **Baseline note:** the register body below is stated against `main@56959fc3`, which was `main` at the
 time of investigation and remains the PR #123 base. Where the body says "absent from `main`" for
 `docs/p01/**`, that was true at `56959fc3` and is **no longer true** at `fb029f66` — see item 1.
+
+## 0.2 Dated addendum (2026-11-04) — IPD-A07 CLOSED for the four intelligence screens
+
+A scoped IRR-to-IPD integration investigation was performed on `2026-11-04` against
+**IPD `main@e1f94e9c4913f816848472e3d16875bdf7af14d6`** and
+**IRR `main@9e0a0415b76571fc4db1747b2da63c73fa0447d3`**, covering exactly four IRR screens —
+**Company Intelligence, Sector Intelligence, Cross-Sector Intelligence and Decision Matrix** — and
+their direct dependencies. Full record:
+[`IIPS_V3_IRR_INTELLIGENCE_SCREENS_IPD_SUPPORT_VERIFICATION_2026-11-04.md`](./IIPS_V3_IRR_INTELLIGENCE_SCREENS_IPD_SUPPORT_VERIFICATION_2026-11-04.md).
+
+**All four are implemented, navigable and connected to their intended services inside IRR**, served by
+IRR-owned `frontend/server/executive-transport.ts` over IRR-owned `iips-platform/src/sector-engines/**`
+(163 files, 14 engine directories, **in the IRR repository**). No IPD dependency exists in their data
+paths. Evidence: IRR targeted suites **30/30 pass**; the transport was booted and the endpoints
+**live-probed** — `/api/decision-matrix`, `/api/cross-sector`, `/api/company/banking`,
+`/api/company/healthcare` all returned **HTTP 200** with fully populated certified `SNAPSHOT`
+payloads; IPD engine library tests **32/32 pass**.
+
+### IPD-A07 disposition
+
+> ### `CLOSED — NO IPD UI IMPLEMENTATION REQUIRED; EXISTING IRR CAPABILITY CONFIRMED.`
+
+1. **IRR owns the four user-facing screens and their existing intelligence implementation.** IPD
+   supplies backend data and services; it does not own and does not need these surfaces.
+2. **IPD's P11 engines remain an in-process library capability.** Their integration with these IRR
+   screens **has not been commissioned**. They stay implemented, tested, **unexported**
+   (`package.json` exposes only `./portfolio-ui`, `./pit`, `./d114-non-production`,
+   `./operator-drop`), **unwired** (IPD has no HTTP surface; the IPC operation set is closed and
+   portfolio-only) and **unconsumed**.
+3. **Duplicating these screens in IPD is not required, and transplanting historical UI components is
+   not required.** The historical refs carrying them (`arena/01a0814b@da43051`, `arena/01a0cf86@ea70a8c4`,
+   `arena/01a0d1d3@1c5f46ca`, `arena/01a0d33d@887ecce0`) would not even compile in IPD: their
+   components import an API client tier that is absent from those branches **and** from IPD `main`
+   (`frontend/src/api` = 0 files; `frontend/server` = 0 files, vs 122 in IRR). A port would duplicate
+   an accepted IRR capability.
+4. **No IPD integration gap was established, so no IPD implementation was performed.** Nothing was
+   created, ported or connected.
+
+### What this addendum does NOT decide
+
+**The P11 Row 26 `CertifiedSectorEngineId` bridge wording and its E2E-pending status remain a separate
+PROGRAM AUTHORITY DECISION PENDING.** This addendum does not close it, does not mark it complete, and
+**does not infer or claim any IPD/IRR engine equivalence** — strict identifier intersection between the
+two engine taxonomies is **1 of 14** and no authoritative mapping exists in either repository. See §7
+of the verification record, `IPD_P11_BOUNDED_LIBRARY_SCOPE_AND_ROW26_RECONCILIATION_2026-10-20.md` and
+`IIPS_V3_DEC06_P11_MAIN_ADMISSION_DECISION_PACKAGE_2026-10-21.md` (`DECISION REQUIRED — NOT DECIDED`).
+
+### Residual scope, recorded honestly
+
+The IRR register defines `IPD-A07` over *"executive/company/sector/reports/command-palette"* — broader
+than the four screens verified here. The closure is recorded **for the four verified screens**. Of the
+remaining families: **Executive** already exists on IPD `main` as `features/executive/ExecutiveSurface.tsx`;
+**Reports** is a residual outside this pass's scope (IPD `/reports` renders the honest fail-closed
+`ReportsStructural`); **command palette** exists in **neither** repository. The authoritative `IPD-A07`
+row itself lives in the **IRR** repository and still reads `SCOPE / ACCEPTANCE DECISION REQUIRED`;
+updating it is an **IRR-owned** change and was **not** made from this IPD session.
+
+## 0.3 Dated addendum (2026-11-04) — scope of the IPD `future` designation for Opportunities / Risks / Rankings
+
+**Clarification only. No capability, route, constant, status value or routing behaviour is changed.**
+
+IPD's `frontend/src/app/routes.ts` declares three route constants — `intelligenceOpportunities`
+(`:53`), `intelligenceRisks` (`:54`), `intelligenceRankings` (`:55`) — and `App.tsx` binds **none** of
+them, so those paths resolve through the `/intelligence/*` splat (`App.tsx:393`) to an honest
+`FeaturePlaceholder`. `navigation.ts:139-141` marks all three `status: 'future'`.
+
+**That designation is a statement about IPD's own frontend scope and nothing wider.**
+
+| Fact | Evidence |
+|---|---|
+| Opportunities, Risks and Rankings are **fully implemented, tested and owned by IRR** | IRR `main@9e0a0415`: `frontend/src/features/intelligence/IntelligenceOpportunities.tsx` (107 L), `IntelligenceRisks.tsx` (109 L), `IntelligenceRankings.tsx` (108 L); bound at `App.tsx:59-61`; navigable via `navigation.ts:64-66` |
+| Admitted under **NP-18** | IRR PR **#115** *"NP-18: isolate approved intelligence views for main"*, `merged=true`, `2026-10-16T08:37:20Z`, merge commit **`b6a11ec0ed21f69d7f155bb908c333e951c761b1`**; evidence `evidence/integration/np18-{admission,authority-determination,isolated-main,qualification,r3}/2026-10-16/` |
+| Verified functional, not placeholder | Targeted suites **32/32 pass** (11 + 10 + 11); `App.test.tsx` **21/21** incl. *"no nav click lands on 'not yet built'"* — **53/53** total. Live probe `GET /api/cross-sector` → **HTTP 200**, `opportunity` (10 items), `ranking` (13 items), `correlation` + `portfolio` populated |
+| Therefore | Their `future` status in IPD **must not** be read as future, unavailable or unimplemented across IIPS |
+
+**Retained unchanged:** all three IPD route constants, the `/intelligence/*` splat routing, and the
+`future` navigation status. No IPD implementation, no IRR duplication and no integration work is
+introduced by this addendum.
+
+**Source-comment corrections made alongside this addendum (comment text only — verified to leave the
+compiled output code-identical):** `frontend/src/app/navigation.ts` previously stated that these three
+have *"no routes, no implementation anywhere"*, which is **false at IIPS scope** and is corrected to
+scope the statement to IPD. Equivalent scope clarifications were added to `routes.ts`, to the
+`navigation.ts` module doc comment and to the `App.tsx` splat comment.
+
+**Verification of the comment-only boundary:** `tsc` preserves comments (`removeComments` unset), so the
+raw emitted JS differs; with comments stripped, `dist/frontend/src/app/{App,navigation,routes}.js` are
+**byte-identical** before and after. `git diff` confirms **0** changed route constants, **0** changed
+`status: 'future'` values and **0** changed `<Route path=` lines. Full suite re-run:
+**1033 / 1032 pass / 0 fail / 1 skipped**.
+
+Full evidence: §8.1 of
+[`IIPS_V3_IRR_INTELLIGENCE_SCREENS_IPD_SUPPORT_VERIFICATION_2026-11-04.md`](./IIPS_V3_IRR_INTELLIGENCE_SCREENS_IPD_SUPPORT_VERIFICATION_2026-11-04.md).
 
 ## 1. Disposition summary
 
@@ -232,13 +329,13 @@ All fifteen required fields are recorded per package below.
 | **Historical findings** | The three refs carry distinct `frontend/**` trees and branch-side transport/package changes: `executive-transport.ts`, `executive-dev-server.ts`, `research-sector-transport.ts`, `research-sector-dev-server.ts`, `api/{authFetch,company,crossSector,dataMode,decisionMatrix,evidence,executive,replay}.ts`, `features/company/CompanyTrustChain.tsx`, plus `app/App.tsx` and `app/navigation.ts` edits |
 | **Governing decision** | **No recovery authority record exists on `main`** — a tree-wide search for recovery records returns only this task's own test file. Prior records describe recovery as branch-only, partially verified and non-production; **D115 implementation authority was not granted** and AI advisory was deferred. The IRR register records these as IPD-owned branch artifacts and requires a per-surface scope/acceptance decision (IPD-A07) |
 | **Confirmed gap** | The surfaces are absent from `main`, **but no governing record establishes them as authorized requirements**. Per the standing rule, absence plus branch existence is not an authorized requirement |
-| **Disposition** | **DEFER** — scope/acceptance decision required per surface. Not IMPLEMENT. **Confirmed by §0.1:** the functional surfaces remain absent at `fb029f66`; PR #124 records the shell *structure* as restored earlier (`6b8afda`) |
+| **Disposition** | **DEFER → CLOSED for the four intelligence screens (§0.2, 2026-11-04).** Originally **DEFER** — scope/acceptance decision required per surface, not IMPLEMENT; **confirmed by §0.1** that the functional surfaces remain absent at `fb029f66` with the shell *structure* restored earlier (`6b8afda`). The §0.2 investigation then established that these surfaces are **IRR-owned and fully supplied by IRR**, so **no IPD implementation is required** — `IPD-A07` is **CLOSED**. The DEFER history is retained, not erased |
 | **IRR dependency** | These are **IPD-owned** artifacts even though they live under `frontend/**`. They must **not** be copied or moved into IRR; any desired IRR surface needs its own IRR decision and implementation. No IRR file was modified |
 | **Implementation status** | No change made. A blanket port of three divergent UI trees would be a blind cherry-pick across unrelated acceptance states |
 | **Tests** | Branch-local acceptance records are not current-`main` acceptance. Main's `shell_intelligence_surface` and related suites cover the admitted surfaces |
 | **Execution evidence** | Static inspection; per-ref `frontend/**` path census |
 | **PR / Commit** | This register only |
-| **Remaining action** | **IPD-A07**: decide per exact surface whether recovery remains required; if retained in IPD scope, each needs its own implementation PR, contract/tests and acceptance, plus browser/host acceptance. No Windows-native or browser execution was performed here |
+| **Remaining action** | **IPD-A07 — CLOSED (2026-11-04, see §0.2):** `CLOSED — NO IPD UI IMPLEMENTATION REQUIRED; EXISTING IRR CAPABILITY CONFIRMED.` The four screens (Company / Sector / Cross-Sector Intelligence, Decision Matrix) are implemented, tested (30/30) and live-verified (HTTP 200) inside IRR over IRR-owned services and engines; no IPD dependency exists in their data paths, so duplicating them in IPD or transplanting historical UI components is **not** required. **Still open and separate:** the P11 Row 26 `CertifiedSectorEngineId` bridge wording and E2E-pending status remain a **PROGRAM AUTHORITY DECISION PENDING** — not closed here, and **no IPD/IRR engine equivalence is inferred**. Evidence: `IIPS_V3_IRR_INTELLIGENCE_SCREENS_IPD_SUPPORT_VERIFICATION_2026-11-04.md` |
 
 ## 4. IRR consumer dependencies (identified, not modified)
 
