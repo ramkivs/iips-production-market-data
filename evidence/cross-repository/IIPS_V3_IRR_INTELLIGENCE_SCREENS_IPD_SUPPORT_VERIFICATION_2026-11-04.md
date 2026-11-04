@@ -250,6 +250,56 @@ IPD session. This IPD record is the evidence an IRR-side update would cite. No I
 
 ---
 
+### 8.1 Opportunities / Risks / Rankings — scope of the IPD `future` designation
+
+Recorded as a clarification so that IPD's `future` marker cannot be misread as an IIPS-wide status.
+
+**These three capabilities are fully implemented, functional and owned by IRR under NP-18.**
+
+| Capability | IRR component (IRR `main@9e0a0415`) | Route | Nav | Targeted tests |
+|---|---|---|---|---|
+| Opportunities | `features/intelligence/IntelligenceOpportunities.tsx` (107 L) | `App.tsx:59` | `navigation.ts:64` | **11 pass** |
+| Risks | `features/intelligence/IntelligenceRisks.tsx` (109 L) | `App.tsx:60` | `navigation.ts:65` | **10 pass** |
+| Rankings | `features/intelligence/IntelligenceRankings.tsx` (108 L) | `App.tsx:61` | `navigation.ts:66` | **11 pass** |
+
+All three eagerly import (not `React.lazy`), call `fetchCrossSectorData()` against IRR's own
+`/api/cross-sector`, render real data with `CertifiedBadge`, and handle `LoadingState` /
+`ErrorState` / `UnavailableState`. Live probe returned **HTTP 200** with `opportunity` (10 items:
+`companyId`, `sector`, `conviction`), `ranking` (13 items) and `correlation` / `portfolio`
+(`avgRisk` 76.5, `holdings` 13) populated. `App.test.tsx` (**21/21**) asserts that *"no nav click
+lands on 'not yet built'"* — **53/53 tests pass** across the four suites.
+
+**NP-18 provenance.** IRR PR **#115**, *"NP-18: isolate approved intelligence views for main"*,
+`merged=true`, `merged_at=2026-10-16T08:37:20Z`, merge commit
+**`b6a11ec0ed21f69d7f155bb908c333e951c761b1`**. Evidence on IRR `main`:
+`evidence/integration/np18-admission/2026-10-16/assessment.json`,
+`np18-authority-determination/2026-10-16/verification.json`,
+`np18-isolated-main/2026-10-16/{isolation-scope,merge-verification}.json`,
+`np18-qualification/2026-10-16/adjudication.json`,
+`np18-r3/2026-10-16/{publication,validation}.json` + `verify-views.mts`.
+51x17 REASSESSED **row 24**: Existence V, Authority V (*"NP-18 admission + qualification + isolated
+main merge + receipt (PR #115, merge `b6a11ec0…`)"*), Integration V, Wiring V, Acceptance V,
+Qualification V; **E2E = P** (route/component-level, no browser acceptance claimed).
+
+**IPD side — deliberately unchanged.** `routes.ts:53-55` declare the three constants; `App.tsx` binds
+none of them, so they resolve through `/intelligence/*` (`App.tsx:393`) to `FeaturePlaceholder`;
+`navigation.ts:139-141` marks them `status: 'future'`, and `navigation.ts:37` documents that `future`
+markers are **not** navigable links. This is intentional donor-model fidelity, and it is **retained**.
+
+**The clarification recorded.** IPD's `future` designation refers **exclusively to IPD's own frontend
+scope**. It does **not** imply that Opportunities, Risks or Rankings are future, unavailable or
+unimplemented across IIPS. No IPD implementation is required, no IRR functionality is duplicated, and
+no integration work is introduced.
+
+**Comment-only source corrections.** `frontend/src/app/navigation.ts` previously read *"Future markers
+in the DONOR model too — no routes, no implementation anywhere"*; the trailing clause is **false at
+IIPS scope** and has been corrected to scope the statement to IPD. Matching scope clarifications were
+added to the `navigation.ts` module doc comment, the `routes.ts` section header and the `App.tsx`
+splat comment. Boundary proof: `tsc` preserves comments, so raw emitted JS differs, but with comments
+stripped `dist/frontend/src/app/{App,navigation,routes}.js` are **byte-identical**; `git diff` shows
+**0** changed route constants, **0** changed `status:` values and **0** changed `<Route path=` lines;
+full suite **1033 / 1032 pass / 0 fail / 1 skipped**.
+
 ## 9. Boundaries, limitations and non-duplication statement
 
 **Boundaries respected:**

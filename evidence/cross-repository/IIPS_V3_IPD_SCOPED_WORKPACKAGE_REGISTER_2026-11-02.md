@@ -145,6 +145,43 @@ remaining families: **Executive** already exists on IPD `main` as `features/exec
 row itself lives in the **IRR** repository and still reads `SCOPE / ACCEPTANCE DECISION REQUIRED`;
 updating it is an **IRR-owned** change and was **not** made from this IPD session.
 
+## 0.3 Dated addendum (2026-11-04) — scope of the IPD `future` designation for Opportunities / Risks / Rankings
+
+**Clarification only. No capability, route, constant, status value or routing behaviour is changed.**
+
+IPD's `frontend/src/app/routes.ts` declares three route constants — `intelligenceOpportunities`
+(`:53`), `intelligenceRisks` (`:54`), `intelligenceRankings` (`:55`) — and `App.tsx` binds **none** of
+them, so those paths resolve through the `/intelligence/*` splat (`App.tsx:393`) to an honest
+`FeaturePlaceholder`. `navigation.ts:139-141` marks all three `status: 'future'`.
+
+**That designation is a statement about IPD's own frontend scope and nothing wider.**
+
+| Fact | Evidence |
+|---|---|
+| Opportunities, Risks and Rankings are **fully implemented, tested and owned by IRR** | IRR `main@9e0a0415`: `frontend/src/features/intelligence/IntelligenceOpportunities.tsx` (107 L), `IntelligenceRisks.tsx` (109 L), `IntelligenceRankings.tsx` (108 L); bound at `App.tsx:59-61`; navigable via `navigation.ts:64-66` |
+| Admitted under **NP-18** | IRR PR **#115** *"NP-18: isolate approved intelligence views for main"*, `merged=true`, `2026-10-16T08:37:20Z`, merge commit **`b6a11ec0ed21f69d7f155bb908c333e951c761b1`**; evidence `evidence/integration/np18-{admission,authority-determination,isolated-main,qualification,r3}/2026-10-16/` |
+| Verified functional, not placeholder | Targeted suites **32/32 pass** (11 + 10 + 11); `App.test.tsx` **21/21** incl. *"no nav click lands on 'not yet built'"* — **53/53** total. Live probe `GET /api/cross-sector` → **HTTP 200**, `opportunity` (10 items), `ranking` (13 items), `correlation` + `portfolio` populated |
+| Therefore | Their `future` status in IPD **must not** be read as future, unavailable or unimplemented across IIPS |
+
+**Retained unchanged:** all three IPD route constants, the `/intelligence/*` splat routing, and the
+`future` navigation status. No IPD implementation, no IRR duplication and no integration work is
+introduced by this addendum.
+
+**Source-comment corrections made alongside this addendum (comment text only — verified to leave the
+compiled output code-identical):** `frontend/src/app/navigation.ts` previously stated that these three
+have *"no routes, no implementation anywhere"*, which is **false at IIPS scope** and is corrected to
+scope the statement to IPD. Equivalent scope clarifications were added to `routes.ts`, to the
+`navigation.ts` module doc comment and to the `App.tsx` splat comment.
+
+**Verification of the comment-only boundary:** `tsc` preserves comments (`removeComments` unset), so the
+raw emitted JS differs; with comments stripped, `dist/frontend/src/app/{App,navigation,routes}.js` are
+**byte-identical** before and after. `git diff` confirms **0** changed route constants, **0** changed
+`status: 'future'` values and **0** changed `<Route path=` lines. Full suite re-run:
+**1033 / 1032 pass / 0 fail / 1 skipped**.
+
+Full evidence: §8.1 of
+[`IIPS_V3_IRR_INTELLIGENCE_SCREENS_IPD_SUPPORT_VERIFICATION_2026-11-04.md`](./IIPS_V3_IRR_INTELLIGENCE_SCREENS_IPD_SUPPORT_VERIFICATION_2026-11-04.md).
+
 ## 1. Disposition summary
 
 | Package | Capability | Current-main status | Disposition |

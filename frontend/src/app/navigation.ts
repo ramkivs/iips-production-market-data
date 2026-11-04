@@ -25,7 +25,10 @@
  *      "Banking" is used exactly as in the donor model (N+7/P-4 concrete-route contract).
  *    · Intelligence regains its four donor children (Decision Matrix navigable structure;
  *      Opportunities / Risks / Rankings remain `future` — they were future-markers in the
- *      donor model too and have no routes).
+ *      donor model too and have no routes IN THIS REPOSITORY).
+ *      SCOPE: that `future` status describes IPD's own frontend scope only. All three are
+ *      fully implemented, tested and owned by IRR under NP-18 (IRR `main`, PR #115 merge
+ *      `b6a11ec0`). Do not read it as future/unavailable/unimplemented across IIPS.
  *    · Evidence regains its donor child (Decision Evidence -> the Evidence Hub).
  *    · Administration regains its 8 donor deep-linkable tabs (admin-only, D115 DEFERRED).
  *
@@ -135,7 +138,12 @@ export const NAV: NavItem[] = [
       // Donor structural route; the donor DecisionMatrix is api/decisionMatrix-coupled —
       // NOT mounted. Renders the honest offline state.
       { label: 'Decision Matrix', path: '/intelligence/decision-matrix', minRole: 'viewer', status: 'unavailable' },
-      // Future markers in the DONOR model too — no routes, no implementation anywhere.
+      // Future markers in the DONOR model, and future IN IPD ONLY — no route is bound here.
+      // NOT unimplemented across IIPS: Opportunities / Risks / Rankings are fully
+      // implemented, tested and owned by IRR under NP-18 (IRR `main`; PR #115, merge
+      // `b6a11ec0`; `IntelligenceOpportunities/Risks/Rankings.tsx` at `App.tsx:59-61`,
+      // served by IRR's own `/api/cross-sector`). IPD intentionally does not duplicate
+      // them; no IPD implementation or integration work is required.
       { label: 'Opportunities', path: '/intelligence/opportunities', minRole: 'viewer', status: 'future' },
       { label: 'Risks', path: '/intelligence/risks', minRole: 'viewer', status: 'future' },
       { label: 'Rankings', path: '/intelligence/rankings', minRole: 'viewer', status: 'future' },

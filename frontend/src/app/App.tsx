@@ -389,7 +389,10 @@ export const App: React.FC<AppProps> = ({
 
         {/* ── OPTION A — donor intelligence children ──────────────────────────────────── */}
         <Route path={ROUTES.intelligenceDecisionMatrix} element={<DecisionMatrixStructural />} />
-        {/* Donor contract: remaining intelligence paths are placeholders (O/R/R = future). */}
+        {/* Donor contract: remaining intelligence paths are placeholders in IPD. O/R/R are
+            `future` IN IPD ONLY — they are fully implemented, tested and owned by IRR under
+            NP-18 (IRR `main`; PR #115, merge `b6a11ec0`). Not future/unavailable across IIPS.
+            Routing behaviour is unchanged and the three route constants are retained. */}
         <Route path="/intelligence/*" element={<FeaturePlaceholder surface="Intelligence" />} />
 
         {/* ── PARTIAL (preserved exactly): Evidence = UI11 at /evidence ───────────────── */}
