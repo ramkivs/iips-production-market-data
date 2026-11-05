@@ -92,6 +92,10 @@ export {
   dhanHistoricalCacheKey,
 } from './dhan_operational_controls.js';
 export type { DhanSecurityScope, CacheLookup, RefreshOutcome, RetryOptions } from './dhan_operational_controls.js';
+// Composed IPD-owned service + authenticated server-to-server transport (DHAN-P5).
+export { DhanMarketDataService } from './dhan_market_data_service.js';
+export type { QuoteRequest, QuoteResponse, HistoricalServiceRequest, HistoricalResponse, ServiceHealth } from './dhan_market_data_service.js';
+export { createMarketDataHttpServer, MarketDataTransportClient, MARKET_DATA_ROUTES, MARKET_DATA_TRANSPORT_TOKEN_ENV } from './dhan_market_data_http.js';
 
 // Provider-neutral consumption contract (what downstream apps actually use).
 export {
