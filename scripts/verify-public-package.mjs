@@ -22,6 +22,38 @@ const npmPrefix = process.platform === 'win32'
   : [];
 check(process.platform !== 'win32' || existsSync(npmPrefix[0]), 'Node-bundled npm CLI is missing');
 const expectedExports = ['./portfolio-ui', './pit', './d114-non-production', './operator-drop'];
+/**
+ * Published modules the IRR `iips-broker-import` alias requires from this package.
+ * IRR reaches these by path into `dist/package` (it does not use a subpath export), so
+ * the export-map checks above do not cover them. Each entry must publish BOTH a runtime
+ * `.js` and a `.d.ts`. Mirrors `frontend/broker-import-package-profile.json`
+ * (`requiredPublishedModules`) in ramkivs/iips-review-recovered; keep the two in step.
+ */
+const BROKER_IMPORT_PUBLISHED_MODULES = [
+  'frontend/src/features/portfolio/import/broker-format-detector',
+  'frontend/src/features/portfolio/import/broker-holdings-mapper',
+  'frontend/src/features/portfolio/import/broker-identity-assessment',
+  'frontend/src/features/portfolio/import/broker-import-ingress',
+  'frontend/src/features/portfolio/import/types',
+  'frontend/src/features/portfolio/import/adapters/csv-parser-helper',
+  'frontend/src/features/portfolio/import/adapters/dhan-holdings-adapter',
+  'frontend/src/features/portfolio/import/adapters/groww-holdings-adapter',
+  'frontend/src/features/portfolio/import/adapters/index',
+  'frontend/src/features/portfolio/import/adapters/zerodha-holdings-adapter',
+  'src/contracts/provenance',
+  'src/contracts/types',
+  'src/identity/d05_broad_universe_data',
+  'src/identity/d05_listing_corrections',
+  'src/identity/governed_fixture_master',
+  'src/identity/mapping_store',
+  'src/identity/quarantine',
+  'src/identity/security_master',
+];
+const BROKER_IMPORT_PUBLISHED_ROOT = 'dist/package';
+const BROKER_IMPORT_RUNTIME_ENTRYPOINTS = [
+  'frontend/src/features/portfolio/import/broker-import-ingress',
+  'src/identity/governed_fixture_master',
+];
 const IRR_PIN = '98cd56a9a568f431ea31d5515e515a1b6cbb91ba';
 const IRR_IMPORTERS = [
   'frontend/server/pit/ipdPitReadAdapter.ts',
@@ -192,6 +224,22 @@ try {
   const tarball = isAbsolute(pack.filename) ? pack.filename : join(temporary, pack.filename);
   check(existsSync(tarball), `packed tarball missing: ${tarball}`);
 
+  // The IRR broker-import alias resolves these by path, not by subpath export, so assert
+  // them against the packed file list itself rather than the export map.
+  const packedPaths = new Set(pack.files.map((file) => file.path));
+  const missingFromPack = [];
+  for (const modulePath of BROKER_IMPORT_PUBLISHED_MODULES) {
+    for (const suffix of ['.js', '.d.ts']) {
+      const packed = `${BROKER_IMPORT_PUBLISHED_ROOT}/${modulePath}${suffix}`;
+      if (!packedPaths.has(packed)) missingFromPack.push(packed);
+    }
+  }
+  check(
+    missingFromPack.length === 0,
+    `broker-import published contract incomplete in pack: ${missingFromPack.join(', ')}`,
+  );
+  const brokerImportPackedFiles = BROKER_IMPORT_PUBLISHED_MODULES.length * 2;
+
   const consumer = join(temporary, 'consumer');
   mkdirSync(consumer, { recursive: true });
   writeFileSync(join(consumer, 'package.json'), JSON.stringify({ private: true, type: 'module' }, null, 2));
@@ -232,6 +280,28 @@ try {
     const entry = installedManifest.exports[subpath];
     check(existsSync(join(installedRoot, entry.import)), `${subpath} installed runtime missing`);
     check(existsSync(join(installedRoot, entry.types)), `${subpath} installed declarations missing`);
+  }
+
+  const missingFromInstall = [];
+  for (const modulePath of BROKER_IMPORT_PUBLISHED_MODULES) {
+    for (const suffix of ['.js', '.d.ts']) {
+      const target = join(installedRoot, BROKER_IMPORT_PUBLISHED_ROOT, `${modulePath}${suffix}`);
+      if (!existsSync(target)) missingFromInstall.push(`${modulePath}${suffix}`);
+    }
+  }
+  check(
+    missingFromInstall.length === 0,
+    `broker-import published contract incomplete after install: ${missingFromInstall.join(', ')}`,
+  );
+
+  console.log('[package-consumer] importing broker-import runtime entrypoints from installed package');
+  const brokerImportEntrypoints = [];
+  for (const modulePath of BROKER_IMPORT_RUNTIME_ENTRYPOINTS) {
+    const specifier = `file://${join(installedRoot, BROKER_IMPORT_PUBLISHED_ROOT, `${modulePath}.js`)}`;
+    const imported = await import(specifier);
+    const named = Object.keys(imported).filter((key) => key !== 'default');
+    check(named.length > 0, `broker-import entrypoint exports nothing: ${modulePath}`);
+    brokerImportEntrypoints.push({ module: modulePath, namedExports: named.length });
   }
 
   const tsc = join(repoRoot, 'node_modules/typescript/bin/tsc');
@@ -286,6 +356,15 @@ try {
     exports: installedManifest.exports,
     runtime,
     irrConsumers,
+    brokerImportContract: {
+      publishedRoot: BROKER_IMPORT_PUBLISHED_ROOT,
+      requiredModules: BROKER_IMPORT_PUBLISHED_MODULES.length,
+      requiredArtifacts: brokerImportPackedFiles,
+      presentInPack: brokerImportPackedFiles - missingFromPack.length,
+      presentAfterInstall: brokerImportPackedFiles - missingFromInstall.length,
+      runtimeEntrypoints: brokerImportEntrypoints,
+      result: 'PASS',
+    },
     browser: {
       platform: 'browser',
       bytes: browserText.length,
