@@ -1,0 +1,59 @@
+From 78f24b81546dabd808c4017eaf01d5e5eba38a60 Mon Sep 17 00:00:00 2001
+From: ramkivs <302525469+ramkivs@users.noreply.github.com>
+Date: Thu, 5 Nov 2026 06:45:05 +0000
+Subject: [PATCH] Move the IRR dev server to port 5176
+
+Port 5173 belongs to the separately running ArthaVault application on the
+operator's host, so the two contend for the same port. IIPS moves to 5176.
+
+frontend/vite.config.ts: port 5173 -> 5176, with a comment recording why the
+allocation changed. docs/OPERATOR_RUNBOOK.md: the operator's live instruction
+now points at http://localhost:5176.
+
+Deliberately not changed:
+- dated evidence and governance records under docs/integration/ and the
+  E2E master tracker, which record what was actually executed at the time
+  and would become false if rewritten;
+- frontend/server/user-portfolio/ipcPortAdapter.test.ts, where 5173 is an
+  arbitrary origin/host fixture exercising origin-versus-host comparison and
+  carries no port-allocation meaning.
+
+The Windows setup bundle in iips-production-market-data already starts the
+frontend with --host 127.0.0.1 --port 5176 --strictPort, so the setup does
+not depend on this default; this aligns the repository with it.
+---
+ docs/OPERATOR_RUNBOOK.md | 2 +-
+ frontend/vite.config.ts  | 4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/docs/OPERATOR_RUNBOOK.md b/docs/OPERATOR_RUNBOOK.md
+index a2757c1..02216c4 100644
+--- a/docs/OPERATOR_RUNBOOK.md
++++ b/docs/OPERATOR_RUNBOOK.md
+@@ -106,7 +106,7 @@ The operator-reported Direct P1 database execution and the exact IPD source pin
+ ## 4. Start the UI
+ 
+ ```bash
+-cd frontend && npm run dev      # → http://localhost:5173 (host 127.0.0.1 — loopback-only bind and loopback-only allowedHosts since the C8 remediation, PR #157; `vite.config.ts:13`)
++cd frontend && npm run dev      # → http://localhost:5176 (host 127.0.0.1 — loopback-only bind and loopback-only allowedHosts since the C8 remediation, PR #157; `vite.config.ts`). Port 5176 since the ArthaVault collision fix; 5173 belongs to ArthaVault.
+ ```
+ 
+ The sidebar then offers Executive, Portfolio, User Portfolios, Watchlists, Collaboration, Settings, the Research and Intelligence children that are built, Screener and Evidence. `Research` and `Intelligence` are group headings, not links: their parent paths have no built workspace, so no click can land on “not yet built” (`App.test.tsx` pins this invariant).
+diff --git a/frontend/vite.config.ts b/frontend/vite.config.ts
+index e588d55..24a849c 100644
+--- a/frontend/vite.config.ts
++++ b/frontend/vite.config.ts
+@@ -11,7 +11,9 @@ export default defineConfig({
+     // Arena's preview domain. This is not a production/public-service deployment.
+     host: '0.0.0.0',
+     allowedHosts: ['localhost', '127.0.0.1', '.e2b.app'],
+-    port: 5173,
++    // 5173 belongs to the separately running ArthaVault application on the operator's host.
++    // IIPS uses 5176 so the two never contend for the same port.
++    port: 5176,
+     proxy: {
+       // Proxy the v3.0 executive transport (runs the certified platform in-process).
+       '/api': { target: 'http://localhost:8787', changeOrigin: true },
+-- 
+2.39.5
+
