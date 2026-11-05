@@ -11,6 +11,7 @@ export * from './contracts/index.js';
 export * from './security/index.js';
 export * from './identity/index.js';
 export * from './spi/index.js';
+export * from './providers/index.js';
 export * from './normalization/index.js';
 export * from './quality/index.js';
 export * from './ingress/index.js';

@@ -1,0 +1,182 @@
+{
+  "notice": "DHAN-D1 SYNTHETIC PRE-ACCESS FIXTURES. Deterministic, locally authored test data only. Contains NO credentials, NO real Dhan security identifiers and NO observed live Dhan response. Instrument identifiers are explicitly marked SYNTHETIC_PRE_ACCESS_FIXTURE placeholders.",
+  "gate": "DHAN-D1",
+  "evaluationInstant": "2026-09-25T10:05:00.000Z",
+  "syntheticInstrumentMappings": [
+    {
+      "companyId": "INFY",
+      "exchange": "NSE",
+      "symbol": "INFY",
+      "exchangeSegment": "NSE_EQ",
+      "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+      "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+    },
+    {
+      "companyId": "TCS",
+      "exchange": "NSE",
+      "symbol": "TCS",
+      "exchangeSegment": "NSE_EQ",
+      "dhanSecurityId": "SYNTH-NSE-EQ-0002",
+      "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
+    }
+  ],
+  "scenarios": {
+    "validQuote": {
+      "description": "Well-formed provider response shape for a single mapped instrument.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0001": {
+              "last_price": 1520.35,
+              "ohlc": { "open": 1510.0, "close": 1508.0, "high": 1530.0, "low": 1505.5 },
+              "volume": 2540000,
+              "average_price": 1518.75,
+              "net_change": 12.35,
+              "buy_quantity": 18400,
+              "sell_quantity": 15200,
+              "last_quantity": 25,
+              "upper_circuit_limit": 1658.8,
+              "lower_circuit_limit": 1357.2,
+              "last_trade_time": "25/09/2026 15:29:58",
+              "depth": {
+                "buy": [{ "quantity": 500, "orders": 4, "price": 1520.25 }],
+                "sell": [{ "quantity": 640, "orders": 6, "price": 1520.5 }]
+              }
+            }
+          }
+        }
+      }
+    },
+    "staleQuoteConcession": {
+      "description": "Timestamp older than the D01 nominal freshness threshold but inside the AD-12 concession band.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0001": {
+              "last_price": 1519.0,
+              "ohlc": { "open": 1510.0, "close": 1508.0, "high": 1530.0, "low": 1505.5 },
+              "volume": 2400000,
+              "average_price": 1517.1,
+              "net_change": 11.0,
+              "last_trade_time": "25/09/2026 15:10:00"
+            }
+          }
+        }
+      }
+    },
+    "staleQuoteSuppressed": {
+      "description": "Timestamp beyond twice the D01 freshness threshold; must be suppressed, never emitted.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0001": {
+              "last_price": 1499.0,
+              "ohlc": { "open": 1510.0, "close": 1508.0, "high": 1530.0, "low": 1490.0 },
+              "volume": 900000,
+              "net_change": -9.0,
+              "last_trade_time": "25/09/2026 12:00:00"
+            }
+          }
+        }
+      }
+    },
+    "malformedResponse": {
+      "description": "Truncated, non-parseable JSON body.",
+      "httpStatus": 200,
+      "bodyTextOverride": "{\"status\": \"success\", \"data\": {\"NSE_EQ\": {"
+    },
+    "missingRequiredField": {
+      "description": "Provider quote block missing the required volume field.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0001": {
+              "last_price": 1520.35,
+              "ohlc": { "open": 1510.0, "close": 1508.0, "high": 1530.0, "low": 1505.5 },
+              "last_trade_time": "25/09/2026 15:29:58"
+            }
+          }
+        }
+      }
+    },
+    "missingOhlcField": {
+      "description": "Provider quote block missing the required ohlc.low field.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0001": {
+              "last_price": 1520.35,
+              "ohlc": { "open": 1510.0, "close": 1508.0, "high": 1530.0 },
+              "volume": 2540000,
+              "last_trade_time": "25/09/2026 15:29:58"
+            }
+          }
+        }
+      }
+    },
+    "instrumentAbsentFromResponse": {
+      "description": "Structurally valid response that does not contain the requested instrument.",
+      "httpStatus": 200,
+      "body": {
+        "status": "success",
+        "data": {
+          "NSE_EQ": {
+            "SYNTH-NSE-EQ-0002": {
+              "last_price": 3850.5,
+              "ohlc": { "open": 3820.0, "close": 3810.0, "high": 3865.0, "low": 3815.0 },
+              "volume": 1200500,
+              "net_change": 40.5,
+              "last_trade_time": "25/09/2026 15:29:58"
+            }
+          }
+        }
+      }
+    },
+    "providerStatusFailure": {
+      "description": "HTTP 200 carrying a provider-level non-success status.",
+      "httpStatus": 200,
+      "body": {
+        "status": "failure",
+        "data": {},
+        "remarks": { "error_code": "SYNTHETIC-PROVIDER-STATUS" }
+      }
+    },
+    "authenticationFailure": {
+      "description": "Simulated credential rejection. No credential material present.",
+      "httpStatus": 401,
+      "body": {
+        "status": "failure",
+        "data": {},
+        "remarks": { "error_code": "SYNTHETIC-AUTH-REJECTED" }
+      }
+    },
+    "rateLimited": {
+      "description": "Simulated throttling response.",
+      "httpStatus": 429,
+      "body": { "status": "failure", "data": {} }
+    },
+    "serverError": {
+      "description": "Simulated upstream server error.",
+      "httpStatus": 503,
+      "body": { "status": "failure", "data": {} }
+    },
+    "transportTimeout": {
+      "description": "Simulated transport that never responds within the configured timeout.",
+      "transportMode": "NEVER_RESOLVES"
+    },
+    "transportFailure": {
+      "description": "Simulated transport-level unavailability.",
+      "transportMode": "TRANSPORT_UNAVAILABLE"
+    }
+  }
+}
