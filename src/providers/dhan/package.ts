@@ -9,10 +9,9 @@
  * contract re-exported here (MarketDataSource SPI, MarketDataDTO,
  * ProviderMarketDataRoute) and construct the provider through this entry only.
  *
- * Deliberately NOT exported (provider-internal): dhan_dto, dhan_normalizer,
- * dhan_historical_dto, dhan_historical_adapter (provisional) — vendor DTO
- * shapes and normalization are implementation details behind the canonical
- * contract. Mapping row loading/validation is exported server-side only, so
+ * Deliberately NOT exported (provider-internal): dhan_dto, dhan_normalizer and
+ * the raw historical DTO parser — vendor DTO shapes are implementation details
+ * behind the canonical contracts. Mapping row loading/validation is exported server-side only, so
  * consumers wire the provider but never handle raw vendor identifiers.
  */
 
@@ -70,6 +69,15 @@ export type {
   DhanMappingCoverageReport,
   CanonicalInstrumentIdentity,
 } from './dhan_instrument_mapping_integration.js';
+// Historical adapter (server-side only); vendor historical DTO stays internal.
+export { DhanHistoricalAdapter, normalizeDhanHistoricalToCandles } from './dhan_historical_adapter.js';
+export type { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
+export type {
+  DhanHistoricalRequest,
+  DhanHistoricalInterval,
+  DhanNormalizedDateRange,
+} from './dhan_historical_dto.js';
+export { DHAN_SUPPORTED_HISTORICAL_INTERVALS, DHAN_HISTORICAL_PATH } from './dhan_historical_dto.js';
 
 // Provider-neutral consumption contract (what downstream apps actually use).
 export {

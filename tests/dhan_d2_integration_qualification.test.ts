@@ -513,7 +513,7 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
 
     const result = await adapter.fetchDailyCandles({
       companyId: 'INFY',
-      interval: 'DAY',
+      interval: '1D',
       fromDate: '2026-09-21',
       toDate: '2026-09-23',
     });
@@ -537,11 +537,11 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
 
   it('DHAN-D2-18: the historical request/date-range model fails closed on invalid input', () => {
     const cases: Array<[Record<string, string>, string]> = [
-      [{ companyId: 'INFY', interval: 'DAY', fromDate: '2026-09-23', toDate: '2026-09-21' }, 'INVALID_DATE_RANGE'],
-      [{ companyId: 'INFY', interval: 'DAY', fromDate: '21-09-2026', toDate: '2026-09-23' }, 'INVALID_DATE_RANGE'],
-      [{ companyId: 'INFY', interval: 'DAY', fromDate: '2000-01-01', toDate: '2026-09-23' }, 'INVALID_DATE_RANGE'],
+      [{ companyId: 'INFY', interval: '1D', fromDate: '2026-09-23', toDate: '2026-09-21' }, 'INVALID_DATE_RANGE'],
+      [{ companyId: 'INFY', interval: '1D', fromDate: '21-09-2026', toDate: '2026-09-23' }, 'INVALID_DATE_RANGE'],
+      [{ companyId: 'INFY', interval: '1D', fromDate: '2000-01-01', toDate: '2026-09-23' }, 'INVALID_DATE_RANGE'],
       [{ companyId: 'INFY', interval: 'MINUTE', fromDate: '2026-09-21', toDate: '2026-09-23' }, 'UNSUPPORTED_INTERVAL'],
-      [{ companyId: '', interval: 'DAY', fromDate: '2026-09-21', toDate: '2026-09-23' }, 'MISSING_REQUIRED_FIELD'],
+      [{ companyId: '', interval: '1D', fromDate: '2026-09-21', toDate: '2026-09-23' }, 'MISSING_REQUIRED_FIELD'],
     ];
 
     for (const [request, expected] of cases) {
@@ -552,7 +552,7 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
 
     const valid = validateDhanHistoricalRequest({
       companyId: 'INFY',
-      interval: 'DAY',
+      interval: '1D',
       fromDate: '2026-09-21',
       toDate: '2026-09-23',
     });
@@ -564,7 +564,6 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
     const expectations: Array<[string, string]> = [
       ['raggedSeries', 'MALFORMED_RESPONSE'],
       ['missingSeries', 'MISSING_REQUIRED_FIELD'],
-      ['emptySeries', 'EMPTY_HISTORICAL_SERIES'],
       ['invalidPriceSeries', 'CANONICAL_VALIDATION_FAILURE'],
       ['invalidTimestampSeries', 'MALFORMED_RESPONSE'],
       ['authenticationFailure', 'AUTHENTICATION_FAILURE'],
@@ -577,7 +576,7 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
       });
       const result = await adapter.fetchDailyCandles({
         companyId: 'INFY',
-        interval: 'DAY',
+        interval: '1D',
         fromDate: '2026-09-21',
         toDate: '2026-09-23',
       });
@@ -585,12 +584,23 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
       if (!result.ok) assert.strictEqual(result.failure.code, expected, scenario);
     }
 
+    // DHAN-D3C semantics: a uniformly empty series is a VALID empty result, not a failure.
+    const emptyAdapter = new DhanHistoricalAdapter({
+      client: buildClient(new ScenarioTransport({ historical: 'emptySeries' })),
+      instrumentRegistry: buildRegistry(),
+    });
+    const empty = await emptyAdapter.fetchDailyCandles({
+      companyId: 'INFY', interval: '1D', fromDate: '2026-09-21', toDate: '2026-09-23',
+    });
+    assert.strictEqual(empty.ok, true, 'emptySeries');
+    if (empty.ok) assert.strictEqual(empty.value.returnedCandleCount, 0);
+
     // Unresolved instrument: no historical request may be attempted.
     const transport = new ScenarioTransport({ historical: 'validSeries' });
     const unresolved = await new DhanHistoricalAdapter({
       client: buildClient(transport),
       instrumentRegistry: new DhanInstrumentRegistry(),
-    }).fetchDailyCandles({ companyId: 'INFY', interval: 'DAY', fromDate: '2026-09-21', toDate: '2026-09-23' });
+    }).fetchDailyCandles({ companyId: 'INFY', interval: '1D', fromDate: '2026-09-21', toDate: '2026-09-23' });
     assert.strictEqual(unresolved.ok, false);
     if (!unresolved.ok) assert.strictEqual(unresolved.failure.code, 'UNRESOLVED_INSTRUMENT');
     assert.strictEqual(transport.requests.length, 0);
@@ -604,7 +614,7 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
     const preAccess = await new DhanHistoricalAdapter({
       client: preAccessClient,
       instrumentRegistry: buildRegistry(),
-    }).fetchDailyCandles({ companyId: 'INFY', interval: 'DAY', fromDate: '2026-09-21', toDate: '2026-09-23' });
+    }).fetchDailyCandles({ companyId: 'INFY', interval: '1D', fromDate: '2026-09-21', toDate: '2026-09-23' });
     assert.strictEqual(preAccess.ok, false);
     if (!preAccess.ok) assert.strictEqual(preAccess.failure.code, 'CREDENTIALS_UNAVAILABLE');
     assert.strictEqual(preAccessTransport.requests.length, 0);
@@ -769,7 +779,7 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
       const historical = await new DhanHistoricalAdapter({
         client: buildClient(new ScenarioTransport({ historical: 'authenticationFailure' })),
         instrumentRegistry: buildRegistry(),
-      }).fetchDailyCandles({ companyId: 'INFY', interval: 'DAY', fromDate: '2026-09-21', toDate: '2026-09-23' });
+      }).fetchDailyCandles({ companyId: 'INFY', interval: '1D', fromDate: '2026-09-21', toDate: '2026-09-23' });
       emitted.push(JSON.stringify(historical));
     } finally {
       console.log = original.log;

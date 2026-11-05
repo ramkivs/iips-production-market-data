@@ -22,9 +22,12 @@ import {
   DhanHistoricalRequest,
   DhanHistoricalResponseDto,
   buildDhanHistoricalRequestBody,
+  dhanIntervalMs,
+  dhanIntervalToCanonical,
   parseDhanHistoricalResponse,
   validateDhanHistoricalRequest,
 } from './dhan_historical_dto.js';
+import { DhanExchangeSegment } from './dhan_dto.js';
 
 export interface DhanHistoricalNormalizationResult {
   candles: OHLCVCandle[];
@@ -43,11 +46,16 @@ export interface DhanHistoricalNormalizationResult {
 export function normalizeDhanHistoricalToCandles(params: {
   dto: DhanHistoricalResponseDto;
   mapping: DhanInstrumentMapping;
+  interval: DhanHistoricalRequest['interval'];
   fromDate: string;
   toDate: string;
 }): DhanResult<DhanHistoricalNormalizationResult> {
   const { dto, mapping } = params;
+  const interval = params.interval;
+  const intervalMs = dhanIntervalMs(interval);
+  const canonicalInterval = dhanIntervalToCanonical(interval);
   const candles: OHLCVCandle[] = [];
+  let previousStartMs = -Infinity;
 
   for (let i = 0; i < dto.timestamp.length; i++) {
     const epochSeconds = dto.timestamp[i];
@@ -57,21 +65,32 @@ export function normalizeDhanHistoricalToCandles(params: {
       });
     }
 
+    // Timestamps are epoch SECONDS at candle START (provisional vendor semantics);
+    // duplicates and out-of-order series fail closed rather than being silently fixed.
     const startMs = Math.trunc(epochSeconds) * 1000;
-    const candleStart = new Date(startMs).toISOString();
-    const candleEnd = new Date(startMs + 86400000).toISOString();
+    if (startMs === previousStartMs) {
+      return dhanFailure('MALFORMED_RESPONSE', `Duplicate historical timestamp at index ${i}`, {
+        field: `timestamp[${i}]`,
+      });
+    }
+    if (startMs < previousStartMs) {
+      return dhanFailure('MALFORMED_RESPONSE', `Historical series is out of order at index ${i}`, {
+        field: `timestamp[${i}]`,
+      });
+    }
+    previousStartMs = startMs;
 
     const candle: OHLCVCandle = {
       companyId: mapping.companyId,
       symbol: mapping.symbol,
-      interval: '1d',
-      candleStart,
-      candleEnd,
+      interval: canonicalInterval,
+      candleStart: new Date(startMs).toISOString(),
+      candleEnd: new Date(startMs + intervalMs).toISOString(),
       open: dto.open[i],
       high: dto.high[i],
       low: dto.low[i],
       close: dto.close[i],
-      volume: dto.volume[i],
+      volume: dto.volume[i], // zero volume is legitimate and preserved; missing series is rejected at parse
       // Adjustment status is unverified pre-access; declared unadjusted rather than assumed.
       isAdjusted: false,
     };
@@ -93,7 +112,7 @@ export function normalizeDhanHistoricalToCandles(params: {
     candles,
     requestedFromDate: params.fromDate,
     requestedToDate: params.toDate,
-    returnedCandleCount: candles.length,
+    returnedCandleCount: candles.length, // 0 is a valid empty result, never a failure
     coverageClaim: 'ACCESS_PENDING_UNVERIFIED',
   });
 }
@@ -117,7 +136,11 @@ export class DhanHistoricalAdapter {
     const range = validateDhanHistoricalRequest(request);
     if (!range.ok) return range;
 
-    const resolution = this.registry.resolve(request.companyId);
+    const resolution = request.exchangeSegment
+      ? request.isin
+        ? this.registry.resolveSecurity(request.companyId, request.exchangeSegment, request.isin)
+        : this.registry.resolveListing(request.companyId, request.exchangeSegment)
+      : this.registry.resolve(request.companyId);
     if (resolution.status === 'UNRESOLVED') {
       return dhanFailure('UNRESOLVED_INSTRUMENT', `${resolution.reason}: ${resolution.details}`, {
         field: 'companyId',
@@ -130,6 +153,7 @@ export class DhanHistoricalAdapter {
       buildDhanHistoricalRequestBody({
         dhanSecurityId: mapping.dhanSecurityId,
         exchangeSegment: mapping.exchangeSegment,
+        interval: request.interval,
         fromDate: range.value.fromDate,
         toDate: range.value.toDate,
       })
@@ -144,6 +168,7 @@ export class DhanHistoricalAdapter {
     return normalizeDhanHistoricalToCandles({
       dto: parsed.value,
       mapping,
+      interval: request.interval,
       fromDate: range.value.fromDate,
       toDate: range.value.toDate,
     });

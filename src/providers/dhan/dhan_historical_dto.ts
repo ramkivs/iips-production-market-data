@@ -15,10 +15,29 @@
 
 import { DhanResult, dhanFailure, dhanOk } from './dhan_failures.js';
 
-/** Historical intervals the pre-access foundation is prepared for. */
-export type DhanHistoricalInterval = 'DAY';
+/**
+ * Historical intervals the pre-access foundation is prepared for.
+ * Vendor interval vocabulary is PROVISIONAL (published docs only, not live-qualified).
+ */
+export type DhanHistoricalInterval = '1m' | '5m' | '15m' | '1h' | '1D';
 
-export const DHAN_SUPPORTED_HISTORICAL_INTERVALS: readonly DhanHistoricalInterval[] = ['DAY'];
+export const DHAN_SUPPORTED_HISTORICAL_INTERVALS: readonly DhanHistoricalInterval[] = ['1m', '5m', '15m', '1h', '1D'];
+
+/** Canonical D02 interval for a vendor interval. */
+export function dhanIntervalToCanonical(interval: DhanHistoricalInterval): '1m' | '5m' | '15m' | '1h' | '1d' {
+  return interval === '1D' ? '1d' : interval;
+}
+
+/** Candle length in milliseconds for a vendor interval (candle boundary = interval start). */
+export function dhanIntervalMs(interval: DhanHistoricalInterval): number {
+  switch (interval) {
+    case '1m': return 60_000;
+    case '5m': return 300_000;
+    case '15m': return 900_000;
+    case '1h': return 3_600_000;
+    case '1D': return 86_400_000;
+  }
+}
 
 export const DHAN_HISTORICAL_PATH = '/charts/historical';
 
@@ -33,6 +52,10 @@ export interface DhanHistoricalRequest {
   fromDate: string;
   /** Inclusive end date, ISO calendar date (YYYY-MM-DD). */
   toDate: string;
+  /** Optional listing scope; with isin this gives complete security identity. */
+  exchangeSegment?: 'NSE_EQ' | 'BSE_EQ';
+  /** Optional canonical security-level identity (ISIN). */
+  isin?: string;
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -136,12 +159,8 @@ export function parseDhanHistoricalResponse(raw: unknown): DhanResult<DhanHistor
       field: 'series',
     });
   }
-  if (expected === 0) {
-    return dhanFailure('EMPTY_HISTORICAL_SERIES', 'Dhan historical response contains zero candles', {
-      field: 'series',
-    });
-  }
-
+  // A uniformly empty series is a VALID empty result (no candles in range), distinct
+  // from a malformed/ragged payload; the adapter reports it as zero coverage.
   return dhanOk(obj as unknown as DhanHistoricalResponseDto);
 }
 
@@ -149,13 +168,16 @@ export function parseDhanHistoricalResponse(raw: unknown): DhanResult<DhanHistor
 export function buildDhanHistoricalRequestBody(params: {
   dhanSecurityId: string;
   exchangeSegment: string;
+  interval: DhanHistoricalInterval;
   fromDate: string;
   toDate: string;
 }): string {
+  // PROVISIONAL vendor request shape; no credential material is ever included.
   return JSON.stringify({
     securityId: params.dhanSecurityId,
     exchangeSegment: params.exchangeSegment,
     instrument: 'EQUITY',
+    interval: params.interval,
     fromDate: params.fromDate,
     toDate: params.toDate,
   });
