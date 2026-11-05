@@ -111,7 +111,16 @@ export function normalizeDhanQuoteToCanonical(
   }
   const previousClose = round2(quote.last_price - quote.net_change);
   const change = round2(quote.net_change);
-  const pctChange = previousClose > 0 ? round2((change / previousClose) * 100) : 0;
+  // Fail closed on an invalid pctChange denominator: a non-finite, zero or
+  // negative derived previousClose must never be represented as pctChange = 0.
+  if (!Number.isFinite(previousClose) || previousClose <= 0) {
+    return dhanFailure(
+      'CANONICAL_VALIDATION_FAILURE',
+      `Derived previousClose (${previousClose}) must be a positive finite number; refusing to compute pctChange`,
+      { field: 'previousClose' }
+    );
+  }
+  const pctChange = round2((change / previousClose) * 100);
 
   // Field-by-field canonical construction. No vendor key is ever copied across,
   // so the emitted payload key-set is exactly the canonical D01 contract.

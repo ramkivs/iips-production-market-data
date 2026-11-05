@@ -194,6 +194,41 @@ describe('DHAN-D3A normalization regression (synthetic)', () => {
     assert.ok(!JSON.stringify(env).includes('last_price'));
   });
 
+  it('D3A-12: derived previousClose is validated before pctChange (fail closed on invalid denominator)', () => {
+    // Zero previousClose: net_change == last_price.
+    const zero = normalize(validQuote({ last_price: 1520.35, net_change: 1520.35 }));
+    assert.ok(!zero.ok);
+    assert.strictEqual(zero.failure.code, 'CANONICAL_VALIDATION_FAILURE');
+    assert.strictEqual(zero.failure.field, 'previousClose');
+    // Negative previousClose: net_change > last_price.
+    const negative = normalize(validQuote({ last_price: 1520.35, net_change: 1600 }));
+    assert.ok(!negative.ok);
+    assert.strictEqual(negative.failure.code, 'CANONICAL_VALIDATION_FAILURE');
+    // Non-finite derived value (overflow to Infinity).
+    const overflow = normalize(validQuote({ last_price: 1e308, net_change: -1e308 }));
+    assert.ok(!overflow.ok);
+    assert.strictEqual(overflow.failure.code, 'CANONICAL_VALIDATION_FAILURE');
+  });
+
+  it('D3A-13: valid pctChange semantics preserved (zero, positive, negative)', () => {
+    // Valid zero percentage change: net_change = 0 -> pctChange = 0 (legitimate).
+    const zeroChange = normalize(validQuote({ last_price: 1520.35, net_change: 0 }));
+    assert.ok(zeroChange.ok, JSON.stringify(zeroChange));
+    assert.strictEqual(zeroChange.value.envelope.payload.previousClose, 1520.35);
+    assert.strictEqual(zeroChange.value.envelope.payload.change, 0);
+    assert.strictEqual(zeroChange.value.envelope.payload.pctChange, 0);
+    // Positive percentage change.
+    const up = normalize(validQuote({ last_price: 1520.35, net_change: 12.35 }));
+    assert.ok(up.ok);
+    assert.strictEqual(up.value.envelope.payload.pctChange, 0.82);
+    // Negative percentage change with valid positive denominator.
+    const down = normalize(validQuote({ last_price: 1520.35, net_change: -20 }));
+    assert.ok(down.ok, JSON.stringify(down));
+    assert.strictEqual(down.value.envelope.payload.previousClose, 1540.35);
+    assert.strictEqual(down.value.envelope.payload.change, -20);
+    assert.ok(down.value.envelope.payload.pctChange < 0);
+  });
+
   it('D3A-11: SPI identity and classification remain provider-neutral', () => {
     const registry = new DhanInstrumentRegistry();
     registry.register(MAPPING);
