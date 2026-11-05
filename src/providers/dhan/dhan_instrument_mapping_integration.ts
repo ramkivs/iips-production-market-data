@@ -26,6 +26,7 @@ import { IdentityAmbiguityError } from '../../identity/quarantine.js';
 import { IdentityQuery } from '../../identity/mapping_store.js';
 import { SecurityMaster } from '../../identity/security_master.js';
 import { DhanExchangeSegment } from './dhan_dto.js';
+import { isD114SecurityId } from '../../contracts/types.js';
 import { DhanResult, dhanFailure, dhanOk } from './dhan_failures.js';
 import {
   DhanInstrumentMapping,
@@ -68,6 +69,16 @@ export function validateDhanInstrumentMappingRow(raw: unknown): DhanResult<DhanI
     return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'isin must be a 12-character identifier when present', {
       field: 'isin',
     });
+  }
+  if (raw.securityId !== undefined) {
+    if (typeof raw.securityId !== 'string' || !isD114SecurityId(raw.securityId.trim())) {
+      return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'securityId must follow the ISIN:<isin>:<series> grammar', {
+        field: 'securityId',
+      });
+    }
+    if (raw.isin !== undefined && !raw.securityId.trim().toUpperCase().includes(`:${String(raw.isin).trim().toUpperCase()}:`)) {
+      return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'securityId and isin disagree', { field: 'securityId' });
+    }
   }
   if (!isNonEmptyString(raw.dhanSecurityId)) {
     return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'Mapping row is missing the provider security identifier', {
@@ -148,6 +159,7 @@ export function validateDhanInstrumentMappingRow(raw: unknown): DhanResult<DhanI
   const mapping: DhanInstrumentMapping = {
     companyId: (raw.companyId as string).trim(),
     ...(raw.isin !== undefined ? { isin: (raw.isin as string).trim().toUpperCase() } : {}),
+    ...(raw.securityId !== undefined ? { securityId: (raw.securityId as string).trim() } : {}),
     exchange: raw.exchange,
     symbol: (raw.symbol as string).trim(),
     exchangeSegment: segment,
@@ -278,9 +290,15 @@ export class DhanInstrumentResolutionService {
    * Without an explicit exchange segment, a multi-listing company fails closed as
    * AMBIGUOUS_MAPPING — company identity alone never selects a security.
    */
-  public resolveProviderMapping(companyId: string, exchangeSegment?: DhanExchangeSegment): DhanResult<DhanInstrumentMapping> {
+  public resolveProviderMapping(
+    companyId: string,
+    exchangeSegment?: DhanExchangeSegment,
+    isin?: string
+  ): DhanResult<DhanInstrumentMapping> {
     const resolution = exchangeSegment
-      ? this.registry.resolveListing(companyId, exchangeSegment)
+      ? isin
+        ? this.registry.resolveSecurity(companyId, exchangeSegment, isin)
+        : this.registry.resolveListing(companyId, exchangeSegment)
       : this.registry.resolve(companyId);
     if (resolution.status === 'UNRESOLVED') {
       return dhanFailure('UNRESOLVED_INSTRUMENT', `${resolution.reason}: ${resolution.details}`, {
@@ -321,7 +339,10 @@ export class DhanInstrumentResolutionService {
     } else if (entity && entity.listings.length === 1) {
       segment = entity.listings[0]!.exchange === 'BSE' ? 'BSE_EQ' : 'NSE_EQ';
     }
-    const mapping = this.resolveProviderMapping(companyId, segment);
+    // ISIN queries carry the complete security identity; pass it through so a
+    // same-segment multi-security company resolves exactly, never ambiguously.
+    const isin = query.identifierType === 'ISIN' ? query.identifierValue.trim().toUpperCase() : undefined;
+    const mapping = this.resolveProviderMapping(companyId, segment, isin);
     if (!mapping.ok) return mapping;
 
     return dhanOk({

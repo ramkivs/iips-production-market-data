@@ -291,6 +291,50 @@ describe('DHAN-D3B instrument mapping (synthetic, company≠security)', () => {
     assert.strictEqual(coverage.preAccessOnly, true);
   });
 
+  it('D3B-13 (mandatory): one company, one segment, two ISINs — both mappings coexist; company+segment is ambiguous; full security identity resolves exactly', () => {
+    const registry = new DhanInstrumentRegistry();
+    const eqA = mapping({ isin: 'INE000SYNTH1', securityId: 'ISIN:INE000SYNTH1:EQ', symbol: 'SYNTHA', dhanSecurityId: 'SYNTH-NSE-EQ-1001' });
+    const eqB = mapping({ isin: 'INE000SYNTH2', securityId: 'ISIN:INE000SYNTH2:EQ', symbol: 'SYNTHA2', dhanSecurityId: 'SYNTH-NSE-EQ-1002' });
+    registry.register(eqA);
+    registry.register(eqB); // same company, same segment, different securities: NO conflict
+    assert.strictEqual(registry.size, 2);
+
+    // Neither overwrote the other.
+    const all = registry.list();
+    assert.deepStrictEqual(all.map((m) => m.isin).sort(), ['INE000SYNTH1', 'INE000SYNTH2']);
+    assert.deepStrictEqual(all.map((m) => m.dhanSecurityId).sort(), ['SYNTH-NSE-EQ-1001', 'SYNTH-NSE-EQ-1002']);
+
+    // Company + segment alone is ambiguous -> fail closed.
+    const byListing = registry.resolveListing('COMP-SYNTH-A', 'NSE_EQ');
+    assert.ok(byListing.status === 'UNRESOLVED');
+    if (byListing.status === 'UNRESOLVED') assert.strictEqual(byListing.reason, 'AMBIGUOUS_MAPPING');
+    const byCompany = registry.resolve('COMP-SYNTH-A');
+    assert.ok(byCompany.status === 'UNRESOLVED');
+    if (byCompany.status === 'UNRESOLVED') assert.strictEqual(byCompany.reason, 'AMBIGUOUS_MAPPING');
+
+    // Complete security identity returns the correct mapping.
+    const a = registry.resolveSecurity('COMP-SYNTH-A', 'NSE_EQ', 'INE000SYNTH1');
+    const b = registry.resolveSecurity('COMP-SYNTH-A', 'NSE_EQ', 'ine000synth2'); // case-insensitive
+    assert.ok(a.status === 'RESOLVED' && b.status === 'RESOLVED');
+    if (a.status === 'RESOLVED') assert.strictEqual(a.mapping.dhanSecurityId, 'SYNTH-NSE-EQ-1001');
+    if (b.status === 'RESOLVED') assert.strictEqual(b.mapping.dhanSecurityId, 'SYNTH-NSE-EQ-1002');
+
+    // Unknown ISIN on the same company+segment fails closed (no substitution).
+    const unknown = registry.resolveSecurity('COMP-SYNTH-A', 'NSE_EQ', 'INE000UNKNWN');
+    assert.ok(unknown.status === 'UNRESOLVED');
+    if (unknown.status === 'UNRESOLVED') assert.strictEqual(unknown.reason, 'UNMAPPED_COMPANY_ID');
+
+    // Genuine conflict still detected at security level: same ISIN, different Dhan id.
+    assert.throws(
+      () => registry.register(mapping({ isin: 'INE000SYNTH1', dhanSecurityId: 'SYNTH-NSE-EQ-7777' })),
+      (err: unknown) =>
+        err instanceof DhanInstrumentMappingConflictError && err.conflictKind === 'SECURITY_MAPPING_CONFLICT'
+    );
+    // securityId/isin disagreement is malformed.
+    const bad = validateDhanInstrumentMappingRow(mapping({ isin: 'INE000SYNTH1', securityId: 'ISIN:INE000SYNTH2:EQ' }));
+    assert.ok(!bad.ok);
+  });
+
   it('D3B-12: mapping provenance and version metadata round-trips; synthetic rows never carry verification dates', () => {
     const noProv = validateDhanInstrumentMappingRow({
       companyId: 'C',

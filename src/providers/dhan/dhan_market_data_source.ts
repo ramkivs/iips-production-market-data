@@ -83,9 +83,12 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
     // Security-level resolution: an explicit exchange segment selects the listing;
     // otherwise a multi-listing company fails closed (AMBIGUOUS_MAPPING).
     const segmentParam = query.parameters?.['exchangeSegment'];
+    const isinParam = query.parameters?.['isin'];
     const resolution =
       segmentParam === 'NSE_EQ' || segmentParam === 'BSE_EQ'
-        ? this.instrumentRegistry.resolveListing(query.companyId, segmentParam)
+        ? typeof isinParam === 'string' && isinParam.trim()
+          ? this.instrumentRegistry.resolveSecurity(query.companyId, segmentParam, isinParam)
+          : this.instrumentRegistry.resolveListing(query.companyId, segmentParam)
         : this.instrumentRegistry.resolve(query.companyId);
     if (resolution.status === 'UNRESOLVED') {
       throw this.fail({
