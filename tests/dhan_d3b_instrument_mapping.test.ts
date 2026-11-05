@@ -2,14 +2,16 @@
  * Institutional Investment Platform System (IIPS)
  * DHAN-D3B Instrument Mapping & Identity-Resolution Suite (synthetic only)
  *
- * Gate: DHAN-D3B PRE-ACCESS MAPPING FOUNDATION. All identifiers are synthetic.
- * The real Dhan instrument registry remains EMPTY: no real-world security ids
- * are invented, and DHAN_INSTRUMENT_MASTER rows are never fabricated here.
+ * Gate: DHAN-D3B-CORRECTION — company identity is NOT security identity.
+ * All identifiers are synthetic. The real Dhan instrument registry remains
+ * EMPTY: no real-world security ids are invented, and DHAN_INSTRUMENT_MASTER
+ * rows are never fabricated here.
  *
- * Covers: exact canonical identity resolution (NSE/BSE), missing identity,
- * missing mapping, duplicates, conflicts (security-id reuse, exchange,
- * instrument type), eligibility (inactive instrument), malformed rows, empty
- * registry, provenance/version metadata, and fail-closed resolution.
+ * Model under test:
+ *   companyId  = canonical COMPANY identity (P04) — one company, many securities.
+ *   security   = listing-level identity: (companyId, exchangeSegment[, isin]).
+ *   Dhan id    = provider instrument id, scoped to (exchangeSegment, securityId);
+ *                provider-wide uniqueness is NOT assumed (live qualification pending).
  */
 
 import { describe, it } from 'node:test';
@@ -30,6 +32,7 @@ const SYNTH = 'SYNTHETIC_PRE_ACCESS_FIXTURE' as const;
 function mapping(overrides: Partial<DhanInstrumentMapping> = {}): DhanInstrumentMapping {
   return {
     companyId: 'COMP-SYNTH-A',
+    isin: 'INE000SYNTHA',
     exchange: 'NSE',
     symbol: 'SYNTHA',
     exchangeSegment: 'NSE_EQ',
@@ -53,93 +56,123 @@ function securityMasterWithSynthEntity(): SecurityMaster {
     industry: 'TEST',
     sector: 'TEST',
     effectiveFrom: '2026-01-01',
-    listings: [{ exchange: 'NSE', symbol: 'SYNTHA', status: 'ACTIVE', lotSize: 1, tickSize: 0.05 }],
+    listings: [
+      { exchange: 'NSE', symbol: 'SYNTHA', status: 'ACTIVE', lotSize: 1, tickSize: 0.05 },
+      { exchange: 'BSE', symbol: 'SYNTHA', scripCode: 'SYN500001', status: 'ACTIVE', lotSize: 1, tickSize: 0.05 },
+    ],
   });
   return sm;
 }
 
-describe('DHAN-D3B instrument mapping (synthetic)', () => {
-  it('D3B-01: valid NSE and BSE equity mappings register and resolve exactly', () => {
+describe('DHAN-D3B instrument mapping (synthetic, company≠security)', () => {
+  it('D3B-01: valid NSE and BSE equity mappings register and resolve per listing', () => {
     const registry = new DhanInstrumentRegistry();
     registry.register(mapping());
     registry.register(
       mapping({
         companyId: 'COMP-SYNTH-B',
+        isin: 'INE000SYNTHB',
         exchange: 'BSE',
         symbol: 'SYNTHB',
         exchangeSegment: 'BSE_EQ',
         dhanSecurityId: 'SYNTH-BSE-EQ-0002',
       })
     );
-    const a = registry.resolve('comp-synth-a'); // case-insensitive canonical id
+    const a = registry.resolveListing('comp-synth-a', 'NSE_EQ'); // case-insensitive
     assert.ok(a.status === 'RESOLVED');
     if (a.status === 'RESOLVED') {
       assert.strictEqual(a.mapping.companyId, 'COMP-SYNTH-A');
       assert.strictEqual(a.mapping.exchange, 'NSE');
-      assert.strictEqual(a.mapping.exchangeSegment, 'NSE_EQ');
+      assert.strictEqual(a.mapping.isin, 'INE000SYNTHA');
       assert.strictEqual(a.mapping.instrumentType, 'EQUITY');
     }
-    const b = registry.resolve('COMP-SYNTH-B');
+    const b = registry.resolveListing('COMP-SYNTH-B', 'BSE_EQ');
     assert.ok(b.status === 'RESOLVED');
     if (b.status === 'RESOLVED') assert.strictEqual(b.mapping.exchangeSegment, 'BSE_EQ');
   });
 
-  it('D3B-02: empty registry fails closed with NO_MAPPING_DATA_LOADED', () => {
+  it('D3B-02: one company with multiple securities/listings is NOT a conflict', () => {
     const registry = new DhanInstrumentRegistry();
-    assert.ok(registry.isEmpty());
-    const r = registry.resolve('COMP-ANYTHING');
-    assert.ok(r.status === 'UNRESOLVED');
-    if (r.status === 'UNRESOLVED') {
-      assert.strictEqual(r.reason, 'NO_MAPPING_DATA_LOADED');
-      assert.strictEqual(r.companyId, 'COMP-ANYTHING'); // original identity preserved
-    }
+    // Same company, NSE and BSE listings, distinct ISINs and Dhan ids.
+    registry.register(mapping());
+    registry.register(
+      mapping({
+        isin: 'INE000SYNTH2',
+        exchange: 'BSE',
+        symbol: 'SYNTHA',
+        exchangeSegment: 'BSE_EQ',
+        dhanSecurityId: 'SYNTH-BSE-EQ-0001',
+      })
+    );
+    assert.strictEqual(registry.size, 2);
+    const nse = registry.resolveListing('COMP-SYNTH-A', 'NSE_EQ');
+    const bse = registry.resolveListing('COMP-SYNTH-A', 'BSE_EQ');
+    assert.ok(nse.status === 'RESOLVED' && bse.status === 'RESOLVED');
+    // Company-level resolution without a segment is ambiguous -> fail closed.
+    const amb = registry.resolve('COMP-SYNTH-A');
+    assert.ok(amb.status === 'UNRESOLVED');
+    if (amb.status === 'UNRESOLVED') assert.strictEqual(amb.reason, 'AMBIGUOUS_MAPPING');
   });
 
-  it('D3B-03: missing Dhan mapping returns explicit UNMAPPED_COMPANY_ID, never invented', () => {
+  it('D3B-03: same Dhan security id under different segments is NOT a conflict (scoped uniqueness)', () => {
     const registry = new DhanInstrumentRegistry();
-    registry.register(mapping());
-    const r = registry.resolve('COMP-UNMAPPED');
-    assert.ok(r.status === 'UNRESOLVED');
-    if (r.status === 'UNRESOLVED') assert.strictEqual(r.reason, 'UNMAPPED_COMPANY_ID');
-  });
-
-  it('D3B-04: duplicate Dhan security id across companies is rejected (SECURITY_ID_REUSED)', () => {
-    const registry = new DhanInstrumentRegistry();
-    registry.register(mapping());
+    registry.register(mapping({ dhanSecurityId: 'SYNTH-500001' }));
+    registry.register(
+      mapping({ exchange: 'BSE', exchangeSegment: 'BSE_EQ', dhanSecurityId: 'SYNTH-500001', isin: 'INE000SYNTH2' })
+    );
+    assert.strictEqual(registry.size, 2);
+    // Same segment reuse by another company IS a conflict.
     assert.throws(
       () =>
         registry.register(
-          mapping({ companyId: 'COMP-SYNTH-C', symbol: 'SYNTHC', dhanSecurityId: 'SYNTH-NSE-EQ-0001' })
+          mapping({ companyId: 'COMP-SYNTH-C', isin: 'INE000SYNTHC', symbol: 'SYNTHC', dhanSecurityId: 'SYNTH-500001' })
         ),
       (err: unknown) =>
         err instanceof DhanInstrumentMappingConflictError && err.conflictKind === 'SECURITY_ID_REUSED'
     );
   });
 
-  it('D3B-05: conflicting canonical identity (remap / exchange / instrument type) is rejected', () => {
+  it('D3B-04: genuine conflict for the same security identity is rejected', () => {
     const registry = new DhanInstrumentRegistry();
     registry.register(mapping());
-    // Same companyId, different provider instrument.
+    // Same company + same segment, different provider instrument -> conflict.
     assert.throws(
       () => registry.register(mapping({ dhanSecurityId: 'SYNTH-NSE-EQ-9999' })),
       (err: unknown) =>
-        err instanceof DhanInstrumentMappingConflictError && err.conflictKind === 'COMPANY_ID_REMAPPED'
-    );
-    // Conflicting exchange assignment.
-    assert.throws(
-      () =>
-        registry.register(
-          mapping({ dhanSecurityId: 'SYNTH-BSE-EQ-0007', exchange: 'BSE', exchangeSegment: 'BSE_EQ' })
-        ),
-      (err: unknown) =>
-        err instanceof DhanInstrumentMappingConflictError && err.conflictKind === 'EXCHANGE_MISMATCH'
+        err instanceof DhanInstrumentMappingConflictError && err.conflictKind === 'SECURITY_MAPPING_CONFLICT'
     );
     // Identical re-registration is idempotent.
     registry.register(mapping());
     assert.strictEqual(registry.size, 1);
   });
 
-  it('D3B-06: inactive instrument never resolves to market data', () => {
+  it('D3B-05: non-EQUITY instrument types are rejected (cash-equity scope); exchange mismatch within a listing rejected', () => {
+    const registry = new DhanInstrumentRegistry();
+    registry.register(mapping());
+    // Out-of-scope instrument type fails closed at registration.
+    assert.throws(() => registry.register(mapping({ instrumentType: 'OPTION' as never })));
+    // A row whose exchange disagrees with its segment is malformed at validation.
+    const bad = validateDhanInstrumentMappingRow(mapping({ exchange: 'BSE', exchangeSegment: 'NSE_EQ' }));
+    assert.ok(!bad.ok);
+    if (!bad.ok) assert.strictEqual(bad.failure.code, 'MALFORMED_INSTRUMENT_MAPPING');
+  });
+
+  it('D3B-06: empty registry fails closed with NO_MAPPING_DATA_LOADED; missing mapping is explicit', () => {
+    const registry = new DhanInstrumentRegistry();
+    assert.ok(registry.isEmpty());
+    const r = registry.resolve('COMP-ANYTHING');
+    assert.ok(r.status === 'UNRESOLVED');
+    if (r.status === 'UNRESOLVED') {
+      assert.strictEqual(r.reason, 'NO_MAPPING_DATA_LOADED');
+      assert.strictEqual(r.companyId, 'COMP-ANYTHING'); // original identity preserved for diagnosis
+    }
+    registry.register(mapping());
+    const miss = registry.resolveListing('COMP-UNMAPPED', 'NSE_EQ');
+    assert.ok(miss.status === 'UNRESOLVED');
+    if (miss.status === 'UNRESOLVED') assert.strictEqual(miss.reason, 'UNMAPPED_COMPANY_ID');
+  });
+
+  it('D3B-07: inactive instrument never resolves to market data', () => {
     const registry = new DhanInstrumentRegistry();
     registry.register(mapping({ active: false }));
     const r = registry.resolve('COMP-SYNTH-A');
@@ -147,14 +180,15 @@ describe('DHAN-D3B instrument mapping (synthetic)', () => {
     if (r.status === 'UNRESOLVED') assert.strictEqual(r.reason, 'INSTRUMENT_INACTIVE');
   });
 
-  it('D3B-07: malformed mapping rows are rejected deterministically', () => {
+  it('D3B-08: malformed mapping rows are rejected deterministically', () => {
     const badRows: unknown[] = [
       null,
       42,
       'row',
       {},
-      { companyId: 'X' }, // missing the rest
+      { companyId: 'X' },
       mapping({ exchangeSegment: 'NSE_EQ', exchange: 'BSE' }), // segment/exchange inconsistency
+      { ...mapping(), isin: 'TOO-SHORT' },
       { ...mapping(), instrumentType: 'OPTION' },
       { ...mapping(), active: 'yes' },
       { ...mapping(), effectiveDate: 'not-a-date' },
@@ -167,7 +201,6 @@ describe('DHAN-D3B instrument mapping (synthetic)', () => {
       assert.ok(!r.ok, `expected rejection of ${JSON.stringify(row)}`);
       if (!r.ok) assert.strictEqual(r.failure.code, 'MALFORMED_INSTRUMENT_MAPPING');
     }
-    // Valid row passes; instrument-master row may carry verification metadata.
     assert.ok(validateDhanInstrumentMappingRow(mapping()).ok);
     assert.ok(
       validateDhanInstrumentMappingRow({
@@ -179,12 +212,12 @@ describe('DHAN-D3B instrument mapping (synthetic)', () => {
     );
   });
 
-  it('D3B-08: load report audits accepted/rejected rows without throwing', () => {
+  it('D3B-09: load report audits accepted/rejected rows without throwing', () => {
     const report = loadDhanInstrumentMappings([
       mapping(),
-      { ...mapping(), companyId: 'COMP-SYNTH-B', symbol: 'SYNTHB', exchange: 'BSE', exchangeSegment: 'BSE_EQ', dhanSecurityId: 'SYNTH-BSE-EQ-0002' },
+      mapping({ isin: 'INE000SYNTHB', companyId: 'COMP-SYNTH-B', symbol: 'SYNTHB', exchange: 'BSE', exchangeSegment: 'BSE_EQ', dhanSecurityId: 'SYNTH-BSE-EQ-0002' }),
       'garbage',
-      { ...mapping(), companyId: 'COMP-SYNTH-C', symbol: 'SYNTHC', dhanSecurityId: 'SYNTH-NSE-EQ-0001' }, // duplicate security id -> conflict
+      mapping({ companyId: 'COMP-SYNTH-C', isin: 'INE000SYNTHC', symbol: 'SYNTHC', dhanSecurityId: 'SYNTH-NSE-EQ-0001' }), // id reuse
     ]);
     assert.strictEqual(report.acceptedCount, 2);
     assert.strictEqual(report.rejectedCount, 2);
@@ -197,26 +230,41 @@ describe('DHAN-D3B instrument mapping (synthetic)', () => {
     );
   });
 
-  it('D3B-09: P04 SecurityMaster alignment — ISIN/symbol resolve to canonical companyId, then mapping', () => {
+  it('D3B-10: P04 SecurityMaster alignment — ISIN/symbol resolve to companyId, then per-listing mapping; ambiguity fails closed', () => {
     const sm = securityMasterWithSynthEntity();
     const registry = new DhanInstrumentRegistry();
     registry.register(mapping());
+    registry.register(
+      mapping({ isin: 'INE000SYNTH2', exchange: 'BSE', exchangeSegment: 'BSE_EQ', dhanSecurityId: 'SYNTH-BSE-EQ-0001' })
+    );
     const service = new DhanInstrumentResolutionService(sm, registry);
 
+    // ISIN identifies the company's security but not its listing segment: with two
+    // listings this fails closed rather than silently picking an instrument.
     const byIsin = service.resolveCanonicalIdentity({ identifierType: 'ISIN', identifierValue: 'ine000syntha' });
-    assert.ok(byIsin.ok, JSON.stringify(byIsin));
-    if (byIsin.ok) {
-      assert.deepStrictEqual(byIsin.value, { companyId: 'COMP-SYNTH-A', symbol: 'SYNTHA', exchange: 'NSE' });
-      // Canonical-only view: no Dhan identifier crosses the boundary.
-      assert.ok(!JSON.stringify(byIsin.value).includes('SYNTH-NSE-EQ'));
+    assert.ok(!byIsin.ok);
+    if (!byIsin.ok) assert.match(byIsin.failure.message, /AMBIGUOUS_MAPPING/);
+    // A symbol query implies its segment and resolves the canonical identity.
+    const bySymbol = service.resolveCanonicalIdentity({ identifierType: 'NSE_SYMBOL', identifierValue: 'syntha' });
+    assert.ok(bySymbol.ok, JSON.stringify(bySymbol));
+    if (bySymbol.ok) {
+      // Canonical-only view: company identity, no Dhan identifier crosses the boundary.
+      assert.deepStrictEqual(bySymbol.value, { companyId: 'COMP-SYNTH-A', symbol: 'SYNTHA', exchange: 'NSE' });
+      assert.ok(!/SYNTH-(NSE|BSE)-EQ/.test(JSON.stringify(bySymbol.value))); // no Dhan instrument id leaks
     }
-    const bySymbol = service.resolveCanonicalIdentity({ identifierType: 'NSE_SYMBOL', identifierValue: 'SYNTHA' });
-    assert.ok(bySymbol.ok);
+    // Segment-aware provider resolution picks the right listing, never silently.
+    const nse = service.resolveProviderMapping('COMP-SYNTH-A', 'NSE_EQ');
+    const bse = service.resolveProviderMapping('COMP-SYNTH-A', 'BSE_EQ');
+    assert.ok(nse.ok && bse.ok);
+    // Company-only resolution of a multi-listing company fails closed.
+    const amb = service.resolveProviderMapping('COMP-SYNTH-A');
+    assert.ok(!amb.ok);
+    if (!amb.ok) assert.match(amb.failure.message, /AMBIGUOUS_MAPPING/);
     // Unknown identity fails closed via P04 quarantine.
     const unknown = service.resolveCanonicalIdentity({ identifierType: 'ISIN', identifierValue: 'INE999UNKNOWN' });
     assert.ok(!unknown.ok);
     if (!unknown.ok) assert.strictEqual(unknown.failure.code, 'IDENTITY_RESOLUTION_FAILURE');
-    // Ambiguous identity (two companies claiming one symbol) fails closed.
+    // Ambiguous P04 identity (two companies claiming one symbol) fails closed.
     sm.registerEntity({
       companyId: 'COMP-SYNTH-D',
       isin: 'INE000SYNTHD',
@@ -231,11 +279,11 @@ describe('DHAN-D3B instrument mapping (synthetic)', () => {
     if (!ambiguous.ok) assert.strictEqual(ambiguous.failure.code, 'IDENTITY_RESOLUTION_FAILURE');
   });
 
-  it('D3B-10: unresolved instruments cannot produce quotes through the resolution service', () => {
+  it('D3B-11: unresolved instruments cannot produce quotes; real registry stays empty', () => {
     const sm = securityMasterWithSynthEntity();
     const emptyRegistry = new DhanInstrumentRegistry(); // real registry stays empty pre-access
     const service = new DhanInstrumentResolutionService(sm, emptyRegistry);
-    const r = service.resolveProviderMapping('COMP-SYNTH-A');
+    const r = service.resolveProviderMapping('COMP-SYNTH-A', 'NSE_EQ');
     assert.ok(!r.ok);
     if (!r.ok) assert.strictEqual(r.failure.code, 'UNRESOLVED_INSTRUMENT');
     const coverage = service.describeCoverage();
@@ -243,8 +291,7 @@ describe('DHAN-D3B instrument mapping (synthetic)', () => {
     assert.strictEqual(coverage.preAccessOnly, true);
   });
 
-  it('D3B-11: mapping provenance and version consistency is enforced', () => {
-    // Synthetic provenance must be declared; missing provenance rejected.
+  it('D3B-12: mapping provenance and version metadata round-trips; synthetic rows never carry verification dates', () => {
     const noProv = validateDhanInstrumentMappingRow({
       companyId: 'C',
       symbol: 'S',
@@ -253,15 +300,14 @@ describe('DHAN-D3B instrument mapping (synthetic)', () => {
       dhanSecurityId: 'X',
     });
     assert.ok(!noProv.ok);
-    // Registry rejects bad metadata at registration time.
     const registry = new DhanInstrumentRegistry();
     assert.throws(() => registry.register(mapping({ effectiveDate: '32/13/2026' })));
-    assert.throws(() => registry.register({ ...mapping(), mappingProvenance: SYNTH, lastVerifiedAt: '2026-09-25T00:00:00Z' }));
-    // Version metadata round-trips through the loader.
+    assert.throws(() => registry.register({ ...mapping(), lastVerifiedAt: '2026-09-25T00:00:00Z' }));
     const report = loadDhanInstrumentMappings([mapping({ mappingVersion: 'synthetic-v2' })]);
     const row = report.registry.list()[0]!;
     assert.strictEqual(row.mappingVersion, 'synthetic-v2');
     assert.strictEqual(row.validationStatus, 'UNVALIDATED');
-    assert.strictEqual(row.lastVerifiedAt, undefined); // never fabricated for synthetic rows
+    assert.strictEqual(row.lastVerifiedAt, undefined);
+    assert.strictEqual(row.isin, 'INE000SYNTHA');
   });
 });

@@ -80,7 +80,13 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
       });
     }
 
-    const resolution = this.instrumentRegistry.resolve(query.companyId);
+    // Security-level resolution: an explicit exchange segment selects the listing;
+    // otherwise a multi-listing company fails closed (AMBIGUOUS_MAPPING).
+    const segmentParam = query.parameters?.['exchangeSegment'];
+    const resolution =
+      segmentParam === 'NSE_EQ' || segmentParam === 'BSE_EQ'
+        ? this.instrumentRegistry.resolveListing(query.companyId, segmentParam)
+        : this.instrumentRegistry.resolve(query.companyId);
     if (resolution.status === 'UNRESOLVED') {
       throw this.fail({
         code: 'UNRESOLVED_INSTRUMENT',

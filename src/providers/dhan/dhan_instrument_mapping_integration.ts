@@ -64,6 +64,11 @@ export function validateDhanInstrumentMappingRow(raw: unknown): DhanResult<DhanI
   if (!isNonEmptyString(raw.symbol)) {
     return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'Mapping row is missing symbol', { field: 'symbol' });
   }
+  if (raw.isin !== undefined && (typeof raw.isin !== 'string' || !/^[A-Za-z0-9]{12}$/.test(raw.isin.trim()))) {
+    return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'isin must be a 12-character identifier when present', {
+      field: 'isin',
+    });
+  }
   if (!isNonEmptyString(raw.dhanSecurityId)) {
     return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'Mapping row is missing the provider security identifier', {
       field: 'dhanSecurityId',
@@ -142,6 +147,7 @@ export function validateDhanInstrumentMappingRow(raw: unknown): DhanResult<DhanI
 
   const mapping: DhanInstrumentMapping = {
     companyId: (raw.companyId as string).trim(),
+    ...(raw.isin !== undefined ? { isin: (raw.isin as string).trim().toUpperCase() } : {}),
     exchange: raw.exchange,
     symbol: (raw.symbol as string).trim(),
     exchangeSegment: segment,
@@ -267,9 +273,15 @@ export class DhanInstrumentResolutionService {
     this.registry = registry;
   }
 
-  /** Provider-internal accessor: returns the vendor mapping for provider wiring only. */
-  public resolveProviderMapping(companyId: string): DhanResult<DhanInstrumentMapping> {
-    const resolution = this.registry.resolve(companyId);
+  /**
+   * Provider-internal accessor: returns the vendor mapping for provider wiring only.
+   * Without an explicit exchange segment, a multi-listing company fails closed as
+   * AMBIGUOUS_MAPPING — company identity alone never selects a security.
+   */
+  public resolveProviderMapping(companyId: string, exchangeSegment?: DhanExchangeSegment): DhanResult<DhanInstrumentMapping> {
+    const resolution = exchangeSegment
+      ? this.registry.resolveListing(companyId, exchangeSegment)
+      : this.registry.resolve(companyId);
     if (resolution.status === 'UNRESOLVED') {
       return dhanFailure('UNRESOLVED_INSTRUMENT', `${resolution.reason}: ${resolution.details}`, {
         field: 'companyId',
@@ -297,7 +309,19 @@ export class DhanInstrumentResolutionService {
       return dhanFailure('IDENTITY_RESOLUTION_FAILURE', 'P04 identity resolution failed closed');
     }
 
-    const mapping = this.resolveProviderMapping(companyId);
+    // Security-level resolution: pick the listing segment implied by the query when
+    // possible, otherwise a single-listing company; a multi-listing company with no
+    // segment hint fails closed (never silently selects an instrument).
+    const entity = this.securityMaster.getEntity(companyId);
+    let segment: DhanExchangeSegment | undefined;
+    if (query.identifierType === 'NSE_SYMBOL' || query.identifierValue.toUpperCase().startsWith('NSE:')) {
+      segment = 'NSE_EQ';
+    } else if (query.identifierType === 'BSE_SYMBOL' || query.identifierValue.toUpperCase().startsWith('BSE:')) {
+      segment = 'BSE_EQ';
+    } else if (entity && entity.listings.length === 1) {
+      segment = entity.listings[0]!.exchange === 'BSE' ? 'BSE_EQ' : 'NSE_EQ';
+    }
+    const mapping = this.resolveProviderMapping(companyId, segment);
     if (!mapping.ok) return mapping;
 
     return dhanOk({

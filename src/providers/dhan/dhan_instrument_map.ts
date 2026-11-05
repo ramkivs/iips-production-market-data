@@ -29,8 +29,14 @@ export type DhanInstrumentType = 'EQUITY';
 export type DhanMappingValidationStatus = 'VALIDATED' | 'UNVALIDATED';
 
 export interface DhanInstrumentMapping {
-  /** Authoritative IIPS company identifier. */
+  /** Authoritative IIPS company identifier (COMPANY-level identity; NOT unique per security). */
   companyId: string;
+  /**
+   * Canonical security-level identity (ISIN) where the authoritative source
+   * (P04 SecurityMaster) provides it. One company may have several securities;
+   * companyId alone never identifies a security.
+   */
+  isin?: string;
   /** Canonical IIPS exchange for the listing. */
   exchange: 'NSE' | 'BSE';
   /** Canonical IIPS trading symbol for the listing. */
@@ -63,7 +69,7 @@ export type DhanInstrumentResolution =
   | { status: 'RESOLVED'; mapping: DhanInstrumentMapping }
   | {
       status: 'UNRESOLVED';
-      reason: 'NO_MAPPING_DATA_LOADED' | 'UNMAPPED_COMPANY_ID' | 'INSTRUMENT_INACTIVE';
+      reason: 'NO_MAPPING_DATA_LOADED' | 'UNMAPPED_COMPANY_ID' | 'INSTRUMENT_INACTIVE' | 'AMBIGUOUS_MAPPING';
       companyId: string;
       details: string;
     };
@@ -86,7 +92,7 @@ export class DhanInstrumentMappingError extends Error {
 export class DhanInstrumentMappingConflictError extends Error {
   public readonly companyId: string;
   public readonly conflictKind:
-    | 'COMPANY_ID_REMAPPED'
+    | 'SECURITY_MAPPING_CONFLICT'
     | 'SECURITY_ID_REUSED'
     | 'EXCHANGE_MISMATCH'
     | 'INSTRUMENT_TYPE_MISMATCH';
@@ -94,7 +100,7 @@ export class DhanInstrumentMappingConflictError extends Error {
   constructor(
     companyId: string,
     conflictKind:
-      | 'COMPANY_ID_REMAPPED'
+      | 'SECURITY_MAPPING_CONFLICT'
       | 'SECURITY_ID_REUSED'
       | 'EXCHANGE_MISMATCH'
       | 'INSTRUMENT_TYPE_MISMATCH',
@@ -108,8 +114,18 @@ export class DhanInstrumentMappingConflictError extends Error {
 }
 
 export class DhanInstrumentRegistry {
-  private readonly byCompanyId = new Map<string, DhanInstrumentMapping>();
+  /**
+   * Mappings are keyed at SECURITY/LISTING level: `${companyId}|${exchangeSegment}`.
+   * companyId alone is company-level identity and may legitimately own several
+   * securities/listings (e.g. NSE_EQ and BSE_EQ) — never conflated, never a conflict.
+   */
+  private readonly byListingKey = new Map<string, DhanInstrumentMapping>();
+  /** Provider instrument identity is scoped to (exchangeSegment, dhanSecurityId). */
   private readonly bySecurityKey = new Map<string, string>();
+
+  private static listingKey(companyId: string, exchangeSegment: DhanExchangeSegment): string {
+    return `${companyId.trim().toUpperCase()}|${exchangeSegment}`;
+  }
 
   public register(mapping: DhanInstrumentMapping): void {
     if (!mapping.companyId || !mapping.companyId.trim()) {
@@ -120,6 +136,9 @@ export class DhanInstrumentRegistry {
     }
     if (!mapping.mappingProvenance) {
       throw new Error('DhanInstrumentRegistry: mappingProvenance is required');
+    }
+    if (mapping.isin !== undefined && !/^[A-Z0-9]{12}$/i.test(mapping.isin.trim())) {
+      throw new Error('DhanInstrumentRegistry: isin must be a 12-character security identifier when present');
     }
     if (mapping.instrumentType !== undefined && mapping.instrumentType !== 'EQUITY') {
       throw new Error('DhanInstrumentRegistry: instrumentType must be EQUITY in the cash-equity scope');
@@ -139,19 +158,22 @@ export class DhanInstrumentRegistry {
       );
     }
 
-    const key = mapping.companyId.trim().toUpperCase();
-    const securityKey = `${mapping.exchangeSegment}:${mapping.dhanSecurityId}`;
+    const key = DhanInstrumentRegistry.listingKey(mapping.companyId, mapping.exchangeSegment);
+    // Dhan instrument ids are namespaced by exchange segment: the same numeric id on
+    // NSE_EQ and BSE_EQ is NOT a conflict (provider-wide uniqueness is not assumed;
+    // remains subject to live qualification).
+    const securityKey = `${mapping.exchangeSegment}:${mapping.dhanSecurityId.trim()}`;
 
-    // DHAN-D2/D3B: duplicate/conflicting mapping detection. Identical re-registration is
-    // idempotent; any divergent remap, cross-company security-id reuse, exchange or
-    // instrument-type conflict fails closed.
-    const existing = this.byCompanyId.get(key);
+    // Duplicate/conflicting mapping detection at the correct identity level.
+    // Identical re-registration is idempotent; any divergent security mapping,
+    // cross-listing security-id reuse, or instrument-type conflict fails closed.
+    const existing = this.byListingKey.get(key);
     if (existing) {
-      if (existing.exchange !== mapping.exchange || existing.exchangeSegment !== mapping.exchangeSegment) {
+      if (existing.exchange !== mapping.exchange) {
         throw new DhanInstrumentMappingConflictError(
           mapping.companyId,
           'EXCHANGE_MISMATCH',
-          `companyId already mapped on exchange ${existing.exchange}/${existing.exchangeSegment}; conflicting ${mapping.exchange}/${mapping.exchangeSegment}`
+          `listing ${key} already recorded on exchange ${existing.exchange}; conflicting ${mapping.exchange}`
         );
       }
       if (
@@ -162,19 +184,18 @@ export class DhanInstrumentRegistry {
         throw new DhanInstrumentMappingConflictError(
           mapping.companyId,
           'INSTRUMENT_TYPE_MISMATCH',
-          `companyId already mapped as ${existing.instrumentType}; conflicting ${mapping.instrumentType}`
+          `listing ${key} already mapped as ${existing.instrumentType}; conflicting ${mapping.instrumentType}`
         );
       }
       const identical =
         existing.dhanSecurityId === mapping.dhanSecurityId &&
-        existing.exchangeSegment === mapping.exchangeSegment &&
-        existing.exchange === mapping.exchange &&
-        existing.symbol === mapping.symbol;
+        existing.symbol === mapping.symbol &&
+        (existing.isin ?? undefined) === (mapping.isin?.trim().toUpperCase() ?? undefined);
       if (!identical) {
         throw new DhanInstrumentMappingConflictError(
           mapping.companyId,
-          'COMPANY_ID_REMAPPED',
-          `companyId is already mapped to a different provider instrument (${existing.exchangeSegment})`
+          'SECURITY_MAPPING_CONFLICT',
+          `security/listing ${key} is already mapped to provider instrument '${existing.dhanSecurityId}'; conflicting '${mapping.dhanSecurityId}'`
         );
       }
     }
@@ -184,11 +205,17 @@ export class DhanInstrumentRegistry {
       throw new DhanInstrumentMappingConflictError(
         mapping.companyId,
         'SECURITY_ID_REUSED',
-        `provider instrument is already mapped to companyId '${ownerOfSecurity}'`
+        `provider instrument '${securityKey}' is already mapped to '${ownerOfSecurity}'`
       );
     }
 
-    this.byCompanyId.set(key, { ...mapping });
+    const normalized: DhanInstrumentMapping = {
+      ...mapping,
+      companyId: mapping.companyId.trim(),
+      dhanSecurityId: mapping.dhanSecurityId.trim(),
+      ...(mapping.isin !== undefined ? { isin: mapping.isin.trim().toUpperCase() } : {}),
+    };
+    this.byListingKey.set(key, normalized);
     this.bySecurityKey.set(securityKey, key);
   }
 
@@ -197,18 +224,36 @@ export class DhanInstrumentRegistry {
   }
 
   public get size(): number {
-    return this.byCompanyId.size;
+    return this.byListingKey.size;
   }
 
   public isEmpty(): boolean {
-    return this.byCompanyId.size === 0;
+    return this.byListingKey.size === 0;
   }
 
-  /** Resolves a companyId, failing closed with an explicit unresolved result. */
+  private activeMapping(mapping: DhanInstrumentMapping, companyId: string): DhanInstrumentResolution {
+    // Inactive instruments are registrable for audit but never resolve to market
+    // data — fail closed, never substitute another instrument.
+    if (mapping.active === false) {
+      return {
+        status: 'UNRESOLVED',
+        reason: 'INSTRUMENT_INACTIVE',
+        companyId,
+        details: `Dhan instrument for '${companyId}' on ${mapping.exchangeSegment} is marked inactive; no quote can be produced.`,
+      };
+    }
+    return { status: 'RESOLVED', mapping };
+  }
+
+  /**
+   * Resolves a companyId. A company may own several securities/listings: with more
+   * than one mapping this fails closed as AMBIGUOUS_MAPPING — it never silently
+   * selects one instrument. Use resolveListing for an explicit segment.
+   */
   public resolve(companyId: string): DhanInstrumentResolution {
     const key = (companyId || '').trim().toUpperCase();
 
-    if (this.byCompanyId.size === 0) {
+    if (this.byListingKey.size === 0) {
       return {
         status: 'UNRESOLVED',
         reason: 'NO_MAPPING_DATA_LOADED',
@@ -218,8 +263,8 @@ export class DhanInstrumentRegistry {
       };
     }
 
-    const mapping = key ? this.byCompanyId.get(key) : undefined;
-    if (!mapping) {
+    const matches = Array.from(this.byListingKey.entries()).filter(([k]) => k.startsWith(`${key}|`));
+    if (matches.length === 0) {
       return {
         status: 'UNRESOLVED',
         reason: 'UNMAPPED_COMPANY_ID',
@@ -227,22 +272,42 @@ export class DhanInstrumentRegistry {
         details: `No Dhan instrument mapping registered for companyId '${companyId}'.`,
       };
     }
-
-    // Inactive instruments are eligible for registration (audit trail) but never
-    // resolve to routable market data — fail closed, never substitute another instrument.
-    if (mapping.active === false) {
+    if (matches.length > 1) {
       return {
         status: 'UNRESOLVED',
-        reason: 'INSTRUMENT_INACTIVE',
+        reason: 'AMBIGUOUS_MAPPING',
         companyId,
-        details: `Dhan instrument for companyId '${companyId}' is marked inactive; no quote can be produced.`,
+        details: `companyId '${companyId}' has ${matches.length} securities/listings; an explicit exchange segment is required.`,
       };
     }
+    return this.activeMapping(matches[0]![1], companyId);
+  }
 
-    return { status: 'RESOLVED', mapping };
+  /** Resolves one security/listing of a company by its Dhan exchange segment. */
+  public resolveListing(companyId: string, exchangeSegment: DhanExchangeSegment): DhanInstrumentResolution {
+    const key = (companyId || '').trim().toUpperCase();
+    if (this.byListingKey.size === 0) {
+      return {
+        status: 'UNRESOLVED',
+        reason: 'NO_MAPPING_DATA_LOADED',
+        companyId,
+        details:
+          'No Dhan instrument mapping data is loaded. Real Dhan security identifiers are unavailable in the pre-access gate.',
+      };
+    }
+    const mapping = this.byListingKey.get(DhanInstrumentRegistry.listingKey(key, exchangeSegment));
+    if (!mapping) {
+      return {
+        status: 'UNRESOLVED',
+        reason: 'UNMAPPED_COMPANY_ID',
+        companyId,
+        details: `No Dhan instrument mapping for companyId '${companyId}' on segment ${exchangeSegment}.`,
+      };
+    }
+    return this.activeMapping(mapping, companyId);
   }
 
   public list(): readonly DhanInstrumentMapping[] {
-    return Array.from(this.byCompanyId.values());
+    return Array.from(this.byListingKey.values());
   }
 }
