@@ -99,14 +99,62 @@ export function validateDhanInstrumentMappingRow(raw: unknown): DhanResult<DhanI
     );
   }
 
-  return dhanOk({
+  // Optional governed metadata (DHAN-D3B): validated when present, never invented.
+  if (raw.instrumentType !== undefined && raw.instrumentType !== 'EQUITY') {
+    return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', `Unsupported instrumentType: ${String(raw.instrumentType)}`, {
+      field: 'instrumentType',
+    });
+  }
+  if (raw.active !== undefined && typeof raw.active !== 'boolean') {
+    return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'active must be a boolean when present', { field: 'active' });
+  }
+  if (raw.mappingVersion !== undefined && !isNonEmptyString(raw.mappingVersion)) {
+    return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'mappingVersion must be a non-empty string when present', {
+      field: 'mappingVersion',
+    });
+  }
+  if (raw.effectiveDate !== undefined && Number.isNaN(Date.parse(String(raw.effectiveDate)))) {
+    return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'effectiveDate must be a valid ISO-8601 date when present', {
+      field: 'effectiveDate',
+    });
+  }
+  const VALIDATION_STATUSES: Array<'VALIDATED' | 'UNVALIDATED'> = ['VALIDATED', 'UNVALIDATED'];
+  if (raw.validationStatus !== undefined && !VALIDATION_STATUSES.includes(raw.validationStatus as 'VALIDATED')) {
+    return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', `Unsupported validationStatus: ${String(raw.validationStatus)}`, {
+      field: 'validationStatus',
+    });
+  }
+  // Synthetic rows must never claim provider-side verification (no fabricated dates).
+  if (raw.lastVerifiedAt !== undefined) {
+    if (raw.mappingProvenance !== 'DHAN_INSTRUMENT_MASTER') {
+      return dhanFailure(
+        'MALFORMED_INSTRUMENT_MAPPING',
+        'lastVerifiedAt is only permitted on DHAN_INSTRUMENT_MASTER rows; synthetic rows must not claim provider verification',
+        { field: 'lastVerifiedAt' }
+      );
+    }
+    if (Number.isNaN(Date.parse(String(raw.lastVerifiedAt)))) {
+      return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'lastVerifiedAt must be a valid ISO-8601 instant', {
+        field: 'lastVerifiedAt',
+      });
+    }
+  }
+
+  const mapping: DhanInstrumentMapping = {
     companyId: (raw.companyId as string).trim(),
     exchange: raw.exchange,
     symbol: (raw.symbol as string).trim(),
     exchangeSegment: segment,
     dhanSecurityId: (raw.dhanSecurityId as string).trim(),
     mappingProvenance: raw.mappingProvenance as DhanMappingProvenance,
-  });
+  };
+  if (raw.instrumentType !== undefined) mapping.instrumentType = 'EQUITY';
+  if (raw.active !== undefined) mapping.active = raw.active as boolean;
+  if (raw.mappingVersion !== undefined) mapping.mappingVersion = (raw.mappingVersion as string).trim();
+  if (raw.effectiveDate !== undefined) mapping.effectiveDate = String(raw.effectiveDate);
+  if (raw.validationStatus !== undefined) mapping.validationStatus = raw.validationStatus as 'VALIDATED' | 'UNVALIDATED';
+  if (raw.lastVerifiedAt !== undefined) mapping.lastVerifiedAt = String(raw.lastVerifiedAt);
+  return dhanOk(mapping);
 }
 
 export interface DhanMappingRejection {

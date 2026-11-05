@@ -10,9 +10,10 @@
  * ProviderMarketDataRoute) and construct the provider through this entry only.
  *
  * Deliberately NOT exported (provider-internal): dhan_dto, dhan_normalizer,
- * dhan_historical_dto, dhan_historical_adapter (provisional),
- * dhan_instrument_mapping_integration — vendor DTO shapes and normalization
- * are implementation details behind the canonical contract.
+ * dhan_historical_dto, dhan_historical_adapter (provisional) — vendor DTO
+ * shapes and normalization are implementation details behind the canonical
+ * contract. Mapping row loading/validation is exported server-side only, so
+ * consumers wire the provider but never handle raw vendor identifiers.
  */
 
 // Provider construction surface (server-side).
@@ -55,7 +56,20 @@ export type {
   DhanInstrumentMapping,
   DhanInstrumentResolution,
   DhanMappingProvenance,
+  DhanInstrumentType,
+  DhanMappingValidationStatus,
 } from './dhan_instrument_map.js';
+export {
+  validateDhanInstrumentMappingRow,
+  loadDhanInstrumentMappings,
+  DhanInstrumentResolutionService,
+} from './dhan_instrument_mapping_integration.js';
+export type {
+  DhanMappingLoadReport,
+  DhanMappingRejection,
+  DhanMappingCoverageReport,
+  CanonicalInstrumentIdentity,
+} from './dhan_instrument_mapping_integration.js';
 
 // Provider-neutral consumption contract (what downstream apps actually use).
 export {

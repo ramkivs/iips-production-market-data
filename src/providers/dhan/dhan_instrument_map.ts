@@ -23,6 +23,11 @@ import { DhanExchangeSegment } from './dhan_dto.js';
  */
 export type DhanMappingProvenance = 'SYNTHETIC_PRE_ACCESS_FIXTURE' | 'DHAN_INSTRUMENT_MASTER';
 
+/** Cash-equity scope of the pre-access foundation; other instrument types are out of scope. */
+export type DhanInstrumentType = 'EQUITY';
+
+export type DhanMappingValidationStatus = 'VALIDATED' | 'UNVALIDATED';
+
 export interface DhanInstrumentMapping {
   /** Authoritative IIPS company identifier. */
   companyId: string;
@@ -36,13 +41,29 @@ export interface DhanInstrumentMapping {
   dhanSecurityId: string;
   /** Origin of this mapping row. */
   mappingProvenance: DhanMappingProvenance;
+  /** Instrument type; cash equity only in the pre-access scope. */
+  instrumentType?: DhanInstrumentType;
+  /** Active/inactive status, where the mapping source provides it. */
+  active?: boolean;
+  /** Mapping row version from the mapping source. */
+  mappingVersion?: string;
+  /** Effective/observation date of the mapping row (ISO-8601 date), where supported. */
+  effectiveDate?: string;
+  /** Validation status of the mapping row. */
+  validationStatus?: DhanMappingValidationStatus;
+  /**
+   * Last provider-side verification instant (ISO-8601 UTC). Only legitimate on
+   * DHAN_INSTRUMENT_MASTER rows; synthetic rows must never carry it (no fabricated
+   * provider verification dates).
+   */
+  lastVerifiedAt?: string;
 }
 
 export type DhanInstrumentResolution =
   | { status: 'RESOLVED'; mapping: DhanInstrumentMapping }
   | {
       status: 'UNRESOLVED';
-      reason: 'NO_MAPPING_DATA_LOADED' | 'UNMAPPED_COMPANY_ID';
+      reason: 'NO_MAPPING_DATA_LOADED' | 'UNMAPPED_COMPANY_ID' | 'INSTRUMENT_INACTIVE';
       companyId: string;
       details: string;
     };
@@ -64,9 +85,21 @@ export class DhanInstrumentMappingError extends Error {
 /** Raised when a registration would conflict with an existing mapping row (DHAN-D2). */
 export class DhanInstrumentMappingConflictError extends Error {
   public readonly companyId: string;
-  public readonly conflictKind: 'COMPANY_ID_REMAPPED' | 'SECURITY_ID_REUSED';
+  public readonly conflictKind:
+    | 'COMPANY_ID_REMAPPED'
+    | 'SECURITY_ID_REUSED'
+    | 'EXCHANGE_MISMATCH'
+    | 'INSTRUMENT_TYPE_MISMATCH';
 
-  constructor(companyId: string, conflictKind: 'COMPANY_ID_REMAPPED' | 'SECURITY_ID_REUSED', details: string) {
+  constructor(
+    companyId: string,
+    conflictKind:
+      | 'COMPANY_ID_REMAPPED'
+      | 'SECURITY_ID_REUSED'
+      | 'EXCHANGE_MISMATCH'
+      | 'INSTRUMENT_TYPE_MISMATCH',
+    details: string
+  ) {
     super(`Dhan instrument mapping conflict for '${companyId}' [${conflictKind}]: ${details}`);
     this.name = 'DhanInstrumentMappingConflictError';
     this.companyId = companyId;
@@ -88,14 +121,50 @@ export class DhanInstrumentRegistry {
     if (!mapping.mappingProvenance) {
       throw new Error('DhanInstrumentRegistry: mappingProvenance is required');
     }
+    if (mapping.instrumentType !== undefined && mapping.instrumentType !== 'EQUITY') {
+      throw new Error('DhanInstrumentRegistry: instrumentType must be EQUITY in the cash-equity scope');
+    }
+    if (mapping.active !== undefined && typeof mapping.active !== 'boolean') {
+      throw new Error('DhanInstrumentRegistry: active must be a boolean when present');
+    }
+    if (mapping.effectiveDate !== undefined && Number.isNaN(Date.parse(mapping.effectiveDate))) {
+      throw new Error('DhanInstrumentRegistry: effectiveDate must be a valid ISO-8601 date');
+    }
+    if (
+      mapping.lastVerifiedAt !== undefined &&
+      (mapping.mappingProvenance !== 'DHAN_INSTRUMENT_MASTER' || Number.isNaN(Date.parse(mapping.lastVerifiedAt)))
+    ) {
+      throw new Error(
+        'DhanInstrumentRegistry: lastVerifiedAt is only permitted as a valid ISO-8601 instant on DHAN_INSTRUMENT_MASTER rows'
+      );
+    }
 
     const key = mapping.companyId.trim().toUpperCase();
     const securityKey = `${mapping.exchangeSegment}:${mapping.dhanSecurityId}`;
 
-    // DHAN-D2: duplicate/conflicting mapping detection. Identical re-registration is
-    // idempotent; any divergent remap or cross-company security-id reuse fails closed.
+    // DHAN-D2/D3B: duplicate/conflicting mapping detection. Identical re-registration is
+    // idempotent; any divergent remap, cross-company security-id reuse, exchange or
+    // instrument-type conflict fails closed.
     const existing = this.byCompanyId.get(key);
     if (existing) {
+      if (existing.exchange !== mapping.exchange || existing.exchangeSegment !== mapping.exchangeSegment) {
+        throw new DhanInstrumentMappingConflictError(
+          mapping.companyId,
+          'EXCHANGE_MISMATCH',
+          `companyId already mapped on exchange ${existing.exchange}/${existing.exchangeSegment}; conflicting ${mapping.exchange}/${mapping.exchangeSegment}`
+        );
+      }
+      if (
+        mapping.instrumentType !== undefined &&
+        existing.instrumentType !== undefined &&
+        existing.instrumentType !== mapping.instrumentType
+      ) {
+        throw new DhanInstrumentMappingConflictError(
+          mapping.companyId,
+          'INSTRUMENT_TYPE_MISMATCH',
+          `companyId already mapped as ${existing.instrumentType}; conflicting ${mapping.instrumentType}`
+        );
+      }
       const identical =
         existing.dhanSecurityId === mapping.dhanSecurityId &&
         existing.exchangeSegment === mapping.exchangeSegment &&
@@ -156,6 +225,17 @@ export class DhanInstrumentRegistry {
         reason: 'UNMAPPED_COMPANY_ID',
         companyId,
         details: `No Dhan instrument mapping registered for companyId '${companyId}'.`,
+      };
+    }
+
+    // Inactive instruments are eligible for registration (audit trail) but never
+    // resolve to routable market data — fail closed, never substitute another instrument.
+    if (mapping.active === false) {
+      return {
+        status: 'UNRESOLVED',
+        reason: 'INSTRUMENT_INACTIVE',
+        companyId,
+        details: `Dhan instrument for companyId '${companyId}' is marked inactive; no quote can be produced.`,
       };
     }
 
