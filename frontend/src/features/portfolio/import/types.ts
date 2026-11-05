@@ -11,6 +11,7 @@
  */
 
 import { SecurityMaster } from '../../../../../src/identity/security_master.js';
+import type { BrokerIdentityAssessment, BrokerIdentitySummary } from './broker-identity-assessment.js';
 
 /**
  * Reused FINAPP Broker Classification (WP-FB-IMPORT-BROKER-01)
@@ -197,6 +198,14 @@ export interface BrokerMappingResult {
     lineageHash: string;
     dataVersion: string;
   };
+  /**
+   * Per-native-row identity evidence (BI-03 / P04). Present on every mapping call that
+   * assessed rows: one entry per native broker row, including excluded rows. A mapping that
+   * aborted on the first unresolved security still returns this vector through the thrown
+   * `BrokerIdentityResolutionError`, so a refusal never destroys the other rows' evidence.
+   */
+  identityAssessments?: BrokerIdentityAssessment[];
+  identitySummary?: BrokerIdentitySummary;
 }
 
 /**
@@ -247,6 +256,9 @@ export interface BrokerIngressResult {
   warnings: string[];
   errors: string[];
   rejections: BrokerIngressRejection[];
+  /** Complete per-row identity evidence, preserved on refusals as well as on success. */
+  identityAssessments?: BrokerIdentityAssessment[];
+  identitySummary?: BrokerIdentitySummary;
   provenance: {
     sourceBroker: FinappBrokerType;
     fileName: string;

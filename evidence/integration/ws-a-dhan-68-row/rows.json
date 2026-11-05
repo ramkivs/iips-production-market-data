@@ -1,0 +1,1677 @@
+{
+  "recordId": "WS-A-DHAN-68-ROW-SOURCE-EVIDENCE",
+  "observedAt": "2026-11-05T07:50:49.090Z",
+  "observedFormat": "DHAN_WEB_UI_SUMMARY_V1",
+  "observedStatus": "PARSED_UNRESOLVED",
+  "observedCounts": {
+    "nativeRows": 68,
+    "resolvedRows": 0,
+    "unresolvedRows": 68,
+    "savedRows": 0
+  },
+  "observedContentDigest": "468441dfd0264fddc1e8a7160ebc7c3e5239fa97d13c7545743d1500eb6264b1",
+  "observedRefusal": "Identity ambiguity detected for 'AGI GREENPAC': UNMAPPED_IDENTIFIER (No active mapping found for BSE_SYMBOL:AGI GREENPAC at asOf 2026-11-05T07:50:49.090Z)",
+  "sourceLimitation": "ISIN and Exchange were blank in the observed UI. No ISIN or exchange value is asserted anywhere in this evidence set.",
+  "evidenceLimitation": "The original CSV bytes were not retained by the running system; only the digest was displayed. Row names are verbatim; each row's numeric columns are a documented de-concatenation of the digit string the operator supplied, with every alternative decomposition listed per row. The reconstructed file therefore has its own digest and does NOT reproduce the observed digest.",
+  "rows": [
+    {
+      "rowIndex": 1,
+      "sourceName": "AGI GREENPAC",
+      "rawDigitString": "2589.65631.65",
+      "readingUsed": {
+        "quantity": 25,
+        "averagePrice": "89.65",
+        "currentPrice": "631.65"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 2,
+          "averagePrice": "589.65",
+          "currentPrice": "631.65"
+        },
+        {
+          "quantity": 258,
+          "averagePrice": "9.65",
+          "currentPrice": "631.65"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 2,
+      "sourceName": "ASK AUTOMOTIVE",
+      "rawDigitString": "7431.29592.95",
+      "readingUsed": {
+        "quantity": 7,
+        "averagePrice": "431.29",
+        "currentPrice": "592.95"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 74,
+          "averagePrice": "31.29",
+          "currentPrice": "592.95"
+        },
+        {
+          "quantity": 743,
+          "averagePrice": "1.29",
+          "currentPrice": "592.95"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 3,
+      "sourceName": "AJAX ENGINEERING",
+      "rawDigitString": "10467.05550.10",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "467.05",
+        "currentPrice": "550.10"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 104,
+          "averagePrice": "67.05",
+          "currentPrice": "550.10"
+        },
+        {
+          "quantity": 1046,
+          "averagePrice": "7.05",
+          "currentPrice": "550.10"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 4,
+      "sourceName": "ARIHANT CAPITAL MARKETS",
+      "rawDigitString": "5067.9286.23",
+      "readingUsed": {
+        "quantity": 50,
+        "averagePrice": "67.92",
+        "currentPrice": "86.23"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 506,
+          "averagePrice": "7.92",
+          "currentPrice": "86.23"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 5,
+      "sourceName": "ARKADE DEVELOPERS",
+      "rawDigitString": "30115.71106.21",
+      "readingUsed": {
+        "quantity": 30,
+        "averagePrice": "115.71",
+        "currentPrice": "106.21"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 301,
+          "averagePrice": "15.71",
+          "currentPrice": "106.21"
+        },
+        {
+          "quantity": 3011,
+          "averagePrice": "5.71",
+          "currentPrice": "106.21"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 6,
+      "sourceName": "ARROW GREENTECH",
+      "rawDigitString": "12388.02715.00",
+      "readingUsed": {
+        "quantity": 12,
+        "averagePrice": "388.02",
+        "currentPrice": "715.00"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "2388.02",
+          "currentPrice": "715.00"
+        },
+        {
+          "quantity": 123,
+          "averagePrice": "88.02",
+          "currentPrice": "715.00"
+        },
+        {
+          "quantity": 1238,
+          "averagePrice": "8.02",
+          "currentPrice": "715.00"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 7,
+      "sourceName": "ASHOKA BUILDCON",
+      "rawDigitString": "100126.08100.45",
+      "readingUsed": {
+        "quantity": 100,
+        "averagePrice": "126.08",
+        "currentPrice": "100.45"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1001,
+          "averagePrice": "26.08",
+          "currentPrice": "100.45"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 8,
+      "sourceName": "BANK OF BARODA",
+      "rawDigitString": "100259.03243.30",
+      "readingUsed": {
+        "quantity": 100,
+        "averagePrice": "259.03",
+        "currentPrice": "243.30"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1002,
+          "averagePrice": "59.03",
+          "currentPrice": "243.30"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 9,
+      "sourceName": "BHARAT COKING COAL",
+      "rawDigitString": "30036.4530.35",
+      "readingUsed": {
+        "quantity": 300,
+        "averagePrice": "36.45",
+        "currentPrice": "30.35"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 3003,
+          "averagePrice": "6.45",
+          "currentPrice": "30.35"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 10,
+      "sourceName": "BLUE JET HEALTHCARE",
+      "rawDigitString": "15411.83496.40",
+      "readingUsed": {
+        "quantity": 15,
+        "averagePrice": "411.83",
+        "currentPrice": "496.40"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "5411.83",
+          "currentPrice": "496.40"
+        },
+        {
+          "quantity": 154,
+          "averagePrice": "11.83",
+          "currentPrice": "496.40"
+        },
+        {
+          "quantity": 1541,
+          "averagePrice": "1.83",
+          "currentPrice": "496.40"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 11,
+      "sourceName": "CANARA ROBECO ASSET MANAGEMENT COMPANY",
+      "rawDigitString": "55252.83217.36",
+      "readingUsed": {
+        "quantity": 55,
+        "averagePrice": "252.83",
+        "currentPrice": "217.36"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 5,
+          "averagePrice": "5252.83",
+          "currentPrice": "217.36"
+        },
+        {
+          "quantity": 552,
+          "averagePrice": "52.83",
+          "currentPrice": "217.36"
+        },
+        {
+          "quantity": 5525,
+          "averagePrice": "2.83",
+          "currentPrice": "217.36"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 12,
+      "sourceName": "CREDO BRANDS MARKETING (MUFTI)",
+      "rawDigitString": "3096.8375.96",
+      "readingUsed": {
+        "quantity": 30,
+        "averagePrice": "96.83",
+        "currentPrice": "75.96"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 309,
+          "averagePrice": "6.83",
+          "currentPrice": "75.96"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 13,
+      "sourceName": "DAM CAPITAL ADVISORS",
+      "rawDigitString": "150149.30133.43",
+      "readingUsed": {
+        "quantity": 150,
+        "averagePrice": "149.30",
+        "currentPrice": "133.43"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "50149.30",
+          "currentPrice": "133.43"
+        },
+        {
+          "quantity": 1501,
+          "averagePrice": "49.30",
+          "currentPrice": "133.43"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 14,
+      "sourceName": "ECOS MOBILITY & HOSPITALITY",
+      "rawDigitString": "100126.42111.07",
+      "readingUsed": {
+        "quantity": 100,
+        "averagePrice": "126.42",
+        "currentPrice": "111.07"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1001,
+          "averagePrice": "26.42",
+          "currentPrice": "111.07"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 15,
+      "sourceName": "EMS",
+      "rawDigitString": "15312.52289.15",
+      "readingUsed": {
+        "quantity": 15,
+        "averagePrice": "312.52",
+        "currentPrice": "289.15"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "5312.52",
+          "currentPrice": "289.15"
+        },
+        {
+          "quantity": 153,
+          "averagePrice": "12.52",
+          "currentPrice": "289.15"
+        },
+        {
+          "quantity": 1531,
+          "averagePrice": "2.52",
+          "currentPrice": "289.15"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 16,
+      "sourceName": "EPACK PREFAB TECHNOLOGIES",
+      "rawDigitString": "10192.75201.51",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "192.75",
+        "currentPrice": "201.51"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 101,
+          "averagePrice": "92.75",
+          "currentPrice": "201.51"
+        },
+        {
+          "quantity": 1019,
+          "averagePrice": "2.75",
+          "currentPrice": "201.51"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 17,
+      "sourceName": "ELECON ENGINEERING COMPANY",
+      "rawDigitString": "22426.02427.95",
+      "readingUsed": {
+        "quantity": 22,
+        "averagePrice": "426.02",
+        "currentPrice": "427.95"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 2,
+          "averagePrice": "2426.02",
+          "currentPrice": "427.95"
+        },
+        {
+          "quantity": 224,
+          "averagePrice": "26.02",
+          "currentPrice": "427.95"
+        },
+        {
+          "quantity": 2242,
+          "averagePrice": "6.02",
+          "currentPrice": "427.95"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 18,
+      "sourceName": "EMAMI",
+      "rawDigitString": "25404.23382.00",
+      "readingUsed": {
+        "quantity": 25,
+        "averagePrice": "404.23",
+        "currentPrice": "382.00"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 2,
+          "averagePrice": "5404.23",
+          "currentPrice": "382.00"
+        },
+        {
+          "quantity": 2540,
+          "averagePrice": "4.23",
+          "currentPrice": "382.00"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 19,
+      "sourceName": "ENGINEERS INDIA",
+      "rawDigitString": "10168.00289.25",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "168.00",
+        "currentPrice": "289.25"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 101,
+          "averagePrice": "68.00",
+          "currentPrice": "289.25"
+        },
+        {
+          "quantity": 1016,
+          "averagePrice": "8.00",
+          "currentPrice": "289.25"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 20,
+      "sourceName": "FINEOTEX CHEMICAL",
+      "rawDigitString": "10022.0349.15",
+      "readingUsed": {
+        "quantity": 100,
+        "averagePrice": "22.03",
+        "currentPrice": "49.15"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1002,
+          "averagePrice": "2.03",
+          "currentPrice": "49.15"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 21,
+      "sourceName": "GHCL",
+      "rawDigitString": "27450.31403.00",
+      "readingUsed": {
+        "quantity": 27,
+        "averagePrice": "450.31",
+        "currentPrice": "403.00"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 2,
+          "averagePrice": "7450.31",
+          "currentPrice": "403.00"
+        },
+        {
+          "quantity": 274,
+          "averagePrice": "50.31",
+          "currentPrice": "403.00"
+        },
+        {
+          "quantity": 2745,
+          "averagePrice": "0.31",
+          "currentPrice": "403.00"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 22,
+      "sourceName": "GMR POWER & URBAN INFRA",
+      "rawDigitString": "11098.9791.77",
+      "readingUsed": {
+        "quantity": 110,
+        "averagePrice": "98.97",
+        "currentPrice": "91.77"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "1098.97",
+          "currentPrice": "91.77"
+        },
+        {
+          "quantity": 1109,
+          "averagePrice": "8.97",
+          "currentPrice": "91.77"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 23,
+      "sourceName": "GATEWAY DISTRIPARKS",
+      "rawDigitString": "9056.0446.39",
+      "readingUsed": {
+        "quantity": 90,
+        "averagePrice": "56.04",
+        "currentPrice": "46.39"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 905,
+          "averagePrice": "6.04",
+          "currentPrice": "46.39"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 24,
+      "sourceName": "GEEKAY WIRES",
+      "rawDigitString": "16022.9326.91",
+      "readingUsed": {
+        "quantity": 160,
+        "averagePrice": "22.93",
+        "currentPrice": "26.91"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "6022.93",
+          "currentPrice": "26.91"
+        },
+        {
+          "quantity": 1602,
+          "averagePrice": "2.93",
+          "currentPrice": "26.91"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 25,
+      "sourceName": "GENUS POWER INFRASTRUCTURES",
+      "rawDigitString": "10305.00270.90",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "305.00",
+        "currentPrice": "270.90"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1030,
+          "averagePrice": "5.00",
+          "currentPrice": "270.90"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 26,
+      "sourceName": "GRAUER & WEIL",
+      "rawDigitString": "5067.7974.16",
+      "readingUsed": {
+        "quantity": 50,
+        "averagePrice": "67.79",
+        "currentPrice": "74.16"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 506,
+          "averagePrice": "7.79",
+          "currentPrice": "74.16"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 27,
+      "sourceName": "GUJARAT PIPAVAV PORT",
+      "rawDigitString": "160150.65163.33",
+      "readingUsed": {
+        "quantity": 160,
+        "averagePrice": "150.65",
+        "currentPrice": "163.33"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "60150.65",
+          "currentPrice": "163.33"
+        },
+        {
+          "quantity": 1601,
+          "averagePrice": "50.65",
+          "currentPrice": "163.33"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 28,
+      "sourceName": "HIMADRI SPECIALITY CHEMICAL",
+      "rawDigitString": "15443.17529.00",
+      "readingUsed": {
+        "quantity": 15,
+        "averagePrice": "443.17",
+        "currentPrice": "529.00"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "5443.17",
+          "currentPrice": "529.00"
+        },
+        {
+          "quantity": 154,
+          "averagePrice": "43.17",
+          "currentPrice": "529.00"
+        },
+        {
+          "quantity": 1544,
+          "averagePrice": "3.17",
+          "currentPrice": "529.00"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 29,
+      "sourceName": "IDFC FIRST BANK",
+      "rawDigitString": "5064.3373.20",
+      "readingUsed": {
+        "quantity": 50,
+        "averagePrice": "64.33",
+        "currentPrice": "73.20"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 506,
+          "averagePrice": "4.33",
+          "currentPrice": "73.20"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 30,
+      "sourceName": "IIFL CAPITAL SERVICES",
+      "rawDigitString": "15314.40347.95",
+      "readingUsed": {
+        "quantity": 15,
+        "averagePrice": "314.40",
+        "currentPrice": "347.95"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "5314.40",
+          "currentPrice": "347.95"
+        },
+        {
+          "quantity": 153,
+          "averagePrice": "14.40",
+          "currentPrice": "347.95"
+        },
+        {
+          "quantity": 1531,
+          "averagePrice": "4.40",
+          "currentPrice": "347.95"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 31,
+      "sourceName": "INDRAPRASTHA MEDICAL CORPORATION",
+      "rawDigitString": "40368.99318.40",
+      "readingUsed": {
+        "quantity": 40,
+        "averagePrice": "368.99",
+        "currentPrice": "318.40"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 403,
+          "averagePrice": "68.99",
+          "currentPrice": "318.40"
+        },
+        {
+          "quantity": 4036,
+          "averagePrice": "8.99",
+          "currentPrice": "318.40"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 32,
+      "sourceName": "INTERNATIONAL CONVEYORS",
+      "rawDigitString": "10078.0775.17",
+      "readingUsed": {
+        "quantity": 100,
+        "averagePrice": "78.07",
+        "currentPrice": "75.17"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1007,
+          "averagePrice": "8.07",
+          "currentPrice": "75.17"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 33,
+      "sourceName": "INTERNATIONAL GEMOLOGICAL INSTITUTE",
+      "rawDigitString": "15314.67407.85",
+      "readingUsed": {
+        "quantity": 15,
+        "averagePrice": "314.67",
+        "currentPrice": "407.85"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "5314.67",
+          "currentPrice": "407.85"
+        },
+        {
+          "quantity": 153,
+          "averagePrice": "14.67",
+          "currentPrice": "407.85"
+        },
+        {
+          "quantity": 1531,
+          "averagePrice": "4.67",
+          "currentPrice": "407.85"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 34,
+      "sourceName": "J KUMAR INFRAPROJECTS",
+      "rawDigitString": "20448.50405.85",
+      "readingUsed": {
+        "quantity": 20,
+        "averagePrice": "448.50",
+        "currentPrice": "405.85"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 204,
+          "averagePrice": "48.50",
+          "currentPrice": "405.85"
+        },
+        {
+          "quantity": 2044,
+          "averagePrice": "8.50",
+          "currentPrice": "405.85"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 35,
+      "sourceName": "JAI BALAJI INDUSTRIES",
+      "rawDigitString": "11067.8469.70",
+      "readingUsed": {
+        "quantity": 110,
+        "averagePrice": "67.84",
+        "currentPrice": "69.70"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "1067.84",
+          "currentPrice": "69.70"
+        },
+        {
+          "quantity": 1106,
+          "averagePrice": "7.84",
+          "currentPrice": "69.70"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 36,
+      "sourceName": "JAMNA AUTO INDUSTRIES",
+      "rawDigitString": "33111.61122.98",
+      "readingUsed": {
+        "quantity": 33,
+        "averagePrice": "111.61",
+        "currentPrice": "122.98"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 3,
+          "averagePrice": "3111.61",
+          "currentPrice": "122.98"
+        },
+        {
+          "quantity": 331,
+          "averagePrice": "11.61",
+          "currentPrice": "122.98"
+        },
+        {
+          "quantity": 3311,
+          "averagePrice": "1.61",
+          "currentPrice": "122.98"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 37,
+      "sourceName": "JIO PLATFORMS",
+      "rawDigitString": "121119.001437.40",
+      "readingUsed": {
+        "quantity": 12,
+        "averagePrice": "1119.00",
+        "currentPrice": "1437.40"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "21119.00",
+          "currentPrice": "1437.40"
+        },
+        {
+          "quantity": 121,
+          "averagePrice": "119.00",
+          "currentPrice": "1437.40"
+        },
+        {
+          "quantity": 1211,
+          "averagePrice": "19.00",
+          "currentPrice": "1437.40"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 38,
+      "sourceName": "KM SUGAR MILLS",
+      "rawDigitString": "14227.3332.23",
+      "readingUsed": {
+        "quantity": 14,
+        "averagePrice": "227.33",
+        "currentPrice": "32.23"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "4227.33",
+          "currentPrice": "32.23"
+        },
+        {
+          "quantity": 142,
+          "averagePrice": "27.33",
+          "currentPrice": "32.23"
+        },
+        {
+          "quantity": 1422,
+          "averagePrice": "7.33",
+          "currentPrice": "32.23"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 39,
+      "sourceName": "KP ENERGY",
+      "rawDigitString": "40325.12159.38",
+      "readingUsed": {
+        "quantity": 40,
+        "averagePrice": "325.12",
+        "currentPrice": "159.38"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 403,
+          "averagePrice": "25.12",
+          "currentPrice": "159.38"
+        },
+        {
+          "quantity": 4032,
+          "averagePrice": "5.12",
+          "currentPrice": "159.38"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 40,
+      "sourceName": "KROSS",
+      "rawDigitString": "5161.00272.20",
+      "readingUsed": {
+        "quantity": 5,
+        "averagePrice": "161.00",
+        "currentPrice": "272.20"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 51,
+          "averagePrice": "61.00",
+          "currentPrice": "272.20"
+        },
+        {
+          "quantity": 516,
+          "averagePrice": "1.00",
+          "currentPrice": "272.20"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 41,
+      "sourceName": "LANDMARK CARS",
+      "rawDigitString": "20386.15456.05",
+      "readingUsed": {
+        "quantity": 20,
+        "averagePrice": "386.15",
+        "currentPrice": "456.05"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 203,
+          "averagePrice": "86.15",
+          "currentPrice": "456.05"
+        },
+        {
+          "quantity": 2038,
+          "averagePrice": "6.15",
+          "currentPrice": "456.05"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 42,
+      "sourceName": "MATRIMONY.COM",
+      "rawDigitString": "20403.08550.00",
+      "readingUsed": {
+        "quantity": 20,
+        "averagePrice": "403.08",
+        "currentPrice": "550.00"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 2040,
+          "averagePrice": "3.08",
+          "currentPrice": "550.00"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 43,
+      "sourceName": "MONARCH NETWORTH CAPITAL",
+      "rawDigitString": "10272.50345.70",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "272.50",
+        "currentPrice": "345.70"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 102,
+          "averagePrice": "72.50",
+          "currentPrice": "345.70"
+        },
+        {
+          "quantity": 1027,
+          "averagePrice": "2.50",
+          "currentPrice": "345.70"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 44,
+      "sourceName": "NATIONAL STOCK EXCHANGE OF INDIA",
+      "rawDigitString": "81785.001803.80",
+      "readingUsed": {
+        "quantity": 8,
+        "averagePrice": "1785.00",
+        "currentPrice": "1803.80"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 81,
+          "averagePrice": "785.00",
+          "currentPrice": "1803.80"
+        },
+        {
+          "quantity": 817,
+          "averagePrice": "85.00",
+          "currentPrice": "1803.80"
+        },
+        {
+          "quantity": 8178,
+          "averagePrice": "5.00",
+          "currentPrice": "1803.80"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 45,
+      "sourceName": "OSWAL PUMPS",
+      "rawDigitString": "35373.99209.54",
+      "readingUsed": {
+        "quantity": 35,
+        "averagePrice": "373.99",
+        "currentPrice": "209.54"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 3,
+          "averagePrice": "5373.99",
+          "currentPrice": "209.54"
+        },
+        {
+          "quantity": 353,
+          "averagePrice": "73.99",
+          "currentPrice": "209.54"
+        },
+        {
+          "quantity": 3537,
+          "averagePrice": "3.99",
+          "currentPrice": "209.54"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 46,
+      "sourceName": "PANAMA PETROCHEM",
+      "rawDigitString": "10295.00465.85",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "295.00",
+        "currentPrice": "465.85"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 102,
+          "averagePrice": "95.00",
+          "currentPrice": "465.85"
+        },
+        {
+          "quantity": 1029,
+          "averagePrice": "5.00",
+          "currentPrice": "465.85"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 47,
+      "sourceName": "PARADEEP PHOSPHATES",
+      "rawDigitString": "20109.00133.85",
+      "readingUsed": {
+        "quantity": 20,
+        "averagePrice": "109.00",
+        "currentPrice": "133.85"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 2010,
+          "averagePrice": "9.00",
+          "currentPrice": "133.85"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 48,
+      "sourceName": "PRECISION WIRES INDIA",
+      "rawDigitString": "5214.00403.60",
+      "readingUsed": {
+        "quantity": 5,
+        "averagePrice": "214.00",
+        "currentPrice": "403.60"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 52,
+          "averagePrice": "14.00",
+          "currentPrice": "403.60"
+        },
+        {
+          "quantity": 521,
+          "averagePrice": "4.00",
+          "currentPrice": "403.60"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 49,
+      "sourceName": "PREMIER POLYFILM",
+      "rawDigitString": "1050.6090.91",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "50.60",
+        "currentPrice": "90.91"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 105,
+          "averagePrice": "0.60",
+          "currentPrice": "90.91"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 50,
+      "sourceName": "PUDUMJEE PAPER PRODUCTS",
+      "rawDigitString": "5082.9987.28",
+      "readingUsed": {
+        "quantity": 50,
+        "averagePrice": "82.99",
+        "currentPrice": "87.28"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 508,
+          "averagePrice": "2.99",
+          "currentPrice": "87.28"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 51,
+      "sourceName": "RADHIKA JEWELTECH",
+      "rawDigitString": "10056.9061.87",
+      "readingUsed": {
+        "quantity": 100,
+        "averagePrice": "56.90",
+        "currentPrice": "61.87"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1005,
+          "averagePrice": "6.90",
+          "currentPrice": "61.87"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 52,
+      "sourceName": "RAJOO ENGINEERS",
+      "rawDigitString": "20052.6055.48",
+      "readingUsed": {
+        "quantity": 200,
+        "averagePrice": "52.60",
+        "currentPrice": "55.48"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 2005,
+          "averagePrice": "2.60",
+          "currentPrice": "55.48"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 53,
+      "sourceName": "RATEGAIN TRAVEL",
+      "rawDigitString": "10522.50820.25",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "522.50",
+        "currentPrice": "820.25"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 105,
+          "averagePrice": "22.50",
+          "currentPrice": "820.25"
+        },
+        {
+          "quantity": 1052,
+          "averagePrice": "2.50",
+          "currentPrice": "820.25"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 54,
+      "sourceName": "SALASAR TECHNO ENGINEERING",
+      "rawDigitString": "3367.114.10",
+      "readingUsed": {
+        "quantity": 33,
+        "averagePrice": "67.11",
+        "currentPrice": "4.10"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 3,
+          "averagePrice": "367.11",
+          "currentPrice": "4.10"
+        },
+        {
+          "quantity": 336,
+          "averagePrice": "7.11",
+          "currentPrice": "4.10"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 55,
+      "sourceName": "SHAKTI PUMPS",
+      "rawDigitString": "7483.79357.00",
+      "readingUsed": {
+        "quantity": 7,
+        "averagePrice": "483.79",
+        "currentPrice": "357.00"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 74,
+          "averagePrice": "83.79",
+          "currentPrice": "357.00"
+        },
+        {
+          "quantity": 748,
+          "averagePrice": "3.79",
+          "currentPrice": "357.00"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 56,
+      "sourceName": "SHARDA MOTOR",
+      "rawDigitString": "10822.60856.40",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "822.60",
+        "currentPrice": "856.40"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 108,
+          "averagePrice": "22.60",
+          "currentPrice": "856.40"
+        },
+        {
+          "quantity": 1082,
+          "averagePrice": "2.60",
+          "currentPrice": "856.40"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 57,
+      "sourceName": "SIGMA SOLVE",
+      "rawDigitString": "7046.9443.03",
+      "readingUsed": {
+        "quantity": 70,
+        "averagePrice": "46.94",
+        "currentPrice": "43.03"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 704,
+          "averagePrice": "6.94",
+          "currentPrice": "43.03"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 58,
+      "sourceName": "SIYARAM SILK MILLS",
+      "rawDigitString": "10526.40473.40",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "526.40",
+        "currentPrice": "473.40"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 105,
+          "averagePrice": "26.40",
+          "currentPrice": "473.40"
+        },
+        {
+          "quantity": 1052,
+          "averagePrice": "6.40",
+          "currentPrice": "473.40"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 59,
+      "sourceName": "STEELCAST",
+      "rawDigitString": "10183.50369.15",
+      "readingUsed": {
+        "quantity": 10,
+        "averagePrice": "183.50",
+        "currentPrice": "369.15"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 101,
+          "averagePrice": "83.50",
+          "currentPrice": "369.15"
+        },
+        {
+          "quantity": 1018,
+          "averagePrice": "3.50",
+          "currentPrice": "369.15"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 60,
+      "sourceName": "SUZLON ENERGY",
+      "rawDigitString": "7043.5435.75",
+      "readingUsed": {
+        "quantity": 70,
+        "averagePrice": "43.54",
+        "currentPrice": "35.75"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 704,
+          "averagePrice": "3.54",
+          "currentPrice": "35.75"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 61,
+      "sourceName": "THYROCARE TECHNOLOGIES",
+      "rawDigitString": "13440.89482.90",
+      "readingUsed": {
+        "quantity": 13,
+        "averagePrice": "440.89",
+        "currentPrice": "482.90"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "3440.89",
+          "currentPrice": "482.90"
+        },
+        {
+          "quantity": 134,
+          "averagePrice": "40.89",
+          "currentPrice": "482.90"
+        },
+        {
+          "quantity": 1344,
+          "averagePrice": "0.89",
+          "currentPrice": "482.90"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 62,
+      "sourceName": "TITAGARH RAIL SYSTEMS",
+      "rawDigitString": "4741.88683.75",
+      "readingUsed": {
+        "quantity": 4,
+        "averagePrice": "741.88",
+        "currentPrice": "683.75"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 47,
+          "averagePrice": "41.88",
+          "currentPrice": "683.75"
+        },
+        {
+          "quantity": 474,
+          "averagePrice": "1.88",
+          "currentPrice": "683.75"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 63,
+      "sourceName": "UNIVASTU",
+      "rawDigitString": "2076.80129.14",
+      "readingUsed": {
+        "quantity": 20,
+        "averagePrice": "76.80",
+        "currentPrice": "129.14"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 207,
+          "averagePrice": "6.80",
+          "currentPrice": "129.14"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 64,
+      "sourceName": "VARDHMAN SPECIAL STEELS",
+      "rawDigitString": "15274.30350.05",
+      "readingUsed": {
+        "quantity": 15,
+        "averagePrice": "274.30",
+        "currentPrice": "350.05"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "5274.30",
+          "currentPrice": "350.05"
+        },
+        {
+          "quantity": 152,
+          "averagePrice": "74.30",
+          "currentPrice": "350.05"
+        },
+        {
+          "quantity": 1527,
+          "averagePrice": "4.30",
+          "currentPrice": "350.05"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 65,
+      "sourceName": "VISHAL MEGA MART",
+      "rawDigitString": "100110.3090.70",
+      "readingUsed": {
+        "quantity": 100,
+        "averagePrice": "110.30",
+        "currentPrice": "90.70"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1001,
+          "averagePrice": "10.30",
+          "currentPrice": "90.70"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 66,
+      "sourceName": "VISHNU CHEMICALS",
+      "rawDigitString": "15504.13519.05",
+      "readingUsed": {
+        "quantity": 15,
+        "averagePrice": "504.13",
+        "currentPrice": "519.05"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 1,
+          "averagePrice": "5504.13",
+          "currentPrice": "519.05"
+        },
+        {
+          "quantity": 1550,
+          "averagePrice": "4.13",
+          "currentPrice": "519.05"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 67,
+      "sourceName": "WAAREE RENEWABLE TECHNOLOGIES",
+      "rawDigitString": "20951.40697.50",
+      "readingUsed": {
+        "quantity": 20,
+        "averagePrice": "951.40",
+        "currentPrice": "697.50"
+      },
+      "alternativeReadings": [
+        {
+          "quantity": 209,
+          "averagePrice": "51.40",
+          "currentPrice": "697.50"
+        },
+        {
+          "quantity": 2095,
+          "averagePrice": "1.40",
+          "currentPrice": "697.50"
+        }
+      ],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    },
+    {
+      "rowIndex": 68,
+      "sourceName": "WEBSOL ENERGY SYSTEM",
+      "rawDigitString": "100107.0967.15",
+      "readingUsed": {
+        "quantity": 100,
+        "averagePrice": "107.09",
+        "currentPrice": "67.15"
+      },
+      "alternativeReadings": [],
+      "sourceIsin": null,
+      "sourceExchange": null,
+      "readingRule": "quantity is the leading integer with no leading zero; averagePrice and currentPrice are two-decimal numbers with no leading zero. Where several decompositions are valid, the reading whose two prices are both realistic traded prices for the instrument is used; every alternative remains listed here."
+    }
+  ]
+}
