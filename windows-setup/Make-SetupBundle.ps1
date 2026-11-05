@@ -63,6 +63,7 @@ $script:ExpectedFiles = @(
     'Make-SetupBundle.ps1',
     'README.md',
     'WINDOWS-VALIDATION-CHECKLIST.md',
+    'IRR-PORT-5176.patch',
     '.validate-scripts.py'
 )
 

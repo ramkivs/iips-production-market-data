@@ -25,6 +25,7 @@ repositories at those commits, or executed against them.
 | `05-Validate-PersistenceRestart.ps1` | durability + restart recovery |
 | `06-Stop-IipsServers.ps1` | stop only IIPS process trees, verify ports and pipe released |
 | `Make-SetupBundle.ps1` | build and verify the distributable bundle from this source |
+| `IRR-PORT-5176.patch` | the IRR-side port change, pending publication to that repository |
 | `.validate-scripts.py` | structural validator (Arena-side; 233 checks, 0 failures) |
 
 ---
@@ -53,6 +54,14 @@ The IRR frontend originally defaulted to `5173`, which collided with the separat
 ArthaVault application on the same host. `5176` is the corrected allocation and is enforced by
 `--host 127.0.0.1 --port 5176 --strictPort` at startup, so the setup does not depend on the
 repository default.
+
+**IRR repository status.** The setup does not depend on the repository default, because it passes
+`--port 5176 --strictPort` explicitly. Separately, `IRR-PORT-5176.patch` aligns
+`frontend/vite.config.ts` and `docs/OPERATOR_RUNBOOK.md` in `iips-review-recovered` so the default
+agrees. It was verified to apply cleanly against a fresh clone of `main` at
+`9e0a0415b76571fc4db1747b2da63c73fa0447d3`, producing `port: 5176`. It is **not yet merged** - the
+publishing credential available here can write to `iips-production-market-data` but not to
+`iips-review-recovered`, so the change is delivered as a patch rather than an open pull request.
 
 ### Mandatory Node.js command handling
 
