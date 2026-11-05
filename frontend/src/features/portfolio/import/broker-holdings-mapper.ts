@@ -12,6 +12,13 @@
 
 import { computeLineageHash } from '../../../../../src/contracts/provenance.js';
 import { IdentityAmbiguityError } from '../../../../../src/identity/quarantine.js';
+import type { IdentityQuarantineRecord } from '../../../../../src/identity/quarantine.js';
+import {
+  assessBrokerRowIdentity,
+  summariseBrokerIdentity,
+  BrokerIdentityResolutionError,
+} from './broker-identity-assessment.js';
+import type { BrokerIdentityAssessment } from './broker-identity-assessment.js';
 import {
   FinappBrokerParseResult,
   FinappHolding,
@@ -27,6 +34,8 @@ interface RawHoldingGroup {
   isin?: string;
   exchange?: 'NSE' | 'BSE';
   items: FinappHolding[];
+  /** 1-based native row indices aggregated into this group (identity evidence is per row). */
+  rowIndices: number[];
 }
 
 /**
@@ -40,6 +49,12 @@ interface RawHoldingGroup {
  *    - For detailed formats with ISIN (e.g. DHAN_DETAILED_HOLDINGS_V1): queries primary ISIN.
  *    - For summary formats without ISIN/Exchange (e.g. DHAN_WEB_UI_SUMMARY_V1): queries NSE_SYMBOL, then BSE_SYMBOL.
  *    - Fails closed on unmapped identity or ambiguous collision (never fabricates or guesses identity).
+ *    - Records a per-native-row identity assessment (identifier class, every lookup attempted in
+ *      order, each outcome, the quarantine record and the exact missing evidence) for ALL rows,
+ *      including rows aggregated into the same group and rows excluded by row validation. The
+ *      whole-import P04 refusal is raised once, after every row has been assessed, carrying the
+ *      complete evidence (`BrokerIdentityResolutionError`); no row's outcome is lost behind the
+ *      first failure, and the surfaced reason is never a masked speculative fallback.
  * 5. Derives portfolio market values and normalizes weights to sum to exactly 100.0%.
  * 6. Attaches cryptographic lineage digests for tamper-proof auditability.
  */
@@ -77,6 +92,18 @@ export function mapBrokerOutputToUserHoldings(
 
   // Step 1: Filter and group raw holdings
   const groupedMap = new Map<string, RawHoldingGroup>();
+  // Per-native-row identity evidence. Populated for every row, including excluded rows.
+  const assessments: BrokerIdentityAssessment[] = [];
+  const assessExcluded = (rowIndex: number, raw: FinappHolding, reason: string): void => {
+    assessments.push(assessBrokerRowIdentity({
+      rowIndex,
+      symbol: (raw.symbol ?? '').toString(),
+      isin: raw.isin ? String(raw.isin) : undefined,
+      exchange: raw.exchange === 'NSE' || raw.exchange === 'BSE' ? raw.exchange : undefined,
+      asOf,
+      excludedReason: reason,
+    }));
+  };
 
   for (let i = 0; i < rawHoldings.length; i++) {
     const raw = rawHoldings[i];
@@ -88,6 +115,7 @@ export function mapBrokerOutputToUserHoldings(
     if (!symbol && !isin) {
       excludedCount++;
       warnings.push(`Row ${i}: Excluded due to missing both symbol and ISIN.`);
+      assessExcluded(i + 1, raw, 'The broker row supplied neither a symbol/name nor an ISIN.');
       continue;
     }
 
@@ -96,6 +124,7 @@ export function mapBrokerOutputToUserHoldings(
     if (isNaN(qty) || qty <= 0) {
       excludedCount++;
       warnings.push(`Row ${i} (${symbol || isin}): Excluded due to non-positive quantity (${raw.quantity}).`);
+      assessExcluded(i + 1, raw, `Non-positive or non-numeric quantity (${raw.quantity}).`);
       continue;
     }
 
@@ -110,6 +139,7 @@ export function mapBrokerOutputToUserHoldings(
     if (currPrice <= 0) {
       excludedCount++;
       warnings.push(`Row ${i} (${symbol || isin}): Excluded due to missing/non-positive current price and average price.`);
+      assessExcluded(i + 1, raw, 'Missing or non-positive current price and average price.');
       continue;
     }
 
@@ -117,6 +147,7 @@ export function mapBrokerOutputToUserHoldings(
     if (calculatedMktVal <= minThreshold) {
       excludedCount++;
       warnings.push(`Row ${i} (${symbol || isin}): Excluded due to market value (${calculatedMktVal}) <= threshold (${minThreshold}).`);
+      assessExcluded(i + 1, raw, `Market value ${calculatedMktVal} is at or below the configured threshold ${minThreshold}.`);
       continue;
     }
 
@@ -135,11 +166,13 @@ export function mapBrokerOutputToUserHoldings(
         isin,
         exchange,
         items: [],
+        rowIndices: [],
       };
       groupedMap.set(primaryKey, group);
     }
 
     group.items.push(raw);
+    group.rowIndices.push(i + 1);
   }
 
   // Step 2: Aggregate duplicates and resolve identity
@@ -158,6 +191,10 @@ export function mapBrokerOutputToUserHoldings(
 
   const isProduction = options?.executionEnvironment === 'PRODUCTION';
   const isBypassAuthorized = !isProduction && options?.allowNonProductionBypass === true;
+
+  // Whole-import P04 refusal evidence, captured without aborting per-row assessment.
+  let firstRefusal: { record: IdentityQuarantineRecord; quarantineRecordId?: string } | undefined;
+  let firstRefusalRowIndex: number | undefined;
 
   for (const [key, group] of groupedMap.entries()) {
     if (group.items.length > 1) {
@@ -186,55 +223,90 @@ export function mapBrokerOutputToUserHoldings(
     const finalCurrentPrice = latestCurrentPrice > 0 ? latestCurrentPrice : weightedAvgBuyPrice;
     const marketValue = totalQty * finalCurrentPrice;
 
-    // Resolve Identity via SecurityMaster if provided
+    // Resolve Identity via the governed SecurityMaster, recording the complete lookup evidence
+    // for EVERY row of this group. The whole-import refusal is raised once, after every group has
+    // been assessed, so one unmapped security can no longer hide the other rows' outcomes.
     let resolvedCompanyId = group.symbol;
     let identityStatus: 'RESOLVED' | 'UNRESOLVED' = 'RESOLVED';
     let resolutionDisposition: 'CANONICAL_P04' | 'NON_PRODUCTION_OPERATOR_BYPASS' = 'CANONICAL_P04';
 
-    if (options?.securityMaster) {
-      try {
-        if (group.isin) {
-          resolvedCompanyId = options.securityMaster.resolveCompanyId({
-            identifierType: 'ISIN',
-            identifierValue: group.isin,
-            asOf,
-          });
-        } else {
-          try {
-            resolvedCompanyId = options.securityMaster.resolveCompanyId({
-              identifierType: 'NSE_SYMBOL',
-              identifierValue: group.symbol,
+    const groupAssessment = assessBrokerRowIdentity({
+      rowIndex: group.rowIndices[0] ?? 0,
+      symbol: group.symbol,
+      isin: group.isin,
+      exchange: group.exchange,
+      master: options?.securityMaster,
+      asOf,
+    });
+
+    if (groupAssessment.status === 'RESOLVED' && groupAssessment.companyId) {
+      resolvedCompanyId = groupAssessment.companyId;
+      identityStatus = 'RESOLVED';
+      resolutionDisposition = 'CANONICAL_P04';
+    } else if (!options?.securityMaster) {
+      // Legacy permissive path: no master supplied. Identity was NOT evaluated; the raw symbol is
+      // preserved so no identity is claimed (the assessment records NOT_EVALUATED).
+      resolutionDisposition = 'CANONICAL_P04';
+    } else if (isBypassAuthorized) {
+      // Explicitly authorized non-production single-operator bypass (Block 3M-A)
+      identityStatus = 'UNRESOLVED';
+      resolutionDisposition = 'NON_PRODUCTION_OPERATOR_BYPASS';
+      resolvedCompanyId = ''; // Strictly DO NOT fabricate companyId!
+      warnings.push(
+        `Non-production operator bypass applied for '${group.symbol}': retained as UNRESOLVED holding without fabricated companyId.`
+      );
+    } else if (failOnUnmapped) {
+      // Record the refusal and continue assessing the remaining rows; the typed refusal is thrown
+      // after the loop with the complete evidence attached.
+      identityStatus = 'UNRESOLVED';
+      resolvedCompanyId = '';
+      if (!firstRefusal) {
+        // The refusal surfaces the LAST authoritative lookup for the first refused row, exactly as
+        // the pre-existing pipeline did (e.g. `BSE_SYMBOL:...` for an unscoped name), while the
+        // complete ordered lookup evidence is retained per row on the assessment vector.
+        const lastQuarantine =
+          groupAssessment.quarantineRecords[groupAssessment.quarantineRecords.length - 1];
+        firstRefusal = {
+          record:
+            lastQuarantine ??
+            groupAssessment.quarantineRecord ??
+            ({
+              quarantineId: `ident-quar-${group.symbol}-${asOf}`,
+              identifierType: groupAssessment.lookups[0]?.identifierType ?? 'UNKNOWN',
+              rawIdentifier: group.symbol,
+              reason: groupAssessment.refusalCode === 'AMBIGUOUS_COLLISION' ? 'AMBIGUOUS_COLLISION' : 'UNMAPPED_IDENTIFIER',
               asOf,
-            });
-          } catch (nseErr) {
-            resolvedCompanyId = options.securityMaster.resolveCompanyId({
-              identifierType: 'BSE_SYMBOL',
-              identifierValue: group.symbol,
-              asOf,
-            });
-          }
-        }
-        identityStatus = 'RESOLVED';
-        resolutionDisposition = 'CANONICAL_P04';
-      } catch (err: unknown) {
-        if (isBypassAuthorized) {
-          // Explicitly authorized non-production single-operator bypass (Block 3M-A)
-          identityStatus = 'UNRESOLVED';
-          resolutionDisposition = 'NON_PRODUCTION_OPERATOR_BYPASS';
-          resolvedCompanyId = ''; // Strictly DO NOT fabricate companyId!
-          warnings.push(
-            `Non-production operator bypass applied for '${group.symbol}': retained as UNRESOLVED holding without fabricated companyId.`
-          );
-        } else if (failOnUnmapped) {
-          if (err instanceof IdentityAmbiguityError) {
-            throw err;
-          }
-          throw new Error(`Security Master identity resolution failed for '${group.symbol}': ${String(err)}`);
-        } else {
-          warnings.push(`Identity resolution unmapped for '${group.symbol}'; preserved raw symbol.`);
-          resolvedCompanyId = group.symbol;
-        }
+              receivedAt: new Date().toISOString(),
+              details:
+                groupAssessment.missingEvidence ??
+                `No governed canonical identity for '${group.symbol}' at asOf ${asOf}.`,
+            } satisfies IdentityQuarantineRecord),
+          quarantineRecordId: lastQuarantine?.quarantineId,
+        };
       }
+    } else {
+      warnings.push(`Identity resolution unmapped for '${group.symbol}'; preserved raw symbol.`);
+      resolutionDisposition = 'CANONICAL_P04';
+    }
+
+    // One assessment per native row in this group (aggregated rows keep their own row index).
+    // The row status is the group's evidence, downgraded honestly whenever the group is not a
+    // canonical P04 resolution (bypass, permission-less permissive path, no master supplied).
+    const assessmentStatus =
+      groupAssessment.status === 'RESOLVED'
+        ? (identityStatus === 'RESOLVED' ? ('RESOLVED' as const) : ('UNRESOLVED' as const))
+        : groupAssessment.status;
+    for (const rowIndex of group.rowIndices) {
+      const rowAssessment: BrokerIdentityAssessment = {
+        ...groupAssessment,
+        rowIndex,
+        status: assessmentStatus,
+        ...(assessmentStatus === 'RESOLVED' ? { companyId: resolvedCompanyId } : {}),
+      };
+      assessments.push(rowAssessment);
+    }
+    if (identityStatus === 'UNRESOLVED' && !firstRefusalRowIndex) {
+      firstRefusalRowIndex = group.rowIndices[0];
     }
 
     intermediateHoldings.push({
@@ -249,6 +321,20 @@ export function mapBrokerOutputToUserHoldings(
       identityStatus,
       resolutionDisposition,
     });
+  }
+
+  // P04 whole-import refusal — raised ONCE, after every native row has been assessed, with the
+  // complete per-row evidence attached. The quarantine record is the last authoritative lookup for
+  // the first refused row (the same record the pre-existing refusal surfaced), so the refusal text
+  // a consumer already depends on is preserved while the masked-evidence defect is removed.
+  if (firstRefusal && failOnUnmapped && !isBypassAuthorized) {
+    throw new BrokerIdentityResolutionError(
+      firstRefusal.record,
+      assessments,
+      assessments
+        .filter((a) => a.status === 'UNRESOLVED' || a.status === 'AMBIGUOUS')
+        .map((a) => a.rowIndex),
+    );
   }
 
   // Step 3: Compute portfolio total market value and weights
@@ -273,6 +359,8 @@ export function mapBrokerOutputToUserHoldings(
       weightSumPercentage: 0.0,
       warnings,
       errors,
+      identityAssessments: assessments,
+      identitySummary: summariseBrokerIdentity(assessments),
       provenance: {
         sourceBroker,
         mappedAt: asOf,
@@ -371,6 +459,8 @@ export function mapBrokerOutputToUserHoldings(
     weightSumPercentage: finalWeightSum,
     warnings,
     errors,
+    identityAssessments: assessments,
+    identitySummary: summariseBrokerIdentity(assessments),
     provenance: {
       sourceBroker,
       mappedAt: asOf,

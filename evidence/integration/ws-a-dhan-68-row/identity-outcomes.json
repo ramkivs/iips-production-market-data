@@ -1,0 +1,4017 @@
+{
+  "recordId": "WS-A-DHAN-68-ROW-IDENTITY-OUTCOMES",
+  "generatedAt": "2026-11-05T08:12:10.046Z",
+  "asOf": "2026-11-05T07:50:49.090Z",
+  "runs": [
+    {
+      "label": "EMPTY_SECURITY_MASTER",
+      "contentDigest": "c44e3cdb06e2d49f88c46d61867444f8a301cdf71a068b0e3aa1d748e6d52f31",
+      "disposition": "REJECTED",
+      "stageReached": "NORMALIZE",
+      "detectedBroker": "DHAN",
+      "variant": "DHAN_WEB_UI_SUMMARY_V1",
+      "nativeRows": 68,
+      "errors": [
+        "P04 Identity Ambiguity Quarantine: Identity ambiguity detected for 'AGI GREENPAC': UNMAPPED_IDENTIFIER (No active mapping found for BSE_SYMBOL:AGI GREENPAC at asOf 2026-11-05T07:50:49.090Z)"
+      ],
+      "rejections": [
+        {
+          "reason": "UNMAPPED_IDENTITY",
+          "details": "P04 Identity Ambiguity Quarantine: Identity ambiguity detected for 'AGI GREENPAC': UNMAPPED_IDENTIFIER (No active mapping found for BSE_SYMBOL:AGI GREENPAC at asOf 2026-11-05T07:50:49.090Z)",
+          "stage": "NORMALIZE"
+        }
+      ],
+      "identitySummary": {
+        "evaluated": 68,
+        "resolved": 0,
+        "unresolved": 68,
+        "ambiguous": 0,
+        "notEvaluated": 0,
+        "excluded": 0,
+        "identitySource": "GOVERNED_SECURITY_MASTER",
+        "saveable": false,
+        "refusalCodes": {
+          "NO_AUTHORITATIVE_IDENTIFIER_MATCH": 68
+        }
+      },
+      "rows": [
+        {
+          "rowIndex": 1,
+          "suppliedIdentifier": "AGI GREENPAC",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "AGI GREENPAC",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330050-ylgq2"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "AGI GREENPAC",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330050-h6nvf"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330050-ylgq2",
+            "ident-quar-1793866330050-h6nvf"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 2,
+          "suppliedIdentifier": "ASK AUTOMOTIVE",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ASK AUTOMOTIVE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-mt2kf"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ASK AUTOMOTIVE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-6sb5h"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-mt2kf",
+            "ident-quar-1793866330051-6sb5h"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 3,
+          "suppliedIdentifier": "AJAX ENGINEERING",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "AJAX ENGINEERING",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-w1gkx"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "AJAX ENGINEERING",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-a2wbk"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-w1gkx",
+            "ident-quar-1793866330051-a2wbk"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 4,
+          "suppliedIdentifier": "ARIHANT CAPITAL MARKETS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ARIHANT CAPITAL MARKETS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-1vqdq"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ARIHANT CAPITAL MARKETS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-09v8a"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-1vqdq",
+            "ident-quar-1793866330051-09v8a"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 5,
+          "suppliedIdentifier": "ARKADE DEVELOPERS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ARKADE DEVELOPERS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-9tq6w"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ARKADE DEVELOPERS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-ar3h1"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-9tq6w",
+            "ident-quar-1793866330051-ar3h1"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 6,
+          "suppliedIdentifier": "ARROW GREENTECH",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ARROW GREENTECH",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-kwh18"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ARROW GREENTECH",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-qlm61"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-kwh18",
+            "ident-quar-1793866330051-qlm61"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 7,
+          "suppliedIdentifier": "ASHOKA BUILDCON",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ASHOKA BUILDCON",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-bt7a8"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ASHOKA BUILDCON",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-641we"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-bt7a8",
+            "ident-quar-1793866330051-641we"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 8,
+          "suppliedIdentifier": "BANK OF BARODA",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "BANK OF BARODA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-s1508"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "BANK OF BARODA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-s8a0c"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-s1508",
+            "ident-quar-1793866330051-s8a0c"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 9,
+          "suppliedIdentifier": "BHARAT COKING COAL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "BHARAT COKING COAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-vgi3z"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "BHARAT COKING COAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-hvxnx"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-vgi3z",
+            "ident-quar-1793866330051-hvxnx"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 10,
+          "suppliedIdentifier": "BLUE JET HEALTHCARE",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "BLUE JET HEALTHCARE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-ft9f9"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "BLUE JET HEALTHCARE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-4wech"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-ft9f9",
+            "ident-quar-1793866330051-4wech"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 11,
+          "suppliedIdentifier": "CANARA ROBECO ASSET MANAGEMENT COMPANY",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "CANARA ROBECO ASSET MANAGEMENT COMPANY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-9a76p"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "CANARA ROBECO ASSET MANAGEMENT COMPANY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-x50qz"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-9a76p",
+            "ident-quar-1793866330051-x50qz"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 12,
+          "suppliedIdentifier": "CREDO BRANDS MARKETING (MUFTI)",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "CREDO BRANDS MARKETING (MUFTI)",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-e9qfa"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "CREDO BRANDS MARKETING (MUFTI)",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-15ulv"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-e9qfa",
+            "ident-quar-1793866330051-15ulv"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 13,
+          "suppliedIdentifier": "DAM CAPITAL ADVISORS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "DAM CAPITAL ADVISORS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-g7nbr"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "DAM CAPITAL ADVISORS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-l6llp"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-g7nbr",
+            "ident-quar-1793866330051-l6llp"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 14,
+          "suppliedIdentifier": "ECOS MOBILITY & HOSPITALITY",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ECOS MOBILITY & HOSPITALITY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-eumy7"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ECOS MOBILITY & HOSPITALITY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-q3euf"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-eumy7",
+            "ident-quar-1793866330051-q3euf"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 15,
+          "suppliedIdentifier": "EMS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "EMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-zqqy4"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "EMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-426m5"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-zqqy4",
+            "ident-quar-1793866330051-426m5"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 16,
+          "suppliedIdentifier": "EPACK PREFAB TECHNOLOGIES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "EPACK PREFAB TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-4now2"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "EPACK PREFAB TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-366w5"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-4now2",
+            "ident-quar-1793866330051-366w5"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 17,
+          "suppliedIdentifier": "ELECON ENGINEERING COMPANY",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ELECON ENGINEERING COMPANY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-pjtit"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ELECON ENGINEERING COMPANY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-epplg"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-pjtit",
+            "ident-quar-1793866330051-epplg"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 18,
+          "suppliedIdentifier": "EMAMI",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "EMAMI",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-244i8"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "EMAMI",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-jzhi9"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-244i8",
+            "ident-quar-1793866330051-jzhi9"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 19,
+          "suppliedIdentifier": "ENGINEERS INDIA",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ENGINEERS INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-d0fiw"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ENGINEERS INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-rt6u3"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-d0fiw",
+            "ident-quar-1793866330051-rt6u3"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 20,
+          "suppliedIdentifier": "FINEOTEX CHEMICAL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "FINEOTEX CHEMICAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-n3pwe"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "FINEOTEX CHEMICAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-qfhy7"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-n3pwe",
+            "ident-quar-1793866330051-qfhy7"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 21,
+          "suppliedIdentifier": "GHCL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GHCL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-6s5oq"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GHCL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-qv6s7"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-6s5oq",
+            "ident-quar-1793866330051-qv6s7"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 22,
+          "suppliedIdentifier": "GMR POWER & URBAN INFRA",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GMR POWER & URBAN INFRA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-0bpm8"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GMR POWER & URBAN INFRA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-67op2"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-0bpm8",
+            "ident-quar-1793866330051-67op2"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 23,
+          "suppliedIdentifier": "GATEWAY DISTRIPARKS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GATEWAY DISTRIPARKS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-cpxuh"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GATEWAY DISTRIPARKS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-j22tg"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-cpxuh",
+            "ident-quar-1793866330051-j22tg"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 24,
+          "suppliedIdentifier": "GEEKAY WIRES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GEEKAY WIRES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-ldb0d"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GEEKAY WIRES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-31cyu"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-ldb0d",
+            "ident-quar-1793866330051-31cyu"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 25,
+          "suppliedIdentifier": "GENUS POWER INFRASTRUCTURES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GENUS POWER INFRASTRUCTURES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-7u4nx"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GENUS POWER INFRASTRUCTURES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-900jw"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-7u4nx",
+            "ident-quar-1793866330051-900jw"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 26,
+          "suppliedIdentifier": "GRAUER & WEIL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GRAUER & WEIL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-ardha"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GRAUER & WEIL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-5mneu"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-ardha",
+            "ident-quar-1793866330051-5mneu"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 27,
+          "suppliedIdentifier": "GUJARAT PIPAVAV PORT",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GUJARAT PIPAVAV PORT",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-8eeow"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GUJARAT PIPAVAV PORT",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-g8wen"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-8eeow",
+            "ident-quar-1793866330051-g8wen"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 28,
+          "suppliedIdentifier": "HIMADRI SPECIALITY CHEMICAL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "HIMADRI SPECIALITY CHEMICAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-4vo32"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "HIMADRI SPECIALITY CHEMICAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-rg5lq"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-4vo32",
+            "ident-quar-1793866330051-rg5lq"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 29,
+          "suppliedIdentifier": "IDFC FIRST BANK",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "IDFC FIRST BANK",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-po8v2"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "IDFC FIRST BANK",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-6bdet"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-po8v2",
+            "ident-quar-1793866330051-6bdet"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 30,
+          "suppliedIdentifier": "IIFL CAPITAL SERVICES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "IIFL CAPITAL SERVICES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-alnwn"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "IIFL CAPITAL SERVICES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-gupin"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-alnwn",
+            "ident-quar-1793866330051-gupin"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 31,
+          "suppliedIdentifier": "INDRAPRASTHA MEDICAL CORPORATION",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "INDRAPRASTHA MEDICAL CORPORATION",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-n8ghl"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "INDRAPRASTHA MEDICAL CORPORATION",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-l11q9"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-n8ghl",
+            "ident-quar-1793866330051-l11q9"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 32,
+          "suppliedIdentifier": "INTERNATIONAL CONVEYORS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "INTERNATIONAL CONVEYORS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-oj1hh"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "INTERNATIONAL CONVEYORS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-ri3vv"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-oj1hh",
+            "ident-quar-1793866330051-ri3vv"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 33,
+          "suppliedIdentifier": "INTERNATIONAL GEMOLOGICAL INSTITUTE",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "INTERNATIONAL GEMOLOGICAL INSTITUTE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330051-q8d83"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "INTERNATIONAL GEMOLOGICAL INSTITUTE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-lf0ub"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330051-q8d83",
+            "ident-quar-1793866330052-lf0ub"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 34,
+          "suppliedIdentifier": "J KUMAR INFRAPROJECTS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "J KUMAR INFRAPROJECTS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-z0vtn"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "J KUMAR INFRAPROJECTS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-37wu4"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-z0vtn",
+            "ident-quar-1793866330052-37wu4"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 35,
+          "suppliedIdentifier": "JAI BALAJI INDUSTRIES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "JAI BALAJI INDUSTRIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-bhhl5"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "JAI BALAJI INDUSTRIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-cmpio"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-bhhl5",
+            "ident-quar-1793866330052-cmpio"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 36,
+          "suppliedIdentifier": "JAMNA AUTO INDUSTRIES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "JAMNA AUTO INDUSTRIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-nwtg0"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "JAMNA AUTO INDUSTRIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-ao5uo"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-nwtg0",
+            "ident-quar-1793866330052-ao5uo"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 37,
+          "suppliedIdentifier": "JIO PLATFORMS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "JIO PLATFORMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-qmtjt"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "JIO PLATFORMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-4mzz2"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-qmtjt",
+            "ident-quar-1793866330052-4mzz2"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 38,
+          "suppliedIdentifier": "KM SUGAR MILLS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "KM SUGAR MILLS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-7cqbp"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "KM SUGAR MILLS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-uqy57"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-7cqbp",
+            "ident-quar-1793866330052-uqy57"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 39,
+          "suppliedIdentifier": "KP ENERGY",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "KP ENERGY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-0zyf5"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "KP ENERGY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-cgfi6"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-0zyf5",
+            "ident-quar-1793866330052-cgfi6"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 40,
+          "suppliedIdentifier": "KROSS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "KROSS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-3kgd0"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "KROSS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-qfga5"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-3kgd0",
+            "ident-quar-1793866330052-qfga5"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 41,
+          "suppliedIdentifier": "LANDMARK CARS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "LANDMARK CARS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-4wcqa"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "LANDMARK CARS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-wcfpz"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-4wcqa",
+            "ident-quar-1793866330052-wcfpz"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 42,
+          "suppliedIdentifier": "MATRIMONY.COM",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "MATRIMONY.COM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-q02o6"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "MATRIMONY.COM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-qbwej"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-q02o6",
+            "ident-quar-1793866330052-qbwej"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 43,
+          "suppliedIdentifier": "MONARCH NETWORTH CAPITAL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "MONARCH NETWORTH CAPITAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-j2dne"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "MONARCH NETWORTH CAPITAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-0aogn"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-j2dne",
+            "ident-quar-1793866330052-0aogn"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 44,
+          "suppliedIdentifier": "NATIONAL STOCK EXCHANGE OF INDIA",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "NATIONAL STOCK EXCHANGE OF INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-9senv"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "NATIONAL STOCK EXCHANGE OF INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-c0b8q"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-9senv",
+            "ident-quar-1793866330052-c0b8q"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 45,
+          "suppliedIdentifier": "OSWAL PUMPS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "OSWAL PUMPS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-f1gkd"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "OSWAL PUMPS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-dfu34"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-f1gkd",
+            "ident-quar-1793866330052-dfu34"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 46,
+          "suppliedIdentifier": "PANAMA PETROCHEM",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "PANAMA PETROCHEM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-y4dt4"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "PANAMA PETROCHEM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-ak9nt"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-y4dt4",
+            "ident-quar-1793866330052-ak9nt"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 47,
+          "suppliedIdentifier": "PARADEEP PHOSPHATES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "PARADEEP PHOSPHATES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-4lvfz"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "PARADEEP PHOSPHATES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-vlkqc"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-4lvfz",
+            "ident-quar-1793866330052-vlkqc"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 48,
+          "suppliedIdentifier": "PRECISION WIRES INDIA",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "PRECISION WIRES INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-sxcv6"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "PRECISION WIRES INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-gjj4z"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-sxcv6",
+            "ident-quar-1793866330052-gjj4z"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 49,
+          "suppliedIdentifier": "PREMIER POLYFILM",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "PREMIER POLYFILM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-41nff"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "PREMIER POLYFILM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-5j8sp"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-41nff",
+            "ident-quar-1793866330052-5j8sp"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 50,
+          "suppliedIdentifier": "PUDUMJEE PAPER PRODUCTS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "PUDUMJEE PAPER PRODUCTS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-nor87"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "PUDUMJEE PAPER PRODUCTS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-sfm2w"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-nor87",
+            "ident-quar-1793866330052-sfm2w"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 51,
+          "suppliedIdentifier": "RADHIKA JEWELTECH",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "RADHIKA JEWELTECH",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-lmqka"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "RADHIKA JEWELTECH",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-lkg13"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-lmqka",
+            "ident-quar-1793866330052-lkg13"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 52,
+          "suppliedIdentifier": "RAJOO ENGINEERS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "RAJOO ENGINEERS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-4z9ov"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "RAJOO ENGINEERS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-1osp7"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-4z9ov",
+            "ident-quar-1793866330052-1osp7"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 53,
+          "suppliedIdentifier": "RATEGAIN TRAVEL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "RATEGAIN TRAVEL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-0ka32"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "RATEGAIN TRAVEL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-1hki3"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-0ka32",
+            "ident-quar-1793866330052-1hki3"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 54,
+          "suppliedIdentifier": "SALASAR TECHNO ENGINEERING",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SALASAR TECHNO ENGINEERING",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-e6bif"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SALASAR TECHNO ENGINEERING",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-od8af"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-e6bif",
+            "ident-quar-1793866330052-od8af"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 55,
+          "suppliedIdentifier": "SHAKTI PUMPS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SHAKTI PUMPS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-9fbxi"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SHAKTI PUMPS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-dhs4t"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-9fbxi",
+            "ident-quar-1793866330052-dhs4t"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 56,
+          "suppliedIdentifier": "SHARDA MOTOR",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SHARDA MOTOR",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-3e7hm"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SHARDA MOTOR",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-e9wie"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-3e7hm",
+            "ident-quar-1793866330052-e9wie"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 57,
+          "suppliedIdentifier": "SIGMA SOLVE",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SIGMA SOLVE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-tdgyv"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SIGMA SOLVE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-31gbb"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-tdgyv",
+            "ident-quar-1793866330052-31gbb"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 58,
+          "suppliedIdentifier": "SIYARAM SILK MILLS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SIYARAM SILK MILLS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-1hcu5"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SIYARAM SILK MILLS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-iuv9u"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-1hcu5",
+            "ident-quar-1793866330052-iuv9u"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 59,
+          "suppliedIdentifier": "STEELCAST",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "STEELCAST",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-ldfoi"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "STEELCAST",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-7avhh"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-ldfoi",
+            "ident-quar-1793866330052-7avhh"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 60,
+          "suppliedIdentifier": "SUZLON ENERGY",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SUZLON ENERGY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-oybxq"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SUZLON ENERGY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-ofajb"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-oybxq",
+            "ident-quar-1793866330052-ofajb"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 61,
+          "suppliedIdentifier": "THYROCARE TECHNOLOGIES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "THYROCARE TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-f3w2w"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "THYROCARE TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-hxlj8"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-f3w2w",
+            "ident-quar-1793866330052-hxlj8"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 62,
+          "suppliedIdentifier": "TITAGARH RAIL SYSTEMS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "TITAGARH RAIL SYSTEMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-pg0na"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "TITAGARH RAIL SYSTEMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-5bbdf"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-pg0na",
+            "ident-quar-1793866330052-5bbdf"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 63,
+          "suppliedIdentifier": "UNIVASTU",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "UNIVASTU",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-usdz7"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "UNIVASTU",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-72tr8"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-usdz7",
+            "ident-quar-1793866330052-72tr8"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 64,
+          "suppliedIdentifier": "VARDHMAN SPECIAL STEELS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "VARDHMAN SPECIAL STEELS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-cwra3"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "VARDHMAN SPECIAL STEELS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-1ja4o"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-cwra3",
+            "ident-quar-1793866330052-1ja4o"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 65,
+          "suppliedIdentifier": "VISHAL MEGA MART",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "VISHAL MEGA MART",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-h3okd"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "VISHAL MEGA MART",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-3pxqc"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-h3okd",
+            "ident-quar-1793866330052-3pxqc"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 66,
+          "suppliedIdentifier": "VISHNU CHEMICALS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "VISHNU CHEMICALS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-gf0j4"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "VISHNU CHEMICALS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-eocui"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-gf0j4",
+            "ident-quar-1793866330052-eocui"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 67,
+          "suppliedIdentifier": "WAAREE RENEWABLE TECHNOLOGIES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "WAAREE RENEWABLE TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-1hbi5"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "WAAREE RENEWABLE TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-l3pv3"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-1hbi5",
+            "ident-quar-1793866330052-l3pv3"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 68,
+          "suppliedIdentifier": "WEBSOL ENERGY SYSTEM",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "WEBSOL ENERGY SYSTEM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330052-gw9aa"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "WEBSOL ENERGY SYSTEM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330053-jixnk"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330052-gw9aa",
+            "ident-quar-1793866330053-jixnk"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        }
+      ]
+    },
+    {
+      "label": "GOVERNED_D05_SECURITY_MASTER",
+      "contentDigest": "c44e3cdb06e2d49f88c46d61867444f8a301cdf71a068b0e3aa1d748e6d52f31",
+      "disposition": "REJECTED",
+      "stageReached": "NORMALIZE",
+      "detectedBroker": "DHAN",
+      "variant": "DHAN_WEB_UI_SUMMARY_V1",
+      "nativeRows": 68,
+      "errors": [
+        "P04 Identity Ambiguity Quarantine: Identity ambiguity detected for 'ASK AUTOMOTIVE': UNMAPPED_IDENTIFIER (No active mapping found for BSE_SYMBOL:ASK AUTOMOTIVE at asOf 2026-11-05T07:50:49.090Z)"
+      ],
+      "rejections": [
+        {
+          "reason": "UNMAPPED_IDENTITY",
+          "details": "P04 Identity Ambiguity Quarantine: Identity ambiguity detected for 'ASK AUTOMOTIVE': UNMAPPED_IDENTIFIER (No active mapping found for BSE_SYMBOL:ASK AUTOMOTIVE at asOf 2026-11-05T07:50:49.090Z)",
+          "stage": "NORMALIZE"
+        }
+      ],
+      "identitySummary": {
+        "evaluated": 68,
+        "resolved": 1,
+        "unresolved": 67,
+        "ambiguous": 0,
+        "notEvaluated": 0,
+        "excluded": 0,
+        "identitySource": "GOVERNED_SECURITY_MASTER",
+        "masterRevision": "BATCH-D05-TIER2-BROAD-UNIVERSE-2026-09-22-001:7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5",
+        "saveable": false,
+        "refusalCodes": {
+          "NO_AUTHORITATIVE_IDENTIFIER_MATCH": 67
+        }
+      },
+      "rows": [
+        {
+          "rowIndex": 1,
+          "suppliedIdentifier": "AGI GREENPAC",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "RESOLVED",
+          "refusalCode": null,
+          "companyId": "EQ_AGI_IN",
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "AGI GREENPAC",
+              "outcome": "RESOLVED",
+              "quarantineId": null
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "AGI GREENPAC",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": null
+            }
+          ],
+          "quarantineIds": [],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 2,
+          "suppliedIdentifier": "ASK AUTOMOTIVE",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ASK AUTOMOTIVE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330060-o3kjf"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ASK AUTOMOTIVE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330061-0ynl3"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330060-o3kjf",
+            "ident-quar-1793866330061-0ynl3"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 3,
+          "suppliedIdentifier": "AJAX ENGINEERING",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "AJAX ENGINEERING",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330061-cbuyz"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "AJAX ENGINEERING",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330062-qd150"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330061-cbuyz",
+            "ident-quar-1793866330062-qd150"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 4,
+          "suppliedIdentifier": "ARIHANT CAPITAL MARKETS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ARIHANT CAPITAL MARKETS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330062-nyi2s"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ARIHANT CAPITAL MARKETS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330062-s6cya"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330062-nyi2s",
+            "ident-quar-1793866330062-s6cya"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 5,
+          "suppliedIdentifier": "ARKADE DEVELOPERS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ARKADE DEVELOPERS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330062-6x2pc"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ARKADE DEVELOPERS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330063-ubovz"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330062-6x2pc",
+            "ident-quar-1793866330063-ubovz"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 6,
+          "suppliedIdentifier": "ARROW GREENTECH",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ARROW GREENTECH",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330063-kmyhw"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ARROW GREENTECH",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330063-2pfia"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330063-kmyhw",
+            "ident-quar-1793866330063-2pfia"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 7,
+          "suppliedIdentifier": "ASHOKA BUILDCON",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ASHOKA BUILDCON",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330063-66kyv"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ASHOKA BUILDCON",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330063-x5ct4"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330063-66kyv",
+            "ident-quar-1793866330063-x5ct4"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 8,
+          "suppliedIdentifier": "BANK OF BARODA",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "BANK OF BARODA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330064-ag5nj"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "BANK OF BARODA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330064-pa3hx"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330064-ag5nj",
+            "ident-quar-1793866330064-pa3hx"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 9,
+          "suppliedIdentifier": "BHARAT COKING COAL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "BHARAT COKING COAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330064-js5y3"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "BHARAT COKING COAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330064-611ev"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330064-js5y3",
+            "ident-quar-1793866330064-611ev"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 10,
+          "suppliedIdentifier": "BLUE JET HEALTHCARE",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "BLUE JET HEALTHCARE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330064-p1vn4"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "BLUE JET HEALTHCARE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330065-lt6zc"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330064-p1vn4",
+            "ident-quar-1793866330065-lt6zc"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 11,
+          "suppliedIdentifier": "CANARA ROBECO ASSET MANAGEMENT COMPANY",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "CANARA ROBECO ASSET MANAGEMENT COMPANY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330065-nwx1j"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "CANARA ROBECO ASSET MANAGEMENT COMPANY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330065-vzyat"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330065-nwx1j",
+            "ident-quar-1793866330065-vzyat"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 12,
+          "suppliedIdentifier": "CREDO BRANDS MARKETING (MUFTI)",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "CREDO BRANDS MARKETING (MUFTI)",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330065-tfptc"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "CREDO BRANDS MARKETING (MUFTI)",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330065-b5a3n"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330065-tfptc",
+            "ident-quar-1793866330065-b5a3n"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 13,
+          "suppliedIdentifier": "DAM CAPITAL ADVISORS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "DAM CAPITAL ADVISORS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330066-dddoe"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "DAM CAPITAL ADVISORS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330066-zgtly"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330066-dddoe",
+            "ident-quar-1793866330066-zgtly"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 14,
+          "suppliedIdentifier": "ECOS MOBILITY & HOSPITALITY",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ECOS MOBILITY & HOSPITALITY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330066-pvp6p"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ECOS MOBILITY & HOSPITALITY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330066-c0viy"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330066-pvp6p",
+            "ident-quar-1793866330066-c0viy"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 15,
+          "suppliedIdentifier": "EMS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "EMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330066-rnxrt"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "EMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330067-zhayy"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330066-rnxrt",
+            "ident-quar-1793866330067-zhayy"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 16,
+          "suppliedIdentifier": "EPACK PREFAB TECHNOLOGIES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "EPACK PREFAB TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330067-a7zjs"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "EPACK PREFAB TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330067-rlo4k"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330067-a7zjs",
+            "ident-quar-1793866330067-rlo4k"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 17,
+          "suppliedIdentifier": "ELECON ENGINEERING COMPANY",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ELECON ENGINEERING COMPANY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330067-jlrtg"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ELECON ENGINEERING COMPANY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330067-r9x8m"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330067-jlrtg",
+            "ident-quar-1793866330067-r9x8m"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 18,
+          "suppliedIdentifier": "EMAMI",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "EMAMI",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330067-8c3oy"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "EMAMI",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330068-43bkb"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330067-8c3oy",
+            "ident-quar-1793866330068-43bkb"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 19,
+          "suppliedIdentifier": "ENGINEERS INDIA",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "ENGINEERS INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330070-uqiz8"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "ENGINEERS INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330070-sno2f"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330070-uqiz8",
+            "ident-quar-1793866330070-sno2f"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 20,
+          "suppliedIdentifier": "FINEOTEX CHEMICAL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "FINEOTEX CHEMICAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330070-hdleq"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "FINEOTEX CHEMICAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330070-12bpd"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330070-hdleq",
+            "ident-quar-1793866330070-12bpd"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 21,
+          "suppliedIdentifier": "GHCL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GHCL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330070-ipc5f"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GHCL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330071-07ita"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330070-ipc5f",
+            "ident-quar-1793866330071-07ita"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 22,
+          "suppliedIdentifier": "GMR POWER & URBAN INFRA",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GMR POWER & URBAN INFRA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330071-nxgrg"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GMR POWER & URBAN INFRA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330071-iqiq7"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330071-nxgrg",
+            "ident-quar-1793866330071-iqiq7"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 23,
+          "suppliedIdentifier": "GATEWAY DISTRIPARKS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GATEWAY DISTRIPARKS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330071-jdtvd"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GATEWAY DISTRIPARKS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330071-ra8hi"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330071-jdtvd",
+            "ident-quar-1793866330071-ra8hi"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 24,
+          "suppliedIdentifier": "GEEKAY WIRES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GEEKAY WIRES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330071-gc7qu"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GEEKAY WIRES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330072-a45ya"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330071-gc7qu",
+            "ident-quar-1793866330072-a45ya"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 25,
+          "suppliedIdentifier": "GENUS POWER INFRASTRUCTURES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GENUS POWER INFRASTRUCTURES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330072-adh3t"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GENUS POWER INFRASTRUCTURES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330072-gac15"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330072-adh3t",
+            "ident-quar-1793866330072-gac15"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 26,
+          "suppliedIdentifier": "GRAUER & WEIL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GRAUER & WEIL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330072-ncuc7"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GRAUER & WEIL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330072-fjq4b"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330072-ncuc7",
+            "ident-quar-1793866330072-fjq4b"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 27,
+          "suppliedIdentifier": "GUJARAT PIPAVAV PORT",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "GUJARAT PIPAVAV PORT",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330073-e4amx"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "GUJARAT PIPAVAV PORT",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330073-hdmk6"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330073-e4amx",
+            "ident-quar-1793866330073-hdmk6"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 28,
+          "suppliedIdentifier": "HIMADRI SPECIALITY CHEMICAL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "HIMADRI SPECIALITY CHEMICAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330073-t7hn5"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "HIMADRI SPECIALITY CHEMICAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330073-7nkux"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330073-t7hn5",
+            "ident-quar-1793866330073-7nkux"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 29,
+          "suppliedIdentifier": "IDFC FIRST BANK",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "IDFC FIRST BANK",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330073-hgbjq"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "IDFC FIRST BANK",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330073-mqbxd"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330073-hgbjq",
+            "ident-quar-1793866330073-mqbxd"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 30,
+          "suppliedIdentifier": "IIFL CAPITAL SERVICES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "IIFL CAPITAL SERVICES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330074-9b6vl"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "IIFL CAPITAL SERVICES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330074-yg8a6"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330074-9b6vl",
+            "ident-quar-1793866330074-yg8a6"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 31,
+          "suppliedIdentifier": "INDRAPRASTHA MEDICAL CORPORATION",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "INDRAPRASTHA MEDICAL CORPORATION",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330074-2vjja"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "INDRAPRASTHA MEDICAL CORPORATION",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330074-bcenx"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330074-2vjja",
+            "ident-quar-1793866330074-bcenx"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 32,
+          "suppliedIdentifier": "INTERNATIONAL CONVEYORS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "INTERNATIONAL CONVEYORS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330074-f3y4q"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "INTERNATIONAL CONVEYORS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330074-qvwri"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330074-f3y4q",
+            "ident-quar-1793866330074-qvwri"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 33,
+          "suppliedIdentifier": "INTERNATIONAL GEMOLOGICAL INSTITUTE",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "INTERNATIONAL GEMOLOGICAL INSTITUTE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330075-fz0e8"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "INTERNATIONAL GEMOLOGICAL INSTITUTE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330075-pa9t9"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330075-fz0e8",
+            "ident-quar-1793866330075-pa9t9"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 34,
+          "suppliedIdentifier": "J KUMAR INFRAPROJECTS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "J KUMAR INFRAPROJECTS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330075-a9327"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "J KUMAR INFRAPROJECTS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330075-gpens"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330075-a9327",
+            "ident-quar-1793866330075-gpens"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 35,
+          "suppliedIdentifier": "JAI BALAJI INDUSTRIES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "JAI BALAJI INDUSTRIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330075-0q8is"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "JAI BALAJI INDUSTRIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330076-8gzxo"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330075-0q8is",
+            "ident-quar-1793866330076-8gzxo"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 36,
+          "suppliedIdentifier": "JAMNA AUTO INDUSTRIES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "JAMNA AUTO INDUSTRIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330076-kmq67"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "JAMNA AUTO INDUSTRIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330076-6qcyr"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330076-kmq67",
+            "ident-quar-1793866330076-6qcyr"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 37,
+          "suppliedIdentifier": "JIO PLATFORMS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "JIO PLATFORMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330076-k2uf8"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "JIO PLATFORMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330076-ai7k8"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330076-k2uf8",
+            "ident-quar-1793866330076-ai7k8"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 38,
+          "suppliedIdentifier": "KM SUGAR MILLS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "KM SUGAR MILLS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330076-ca0w8"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "KM SUGAR MILLS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330077-v6bio"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330076-ca0w8",
+            "ident-quar-1793866330077-v6bio"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 39,
+          "suppliedIdentifier": "KP ENERGY",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "KP ENERGY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330077-2jxbo"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "KP ENERGY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330077-4odvx"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330077-2jxbo",
+            "ident-quar-1793866330077-4odvx"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 40,
+          "suppliedIdentifier": "KROSS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "KROSS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330077-3p37k"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "KROSS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330077-wngrk"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330077-3p37k",
+            "ident-quar-1793866330077-wngrk"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 41,
+          "suppliedIdentifier": "LANDMARK CARS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "LANDMARK CARS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330078-wohuj"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "LANDMARK CARS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330078-zkzl1"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330078-wohuj",
+            "ident-quar-1793866330078-zkzl1"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 42,
+          "suppliedIdentifier": "MATRIMONY.COM",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "MATRIMONY.COM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330078-azkhh"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "MATRIMONY.COM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330078-u3n2o"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330078-azkhh",
+            "ident-quar-1793866330078-u3n2o"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 43,
+          "suppliedIdentifier": "MONARCH NETWORTH CAPITAL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "MONARCH NETWORTH CAPITAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330078-o3mkh"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "MONARCH NETWORTH CAPITAL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330078-f6axy"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330078-o3mkh",
+            "ident-quar-1793866330078-f6axy"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 44,
+          "suppliedIdentifier": "NATIONAL STOCK EXCHANGE OF INDIA",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "NATIONAL STOCK EXCHANGE OF INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330079-elrmg"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "NATIONAL STOCK EXCHANGE OF INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330079-cjktj"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330079-elrmg",
+            "ident-quar-1793866330079-cjktj"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 45,
+          "suppliedIdentifier": "OSWAL PUMPS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "OSWAL PUMPS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330079-3esbp"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "OSWAL PUMPS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330079-rvctx"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330079-3esbp",
+            "ident-quar-1793866330079-rvctx"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 46,
+          "suppliedIdentifier": "PANAMA PETROCHEM",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "PANAMA PETROCHEM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330079-e1j9a"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "PANAMA PETROCHEM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330080-o2j6g"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330079-e1j9a",
+            "ident-quar-1793866330080-o2j6g"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 47,
+          "suppliedIdentifier": "PARADEEP PHOSPHATES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "PARADEEP PHOSPHATES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330080-z7s46"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "PARADEEP PHOSPHATES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330080-2mgix"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330080-z7s46",
+            "ident-quar-1793866330080-2mgix"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 48,
+          "suppliedIdentifier": "PRECISION WIRES INDIA",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "PRECISION WIRES INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330080-66te1"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "PRECISION WIRES INDIA",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330080-20p8w"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330080-66te1",
+            "ident-quar-1793866330080-20p8w"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 49,
+          "suppliedIdentifier": "PREMIER POLYFILM",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "PREMIER POLYFILM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330081-yv65o"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "PREMIER POLYFILM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330081-rclcu"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330081-yv65o",
+            "ident-quar-1793866330081-rclcu"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 50,
+          "suppliedIdentifier": "PUDUMJEE PAPER PRODUCTS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "PUDUMJEE PAPER PRODUCTS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330081-218ba"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "PUDUMJEE PAPER PRODUCTS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330081-6fzrv"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330081-218ba",
+            "ident-quar-1793866330081-6fzrv"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 51,
+          "suppliedIdentifier": "RADHIKA JEWELTECH",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "RADHIKA JEWELTECH",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330081-0xq3b"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "RADHIKA JEWELTECH",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330081-5b4a6"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330081-0xq3b",
+            "ident-quar-1793866330081-5b4a6"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 52,
+          "suppliedIdentifier": "RAJOO ENGINEERS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "RAJOO ENGINEERS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330082-9fp0f"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "RAJOO ENGINEERS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330082-fqdqa"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330082-9fp0f",
+            "ident-quar-1793866330082-fqdqa"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 53,
+          "suppliedIdentifier": "RATEGAIN TRAVEL",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "RATEGAIN TRAVEL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330082-0uokh"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "RATEGAIN TRAVEL",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330082-fhbd1"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330082-0uokh",
+            "ident-quar-1793866330082-fhbd1"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 54,
+          "suppliedIdentifier": "SALASAR TECHNO ENGINEERING",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SALASAR TECHNO ENGINEERING",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330082-auj5v"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SALASAR TECHNO ENGINEERING",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330083-109dm"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330082-auj5v",
+            "ident-quar-1793866330083-109dm"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 55,
+          "suppliedIdentifier": "SHAKTI PUMPS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SHAKTI PUMPS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330083-96pel"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SHAKTI PUMPS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330083-9r78d"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330083-96pel",
+            "ident-quar-1793866330083-9r78d"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 56,
+          "suppliedIdentifier": "SHARDA MOTOR",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SHARDA MOTOR",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330083-5gkhc"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SHARDA MOTOR",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330083-j2mf1"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330083-5gkhc",
+            "ident-quar-1793866330083-j2mf1"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 57,
+          "suppliedIdentifier": "SIGMA SOLVE",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SIGMA SOLVE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330084-vlrac"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SIGMA SOLVE",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330084-yrrzo"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330084-vlrac",
+            "ident-quar-1793866330084-yrrzo"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 58,
+          "suppliedIdentifier": "SIYARAM SILK MILLS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SIYARAM SILK MILLS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330084-75y9h"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SIYARAM SILK MILLS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330084-43i3d"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330084-75y9h",
+            "ident-quar-1793866330084-43i3d"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 59,
+          "suppliedIdentifier": "STEELCAST",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "STEELCAST",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330084-jqt0x"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "STEELCAST",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330085-b7v1p"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330084-jqt0x",
+            "ident-quar-1793866330085-b7v1p"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 60,
+          "suppliedIdentifier": "SUZLON ENERGY",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "SUZLON ENERGY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330085-n7c0b"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "SUZLON ENERGY",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330085-pggcv"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330085-n7c0b",
+            "ident-quar-1793866330085-pggcv"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 61,
+          "suppliedIdentifier": "THYROCARE TECHNOLOGIES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "THYROCARE TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330085-v9yg0"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "THYROCARE TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330085-qiwzl"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330085-v9yg0",
+            "ident-quar-1793866330085-qiwzl"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 62,
+          "suppliedIdentifier": "TITAGARH RAIL SYSTEMS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "TITAGARH RAIL SYSTEMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330085-djod6"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "TITAGARH RAIL SYSTEMS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330086-9i1xd"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330085-djod6",
+            "ident-quar-1793866330086-9i1xd"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 63,
+          "suppliedIdentifier": "UNIVASTU",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "UNIVASTU",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330086-tp1z2"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "UNIVASTU",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330086-udzws"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330086-tp1z2",
+            "ident-quar-1793866330086-udzws"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 64,
+          "suppliedIdentifier": "VARDHMAN SPECIAL STEELS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "VARDHMAN SPECIAL STEELS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330086-818jf"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "VARDHMAN SPECIAL STEELS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330086-se8w2"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330086-818jf",
+            "ident-quar-1793866330086-se8w2"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 65,
+          "suppliedIdentifier": "VISHAL MEGA MART",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "VISHAL MEGA MART",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330087-pgllv"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "VISHAL MEGA MART",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330087-biklm"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330087-pgllv",
+            "ident-quar-1793866330087-biklm"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 66,
+          "suppliedIdentifier": "VISHNU CHEMICALS",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "VISHNU CHEMICALS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330087-g73cn"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "VISHNU CHEMICALS",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330087-ifk4g"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330087-g73cn",
+            "ident-quar-1793866330087-ifk4g"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 67,
+          "suppliedIdentifier": "WAAREE RENEWABLE TECHNOLOGIES",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "WAAREE RENEWABLE TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330088-au88y"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "WAAREE RENEWABLE TECHNOLOGIES",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330088-bh39r"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330088-au88y",
+            "ident-quar-1793866330088-bh39r"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        },
+        {
+          "rowIndex": 68,
+          "suppliedIdentifier": "WEBSOL ENERGY SYSTEM",
+          "suppliedIsin": null,
+          "suppliedExchange": null,
+          "identifierClass": "UNSCOPED_NAME_OR_SYMBOL",
+          "identityStatus": "UNRESOLVED",
+          "refusalCode": "NO_AUTHORITATIVE_IDENTIFIER_MATCH",
+          "companyId": null,
+          "lookups": [
+            {
+              "identifierType": "NSE_SYMBOL",
+              "identifierValue": "WEBSOL ENERGY SYSTEM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330088-cko6q"
+            },
+            {
+              "identifierType": "BSE_SYMBOL",
+              "identifierValue": "WEBSOL ENERGY SYSTEM",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineId": "ident-quar-1793866330089-e8kqj"
+            }
+          ],
+          "quarantineIds": [
+            "ident-quar-1793866330088-cko6q",
+            "ident-quar-1793866330089-e8kqj"
+          ],
+          "missingEvidence": "The broker file supplies neither an ISIN nor an exchange, and the supplied name/symbol is not an exact governed mapping key or governed alias; the ISIN (preferred) or an exchange-scoped trading symbol must be supplied by the broker export."
+        }
+      ]
+    }
+  ]
+}

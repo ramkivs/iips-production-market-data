@@ -23,6 +23,8 @@ import {
   UserHoldingInput,
 } from './types.js';
 import { BrokerFormatDetector } from './broker-format-detector.js';
+import { BrokerIdentityResolutionError } from './broker-identity-assessment.js';
+import type { BrokerIdentityAssessment, BrokerIdentitySummary } from './broker-identity-assessment.js';
 import { mapBrokerOutputToUserHoldings } from './broker-holdings-mapper.js';
 
 export class BrokerImportIngressOrchestrator {
@@ -291,6 +293,10 @@ export class BrokerImportIngressOrchestrator {
     } catch (err: unknown) {
       let rejReason: 'UNMAPPED_IDENTITY' | 'IDENTITY_AMBIGUITY' | 'SCHEMA_MISMATCH' = 'UNMAPPED_IDENTITY';
       let rejDetails = String(err);
+      // P04 refusal evidence: the mapper assessed EVERY row before refusing, so the complete
+      // per-row identity evidence survives the refusal instead of only the first failing row.
+      const refusalAssessments = err instanceof BrokerIdentityResolutionError ? err.assessments : undefined;
+      const refusalSummary = err instanceof BrokerIdentityResolutionError ? err.summary : undefined;
 
       if (err instanceof IdentityAmbiguityError) {
         rejReason = err.quarantineRecord.reason === 'AMBIGUOUS_COLLISION' ? 'IDENTITY_AMBIGUITY' : 'UNMAPPED_IDENTITY';
@@ -319,6 +325,8 @@ export class BrokerImportIngressOrchestrator {
         sourceBroker: detection.brokerType,
         fileName,
         asOf,
+        identityAssessments: refusalAssessments,
+        identitySummary: refusalSummary,
       });
     }
 
@@ -477,6 +485,8 @@ export class BrokerImportIngressOrchestrator {
       warnings,
       errors: [],
       rejections,
+      identityAssessments: mappingResult.identityAssessments,
+      identitySummary: mappingResult.identitySummary,
       provenance: {
         sourceBroker: detection.brokerType,
         fileName,
@@ -506,6 +516,8 @@ export class BrokerImportIngressOrchestrator {
     sourceBroker: BrokerIngressResult['provenance']['sourceBroker'];
     fileName: string;
     asOf: string;
+    identityAssessments?: readonly BrokerIdentityAssessment[];
+    identitySummary?: BrokerIdentitySummary;
   }): BrokerIngressResult {
     const emptyLineage = computeLineageHash(
       { disposition: params.disposition, stage: params.stageReached, errors: params.errors },
@@ -530,6 +542,8 @@ export class BrokerImportIngressOrchestrator {
       warnings: params.warnings,
       errors: params.errors,
       rejections: params.rejections,
+      ...(params.identityAssessments ? { identityAssessments: [...params.identityAssessments] } : {}),
+      ...(params.identitySummary ? { identitySummary: params.identitySummary } : {}),
       provenance: {
         sourceBroker: params.sourceBroker,
         fileName: params.fileName,
