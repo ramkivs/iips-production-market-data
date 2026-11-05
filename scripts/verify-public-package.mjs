@@ -21,7 +21,7 @@ const npmPrefix = process.platform === 'win32'
   ? [resolve(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')]
   : [];
 check(process.platform !== 'win32' || existsSync(npmPrefix[0]), 'Node-bundled npm CLI is missing');
-const expectedExports = ['./portfolio-ui', './pit', './d114-non-production', './operator-drop'];
+const expectedExports = ['./portfolio-ui', './pit', './d114-non-production', './operator-drop', './dhan-server'];
 /**
  * Published modules the IRR `iips-broker-import` alias requires from this package.
  * IRR reaches these by path into `dist/package` (it does not use a subpath export), so
@@ -340,6 +340,8 @@ try {
     'createConnection', 'DatabaseSync', 'listenIpc', 'persistBrokerImport',
     'WRITE_NOT_AUTHORIZED', 'src/ipc/', 'src/persistence/', 'PitReadService',
     'HistoricalPitIngestionLoader', 'NON_PRODUCTION_D114',
+    // Server-only Dhan provider must never enter the browser closure.
+    'DhanApiClient', 'PreAccessNoNetworkTransport', 'api.dhan.co', 'dhan-server',
   ];
   const hits = forbidden.filter((needle) => browserText.includes(needle));
   check(hits.length === 0, `browser closure contains forbidden entries: ${hits.join(', ')}`);
