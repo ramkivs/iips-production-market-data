@@ -244,6 +244,24 @@ export function parseDhanTradeTimeToUtcIso(raw: string): DhanResult<string> {
   // IST (Asia/Kolkata) is a fixed UTC+05:30 offset with no daylight saving.
   const IST_OFFSET_MINUTES = 330;
   const utcMs = Date.UTC(year, month - 1, day, hour, minute, second) - IST_OFFSET_MINUTES * 60 * 1000;
+
+  // Calendar round-trip: Date.UTC silently rolls impossible dates over
+  // (e.g. 31/02 -> 03/03). Reject any input whose local components do not
+  // survive the round trip — invalid dates must fail closed, never shift.
+  const roundTrip = new Date(utcMs + IST_OFFSET_MINUTES * 60 * 1000);
+  if (
+    roundTrip.getUTCFullYear() !== year ||
+    roundTrip.getUTCMonth() !== month - 1 ||
+    roundTrip.getUTCDate() !== day ||
+    roundTrip.getUTCHours() !== hour ||
+    roundTrip.getUTCMinutes() !== minute ||
+    roundTrip.getUTCSeconds() !== second
+  ) {
+    return dhanFailure('MALFORMED_RESPONSE', 'Dhan last_trade_time is not a real calendar date/time', {
+      field: 'last_trade_time',
+    });
+  }
+
   const iso = new Date(utcMs).toISOString();
   if (Number.isNaN(Date.parse(iso))) {
     return dhanFailure('MALFORMED_RESPONSE', 'Dhan last_trade_time could not be converted to UTC', {

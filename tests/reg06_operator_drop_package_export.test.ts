@@ -19,7 +19,7 @@ import { pathToFileURL } from 'node:url';
 const ROOT = process.cwd();
 const MANIFEST_PATH = resolve(ROOT, 'package.json');
 
-const EXPECTED_EXPORTS = ['./portfolio-ui', './pit', './d114-non-production', './operator-drop'];
+const EXPECTED_EXPORTS = ['./portfolio-ui', './pit', './d114-non-production', './operator-drop', './dhan-server'];
 
 /** The exact public surface of the `./operator-drop` subpath. */
 const EXPECTED_OPERATOR_DROP_SURFACE = [

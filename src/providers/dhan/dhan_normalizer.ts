@@ -73,6 +73,23 @@ export function normalizeDhanQuoteToCanonical(
   if (!asOfResult.ok) return asOfResult;
   const asOf = asOfResult.value;
 
+  // Fail closed on non-finite numeric vendor fields even if the DTO parse stage
+  // was bypassed: NaN/Infinity compare false against range checks and would
+  // otherwise slip through canonical validation.
+  const numericFields: Array<[string, number]> = [
+    ['last_price', quote.last_price],
+    ['ohlc.open', quote.ohlc.open],
+    ['ohlc.high', quote.ohlc.high],
+    ['ohlc.low', quote.ohlc.low],
+    ['ohlc.close', quote.ohlc.close],
+    ['volume', quote.volume],
+  ];
+  for (const [field, value] of numericFields) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      return dhanFailure('MALFORMED_RESPONSE', `Dhan ${field} must be a finite number`, { field });
+    }
+  }
+
   const receivedAt = input.receivedAt;
   if (Number.isNaN(Date.parse(receivedAt))) {
     return dhanFailure('MALFORMED_RESPONSE', 'receivedAt must be a valid ISO-8601 instant', { field: 'receivedAt' });
@@ -81,12 +98,19 @@ export function normalizeDhanQuoteToCanonical(
     ? input.evaluatedAt
     : receivedAt;
 
-  const previousClose =
-    typeof quote.net_change === 'number'
-      ? round2(quote.last_price - quote.net_change)
-      : quote.ohlc.close;
-
-  const change = typeof quote.net_change === 'number' ? quote.net_change : round2(quote.last_price - previousClose);
+  // previousClose/change derive from net_change only. Dhan's ohlc.close is the
+  // CURRENT session close (≈ last_price), not the previous day's close, so it
+  // must never be substituted as previousClose — that would silently zero the
+  // day change. Fail closed instead.
+  if (typeof quote.net_change !== 'number' || !Number.isFinite(quote.net_change)) {
+    return dhanFailure(
+      'MISSING_REQUIRED_FIELD',
+      'Dhan net_change is required to derive previousClose/change; ohlc.close is not a valid substitute',
+      { field: 'net_change' }
+    );
+  }
+  const previousClose = round2(quote.last_price - quote.net_change);
+  const change = round2(quote.net_change);
   const pctChange = previousClose > 0 ? round2((change / previousClose) * 100) : 0;
 
   // Field-by-field canonical construction. No vendor key is ever copied across,
