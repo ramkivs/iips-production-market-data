@@ -78,6 +78,20 @@ export type {
   DhanNormalizedDateRange,
 } from './dhan_historical_dto.js';
 export { DHAN_SUPPORTED_HISTORICAL_INTERVALS, DHAN_HISTORICAL_PATH } from './dhan_historical_dto.js';
+// Provider-side operational controls (DHAN-P4), server-only.
+export {
+  DhanBoundedCache,
+  DhanHistoricalCache,
+  DhanRateLimiter,
+  DhanConcurrencyLimiter,
+  DhanRequestCoalescer,
+  DhanRefreshOrchestrator,
+  withBoundedRetry,
+  isTransientFailure,
+  dhanQuoteCacheKey,
+  dhanHistoricalCacheKey,
+} from './dhan_operational_controls.js';
+export type { DhanSecurityScope, CacheLookup, RefreshOutcome, RetryOptions } from './dhan_operational_controls.js';
 
 // Provider-neutral consumption contract (what downstream apps actually use).
 export {
