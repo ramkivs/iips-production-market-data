@@ -16,7 +16,32 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path("/home/user/iips-production-market-data/windows-setup")
+# CORRECTION. This used to be a hardcoded Arena sandbox path:
+#     ROOT = Path("/home/user/iips-production-market-data/windows-setup")
+# which made the validator fail outside that one machine. The default is now derived from this
+# file's own location, so it works from the repository's windows-setup directory and from any
+# other checkout. An optional single argument overrides it, which is also what lets the
+# missing-directory and empty-directory cases be exercised directly.
+DEFAULT_ROOT = Path(__file__).resolve().parent
+
+if len(sys.argv) > 2:
+    print("usage: .validate-scripts.py [script-directory]")
+    sys.exit(2)
+
+ROOT = DEFAULT_ROOT if len(sys.argv) < 2 else Path(sys.argv[1]).expanduser().resolve()
+
+# Fail closed on a target that cannot be validated. Without these guards a missing or empty
+# directory yields zero scripts, a "0 pass / 0 fail" tally and exit code 0 - a silent pass.
+if not ROOT.is_dir():
+    print(f"ERROR: script directory does not exist or is not a directory: {ROOT}")
+    sys.exit(1)
+
+TARGET_SCRIPTS = sorted(ROOT.glob("*.ps1"))
+if not TARGET_SCRIPTS:
+    print(f"ERROR: no *.ps1 scripts to validate in: {ROOT}")
+    sys.exit(1)
+
+print(f"validating {len(TARGET_SCRIPTS)} script(s) in {ROOT}")
 
 
 def strip_strings_and_comments(src: str) -> str:
@@ -89,7 +114,7 @@ def check(cond, label, detail=""):
 
 LIBRARY = "Iips-Common.ps1"
 
-for path in sorted(ROOT.glob("*.ps1")):
+for path in TARGET_SCRIPTS:
     is_library = path.name == LIBRARY
     script_name = path.name
     raw = path.read_text(encoding="utf-8")

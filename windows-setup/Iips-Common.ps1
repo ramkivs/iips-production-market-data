@@ -521,13 +521,87 @@ function Test-IipsIsListener {
 
 <#
 .SYNOPSIS
-    Returns the LISTENER row for a local port, or $null when the port is free.
+    Queries the TCP connection rows bound to a local port, distinguishing an empty result from an
+    actual query failure.
 
 .NOTES
-    Get-NetTCPConnection emits a non-terminating "No MSFT_NetTCPConnection objects found"
-    error when nothing matches. Under $ErrorActionPreference = 'Stop' that surfaces as an
-    exception, so it is caught explicitly and treated as "no listener" - an unused port must be
-    reported as free, not as a failure.
+    CORRECTION. The previous implementation passed -ErrorAction SilentlyContinue and wrapped the
+    call in try/catch, then treated BOTH outcomes as "no rows". That conflates two very different
+    facts:
+
+      * the query ran and nothing matched   -> the port is genuinely free
+      * the query itself failed (provider, CIM/WMI, permission, cmdlet absent) -> the port state
+        is UNKNOWN
+
+    Collapsing the second into the first reports a port as free when it was never successfully
+    inspected, which is the dangerous direction for a setup script: it can bind over a live
+    listener, or declare a port released when it is not.
+
+    This helper therefore queries with -ErrorAction Stop and CLASSIFIES the exception:
+
+      * a "not found" signal (the documented "No MSFT_NetTCPConnection objects found" error that
+        Get-NetTCPConnection raises when the filter matches nothing) is a SUCCESSFUL query with an
+        empty result, so the port is free;
+      * anything else is reported as Succeeded = $false, and callers fail closed.
+
+    Unrecognised error identities are deliberately classified as failures rather than as empty
+    results. A surprise must never be read as "free".
+
+.OUTPUTS
+    Hashtable: @{ Succeeded = [bool]; Rows = [array]; Reason = [string] }
+#>
+function Get-IipsTcpRowsForPort {
+    param([Parameter(Mandatory = $true)][int] $Port)
+
+    try {
+        # -ErrorAction Stop, not SilentlyContinue: a real failure must surface as an exception
+        # so it can be distinguished from an empty result.
+        $rows = @(Get-NetTCPConnection -LocalPort $Port -ErrorAction Stop)
+        return @{ Succeeded = $true; Rows = $rows; Reason = '' }
+    }
+    catch {
+        $errorId = ''
+        $category = ''
+        $message = ''
+        try { $errorId = "$($_.FullyQualifiedErrorId)" }
+        catch { $errorId = '' }
+        try { $category = "$($_.CategoryInfo.Category)" }
+        catch { $category = '' }
+        try { $message = "$($_.Exception.Message)" }
+        catch { $message = '' }
+
+        # The documented "nothing matched" signal, recognised by error identity, error category
+        # and message so that a single wording difference cannot turn a free port into UNKNOWN.
+        $isEmptyResult = $false
+        if ($errorId -like 'CmdletizationQuery_NotFound*') { $isEmptyResult = $true }
+        if ($errorId -eq 'NoMatchingInstances') { $isEmptyResult = $true }
+        if ($category -eq 'ObjectNotFound') { $isEmptyResult = $true }
+        if ($message -match 'No MSFT_NetTCPConnection objects found') { $isEmptyResult = $true }
+
+        if ($isEmptyResult) {
+            # Successful query, zero matches: the port is genuinely free.
+            return @{ Succeeded = $true; Rows = @(); Reason = '' }
+        }
+
+        # A genuine query failure. State must be UNKNOWN - never free.
+        $reason = "$errorId"
+        if ($reason.Length -eq 0) { $reason = 'unidentified error' }
+        if ($message.Length -gt 0) { $reason = "$reason - $message" }
+        return @{ Succeeded = $false; Rows = @(); Reason = $reason }
+    }
+}
+
+<#
+.SYNOPSIS
+    Returns the LISTENER row for a local port, or $null when the port is confirmed free.
+
+.NOTES
+    Throws when the port state cannot be determined, so an UNKNOWN state fails closed instead of
+    being mistaken for a free port.
+
+    Blank State, wildcard remote address and RemotePort = 0 handling lives in Test-IipsIsListener
+    and is unchanged: an explicit Listen state is definitive, an explicit non-Listen state is never
+    a listener, and a blank State falls back to the wildcard/zero remote endpoint test.
 
     The result is always normalised with @() because the cmdlet returns zero, one or many objects
     and PowerShell unrolls a single-element result into a scalar.
@@ -535,13 +609,12 @@ function Test-IipsIsListener {
 function Get-IipsPortOwner {
     param([Parameter(Mandatory = $true)][int] $Port)
 
-    $rows = @()
-    try {
-        $rows = @(Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue)
+    $query = Get-IipsTcpRowsForPort -Port $Port
+    if (-not $query.Succeeded) {
+        throw "UNKNOWN: could not determine whether port $Port is in use ($($query.Reason)). This is treated as a failure, not as a free port, because binding over an uninspected listener is unsafe."
     }
-    catch {
-        $rows = @()
-    }
+
+    $rows = @($query.Rows)
     if ($rows.Count -eq 0) { return $null }
 
     foreach ($r in $rows) {
@@ -557,18 +630,18 @@ function Get-IipsPortOwner {
 .NOTES
     Used for release verification: a port is only truly released when NOTHING is bound to it,
     which is a stronger condition than "no listener".
+
+    Throws when the count cannot be obtained. A release check that cannot be performed must not
+    report success, so an UNKNOWN state fails closed rather than being read as zero occupants.
 #>
 function Get-IipsPortOccupantCount {
     param([Parameter(Mandatory = $true)][int] $Port)
 
-    $rows = @()
-    try {
-        $rows = @(Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue)
+    $query = Get-IipsTcpRowsForPort -Port $Port
+    if (-not $query.Succeeded) {
+        throw "UNKNOWN: could not count the occupants of port $Port ($($query.Reason)). This is treated as a failure, not as a released port, because an unverified release check proves nothing."
     }
-    catch {
-        $rows = @()
-    }
-    return $rows.Count
+    return @($query.Rows).Count
 }
 
 function Assert-IipsPortFree {
