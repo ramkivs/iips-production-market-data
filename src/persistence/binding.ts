@@ -30,6 +30,21 @@ export interface ActiveOwner {
   readonly canonicalOwnerId: string;
 }
 
+/**
+ * D02 — prospective canonical-owner extension to the holdings domain
+ * (`IIPS-V3-G2-HOLDINGS-OWNER-BINDING-2026-11-06-01`, effective 2026-11-06).
+ *
+ * The holdings snapshot domain recognizes exactly one prospectively extended
+ * canonical owner (`owner-4dc756b3`) on the retained technical IPD tenant
+ * (`ipd-personal-local`). SAIRAM is display-only and is never authority; the
+ * IRR evidence tenant/carrier is not holdings authority. These constants grant
+ * no provisioning, migration, reassignment or operational authority: binding
+ * rows are resolved as stored, and any binding/membership that is not this
+ * exact pair fails closed. No existing data is reassigned.
+ */
+export const HOLDINGS_CANONICAL_OWNER_ID = 'owner-4dc756b3';
+export const HOLDINGS_TENANT_ID = 'ipd-personal-local';
+
 interface BindingRow {
   binding_id: string;
   principal_label: string;
@@ -121,4 +136,38 @@ export function resolveActiveBindingInCurrentTransaction(db: DatabaseSync): Acti
     tenantId: membership.tenant_id,
     canonicalOwnerId: membership.canonical_owner_id,
   };
+}
+
+function assertHoldingsOwner(owner: ActiveOwner): ActiveOwner {
+  // Prospective holdings authority is the exact D02 pair; anything else —
+  // including a well-formed binding for a different canonical owner or tenant,
+  // or the pre-extension S1 owner — fails closed with the same typed error a
+  // malformed binding produces. Nothing about the binding is disclosed.
+  if (owner.canonicalOwnerId !== HOLDINGS_CANONICAL_OWNER_ID || owner.tenantId !== HOLDINGS_TENANT_ID) {
+    throw new BindingInvalidError('the ACTIVE binding is not the authorized holdings owner binding');
+  }
+  return owner;
+}
+
+/**
+ * D02 holdings-domain resolution. Identical to {@link resolveActiveBinding}
+ * (fresh resolution per call, no cache, BEGIN IMMEDIATE serialization) with
+ * the additional prospective-ownership requirement: the sole ACTIVE
+ * binding/membership must be the canonical holdings owner on the retained
+ * technical tenant. Any other shape — absent, multiple, malformed, revoked or
+ * non-holdings owner — throws BindingAbsentError/BindingInvalidError and the
+ * caller fails closed.
+ */
+export function resolveActiveHoldingsBinding(db: DatabaseSync): ActiveOwner {
+  return assertHoldingsOwner(resolveActiveBinding(db));
+}
+
+/**
+ * D02 holdings-domain resolution inside a caller-held BEGIN IMMEDIATE.
+ * The caller must already hold the transaction on this same connection, which
+ * serializes this check with revocation and the protected mutation writes
+ * (revocation committed first wins; no cache, no default, no rebinding).
+ */
+export function resolveActiveHoldingsBindingInCurrentTransaction(db: DatabaseSync): ActiveOwner {
+  return assertHoldingsOwner(resolveActiveBindingInCurrentTransaction(db));
 }

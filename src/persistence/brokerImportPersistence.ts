@@ -12,6 +12,11 @@ import {
   type PortfolioContribution,
   type PortfolioSaveRequest,
   type PortfolioSummary,
+  type RevisionEntry,
+  type SnapshotDisposition,
+  type SnapshotReceipt,
+  type SnapshotSourceEvidence,
+  type SnapshotStoreEffect,
 } from './portfolio_store.js';
 import { createGovernedBrokerObservationResolver } from '../identity/broker_observation_resolver.js';
 import type { BrokerObservationResolver } from '../identity/broker_observation_resolver.js';
@@ -350,6 +355,308 @@ export function reconcileBrokerImportByRead(
     return writer.contributions(owner, portfolioId).some((row) => row.contributionId === contentDigest)
       ? 'COMMITTED'
       : 'NOT_COMMITTED';
+  } catch {
+    return 'UNRESOLVED';
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * D03 — consumer contract 2.0.0 / frame v=2 snapshot service
+ *
+ * Same pipeline shape as the v1 broker import: closed request validation,
+ * governed identity resolution over source observations, IPD-computed
+ * per-row lineage and aggregate provenance digest (never a wire assertion),
+ * then the protected store transaction. All live product writes refuse
+ * before reaching here; these primitives run in isolated synthetic fixtures.
+ * ------------------------------------------------------------------ */
+
+/** A v2 observed holding row: the wire shape carries no canonical identity and no lineage claim. */
+export interface SnapshotObservedHolding {
+  readonly symbol: string;
+  readonly isin?: string;
+  readonly exchange?: 'NSE' | 'BSE';
+  readonly quantity: number;
+  readonly averageBuyPrice: number;
+  readonly currentPrice: number;
+  readonly marketValue: number;
+  readonly weightPercentage: number;
+  readonly active: boolean;
+  readonly sourceBroker: string;
+}
+
+export interface SnapshotSaveV2Request {
+  readonly portfolioId: string;
+  readonly expectedRevision: number;
+  readonly holdings: readonly SnapshotObservedHolding[];
+  /** Caller evidence digest; the contribution identity (never proof of authority). */
+  readonly contentDigest: string;
+  readonly broker: string;
+  readonly sourceEvidence: SnapshotSourceEvidence;
+}
+
+export type SnapshotV2RefusalCode =
+  | 'REFUSED_UNRESOLVED_IDENTITY'
+  | 'REFUSED_STORE_GUARD'
+  | 'WRITE_NOT_AUTHORIZED'
+  | 'INVALID_REQUEST'
+  | 'REVISION_CONFLICT'
+  | 'RESOURCE_UNAVAILABLE'
+  | 'UNAVAILABLE';
+
+export interface SnapshotV2Success {
+  readonly ok: true;
+  readonly disposition: SnapshotDisposition;
+  readonly revision: number;
+  readonly noOp: boolean;
+  readonly storeEffect: SnapshotStoreEffect;
+  readonly holdingsPersisted: number;
+  readonly totalMarketValue: number;
+  readonly contributions: number;
+  /**
+   * Contract 2.0.0 `SaveReceipt.durability`. Both success paths acknowledge
+   * state that is committed to the designated durable local store (COMMIT, or
+   * the settled ledger read behind ALREADY_IMPORTED_NO_OP), so `DURABLE` /
+   * `true` is the only supportable claim; `SESSION_ONLY` is never emitted by
+   * this service. Asserted only in isolated synthetic fixtures; the product
+   * dispatcher never emits a v2 write frame.
+   */
+  readonly durability: 'DURABLE';
+  readonly durable: true;
+  readonly message: string;
+}
+
+export interface SnapshotV2Refusal {
+  readonly ok: false;
+  readonly code: SnapshotV2RefusalCode;
+  readonly message: string;
+  readonly storeEffect: 'NONE';
+  readonly refusedHoldings?: readonly BrokerImportRefusedHolding[];
+  readonly revision?: number;
+}
+
+export interface SnapshotV2OutcomeUnknown {
+  readonly ok: 'unknown';
+  readonly code: 'OUTCOME_UNKNOWN';
+  readonly message: string;
+  readonly storeEffect: 'OUTCOME_UNKNOWN';
+  readonly portfolioId: string;
+  readonly contentDigest: string;
+}
+
+export type SnapshotV2Outcome = SnapshotV2Success | SnapshotV2Refusal | SnapshotV2OutcomeUnknown;
+
+/** Narrow writer surface used by the v2 service and its fixtures. */
+export interface HoldingsSnapshotWriter {
+  saveSnapshotV2(owner: OwnerRef, request: {
+    readonly portfolioId: string;
+    readonly expectedRevision: number;
+    readonly holdings: HoldingInput[];
+    readonly contentDigest: string;
+    readonly provenanceDigest: string;
+    readonly broker: string;
+    readonly sourceEvidence: SnapshotSourceEvidence;
+  }): SnapshotReceipt;
+  contributionsValidated(owner: OwnerRef, portfolioId: string): PortfolioContribution[];
+  revisions(owner: OwnerRef, portfolioId: string): RevisionEntry[];
+}
+
+const SNAPSHOT_ROW_KEYS: readonly string[] = [
+  'symbol',
+  'isin',
+  'exchange',
+  'quantity',
+  'averageBuyPrice',
+  'currentPrice',
+  'marketValue',
+  'weightPercentage',
+  'active',
+  'sourceBroker',
+];
+
+function rowLineageDigestOf(holding: SnapshotObservedHolding): string {
+  // IPD-computed per-row lineage over source observations and nothing else:
+  // identical inputs yield identical lineage, and no caller value can assert it.
+  const canonical = [
+    `${holding.symbol}|${holding.isin ?? ''}|${holding.exchange ?? ''}`,
+    `${holding.quantity}|${holding.averageBuyPrice}|${holding.currentPrice}`,
+    `${holding.marketValue}|${holding.weightPercentage}|${holding.active}|${holding.sourceBroker}`,
+  ].join('\n');
+  return createHash('sha256').update(canonical, 'utf8').digest('hex');
+}
+
+function validateSnapshotV2Shape(request: SnapshotSaveV2Request): string | undefined {
+  if (!request || typeof request !== 'object' || Array.isArray(request)) return 'The snapshot request is missing.';
+  for (const key of Object.keys(request)) {
+    if (!['portfolioId', 'expectedRevision', 'holdings', 'contentDigest', 'broker', 'sourceEvidence'].includes(key)) {
+      return `The snapshot request carries an unexpected key: ${key}.`;
+    }
+  }
+  const identityKeys = findCallerSuppliedIdentityKeys(request);
+  if (identityKeys.length) return `Caller-supplied identity or authority keys are refused: ${identityKeys.join(', ')}.`;
+  if (typeof request.portfolioId !== 'string' || !request.portfolioId.trim()) return 'A portfolio id is required.';
+  if (!Number.isSafeInteger(request.expectedRevision) || request.expectedRevision < 1) {
+    return 'A safe integer expectedRevision >= 1 is required.';
+  }
+  if (!Array.isArray(request.holdings) || request.holdings.length === 0) return 'The snapshot carries no holdings.';
+  for (const holding of request.holdings) {
+    if (!holding || typeof holding !== 'object' || Array.isArray(holding)) return 'A holding row is malformed.';
+    for (const key of Object.keys(holding)) {
+      if (!SNAPSHOT_ROW_KEYS.includes(key)) return `A holding row carries an unexpected key: ${key}.`;
+    }
+  }
+  if (typeof request.contentDigest !== 'string' || !/^[a-f0-9]{64}$/.test(request.contentDigest)) {
+    return 'contentDigest must be a lowercase 64-hex digest.';
+  }
+  if (typeof request.broker !== 'string' || !request.broker.trim()) return 'A non-blank broker is required.';
+  const evidence = request.sourceEvidence;
+  if (!evidence || typeof evidence !== 'object' || Array.isArray(evidence)) return 'sourceEvidence is required.';
+  for (const key of Object.keys(evidence)) {
+    if (!['fileName', 'sourceBroker', 'importedAt', 'evidenceRecordDigest'].includes(key)) {
+      return `sourceEvidence carries an unexpected key: ${key}.`;
+    }
+  }
+  if (typeof evidence.fileName !== 'string' || !evidence.fileName.trim()) return 'sourceEvidence.fileName is required.';
+  if (typeof evidence.sourceBroker !== 'string' || !evidence.sourceBroker.trim()) return 'sourceEvidence.sourceBroker is required.';
+  if (typeof evidence.evidenceRecordDigest !== 'string' || !/^[a-f0-9]{64}$/.test(evidence.evidenceRecordDigest)) {
+    return 'sourceEvidence.evidenceRecordDigest must be a lowercase 64-hex digest.';
+  }
+  if (evidence.sourceBroker !== request.broker) return 'broker and sourceEvidence.sourceBroker must match.';
+  return undefined;
+}
+
+function snapshotRefusal(
+  code: SnapshotV2RefusalCode,
+  message: string,
+  refusedHoldings?: readonly BrokerImportRefusedHolding[],
+): SnapshotV2Refusal {
+  return { ok: false, code, message, storeEffect: 'NONE', ...(refusedHoldings ? { refusedHoldings } : {}) };
+}
+
+/**
+ * v2 `portfolio.save`: complete-snapshot MERGE. Outcome vocabulary is exact —
+ * success (post-COMMIT receipt), typed authorized refusal (zero domain
+ * delta), or OUTCOME_UNKNOWN (lost acknowledgement; reconcile by exact
+ * authorized readback, never by automatic resend).
+ */
+export function persistHoldingsSnapshotV2(
+  writer: HoldingsSnapshotWriter,
+  owner: OwnerRef,
+  request: SnapshotSaveV2Request,
+  resolver: BrokerObservationResolver = createGovernedBrokerObservationResolver(),
+): SnapshotV2Outcome {
+  const invalidShape = validateSnapshotV2Shape(request);
+  if (invalidShape) return snapshotRefusal('INVALID_REQUEST', invalidShape);
+
+  // Server-side lineage construction: per-row lineage is computed from the
+  // source observations; the caller cannot assert it.
+  const observedWithLineage: BrokerImportHolding[] = request.holdings.map((holding) => ({
+    ...holding,
+    lineageDigest: rowLineageDigestOf(holding),
+  }));
+  const brokerRequest: BrokerImportRequest = {
+    portfolioId: request.portfolioId,
+    expectedRevision: request.expectedRevision,
+    holdings: observedWithLineage,
+    contentDigest: request.contentDigest,
+    fileName: request.sourceEvidence.fileName,
+    sourceBroker: request.broker,
+    importedAt: request.sourceEvidence.importedAt,
+    mode: 'MERGE',
+  };
+  const invalid = validateRequest(brokerRequest);
+  if (invalid) return snapshotRefusal('INVALID_REQUEST', invalid);
+
+  const { resolved, gate } = resolveHoldings(brokerRequest, resolver);
+  if (!gate.saveable || !resolved) {
+    return snapshotRefusal(
+      'REFUSED_UNRESOLVED_IDENTITY',
+      gate.disabledReason ?? 'The snapshot has no single canonical identity per row.',
+      gate.refusedHoldings,
+    );
+  }
+
+  const holdings = mapBrokerImportHoldings(resolved);
+  const provenanceDigest = computeBrokerImportProvenance(brokerRequest);
+  try {
+    const receipt = writer.saveSnapshotV2(owner, {
+      portfolioId: request.portfolioId,
+      expectedRevision: request.expectedRevision,
+      holdings,
+      contentDigest: request.contentDigest,
+      provenanceDigest,
+      broker: request.broker,
+      sourceEvidence: request.sourceEvidence,
+    });
+    return {
+      ok: true,
+      disposition: receipt.disposition,
+      revision: receipt.revision,
+      noOp: receipt.noOp,
+      storeEffect: receipt.storeEffect,
+      holdingsPersisted: receipt.holdingsPersisted,
+      totalMarketValue: receipt.totalMarketValue,
+      contributions: receipt.contributions,
+      durability: 'DURABLE',
+      durable: true,
+      message: receipt.noOp
+        ? 'This import was already committed; state was preserved without duplication.'
+        : 'The snapshot was committed as the next immutable revision.',
+    };
+  } catch (error) {
+    if (error instanceof CommitOutcomeUnknownError) {
+      return {
+        ok: 'unknown',
+        code: 'OUTCOME_UNKNOWN',
+        message: 'The transaction acknowledgement was lost; reconcile by exact authorized readback. Do not retry automatically.',
+        storeEffect: 'OUTCOME_UNKNOWN',
+        portfolioId: request.portfolioId,
+        contentDigest: request.contentDigest,
+      };
+    }
+    if (error instanceof WriteNotAuthorizedError) {
+      return snapshotRefusal('WRITE_NOT_AUTHORIZED', 'The write gate refused the write; no success response was produced.');
+    }
+    if (error instanceof RevisionConflictError) return snapshotRefusal('REVISION_CONFLICT', error.message);
+    if (error instanceof ResourceUnavailableError) return snapshotRefusal('RESOURCE_UNAVAILABLE', 'The requested resource is not available.');
+    if (error instanceof InvalidPortfolioRequestError) return snapshotRefusal('INVALID_REQUEST', error.message);
+    // Lock timeout / busy / any other store failure: no retry, no session
+    // fallback; generic unavailability only.
+    return snapshotRefusal('UNAVAILABLE', 'The request could not be completed.');
+  }
+}
+
+export type SnapshotV2Reconciliation = 'COMMITTED' | 'NOT_COMMITTED' | 'UNRESOLVED';
+
+/**
+ * Exact authorized readback for a v2 outcome left UNKNOWN. When the expected
+ * successor revision is supplied, BOTH the contribution ledger and the
+ * revision history must agree: contribution present + successor revision
+ * present -> COMMITTED; both absent -> NOT_COMMITTED; disagreement or a read
+ * failure -> UNRESOLVED. A receipt alone is never proof; absence is not a
+ * substitute for a settled, consistent read, and an unsettled writer is never
+ * second-guessed into a retry.
+ */
+export function reconcileSnapshotV2ByRead(
+  writer: Pick<HoldingsSnapshotWriter, 'contributionsValidated' | 'revisions'>,
+  owner: OwnerRef,
+  portfolioId: string,
+  contentDigest: string,
+  expectedSuccessorRevision?: number,
+): SnapshotV2Reconciliation {
+  try {
+    const contributions = writer.contributionsValidated(owner, portfolioId);
+    const contributed = contributions.some((row) => row.contributionId === contentDigest);
+    if (expectedSuccessorRevision === undefined) {
+      return contributed ? 'COMMITTED' : 'NOT_COMMITTED';
+    }
+    if (!Number.isSafeInteger(expectedSuccessorRevision) || expectedSuccessorRevision < 2) {
+      return 'UNRESOLVED';
+    }
+    const revisions = writer.revisions(owner, portfolioId);
+    const successorPresent = revisions.some((row) => row.revision === expectedSuccessorRevision);
+    if (contributed && successorPresent) return 'COMMITTED';
+    if (!contributed && !successorPresent) return 'NOT_COMMITTED';
+    return 'UNRESOLVED';
   } catch {
     return 'UNRESOLVED';
   }
