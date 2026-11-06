@@ -120,3 +120,14 @@ The PA act §4 names a remediation branch `arena/f839befc-iips-review-recovered`
 ---
 
 *Prepared as reconstruction evidence on 2026-11-06. The implementing agent is not the original author of record `4b126987…`, and no claim is made that this code is that commit. SQLite timestamps, fixture IDs and randomized UUIDs differ by construction; the logical content is what §3–§4 describe.*
+
+---
+
+## 10. Amendment — 2026-11-06T12:35Z: PR #129 post-merge static deviation corrections
+
+The read-only investigation of merged PR #129 confirmed two static deviations against the effective D02/D03/D05 decisions. They were corrected on branch `arena/cf50d9d8-iips-production-market-data` (this document is otherwise frozen; §4 file digests describe the originally published tree only):
+
+1. **Stale-revision precedence** — domain, provenance and identity rejection could precede stale-revision detection. The store now splits phase-A framing/security from phase-B domain/provenance/identity validation, runs the stale check first inside the serialized transaction, and the v2 service refuses stale requests from an authorized read-only probe **before** lineage-adjacent domain validation and the identity gate (store still re-checks at commit time).
+2. **UNKNOWN/lost-acknowledgement reconciliation** — `reconcileSnapshotV2ByRead` now requires a zero-write writer-settlement probe (`BEGIN IMMEDIATE` + immediate `ROLLBACK`), two consistent read passes, and exact correspondence of contribution identity + stored digest copy + complete provenance and (when supplied) of the successor revision (`MERGE`, `holdingsCount >= 1`, finite non-negative value, 64-hex provenance). Absent + settled → `NOT_COMMITTED`; anything unproven → `UNRESOLVED`. No retry anywhere.
+
+Regression tests added: `V2-C05`, `V2-R06`. Guarded suite at amendment time: **1056 executed — 1055 passed — 0 failed — 1 skipped**. Build exit 0; `test:package-consumer` PASS. Full details, digests and non-authorizations: `evidence/cross-repository/IIPS_V3_D02_D03_D05_PR129_DEVIATION_CORRECTIONS_2026-11-06.md`. The contract, receipt schema, v1 semantics, cap, IRR v1 consumer and all operational boundaries are unchanged; H01–H12 remain **NOT QUALIFIED**.

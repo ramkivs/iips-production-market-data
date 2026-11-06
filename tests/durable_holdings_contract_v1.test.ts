@@ -560,4 +560,229 @@ describe('durable holdings / v2 contract (isolated synthetic fixture)', () => {
       await handle.stop();
     }
   });
+
+  it('V2-C05: stale-revision precedence — REVISION_CONFLICT precedes domain, provenance and identity rejection', () => {
+    const db = freshDb();
+    seedHoldingsBinding(db);
+    const store = new DurablePortfolioStore(db);
+    const created = store.createEmptySnapshot(OWNER, {});
+    const first = persistHoldingsSnapshotV2(store, OWNER, snapshotRequest({ portfolioId: created.portfolioId }), resolvedResolver);
+    assert.equal(first.ok, true);
+
+    const storeHoldings = () => [
+      {
+        symbol: 'AAA',
+        companyId: 'company-AAA',
+        quantity: 10,
+        averageBuyPrice: 100,
+        currentPrice: 110,
+        marketValue: 1100,
+        weightPercentage: 60,
+        active: true,
+        sourceBroker: 'broker-a',
+        lineageDigest: 'd'.repeat(64),
+        identityStatus: 'RESOLVED',
+        resolutionDisposition: 'CANONICAL_P04',
+      },
+      {
+        symbol: 'BBB',
+        companyId: 'company-BBB',
+        quantity: 4,
+        averageBuyPrice: 100,
+        currentPrice: 100,
+        marketValue: 400,
+        weightPercentage: 40,
+        active: true,
+        sourceBroker: 'broker-a',
+        lineageDigest: 'e'.repeat(64),
+        identityStatus: 'RESOLVED',
+        resolutionDisposition: 'CANONICAL_P04',
+      },
+    ];
+    const storeRequest = (patch: Record<string, unknown> = {}) => ({
+      portfolioId: created.portfolioId,
+      expectedRevision: 99,
+      holdings: storeHoldings(),
+      contentDigest: 'f'.repeat(64),
+      provenanceDigest: 'c'.repeat(64),
+      broker: 'broker-a',
+      sourceEvidence: {
+        fileName: 'fixture-2026-11-06.csv',
+        sourceBroker: 'broker-a',
+        importedAt: NOW,
+        evidenceRecordDigest: 'b'.repeat(64),
+      },
+      ...patch,
+    });
+
+    // A. stale + domain-invalid (NaN) -> REVISION_CONFLICT at the store boundary.
+    assert.throws(
+      () => store.saveSnapshotV2(OWNER, storeRequest({
+        holdings: storeHoldings().map((h, i) => (i === 0 ? { ...h, marketValue: Number.NaN } : h)),
+      })),
+      RevisionConflictError,
+    );
+    // B. stale + provenance-invalid (importedAt not round-trippable) -> REVISION_CONFLICT.
+    assert.throws(
+      () => store.saveSnapshotV2(OWNER, storeRequest({
+        sourceEvidence: { ...storeRequest().sourceEvidence, importedAt: '2026-11-06 03:30:00' },
+      })),
+      RevisionConflictError,
+    );
+    // C. stale + identity-field blank -> REVISION_CONFLICT.
+    assert.throws(
+      () => store.saveSnapshotV2(OWNER, storeRequest({
+        holdings: storeHoldings().map((h, i) => (i === 0 ? { ...h, identityStatus: '' } : h)),
+      })),
+      RevisionConflictError,
+    );
+    // D. stale + lineage digest malformed -> REVISION_CONFLICT.
+    assert.throws(
+      () => store.saveSnapshotV2(OWNER, storeRequest({
+        holdings: storeHoldings().map((h, i) => (i === 0 ? { ...h, lineageDigest: 'zz'.repeat(32) } : h)),
+      })),
+      RevisionConflictError,
+    );
+    // E. service boundary: stale + domain-invalid -> REVISION_CONFLICT refusal, zero delta.
+    const serviceDomain = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({
+        portfolioId: created.portfolioId,
+        expectedRevision: 99,
+        holdings: observedHoldings().map((h, i) => (i === 0 ? { ...h, marketValue: Number.NaN } : h)),
+      }),
+      resolvedResolver,
+    );
+    assert.equal(serviceDomain.ok, false);
+    if (!serviceDomain.ok) assert.equal(serviceDomain.code, 'REVISION_CONFLICT');
+    // F. service boundary: stale + unresolved identity -> REVISION_CONFLICT (identity gate runs after stale).
+    const serviceIdentity = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({ portfolioId: created.portfolioId, expectedRevision: 99 }),
+      unresolvedResolver,
+    );
+    assert.equal(serviceIdentity.ok, false);
+    if (!serviceIdentity.ok) assert.equal(serviceIdentity.code, 'REVISION_CONFLICT');
+    // G. service boundary: stale + broker/evidence mismatch -> REVISION_CONFLICT.
+    const serviceProvenance = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({
+        portfolioId: created.portfolioId,
+        expectedRevision: 99,
+        sourceEvidence: { ...snapshotRequest().sourceEvidence, sourceBroker: 'broker-b' },
+      }),
+      resolvedResolver,
+    );
+    assert.equal(serviceProvenance.ok, false);
+    if (!serviceProvenance.ok) assert.equal(serviceProvenance.code, 'REVISION_CONFLICT');
+    // G2. stale + ISO-8601 offset instant that is NOT round-trippable -> REVISION_CONFLICT.
+    const serviceInstant = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({
+        portfolioId: created.portfolioId,
+        expectedRevision: 99,
+        sourceEvidence: { ...snapshotRequest().sourceEvidence, importedAt: '2026-11-06T03:30:00+00:00' },
+      }),
+      resolvedResolver,
+    );
+    assert.equal(serviceInstant.ok, false);
+    if (!serviceInstant.ok) assert.equal(serviceInstant.code, 'REVISION_CONFLICT');
+
+    // H. framing/security still precede stale: caller-supplied identity key + stale -> INVALID_REQUEST (never REVISION_CONFLICT).
+    const framed = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({ portfolioId: created.portfolioId, expectedRevision: 99, companyId: 'company-evil' } as never),
+      resolvedResolver,
+    );
+    assert.equal(framed.ok, false);
+    if (!framed.ok) assert.equal(framed.code, 'INVALID_REQUEST');
+    // I. malformed digest + stale -> INVALID_REQUEST (framing precedes stale).
+    const digest = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({ portfolioId: created.portfolioId, expectedRevision: 99, contentDigest: 'not-a-digest' }),
+      resolvedResolver,
+    );
+    assert.equal(digest.ok, false);
+    if (!digest.ok) assert.equal(digest.code, 'INVALID_REQUEST');
+    // J. expectedRevision 0 + stale-impossible request -> INVALID_REQUEST (framing precedes stale).
+    const zero = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({ portfolioId: created.portfolioId, expectedRevision: 0 }),
+      resolvedResolver,
+    );
+    assert.equal(zero.ok, false);
+    if (!zero.ok) assert.equal(zero.code, 'INVALID_REQUEST');
+
+    // Zero domain delta after every refused path.
+    assert.deepEqual(domainCounts(db), { portfolios: 1, revisions: 2, holdings: 2, contributions: 1 });
+
+    // K. current revision + domain-invalid -> INVALID_REQUEST (NOT REVISION_CONFLICT), zero delta.
+    const currentDomain = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({
+        portfolioId: created.portfolioId,
+        expectedRevision: 2,
+        contentDigest: '1'.repeat(64),
+        holdings: observedHoldings().map((h, i) => (i === 0 ? { ...h, marketValue: Number.NaN } : h)),
+      }),
+      resolvedResolver,
+    );
+    assert.equal(currentDomain.ok, false);
+    if (!currentDomain.ok) assert.equal(currentDomain.code, 'INVALID_REQUEST');
+    // L. current revision + unresolved identity -> REFUSED_UNRESOLVED_IDENTITY.
+    const currentIdentity = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({ portfolioId: created.portfolioId, expectedRevision: 2, contentDigest: '2'.repeat(64) }),
+      unresolvedResolver,
+    );
+    assert.equal(currentIdentity.ok, false);
+    if (!currentIdentity.ok) assert.equal(currentIdentity.code, 'REFUSED_UNRESOLVED_IDENTITY');
+    // M. current revision + already-committed contribution digest + INVALID payload -> INVALID_REQUEST (never a success no-op for an unverifiable payload).
+    const replayed = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({
+        portfolioId: created.portfolioId,
+        expectedRevision: 2,
+        contentDigest: 'a'.repeat(64),
+        holdings: observedHoldings().map((h, i) => (i === 0 ? { ...h, marketValue: Number.NaN } : h)),
+      }),
+      resolvedResolver,
+    );
+    assert.equal(replayed.ok, false);
+    if (!replayed.ok) assert.equal(replayed.code, 'INVALID_REQUEST');
+    // M2. same offset-instant boundary at CURRENT revision -> INVALID_REQUEST (provenance strictness preserved post-stale).
+    const currentInstant = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({
+        portfolioId: created.portfolioId,
+        expectedRevision: 2,
+        contentDigest: '3'.repeat(64),
+        sourceEvidence: { ...snapshotRequest().sourceEvidence, importedAt: '2026-11-06T03:30:00+00:00' },
+      }),
+      resolvedResolver,
+    );
+    assert.equal(currentInstant.ok, false);
+    if (!currentInstant.ok) assert.equal(currentInstant.code, 'INVALID_REQUEST');
+    // N. and at the store boundary the duplicate-no-op-before-cap rule is preserved for valid payloads at current revision.
+    const noop = persistHoldingsSnapshotV2(
+      store,
+      OWNER,
+      snapshotRequest({ portfolioId: created.portfolioId, expectedRevision: 2, contentDigest: 'a'.repeat(64) }),
+      resolvedResolver,
+    );
+    assert.equal(noop.ok, true);
+    if (noop.ok) assert.equal(noop.disposition, 'ALREADY_IMPORTED_NO_OP');
+    assert.deepEqual(domainCounts(db), { portfolios: 1, revisions: 2, holdings: 2, contributions: 1 });
+  });
 });
