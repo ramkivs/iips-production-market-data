@@ -1,0 +1,33 @@
+{
+  "task": "DHAN-P7",
+  "generatedAtUtc": "2026-11-06T05:04:30.557Z",
+  "source": {
+    "url": "https://images.dhan.co/api-data/api-scrip-master-detailed.csv",
+    "retrievedAtUtc": "2026-11-06T05:04:30.439Z",
+    "httpStatus": null,
+    "contentType": null,
+    "contentLength": null,
+    "rawSha256": null,
+    "byteSize": null,
+    "ok": false,
+    "error": "TypeError: fetch failed"
+  },
+  "parserSchemaError": "empty CSV: no header row",
+  "observedHeaders": [],
+  "totalRows": 0,
+  "equityCandidates": 0,
+  "qualified": 0,
+  "counts": {
+    "QUALIFIED": 0,
+    "REJECTED_SCHEMA": 0,
+    "REJECTED_NOT_EQUITY": 0,
+    "REJECTED_INVALID_FIELD": 0,
+    "REJECTED_NO_P04_CORRESPONDENCE": 0,
+    "REJECTED_AMBIGUOUS_IDENTITY": 0,
+    "DUPLICATE_IDENTITY": 0,
+    "CONFLICTING_PROVIDER_ID": 0
+  },
+  "coverageByExchangeSeries": {},
+  "registryEntries": [],
+  "records": []
+}
