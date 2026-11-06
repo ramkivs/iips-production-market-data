@@ -11,11 +11,35 @@
 import type { Socket } from 'node:net';
 
 export const IPC_PROTOCOL_VERSION = 1;
+export const IPC_PROTOCOL_VERSION_V2 = 2;
 export const IPC_LENGTH_PREFIX_BYTES = 4;
 export const IPC_REQUEST_MAX_BYTES = 64 * 1024;
 export const IPC_RESPONSE_MAX_BYTES = 256 * 1024;
 export const IPC_MAX_SCAN_DEPTH = 12;
 const DIAGNOSTIC_SINK_LIMIT = 256;
+
+export type IpcV2Operation =
+  | 'portfolio.list'
+  | 'portfolio.get'
+  | 'portfolio.revisions'
+  | 'portfolio.create'
+  | 'portfolio.save';
+
+/**
+ * D03 — closed v2 operation set (consumer contract 2.0.0 / frame v=2).
+ * `portfolio.reset` and `portfolio.delete` are deliberately absent: they are
+ * not part of the adopted v2 contract and a v2 frame naming either is
+ * refused as an unknown operation. v1 operations are untouched.
+ */
+export const IPC_V2_OPERATIONS: readonly IpcV2Operation[] = [
+  'portfolio.list',
+  'portfolio.get',
+  'portfolio.revisions',
+  'portfolio.create',
+  'portfolio.save',
+];
+export const IPC_V2_WRITE_OPERATIONS: readonly IpcV2Operation[] = ['portfolio.create', 'portfolio.save'];
+export const IPC_V2_READ_OPERATIONS: readonly IpcV2Operation[] = ['portfolio.list', 'portfolio.get', 'portfolio.revisions'];
 
 export type IpcOperation =
   | 'portfolio.list'
@@ -134,6 +158,15 @@ export interface RequestEnvelope {
   requestId?: string;
 }
 
+export interface RequestEnvelopeV2 {
+  v: 2;
+  op: IpcV2Operation;
+  payload?: Record<string, unknown>;
+  requestId?: string;
+}
+
+export type AnyRequestEnvelope = RequestEnvelope | RequestEnvelopeV2;
+
 export function encodeResponse(frame: Record<string, unknown>): Buffer {
   const body = Buffer.from(JSON.stringify(frame), 'utf8');
   if (body.byteLength > IPC_RESPONSE_MAX_BYTES) {
@@ -144,9 +177,9 @@ export function encodeResponse(frame: Record<string, unknown>): Buffer {
   return Buffer.concat([prefix, body]);
 }
 
-export function classAFrame(op: string, outcome: ClassAOutcome, requestId: string | undefined, detail?: string): Buffer {
+export function classAFrame(op: string, outcome: ClassAOutcome, requestId: string | undefined, detail?: string, version: 1 | 2 = IPC_PROTOCOL_VERSION): Buffer {
   return encodeResponse({
-    v: IPC_PROTOCOL_VERSION,
+    v: version,
     ok: false,
     op,
     ...(requestId ? { requestId } : {}),
@@ -155,9 +188,9 @@ export function classAFrame(op: string, outcome: ClassAOutcome, requestId: strin
   });
 }
 
-export function successFrame(op: IpcOperation, result: unknown, requestId: string | undefined): Buffer {
+export function successFrame(op: IpcOperation | IpcV2Operation, result: unknown, requestId: string | undefined, version: 1 | 2 = IPC_PROTOCOL_VERSION): Buffer {
   return encodeResponse({
-    v: IPC_PROTOCOL_VERSION,
+    v: version,
     ok: true,
     op,
     ...(requestId ? { requestId } : {}),
@@ -170,7 +203,7 @@ export function successFrame(op: IpcOperation, result: unknown, requestId: strin
  * needed. A declared length over the cap, a truncated body or trailing bytes
  * after the first frame are Class P protocol violations.
  */
-export function parseSingleFrame(buffer: Buffer): { envelope: RequestEnvelope; totalLength: number } | null {
+export function parseSingleFrame(buffer: Buffer): { envelope: AnyRequestEnvelope; totalLength: number } | null {
   if (buffer.byteLength < IPC_LENGTH_PREFIX_BYTES) return null;
   const declared = buffer.readUInt32BE(0);
   if (declared > IPC_REQUEST_MAX_BYTES) {
@@ -202,8 +235,15 @@ export function parseSingleFrame(buffer: Buffer): { envelope: RequestEnvelope; t
       throw new ClassPError('MALFORMED_FRAME', `unexpected envelope key: ${key}`);
     }
   }
-  if (record.v !== IPC_PROTOCOL_VERSION) {
+  if (record.v !== IPC_PROTOCOL_VERSION && record.v !== IPC_PROTOCOL_VERSION_V2) {
     throw new ClassPError('PROTOCOL_VERSION_UNSUPPORTED', `unsupported protocol version: ${String(record.v)}`);
+  }
+  if (record.v === IPC_PROTOCOL_VERSION_V2) {
+    // v2 is a separate, explicitly closed versioned surface; v1 below is
+    // untouched. The v2 validator is structural (types, ranges, key closure);
+    // semantic/domain rules are enforced again at the store/service layer.
+    validateV2Envelope(record);
+    return { envelope: record as unknown as RequestEnvelopeV2, totalLength };
   }
   if (typeof record.op !== 'string' || !(IPC_OPERATIONS as readonly string[]).includes(record.op)) {
     throw new ClassPError('UNKNOWN_OPERATION', `operation outside the closed v1 set: ${String(record.op)}`);
@@ -215,6 +255,147 @@ export function parseSingleFrame(buffer: Buffer): { envelope: RequestEnvelope; t
     throw new ClassPError('MALFORMED_FRAME', 'requestId must be a string');
   }
   return { envelope: record as unknown as RequestEnvelope, totalLength };
+}
+
+/* ---------------------------------------------------- v2 validation */
+
+const V2_HEX_64 = /^[a-f0-9]{64}$/;
+const V2_MAX_SAFE_INTEGER = 9007199254740991;
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function refuseV2(message: string): never {
+  throw new ClassPError('MALFORMED_FRAME', message);
+}
+
+function v2Keys(record: Record<string, unknown>, allowed: readonly string[], shape: string): void {
+  for (const key of Object.keys(record)) {
+    if (!allowed.includes(key)) {
+      refuseV2(`${shape} carries an unexpected key: ${key}`);
+    }
+  }
+}
+
+function v2NonEmptyString(value: unknown, field: string): string {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    refuseV2(`${field} must be a non-blank string`);
+  }
+  return value;
+}
+
+function v2FiniteNumber(value: unknown, field: string, min: number, max: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    refuseV2(`${field} must be a finite number`);
+  }
+  if (value < min || value > max) {
+    refuseV2(`${field} is out of range`);
+  }
+  return value;
+}
+
+function v2Digest(value: unknown, field: string): string {
+  if (typeof value !== 'string' || !V2_HEX_64.test(value)) {
+    refuseV2(`${field} must be a lowercase 64-hex digest`);
+  }
+  return value;
+}
+
+function isUtcIsoInstant(value: string): boolean {
+  return Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
+}
+
+function validateV2ObservedHolding(value: unknown, index: number): void {
+  const shape = `holdings[${index}]`;
+  if (!isPlainObject(value)) refuseV2(`${shape} must be an object`);
+  v2Keys(
+    value,
+    ['symbol', 'isin', 'exchange', 'quantity', 'averageBuyPrice', 'currentPrice', 'marketValue', 'weightPercentage', 'active', 'sourceBroker'],
+    shape,
+  );
+  for (const field of ['symbol', 'quantity', 'averageBuyPrice', 'currentPrice', 'marketValue', 'weightPercentage', 'active', 'sourceBroker']) {
+    if (!(field in value)) refuseV2(`${shape} is missing required field ${field}`);
+  }
+  v2NonEmptyString(value.symbol, `${shape}.symbol`);
+  if (value.isin !== undefined) v2NonEmptyString(value.isin, `${shape}.isin`);
+  if (value.exchange !== undefined && value.exchange !== 'NSE' && value.exchange !== 'BSE') {
+    refuseV2(`${shape}.exchange must be NSE or BSE`);
+  }
+  const quantity = v2FiniteNumber(value.quantity, `${shape}.quantity`, 0, V2_MAX_SAFE_INTEGER);
+  v2FiniteNumber(value.averageBuyPrice, `${shape}.averageBuyPrice`, 0, V2_MAX_SAFE_INTEGER);
+  v2FiniteNumber(value.currentPrice, `${shape}.currentPrice`, 0, V2_MAX_SAFE_INTEGER);
+  v2FiniteNumber(value.marketValue, `${shape}.marketValue`, 0, V2_MAX_SAFE_INTEGER);
+  v2FiniteNumber(value.weightPercentage, `${shape}.weightPercentage`, 0, 100);
+  if (typeof value.active !== 'boolean') refuseV2(`${shape}.active must be a boolean`);
+  v2NonEmptyString(value.sourceBroker, `${shape}.sourceBroker`);
+  if (value.active === true && quantity <= 0) {
+    refuseV2(`${shape}.quantity must be positive for an active holding`);
+  }
+}
+
+function validateV2SourceEvidence(value: unknown): Record<string, unknown> {
+  if (!isPlainObject(value)) refuseV2('sourceEvidence must be an object');
+  v2Keys(value, ['fileName', 'sourceBroker', 'importedAt', 'evidenceRecordDigest'], 'sourceEvidence');
+  for (const field of ['fileName', 'sourceBroker', 'importedAt', 'evidenceRecordDigest']) {
+    if (!(field in value)) refuseV2(`sourceEvidence is missing required field ${field}`);
+  }
+  v2NonEmptyString(value.fileName, 'sourceEvidence.fileName');
+  v2NonEmptyString(value.sourceBroker, 'sourceEvidence.sourceBroker');
+  if (typeof value.importedAt !== 'string' || !isUtcIsoInstant(value.importedAt)) {
+    refuseV2('sourceEvidence.importedAt must be a UTC ISO-8601 instant');
+  }
+  v2Digest(value.evidenceRecordDigest, 'sourceEvidence.evidenceRecordDigest');
+  return value;
+}
+
+function validateV2Envelope(record: Record<string, unknown>): void {
+  const op = record.op;
+  if (typeof op !== 'string' || !(IPC_V2_OPERATIONS as readonly string[]).includes(op)) {
+    throw new ClassPError('UNKNOWN_OPERATION', `operation outside the closed v2 set: ${String(op)}`);
+  }
+  if (record.requestId !== undefined && typeof record.requestId !== 'string') {
+    throw new ClassPError('MALFORMED_FRAME', 'requestId must be a string');
+  }
+  const payload = record.payload;
+  switch (op as IpcV2Operation) {
+    case 'portfolio.list':
+      if (payload !== undefined) refuseV2('portfolio.list takes no payload in v2');
+      return;
+    case 'portfolio.get':
+    case 'portfolio.revisions': {
+      if (!isPlainObject(payload)) refuseV2(`${op} requires a payload object`);
+      v2Keys(payload, ['portfolioId'], 'payload');
+      v2NonEmptyString(payload.portfolioId, 'payload.portfolioId');
+      return;
+    }
+    case 'portfolio.create': {
+      if (!isPlainObject(payload)) refuseV2('portfolio.create requires a payload object');
+      v2Keys(payload, ['portfolioName'], 'payload');
+      if (payload.portfolioName !== undefined) v2NonEmptyString(payload.portfolioName, 'payload.portfolioName');
+      return;
+    }
+    case 'portfolio.save': {
+      if (!isPlainObject(payload)) refuseV2('portfolio.save requires a payload object');
+      v2Keys(payload, ['portfolioId', 'expectedRevision', 'mode', 'holdings', 'contentDigest', 'broker', 'sourceEvidence'], 'payload');
+      for (const field of ['portfolioId', 'expectedRevision', 'mode', 'holdings', 'contentDigest', 'broker', 'sourceEvidence']) {
+        if (!(field in payload)) refuseV2(`portfolio.save payload is missing required field ${field}`);
+      }
+      v2NonEmptyString(payload.portfolioId, 'payload.portfolioId');
+      const expectedRevision = payload.expectedRevision;
+      if (typeof expectedRevision !== 'number' || !Number.isSafeInteger(expectedRevision) || expectedRevision < 1 || expectedRevision > V2_MAX_SAFE_INTEGER) {
+        refuseV2('payload.expectedRevision must be a safe integer within 1..9007199254740991');
+      }
+      if (payload.mode !== 'MERGE') refuseV2("payload.mode must be 'MERGE'");
+      const holdings = payload.holdings;
+      if (!Array.isArray(holdings) || holdings.length === 0) refuseV2('payload.holdings must be a non-empty array');
+      holdings.forEach((holding, index) => validateV2ObservedHolding(holding, index));
+      v2Digest(payload.contentDigest, 'payload.contentDigest');
+      v2NonEmptyString(payload.broker, 'payload.broker');
+      validateV2SourceEvidence(payload.sourceEvidence);
+      return;
+    }
+  }
 }
 
 /**
@@ -273,7 +454,7 @@ export interface ReadFrameOptions {
  * a protocol change.
  */
 export interface FrameReader {
-  readonly envelope: RequestEnvelope;
+  readonly envelope: AnyRequestEnvelope;
   readonly settlement: FrameSettlementPolicy;
   /** Resolves on a clean half-close after exactly one frame; rejects on any trailing data or fault. */
   readonly whenSettled: Promise<void>;

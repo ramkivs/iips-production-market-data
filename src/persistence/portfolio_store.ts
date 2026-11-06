@@ -10,9 +10,14 @@
  * foreign-owned or tombstoned portfolio share one ResourceUnavailableError so
  * existence cannot be probed across owners.
  */
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
-import { BindingAbsentError, BindingInvalidError, resolveActiveBindingInCurrentTransaction } from './binding.js';
+import {
+  BindingAbsentError,
+  BindingInvalidError,
+  resolveActiveBindingInCurrentTransaction,
+  resolveActiveHoldingsBindingInCurrentTransaction,
+} from './binding.js';
 
 export class InvalidPortfolioRequestError extends Error {
   constructor(message: string) {
@@ -116,6 +121,77 @@ export interface OwnerRef {
   readonly canonicalOwnerId: string;
   readonly tenantId: string;
 }
+
+/* ------------------------------------------------------------------ *
+ * D03 — consumer contract 2.0.0 / frame v=2 snapshot types
+ *
+ * The v2 path is explicitly separate from the v1 path above. v1 parsing,
+ * results and refusals are unchanged; the constants and primitives below
+ * implement the adopted v2 semantics under the current authority override
+ * (four-revision cap retained, stale-first ordering, duplicate no-op BEFORE
+ * cap rejection, complete-snapshot MERGE, empty INITIAL revision 1, stable
+ * opaque IDs, immutable history).
+ * ------------------------------------------------------------------ */
+
+/** Safe-integer bound for revisions and wire integers (spec §3.2). */
+export const SNAPSHOT_MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
+
+export interface SnapshotSourceEvidence {
+  readonly fileName: string;
+  readonly sourceBroker: string;
+  readonly importedAt: string;
+  readonly evidenceRecordDigest: string;
+}
+
+/**
+ * A v2 `portfolio.save` request AFTER the service layer has resolved every
+ * observed row against the governed identity master. `contentDigest` is the
+ * caller-supplied evidence digest and is the contribution identity;
+ * `provenanceDigest` is IPD-computed server-side over source observations and
+ * the original `importedAt`. The internal lineage is never accepted as a wire
+ * assertion.
+ */
+export interface SnapshotSaveRequest {
+  readonly portfolioId: string;
+  readonly expectedRevision: number;
+  readonly holdings: HoldingInput[];
+  readonly contentDigest: string;
+  readonly provenanceDigest: string;
+  readonly broker: string;
+  readonly sourceEvidence: SnapshotSourceEvidence;
+}
+
+export interface SnapshotCreateRequest {
+  readonly portfolioName?: string;
+}
+
+export type SnapshotDisposition = 'SAVED_NEW_BATCH' | 'MERGED_INTO_EXISTING' | 'ALREADY_IMPORTED_NO_OP';
+export type SnapshotStoreEffect = 'NONE' | 'REVISION_COMMITTED';
+
+export interface SnapshotReceipt {
+  readonly disposition: SnapshotDisposition;
+  readonly revision: number;
+  readonly noOp: boolean;
+  readonly storeEffect: SnapshotStoreEffect;
+  readonly holdingsPersisted: number;
+  readonly totalMarketValue: number;
+  readonly contributions: number;
+}
+
+export interface SnapshotCreated {
+  readonly portfolioId: string;
+  readonly revision: number;
+}
+
+const HEX_64 = /^[a-f0-9]{64}$/;
+const UTC_ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
+
+function isUtcIsoInstant(value: string): boolean {
+  if (!UTC_ISO_INSTANT.test(value)) return false;
+  if (!Number.isFinite(Date.parse(value))) return false;
+  return new Date(value).toISOString() === value;
+}
+
 
 /* ------------------------------------------------------------------ *
  * Read projections — accepted wire contract v1 shapes
@@ -232,6 +308,16 @@ export function computeLineageHash(holdings: readonly HoldingInput[]): string {
 /** The closed stored operation vocabulary (contract v1 §6). */
 const STORED_OPERATIONS: readonly string[] = ['INITIAL', 'MERGE', 'REPLACE', 'RESET', 'DELETE'];
 
+/** The closed stored contribution semantics vocabulary (migration 004 / DR-4r). */
+const STORED_CONTRIBUTION_SEMANTICS: readonly string[] = ['SAVED_NEW_BATCH', 'MERGED_INTO_EXISTING', 'RESET', 'REPLACE'];
+
+function storedInstant(value: unknown): boolean {
+  if (typeof value !== 'string' || value.trim().length === 0) return false;
+  // Stored instants are written by this store as parseable ISO-8601; a stored
+  // value that does not parse is not silently kept.
+  return Number.isFinite(Date.parse(value));
+}
+
 type StoredRow = Record<string, unknown>;
 
 function refuseStoredValue(shape: string, field: string, requirement: string): never {
@@ -334,7 +420,7 @@ export function findCallerSuppliedIdentityKeys(value: unknown, depth = 0): strin
   return [...found].sort();
 }
 
-function contentDigestOf(request: PortfolioSaveRequest): string {
+function contentDigestOf(request: Pick<PortfolioSaveRequest, 'holdings' | 'provenanceDigest'>): string {
   return createHash('sha256')
     .update(JSON.stringify({ holdings: request.holdings, provenance: request.provenanceDigest }), 'utf8')
     .digest('hex');
@@ -393,6 +479,31 @@ export class DurablePortfolioStore {
       let active;
       try {
         active = resolveActiveBindingInCurrentTransaction(this.db);
+      } catch (error) {
+        if (error instanceof BindingAbsentError || error instanceof BindingInvalidError) {
+          throw new ResourceUnavailableError();
+        }
+        throw error;
+      }
+      if (active.canonicalOwnerId !== owner.canonicalOwnerId || active.tenantId !== owner.tenantId) {
+        throw new ResourceUnavailableError();
+      }
+      return work(this);
+    });
+  }
+
+  /**
+   * D02/D03 — revalidates the sole ACTIVE holdings owner inside the caller's
+   * protected transaction. The resolved pair must equal the prospectively
+   * extended canonical owner on the retained tenant; anything else is folded
+   * into the same ResourceUnavailableError a missing/foreign portfolio
+   * produces, so ownership cannot be probed.
+   */
+  withHoldingsSnapshotTransaction<T>(owner: OwnerRef, work: (store: this) => T): T {
+    return this.withTransaction(() => {
+      let active;
+      try {
+        active = resolveActiveHoldingsBindingInCurrentTransaction(this.db);
       } catch (error) {
         if (error instanceof BindingAbsentError || error instanceof BindingInvalidError) {
           throw new ResourceUnavailableError();
@@ -515,6 +626,18 @@ export class DurablePortfolioStore {
   }
 
   /**
+   * D03 — `portfolio.get` for the v2 consumer contract. Identical to
+   * {@link get} (DR-2/DQ-1 stored-value refusal, DR-3 durability absence,
+   * owner-isolation predicates) except the contribution ledger is projected
+   * through the validated nullable projection: malformed non-empty rows
+   * refuse the whole read instead of being passed through.
+   */
+  getV2(owner: OwnerRef, portfolioId: string): PortfolioDetail {
+    const detail = this.get(owner, portfolioId);
+    return { ...detail, contributions: this.contributionsValidated(owner, portfolioId) };
+  }
+
+  /**
    * The contribution ledger for one portfolio (contract v1 `PortfolioDetail`).
    *
    * Every committed import appends exactly one contribution row whose
@@ -556,6 +679,53 @@ export class DurablePortfolioStore {
       importedAt: row.imported_at,
       semantics: row.contribution_semantics,
     }));
+  }
+
+  /**
+   * D03 / DR-4r — validated nullable non-empty contribution projection.
+   *
+   * Legacy migration-004 rows may carry NULL provenance; NULL is preserved as
+   * unknown and is never coerced to '', a guessed broker or a replacement row.
+   * A non-null value that does not conform refuses the whole projection
+   * (ContractEnvelopeViolationError) — malformed non-empty rows are never
+   * silently dropped or fabricated into a successful empty view.
+   */
+  contributionsValidated(owner: OwnerRef, portfolioId: string): PortfolioContribution[] {
+    const rows = this.contributions(owner, portfolioId);
+    return rows.map((row) => {
+      const shape = 'portfolio.contributions';
+      if (!HEX_64.test(row.contributionId)) {
+        refuseStoredValue(shape, 'contribution_id', 'a stored 64-hex contribution identity');
+      }
+      if (!Number.isFinite(row.amount) || row.amount < 0 || row.amount > SNAPSHOT_MAX_SAFE_INTEGER) {
+        refuseStoredValue(shape, 'amount', 'a finite non-negative stored amount within the safe range');
+      }
+      if (!storedInstant(row.contributedAt)) {
+        refuseStoredValue(shape, 'contributed_at', 'a stored UTC ISO-8601 instant');
+      }
+      if (!storedInstant(row.createdAt)) {
+        refuseStoredValue(shape, 'created_at', 'a stored UTC ISO-8601 instant');
+      }
+      if (row.fileName !== null && (typeof row.fileName !== 'string' || row.fileName.trim().length === 0)) {
+        refuseStoredValue(shape, 'file_name', 'a stored non-blank string or SQL NULL');
+      }
+      if (row.sourceBroker !== null && (typeof row.sourceBroker !== 'string' || row.sourceBroker.trim().length === 0)) {
+        refuseStoredValue(shape, 'source_broker', 'a stored non-blank string or SQL NULL');
+      }
+      if (row.contentDigest !== null && (typeof row.contentDigest !== 'string' || !HEX_64.test(row.contentDigest))) {
+        refuseStoredValue(shape, 'content_digest', 'a stored 64-hex digest or SQL NULL');
+      }
+      if (row.lineageDigest !== null && (typeof row.lineageDigest !== 'string' || !HEX_64.test(row.lineageDigest))) {
+        refuseStoredValue(shape, 'lineage_digest', 'a stored 64-hex digest or SQL NULL');
+      }
+      if (row.importedAt !== null && !storedInstant(row.importedAt)) {
+        refuseStoredValue(shape, 'imported_at', 'a stored UTC ISO-8601 instant or SQL NULL');
+      }
+      if (row.semantics !== null && !STORED_CONTRIBUTION_SEMANTICS.includes(row.semantics)) {
+        refuseStoredValue(shape, 'contribution_semantics', 'a stored semantics value in the closed vocabulary or SQL NULL');
+      }
+      return row;
+    });
   }
 
   /**
@@ -770,6 +940,340 @@ export class DurablePortfolioStore {
       );
     this.afterMutation('contribution-insert');
     return nextRevision;
+  }
+
+  /* ------------------------------------------------------------------ *
+   * D03 — consumer contract 2.0.0 / frame v=2 snapshot primitives.
+   *
+   * These low-level methods exist for the isolated synthetic fixture class
+   * under the D05 bounded-engineering authority; they are disconnected from
+   * product dispatch (all live writes refuse before reaching here). v1
+   * methods above are unchanged. The current authority override retains the
+   * four-revision cap: stale-first ordering, duplicate no-op BEFORE cap
+   * rejection, immutable history, complete-snapshot MERGE.
+   * ------------------------------------------------------------------ */
+
+  private validateSnapshotHoldings(holdings: readonly HoldingInput[]): { totalMarketValue: number; weightSum: number } {
+    if (!Array.isArray(holdings) || holdings.length === 0) {
+      throw new InvalidPortfolioRequestError('a snapshot save requires at least one observed holding');
+    }
+    const symbols = new Set<string>();
+    let total = 0;
+    let weightSum = 0;
+    let activeCount = 0;
+    for (const h of holdings) {
+      if (!h || typeof h !== 'object') {
+        throw new InvalidPortfolioRequestError('a holding row is missing');
+      }
+      if (typeof h.symbol !== 'string' || h.symbol.trim().length === 0) {
+        throw new InvalidPortfolioRequestError('holding symbol must be a non-blank string');
+      }
+      if (symbols.has(h.symbol)) {
+        throw new InvalidPortfolioRequestError('duplicate holding symbols in the snapshot');
+      }
+      symbols.add(h.symbol);
+      if (typeof h.active !== 'boolean') {
+        throw new InvalidPortfolioRequestError('active must be a boolean');
+      }
+      for (const field of ['quantity', 'averageBuyPrice', 'currentPrice', 'marketValue', 'weightPercentage'] as const) {
+        const value = h[field];
+        if (typeof value !== 'number' || !Number.isFinite(value)) {
+          throw new InvalidPortfolioRequestError(`${field} must be a finite number`);
+        }
+        if (value < 0) {
+          throw new InvalidPortfolioRequestError(`${field} must be non-negative`);
+        }
+        if (value > SNAPSHOT_MAX_SAFE_INTEGER) {
+          throw new InvalidPortfolioRequestError(`${field} exceeds the safe numeric range`);
+        }
+      }
+      if (h.weightPercentage > 100) {
+        throw new InvalidPortfolioRequestError('weightPercentage must be within 0..100');
+      }
+      if (h.active) {
+        if (h.quantity <= 0) {
+          throw new InvalidPortfolioRequestError('an active holding must have a positive quantity');
+        }
+        activeCount += 1;
+      }
+      if (typeof h.sourceBroker !== 'string' || h.sourceBroker.trim().length === 0) {
+        throw new InvalidPortfolioRequestError('each holding requires a non-blank sourceBroker');
+      }
+      if (typeof h.companyId !== 'string' || h.companyId.trim().length === 0) {
+        throw new InvalidPortfolioRequestError('each holding requires a resolved companyId');
+      }
+      if (typeof h.lineageDigest !== 'string' || !HEX_64.test(h.lineageDigest)) {
+        throw new InvalidPortfolioRequestError('each holding requires a 64-hex lineageDigest');
+      }
+      if (typeof h.identityStatus !== 'string' || h.identityStatus.trim().length === 0) {
+        throw new InvalidPortfolioRequestError('each holding requires an identityStatus');
+      }
+      if (typeof h.resolutionDisposition !== 'string' || h.resolutionDisposition.trim().length === 0) {
+        throw new InvalidPortfolioRequestError('each holding requires a resolutionDisposition');
+      }
+      total += h.marketValue;
+      weightSum += h.weightPercentage;
+      if (!Number.isFinite(total) || !Number.isFinite(weightSum)) {
+        throw new InvalidPortfolioRequestError('aggregate overflow: the snapshot totals are not finite');
+      }
+    }
+    if (total > SNAPSHOT_MAX_SAFE_INTEGER) {
+      throw new InvalidPortfolioRequestError('aggregate market value exceeds the safe numeric range');
+    }
+    if (activeCount === 0) {
+      throw new InvalidPortfolioRequestError('a non-empty snapshot requires at least one active holding');
+    }
+    if (Math.abs(weightSum - 100) > 0.01) {
+      throw new InvalidPortfolioRequestError('the whole-vector weight sum must be 100 ± 0.01 for a non-empty save');
+    }
+    return { totalMarketValue: total, weightSum };
+  }
+
+  private validateSnapshotRequest(request: SnapshotSaveRequest): { totalMarketValue: number; weightSum: number } {
+    if (!request || typeof request !== 'object' || Array.isArray(request)) {
+      throw new InvalidPortfolioRequestError('the snapshot request is missing');
+    }
+    const { holdings: _holdings, ...envelopeShape } = request;
+    const refused = findCallerSuppliedIdentityKeys(envelopeShape);
+    if (refused.length > 0) {
+      throw new InvalidPortfolioRequestError(`caller-supplied identity keys are refused: ${refused.join(', ')}`);
+    }
+    if (typeof request.portfolioId !== 'string' || request.portfolioId.trim().length === 0) {
+      throw new InvalidPortfolioRequestError('a portfolio id is required');
+    }
+    if (!Number.isSafeInteger(request.expectedRevision) || request.expectedRevision < 1) {
+      throw new InvalidPortfolioRequestError('expectedRevision must be a safe integer >= 1');
+    }
+    if (typeof request.contentDigest !== 'string' || !HEX_64.test(request.contentDigest)) {
+      throw new InvalidPortfolioRequestError('contentDigest must be a lowercase 64-hex digest');
+    }
+    if (typeof request.provenanceDigest !== 'string' || !HEX_64.test(request.provenanceDigest)) {
+      throw new InvalidPortfolioRequestError('provenanceDigest must be a lowercase 64-hex digest');
+    }
+    if (typeof request.broker !== 'string' || request.broker.trim().length === 0) {
+      throw new InvalidPortfolioRequestError('broker must be a non-blank string');
+    }
+    const evidence = request.sourceEvidence;
+    if (!evidence || typeof evidence !== 'object' || Array.isArray(evidence)) {
+      throw new InvalidPortfolioRequestError('sourceEvidence is required');
+    }
+    for (const key of Object.keys(evidence)) {
+      if (!['fileName', 'sourceBroker', 'importedAt', 'evidenceRecordDigest'].includes(key)) {
+        throw new InvalidPortfolioRequestError(`sourceEvidence carries an unexpected key: ${key}`);
+      }
+    }
+    if (typeof evidence.fileName !== 'string' || evidence.fileName.trim().length === 0) {
+      throw new InvalidPortfolioRequestError('sourceEvidence.fileName is required');
+    }
+    if (typeof evidence.sourceBroker !== 'string' || evidence.sourceBroker.trim().length === 0) {
+      throw new InvalidPortfolioRequestError('sourceEvidence.sourceBroker is required');
+    }
+    if (typeof evidence.importedAt !== 'string' || !isUtcIsoInstant(evidence.importedAt)) {
+      throw new InvalidPortfolioRequestError('sourceEvidence.importedAt must be a UTC ISO-8601 instant');
+    }
+    if (typeof evidence.evidenceRecordDigest !== 'string' || !HEX_64.test(evidence.evidenceRecordDigest)) {
+      throw new InvalidPortfolioRequestError('sourceEvidence.evidenceRecordDigest must be a lowercase 64-hex digest');
+    }
+    if (request.broker !== evidence.sourceBroker) {
+      throw new InvalidPortfolioRequestError('root broker and evidence source broker must match');
+    }
+    const { totalMarketValue, weightSum } = this.validateSnapshotHoldings(request.holdings);
+    if (request.holdings.some((holding) => holding.sourceBroker !== request.broker)) {
+      throw new InvalidPortfolioRequestError('each holding source broker must match the snapshot broker');
+    }
+    return { totalMarketValue, weightSum };
+  }
+
+  /**
+   * D03 — deliberate create for the v2 lifecycle: one opaque IPD-generated ID,
+   * empty INITIAL revision 1, zero holdings/contributions, `isSaved: false`.
+   * There is no request-idempotency promise and no default/fallback creation.
+   */
+  createEmptySnapshot(owner: OwnerRef, request: SnapshotCreateRequest = {}): SnapshotCreated {
+    if (!request || typeof request !== 'object' || Array.isArray(request)) {
+      throw new InvalidPortfolioRequestError('the create request is malformed');
+    }
+    for (const key of Object.keys(request)) {
+      if (key !== 'portfolioName') {
+        throw new InvalidPortfolioRequestError(`the create request carries an unexpected key: ${key}`);
+      }
+    }
+    const name = request.portfolioName;
+    if (name !== undefined && (typeof name !== 'string' || name.trim().length === 0)) {
+      throw new InvalidPortfolioRequestError('portfolioName must be a non-blank string when present');
+    }
+    const refusedKeys = findCallerSuppliedIdentityKeys(request);
+    if (refusedKeys.length > 0) {
+      throw new InvalidPortfolioRequestError(`caller-supplied identity keys are refused: ${refusedKeys.join(', ')}`);
+    }
+    return this.withHoldingsSnapshotTransaction(owner, () => {
+      const portfolioId = randomUUID();
+      const now = new Date().toISOString();
+      this.db
+        .prepare(
+          `INSERT INTO portfolios (portfolio_id, canonical_owner_id, tenant_id, portfolio_name,
+                                   current_revision, status, created_at, updated_at, deleted_at)
+           VALUES (?, ?, ?, ?, 0, 'ACTIVE', ?, ?, NULL)`,
+        )
+        .run(portfolioId, owner.canonicalOwnerId, owner.tenantId, name ?? portfolioId, now, now);
+      this.afterMutation('portfolio-insert');
+      this.db
+        .prepare(
+          `INSERT INTO portfolio_revisions
+             (portfolio_id, canonical_owner_id, revision, operation, total_market_value,
+              weight_sum_percentage, holdings_count, provenance_digest, content_digest, created_at)
+           VALUES (?, ?, ?, 'INITIAL', 0, 0, 0, '', NULL, ?)`,
+        )
+        .run(portfolioId, owner.canonicalOwnerId, 1, now);
+      this.afterMutation('revision-insert');
+      this.db
+        .prepare('UPDATE portfolios SET current_revision = 1, updated_at = ? WHERE canonical_owner_id = ? AND portfolio_id = ?')
+        .run(now, owner.canonicalOwnerId, portfolioId);
+      this.afterMutation('portfolio-update');
+      return { portfolioId, revision: 1 };
+    });
+  }
+
+  /**
+   * D03 — complete-snapshot MERGE for the v2 lifecycle.
+   *
+   * Ordering under the serialized transaction: resolve and revalidate the
+   * holdings owner -> resolve portfolio (missing/foreign/tombstoned fold into
+   * ResourceUnavailableError) -> expectedRevision safe-integer check ->
+   * stale-first conflict -> active-set contribution duplicate (caller content
+   * digest) no-op BEFORE cap rejection -> cap refusal for a new mutation ->
+   * atomic revision/holdings/pointer/contribution write -> COMMIT. A duplicate
+   * returns ALREADY_IMPORTED_NO_OP with the original revision and lineage and
+   * zero domain delta, even at the cap. No automatic retry anywhere.
+   */
+  saveSnapshotV2(owner: OwnerRef, request: SnapshotSaveRequest): SnapshotReceipt {
+    const { totalMarketValue, weightSum } = this.validateSnapshotRequest(request);
+    return this.withHoldingsSnapshotTransaction(owner, () => {
+      const current = this.resolvePortfolio(owner, request.portfolioId);
+      if (current.currentRevision !== request.expectedRevision) {
+        throw new RevisionConflictError(
+          `expected revision ${request.expectedRevision} but the portfolio is at ${current.currentRevision}`,
+        );
+      }
+      // Duplicate BEFORE cap rejection (D03 current override): an already
+      // committed contribution identity in this portfolio is an idempotent
+      // no-op at the current revision — no revision, no rows, no contribution.
+      const committed = this.db
+        .prepare(
+          'SELECT 1 AS present FROM portfolio_contributions WHERE canonical_owner_id = ? AND portfolio_id = ? AND contribution_id = ?',
+        )
+        .get(owner.canonicalOwnerId, request.portfolioId, request.contentDigest) as { present: number } | undefined;
+      if (committed) {
+        const currentRevisionRow = this.db
+          .prepare(
+            'SELECT holdings_count, total_market_value FROM portfolio_revisions WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?',
+          )
+          .get(owner.canonicalOwnerId, request.portfolioId, current.currentRevision) as
+          | { holdings_count: number; total_market_value: number }
+          | undefined;
+        return {
+          disposition: 'ALREADY_IMPORTED_NO_OP',
+          revision: current.currentRevision,
+          noOp: true,
+          storeEffect: 'NONE',
+          holdingsPersisted: currentRevisionRow ? Number(currentRevisionRow.holdings_count) : 0,
+          totalMarketValue: currentRevisionRow ? Number(currentRevisionRow.total_market_value) : 0,
+          contributions: 0,
+        };
+      }
+      if (current.currentRevision >= MAX_REVISIONS) {
+        throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${MAX_REVISIONS}`);
+      }
+      const nextRevision = request.expectedRevision + 1;
+      const contentDigest = contentDigestOf(request);
+      const now = new Date().toISOString();
+      this.db
+        .prepare(
+          `INSERT INTO portfolio_revisions
+             (portfolio_id, canonical_owner_id, revision, operation, total_market_value,
+              weight_sum_percentage, holdings_count, provenance_digest, content_digest, created_at)
+           VALUES (?, ?, ?, 'MERGE', ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          request.portfolioId,
+          owner.canonicalOwnerId,
+          nextRevision,
+          totalMarketValue,
+          weightSum,
+          request.holdings.length,
+          request.provenanceDigest,
+          contentDigest,
+          now,
+        );
+      this.afterMutation('revision-insert');
+      const insertHolding = this.db.prepare(
+        `INSERT INTO portfolio_holdings
+           (canonical_owner_id, portfolio_id, revision, holding_key, symbol, company_id,
+            quantity, average_buy_price, current_price, market_value, weight_percentage,
+            active, source_broker, lineage_digest, identity_status, resolution_disposition, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      );
+      for (const h of request.holdings) {
+        insertHolding.run(
+          owner.canonicalOwnerId,
+          request.portfolioId,
+          nextRevision,
+          h.symbol,
+          h.symbol,
+          h.companyId,
+          h.quantity,
+          h.averageBuyPrice,
+          h.currentPrice,
+          h.marketValue,
+          h.weightPercentage,
+          h.active ? 1 : 0,
+          h.sourceBroker,
+          h.lineageDigest,
+          h.identityStatus,
+          h.resolutionDisposition,
+          now,
+        );
+        this.afterMutation(`holding-insert:${h.symbol}`);
+      }
+      this.db
+        .prepare('UPDATE portfolios SET current_revision = ?, updated_at = ? WHERE canonical_owner_id = ? AND portfolio_id = ?')
+        .run(nextRevision, now, owner.canonicalOwnerId, request.portfolioId);
+      this.afterMutation('portfolio-update');
+      // The contribution ledger: exactly one row per committed snapshot, keyed
+      // by the import's caller-supplied content digest (Gate E W-8 / BI-08).
+      // Provenance fields record the actual source evidence; nothing is
+      // guessed. Legacy migration-004 NULLs (pre-existing rows) are untouched.
+      this.db
+        .prepare(
+          `INSERT INTO portfolio_contributions
+             (canonical_owner_id, portfolio_id, contribution_id, amount, contributed_at, created_at,
+              file_name, source_broker, content_digest, lineage_digest, imported_at, contribution_semantics)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'MERGED_INTO_EXISTING')`,
+        )
+        .run(
+          owner.canonicalOwnerId,
+          request.portfolioId,
+          request.contentDigest,
+          totalMarketValue,
+          now,
+          now,
+          request.sourceEvidence.fileName,
+          request.sourceEvidence.sourceBroker,
+          request.contentDigest,
+          request.provenanceDigest,
+          request.sourceEvidence.importedAt,
+        );
+      this.afterMutation('contribution-insert');
+      return {
+        disposition: 'MERGED_INTO_EXISTING',
+        revision: nextRevision,
+        noOp: false,
+        storeEffect: 'REVISION_COMMITTED',
+        holdingsPersisted: request.holdings.length,
+        totalMarketValue,
+        contributions: 1,
+      };
+    });
   }
 
   create(owner: OwnerRef, portfolioId: string, request: PortfolioSaveRequest): number {

@@ -19,16 +19,22 @@ import {
   classAFrame,
   diagnosticSink,
   findRefusedWireKeys,
+  IPC_V2_WRITE_OPERATIONS,
   IPC_WRITE_OPERATIONS,
   readSingleFrame,
   successFrame,
+  type AnyRequestEnvelope,
   type ClassAOutcome,
   type ClassPReason,
   type FrameReader,
   type FrameSettlementPolicy,
-  type RequestEnvelope,
 } from './protocol.js';
-import { BindingAbsentError, BindingInvalidError, resolveActiveBinding } from '../persistence/binding.js';
+import {
+  BindingAbsentError,
+  BindingInvalidError,
+  resolveActiveBinding,
+  resolveActiveHoldingsBinding,
+} from '../persistence/binding.js';
 import {
   DurablePortfolioStore,
   ResourceUnavailableError,
@@ -101,7 +107,7 @@ export function createConnectionHandler(
 
     void (async () => {
       let reader: FrameReader;
-      let envelope: RequestEnvelope;
+      let envelope: AnyRequestEnvelope;
       try {
         reader = await readSingleFrame(socket, {
           settlement,
@@ -117,6 +123,9 @@ export function createConnectionHandler(
         return;
       }
 
+      // Single Class A response version: v2 frames refuse/answer with v=2.
+      const responseVersion: 1 | 2 = envelope.v === 2 ? 2 : 1;
+
       // Declared outside the try so Class A error frames in the catch block
       // use the same guarded single-response write path. Before assignment
       // (a fault during the pre-write validation) it stays a zero-byte no-op.
@@ -131,9 +140,12 @@ export function createConnectionHandler(
         }
 
         // Per-request binding resolution; no cache, no process-global owner.
+        // v2 holdings traffic additionally requires the prospectively
+        // extended D02 canonical owner on the retained technical tenant; v1
+        // keeps the existing generic resolution unchanged.
         let owner;
         try {
-          owner = resolveActiveBinding(db);
+          owner = responseVersion === 2 ? resolveActiveHoldingsBinding(db) : resolveActiveBinding(db);
         } catch (error) {
           if (error instanceof BindingAbsentError) {
             refuseClassP(socket, 'BINDING_ABSENT', error.message);
@@ -225,6 +237,38 @@ export function createConnectionHandler(
         const requestId = envelope.requestId;
         const payload = envelope.payload ?? {};
 
+        if (envelope.v === 2) {
+          // D03 v2 surface: reads and refusals only. v2 writes (create/save)
+          // refuse with WRITE_NOT_AUTHORIZED before any store mutation — the
+          // W-1 hard-false conjunction covers v2 exactly as v1; the v2
+          // mutation primitives are exercised only by isolated synthetic
+          // fixtures, never through this dispatcher.
+          const op = envelope.op;
+          if ((IPC_V2_WRITE_OPERATIONS as readonly string[]).includes(op)) {
+            await writeGuarded(classAFrame(op, 'WRITE_NOT_AUTHORIZED', requestId, undefined, 2));
+            return;
+          }
+          let v2Result: unknown;
+          switch (op) {
+            case 'portfolio.list':
+              v2Result = store.list(owner);
+              break;
+            case 'portfolio.get':
+              // The v2 read projection is the validated nullable contribution
+              // projection; durability fields remain absent (DR-3).
+              v2Result = store.getV2(owner, String(payload.portfolioId));
+              break;
+            case 'portfolio.revisions':
+              v2Result = store.revisions(owner, String(payload.portfolioId));
+              break;
+            default:
+              refuseClassP(socket, 'UNKNOWN_OPERATION', `not dispatched: ${String(op)}`);
+              return;
+          }
+          await writeGuarded(successFrame(op, v2Result, requestId, 2));
+          return;
+        }
+
         if ((IPC_WRITE_OPERATIONS as readonly string[]).includes(envelope.op)) {
           // Gate E W-1(3) and W-1(4) are false: refuse before any mutation. No
           // environment flag, test result or operator assertion can enable writes.
@@ -265,11 +309,11 @@ export function createConnectionHandler(
         const write = writeGuarded;
         if (error instanceof ResourceUnavailableError) {
           // Missing, foreign and tombstoned portfolios share one byte-stable outcome.
-          await write(classAFrame(envelope.op, 'RESOURCE_UNAVAILABLE', envelope.requestId, RESOURCE_UNAVAILABLE_DETAIL));
+          await write(classAFrame(envelope.op, 'RESOURCE_UNAVAILABLE', envelope.requestId, RESOURCE_UNAVAILABLE_DETAIL, responseVersion));
           return;
         }
         const outcome: ClassAOutcome = 'UNAVAILABLE';
-        await write(classAFrame(envelope.op, outcome, envelope.requestId, 'the request could not be completed'));
+        await write(classAFrame(envelope.op, outcome, envelope.requestId, 'the request could not be completed', responseVersion));
       } finally {
         // Detach exactly the reader-owned listeners; the caller's socket error
         // handler registered above remains available for transmission faults.
