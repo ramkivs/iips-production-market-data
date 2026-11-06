@@ -15,6 +15,7 @@ import { migration001InitialSchema } from './migrations/001_initial_schema.js';
 import { migration002AuditEventSequence } from './migrations/002_audit_event_sequence.js';
 import { migration003LocalPrincipalBindings } from './migrations/003_local_principal_bindings.js';
 import { migration004PortfolioContributionProvenance } from './migrations/004_portfolio_contribution_provenance.js';
+import { migration005HoldingSecurityIdentity } from './migrations/005_holding_security_identity.js';
 import { readAuditEvents, verifyAuditChain } from './audit.js';
 import { BindingAbsentError, BindingInvalidError, resolveActiveBindingInCurrentTransaction } from './binding.js';
 import { evaluatePortSaveGuard } from './portfolio_store.js';
@@ -57,6 +58,7 @@ export const DESIGNATED_MIGRATION_BLOBS = Object.freeze({
   '002_audit_event_sequence': '932af8e603c4be41c9f0d8a6b051f41836c1fee8',
   '003_local_principal_bindings': '32b125bf962bb76a6ae59d3b262203dbbb988197',
   '004_portfolio_contribution_provenance': '6bad5a5095b6bb94ce91a86a4b65f7ab915c516c',
+  '005_holding_security_identity': '09fb8b68775a3c6cf799852a0c5c0146ea697191',
 });
 
 /** Kept local to the act rather than importing the IPC/startup module. */
@@ -65,6 +67,7 @@ export const GATE3_MIGRATIONS: readonly Migration[] = [
   migration002AuditEventSequence,
   migration003LocalPrincipalBindings,
   migration004PortfolioContributionProvenance,
+  migration005HoldingSecurityIdentity,
 ];
 
 export interface GateAPrimeValidationInput {

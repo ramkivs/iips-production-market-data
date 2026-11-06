@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { buildD114SecurityIdentity } from '../contracts/types.js';
 import {
   CommitOutcomeUnknownError,
   InvalidPortfolioRequestError,
@@ -22,6 +23,11 @@ export interface BrokerImportHolding {
   readonly symbol: string;
   readonly isin?: string;
   readonly exchange?: 'NSE' | 'BSE';
+  /**
+   * The exchange series (e.g. `EQ`). Only together with an explicit ISIN does
+   * this form an exact P04 D114 identity; either one alone stays unresolved.
+   */
+  readonly series?: string;
   readonly quantity: number;
   readonly averageBuyPrice: number;
   readonly currentPrice: number;
@@ -175,6 +181,8 @@ export function mapBrokerImportHoldings(holdings: readonly ResolvedBrokerImportH
       lineageDigest: h.lineageDigest,
       identityStatus: h.identityStatus,
       resolutionDisposition: h.resolutionDisposition,
+      // Exact identity only from explicit ISIN + series evidence; never inferred.
+      securityIdentity: buildD114SecurityIdentity(h.isin, h.series) ?? null,
     }));
 }
 

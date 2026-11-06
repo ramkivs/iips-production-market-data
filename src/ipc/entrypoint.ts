@@ -18,6 +18,7 @@ import { migration001InitialSchema } from '../persistence/migrations/001_initial
 import { migration002AuditEventSequence } from '../persistence/migrations/002_audit_event_sequence.js';
 import { migration003LocalPrincipalBindings } from '../persistence/migrations/003_local_principal_bindings.js';
 import { migration004PortfolioContributionProvenance } from '../persistence/migrations/004_portfolio_contribution_provenance.js';
+import { migration005HoldingSecurityIdentity } from '../persistence/migrations/005_holding_security_identity.js';
 import { verifyAuditChain } from '../persistence/audit.js';
 import {
   EndpointCollisionError,
@@ -39,6 +40,7 @@ export const GATE3_MIGRATIONS: readonly Migration[] = [
   migration002AuditEventSequence,
   migration003LocalPrincipalBindings,
   migration004PortfolioContributionProvenance,
+  migration005HoldingSecurityIdentity,
 ];
 
 export type StartupPhase = 'validate' | 'connect' | 'migrate' | 'verify' | 'bind';
