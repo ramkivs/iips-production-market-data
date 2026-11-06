@@ -411,6 +411,9 @@ describe('durable holdings / v2 recovery (isolated synthetic fixture)', () => {
 
     // An unreadable store is UNRESOLVED, never an invented verdict.
     const unreadable = {
+      proveSettledForReconciliation(): never {
+        throw new Error('the settled store is unreadable');
+      },
       contributionsValidated(): never {
         throw new Error('the settled store is unreadable');
       },
@@ -611,5 +614,137 @@ describe('durable holdings / v2 recovery (isolated synthetic fixture)', () => {
       failed = true;
     }
     assert.equal(failed, true, 'a truncated database must fail closed, never open silently');
+  });
+
+  it('V2-R06: UNKNOWN reconciliation requires writer settlement and exact ledger/revision/provenance correspondence', () => {
+    // c. Settlement failure also applies when the committed state is ABSENT
+    //    (own database; the process keeps one open connection per path).
+    const dbEmpty = freshDb('recon-unsettled-absent.db');
+    seedHoldingsBinding(dbEmpty);
+    const emptyStore = new DurablePortfolioStore(dbEmpty);
+    const emptyCreated = emptyStore.createEmptySnapshot(OWNER, {});
+    const unsettledAbsent = {
+      proveSettledForReconciliation(): never {
+        throw new Error('busy store');
+      },
+      contributionsValidated(): never {
+        throw new Error('must not be reached');
+      },
+      revisions(): never {
+        throw new Error('must not be reached');
+      },
+    };
+    assert.equal(reconcileSnapshotV2ByRead(unsettledAbsent, OWNER, emptyCreated.portfolioId, 'a'.repeat(64), 2), 'UNRESOLVED');
+    // d. and absent+settled with no successor supplied -> ledger-only NOT_COMMITTED.
+    assert.equal(reconcileSnapshotV2ByRead(emptyStore, OWNER, emptyCreated.portfolioId, 'a'.repeat(64)), 'NOT_COMMITTED');
+    closeDatabase();
+
+    const db = freshDb('recon-settlement.db');
+    seedHoldingsBinding(db);
+    const setup = new DurablePortfolioStore(db);
+    const created = setup.createEmptySnapshot(OWNER, {});
+
+    // Commit under a fault that loses the acknowledgement after COMMIT -> UNKNOWN.
+    const afterCommitFault = new DurablePortfolioStore(db, {
+      afterCommit() {
+        throw new Error('injected post-commit fault');
+      },
+    });
+    const unknown = persistHoldingsSnapshotV2(
+      afterCommitFault,
+      OWNER,
+      snapshotRequest({ portfolioId: created.portfolioId }),
+      resolvedResolver,
+    );
+    assert.equal(unknown.ok, 'unknown');
+
+    // a. Settled, exact correspondence -> COMMITTED; reconciliation performs ZERO writes.
+    const before = domainCounts(db);
+    assert.equal(reconcileSnapshotV2ByRead(setup, OWNER, created.portfolioId, 'a'.repeat(64), 2), 'COMMITTED');
+    assert.deepEqual(domainCounts(db), before);
+
+    // b. Settlement probe failure -> UNRESOLVED (never NOT_COMMITTED, never a retry ticket).
+    const unsettled = {
+      proveSettledForReconciliation(): never {
+        throw new Error('a writer may still hold the lock');
+      },
+      contributionsValidated(): never {
+        throw new Error('must not be reached when settlement is unproven');
+      },
+      revisions(): never {
+        throw new Error('must not be reached when settlement is unproven');
+      },
+    };
+    assert.equal(reconcileSnapshotV2ByRead(unsettled, OWNER, created.portfolioId, 'a'.repeat(64), 2), 'UNRESOLVED');
+
+    // e. Two consistent passes are required: a verdict change between them -> UNRESOLVED.
+    const matchRow = {
+      contributionId: 'a'.repeat(64),
+      amount: 1500,
+      contributedAt: NOW,
+      createdAt: NOW,
+      fileName: 'fixture-2026-11-06.csv',
+      sourceBroker: 'broker-a',
+      contentDigest: 'a'.repeat(64),
+      lineageDigest: 'c'.repeat(64),
+      importedAt: NOW,
+      semantics: 'MERGED_INTO_EXISTING' as const,
+    };
+    const successorRow = {
+      revision: 2,
+      operation: 'MERGE' as const,
+      committedAt: NOW,
+      totalMarketValue: 1500,
+      provenanceDigest: 'c'.repeat(64),
+      holdingsCount: 2,
+    };
+    let pass = 0;
+    const flickering = {
+      proveSettledForReconciliation(): void {},
+      contributionsValidated() {
+        pass += 1;
+        return pass % 2 === 1 ? [matchRow] : [];
+      },
+      revisions() {
+        return [successorRow];
+      },
+    };
+    assert.equal(reconcileSnapshotV2ByRead(flickering, OWNER, 'p', 'a'.repeat(64), 2), 'UNRESOLVED');
+
+    // f. Successor present but EMPTY snapshot (holdingsCount 0) -> UNRESOLVED, never COMMITTED.
+    const emptySnapshot = {
+      proveSettledForReconciliation(): void {},
+      contributionsValidated: () => [matchRow],
+      revisions: () => [{ ...successorRow, holdingsCount: 0, totalMarketValue: 0 }],
+    };
+    assert.equal(reconcileSnapshotV2ByRead(emptySnapshot, OWNER, 'p', 'a'.repeat(64), 2), 'UNRESOLVED');
+
+    // g. Successor present with a non-MERGE operation -> UNRESOLVED.
+    const wrongOperation = {
+      proveSettledForReconciliation(): void {},
+      contributionsValidated: () => [matchRow],
+      revisions: () => [{ ...successorRow, operation: 'INITIAL' as const }],
+    };
+    assert.equal(reconcileSnapshotV2ByRead(wrongOperation, OWNER, 'p', 'a'.repeat(64), 2), 'UNRESOLVED');
+
+    // h. Revision/history present but provenance malformed -> UNRESOLVED.
+    const weakRevision = {
+      proveSettledForReconciliation(): void {},
+      contributionsValidated: () => [matchRow],
+      revisions: () => [{ ...successorRow, provenanceDigest: 'nope' }],
+    };
+    assert.equal(reconcileSnapshotV2ByRead(weakRevision, OWNER, 'p', 'a'.repeat(64), 2), 'UNRESOLVED');
+
+    // i. Contribution row identity match with LEGACY/NULL provenance -> UNRESOLVED against a real store.
+    db.prepare('UPDATE portfolio_contributions SET lineage_digest = NULL WHERE contribution_id = ?').run('a'.repeat(64));
+    assert.equal(reconcileSnapshotV2ByRead(setup, OWNER, created.portfolioId, 'a'.repeat(64), 2), 'UNRESOLVED');
+
+    // j. Malformed inputs never yield a verdict of convenience.
+    assert.equal(reconcileSnapshotV2ByRead(setup, OWNER, created.portfolioId, 'zz'.repeat(32), 2), 'UNRESOLVED');
+    assert.equal(reconcileSnapshotV2ByRead(setup, OWNER, created.portfolioId, 'a'.repeat(64), 1), 'UNRESOLVED');
+
+    // k. Reconciliation still performed ZERO writes after every probe above.
+    assert.deepEqual(domainCounts(db), before);
+    closeDatabase();
   });
 });

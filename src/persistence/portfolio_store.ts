@@ -769,6 +769,42 @@ export class DurablePortfolioStore {
     });
   }
 
+  /**
+   * D03 — authorized read probe for the CURRENT portfolio revision. Folds
+   * missing/foreign/tombstoned into ResourceUnavailableError (never a
+   * disclosure). The v2 service uses it to refuse stale requests before
+   * domain/provenance/identity rejection; the store re-checks stale under
+   * the serialized transaction at commit time regardless of this probe.
+   */
+  currentRevision(owner: OwnerRef, portfolioId: string): number {
+    return this.resolvePortfolio(owner, portfolioId).currentRevision;
+  }
+
+  /**
+   * D03 — reconciliation settlement probe. Opens and immediately rolls back
+   * an empty `BEGIN IMMEDIATE` transaction: zero bytes, zero domain effect.
+   * Proving settlement means no writer holds the write lock at this instant;
+   * a lost-acknowledgement writer then either completed atomically before
+   * the lock was granted or is still blocked behind it. Throws when
+   * settlement cannot be proven (lock held, busy store, nested transaction).
+   */
+  proveSettledForReconciliation(): void {
+    if (this.transactionDepth > 0) {
+      throw new Error('settlement cannot be proven inside an open transaction');
+    }
+    this.db.exec('BEGIN IMMEDIATE;');
+    try {
+      this.db.exec('ROLLBACK;');
+    } catch (error) {
+      try {
+        this.db.exec('ROLLBACK;');
+      } catch {
+        //already rolled back; the primary error stands
+      }
+      throw error;
+    }
+  }
+
   private holdingFromRow(r: Record<string, unknown>): HoldingInput {
     return {
       symbol: String(r.symbol),
@@ -1029,7 +1065,14 @@ export class DurablePortfolioStore {
     return { totalMarketValue: total, weightSum };
   }
 
-  private validateSnapshotRequest(request: SnapshotSaveRequest): { totalMarketValue: number; weightSum: number } {
+  /**
+   * D03 — phase A: framing and security only. Types, key closure,
+   * caller-authority refusal (C7), presence, 64-hex digest format and
+   * safe-integer expectedRevision. No domain, provenance-semantics or
+   * identity rejection happens here; those run only after stale-revision
+   * detection (phase B), per D03 ordering.
+   */
+  private validateSnapshotFraming(request: SnapshotSaveRequest): void {
     if (!request || typeof request !== 'object' || Array.isArray(request)) {
       throw new InvalidPortfolioRequestError('the snapshot request is missing');
     }
@@ -1068,11 +1111,29 @@ export class DurablePortfolioStore {
     if (typeof evidence.sourceBroker !== 'string' || evidence.sourceBroker.trim().length === 0) {
       throw new InvalidPortfolioRequestError('sourceEvidence.sourceBroker is required');
     }
-    if (typeof evidence.importedAt !== 'string' || !isUtcIsoInstant(evidence.importedAt)) {
-      throw new InvalidPortfolioRequestError('sourceEvidence.importedAt must be a UTC ISO-8601 instant');
+    if (typeof evidence.importedAt !== 'string' || evidence.importedAt.trim().length === 0) {
+      throw new InvalidPortfolioRequestError('sourceEvidence.importedAt is required');
     }
     if (typeof evidence.evidenceRecordDigest !== 'string' || !HEX_64.test(evidence.evidenceRecordDigest)) {
       throw new InvalidPortfolioRequestError('sourceEvidence.evidenceRecordDigest must be a lowercase 64-hex digest');
+    }
+    if (!Array.isArray(request.holdings) || request.holdings.length === 0) {
+      throw new InvalidPortfolioRequestError('a snapshot save requires at least one observed holding');
+    }
+  }
+
+  /**
+   * D03 — phase B: domain, provenance-semantics and identity rejection.
+   * Runs ONLY after stale-revision detection inside the serialized
+   * transaction. Aggregate finiteness, weight-sum, active-count, broker /
+   * evidence consistency, the UTC-instant provenance check and the per-row
+   * identity-field/lineage validation live here — a stale request refuses
+   * with REVISION_CONFLICT before any of them run (zero domain delta).
+   */
+  private validateSnapshotDomainAndProvenance(request: SnapshotSaveRequest): { totalMarketValue: number; weightSum: number } {
+    const evidence = request.sourceEvidence;
+    if (!isUtcIsoInstant(evidence.importedAt)) {
+      throw new InvalidPortfolioRequestError('sourceEvidence.importedAt must be a UTC ISO-8601 instant');
     }
     if (request.broker !== evidence.sourceBroker) {
       throw new InvalidPortfolioRequestError('root broker and evidence source broker must match');
@@ -1139,15 +1200,22 @@ export class DurablePortfolioStore {
    *
    * Ordering under the serialized transaction: resolve and revalidate the
    * holdings owner -> resolve portfolio (missing/foreign/tombstoned fold into
-   * ResourceUnavailableError) -> expectedRevision safe-integer check ->
-   * stale-first conflict -> active-set contribution duplicate (caller content
-   * digest) no-op BEFORE cap rejection -> cap refusal for a new mutation ->
-   * atomic revision/holdings/pointer/contribution write -> COMMIT. A duplicate
+   * ResourceUnavailableError) -> expectedRevision safe-integer check (phase A
+   * framing) -> STALE-FIRST conflict -> phase-B domain/provenance/identity
+   * validation -> active-set contribution duplicate (caller content digest)
+   * no-op BEFORE cap rejection -> cap refusal for a new mutation -> atomic
+   * revision/holdings/pointer/contribution write -> COMMIT. A duplicate
    * returns ALREADY_IMPORTED_NO_OP with the original revision and lineage and
    * zero domain delta, even at the cap. No automatic retry anywhere.
+   *
+   * D03 stale-revision precedence: stale detection happens BEFORE domain,
+   * provenance and identity rejection. Phase-A framing and security checks
+   * (types, key closure, caller-authority refusal) legitimately run first;
+   * everything else runs only after the stale check so a stale request
+   * refuses with REVISION_CONFLICT (zero domain delta) whatever its payload.
    */
   saveSnapshotV2(owner: OwnerRef, request: SnapshotSaveRequest): SnapshotReceipt {
-    const { totalMarketValue, weightSum } = this.validateSnapshotRequest(request);
+    this.validateSnapshotFraming(request);
     return this.withHoldingsSnapshotTransaction(owner, () => {
       const current = this.resolvePortfolio(owner, request.portfolioId);
       if (current.currentRevision !== request.expectedRevision) {
@@ -1155,6 +1223,10 @@ export class DurablePortfolioStore {
           `expected revision ${request.expectedRevision} but the portfolio is at ${current.currentRevision}`,
         );
       }
+      // D03 ordering: STALE REVISION FIRST. Domain, provenance and identity
+      // rejection run only after this check; a stale request refuses here
+      // with zero domain delta.
+      const { totalMarketValue, weightSum } = this.validateSnapshotDomainAndProvenance(request);
       // Duplicate BEFORE cap rejection (D03 current override): an already
       // committed contribution identity in this portfolio is an idempotent
       // no-op at the current revision — no revision, no rows, no contribution.

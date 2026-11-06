@@ -363,11 +363,14 @@ export function reconcileBrokerImportByRead(
 /* ------------------------------------------------------------------ *
  * D03 — consumer contract 2.0.0 / frame v=2 snapshot service
  *
- * Same pipeline shape as the v1 broker import: closed request validation,
- * governed identity resolution over source observations, IPD-computed
- * per-row lineage and aggregate provenance digest (never a wire assertion),
- * then the protected store transaction. All live product writes refuse
- * before reaching here; these primitives run in isolated synthetic fixtures.
+ * Pipeline: closed framing/security validation, then D03 stale-revision
+ * detection (authorized read probe; zero domain effect), then domain,
+ * provenance and identity rejection (governed resolution over source
+ * observations, IPD-computed per-row lineage and aggregate provenance
+ * digest — never a wire assertion), then the protected store transaction
+ * (which re-checks stale under the serialized writer). All live product
+ * writes refuse before reaching here; these primitives run in isolated
+ * synthetic fixtures.
  * ------------------------------------------------------------------ */
 
 /** A v2 observed holding row: the wire shape carries no canonical identity and no lineage claim. */
@@ -458,6 +461,10 @@ export interface HoldingsSnapshotWriter {
   }): SnapshotReceipt;
   contributionsValidated(owner: OwnerRef, portfolioId: string): PortfolioContribution[];
   revisions(owner: OwnerRef, portfolioId: string): RevisionEntry[];
+  /** Authorized read probe for the current revision (stale detection input). */
+  currentRevision(owner: OwnerRef, portfolioId: string): number;
+  /** Zero-write quiescence probe: throws when the store cannot prove settlement. */
+  proveSettledForReconciliation(): void;
 }
 
 const SNAPSHOT_ROW_KEYS: readonly string[] = [
@@ -520,7 +527,8 @@ function validateSnapshotV2Shape(request: SnapshotSaveV2Request): string | undef
   if (typeof evidence.evidenceRecordDigest !== 'string' || !/^[a-f0-9]{64}$/.test(evidence.evidenceRecordDigest)) {
     return 'sourceEvidence.evidenceRecordDigest must be a lowercase 64-hex digest.';
   }
-  if (evidence.sourceBroker !== request.broker) return 'broker and sourceEvidence.sourceBroker must match.';
+  // Cross-field broker/evidence consistency is a domain check and runs only
+  // after the stale-revision check (D03 ordering); see persistHoldingsSnapshotV2.
   return undefined;
 }
 
@@ -546,6 +554,27 @@ export function persistHoldingsSnapshotV2(
 ): SnapshotV2Outcome {
   const invalidShape = validateSnapshotV2Shape(request);
   if (invalidShape) return snapshotRefusal('INVALID_REQUEST', invalidShape);
+
+  // D03 — STALE REVISION FIRST: detection happens BEFORE domain, provenance
+  // and identity rejection. This is an authorized read-only probe with zero
+  // domain effect; the store re-checks under the serialized transaction at
+  // commit time, so a concurrent commit can never smuggle a stale write past
+  // this point.
+  let currentRevision: number;
+  try {
+    currentRevision = writer.currentRevision(owner, request.portfolioId);
+  } catch (error) {
+    if (error instanceof ResourceUnavailableError) {
+      return snapshotRefusal('RESOURCE_UNAVAILABLE', 'The requested resource is not available.');
+    }
+    return snapshotRefusal('UNAVAILABLE', 'The request could not be completed.');
+  }
+  if (currentRevision !== request.expectedRevision) {
+    return snapshotRefusal(
+      'REVISION_CONFLICT',
+      `expected revision ${request.expectedRevision} but the portfolio is at ${currentRevision}`,
+    );
+  }
 
   // Server-side lineage construction: per-row lineage is computed from the
   // source observations; the caller cannot assert it.
@@ -627,16 +656,51 @@ export function persistHoldingsSnapshotV2(
 
 export type SnapshotV2Reconciliation = 'COMMITTED' | 'NOT_COMMITTED' | 'UNRESOLVED';
 
+const RECON_HEX_64 = /^[a-f0-9]{64}$/;
+
+function isUtcIsoInstantValue(value: unknown): value is string {
+  return (
+    typeof value === 'string'
+    && !Number.isNaN(Date.parse(value))
+    && new Date(value).toISOString() === value
+  );
+}
+
 /**
- * Exact authorized readback for a v2 outcome left UNKNOWN. When the expected
- * successor revision is supplied, BOTH the contribution ledger and the
- * revision history must agree: contribution present + successor revision
- * present -> COMMITTED; both absent -> NOT_COMMITTED; disagreement or a read
- * failure -> UNRESOLVED. A receipt alone is never proof; absence is not a
- * substitute for a settled, consistent read, and an unsettled writer is never
- * second-guessed into a retry.
+ * Full evidence correspondence for the contribution row this transaction
+ * would have written: matching identity, matching stored digest copy, and
+ * the complete non-null provenance the v2 writer always persists. A row
+ * that matches on identity alone — or carries legacy/NULL provenance — is
+ * never sufficient to declare COMMITTED.
  */
-export function reconcileSnapshotV2ByRead(
+function contributionCorrespondent(row: PortfolioContribution, contentDigest: string): boolean {
+  if (row.contributionId !== contentDigest) return false;
+  if (row.contentDigest !== contentDigest) return false;
+  if (typeof row.lineageDigest !== 'string' || !RECON_HEX_64.test(row.lineageDigest)) return false;
+  if (typeof row.fileName !== 'string' || row.fileName.trim().length === 0) return false;
+  if (typeof row.sourceBroker !== 'string' || row.sourceBroker.trim().length === 0) return false;
+  if (!isUtcIsoInstantValue(row.importedAt)) return false;
+  return true;
+}
+
+/**
+ * Snapshot correspondence for the expected successor revision: it must exist,
+ * be the MERGE the v2 path writes, carry a real non-empty snapshot
+ * (holdingsCount >= 1), a finite non-negative value, a non-blank commit
+ * instant and a 64-hex provenance digest. A receipt — or a bare revision
+ * number — alone is never proof.
+ */
+function revisionCorrespondent(row: RevisionEntry | undefined): boolean {
+  if (!row) return false;
+  if (row.operation !== 'MERGE') return false;
+  if (!Number.isFinite(row.totalMarketValue) || row.totalMarketValue < 0) return false;
+  if (!Number.isSafeInteger(row.holdingsCount) || row.holdingsCount < 1) return false;
+  if (typeof row.committedAt !== 'string' || row.committedAt.trim().length === 0) return false;
+  if (typeof row.provenanceDigest !== 'string' || !RECON_HEX_64.test(row.provenanceDigest)) return false;
+  return true;
+}
+
+function readReconciliationPass(
   writer: Pick<HoldingsSnapshotWriter, 'contributionsValidated' | 'revisions'>,
   owner: OwnerRef,
   portfolioId: string,
@@ -645,19 +709,69 @@ export function reconcileSnapshotV2ByRead(
 ): SnapshotV2Reconciliation {
   try {
     const contributions = writer.contributionsValidated(owner, portfolioId);
-    const contributed = contributions.some((row) => row.contributionId === contentDigest);
+    const match = contributions.find((row) => row.contributionId === contentDigest);
     if (expectedSuccessorRevision === undefined) {
-      return contributed ? 'COMMITTED' : 'NOT_COMMITTED';
+      // Ledger-only verdict, still requiring complete provenance evidence.
+      if (!match) return 'NOT_COMMITTED';
+      return contributionCorrespondent(match, contentDigest) ? 'COMMITTED' : 'UNRESOLVED';
     }
-    if (!Number.isSafeInteger(expectedSuccessorRevision) || expectedSuccessorRevision < 2) {
-      return 'UNRESOLVED';
+    const successor = writer.revisions(owner, portfolioId).find((row) => row.revision === expectedSuccessorRevision);
+    if (!successor) {
+      // Ledger and history disagree (contribution present, revision absent):
+      // never guessed in either direction.
+      return match ? 'UNRESOLVED' : 'NOT_COMMITTED';
     }
-    const revisions = writer.revisions(owner, portfolioId);
-    const successorPresent = revisions.some((row) => row.revision === expectedSuccessorRevision);
-    if (contributed && successorPresent) return 'COMMITTED';
-    if (!contributed && !successorPresent) return 'NOT_COMMITTED';
-    return 'UNRESOLVED';
+    return match && contributionCorrespondent(match, contentDigest) && revisionCorrespondent(successor)
+      ? 'COMMITTED'
+      : 'UNRESOLVED';
   } catch {
     return 'UNRESOLVED';
   }
+}
+
+/**
+ * Exact authorized readback for a v2 outcome left UNKNOWN.
+ *
+ * Stronger than receipt-trust: (1) settlement is proven by an empty
+ * zero-write quiescence probe — no writer can hold the write lock at
+ * that instant — and the store with a zero-write `BEGIN IMMEDIATE` + ROLLBACK probe —
+ * a lost-acknowledgement writer either committed atomically before the lock
+ * was granted or is blocked behind it, so absence is never read while a
+ * writer could still commit; (2) TWO consistent read passes are required —
+ * any verdict change between them yields UNRESOLVED; (3) COMMITTED requires
+ * exact correspondence on BOTH the contribution ledger (identity, stored
+ * digest copy, complete provenance) and, when the expected successor
+ * revision is supplied, the revision history (MERGE, non-empty snapshot,
+ * provenance evidence). Disagreement, weak provenance, a failed settlement
+ * probe or any read failure yields UNRESOLVED. Absence with settlement
+ * proven yields NOT_COMMITTED. A receipt alone is never proof; no outcome
+ * here authorizes or implies a retry.
+ */
+export function reconcileSnapshotV2ByRead(
+  writer: Pick<HoldingsSnapshotWriter, 'contributionsValidated' | 'revisions' | 'proveSettledForReconciliation'>,
+  owner: OwnerRef,
+  portfolioId: string,
+  contentDigest: string,
+  expectedSuccessorRevision?: number,
+): SnapshotV2Reconciliation {
+  if (typeof contentDigest !== 'string' || !RECON_HEX_64.test(contentDigest)) return 'UNRESOLVED';
+  if (
+    expectedSuccessorRevision !== undefined
+    && (!Number.isSafeInteger(expectedSuccessorRevision) || expectedSuccessorRevision < 2)
+  ) {
+    return 'UNRESOLVED';
+  }
+  // (1) Writer settlement: an empty `BEGIN IMMEDIATE` + ROLLBACK performs
+  // zero writes and throws when the store cannot prove quiescence. If the
+  // probe fails, the outcome is UNRESOLVED — never NOT_COMMITTED.
+  try {
+    writer.proveSettledForReconciliation();
+  } catch {
+    return 'UNRESOLVED';
+  }
+  // (2)+(3) Two consistent read passes; a change between them yields UNRESOLVED.
+  const first = readReconciliationPass(writer, owner, portfolioId, contentDigest, expectedSuccessorRevision);
+  const second = readReconciliationPass(writer, owner, portfolioId, contentDigest, expectedSuccessorRevision);
+  if (first !== second) return 'UNRESOLVED';
+  return first;
 }
