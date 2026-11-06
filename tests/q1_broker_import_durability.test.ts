@@ -402,7 +402,7 @@ describe('q1 / durable broker-ingestion persistence boundary', () => {
       assert.equal(unknown.ok, 'unknown', JSON.stringify(unknown));
       assert.equal(unknown.code, 'OUTCOME_UNKNOWN');
       assert.equal(unknown.storeEffect, 'OUTCOME_UNKNOWN');
-      assert.equal(reconcileBrokerImportByRead(store, OWNER, 'P-ACK-LOSS', 'sha256:ack-loss'), 'COMMITTED');
+      assert.equal(reconcileBrokerImportByRead(store, OWNER, 'P-ACK-LOSS', 'sha256:ack-loss', { request }), 'COMMITTED');
       assert.equal(store.revisions(OWNER, 'P-ACK-LOSS').length, 1, 'no automatic retry occurred');
     });
 

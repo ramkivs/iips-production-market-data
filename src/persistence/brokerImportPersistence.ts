@@ -331,7 +331,7 @@ export function persistBrokerImport(
       return {
         ok: 'unknown',
         code: 'OUTCOME_UNKNOWN',
-        message: 'The transaction acknowledgement was lost; reconcile by reading the contribution ledger. Do not retry automatically.',
+        message: 'The transaction acknowledgement was lost; reconcile against the stored import evidence (reconcileBrokerImportByRead with the original request). Do not retry automatically.',
         storeEffect: 'OUTCOME_UNKNOWN',
         portfolioId: request.portfolioId,
         contentDigest: request.contentDigest,
@@ -347,19 +347,198 @@ export function persistBrokerImport(
 
 export type BrokerImportReconciliation = 'COMMITTED' | 'NOT_COMMITTED' | 'UNRESOLVED';
 
+/**
+ * The evidence the v1 UNKNOWN/lost-ACK recovery path owes the reconciler: the
+ * ORIGINAL broker-import request that produced the COMMIT/ROLLBACK decision.
+ * Without it (or without a derivable intended outcome from it) no terminal
+ * verdict but UNRESOLVED is reachable — the wire digest alone never binds the
+ * successor revision or the provenance. `resolver` defaults to the governed
+ * broker-observation resolver, identical to the commit path.
+ */
+export interface BrokerImportReconciliationExpectation {
+  readonly request: BrokerImportRequest;
+  readonly resolver?: BrokerObservationResolver;
+}
+
+/**
+ * What the v1 reconciler requires of its writer. A `DurablePortfolioStore`
+ * implements all three evidence reads plus the settlement probe. An adapter
+ * that cannot prove settlement or cannot return the successor evidence
+ * satisfies none of this meaningfully and always yields UNRESOLVED — reconciliation here
+ * is an authorized readback, not an adapter contract.
+ */
+export interface BrokerImportReconciliationWriter {
+  /** v1 ledger read — the same surface `BrokerImportWriter.contributions` exposes. */
+  contributions(owner: OwnerRef, portfolioId: string): PortfolioContribution[];
+  proveSettledForReconciliation?(): void;
+  revisionReconciliationEvidence?(
+    owner: OwnerRef,
+    portfolioId: string,
+    revision: number,
+  ): RevisionReconciliationEvidence | undefined;
+  holdingsForRevision?(owner: OwnerRef, portfolioId: string, revision: number): HoldingInput[];
+}
+
+/** Intended v1 outcome re-derived from the original request (commit-path math). */
+export interface DerivedV1IntendedEvidence {
+  readonly holdings: HoldingInput[];
+  readonly provenanceDigest: string;
+  /** The digest the v1 store persists in `portfolio_revisions.content_digest`. */
+  readonly storedContentDigest: string;
+  readonly expectedSuccessorRevision: number;
+  readonly expectedOperation: 'INITIAL' | 'MERGE' | 'REPLACE';
+}
+
+/**
+ * Re-derive the v1 commit path's intended evidence. Pure: validation, lineage,
+ * identity resolution, provenance and digests exactly as the commit computes
+ * them. Returns undefined on any failure (callers report UNRESOLVED).
+ */
+export function deriveV1IntendedEvidence(
+  request: BrokerImportRequest,
+  resolver: BrokerObservationResolver = createGovernedBrokerObservationResolver(),
+): DerivedV1IntendedEvidence | undefined {
+  if (!request || typeof request !== 'object' || Array.isArray(request)) return undefined;
+  if (validateRequest(request)) return undefined;
+  const { resolved, gate } = resolveHoldings(request, resolver);
+  if (!gate.saveable || !resolved) return undefined;
+  const holdings = mapBrokerImportHoldings(resolved);
+  const provenanceDigest = computeBrokerImportProvenance(request);
+  const expectedSuccessorRevision = request.expectedRevision + 1;
+  if (!Number.isSafeInteger(expectedSuccessorRevision) || expectedSuccessorRevision < 1) return undefined;
+  // v1 operation semantics: `create()` always commits INITIAL; `save()` commits
+  // REPLACE for an explicit REPLACE mode, MERGE otherwise.
+  const expectedOperation: DerivedV1IntendedEvidence['expectedOperation'] =
+    request.expectedRevision === 0 ? 'INITIAL' : request.mode === 'REPLACE' ? 'REPLACE' : 'MERGE';
+  return {
+    holdings,
+    provenanceDigest,
+    storedContentDigest: computeRevisionContentDigest(holdings, provenanceDigest),
+    expectedSuccessorRevision,
+    expectedOperation,
+  };
+}
+
+/** Verdict binding for a single v1 evidence fingerprint (never guesses). */
+function verdictOfBrokerImportFingerprint(
+  fp: EvidenceFingerprint,
+  request: BrokerImportRequest,
+  intended: DerivedV1IntendedEvidence,
+): 'absent' | 'match' | 'other' {
+  if (!fp.contribution && fp.revision === undefined && fp.holdings.length === 0) return 'absent';
+  const { contribution, revision, holdings } = fp;
+  if (!contribution || !revision) return 'other';
+  // Contribution ↔ intended import request evidence.
+  if (contribution.contributionId !== request.contentDigest) return 'other';
+  if (contribution.contentDigest !== request.contentDigest) return 'other';
+  if (typeof contribution.lineageDigest !== 'string' || !RECON_HEX_64.test(contribution.lineageDigest)) return 'other';
+  if (contribution.lineageDigest !== intended.provenanceDigest) return 'other';
+  if (contribution.fileName !== request.fileName) return 'other';
+  if (contribution.sourceBroker !== request.sourceBroker) return 'other';
+  if (contribution.importedAt !== request.importedAt) return 'other';
+  if (!isUtcIsoInstantValue(contribution.importedAt)) return 'other';
+  if (!Number.isFinite(contribution.amount) || contribution.amount < 0) return 'other';
+  // A committed v1 import always records its disposition semantics.
+  if (contribution.semantics !== 'SAVED_NEW_BATCH' && contribution.semantics !== 'MERGED_INTO_EXISTING') return 'other';
+  // Contribution ↔ successor revision cross-binding (the expected MERGE/REPLACE successor for exactly this content).
+  if (revision.revision !== intended.expectedSuccessorRevision) return 'other';
+  if (revision.operation !== intended.expectedOperation) return 'other';
+  if (typeof revision.committedAt !== 'string' || !isUtcIsoInstantValue(revision.committedAt)) return 'other';
+  if (!Number.isSafeInteger(revision.holdingsCount) || revision.holdingsCount < 1) return 'other';
+  if (revision.holdingsCount !== intended.holdings.length) return 'other';
+  if (!Number.isFinite(revision.totalMarketValue) || revision.totalMarketValue < 0) return 'other';
+  if (typeof revision.provenanceDigest !== 'string' || !RECON_HEX_64.test(revision.provenanceDigest)) return 'other';
+  if (revision.provenanceDigest !== contribution.lineageDigest) return 'other';
+  if (revision.provenanceDigest !== intended.provenanceDigest) return 'other';
+  if (typeof revision.contentDigest !== 'string' || !RECON_HEX_64.test(revision.contentDigest)) return 'other';
+  if (revision.contentDigest !== intended.storedContentDigest) return 'other';
+  if (contribution.amount !== revision.totalMarketValue) return 'other';
+  // Stored snapshot ↔ intended snapshot: exact row equality.
+  if (!holdingsSnapshotsEqual(holdings, intended.holdings)) return 'other';
+  const intendedTotal = intended.holdings.reduce((sum, holding) => sum + holding.marketValue, 0);
+  if (revision.totalMarketValue !== intendedTotal) return 'other';
+  return 'match';
+}
+
+/**
+ * Exact authorized readback for a v1 outcome left UNKNOWN (lost acknowledgement).
+ *
+ * Behaviour change (2026-11-06, bounded correction of the finding recorded in
+ * the R01 investigation): the four-argument legacy call, which used to treat a
+ * lone contribution-ledger row as sufficient, now ALWAYS fails closed to
+ * UNRESOLVED. A terminal verdict requires ALL of:
+ *
+ *   (1) SETTLEMENT — the writer must implement and pass `proveSettledForReconciliation()`
+ *       (zero writes). Settlement is necessary, never sufficient: it is an
+ *       instantaneous observation of an open write lock, proves no open
+ *       transaction at that moment, is never held through the reads and never
+ *       upgrades an evidence gap. Probe failure → UNRESOLVED.
+ *   (2) EVIDENCE BINDING — the original broker-import request is required;
+ *       the intended successor (`expectedRevision + 1`), intended provenance
+ *       and intended stored content digest are re-derived through the commit
+ *       path, and the supplied `contentDigest` must match the request's.
+ *   (3) CROSS-BINDING — contribution row bound to the request identities
+ *       (contributionId, digest, provenance lineage, fileName, sourceBroker,
+ *       round-trippable importedAt, disposition semantics), bound across to
+ *       the successor revision (revision number, operation, count, totals,
+ *       provenance, stored content digest), and the stored holdings snapshot
+ *       must row-equal the intended snapshot.
+ *   (4) TWO SERIALIZED EVIDENCE PASSES — the contribution, revision evidence
+ *       and holdings are read twice; byte-identical fingerprints are required,
+ *       else UNRESOLVED. Absent on both passes with settlement proven ⇒
+ *       NOT_COMMITTED. Everything else ⇒ UNRESOLVED. A receipt alone is never
+ *       proof; no outcome here authorizes or implies a retry.
+ *
+ * NOT_COMMITTED under a foreign owner means "absent under that owner's scope",
+ * never "provably never committed". Reconciliation performs zero writes.
+ */
 export function reconcileBrokerImportByRead(
-  writer: Pick<BrokerImportWriter, 'contributions'>,
+  writer: BrokerImportReconciliationWriter,
   owner: OwnerRef,
   portfolioId: string,
   contentDigest: string,
+  expectation?: BrokerImportReconciliationExpectation,
 ): BrokerImportReconciliation {
+  if (typeof contentDigest !== 'string' || !contentDigest.trim()) return 'UNRESOLVED';
+  // (1) Settlement is mandatory. Adapters without the probe can never establish it.
+  if (typeof writer.proveSettledForReconciliation !== 'function') return 'UNRESOLVED';
   try {
-    return writer.contributions(owner, portfolioId).some((row) => row.contributionId === contentDigest)
-      ? 'COMMITTED'
-      : 'NOT_COMMITTED';
+    writer.proveSettledForReconciliation();
   } catch {
     return 'UNRESOLVED';
   }
+  // (2) Evidence binding — impossible without the original request.
+  if (!expectation || typeof expectation !== 'object') return 'UNRESOLVED';
+  const request = expectation.request;
+  const intended = deriveV1IntendedEvidence(request, expectation.resolver);
+  if (!intended) return 'UNRESOLVED';
+  if (request.contentDigest !== contentDigest) return 'UNRESOLVED';
+  if (request.portfolioId !== portfolioId) return 'UNRESOLVED';
+  if (
+    typeof writer.revisionReconciliationEvidence !== 'function'
+    || typeof writer.holdingsForRevision !== 'function'
+  ) {
+    return 'UNRESOLVED';
+  }
+  const projection: Pick<HoldingsSnapshotWriter, 'contributionsValidated' | 'revisionReconciliationEvidence' | 'holdingsForRevision'> = {
+    contributionsValidated: (o, pid) => writer.contributions(o, pid),
+    revisionReconciliationEvidence: writer.revisionReconciliationEvidence.bind(writer),
+    holdingsForRevision: writer.holdingsForRevision.bind(writer),
+  };
+  let first: EvidenceFingerprint | undefined;
+  let second: EvidenceFingerprint | undefined;
+  try {
+    // (4) Evidence-snapshot consistency — not verdict equality.
+    first = readEvidenceFingerprint(projection, owner, portfolioId, contentDigest, intended.expectedSuccessorRevision);
+    second = readEvidenceFingerprint(projection, owner, portfolioId, contentDigest, intended.expectedSuccessorRevision);
+  } catch {
+    return 'UNRESOLVED';
+  }
+  if (fingerprintOf(first) !== fingerprintOf(second)) return 'UNRESOLVED';
+  const verdict = verdictOfBrokerImportFingerprint(first, request, intended);
+  if (verdict === 'absent') return 'NOT_COMMITTED';
+  if (verdict === 'match') return 'COMMITTED';
+  return 'UNRESOLVED';
 }
 
 /* ------------------------------------------------------------------ *
