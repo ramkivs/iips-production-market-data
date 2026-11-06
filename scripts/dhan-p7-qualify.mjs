@@ -1,105 +1,167 @@
 #!/usr/bin/env node
 /**
- * DHAN-P7 evidence runner: retrieve the official Dhan instrument master,
- * snapshot it, qualify records against authoritative P04 identity data and
- * emit a machine-readable manifest + human-readable report under
- * evidence/dhan-p7/. Deterministic for a fixed snapshot (`--snapshot <file>`).
+ * DHAN-P7 evidence runner (offline, deterministic).
  *
- * No credentials are used or requested. No live quote request is made.
+ * Consumes the RETAINED official snapshots under evidence/dhan-p7/source/
+ * (never redownloads), verifies their SHA-256 against
+ * source-retrieval-manifest.json, parses detailed + compact masters from
+ * their observed headers, reconciles them, qualifies equity candidates
+ * against the authoritative governed P04 SecurityMaster and emits the
+ * qualification manifest + reports under evidence/dhan-p7/.
+ *
+ * No credentials, no live quote requests, no claim of live qualification.
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { execSync } from 'node:child_process';
 
 import {
-  retrieveInstrumentMaster,
   parseInstrumentMasterCsv,
   qualifyInstrumentMaster,
-  DHAN_INSTRUMENT_MASTER_DETAILED_URL,
-  DHAN_INSTRUMENT_MASTER_COMPACT_URL,
+  indexCompactMaster,
+  compactConsistency,
+  DETAILED_REQUIRED_COLUMNS,
+  COMPACT_REQUIRED_COLUMNS,
 } from '../dist/src/providers/dhan/index.js';
 import { getGovernedBroadSecurityMaster } from '../dist/src/identity/governed_fixture_master.js';
 
+const srcDir = resolve(process.cwd(), 'evidence/dhan-p7/source');
 const outDir = resolve(process.cwd(), 'evidence/dhan-p7');
 mkdirSync(outDir, { recursive: true });
 
-const snapshotArg = process.argv.indexOf('--snapshot');
-const snapshotPath = snapshotArg >= 0 ? process.argv[snapshotArg + 1] : null;
+const retrievalManifest = JSON.parse(readFileSync(join(outDir, 'source-retrieval-manifest.json'), 'utf8').replace(/^\uFEFF/, ''));
+const commit = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 
-let source;
-let body;
-if (snapshotPath) {
-  body = readFileSync(snapshotPath, 'utf8');
-  const bytes = Buffer.from(body, 'utf8');
-  source = {
-    url: `file://${resolve(snapshotPath)} (retained snapshot of ${DHAN_INSTRUMENT_MASTER_DETAILED_URL})`,
-    retrievedAtUtc: new Date().toISOString(),
-    httpStatus: null,
-    contentType: 'text/csv',
-    contentLength: bytes.length,
-    rawSha256: createHash('sha256').update(bytes).digest('hex'),
-    byteSize: bytes.length,
-    ok: true,
-  };
-  writeFileSync(join(outDir, 'api-scrip-master-detailed.snapshot.csv'), body);
-} else {
-  const snap = await retrieveInstrumentMaster(DHAN_INSTRUMENT_MASTER_DETAILED_URL);
-  source = snap.evidence;
-  body = snap.body;
-  if (snap.evidence.ok) {
-    writeFileSync(join(outDir, 'api-scrip-master-detailed.csv'), body);
+function loadVerified(file) {
+  const expected = retrievalManifest.files.find((f) => f.filename === file);
+  if (!expected) throw new Error(`no manifest entry for ${file}`);
+  const bytes = readFileSync(join(srcDir, file));
+  const actual = createHash('sha256').update(bytes).digest('hex').toUpperCase();
+  if (actual !== expected.sha256.toUpperCase()) {
+    throw new Error(`hash mismatch for ${file}: manifest ${expected.sha256} != actual ${actual}`);
   }
-  // Compact master is used only for a security-ID cross-check when reachable.
-  const compact = await retrieveInstrumentMaster(DHAN_INSTRUMENT_MASTER_COMPACT_URL);
-  writeFileSync(
-    join(outDir, 'retrieval-log.json'),
-    JSON.stringify({ detailed: source, compact: compact.evidence }, null, 2) + '\n',
-  );
+  return { text: bytes.toString('utf8'), expected, actual };
 }
 
-const parsed = parseInstrumentMasterCsv(body);
-const { manifest, registry } = qualifyInstrumentMaster(parsed, getGovernedBroadSecurityMaster(), source);
+const detailed = loadVerified('api-scrip-master-detailed.csv');
+const compact = loadVerified('api-scrip-master.csv');
 
-const manifestJson = {
+const parsedDetailed = parseInstrumentMasterCsv(detailed.text, DETAILED_REQUIRED_COLUMNS);
+const parsedCompact = parseInstrumentMasterCsv(compact.text, COMPACT_REQUIRED_COLUMNS);
+if (parsedDetailed.schemaError) throw new Error(`detailed schema: ${parsedDetailed.schemaError}`);
+if (parsedCompact.schemaError) throw new Error(`compact schema: ${parsedCompact.schemaError}`);
+
+const compactIndex = indexCompactMaster(parsedCompact);
+const securityMaster = getGovernedBroadSecurityMaster();
+const sourceEvidence = {
+  url: retrievalManifest.files[0].sourceUrl,
+  retrievedAtUtc: retrievalManifest.files[0].retrievedAtUtc,
+  httpStatus: 200,
+  contentType: 'text/csv',
+  contentLength: detailed.expected.sizeBytes,
+  rawSha256: detailed.actual.toLowerCase(),
+  byteSize: detailed.expected.sizeBytes,
+  ok: true,
+};
+
+const { manifest, registry } = qualifyInstrumentMaster(parsedDetailed, securityMaster, sourceEvidence);
+
+// Reconciliation stats over equity candidates.
+const recon = { consistent: 0, missingInCompact: 0, seriesMismatch: 0, notEquitySkipped: 0 };
+for (const rec of parsedDetailed.records) {
+  const v = rec.values;
+  if (v['SEGMENT'] !== 'E' || v['INSTRUMENT'] !== 'EQUITY') { recon.notEquitySkipped++; continue; }
+  const r = compactConsistency(compactIndex, v['EXCH_ID'], v['SEGMENT'], v['SECURITY_ID'], v['SERIES']);
+  if (r === 'CONSISTENT') recon.consistent++;
+  else if (r === 'MISSING_IN_COMPACT') recon.missingInCompact++;
+  else recon.seriesMismatch++;
+}
+
+const byCategory = {};
+for (const rec of parsedDetailed.records) {
+  const key = `${rec.values['SEGMENT'] ?? '?'}|${rec.values['INSTRUMENT'] ?? '?'}`;
+  byCategory[key] = (byCategory[key] ?? 0) + 1;
+}
+
+const full = {
   task: 'DHAN-P7',
   generatedAtUtc: new Date().toISOString(),
-  source: manifest.source,
-  parserSchemaError: manifest.parserSchemaError,
-  observedHeaders: manifest.observedHeaders,
-  totalRows: manifest.totalRows,
-  equityCandidates: manifest.equityCandidates,
-  qualified: manifest.qualified,
-  counts: manifest.counts,
+  pipelineCommit: commit,
+  sources: retrievalManifest.files.map((f) => ({
+    filename: f.filename,
+    sourceUrl: f.sourceUrl,
+    retrievedAtUtc: f.retrievedAtUtc,
+    sha256: f.sha256,
+    sha256Verified: true,
+    sizeBytes: f.sizeBytes,
+    dataRows: f.dataRows,
+    observedColumns: f.columns.filter(Boolean),
+  })),
+  schemas: {
+    detailedRequired: DETAILED_REQUIRED_COLUMNS,
+    compactRequired: COMPACT_REQUIRED_COLUMNS,
+    detailedHeadersObserved: parsedDetailed.headers,
+    compactHeadersObserved: parsedCompact.headers,
+  },
+  totals: {
+    detailedRows: manifest.totalRows,
+    compactRows: parsedCompact.records.length,
+    equityCandidates: manifest.equityCandidates,
+    qualified: manifest.qualified,
+    registrySize: registry.size,
+  },
+  countsByDisposition: manifest.counts,
+  countsByCategory: byCategory,
   coverageByExchangeSeries: manifest.coverageByExchangeSeries,
+  reconciliation: recon,
   registryEntries: manifest.registryEntries,
-  records: manifest.records,
+  // Bounded per-record evidence: every QUALIFIED record plus the first 500 non-qualified.
+  records: [
+    ...manifest.records.filter((r) => r.disposition === 'QUALIFIED'),
+    ...manifest.records.filter((r) => r.disposition !== 'QUALIFIED').slice(0, 500),
+  ],
+  identityLimitation:
+    'P04 establishes companyId from exact ISIN and the active exchange listing; it does not independently carry exchange series. ' +
+    'The D114 series component is sourced from the official Dhan master SERIES column (vendor evidence). ' +
+    'Dhan does not independently verify P04 series; no symbol/name fallback is used.',
 };
-writeFileSync(join(outDir, 'qualification-manifest.json'), JSON.stringify(manifestJson, null, 2) + '\n');
+writeFileSync(join(outDir, 'qualification-manifest.json'), JSON.stringify(full, null, 2) + '\n');
 
 const lines = [
-  '# DHAN-P7 Instrument-Master Qualification Report',
+  '# DHAN-P7 Qualification Report',
   '',
-  `- Source: ${source.url}`,
-  `- Retrieved (UTC): ${source.retrievedAtUtc} — not claimed current beyond this timestamp`,
-  `- HTTP status: ${source.httpStatus ?? 'unreachable'}`,
-  `- Raw SHA-256: ${source.rawSha256 ?? 'n/a'}`,
-  `- Bytes: ${source.byteSize ?? 'n/a'}`,
-  `- Total rows: ${manifest.totalRows}, equity candidates: ${manifest.equityCandidates}, qualified: ${manifest.qualified}`,
-  `- Counts: ${JSON.stringify(manifest.counts)}`,
+  `- Pipeline commit: ${commit}`,
+  `- Detailed: ${detailed.expected.sourceUrl} sha256=${detailed.actual} rows=${manifest.totalRows}`,
+  `- Compact: ${compact.expected.sourceUrl} sha256=${compact.actual} rows=${parsedCompact.records.length}`,
+  `- Snapshots verified against source-retrieval-manifest.json: yes (immutable, not redownloaded)`,
+  `- Equity candidates: ${manifest.equityCandidates}; QUALIFIED: ${manifest.qualified}; registry size: ${registry.size}`,
+  `- Dispositions: ${JSON.stringify(manifest.counts)}`,
+  `- Reconciliation (equity): ${JSON.stringify(recon)}`,
   `- Coverage by exchange:series: ${JSON.stringify(manifest.coverageByExchangeSeries)}`,
-  `- Registry entries populated: ${manifest.registryEntries.length}`,
   '',
-  'A record in Dhan\'s master does NOT prove live quote qualification or current tradability.',
+  'Static instrument-master evidence only: no live quote qualification, no production readiness claim.',
 ].join('\n');
 writeFileSync(join(outDir, 'qualification-report.md'), lines + '\n');
+writeFileSync(
+  join(outDir, 'source-reconciliation-report.md'),
+  [
+    '# DHAN-P7 Source Reconciliation Report',
+    '',
+    `- Detailed vs compact join key: EXCH_ID/SEM_EXM_EXCH_ID + SEGMENT/SEM_SEGMENT + SECURITY_ID/SEM_SMST_SECURITY_ID (provider scope; IDs are not globally unique).`,
+    `- Equity-candidate reconciliation: ${JSON.stringify(recon)}`,
+    `- Category counts: ${JSON.stringify(byCategory)}`,
+    `- Compact master carries no ISIN; ISIN exists only in the detailed master.`,
+  ].join('\n') + '\n',
+);
 
 console.log(JSON.stringify({
-  ok: source.ok,
-  url: source.url,
-  httpStatus: source.httpStatus,
-  rawSha256: source.rawSha256,
-  totalRows: manifest.totalRows,
+  commit,
+  detailedRows: manifest.totalRows,
+  compactRows: parsedCompact.records.length,
+  equityCandidates: manifest.equityCandidates,
   qualified: manifest.qualified,
   registrySize: registry.size,
-  evidenceDir: outDir,
+  counts: manifest.counts,
+  reconciliation: recon,
 }, null, 2));

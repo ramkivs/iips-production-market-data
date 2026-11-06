@@ -3,18 +3,21 @@
  * DHAN-P7 — parser for the official Dhan instrument master (detailed CSV).
  *
  * The parser trusts the OBSERVED header row, never a hardcoded positional
- * schema. Documented detailed-master columns include:
- *   EXCH_ID, SEGMENT, SEM_SMST_SECURITY_ID, ISIN, INSTRUMENT,
- *   UNDERLYING_SECURITY_ID, UNDERLYING_SYMBOL, SYMBOL_NAME, INSTRUMENT_TYPE,
- *   SERIES, LOT_SIZE, ASM_GSM_CATEGORY, BUY_SELL_INDICATOR, ...
- * The compact master uses SEM_EXM_EXCH_ID / SEM_SEGMENT / SEM_SMST_SECURITY_ID /
- * SEM_SERIES / SEM_INSTRUMENT_NAME / ... and has NO ISIN column.
+ * schema. OBSERVED on the published snapshots (evidence/dhan-p7/source,
+ * retrieved 2026-11-06, hashes in source-retrieval-manifest.json):
+ *   detailed: EXCH_ID, SEGMENT, SECURITY_ID, ISIN, INSTRUMENT,
+ *             UNDERLYING_SECURITY_ID, UNDERLYING_SYMBOL, SYMBOL_NAME,
+ *             DISPLAY_NAME, INSTRUMENT_TYPE, SERIES, LOT_SIZE, ...
+ *             (SECURITY_ID, NOT SEM_SMST_SECURITY_ID; carries ISIN + SERIES)
+ *   compact:  SEM_EXM_EXCH_ID, SEM_SEGMENT, SEM_SMST_SECURITY_ID,
+ *             SEM_INSTRUMENT_NAME, ..., SEM_SERIES, SM_SYMBOL_NAME
+ *             (carries NO ISIN column)
  */
 
 export const DETAILED_REQUIRED_COLUMNS = [
   'EXCH_ID',
   'SEGMENT',
-  'SEM_SMST_SECURITY_ID',
+  'SECURITY_ID',
   'ISIN',
   'INSTRUMENT',
   'SERIES',
@@ -41,6 +44,7 @@ export interface ParsedInstrumentMaster {
 
 /** Minimal RFC-4180-style CSV splitter (quoted fields, escaped quotes, CRLF). */
 export function splitCsv(text: string): string[][] {
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1); // strip BOM
   const rows: string[][] = [];
   let field = '';
   let row: string[] = [];

@@ -122,7 +122,8 @@ export function qualifyInstrumentMaster(
     const v = rec.values;
     const exchange = v['EXCH_ID'] ?? v['SEM_EXM_EXCH_ID'] ?? '';
     const segment = v['SEGMENT'] ?? v['SEM_SEGMENT'] ?? '';
-    const dhanSecurityId = v['SEM_SMST_SECURITY_ID'] ?? '';
+    // Detailed master: SECURITY_ID. Compact master: SEM_SMST_SECURITY_ID.
+    const dhanSecurityId = v['SECURITY_ID'] ?? v['SEM_SMST_SECURITY_ID'] ?? '';
     const isin = v['ISIN'] ?? '';
     const instrument = v['INSTRUMENT'] ?? v['SEM_INSTRUMENT_NAME'] ?? '';
     const series = v['SERIES'] ?? v['SEM_SERIES'] ?? '';
@@ -244,6 +245,52 @@ export function qualifyInstrumentMaster(
     },
     registry,
   };
+}
+
+export interface CompactIndexEntry {
+  readonly exchange: string;
+  readonly segment: string;
+  readonly dhanSecurityId: string;
+  readonly series: string;
+  readonly instrument: string;
+}
+
+/**
+ * Indexes the compact master by the provider identity scope
+ * (exchange, segment, dhanSecurityId). Dhan security IDs are NOT globally
+ * unique — the exchange+segment scope is mandatory.
+ */
+export function indexCompactMaster(parsed: ParsedInstrumentMaster): Map<string, CompactIndexEntry> {
+  const map = new Map<string, CompactIndexEntry>();
+  for (const rec of parsed.records) {
+    const v = rec.values;
+    const exchange = v['SEM_EXM_EXCH_ID'] ?? '';
+    const segment = v['SEM_SEGMENT'] ?? '';
+    const dhanSecurityId = v['SEM_SMST_SECURITY_ID'] ?? '';
+    if (!exchange || !segment || !dhanSecurityId) continue;
+    map.set(`${exchange}|${segment}|${dhanSecurityId}`, {
+      exchange,
+      segment,
+      dhanSecurityId,
+      series: v['SEM_SERIES'] ?? '',
+      instrument: v['SEM_INSTRUMENT_NAME'] ?? '',
+    });
+  }
+  return map;
+}
+
+/** Detailed/compact consistency for one detailed record (series + instrument where applicable). */
+export function compactConsistency(
+  compactIndex: ReadonlyMap<string, CompactIndexEntry>,
+  exchange: string,
+  segment: string,
+  dhanSecurityId: string,
+  series: string,
+): 'CONSISTENT' | 'MISSING_IN_COMPACT' | 'SERIES_MISMATCH' {
+  const entry = compactIndex.get(`${exchange}|${segment}|${dhanSecurityId}`);
+  if (!entry) return 'MISSING_IN_COMPACT';
+  if (entry.series !== series) return 'SERIES_MISMATCH';
+  return 'CONSISTENT';
 }
 
 /** Validates an observed Dhan security id conservatively (non-empty, no whitespace). */

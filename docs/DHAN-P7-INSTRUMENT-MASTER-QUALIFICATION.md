@@ -5,8 +5,11 @@
 - Detailed (primary): `https://images.dhan.co/api-data/api-scrip-master-detailed.csv`
 - Compact (security-ID cross-check only): `https://images.dhan.co/api-data/api-scrip-master.csv`
 
-The detailed master is parsed from its **observed header row** (never positional):
-`EXCH_ID, SEGMENT, SEM_SMST_SECURITY_ID, ISIN, INSTRUMENT, SERIES, SYMBOL_NAME, INSTRUMENT_TYPE, ...`
+The masters are parsed from their **observed header rows** (never positional):
+- detailed: `EXCH_ID, SEGMENT, SECURITY_ID, ISIN, INSTRUMENT, UNDERLYING_SECURITY_ID, UNDERLYING_SYMBOL, SYMBOL_NAME, DISPLAY_NAME, INSTRUMENT_TYPE, SERIES, LOT_SIZE, ...` — note `SECURITY_ID` (not `SEM_SMST_SECURITY_ID`); carries `ISIN` and `SERIES`.
+- compact: `SEM_EXM_EXCH_ID, SEM_SEGMENT, SEM_SMST_SECURITY_ID, SEM_INSTRUMENT_NAME, ..., SEM_SERIES, SM_SYMBOL_NAME` — carries **no ISIN**.
+
+Detailed↔compact reconciliation joins on the provider identity scope `exchange + segment + securityId` (Dhan IDs are not globally unique) and compares series where applicable.
 
 ## Identity relationship
 
@@ -29,9 +32,17 @@ A record is QUALIFIED only if: segment `E` + instrument `EQUITY` on NSE/BSE; val
 
 Reproduce: `node scripts/dhan-p7-qualify.mjs` (live retrieval attempt) or `node scripts/dhan-p7-qualify.mjs --snapshot <file>` (deterministic re-run from a retained snapshot).
 
-## Current environment status (2026-11-06)
+## Published evidence (2026-11-06)
 
-The sandbox network allowlist (github.com, npmjs, pypi only) blocks `images.dhan.co`, so the official master could not be retrieved in this environment; the retrieval log records the failure and **zero** mappings were qualified. The registry therefore remains empty and every quote fails closed — the required fail-closed behaviour. No unofficial mirror, guessed mapping or hardcoded security ID was used as a substitute.
+Official snapshots were retrieved, SHA-256-verified and published (immutable; never redownloaded or altered):
+
+- `evidence/dhan-p7/source/api-scrip-master-detailed.csv` — 217,104 rows, SHA-256 `6F19FEB4ABD513843EAF2F139A27F17CCB660233F95AD385D11AA92C322A010D`
+- `evidence/dhan-p7/source/api-scrip-master.csv` — 217,104 rows, SHA-256 `4366E41B115B00B7A84225D3506A3DBB6EF483CB3BA4D32AD5F23D72E9EDCDDD`
+- `evidence/dhan-p7/source-retrieval-manifest.json` — retrieval timestamps/URLs/hashes/columns.
+
+Qualification result (deterministic, `scripts/dhan-p7-qualify.mjs`): 217,104 detailed rows → 23,764 equity candidates (segment `E` + instrument `EQUITY` on NSE/BSE) → **96 QUALIFIED** mappings entered the registry under `companyId|exchangeSegment|isin|series`; 23,644 rejected `REJECTED_NO_P04_CORRESPONDENCE` (governed P04 master has 2,250 entities); 24 `REJECTED_INVALID_FIELD`; 0 duplicates/conflicts; detailed↔compact reconciliation 23,764/23,764 CONSISTENT, 0 mismatches. Full counts/coverage in `evidence/dhan-p7/qualification-manifest.json`.
+
+**Identity limitation (explicit):** P04 establishes `companyId` from exact ISIN plus the active exchange listing; it does not independently carry exchange series. The D114 series component is sourced from the official Dhan master `SERIES` column (vendor evidence). No symbol/name fallback is used, and Dhan does not independently verify P04 series.
 
 ## Safety boundaries
 
