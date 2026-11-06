@@ -1,0 +1,77 @@
+{
+  "logVersion": 1,
+  "task": "Wave-3 bounded D05 universe expansion — authoritative acquisition attempt log",
+  "generatedAt": "2026-11-06T17:38:00Z",
+  "branch": "arena/8d4ad851-iips-production-market-data",
+  "baselineMain": "943309e4e84614bb8edc8d5631cd0292c7716807",
+  "authorizationClass": "PA task 2026-11-06 — Wave-3 universe expansion (execution in this sandbox)",
+  "egressAllowlist": [
+    "github.com",
+    "codeload.github.com",
+    "api.github.com",
+    "registry.npmjs.org",
+    "pypi.org",
+    "files.pythonhosted.org"
+  ],
+  "attempts": [
+    {
+      "source": "nsearchives.nseindia.com (NSE official archive: EQUITY_L, CM-UDiFF bhavcopy, niftyfiles)",
+      "result": "NOT_REACHABLE",
+      "detail": "Not on the sandbox egress allowlist; the host is unreachable from this environment. This is the primary authoritative source for the Tier-2 CM universe."
+    },
+    {
+      "source": "nseindia.com (NSE listing downloads: EQUITY_L.csv, SCRIP master, indices)",
+      "result": "NOT_REACHABLE",
+      "detail": "Same egress constraint."
+    },
+    {
+      "source": "github.com/nseindia (official NSE organisation)",
+      "result": "NO_DATA",
+      "detail": "Organisation exists; 0 public repositories as of 2026-11-06 (gh api orgs/nseindia)."
+    },
+    {
+      "source": "github.com/bseindia (official BSE organisation)",
+      "result": "NO_DATA",
+      "detail": "Organisation exists; 0 public repositories as of 2026-11-06."
+    },
+    {
+      "source": "GitHub code search: filename:EQUITY_L.csv",
+      "result": "MIRRORS_ONLY_DECLINED",
+      "detail": "218 hits, all third-party analysis/personal-finance mirrors; bytes cannot be authenticated against NSE; freshness unverifiable; several years stale. Not usable as authoritative listing data; declined under the no-manufactured-evidence bound."
+    },
+    {
+      "source": "npm registry (registry.npmjs.org)",
+      "result": "FETCHER_PACKAGES_ONLY",
+      "detail": "Search 'nse equity'/'EQUITY_L' returns live-fetch client libraries only (e.g. stock-nse-india, nse-bse-api, tapetide-mcp, screener-india); no in-package NSE master snapshot; packages call nseindia.com at runtime, which is unreachable."
+    },
+    {
+      "source": "PyPI (pypi.org / files.pythonhosted.org)",
+      "result": "FETCHER_PACKAGES_ONLY",
+      "detail": "jugaad-data, nsepython, nsetools, nse, nsepy — live-fetch clients, none bundles a listing snapshot (wheels ≤ 55 KB); live fetch target unreachable."
+    },
+    {
+      "source": "IPD in-repo archives (evidence/d114, evidence/d114-legacy)",
+      "result": "CHECKSUMS_ONLY__NO_DATA",
+      "detail": "D114 manifests record NSE CM-UDiFF bhavcopy acquisitions 2024-01-01..2026-09-20 (~2,982-3,484 records/trading day) with per-file sha256256 pins and acquisition URLs, but the bhavcopy CSVs themselves are NOT deposited in this repository — only manifests/reports. No usable listing bytes."
+    },
+    {
+      "source": "B-04 source (evidence/operator_drop/wave2-2026-11-06/source.csv)",
+      "result": "INSUFFICIENT_FIELDS",
+      "detail": "68 rows; per row only Scrip Name + ISIN + price fields + assessment NSE designation. No symbols, CIN, face value, lot/tick, industry/sector, ACTIVE evidence. Cannot populate a conforming governed record."
+    },
+    {
+      "source": "Field-completeness gap (any NSE listing file)",
+      "result": "STRUCTURAL_GAP",
+      "detail": "Even if NSE archives were reachable, EQUITY_L-class files carry only ISIN/symbol/name/series/listing date. CIN and face value require MCA master data; industry/sector require a taxonomy deposition; lot/tick come from series/F&O masters; listing status/suspension needs as-of-dated evidence. No single reachable file set yields the full contract field set; an authority-deposited merged dataset (operator drop) is the established process and none was deposited for Wave-3."
+    }
+  ],
+  "result": "ACQUISITION_BLOCKED__ZERO_INCORPORATION__NO_DEPOSITION_PUBLISHED",
+  "constraintsHonoured": [
+    "no record was invented, inferred or guessed",
+    "no third-party mirror bytes were used as evidence",
+    "existing eligibility/uniqueness/identifier/provenance rules are not weakened",
+    "existing corpus, runtime asset, manifests, Wave-1/Wave-2 revisions remain byte-identical",
+    "no new batchId was minted for a zero-addition revision",
+    "no operational DB/provisioning/activation performed"
+  ]
+}
