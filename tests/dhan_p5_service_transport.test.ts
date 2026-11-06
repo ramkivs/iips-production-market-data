@@ -11,6 +11,7 @@ import * as assert from 'node:assert';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
+import { buildD114SecurityIdentity } from '../src/contracts/types.js';
 import {
   DhanApiClient,
   DhanInstrumentRegistry,
@@ -24,6 +25,8 @@ import {
 import type { DhanHttpTransport, DhanHttpRequest, DhanHttpResponse } from '../src/providers/dhan/dhan_api_client.js';
 
 const TOKEN = 'synthetic-transport-token';
+const ID_A = buildD114SecurityIdentity('INE000SYNTH1', 'EQ')!;
+const ID_A2 = buildD114SecurityIdentity('INE000SYNTH2', 'EQ')!;
 const MAPPING = {
   companyId: 'COMP-SYNTH-A',
   isin: 'INE000SYNTH1',
@@ -105,7 +108,7 @@ describe('DHAN-P5 composed service & transport (synthetic)', () => {
   it('P5-02: authenticated quote request returns canonical D01 envelope with asOf/provenance/freshness', async () => {
     const service = makeService(okTransport());
     await withServer(service, async (_base, client) => {
-      const res = (await client.getQuote({ companyId: 'COMP-SYNTH-A', isin: 'INE000SYNTH1', exchangeSegment: 'NSE_EQ' })) as never as { ok: true; envelope: { domain: string; payload: { ltp: number; companyId: string }; provenance: { asOf: string } }; freshness: string };
+      const res = (await client.getQuote({ companyId: 'COMP-SYNTH-A', securityIdentity: ID_A, exchangeSegment: 'NSE_EQ' })) as never as { ok: true; envelope: { domain: string; payload: { ltp: number; companyId: string }; provenance: { asOf: string } }; freshness: string };
       assert.strictEqual(res.ok, true);
       assert.strictEqual(res.envelope.domain, 'D01_QUOTES');
       assert.strictEqual(res.envelope.payload.ltp, 1520.35);
@@ -139,14 +142,14 @@ describe('DHAN-P5 composed service & transport (synthetic)', () => {
   it('P5-04: ambiguous company-only request fails closed; multi-ISIN and NSE/BSE stay distinct; exact ISIN resolves', async () => {
     const service = makeService(okTransport());
     // Two securities on the same segment for one company -> company+segment ambiguous without ISIN.
-    const amb = await service.getQuote({ companyId: 'COMP-SYNTH-A', exchangeSegment: 'NSE_EQ' });
+    const amb = await service.getQuote({ companyId: 'COMP-SYNTH-A', exchangeSegment: 'NSE_EQ' } as never);
     assert.strictEqual(amb.ok, false);
-    if (!amb.ok) assert.match(amb.failure.message, /AMBIGUOUS_MAPPING|UNRESOLVED_INSTRUMENT/);
+    if (!amb.ok) assert.match(amb.failure.message, /securityIdentity|D114/);
     // Exact security identity resolves.
-    const exact = await service.getQuote({ companyId: 'COMP-SYNTH-A', exchangeSegment: 'NSE_EQ', isin: 'INE000SYNTH1' });
+    const exact = await service.getQuote({ companyId: 'COMP-SYNTH-A', exchangeSegment: 'NSE_EQ', securityIdentity: ID_A });
     assert.strictEqual(exact.ok, true);
     // Unknown company fails closed, no name/symbol fallback.
-    const unk = await service.getQuote({ companyId: 'Synth A' }); // company NAME must not resolve
+    const unk = await service.getQuote({ companyId: 'Synth A', securityIdentity: ID_A }); // company NAME must not resolve
     assert.strictEqual(unk.ok, false);
   });
 
@@ -195,8 +198,8 @@ describe('DHAN-P5 composed service & transport (synthetic)', () => {
     const service = makeService(counting);
     await withServer(service, async (_b, client) => {
       const [a, b] = await Promise.all([
-        client.getQuote({ companyId: 'COMP-SYNTH-A', isin: 'INE000SYNTH1', exchangeSegment: 'NSE_EQ' }),
-        client.getQuote({ companyId: 'COMP-SYNTH-A', isin: 'INE000SYNTH1', exchangeSegment: 'NSE_EQ' }),
+        client.getQuote({ companyId: 'COMP-SYNTH-A', securityIdentity: ID_A, exchangeSegment: 'NSE_EQ' }),
+        client.getQuote({ companyId: 'COMP-SYNTH-A', securityIdentity: ID_A, exchangeSegment: 'NSE_EQ' }),
       ]);
       assert.strictEqual((a as { ok: boolean }).ok, true);
       assert.strictEqual((b as { ok: boolean }).ok, true);
@@ -204,7 +207,7 @@ describe('DHAN-P5 composed service & transport (synthetic)', () => {
     });
     service.stop();
     assert.strictEqual(service.isRunning, false);
-    const afterStop = await service.getQuote({ companyId: 'COMP-SYNTH-A', isin: 'INE000SYNTH1', exchangeSegment: 'NSE_EQ' });
+    const afterStop = await service.getQuote({ companyId: 'COMP-SYNTH-A', securityIdentity: ID_A, exchangeSegment: 'NSE_EQ' });
     assert.strictEqual(afterStop.ok, false); // deterministic shutdown
   });
 });

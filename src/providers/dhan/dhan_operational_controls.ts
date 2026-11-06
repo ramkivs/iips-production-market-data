@@ -27,10 +27,12 @@ export interface DhanSecurityScope {
   companyId: string;
   exchangeSegment: DhanExchangeSegment;
   isin?: string;
+  /** Exact P04 exchange series from the canonical D114 identity; part of the cache key. */
+  series?: string;
 }
 
 export function dhanQuoteCacheKey(scope: DhanSecurityScope): string {
-  return `${scope.companyId.trim().toUpperCase()}|${scope.exchangeSegment}|${(scope.isin ?? '').trim().toUpperCase()}`;
+  return `${scope.companyId.trim().toUpperCase()}|${scope.exchangeSegment}|${(scope.isin ?? '').trim().toUpperCase()}|${(scope.series ?? '').trim().toUpperCase()}`;
 }
 
 export function dhanHistoricalCacheKey(req: {

@@ -8,7 +8,7 @@
  * primitives, vendor DTOs, Dhan instrument ids or credentials.
  *
  * Routes (all JSON, all POST except health):
- *   POST /v1/quotes      { companyId, isin?, exchangeSegment? } -> D01 envelope or error
+ *   POST /v1/quotes      { companyId, securityId: 'ISIN:<isin>:<series>', exchangeSegment? } -> D01 envelope or error
  *   POST /v1/historical  { companyId, exchangeSegment?, isin?, interval, fromDate, toDate } -> D02 result or error
  *   GET  /v1/health      -> ServiceHealth (never implies live connectivity)
  *
@@ -29,6 +29,7 @@ import {
   QuoteRequest,
   HistoricalServiceRequest,
 } from './dhan_market_data_service.js';
+import { buildD114SecurityIdentity, isD114SecurityIdentity } from '../../contracts/types.js';
 
 export const MARKET_DATA_TRANSPORT_TOKEN_ENV = 'IIPS_MARKET_DATA_TRANSPORT_TOKEN';
 export const MARKET_DATA_ROUTES = {
@@ -136,10 +137,34 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
         return;
       }
 
+      // Quote requests must carry the exact canonical P04 security id; a
+      // malformed identity is rejected here, before the service (and thus
+      // before any provider invocation).
+      let quoteRequest: QuoteRequest | undefined;
+      if (path === MARKET_DATA_ROUTES.quotes) {
+        const body = parsed as Record<string, unknown>;
+        const securityId = body?.securityId;
+        const identity = typeof securityId === 'string' ? buildD114SecurityIdentity(
+          securityId.split(':')[1],
+          securityId.split(':')[2],
+        ) : null;
+        if (!identity || !isD114SecurityIdentity(identity) || typeof body?.companyId !== 'string') {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'quotes require companyId and a canonical securityId (ISIN:<isin>:<series>)');
+          return;
+        }
+        quoteRequest = {
+          companyId: body.companyId as string,
+          securityIdentity: identity,
+          ...(body.exchangeSegment === 'NSE_EQ' || body.exchangeSegment === 'BSE_EQ'
+            ? { exchangeSegment: body.exchangeSegment }
+            : {}),
+        };
+      }
+
       // Bounded execution: a hung handler must not hold the connection forever.
       const result = await Promise.race([
         path === MARKET_DATA_ROUTES.quotes
-          ? service.getQuote(parsed as QuoteRequest)
+          ? service.getQuote(quoteRequest as QuoteRequest)
           : service.getHistorical(parsed as HistoricalServiceRequest),
         new Promise<'TIMEOUT'>((resolvePromise) => setTimeout(() => resolvePromise('TIMEOUT'), timeoutMs)),
       ]);
@@ -179,7 +204,13 @@ export class MarketDataTransportClient {
   }
 
   public getQuote(request: QuoteRequest) {
-    return this.post(MARKET_DATA_ROUTES.quotes, request);
+    // The wire carries the canonical securityId string; the full validated
+    // identity is reconstructed server-side. No Dhan identifiers ever cross.
+    return this.post(MARKET_DATA_ROUTES.quotes, {
+      companyId: request.companyId,
+      securityId: request.securityIdentity.securityId,
+      ...(request.exchangeSegment ? { exchangeSegment: request.exchangeSegment } : {}),
+    });
   }
 
   public getHistorical(request: HistoricalServiceRequest) {

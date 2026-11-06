@@ -324,9 +324,11 @@ describe('DHAN-D3B instrument mapping (synthetic, company≠security)', () => {
     assert.ok(unknown.status === 'UNRESOLVED');
     if (unknown.status === 'UNRESOLVED') assert.strictEqual(unknown.reason, 'UNMAPPED_COMPANY_ID');
 
-    // Genuine conflict still detected at security level: same ISIN, different Dhan id.
+    // Genuine conflict still detected at exact security level: same ISIN AND same
+    // series, different Dhan id. (Same ISIN with a DIFFERENT series is a distinct
+    // security and coexists — see DHAN-P6.)
     assert.throws(
-      () => registry.register(mapping({ isin: 'INE000SYNTH1', dhanSecurityId: 'SYNTH-NSE-EQ-7777' })),
+      () => registry.register(mapping({ isin: 'INE000SYNTH1', securityId: 'ISIN:INE000SYNTH1:EQ', dhanSecurityId: 'SYNTH-NSE-EQ-7777' })),
       (err: unknown) =>
         err instanceof DhanInstrumentMappingConflictError && err.conflictKind === 'SECURITY_MAPPING_CONFLICT'
     );

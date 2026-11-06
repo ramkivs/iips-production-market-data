@@ -16,7 +16,7 @@
  */
 
 import { DhanExchangeSegment } from './dhan_dto.js';
-import { isD114SecurityId } from '../../contracts/types.js';
+import { isD114SecurityId, type D114SecurityIdentity } from '../../contracts/types.js';
 
 /**
  * Declares where a mapping row came from. Synthetic rows exist only for
@@ -131,8 +131,15 @@ export class DhanInstrumentRegistry {
   /** Provider instrument identity is scoped to (exchangeSegment, dhanSecurityId). */
   private readonly bySecurityKey = new Map<string, string>();
 
-  private static keyOf(companyId: string, exchangeSegment: DhanExchangeSegment, isin?: string): string {
-    return `${companyId.trim().toUpperCase()}|${exchangeSegment}|${(isin ?? '').trim().toUpperCase()}`;
+  private static keyOf(companyId: string, exchangeSegment: DhanExchangeSegment, isin?: string, series?: string): string {
+    return `${companyId.trim().toUpperCase()}|${exchangeSegment}|${(isin ?? '').trim().toUpperCase()}|${(series ?? '').trim().toUpperCase()}`;
+  }
+
+  /** The exchange series of a mapping, taken only from the canonical P04 securityId — never inferred. */
+  private static seriesOf(mapping: DhanInstrumentMapping): string {
+    if (typeof mapping.securityId !== 'string' || !mapping.securityId.trim()) return '';
+    const parts = mapping.securityId.trim().split(':');
+    return parts.length === 3 ? parts[2]!.toUpperCase() : '';
   }
 
   public register(mapping: DhanInstrumentMapping): void {
@@ -177,7 +184,8 @@ export class DhanInstrumentRegistry {
     }
 
     const isin = mapping.isin?.trim().toUpperCase();
-    const key = DhanInstrumentRegistry.keyOf(mapping.companyId, mapping.exchangeSegment, isin);
+    const series = DhanInstrumentRegistry.seriesOf(mapping);
+    const key = DhanInstrumentRegistry.keyOf(mapping.companyId, mapping.exchangeSegment, isin, series);
     // Dhan instrument ids are namespaced by exchange segment: the same id on
     // NSE_EQ and BSE_EQ is NOT a conflict (provider-wide uniqueness is not
     // assumed; remains subject to live qualification).
@@ -343,12 +351,53 @@ export class DhanInstrumentRegistry {
         details: 'A canonical ISIN (security identity) is required to resolve a mapping; company + segment alone may be ambiguous.',
       };
     }
-    const mapping = this.bySecurityListingKey.get(DhanInstrumentRegistry.keyOf(key, exchangeSegment, isin));
-    if (!mapping) {
+    const matches = this.listFor(`${key}|${exchangeSegment}|${isin.trim().toUpperCase()}|`);
+    if (matches.length === 0) {
       return DhanInstrumentRegistry.notFound(
         companyId,
         `security ${isin} of companyId '${companyId}' on segment ${exchangeSegment}`
       );
+    }
+    if (matches.length > 1) {
+      return {
+        status: 'UNRESOLVED',
+        reason: 'AMBIGUOUS_MAPPING',
+        companyId,
+        details: `security ${isin} of companyId '${companyId}' on segment ${exchangeSegment} has ${matches.length} series; the exact P04 D114 series is required to disambiguate.`,
+      };
+    }
+    return this.checkActive(matches[0]!, companyId);
+  }
+
+  /**
+   * Exact-identity resolution: the complete canonical P04 `D114SecurityIdentity`
+   * (ISIN + series) plus company and segment must match ONE registered mapping.
+   * There is deliberately NO fallback to company-only, ISIN-only or segment-only
+   * resolution — a missing exact match fails closed.
+   */
+  public resolveExactIdentity(
+    companyId: string,
+    exchangeSegment: DhanExchangeSegment,
+    identity: D114SecurityIdentity,
+  ): DhanInstrumentResolution {
+    const key = (companyId || '').trim().toUpperCase();
+    if (this.bySecurityListingKey.size === 0) return DhanInstrumentRegistry.emptyResult(companyId);
+    const mapping = this.bySecurityListingKey.get(
+      DhanInstrumentRegistry.keyOf(key, exchangeSegment, identity.isin, identity.series),
+    );
+    if (!mapping) {
+      return DhanInstrumentRegistry.notFound(
+        companyId,
+        `exact security identity ${identity.securityId} of companyId '${companyId}' on segment ${exchangeSegment}`,
+      );
+    }
+    if (mapping.securityId !== undefined && mapping.securityId.trim().toUpperCase() !== identity.securityId.toUpperCase()) {
+      return {
+        status: 'UNRESOLVED',
+        reason: 'AMBIGUOUS_MAPPING',
+        companyId,
+        details: `mapping for ${identity.securityId} disagrees with its registered canonical identity ${mapping.securityId}.`,
+      };
     }
     return this.checkActive(mapping, companyId);
   }

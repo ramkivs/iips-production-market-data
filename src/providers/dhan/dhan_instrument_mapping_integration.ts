@@ -26,7 +26,7 @@ import { IdentityAmbiguityError } from '../../identity/quarantine.js';
 import { IdentityQuery } from '../../identity/mapping_store.js';
 import { SecurityMaster } from '../../identity/security_master.js';
 import { DhanExchangeSegment } from './dhan_dto.js';
-import { isD114SecurityId } from '../../contracts/types.js';
+import { type D114SecurityIdentity, isD114SecurityIdentity,  isD114SecurityId } from '../../contracts/types.js';
 import { DhanResult, dhanFailure, dhanOk } from './dhan_failures.js';
 import {
   DhanInstrumentMapping,
@@ -290,6 +290,35 @@ export class DhanInstrumentResolutionService {
    * Without an explicit exchange segment, a multi-listing company fails closed as
    * AMBIGUOUS_MAPPING — company identity alone never selects a security.
    */
+  /**
+   * Exact D114 identity resolution: requires the complete canonical identity
+   * (ISIN + series), binds it to the company and segment, and resolves only an
+   * exact unambiguous mapping. No fallback to partial identity.
+   */
+  public resolveExactIdentity(
+    companyId: string,
+    exchangeSegment: DhanExchangeSegment,
+    identity: D114SecurityIdentity,
+  ): DhanResult<DhanInstrumentMapping> {
+    if (!isD114SecurityIdentity(identity)) {
+      return dhanFailure('MALFORMED_RESPONSE', 'securityIdentity does not conform to the canonical P04 D114 grammar', {
+        field: 'securityIdentity',
+      });
+    }
+    const resolution = this.registry.resolveExactIdentity(companyId, exchangeSegment, identity);
+    if (resolution.status === 'UNRESOLVED') {
+      return dhanFailure('UNRESOLVED_INSTRUMENT', `${resolution.reason}: ${resolution.details}`, {
+        field: 'securityIdentity',
+      });
+    }
+    if (resolution.mapping.companyId.trim().toUpperCase() !== companyId.trim().toUpperCase()) {
+      return dhanFailure('IDENTITY_RESOLUTION_FAILURE', 'resolved mapping is not bound to the requested company', {
+        field: 'companyId',
+      });
+    }
+    return dhanOk(resolution.mapping);
+  }
+
   public resolveProviderMapping(
     companyId: string,
     exchangeSegment?: DhanExchangeSegment,

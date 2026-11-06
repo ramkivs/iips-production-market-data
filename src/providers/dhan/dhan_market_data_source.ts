@@ -17,7 +17,7 @@
 
 import { CanonicalEnvelope } from '../../contracts/envelope.js';
 import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
-import { SourceClassification } from '../../contracts/types.js';
+import { buildD114SecurityIdentity,  SourceClassification } from '../../contracts/types.js';
 import {
   MarketDataSource,
   ProviderHealth,
@@ -84,12 +84,26 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
     // otherwise a multi-listing company fails closed (AMBIGUOUS_MAPPING).
     const segmentParam = query.parameters?.['exchangeSegment'];
     const isinParam = query.parameters?.['isin'];
-    const resolution =
-      segmentParam === 'NSE_EQ' || segmentParam === 'BSE_EQ'
-        ? typeof isinParam === 'string' && isinParam.trim()
+    const seriesParam = query.parameters?.['series'];
+    let resolution: ReturnType<DhanInstrumentRegistry['resolve']>;
+    if (
+      (segmentParam === 'NSE_EQ' || segmentParam === 'BSE_EQ') &&
+      typeof isinParam === 'string' && isinParam.trim() &&
+      typeof seriesParam === 'string' && seriesParam.trim()
+    ) {
+      // Exact D114 path: ISIN + series must match one mapping exactly.
+      const identity = buildD114SecurityIdentity(isinParam, seriesParam);
+      resolution = identity
+        ? this.instrumentRegistry.resolveExactIdentity(query.companyId, segmentParam, identity)
+        : { status: 'UNRESOLVED', reason: 'AMBIGUOUS_MAPPING', companyId: query.companyId, details: 'ISIN + series do not form a canonical P04 D114 identity.' };
+    } else if (segmentParam === 'NSE_EQ' || segmentParam === 'BSE_EQ') {
+      resolution =
+        typeof isinParam === 'string' && isinParam.trim()
           ? this.instrumentRegistry.resolveSecurity(query.companyId, segmentParam, isinParam)
-          : this.instrumentRegistry.resolveListing(query.companyId, segmentParam)
-        : this.instrumentRegistry.resolve(query.companyId);
+          : this.instrumentRegistry.resolveListing(query.companyId, segmentParam);
+    } else {
+      resolution = this.instrumentRegistry.resolve(query.companyId);
+    }
     if (resolution.status === 'UNRESOLVED') {
       throw this.fail({
         code: 'UNRESOLVED_INSTRUMENT',

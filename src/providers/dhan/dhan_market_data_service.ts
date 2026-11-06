@@ -12,6 +12,7 @@
  */
 
 import { CanonicalEnvelope } from '../../contracts/envelope.js';
+import { isD114SecurityIdentity, type D114SecurityIdentity } from '../../contracts/types.js';
 import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
 import { SecurityMaster } from '../../identity/security_master.js';
 import { DhanApiClient } from './dhan_api_client.js';
@@ -36,7 +37,13 @@ import {
 
 export interface QuoteRequest {
   companyId: string;
-  isin?: string;
+  /**
+   * The complete canonical P04 `D114SecurityIdentity` (`ISIN:<isin>:<series>`).
+   * Quote resolution REQUIRES it: companyId, ISIN-only or segment-only requests
+   * fail closed before any provider invocation. Typically sourced from the
+   * G-2 persisted holding identity.
+   */
+  securityIdentity: D114SecurityIdentity;
   exchangeSegment?: DhanExchangeSegment;
 }
 
@@ -115,7 +122,7 @@ export class DhanMarketDataService {
           const envelope = await this.source.fetchSnapshot({
             companyId: scope.companyId,
             domain: 'D01_QUOTES',
-            parameters: { exchangeSegment: scope.exchangeSegment, isin: scope.isin },
+            parameters: { exchangeSegment: scope.exchangeSegment, isin: scope.isin, series: scope.series },
           });
           return { ok: true as const, value: envelope };
         } catch (err) {
@@ -151,24 +158,33 @@ export class DhanMarketDataService {
     if (!request || typeof request.companyId !== 'string' || !request.companyId.trim()) {
       return { ok: false, failure: dhanFailure('MISSING_REQUIRED_FIELD', 'companyId is required', { field: 'companyId' }).failure };
     }
-    if (request.isin !== undefined && !/^[A-Za-z0-9]{12}$/.test(request.isin.trim())) {
-      return { ok: false, failure: dhanFailure('MALFORMED_RESPONSE', 'isin must be 12 characters', { field: 'isin' }).failure };
+    // The exact canonical D114 identity is MANDATORY — validated with the
+    // authoritative P04 validator before anything else, never reconstructed.
+    if (!request.securityIdentity || !isD114SecurityIdentity(request.securityIdentity)) {
+      return {
+        ok: false,
+        failure: dhanFailure('MISSING_REQUIRED_FIELD', 'a valid canonical D114 securityIdentity (ISIN:<isin>:<series>) is required', { field: 'securityIdentity' }).failure,
+      };
     }
     if (request.exchangeSegment !== undefined && request.exchangeSegment !== 'NSE_EQ' && request.exchangeSegment !== 'BSE_EQ') {
       return { ok: false, failure: dhanFailure('MALFORMED_RESPONSE', 'unsupported exchangeSegment', { field: 'exchangeSegment' }).failure };
     }
 
-    // Fail closed on ambiguous identity at the governed mapping boundary:
-    // resolve through P04 + the Prompt 3B registry BEFORE any provider call.
-    const scope: DhanSecurityScope = {
-      companyId: request.companyId,
-      exchangeSegment: request.exchangeSegment ?? 'NSE_EQ',
-      isin: request.isin?.trim().toUpperCase(),
-    };
-    const mapping = this.resolution.resolveProviderMapping(scope.companyId, scope.exchangeSegment, scope.isin);
+    // Fail closed on missing/ambiguous/inconsistent identity at the governed
+    // mapping boundary: resolve the EXACT identity (ISIN + series bound to the
+    // company and segment) BEFORE any provider call.
+    const identity = request.securityIdentity;
+    const segment = request.exchangeSegment ?? 'NSE_EQ';
+    const mapping = this.resolution.resolveExactIdentity(request.companyId, segment, identity);
     if (!mapping.ok) {
       return { ok: false, failure: mapping.failure };
     }
+    const scope: DhanSecurityScope = {
+      companyId: request.companyId,
+      exchangeSegment: segment,
+      isin: identity.isin.toUpperCase(),
+      series: identity.series.toUpperCase(),
+    };
 
     const outcomes = await this.orchestrator.refresh([scope]);
     const outcome = outcomes[0]!;
