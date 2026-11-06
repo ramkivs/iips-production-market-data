@@ -420,10 +420,41 @@ export function findCallerSuppliedIdentityKeys(value: unknown, depth = 0): strin
   return [...found].sort();
 }
 
-function contentDigestOf(request: Pick<PortfolioSaveRequest, 'holdings' | 'provenanceDigest'>): string {
+/**
+ * The stored `portfolio_revisions.content_digest` for a v2 MERGE snapshot:
+ * sha256 of the canonical JSON of the mapped holdings and the provenance
+ * digest. Exported so the reconciliation path recomputes the exact stored
+ * value instead of trusting any caller-supplied copy.
+ */
+export function computeRevisionContentDigest(
+  holdings: readonly HoldingInput[],
+  provenanceDigest: string,
+): string {
   return createHash('sha256')
-    .update(JSON.stringify({ holdings: request.holdings, provenance: request.provenanceDigest }), 'utf8')
+    .update(JSON.stringify({ holdings, provenance: provenanceDigest }), 'utf8')
     .digest('hex');
+}
+
+function contentDigestOf(request: Pick<PortfolioSaveRequest, 'holdings' | 'provenanceDigest'>): string {
+  return computeRevisionContentDigest(request.holdings, request.provenanceDigest);
+}
+
+/**
+ * Internal reconciliation-only evidence for one stored revision, carrying the
+ * stored `content_digest` verbatim (SQL NULL preserved as null) — never the
+ * §6 wire projection. Part of the R01 bounded correction: read-only, used
+ * exclusively by `reconcileSnapshotV2ByRead`.
+ */
+export interface RevisionReconciliationEvidence {
+  readonly revision: number;
+  readonly operation: string;
+  /** The stored `portfolio_revisions.created_at` value (v1 `RevisionEntry.committedAt` semantics). */
+  readonly committedAt: string;
+  readonly totalMarketValue: number;
+  readonly holdingsCount: number;
+  readonly provenanceDigest: string;
+  /** The stored `portfolio_revisions.content_digest`; SQL NULL preserved. */
+  readonly contentDigest: string | null;
 }
 
 const MAX_REVISIONS = 4;
@@ -770,6 +801,81 @@ export class DurablePortfolioStore {
   }
 
   /**
+   * Internal reconciliation-only read of the stored evidence for one
+   * revision, including the stored `content_digest` (SQL NULL preserved).
+   * Never call from dispatch or any §6 path; authorized callers are the
+   * UNKNOWN-outcome reconciliation fixtures under the R01 correction.
+   */
+  revisionReconciliationEvidence(
+    owner: OwnerRef,
+    portfolioId: string,
+    revision: number,
+  ): RevisionReconciliationEvidence | undefined {
+    const row = this.db
+      .prepare(
+        `SELECT revision, operation, created_at, total_market_value,
+                holdings_count, provenance_digest, content_digest
+           FROM portfolio_revisions
+          WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`,
+      )
+      .get(owner.canonicalOwnerId, portfolioId, revision) as
+      | {
+          revision: number | bigint;
+          operation: string | null;
+          created_at: string | null;
+          total_market_value: number | null;
+          holdings_count: number | bigint | null;
+          provenance_digest: string | null;
+          content_digest: string | null;
+        }
+      | undefined;
+    if (!row) return undefined;
+    // Fail closed through the same helpers the history projection uses: a
+    // malformed stored row refuses here (surfacing as UNRESOLVED from the
+    // reconciler) instead of being coerced into a reconciliation verdict.
+    const shape = 'portfolio.revisions.evidence';
+    const revisionValue = storedNonNegativeInteger(row as unknown as StoredRow, 'revision', shape);
+    const operation = storedOperation(row as unknown as StoredRow, 'operation', shape);
+    const committedAt = storedString(row as unknown as StoredRow, 'created_at', shape, true);
+    const totalMarketValue = storedFiniteNumber(row as unknown as StoredRow, 'total_market_value', shape);
+    const provenanceDigest = storedString(row as unknown as StoredRow, 'provenance_digest', shape);
+    const holdingsCount = storedNonNegativeInteger(row as unknown as StoredRow, 'holdings_count', shape);
+    const rawDigest = row.content_digest;
+    if (rawDigest !== null && rawDigest !== undefined && (typeof rawDigest !== 'string' || rawDigest.trim().length === 0)) {
+      refuseStoredValue(shape, 'content_digest', 'a stored string or SQL NULL');
+    }
+    return {
+      revision: revisionValue,
+      operation,
+      committedAt,
+      totalMarketValue,
+      holdingsCount,
+      provenanceDigest,
+      // SQL NULL means the optional v1 property is genuinely absent.
+      contentDigest: typeof rawDigest === 'string' ? rawDigest : null,
+    };
+  }
+
+  /**
+   * Internal reconciliation-only read of the stored holdings snapshot for
+   * one revision (canonical `holding_key` order). Never call from dispatch
+   * or any §6 path; returns [] when the revision has no stored holdings.
+   */
+  holdingsForRevision(owner: OwnerRef, portfolioId: string, revision: number): HoldingInput[] {
+    const rows = this.db
+      .prepare(
+        `SELECT holding_key, symbol, company_id, quantity, average_buy_price, current_price,
+                market_value, weight_percentage, active, source_broker, lineage_digest,
+                identity_status, resolution_disposition
+           FROM portfolio_holdings
+          WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?
+          ORDER BY holding_key`,
+      )
+      .all(owner.canonicalOwnerId, portfolioId, revision) as unknown as Record<string, unknown>[];
+    return rows.map((row) => this.holdingFromRow(row));
+  }
+
+  /**
    * D03 — authorized read probe for the CURRENT portfolio revision. Folds
    * missing/foreign/tombstoned into ResourceUnavailableError (never a
    * disclosure). The v2 service uses it to refuse stale requests before
@@ -783,10 +889,18 @@ export class DurablePortfolioStore {
   /**
    * D03 — reconciliation settlement probe. Opens and immediately rolls back
    * an empty `BEGIN IMMEDIATE` transaction: zero bytes, zero domain effect.
-   * Proving settlement means no writer holds the write lock at this instant;
-   * a lost-acknowledgement writer then either completed atomically before
-   * the lock was granted or is still blocked behind it. Throws when
-   * settlement cannot be proven (lock held, busy store, nested transaction).
+   *
+   * Narrow semantics (R01 correction, 2026-11-06): this certifies only that
+   * no writer holds the write lock at the single instant the probe runs —
+   * an instantaneous quiescence signal. It is a NECESSARY precondition for
+   * any `NOT_COMMITTED` verdict derived from absent evidence, and nothing
+   * more: it does NOT prove terminal completion or cancellation of the one
+   * particular lost-acknowledgement operation being reconciled, a queued or
+   * not-yet-locking lost-ack writer may still proceed after the probe's lock
+   * is released, and the lock is NOT held through the reconciliation reads.
+   * Callers must never derive `COMMITTED` — or skip the evidence
+   * correspondence checks — from this probe alone. Throws when settlement
+   * cannot be proven (lock held, busy store, nested transaction).
    */
   proveSettledForReconciliation(): void {
     if (this.transactionDepth > 0) {

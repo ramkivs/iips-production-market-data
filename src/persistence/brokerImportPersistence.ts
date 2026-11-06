@@ -17,6 +17,8 @@ import {
   type SnapshotReceipt,
   type SnapshotSourceEvidence,
   type SnapshotStoreEffect,
+  computeRevisionContentDigest,
+  type RevisionReconciliationEvidence,
 } from './portfolio_store.js';
 import { createGovernedBrokerObservationResolver } from '../identity/broker_observation_resolver.js';
 import type { BrokerObservationResolver } from '../identity/broker_observation_resolver.js';
@@ -465,6 +467,18 @@ export interface HoldingsSnapshotWriter {
   currentRevision(owner: OwnerRef, portfolioId: string): number;
   /** Zero-write quiescence probe: throws when the store cannot prove settlement. */
   proveSettledForReconciliation(): void;
+  /**
+   * Internal reconciliation-only read of the stored revision evidence
+   * (including the stored `content_digest`). Never part of the §6 projection
+   * or the wire; used exclusively by `reconcileSnapshotV2ByRead`.
+   */
+  revisionReconciliationEvidence(owner: OwnerRef, portfolioId: string, revision: number): RevisionReconciliationEvidence | undefined;
+  /**
+   * Internal reconciliation-only read of the stored holdings snapshot for
+   * one revision (canonical `holding_key` order). Never on the wire;
+   * returns [] when the revision has no stored holdings.
+   */
+  holdingsForRevision(owner: OwnerRef, portfolioId: string, revision: number): HoldingInput[];
 }
 
 const SNAPSHOT_ROW_KEYS: readonly string[] = [
@@ -667,111 +681,248 @@ function isUtcIsoInstantValue(value: unknown): value is string {
 }
 
 /**
- * Full evidence correspondence for the contribution row this transaction
- * would have written: matching identity, matching stored digest copy, and
- * the complete non-null provenance the v2 writer always persists. A row
- * that matches on identity alone — or carries legacy/NULL provenance — is
- * never sufficient to declare COMMITTED.
+ * The deterministic evidence an UNKNOWN-outcome reconciliation re-derives
+ * from the intended v2 request — the exact operation whose acknowledgement
+ * was lost. Built with the same code path as the commit itself (shape
+ * validation, lineage construction, identity resolution, provenance and the
+ * stored revision content digest); when the intended evidence cannot be
+ * derived, no COMMITTED verdict is reachable.
  */
-function contributionCorrespondent(row: PortfolioContribution, contentDigest: string): boolean {
-  if (row.contributionId !== contentDigest) return false;
-  if (row.contentDigest !== contentDigest) return false;
-  if (typeof row.lineageDigest !== 'string' || !RECON_HEX_64.test(row.lineageDigest)) return false;
-  if (typeof row.fileName !== 'string' || row.fileName.trim().length === 0) return false;
-  if (typeof row.sourceBroker !== 'string' || row.sourceBroker.trim().length === 0) return false;
-  if (!isUtcIsoInstantValue(row.importedAt)) return false;
-  return true;
+export interface DerivedV2IntendedEvidence {
+  /** Resolved + mapped holdings exactly as the commit persisted them. */
+  readonly holdings: HoldingInput[];
+  /** sha256 provenance digest recomputed from the intended request. */
+  readonly provenanceDigest: string;
+  /** Stored `portfolio_revisions.content_digest` for the successor revision. */
+  readonly contentDigest: string;
+  /** Expected successor revision (`request.expectedRevision + 1`). */
+  readonly expectedSuccessorRevision: number;
 }
 
-/**
- * Snapshot correspondence for the expected successor revision: it must exist,
- * be the MERGE the v2 path writes, carry a real non-empty snapshot
- * (holdingsCount >= 1), a finite non-negative value, a non-blank commit
- * instant and a 64-hex provenance digest. A receipt — or a bare revision
- * number — alone is never proof.
- */
-function revisionCorrespondent(row: RevisionEntry | undefined): boolean {
-  if (!row) return false;
-  if (row.operation !== 'MERGE') return false;
-  if (!Number.isFinite(row.totalMarketValue) || row.totalMarketValue < 0) return false;
-  if (!Number.isSafeInteger(row.holdingsCount) || row.holdingsCount < 1) return false;
-  if (typeof row.committedAt !== 'string' || row.committedAt.trim().length === 0) return false;
-  if (typeof row.provenanceDigest !== 'string' || !RECON_HEX_64.test(row.provenanceDigest)) return false;
-  return true;
+export function deriveV2IntendedEvidence(
+  request: SnapshotSaveV2Request,
+  resolver: BrokerObservationResolver = createGovernedBrokerObservationResolver(),
+): DerivedV2IntendedEvidence | undefined {
+  if (!request || typeof request !== 'object' || Array.isArray(request)) return undefined;
+  const shape = validateSnapshotV2Shape(request);
+  if (shape) return undefined;
+  const observedWithLineage: BrokerImportHolding[] = request.holdings.map((holding) => ({
+    ...holding,
+    lineageDigest: rowLineageDigestOf(holding),
+  }));
+  const brokerRequest: BrokerImportRequest = {
+    portfolioId: request.portfolioId,
+    expectedRevision: request.expectedRevision,
+    holdings: observedWithLineage,
+    contentDigest: request.contentDigest,
+    fileName: request.sourceEvidence.fileName,
+    sourceBroker: request.broker,
+    importedAt: request.sourceEvidence.importedAt,
+    mode: 'MERGE',
+  };
+  const invalid = validateRequest(brokerRequest);
+  if (invalid) return undefined;
+  const { resolved, gate } = resolveHoldings(brokerRequest, resolver);
+  if (!gate.saveable || !resolved) return undefined;
+  const holdings = mapBrokerImportHoldings(resolved);
+  const provenanceDigest = computeBrokerImportProvenance(brokerRequest);
+  return {
+    holdings,
+    provenanceDigest,
+    contentDigest: computeRevisionContentDigest(holdings, provenanceDigest),
+    expectedSuccessorRevision: request.expectedRevision + 1,
+  };
 }
 
-function readReconciliationPass(
-  writer: Pick<HoldingsSnapshotWriter, 'contributionsValidated' | 'revisions'>,
+interface EvidenceFingerprint {
+  readonly contribution: PortfolioContribution | null;
+  readonly revision: RevisionReconciliationEvidence | undefined;
+  readonly holdings: readonly HoldingInput[];
+}
+
+function readEvidenceFingerprint(
+  writer: Pick<HoldingsSnapshotWriter, 'contributionsValidated' | 'revisionReconciliationEvidence' | 'holdingsForRevision'>,
   owner: OwnerRef,
   portfolioId: string,
   contentDigest: string,
-  expectedSuccessorRevision?: number,
-): SnapshotV2Reconciliation {
-  try {
-    const contributions = writer.contributionsValidated(owner, portfolioId);
-    const match = contributions.find((row) => row.contributionId === contentDigest);
-    if (expectedSuccessorRevision === undefined) {
-      // Ledger-only verdict, still requiring complete provenance evidence.
-      if (!match) return 'NOT_COMMITTED';
-      return contributionCorrespondent(match, contentDigest) ? 'COMMITTED' : 'UNRESOLVED';
-    }
-    const successor = writer.revisions(owner, portfolioId).find((row) => row.revision === expectedSuccessorRevision);
-    if (!successor) {
-      // Ledger and history disagree (contribution present, revision absent):
-      // never guessed in either direction.
-      return match ? 'UNRESOLVED' : 'NOT_COMMITTED';
-    }
-    return match && contributionCorrespondent(match, contentDigest) && revisionCorrespondent(successor)
-      ? 'COMMITTED'
-      : 'UNRESOLVED';
-  } catch {
-    return 'UNRESOLVED';
+  expectedSuccessorRevision: number,
+): EvidenceFingerprint {
+  const contributions = writer.contributionsValidated(owner, portfolioId);
+  const contribution = contributions.find((row) => row.contributionId === contentDigest) ?? null;
+  const revision = writer.revisionReconciliationEvidence(owner, portfolioId, expectedSuccessorRevision);
+  const holdings = writer.holdingsForRevision(owner, portfolioId, expectedSuccessorRevision);
+  return { contribution, revision, holdings };
+}
+
+function holdingInputsEqual(a: HoldingInput, b: HoldingInput): boolean {
+  return a.symbol === b.symbol
+    && a.companyId === b.companyId
+    && a.quantity === b.quantity
+    && a.averageBuyPrice === b.averageBuyPrice
+    && a.currentPrice === b.currentPrice
+    && a.marketValue === b.marketValue
+    && a.weightPercentage === b.weightPercentage
+    && Boolean(a.active) === Boolean(b.active)
+    && a.sourceBroker === b.sourceBroker
+    && a.lineageDigest === b.lineageDigest
+    && a.identityStatus === b.identityStatus
+    && a.resolutionDisposition === b.resolutionDisposition;
+}
+
+function holdingsSnapshotsEqual(a: readonly HoldingInput[], b: readonly HoldingInput[]): boolean {
+  if (a.length !== b.length) return false;
+  const sortBySymbol = (rows: readonly HoldingInput[]) => [...rows].sort((x, y) => (x.symbol < y.symbol ? -1 : x.symbol > y.symbol ? 1 : 0));
+  const aa = sortBySymbol(a);
+  const bb = sortBySymbol(b);
+  for (let i = 0; i < aa.length; i += 1) {
+    if (!holdingInputsEqual(aa[i], bb[i])) return false;
   }
+  return true;
 }
 
 /**
- * Exact authorized readback for a v2 outcome left UNKNOWN.
+ * Verdict from a single evidence fingerprint, bound to the intended import:
+ * absence of every leg; exact cross-bound correspondence on all legs; else
+ * "other" (never guessed). `absent` is only reachable when the contribution,
+ * the successor revision and the stored snapshot are all missing — always
+ * after the settlement probe has passed.
+ */
+function verdictOfFingerprint(
+  fp: EvidenceFingerprint,
+  request: SnapshotSaveV2Request,
+  intended: DerivedV2IntendedEvidence,
+): 'absent' | 'match' | 'other' {
+  if (!fp.contribution && fp.revision === undefined && fp.holdings.length === 0) return 'absent';
+  const { contribution, revision, holdings } = fp;
+  if (!contribution || !revision) return 'other';
+  // Contribution ↔ intended import request evidence.
+  if (contribution.contributionId !== request.contentDigest) return 'other';
+  if (contribution.contentDigest !== request.contentDigest) return 'other';
+  if (typeof contribution.lineageDigest !== 'string' || !RECON_HEX_64.test(contribution.lineageDigest)) return 'other';
+  if (contribution.lineageDigest !== intended.provenanceDigest) return 'other';
+  if (contribution.fileName !== request.sourceEvidence.fileName) return 'other';
+  if (contribution.sourceBroker !== request.sourceEvidence.sourceBroker) return 'other';
+  if (contribution.importedAt !== request.sourceEvidence.importedAt) return 'other';
+  if (!isUtcIsoInstantValue(contribution.importedAt)) return 'other';
+  if (!Number.isFinite(contribution.amount) || contribution.amount < 0) return 'other';
+  // Contribution ↔ successor revision cross-binding (the revision must be the
+  // expected MERGE successor for exactly this content).
+  if (revision.revision !== intended.expectedSuccessorRevision) return 'other';
+  if (revision.operation !== 'MERGE') return 'other';
+  if (typeof revision.committedAt !== 'string' || !isUtcIsoInstantValue(revision.committedAt)) return 'other';
+  if (!Number.isSafeInteger(revision.holdingsCount) || revision.holdingsCount < 1) return 'other';
+  if (revision.holdingsCount !== intended.holdings.length) return 'other';
+  if (!Number.isFinite(revision.totalMarketValue) || revision.totalMarketValue < 0) return 'other';
+  if (typeof revision.provenanceDigest !== 'string' || !RECON_HEX_64.test(revision.provenanceDigest)) return 'other';
+  if (revision.provenanceDigest !== contribution.lineageDigest) return 'other';
+  if (revision.provenanceDigest !== intended.provenanceDigest) return 'other';
+  if (typeof revision.contentDigest !== 'string' || !RECON_HEX_64.test(revision.contentDigest)) return 'other';
+  if (revision.contentDigest !== intended.contentDigest) return 'other';
+  if (contribution.amount !== revision.totalMarketValue) return 'other';
+  // Stored snapshot ↔ intended snapshot: exact row equality.
+  if (!holdingsSnapshotsEqual(holdings, intended.holdings)) return 'other';
+  const intendedTotal = intended.holdings.reduce((sum, holding) => sum + holding.marketValue, 0);
+  if (revision.totalMarketValue !== intendedTotal) return 'other';
+  const intendedWeight = intended.holdings.reduce((sum, holding) => sum + holding.weightPercentage, 0);
+  if (!Number.isFinite(intendedWeight)) return 'other';
+  return 'match';
+}
+
+function fingerprintOf(fp: EvidenceFingerprint): string {
+  const c = fp.contribution;
+  const r = fp.revision;
+  return JSON.stringify({
+    contribution: c
+      ? {
+          contributionId: c.contributionId,
+          amount: c.amount,
+          contributedAt: c.contributedAt,
+          createdAt: c.createdAt,
+          fileName: c.fileName,
+          sourceBroker: c.sourceBroker,
+          contentDigest: c.contentDigest ?? null,
+          lineageDigest: c.lineageDigest ?? null,
+          importedAt: c.importedAt ?? null,
+          semantics: c.semantics ?? null,
+        }
+      : null,
+    revision: r
+      ? {
+          revision: r.revision,
+          operation: r.operation,
+          committedAt: r.committedAt,
+          totalMarketValue: r.totalMarketValue,
+          holdingsCount: r.holdingsCount,
+          provenanceDigest: r.provenanceDigest,
+          contentDigest: r.contentDigest,
+        }
+      : null,
+    holdings: fp.holdings.map((h) => [
+      h.symbol, h.companyId, h.quantity, h.averageBuyPrice, h.currentPrice,
+      h.marketValue, h.weightPercentage, h.active ? 1 : 0,
+      h.sourceBroker, h.lineageDigest, h.identityStatus ?? null, h.resolutionDisposition ?? null,
+    ]),
+  });
+}
+
+/**
+ * Exact authorized readback for a v2 outcome left UNKNOWN — bound to the
+ * intended snapshot's operation evidence (R01 correction, 2026-11-06).
  *
- * Stronger than receipt-trust: (1) settlement is proven by an empty
- * zero-write quiescence probe — no writer can hold the write lock at
- * that instant — and the store with a zero-write `BEGIN IMMEDIATE` + ROLLBACK probe —
- * a lost-acknowledgement writer either committed atomically before the lock
- * was granted or is blocked behind it, so absence is never read while a
- * writer could still commit; (2) TWO consistent read passes are required —
- * any verdict change between them yields UNRESOLVED; (3) COMMITTED requires
- * exact correspondence on BOTH the contribution ledger (identity, stored
- * digest copy, complete provenance) and, when the expected successor
- * revision is supplied, the revision history (MERGE, non-empty snapshot,
- * provenance evidence). Disagreement, weak provenance, a failed settlement
- * probe or any read failure yields UNRESOLVED. Absence with settlement
- * proven yields NOT_COMMITTED. A receipt alone is never proof; no outcome
- * here authorizes or implies a retry.
+ * (1) SETTLEMENT IS NECESSARY, NEVER SUFFICIENT: an empty zero-write `BEGIN
+ * IMMEDIATE` + `ROLLBACK` certifies only that no writer holds the write lock
+ * at that single instant; it does not prove terminal completion of the lost
+ * operation, is not held through the reads and never upgrades an evidence
+ * gap into a verdict. Any probe failure yields UNRESOLVED. (2) The intended
+ * operation is evidence-bound: the intended request is re-derived through
+ * the same validation, lineage, identity, provenance and stored-content-digest
+ * path as the commit. If the intended evidence cannot be derived, no verdict
+ * but UNRESOLVED is reachable. (3) COMMITTED requires, for the expected
+ * successor revision ({request.expectedRevision + 1}): stored-revision
+ * existence with `MERGE`, the intended provenance and the stored content
+ * digest; the contribution row bound to the intended import (identity, stored
+ * digest copy, complete intended-matching provenance incl. fileName,
+ * sourceBroker and importedAt); cross-binding of contribution lineage to the
+ * successor revision's provenance; and exact row-equality of the stored
+ * holdings snapshot against the intended snapshot. (4) TWO consistent read
+ * passes are required and compared as SERIALIZED EVIDENCE SNAPSHOTS, not
+ * verdict strings: any change in contribution, revision or holdings evidence
+ * between passes yields UNRESOLVED. Disagreement, weak/legacy/NULL evidence,
+ * a failed settlement probe or any read failure yields UNRESOLVED. Absence on
+ * both passes with settlement proven yields NOT_COMMITTED. A receipt alone is
+ * never proof; no outcome here authorizes or implies a retry.
  */
 export function reconcileSnapshotV2ByRead(
-  writer: Pick<HoldingsSnapshotWriter, 'contributionsValidated' | 'revisions' | 'proveSettledForReconciliation'>,
+  writer: Pick<HoldingsSnapshotWriter, 'contributionsValidated' | 'revisionReconciliationEvidence' | 'holdingsForRevision' | 'proveSettledForReconciliation'>,
   owner: OwnerRef,
-  portfolioId: string,
-  contentDigest: string,
-  expectedSuccessorRevision?: number,
+  request: SnapshotSaveV2Request,
+  resolver: BrokerObservationResolver = createGovernedBrokerObservationResolver(),
 ): SnapshotV2Reconciliation {
-  if (typeof contentDigest !== 'string' || !RECON_HEX_64.test(contentDigest)) return 'UNRESOLVED';
-  if (
-    expectedSuccessorRevision !== undefined
-    && (!Number.isSafeInteger(expectedSuccessorRevision) || expectedSuccessorRevision < 2)
-  ) {
+  const intended = deriveV2IntendedEvidence(request, resolver);
+  if (!intended) return 'UNRESOLVED';
+  if (!Number.isSafeInteger(intended.expectedSuccessorRevision) || intended.expectedSuccessorRevision < 2) {
     return 'UNRESOLVED';
   }
-  // (1) Writer settlement: an empty `BEGIN IMMEDIATE` + ROLLBACK performs
-  // zero writes and throws when the store cannot prove quiescence. If the
-  // probe fails, the outcome is UNRESOLVED — never NOT_COMMITTED.
+  // (1) Writer settlement: zero writes; failure means UNRESOLVED, never a
+  // verdict of convenience. Necessary precondition only — see the probe's
+  // narrowed contract in DurablePortfolioStore.
   try {
     writer.proveSettledForReconciliation();
   } catch {
     return 'UNRESOLVED';
   }
-  // (2)+(3) Two consistent read passes; a change between them yields UNRESOLVED.
-  const first = readReconciliationPass(writer, owner, portfolioId, contentDigest, expectedSuccessorRevision);
-  const second = readReconciliationPass(writer, owner, portfolioId, contentDigest, expectedSuccessorRevision);
-  if (first !== second) return 'UNRESOLVED';
-  return first;
+  let first: EvidenceFingerprint;
+  let second: EvidenceFingerprint;
+  try {
+    // (4) Evidence-snapshot consistency — not verdict equality.
+    first = readEvidenceFingerprint(writer, owner, request.portfolioId, request.contentDigest, intended.expectedSuccessorRevision);
+    second = readEvidenceFingerprint(writer, owner, request.portfolioId, request.contentDigest, intended.expectedSuccessorRevision);
+  } catch {
+    return 'UNRESOLVED';
+  }
+  if (fingerprintOf(first) !== fingerprintOf(second)) return 'UNRESOLVED';
+  const verdict = verdictOfFingerprint(first, request, intended);
+  if (verdict === 'absent') return 'NOT_COMMITTED';
+  if (verdict === 'match') return 'COMMITTED';
+  return 'UNRESOLVED';
 }
