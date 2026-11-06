@@ -77,4 +77,6 @@ No change to the adopted contract or receipt schema; no evidence-record digest p
 
 ## 6. Publication
 
-Branch `arena/cf50d9d8-iips-production-market-data`; PR → `main`; merge **not** authorized by this document — CI must pass on the PR and a separate human/PA action is required to merge.
+- Branch `arena/cf50d9d8-iips-production-market-data`; **PR #130** → `main` (created 2026-11-06T12:47Z, head `7d99117`).
+- CI run `42218869705` (pull_request, `7d99117`): `typecheck`, `build`, **Test (guarded)**, `Public package consumer` — all SUCCESS; the trailing `Publish executed test count` github-script step reported `tests=null, pass=null, fail=null` (the tee'd `test-output.log` did not match the step's anchored parse on the runner; the guarded runner itself passed and recorded 1056/1055/0 locally and on the runner's test step). A re-run request was rejected by the platform (`run 42218869705 cannot be rerun`); this document update re-triggers CI on a new head. If the step fails identically on re-trigger, the gap is in the runner/publish step, not in the code or the guarded test result — report, do not bypass.
+- Merge is **not** authorized by this document — required CI must be green and a separate human/PA action is required to merge.
