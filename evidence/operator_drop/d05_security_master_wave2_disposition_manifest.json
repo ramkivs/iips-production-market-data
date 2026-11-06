@@ -1,0 +1,45 @@
+{
+  "batchId": "BATCH-D05-TIER2-BROAD-UNIVERSE-WAVE2-DISPOSITION-2026-11-06-001",
+  "domain": "D05_SECURITY_MASTER",
+  "kind": "DISPOSITION_ONLY__NO_DEPOSITION__CORPUS_BYTE_IDENTICAL",
+  "fileChecksumSha256": "7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5",
+  "recordCount": 2250,
+  "incorporated": 0,
+  "unresolved": 67,
+  "droppedAt": "2026-11-06T17:09:44Z",
+  "operatorId": "OPERATOR_ADMIN_GOVERNED_01",
+  "authorizationRef": "AUTH-D05-WAVE2-BROAD-UNIVERSE-EXPANSION-2026-11-06-01",
+  "operatingMode": "OFFLINE_BOOTSTRAP",
+  "selectedTier": "TIER_2_ACTIVE_NSE_CM",
+  "supersedesDispositionOf": null,
+  "priorManifest": "evidence/operator_drop/d05_security_master_manifest.json",
+  "priorRevisionBatchId": "BATCH-D05-TIER2-BROAD-UNIVERSE-2026-09-22-001",
+  "corpusPath": "evidence/operator_drop/d05_security_master_broad_universe.json",
+  "corpusByteIdentical": true,
+  "source": {
+    "sourceCsvPath": "evidence/operator_drop/wave2-2026-11-06/source.csv",
+    "sourceSha256": "2dc1d1fba6e183cfa657652d0dab98daac570df6e3ef3adbbc8f2a397fcabd0d",
+    "sourceRows": 68,
+    "assessmentJsonPath": "evidence/operator_drop/wave2-2026-11-06/assessment.json",
+    "assessmentSha256": "3211fbc607b29632e77ffbb9ef88eb9c9e594ea392a48cac813ad74f155d23e4",
+    "b04Publication": {
+      "repository": "ramkivs/iips-review-recovered",
+      "path": "evidence/integration/b04-dhan-isin-nse-2026-11-06/",
+      "pullRequest": 496,
+      "mergeCommit": "0a0aac2bba517be933dae7a91a89af2943996b51"
+    }
+  },
+  "dispositionReportPath": "evidence/operator_drop/wave2-2026-11-06/disposition-2026-11-06.json",
+  "dispositionReportSha256": "2186087ce3b0c2c1c2cd7f3d3b51898a3e0e71eda40b918372c00f5c8fe8814d",
+  "dispositionTableSha256": "47c6791ccd990ac3cb3a6e06cb197461618221055ef907f59ac2cfb50e191277",
+  "claimBoundaries": [
+    "DEPOSITION_DID_NOT_OCCUR: no record is added to the governed corpus by this revision",
+    "CORPUS_BYTE_IDENTICAL: 7f53540b... remains the checksum of the operative D05 corpus under BATCH-D05-TIER2-BROAD-UNIVERSE-2026-09-22-001",
+    "NO_REAL_CLASSIFICATION: ISIN checksum validity does not establish origin",
+    "NO_SYMBOL_ASSERTION: no NSE/BSE symbol is asserted for any of the 67",
+    "SOURCE_NOT_EXCHANGE_EVIDENCE: broker-platform export, not independently broker-authenticated (per B-04)",
+    "NO_OPERATIONAL_WRITE: no production/operational database write or activation",
+    "WAVE1_PRESERVED: prior records, quarantine evidence and the prior manifest remain intact and verifiable"
+  ],
+  "aiilRuling": "RULING_3_DUAL_EFFECTIVE_DATED_MAPPING"
+}
