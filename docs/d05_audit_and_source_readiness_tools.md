@@ -74,8 +74,18 @@ Exit codes: `0` audit produced (findings never fail the CLI); `2` usage/output-d
 ```bash
 node scripts/source_readiness.mjs \
   [--nse <nse.csv>] [--bse <bse.csv>] [--mca <mca.csv>] [--taxonomy <taxonomy.csv>] \
-  [--output-dir <dir>]      # default audits/source-readiness
+  [--tick-rules <ticks.csv>]           # optional — per-ISIN tick bands: isin,tickSize ∈ {0.01,0.05,0.10,0.25}
+  [--tick-size-uniform 0.05]           # optional — single value, must be explicitly act-bound
+  [--output-dir <dir>]                 # default audits/source-readiness
 ```
+
+`--tick-rules` expects CSV `ISIN,TICK_SIZE` (header aliases: `isin`/`isinnumber`; `ticksize`/`tick_size`/`tick`/`tickband`). Every supplied row is validated (ISIN shape+Luhn; tick ∈ {0.01, 0.05, 0.10, 0.25} — any other value is an invalid row, rejected, never admitted); divergent duplicates of the same ISIN are blocking conflicts; identical duplicates are tolerated with a warning. Coverage is measured against the deposit-intended universe (NSE set, or the union when NSE is absent) and every deposit-intended security must be covered.
+
+`--tick-size-uniform <0.01|0.05|0.10|0.25>` accepts a single uniform tick bound by the Wave-3 deposition act (as-of NSE CM price-band circular). It is recorded as `DERIVED` with the binding note, never as a silent default. Any other value exits `2` (usage error).
+
+**`DEPOSITION_READY` semantics (since 2026-11-07):** every MANDATORY D05 coverage row must be `SOURCE_PROVIDED` or explicitly `DERIVED`, and all supplied files must be structurally valid and mutually consistent. Unresolved tickSize — from absent evidence, partial tick-rules coverage, band-invalid rows or conflicting rules — is **blocking**, like every other mandatory field. `DEPOSITION_READY` still does not authorize or itself create a deposition act, corpus revision, governed-constant re-pin or PR disposition.
+
+Coverage rows are tagged `kind`: **MANDATORY** (UNRESOLVED ⇒ blocks `DEPOSITION_READY`) or **ADVISORY** (reported for the act; never affects the verdict). Mandatory: isin, nseSymbol, companyName, series/EQ filter, listingStatus(as-of), effectiveFrom(listing date), lotSize, tickSize, faceValue, cin, industry, sector, bseSymbol, bseScripCode. Advisory: `currency` (INR derivation to be stated by the act) and the optional `faceValue cross-check (NSE vs MCA)` advisory row (present only when both files carry face value).
 
 Validates **locally supplied** files only. It NEVER downloads, never resolves mirrors, never
 "verifies" a source by network; supplied bytes are treated as untrusted evidence whose integrity is
@@ -98,6 +108,7 @@ mapping; invalid rows are excluded and reported (`invalidRowSamples`, capped at 
 
 ### What it reports
 
+- Tick-size evidence: `tickSizeEvidence` object (mode absent|rules|uniform, sha256 for rules, coverage counts, samples); invalid rule rows and missing ISINs are also emitted into `source-readiness.csv` as `INVALID_TICK_RULE_ROW` / `TICK_SIZE_MISSING_ISIN`.
 - Per source: SHA-256, bytes, header status (`OK`/`MISSING_COLUMNS`/`UNUSABLE`), matched columns,
   ISO-Luhn/Luhn failures, totals (total vs valid rows), duplicate ISIN/CIN counts + samples,
   NSE `SERIES` distribution and out-of-Tier-2-scope row counts (series ≠ `EQ`).
@@ -111,9 +122,13 @@ mapping; invalid rows are excluded and reported (`invalidRowSamples`, capped at 
   tick values, so it stays UNRESOLVED with the evidence rule stated — the deposit act must bind it
   explicitly (uniform 0.05 with deviation notice, or an as-of NSE CM circular extract). The tool never
   defaulted tickSize, lotSize, or any face value.
-- Verdict: `DEPOSITION_READY` (0 blocking reasons) or `DEPOSITION_BLOCKED` with `blockingReasons[]`
-  (missing sources, header failure, duplicates/conflicts, mandatory unresolved coverage) and
-  `requiredEvidenceForFullCoverage[]` stating exactly what to add.
+- Verdict: `DEPOSITION_READY` (0 blocking reasons; every MANDATORY field positively established)
+  or `DEPOSITION_BLOCKED` with `blockingReasons[]` (missing sources, header failure,
+  duplicates/conflicts, MANDATORY unresolved coverage incl. tickSize) and
+  `requiredEvidenceForFullCoverage[]` stating exactly what to add (mentions `--tick-rules`
+  coverage or `--tick-size-uniform` when tick evidence is missing). Outputs now carry
+  `tickSizeEvidence` (mode, path, sha256, validRows, coveredIsins/denominator, missing/invalid samples)
+  and `reportVersion: 2`.
 
 Outputs: `audits/source-readiness/source-readiness.{json,csv,md}` (JSON 2-space; CSV lists problem rows
 for triage; MD is the review summary). Exit `4` on BLOCKED — scriptable in the deposit runbook.

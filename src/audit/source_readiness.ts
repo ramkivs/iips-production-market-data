@@ -11,7 +11,10 @@
  * This tool NEVER downloads anything, never treats third-party mirrors as evidence,
  * and never writes into the corpus or revises any manifest. Absent sources, malformed
  * files, duplicate/conflicting identifiers and unresolved mappings are reported with
- * the exact additional evidence required. Tick sizes are never defaulted.
+ * the exact additional evidence required. Tick sizes are never defaulted:
+ * DEPOSITION_READY is reachable only when every MANDATORY D05 field is positively
+ * established (SOURCE_PROVIDED) or explicitly derived and stated (DERIVED).
+ * ADVISORY rows (kind=ADVISORY) never affect the verdict.
  *
  * Determinism: no clock, no randomness. Identical inputs produce byte-identical reports.
  */
@@ -28,15 +31,40 @@ export interface SourceBytes {
   sha256?: string | null;
 }
 
-export type SourceInputs = Partial<Record<SourceKey, SourceBytes>>;
+export type SourceInputs = Partial<Record<SourceKey, SourceBytes>> & {
+  /** Optional per-ISIN tick-band extract (CSV: isin,tickSize ∈ {0.01,0.05,0.10,0.25}). */
+  tickRules?: SourceBytes;
+  /** Optional act-bound uniform tickSize; must be one of 0.01|0.05|0.10|0.25. */
+  tickSizeUniform?: number;
+};
+
+export const TICK_SIZE_BANDS = [0.01, 0.05, 0.1, 0.25] as const;
+export function isTickSizeBand(v: number): boolean {
+  return Number.isFinite(v) && TICK_SIZE_BANDS.some((b) => Math.abs(b - v) < 1e-9);
+}
 
 export type FieldCoverageStatus = 'SOURCE_PROVIDED' | 'DERIVED' | 'UNRESOLVED';
+export type FieldCoverageKind = 'MANDATORY' | 'ADVISORY';
 
 export interface FieldCoverageRow {
   field: string;
   status: FieldCoverageStatus;
-  source: SourceKey | 'derived' | null;
+  source: SourceKey | 'derived' | 'tickRules' | null;
+  /** MANDATORY rows block DEPOSITION_READY when UNRESOLVED. ADVISORY rows never block. */
+  kind: FieldCoverageKind;
   note: string;
+}
+
+export interface TickSizeEvidence {
+  mode: 'rules' | 'uniform' | 'absent';
+  path: string | null;
+  sha256: string | null;
+  uniformValue: number | null;
+  validRows: number | null;
+  coveredIsins: number | null;
+  denominator: number | null;
+  missingSamples: string[];
+  invalidSamples: Array<{ line: number; reason: string }>;
 }
 
 export interface SourceReadinessSourceReport {
@@ -62,8 +90,8 @@ export interface SourceReadinessSourceReport {
 }
 
 export interface SourceReadinessReport {
-  reportVersion: 1;
-  tool: { name: 'source-readiness'; version: 1 };
+  reportVersion: 2;
+  tool: { name: 'source-readiness'; version: 2 };
   verdict: 'DEPOSITION_READY' | 'DEPOSITION_BLOCKED';
   blockingReasons: string[];
   warnings: string[];
@@ -83,6 +111,7 @@ export interface SourceReadinessReport {
     mcaAmbiguousNameSamples: string[];
     taxonomyUnmappedSamples: string[];
   };
+  tickSizeEvidence: TickSizeEvidence;
   d05FieldCoverage: FieldCoverageRow[];
   requiredEvidenceForFullCoverage: string[];
   disclaimers: string[];
@@ -149,6 +178,49 @@ export function parseCsv(text: string): { table: CsvTable | null; errors: string
     cleanRows.push(r.cells.map((c) => c.trim()));
   }
   return { table: { header, rows: cleanRows, lineErrors }, errors };
+}
+
+export interface TickRulesResult {
+  map: Map<string, number>;
+  validRows: number;
+  duplicateAgreements: number;
+  duplicateConflicts: Array<{ isin: string; detail: string }>;
+  invalidSamples: Array<{ line: number; reason: string }>;
+}
+
+export function parseTickRules(bytes: Uint8Array): TickRulesResult | { error: string } {
+  const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+  const { table, errors } = parseCsv(text);
+  if (!table) return { error: errors.join('; ') || 'tick rules: no rows found' };
+  const idx = new Map(table.header.map((h, i) => [norm(h), i]));
+  const pick = (...aliases: string[]): number | undefined => aliases.map((a) => idx.get(a)).find((v) => v !== undefined);
+  const isinIdx = pick('isin', 'isinnumber');
+  const tickIdx = pick('ticksize', 'tick_size', 'tick', 'tickband', 'tickbandpaise');
+  if (isinIdx === undefined || tickIdx === undefined) {
+    return { error: 'tick rules: header must include ISIN and tickSize' };
+  }
+  const invalidSamples: Array<{ line: number; reason: string }> = [];
+  const map = new Map<string, number>();
+  const conflicts: Array<{ isin: string; detail: string }> = [];
+  let duplicateAgreements = 0;
+  let validRows = 0;
+  table.rows.forEach((cells, rIdx) => {
+    const line = rIdx + 2;
+    const isin = (cells[isinIdx] ?? '').trim().toUpperCase();
+    const tickRaw = (cells[tickIdx] ?? '').trim();
+    const reasons: string[] = [];
+    if (!ISIN_REGEX.test(isin) || !isIsinCheckDigitValid(isin)) reasons.push(`bad ISIN: ${isin || '(blank)'}`);
+    const tick = tickRaw === '' ? Number.NaN : Number(tickRaw);
+    if (!Number.isFinite(tick) || !isTickSizeBand(tick)) reasons.push(`tickSize not one of 0.01/0.05/0.10/0.25: ${tickRaw || '(blank)'}`);
+    if (reasons.length > 0) { if (invalidSamples.length < 10) invalidSamples.push({ line, reason: reasons.join('; ') }); return; }
+    validRows += 1;
+    const prior = map.get(isin);
+    if (prior === undefined) { map.set(isin, tick); return; }
+    if (Math.abs(prior - tick) < 1e-12) { duplicateAgreements += 1; return; }
+    map.delete(isin);
+    conflicts.push({ isin, detail: `conflicting tickSize for ISIN ${isin} in tick rules (${prior} vs ${tick})` });
+  });
+  return { map, validRows, duplicateAgreements, duplicateConflicts: conflicts, invalidSamples };
 }
 
 /* ── hashing ─────────────────── intentionally none here: caller provides bytes; hashing is fs work ── */
@@ -467,6 +539,68 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
   const hasBse = bse !== undefined && bse.headerStatus === 'OK';
   const hasMca = mca !== undefined && mca.headerStatus !== 'UNUSABLE';
   const hasTaxonomy = tax !== undefined && tax.headerStatus === 'OK';
+  /* ── tick-size evidence (MANDATORY deposit field; never defaulted) ──────── */
+  const nseRowsAll = rowMaps.get('nse') ?? [];
+  const nseSetForTicks = new Set(nseRowsAll.map((r) => r.isin).filter(Boolean) as string[]);
+  const denominatorSet = nseSetForTicks.size > 0 ? nseSetForTicks : union;
+  const denominator = denominatorSet.size;
+  let tickStatus: FieldCoverageStatus = 'UNRESOLVED';
+  let tickSource: FieldCoverageRow['source'] = null;
+  let tickNote = 'no tick-size evidence supplied; the deposit contract requires a positive tickSize per record (price-band dependent: 0.01/0.05/0.10/0.25)';
+  const tickSizeEvidence: TickSizeEvidence = {
+    mode: 'absent', path: null, sha256: null, uniformValue: null,
+    validRows: null, coveredIsins: null, denominator: denominator > 0 ? denominator : null,
+    missingSamples: [], invalidSamples: [],
+  };
+  if (inputs.tickSizeUniform !== undefined) {
+    const v = inputs.tickSizeUniform;
+    tickSizeEvidence.mode = 'uniform';
+    tickSizeEvidence.uniformValue = v;
+    if (isTickSizeBand(v) && denominator > 0) {
+      tickStatus = 'DERIVED';
+      tickSource = 'derived';
+      tickSizeEvidence.coveredIsins = denominator;
+      tickSizeEvidence.validRows = denominator;
+      tickNote = `uniform tickSize ${v} bound by the Wave-3 deposition act (as-of NSE CM price-band circular); stated explicitly by --tick-size-uniform, never a hard default`;
+    } else {
+      tickNote = isTickSizeBand(v)
+        ? 'tickSizeUniform supplied but the deposit-intended universe is empty'
+        : `tickSizeUniform ${v} is not one of 0.01/0.05/0.10/0.25`;
+    }
+  } else if (inputs.tickRules) {
+    tickSizeEvidence.mode = 'rules';
+    tickSizeEvidence.path = inputs.tickRules.path;
+    tickSizeEvidence.sha256 = inputs.tickRules.sha256 ?? null;
+    const parsed = parseTickRules(inputs.tickRules.bytes);
+    if ('error' in parsed) {
+      tickNote = `tick-rules unusable: ${parsed.error}`;
+    } else {
+      tickSizeEvidence.validRows = parsed.validRows;
+      tickSizeEvidence.invalidSamples = parsed.invalidSamples;
+      for (const c of parsed.duplicateConflicts) conflicts.push({ kind: 'TICK_RULE_DUPLICATE_ISIN', isin: c.isin, detail: c.detail });
+      if (parsed.duplicateConflicts.length > 0) {
+        blockingReasons.push(`${parsed.duplicateConflicts.length} ISIN(s) have conflicting tickSize values in tick-rules; those records cannot be deposited`);
+      }
+      if (parsed.duplicateAgreements > 0) warnings.push(`tick-rules: ${parsed.duplicateAgreements} duplicate ISIN row(s) with identical tickSize (tolerated)`);
+      const missing = [...denominatorSet].filter((i) => !parsed.map.has(i)).sort();
+      tickSizeEvidence.coveredIsins = denominator - missing.length;
+      tickSizeEvidence.missingSamples = missing.slice(0, 20);
+      if (missing.length > 0) {
+        tickNote = `tick-rules cover ${denominator - missing.length}/${denominator} deposit-intended securities; missing ${missing.length} (e.g. ${missing.slice(0, 3).join(', ')}); supply complete as-of price-band rule evidence or --tick-size-uniform in the act`;
+      } else if (denominator === 0) {
+        tickNote = 'tick-rules supplied but the deposit-intended universe is empty';
+      } else if (parsed.duplicateConflicts.length === 0 && parsed.invalidSamples.length === 0) {
+        tickStatus = 'SOURCE_PROVIDED';
+        tickSource = 'tickRules';
+        tickNote = `per-ISIN tickSize provided by tick-rules (sha256 ${tickSizeEvidence.sha256 ?? 'unrecorded'}); every deposit-intended security covered; values restricted to 0.01/0.05/0.10/0.25`;
+      } else {
+        tickNote = `tick-rules present but contain ${parsed.invalidSamples.length} invalid row(s); revalidate supply`;
+      }
+    }
+  } else {
+    tickNote = 'no tick-size evidence supplied — supply --tick-rules <isin,tickSize CSV covering every deposit-intended security> or --tick-size-uniform <0.01|0.05|0.10|0.25> (act-bound). The deposit contract requires a positive tickSize; it is never defaulted';
+  }
+
   if (nse !== undefined && nse.headerStatus === 'OK') {
     if (hasBse && nseWithoutBse > 0) blockingReasons.push(`${nseWithoutBse} of ${nseSet.size} NSE securities have no BSE listing match (bseSymbol/bseScripCode cannot be provisioned)`);
     if (hasMca && nseWithoutMca > 0) blockingReasons.push(`${nseWithoutMca} of ${nseSet.size} NSE securities have no MCA linkage (cin/faceValue cannot be provisioned)`);
@@ -478,41 +612,87 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
   const bseOk = bse !== undefined && bse.headerStatus === 'OK';
   const mcaOk = mca !== undefined && (mca.headerStatus === 'OK' || (mca.matchedColumns.cin !== undefined && mca.matchedColumns.name !== undefined));
   const taxOk = tax !== undefined && tax.headerStatus === 'OK';
-  coverage.push({ field: 'isin', status: nseOk || bseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : (bseOk ? 'bse' : null), note: nseOk ? 'NSE listing master' : 'supply NSE and/or BSE listing master with ISIN' });
-  coverage.push({ field: 'nseSymbol', status: nseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, note: nseOk ? 'NSE listing master' : 'supply NSE listing master' });
-  coverage.push({ field: 'companyName', status: nseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, note: nseOk ? 'NSE listing master (issuer name)' : 'supply NSE listing master' });
-  coverage.push({ field: 'series/segment (Tier-2 EQ filter)', status: nseOk && nse.seriesDistribution !== undefined ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, note: nseOk ? (nse.seriesDistribution !== undefined ? 'series column present' : 'series column absent — Tier-2 CM EQ filter not evidenceable') : 'supply NSE listing master' });
-  coverage.push({ field: 'listingStatus (as-of)', status: nseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, note: nseOk ? 'status asserted for the listing as of the deposition asOf; no win guarantees future status' : 'supply NSE listing master' });
-  coverage.push({ field: 'effectiveFrom (listing date)', status: nseOk && nse.matchedColumns.listing_date !== undefined ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, note: 'effectiveFrom ← listing date of the listing master; the deposit act must bind this mapping, or supply an act-bound asOf effective date instead' });
-  coverage.push({ field: 'lotSize', status: nseOk && nse.matchedColumns.market_lot !== undefined && sources.find((s) => s.key === 'nse')?.validRows ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, note: 'per-row MARKET LOT column required; for non-F&O cash equities the CM default is 1 and must be recorded as such in the deposit act, not as a hidden default' });
-  coverage.push({ field: 'tickSize', status: 'UNRESOLVED', source: null, note: 'tick size is price-band dependent (0.01/0.05/0.10/0.25); NO source file supplied can assert it generally. Requires an as-of price-band rule extract or an act-bound uniform value — never defaulted' });
-  coverage.push({ field: 'faceValue', status: mcaOk && mca.matchedColumns.face_value !== undefined ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: mcaOk ? 'mca' : null, note: mcaOk ? 'MCA master data face value column' : 'supply MCA company master with CIN + face value' });
-  coverage.push({ field: 'currency', status: 'DERIVED', source: 'derived', note: 'INR uniform for the NSE/BSE CM universe; promotion to corpus requires the deposit act to state the derivation' });
-  coverage.push({ field: 'cin', status: mcaOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: mcaOk ? 'mca' : null, note: mcaOk ? 'MCA master data (bridged via ISIN/SYMBOL/exact COMPANY_NAME)' : 'supply MCA company master (CIN + company name + face value)' });
-  coverage.push({ field: 'industry', status: taxOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: taxOk ? 'taxonomy' : null, note: taxOk ? 'taxonomy deposit' : 'supply an authoritative industry/sector taxonomy (named source, sha256)' });
-  coverage.push({ field: 'sector', status: taxOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: taxOk ? 'taxonomy' : null, note: taxOk ? 'taxonomy deposit' : 'supply an authoritative sector taxonomy (named source, sha256)' });
-  coverage.push({ field: 'bseSymbol', status: bseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: bseOk ? 'bse' : null, note: bseOk ? 'BSE listing master' : 'supply BSE listing master' });
-  coverage.push({ field: 'bseScripCode', status: bseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: bseOk ? 'bse' : null, note: bseOk ? 'BSE listing master scrip codes' : 'supply BSE listing master' });
+  const M = 'MANDATORY' as const;
+  const A = 'ADVISORY' as const;
+  coverage.push({ field: 'isin', status: nseOk || bseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : (bseOk ? 'bse' : null), kind: M, note: nseOk ? 'NSE listing master' : 'supply NSE and/or BSE listing master with ISIN' });
+  coverage.push({ field: 'nseSymbol', status: nseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, kind: M, note: nseOk ? 'NSE listing master' : 'supply NSE listing master' });
+  coverage.push({ field: 'companyName', status: nseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, kind: M, note: nseOk ? 'NSE listing master (issuer name)' : 'supply NSE listing master' });
+  coverage.push({ field: 'series/segment (Tier-2 EQ filter)', status: nseOk && nse.seriesDistribution !== undefined ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, kind: M, note: nseOk ? (nse.seriesDistribution !== undefined ? 'series column present' : 'series column absent — Tier-2 CM EQ filter not evidenceable') : 'supply NSE listing master' });
+  coverage.push({ field: 'listingStatus (as-of)', status: nseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, kind: M, note: nseOk ? 'status asserted for the listing as of the deposition asOf; no assertion of future status' : 'supply NSE listing master' });
+  coverage.push({ field: 'effectiveFrom (listing date)', status: nseOk && nse.matchedColumns.listing_date !== undefined ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, kind: M, note: 'effectiveFrom ← listing date of the listing master; the deposit act must bind this mapping, or supply an act-bound asOf effective date instead' });
+  coverage.push({ field: 'lotSize', status: nseOk && nse.matchedColumns.market_lot !== undefined && sources.find((s) => s.key === 'nse')?.validRows ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, kind: M, note: 'per-row MARKET LOT column required; for non-F&O cash equities the CM default is 1 and must be recorded as such in the deposit act, not as a hidden default' });
+  coverage.push({ field: 'tickSize', status: tickStatus, source: tickSource, kind: M, note: tickNote });
+  coverage.push({ field: 'faceValue', status: mcaOk && mca.matchedColumns.face_value !== undefined ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: mcaOk ? 'mca' : null, kind: M, note: mcaOk ? 'MCA master data face value column' : 'supply MCA company master with CIN + face value' });
+  coverage.push({ field: 'currency', status: 'DERIVED', source: 'derived', kind: A, note: 'INR uniform for the NSE/BSE CM universe; DERIVATION must be stated by the deposit act (never inferred into corpus silently)' });
+  coverage.push({ field: 'cin', status: mcaOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: mcaOk ? 'mca' : null, kind: M, note: mcaOk ? 'MCA master data (bridged via ISIN/SYMBOL/exact COMPANY_NAME)' : 'supply MCA company master (CIN + company name + face value)' });
+  coverage.push({ field: 'industry', status: taxOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: taxOk ? 'taxonomy' : null, kind: M, note: taxOk ? 'taxonomy deposit' : 'supply an authoritative industry/sector taxonomy (named source, sha256)' });
+  coverage.push({ field: 'sector', status: taxOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: taxOk ? 'taxonomy' : null, kind: M, note: taxOk ? 'taxonomy deposit' : 'supply an authoritative sector taxonomy (named source, sha256)' });
+  coverage.push({ field: 'bseSymbol', status: bseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: bseOk ? 'bse' : null, kind: M, note: bseOk ? 'BSE listing master' : 'supply BSE listing master' });
+  coverage.push({ field: 'bseScripCode', status: bseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: bseOk ? 'bse' : null, kind: M, note: bseOk ? 'BSE listing master scrip codes' : 'supply BSE listing master' });
 
-  const unresolved = coverage.filter((c) => c.status === 'UNRESOLVED' && c.field !== 'tickSize');
+  /* ── advisory cross-check: NSE vs MCA faceValue (never blocking) ─────────── */
+  if (nseOk && nse.matchedColumns.face_value !== undefined && mcaOk && mca.matchedColumns.face_value !== undefined) {
+    const mcaFaceByIsin = new Map<string, number>();
+    for (const r of rowMaps.get('mca') ?? []) {
+      if (!r.isin || r.face_value === undefined) continue;
+      const v = Number(r.face_value);
+      if (Number.isFinite(v)) mcaFaceByIsin.set(r.isin, v);
+    }
+    // MCA bridge rows may carry the joined ISIN; if the bridge was via name, MCA rows have no isin.
+    // Re-bridge with the same exact-match rule used above (no fuzzy match).
+    if (mcaFaceByIsin.size === 0) {
+      for (const r of rowMaps.get('mca') ?? []) {
+        if (r.face_value === undefined) continue;
+        const v = Number(r.face_value);
+        if (!Number.isFinite(v)) continue;
+        if (r.symbol) {
+          const hit = symbolToNse.get(r.symbol.toUpperCase()) ?? [];
+          if (hit.length === 1) { mcaFaceByIsin.set(hit[0], v); continue; }
+        }
+        if (r.name) {
+          const hit = nameToNse.get(normName(r.name)) ?? [];
+          if (hit.length === 1) mcaFaceByIsin.set(hit[0], v);
+        }
+      }
+    }
+    let compared = 0;
+    let mismatched = 0;
+    for (const r of nseRows) {
+      if (!r.isin || r.face_value === undefined) continue;
+      const nseV = Number(r.face_value);
+      const mcaV = mcaFaceByIsin.get(r.isin);
+      if (mcaV === undefined || !Number.isFinite(nseV)) continue;
+      compared += 1;
+      if (Math.abs(nseV - mcaV) > 1e-9) mismatched += 1;
+    }
+    if (compared > 0) {
+      if (mismatched > 0) warnings.push(`faceValue divergence: NSE vs MCA disagree for ${mismatched}/${compared} compared ISIN(s) (advisory; the deposit act must bind source precedence)`);
+      coverage.push({ field: 'faceValue cross-check (NSE vs MCA)', status: mismatched > 0 ? 'UNRESOLVED' : 'DERIVED', source: 'nse', kind: A, note: `${compared} compared; ${mismatched} divergences (advisory — never blocking; the deposit act must bind source precedence)` });
+    }
+  }
+
+  const unresolved = coverage.filter((c) => c.status === 'UNRESOLVED' && c.kind === 'MANDATORY');
   for (const u of unresolved) blockingReasons.push(`D05 field unresolved: ${u.field} — ${u.note}`);
   for (const name of missingSources) blockingReasons.push(`${name}: source file not supplied`);
 
   const requiredEvidenceForFullCoverage: string[] = [
     ...missingSources.map((m) => `supply the ${m.toUpperCase()} source`),
-    'tickSize: an as-of price-band rule extract (or price series + tick-band table), or an act-bound uniform tickSize with explicit deviation notice',
+    ...(tickStatus === 'UNRESOLVED'
+      ? ['tickSize: supply --tick-rules <isin,tickSize CSV> covering EVERY deposit-intended security (values restricted to 0.01, 0.05, 0.10, 0.25, SHA-256 pinned), or pass --tick-size-uniform <0.01|0.05|0.10|0.25> with the value explicitly bound in the Wave-3 deposition act (as-of NSE CM price-band circular). Never defaulted.']
+      : [`tickSize: evidence accepted (mode=${tickSizeEvidence.mode}${tickSizeEvidence.sha256 ? `; sha256 ${tickSizeEvidence.sha256}` : ''}) — record the binding in the act`]),
     'industry/sector: an authoritative taxonomy deposit with named provenance for every admitted security (e.g., NSE Indices classification or an owner-licensed taxonomy)',
     'MCA linkage: either an ISIN or SYMBOL bridge column in the MCA extract, or exact COMPANY_NAME matching against the NSE file (fuzzy is never used)',
   ];
 
   const report: SourceReadinessReport = {
-    reportVersion: 1,
-    tool: { name: 'source-readiness', version: 1 },
+    reportVersion: 2,
+    tool: { name: 'source-readiness', version: 2 },
     verdict: blockingReasons.length === 0 ? 'DEPOSITION_READY' : 'DEPOSITION_BLOCKED',
     blockingReasons: [...new Set(blockingReasons)].sort(),
     warnings: [...new Set(warnings)].sort(),
     sources,
     missingSources,
+    tickSizeEvidence,
     crossSource: {
       unionIsins: union.size,
       isinsPresentInAll,
@@ -533,7 +713,9 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
       'Source files are validated as supplied; this tool never downloads anything and never treats mirrors as authoritative.',
       'A CLEAN report means the files are structurally valid and internally consistent — it does NOT prove issuer truth, ACTIVE listing truth, realtime staleness or eligibility for any downstream use.',
       'COMPANY_NAME bridging (when no ISIN/SYMBOL bridge exists in MCA) uses exact normalized string equality only; ambiguous candidates are reported, never guessed.',
-      'tickSize is never defaulted by this tool; the D05 deposit act must bind its value.',
+      'tickSize is never defaulted by this tool: DEPOSITION_READY is impossible without --tick-rules covering every deposit-intended security or --tick-size-uniform bound in the act.',
+      'DEPOSITION_READY means every MANDATORY D05 field is positively established from supplied local evidence (SOURCE_PROVIDED) or explicitly derived and stated (DERIVED), AND the files are structurally consistent. It does NOT authorize a deposit act, create a corpus revision, re-pin governed constants, or substitute for the Wave-3 gate and reviewed PR.',
+      'ADVISORY coverage rows (kind=ADVISORY, e.g. currency derivation, NSE↔MCA faceValue cross-check) are reported for the act’s attention and never affect the verdict.',
       'A DEPOSITION_READY verdict still requires a separate Wave-3 deposition act, the merged corpus re-render, governed-constant re-pinning and a reviewed PR.',
     ],
   };
@@ -557,6 +739,8 @@ export function readinessToCsv(report: SourceReadinessReport): string {
     for (const d of s.duplicateIsinSamples.slice(0, 100)) lines.push([s.key, '', 'DUPLICATE_ISIN', `${d.isin} x${d.rows}`].map(esc).join(','));
   }
   for (const c of report.crossSource.conflicts) lines.push(['cross-source', '', c.kind, c.detail].map(esc).join(','));
+  for (const s of report.tickSizeEvidence.invalidSamples) lines.push(['tick-rules', s.line, 'INVALID_TICK_RULE_ROW', s.reason].map(esc).join(','));
+  for (const isin of report.tickSizeEvidence.missingSamples) lines.push(['tick-rules', '', 'TICK_SIZE_MISSING_ISIN', isin].map(esc).join(','));
   return lines.join('\n') + '\n';
 }
 
@@ -564,8 +748,21 @@ export function readinessToMarkdown(report: SourceReadinessReport): string {
   const lines: string[] = [
     '# D05 Wave-3 — Authoritative Source Readiness',
     '',
-    `- Verdict: **${report.verdict}**`,
+    `- Verdict: **${report.verdict}**${report.verdict === 'DEPOSITION_READY' ? ' (all MANDATORY D05 fields are SOURCE_PROVIDED or explicitly DERIVED from supplied local evidence)' : ' (at least one MANDATORY D05 field is unresolved/conflicting — see blocking reasons)'}`,
     `- Missing sources: ${report.missingSources.length ? report.missingSources.join(', ') : 'none'}`,
+    '',
+    '## Tick-size evidence',
+    '',
+    `- mode: ${report.tickSizeEvidence.mode}`,
+    ...(report.tickSizeEvidence.path ? [`- path: ${report.tickSizeEvidence.path}`, `- sha256: ${report.tickSizeEvidence.sha256 ?? 'unrecorded'}`] : []),
+    ...(report.tickSizeEvidence.uniformValue !== null ? [`- uniformValue: ${report.tickSizeEvidence.uniformValue} (act-bound, never a hidden default)`] : []),
+    ...(report.tickSizeEvidence.denominator !== null && report.tickSizeEvidence.validRows !== null && report.tickSizeEvidence.mode === 'rules'
+      ? [`- validRows: ${report.tickSizeEvidence.validRows} · coveredIsins: ${report.tickSizeEvidence.coveredIsins}/${report.tickSizeEvidence.denominator}`]
+      : report.tickSizeEvidence.denominator !== null && report.tickSizeEvidence.mode === 'uniform'
+        ? [`- universe coverage denominator (securities): ${report.tickSizeEvidence.denominator}`]
+        : []),
+    ...(report.tickSizeEvidence.missingSamples.length ? [`- missing ISIN samples (cap 20): ${report.tickSizeEvidence.missingSamples.join(', ')}`] : []),
+    ...(report.tickSizeEvidence.invalidSamples.length ? [`- invalid tick-rule rows: ${report.tickSizeEvidence.invalidSamples.map((s) => `line ${s.line}: ${s.reason}`).join(' | ')}`] : []),
     '',
     '## Sources',
     '',
@@ -579,9 +776,9 @@ export function readinessToMarkdown(report: SourceReadinessReport): string {
     '',
     '## D05 field coverage',
     '',
-    '| Field | Status | Source | Note |',
-    '|---|---|---|---|',
-    ...report.d05FieldCoverage.map((c) => `| ${c.field} | ${c.status} | ${c.source ?? '—'} | ${c.note} |`),
+    '| Field | Status | Source | Kind | Note |',
+    '|---|---|---|---|---|',
+    ...report.d05FieldCoverage.map((c) => `| ${c.field} | ${c.status} | ${c.source ?? '—'} | ${c.kind} | ${c.note} |`),
     '',
     '## Cross-source mapping',
     '',
