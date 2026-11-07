@@ -32,13 +32,13 @@ export interface SourceBytes {
 }
 
 export type SourceInputs = Partial<Record<SourceKey, SourceBytes>> & {
-  /** Optional per-ISIN tick-band extract (CSV: isin,tickSize ∈ {0.01,0.05,0.10,0.25}). */
+  /** Optional per-ISIN tick-band extract (CSV: isin,tickSize — a member of the CM cash tick set {0.01,0.05,0.10,0.25,0.50,1.00,5.00}; the act binds the applicable regime via evidence). */
   tickRules?: SourceBytes;
-  /** Optional act-bound uniform tickSize; must be one of 0.01|0.05|0.10|0.25. */
+  /** Optional act-bound uniform tickSize; member of the CM cash tick set. */
   tickSizeUniform?: number;
 };
 
-export const TICK_SIZE_BANDS = [0.01, 0.05, 0.1, 0.25] as const;
+export const TICK_SIZE_BANDS = [0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 5.0] as const;
 export function isTickSizeBand(v: number): boolean {
   return Number.isFinite(v) && TICK_SIZE_BANDS.some((b) => Math.abs(b - v) < 1e-9);
 }
@@ -211,7 +211,7 @@ export function parseTickRules(bytes: Uint8Array): TickRulesResult | { error: st
     const reasons: string[] = [];
     if (!ISIN_REGEX.test(isin) || !isIsinCheckDigitValid(isin)) reasons.push(`bad ISIN: ${isin || '(blank)'}`);
     const tick = tickRaw === '' ? Number.NaN : Number(tickRaw);
-    if (!Number.isFinite(tick) || !isTickSizeBand(tick)) reasons.push(`tickSize not one of 0.01/0.05/0.10/0.25: ${tickRaw || '(blank)'}`);
+    if (!Number.isFinite(tick) || !isTickSizeBand(tick)) reasons.push(`tickSize not one of 0.01/0.05/0.10/0.25/0.50/1.00/5.00: ${tickRaw || '(blank)'}`);
     if (reasons.length > 0) { if (invalidSamples.length < 10) invalidSamples.push({ line, reason: reasons.join('; ') }); return; }
     validRows += 1;
     const prior = map.get(isin);
@@ -546,7 +546,7 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
   const denominator = denominatorSet.size;
   let tickStatus: FieldCoverageStatus = 'UNRESOLVED';
   let tickSource: FieldCoverageRow['source'] = null;
-  let tickNote = 'no tick-size evidence supplied; the deposit contract requires a positive tickSize per record (price-band dependent: 0.01/0.05/0.10/0.25)';
+  let tickNote = 'no tick-size evidence supplied; the deposit contract requires a positive tickSize per record (price-linked per NSE CM circulars: 0.01/0.05/0.10/0.25/0.50/1.00/5.00)';
   const tickSizeEvidence: TickSizeEvidence = {
     mode: 'absent', path: null, sha256: null, uniformValue: null,
     validRows: null, coveredIsins: null, denominator: denominator > 0 ? denominator : null,
@@ -565,7 +565,7 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
     } else {
       tickNote = isTickSizeBand(v)
         ? 'tickSizeUniform supplied but the deposit-intended universe is empty'
-        : `tickSizeUniform ${v} is not one of 0.01/0.05/0.10/0.25`;
+        : `tickSizeUniform ${v} is not one of 0.01/0.05/0.10/0.25/0.50/1.00/5.00`;
     }
   } else if (inputs.tickRules) {
     tickSizeEvidence.mode = 'rules';
@@ -592,13 +592,13 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
       } else if (parsed.duplicateConflicts.length === 0 && parsed.invalidSamples.length === 0) {
         tickStatus = 'SOURCE_PROVIDED';
         tickSource = 'tickRules';
-        tickNote = `per-ISIN tickSize provided by tick-rules (sha256 ${tickSizeEvidence.sha256 ?? 'unrecorded'}); every deposit-intended security covered; values restricted to 0.01/0.05/0.10/0.25`;
+        tickNote = `per-ISIN tickSize provided by tick-rules (sha256 ${tickSizeEvidence.sha256 ?? 'unrecorded'}); every deposit-intended security covered; values restricted to 0.01/0.05/0.10/0.25/0.50/1.00/5.00`;
       } else {
         tickNote = `tick-rules present but contain ${parsed.invalidSamples.length} invalid row(s); revalidate supply`;
       }
     }
   } else {
-    tickNote = 'no tick-size evidence supplied — supply --tick-rules <isin,tickSize CSV covering every deposit-intended security> or --tick-size-uniform <0.01|0.05|0.10|0.25> (act-bound). The deposit contract requires a positive tickSize; it is never defaulted';
+    tickNote = 'no tick-size evidence supplied — supply --tick-rules <isin,tickSize CSV covering every deposit-intended security> or --tick-size-uniform <0.01/0.05/0.10/0.25/0.50/1.00/5.00> (act-bound). The deposit contract requires a positive tickSize; it is never defaulted';
   }
 
   if (nse !== undefined && nse.headerStatus === 'OK') {
@@ -678,7 +678,7 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
   const requiredEvidenceForFullCoverage: string[] = [
     ...missingSources.map((m) => `supply the ${m.toUpperCase()} source`),
     ...(tickStatus === 'UNRESOLVED'
-      ? ['tickSize: supply --tick-rules <isin,tickSize CSV> covering EVERY deposit-intended security (values restricted to 0.01, 0.05, 0.10, 0.25, SHA-256 pinned), or pass --tick-size-uniform <0.01|0.05|0.10|0.25> with the value explicitly bound in the Wave-3 deposition act (as-of NSE CM price-band circular). Never defaulted.']
+      ? ['tickSize: supply --tick-rules <isin,tickSize CSV> covering EVERY deposit-intended security (values restricted to 0.01, 0.05, 0.10, 0.25, 0.50, 1.00, 5.00, SHA-256 pinned), or pass --tick-size-uniform <0.01/0.05/0.10/0.25/0.50/1.00/5.00> with the value explicitly bound in the Wave-3 deposition act (as-of NSE CM price-band circular). Never defaulted.']
       : [`tickSize: evidence accepted (mode=${tickSizeEvidence.mode}${tickSizeEvidence.sha256 ? `; sha256 ${tickSizeEvidence.sha256}` : ''}) — record the binding in the act`]),
     'industry/sector: an authoritative taxonomy deposit with named provenance for every admitted security (e.g., NSE Indices classification or an owner-licensed taxonomy)',
     'MCA linkage: either an ISIN or SYMBOL bridge column in the MCA extract, or exact COMPANY_NAME matching against the NSE file (fuzzy is never used)',

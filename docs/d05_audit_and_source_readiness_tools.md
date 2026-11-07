@@ -74,14 +74,14 @@ Exit codes: `0` audit produced (findings never fail the CLI); `2` usage/output-d
 ```bash
 node scripts/source_readiness.mjs \
   [--nse <nse.csv>] [--bse <bse.csv>] [--mca <mca.csv>] [--taxonomy <taxonomy.csv>] \
-  [--tick-rules <ticks.csv>]           # optional — per-ISIN tick bands: isin,tickSize ∈ {0.01,0.05,0.10,0.25}
+  [--tick-rules <ticks.csv>]           # optional — per-ISIN tick bands: isin,tickSize ∈ {0.01,0.05,0.10,0.25,0.50,1.00,5.00}
   [--tick-size-uniform 0.05]           # optional — single value, must be explicitly act-bound
   [--output-dir <dir>]                 # default audits/source-readiness
 ```
 
-`--tick-rules` expects CSV `ISIN,TICK_SIZE` (header aliases: `isin`/`isinnumber`; `ticksize`/`tick_size`/`tick`/`tickband`). Every supplied row is validated (ISIN shape+Luhn; tick ∈ {0.01, 0.05, 0.10, 0.25} — any other value is an invalid row, rejected, never admitted); divergent duplicates of the same ISIN are blocking conflicts; identical duplicates are tolerated with a warning. Coverage is measured against the deposit-intended universe (NSE set, or the union when NSE is absent) and every deposit-intended security must be covered.
+`--tick-rules` expects CSV `ISIN,TICK_SIZE` (header aliases: `isin`/`isinnumber`; `ticksize`/`tick_size`/`tick`/`tickband`). Every supplied row is validated (ISIN shape+Luhn; tick ∈ {0.01, 0.05, 0.10, 0.25, 0.50, 1.00, 5.00} — the union of the pre-June-2024 tick regime and the price-linked ticks introduced by NSE CM circulars in 2024/2025 (price < ₹250 ⇒ 0.01 … price > ₹20,000 ⇒ 5.00) — any other value is an invalid row, rejected, never admitted); divergent duplicates of the same ISIN are blocking conflicts; identical duplicates are tolerated with a warning. Coverage is measured against the deposit-intended universe (NSE set, or the union when NSE is absent) and every deposit-intended security must be covered.
 
-`--tick-size-uniform <0.01|0.05|0.10|0.25>` accepts a single uniform tick bound by the Wave-3 deposition act (as-of NSE CM price-band circular). It is recorded as `DERIVED` with the binding note, never as a silent default. Any other value exits `2` (usage error).
+`--tick-size-uniform <0.01|0.05|0.10|0.25|0.50|1.00|5.00>` accepts a single uniform tick bound by the Wave-3 deposition act (as-of NSE CM price-band circular). It is recorded as `DERIVED` with the binding note, never as a silent default. Any other value exits `2` (usage error).
 
 **`DEPOSITION_READY` semantics (since 2026-11-07):** every MANDATORY D05 coverage row must be `SOURCE_PROVIDED` or explicitly `DERIVED`, and all supplied files must be structurally valid and mutually consistent. Unresolved tickSize — from absent evidence, partial tick-rules coverage, band-invalid rows or conflicting rules — is **blocking**, like every other mandatory field. `DEPOSITION_READY` still does not authorize or itself create a deposition act, corpus revision, governed-constant re-pin or PR disposition.
 
@@ -118,9 +118,10 @@ mapping; invalid rows are excluded and reported (`invalidRowSamples`, capped at 
 - **D05 field coverage** for every corpus field: `SOURCE_PROVIDED` / `DERIVED` / `UNRESOLVED` with the
   exact source or note; mandatory gaps (BSE match, MCA linkage, taxonomy coverage for deposit-intended
   securities; listing date for `effectiveFrom`; faceValue; industry/sector; series for Tier-2 filter)
-  are **blocking**. `tickSize` is deliberately **advisory**: no listing-master file can assert price-band
-  tick values, so it stays UNRESOLVED with the evidence rule stated — the deposit act must bind it
-  explicitly (uniform 0.05 with deviation notice, or an as-of NSE CM circular extract). The tool never
+  are **blocking**. `tickSize` is **mandatory**: no listing-master file can assert price-linked
+  tick values on its own, so without `--tick-rules` full coverage or a `--tick-size-uniform` act binding
+  it stays UNRESOLVED and the verdict is BLOCKED — the deposit act must bind it explicitly
+  (uniform 0.05 with deviation notice, or an as-of NSE CM circular extract). The tool never
   defaulted tickSize, lotSize, or any face value.
 - Verdict: `DEPOSITION_READY` (0 blocking reasons; every MANDATORY field positively established)
   or `DEPOSITION_BLOCKED` with `blockingReasons[]` (missing sources, header failure,

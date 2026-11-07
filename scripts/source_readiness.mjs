@@ -4,8 +4,8 @@
  *
  * Validates LOCALLY supplied files (no downloads, no mirrors-as-truth):
  *   --nse <file.csv> --bse <file.csv> --mca <file.csv> --taxonomy <file.csv>
- *   [--tick-rules <isin,tickSize CSV>]   per-ISIN tick bands (0.01|0.05|0.10|0.25) for the act-governed universe
- *   [--tick-size-uniform <0.01|0.05|0.10|0.25>]  uniform value explicitly bound in the Wave-3 act
+ *   [--tick-rules <isin,tickSize CSV>]   per-ISIN tick bands (0.01|0.05|0.10|0.25|0.50|1.00|5.00 incl. price-linked regimes) for the act-governed universe
+ *   [--tick-size-uniform <0.01|0.05|0.10|0.25|0.50|1.00|5.00>]  uniform value explicitly bound in the Wave-3 act
  * Writes: ONLY <output-dir>/source-readiness.{json,csv,md} (default audits/source-readiness/)
  *
  * Exit codes: 0 = DEPOSITION_READY; 4 = DEPOSITION_BLOCKED; 2 = usage error; 3 = input read error.
@@ -34,7 +34,7 @@ for (const bad of forbiddenRoots) {
   }
 }
 
-const TICK_BANDS = [0.01, 0.05, 0.1, 0.25];
+const TICK_BANDS = [0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 5.0];
 const tickRulesArg = argValue('--tick-rules');
 const uniformArg = argValue('--tick-size-uniform');
 
@@ -67,7 +67,7 @@ if (tickRulesArg !== undefined) {
 if (uniformArg !== undefined) {
   const v = Number(uniformArg);
   if (!Number.isFinite(v) || !TICK_BANDS.some((b) => Math.abs(b - v) < 1e-9)) {
-    fail(2, `--tick-size-uniform must be one of 0.01, 0.05, 0.10, 0.25 (got: ${uniformArg})`);
+    fail(2, `--tick-size-uniform must be one of 0.01, 0.05, 0.10, 0.25, 0.50, 1.00, 5.00 (got: ${uniformArg})`);
   }
   inputs.tickSizeUniform = TICK_BANDS.find((b) => Math.abs(b - v) < 1e-9);
 }

@@ -239,9 +239,9 @@ describe('D05 source readiness CLI', () => {
     const tickRules = fixture('ticks-full.csv', [
       'ISIN,TICK_SIZE',
       'INE001A01036,0.05',
-      'INE002A01018,0.05',
-      'INE040A01034,0.10',
-      'INE081A01020,0.25',
+      'INE002A01018,0.10',
+      'INE040A01034,0.50',
+      'INE081A01020,5.00',
     ].join('\n') + '\n');
     const res = runCli(['--nse', nse, '--bse', bse, '--mca', mca, '--taxonomy', taxonomy, '--tick-rules', tickRules, '--output-dir', outDir('t-full')]);
     assert.equal(res.status, 0, res.stderr);
@@ -289,7 +289,7 @@ describe('D05 source readiness CLI', () => {
     assert.equal(res.status, 4);
     const report = JSON.parse(readFileSync(join(outDir('t-band'), 'source-readiness.json'), 'utf8'));
     assert.equal(report.tickSizeEvidence.invalidSamples.length, 1);
-    assert.match(report.tickSizeEvidence.invalidSamples[0].reason, /0\.01\/0\.05\/0\.10\/0\.25/);
+    assert.match(report.tickSizeEvidence.invalidSamples[0].reason, /0\.01\/0\.05\/0\.10\/0\.25\/0\.50\/1\.00\/5\.00/);
     const csv = readFileSync(join(outDir('t-band'), 'source-readiness.csv'), 'utf8');
     assert.match(csv, /INVALID_TICK_RULE_ROW/);
   });
@@ -369,7 +369,7 @@ describe('D05 source readiness CLI', () => {
       'INE001A01036,0.05',
       'INE002A01018,0.05',
       'INE040A01034,0.10',
-      'INE081A01020,0.25',
+      'INE081A01020,5.00',
     ].join('\n') + '\n');
     const a = outDir('t-det-a'); const b = outDir('t-det-b');
     assert.equal(runCli(['--nse', nse, '--bse', bse, '--mca', mca, '--taxonomy', taxonomy, '--tick-rules', tickRules, '--output-dir', a]).status, 0);
