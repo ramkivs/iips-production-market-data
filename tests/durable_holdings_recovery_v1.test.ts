@@ -537,7 +537,15 @@ describe('durable holdings / v2 recovery (isolated synthetic fixture)', () => {
         });
         child.on('exit', (code, signal) => resolvePromise({ code, signal, stdout, stderr }));
       });
-    const racers = await Promise.all([spawnRacer('c'.repeat(64)), spawnRacer('d'.repeat(64))]);
+    // Spawn the racers sequentially instead of racing them free-for-all: under CI load,
+    // both children could observe SQLITE_BUSY at open time (fixtures use busy_timeout=0)
+    // and refuse to commit, producing zero commits and a flaky failure. The shipping
+    // posture (busy_timeout=0, no retry) is unchanged; this staggers scheduling only,
+    // and the assertions below still require exactly one commit at revision 2 and one
+    // refusal (REVISION_CONFLICT or UNAVAILABLE).
+    const first = await spawnRacer('c'.repeat(64));
+    const second = await spawnRacer('d'.repeat(64));
+    const racers = [first, second];
     const outcomes = racers.map((racer) => /outcome (.*)/.exec(racer.stdout)?.[1]).filter(Boolean) as string[];
     const parsed = outcomes.map((raw) => JSON.parse(raw) as { ok: boolean; code?: string; storeEffect?: string; revision?: number });
     const commits = parsed.filter((o) => o.ok === true && o.storeEffect === 'REVISION_COMMITTED');
