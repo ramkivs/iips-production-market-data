@@ -126,3 +126,12 @@ Keep the 2,250 runtime corpus untouched. Deposit Wave-3 as a SEPARATE authentica
 ## 9. Explicit non-goals of this document
 
 No implementation, no PR pin changes, no manifest edits, no resolver changes, no deployment, no claim that any option is approved, no claim that the ACTIVE NSE CM universe is expanded (it is not — tooling only as of 2026-11-07).
+
+---
+
+## Amendment — PA Decision (2026-11-07): Option B selected
+
+**Decision:** The Program Authority has selected **Option B — Governed Replacement of the D05 Security Master** (authoritative reference: 2026-11-07 PA decision naming `main@fb6cf91219c0a270d42c3618aa20ed6682699817` as post-PR #135 baseline).
+**Effect:** options A (append-only retention) and C (authenticated universe alongside) are **closed** — not under consideration in any future task unless a fresh PA decision re-opens them.
+**Operationalization:** `evidence/cross-repository/IIPS_V3_D05_WAVE3_OPTION_B_GOVERNED_REPLACEMENT_PLAN_2026-11-07.md` records the verified-implementation inspection, exact replacement semantics, treatment of the 2,198 generated + 52 previously classified real records, the runtime consumer re-pinning blast radius, the phased execution plan (P0–P9), required source datasets/evidence, and the remaining PA sub-decisions (D-1…D-15).
+**Nothing is deposited by this amendment.** The authenticated replacement universe does not exist; §3.1–§3.2 of the prior analysis stands as correct for A and C only in historical context. The 2,250-record Wave-1 revision remains byte-identical evidence (`7f53540b…74b5`) until a future, separately authorized execution completes P5–P7.
