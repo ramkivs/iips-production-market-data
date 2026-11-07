@@ -172,3 +172,8 @@ its own tests and the `audits/` ignore rule.
 - Wave-3 machinery: `scripts/wave3_universe_expansion.mjs`, `src/identity/universe_expansion_gate.ts`
 - Contract: `src/contracts/d05_security_master.ts` (5 enforced rules only); deposit policy carries the rest
 - Wave-3 receipt (blocker): `evidence/cross-repository/IIPS_V3_D05_WAVE3_UNIVERSE_EXPANSION_RECEIPT_2026-11-06.md`
+
+## 6. 2026-11-08 — Fail-closed addendum (PR #139)
+
+`source_readiness.ts` now enforces that a BSE `scrip_code` row must match `^[0-9]{6}$`.
+Placeholder tokens such as `UNLISTED-BSE` / `NSE-EXCLUSIVE` are **not identity claims**: rows carrying them are rejected as invalid for coverage purposes, so they cannot close the NSE↔BSE linkage gap; verification of the linkage therefore still fails closed until an authentic exchange master is supplied. The MCA side already enforced C-20 CIN format (`^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$`), which rejects `EXEMPT-STRUCT-*` / `ALIAS-MATCH-*` tokens the same way. Behaviour tests: `tests/source_readiness.test.ts` (2 new cases) and `tests/d05_wave3_evidence_reconciliation.test.ts` pin the 2026-11-08 publication and verdict. See `evidence/cross-repository/IIPS_V3_D05_WAVE3_EQ_EVIDENCE_RECONCILIATION_2026-11-08.md` for the full findings. No weakening, no defaults, no tolerated placeholders.

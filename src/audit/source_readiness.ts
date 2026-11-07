@@ -263,6 +263,9 @@ const SPECS: Record<SourceKey | 'taxonomy', ColSpec[]> = {
 
 const CIN_MCA_REGEX = /^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/;
 const ISIN_REGEX = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/;
+// BSE scrip codes are six-digit numerics. Placeholder tokens (e.g. UNLISTED-BSE /
+// NSE-EXCLUSIVE / N/A) are NOT identity claims and never satisfy the coverage rule.
+const SCRIP_CODE_BSE_REGEX = /^[0-9]{6}$/;
 
 
 function parseSource(key: SourceKey, bytes: Uint8Array, label: string, sha256: string | null): {
@@ -339,7 +342,12 @@ function parseSource(key: SourceKey, bytes: Uint8Array, label: string, sha256: s
     if (matchedIdx.sector !== undefined && !rowRec.sector) { ok = false; reasons.push('sector blank'); }
     if (matchedIdx.symbol !== undefined && !rowRec.symbol) { ok = false; reasons.push('symbol blank'); }
     if (matchedIdx.name !== undefined && !rowRec.name) { ok = false; reasons.push('name blank'); }
-    if (matchedIdx.scrip_code !== undefined && !(rowRec.scrip_code ?? '').trim()) { ok = false; reasons.push('scrip_code blank'); }
+    if (matchedIdx.scrip_code !== undefined) {
+      const sc = (rowRec.scrip_code ?? '').trim();
+      if (!sc) { ok = false; reasons.push('scrip_code blank'); }
+      else if (!SCRIP_CODE_BSE_REGEX.test(sc)) { ok = false; reasons.push(`scrip_code not a 6-digit numeric BSE scrip code: ${sc || '(blank)'} (placeholders are not identity claims)`); }
+      else rowRec.scrip_code = sc;
+    }
     if (!ok) {
       if (invalidRowSamples.length < 10) invalidRowSamples.push({ line, reason: reasons.join('; ') });
       return;
