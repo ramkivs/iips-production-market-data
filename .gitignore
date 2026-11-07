@@ -4,3 +4,4 @@ dist-frontend/
 *.log
 .DS_Store
 run-d114-acquisition.ps1
+audits/
