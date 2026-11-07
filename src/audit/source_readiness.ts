@@ -241,7 +241,7 @@ const SPECS: Record<SourceKey | 'taxonomy', ColSpec[]> = {
     { canonical: 'face_value', synonyms: ['facevalue', 'facevalueofsecurity'], required: false },
   ],
   bse: [
-    { canonical: 'scrip_code', synonyms: ['scripcode', 'securitycode', 'code', 'bssescripcode'], required: true },
+    { canonical: 'scrip_code', synonyms: ['scripcode', 'securitycode', 'code', 'bsescripcode'], required: true },
     { canonical: 'isin', synonyms: ['isin', 'isinnumber', 'isinno', 'isinnumberbse'], required: true },
     { canonical: 'name', synonyms: ['securityname', 'companyname', 'name', 'security'], required: true },
   ],
