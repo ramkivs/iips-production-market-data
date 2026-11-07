@@ -123,6 +123,8 @@ mapping; invalid rows are excluded and reported (`invalidRowSamples`, capped at 
   it stays UNRESOLVED and the verdict is BLOCKED — the deposit act must bind it explicitly
   (uniform 0.05 with deviation notice, or an as-of NSE CM circular extract). The tool never
   defaulted tickSize, lotSize, or any face value.
+- Taxonomy input contract: **one** CSV — `isin` or `cin` (at least one; industry + sector required non-blank) —
+  keyed by ISIN or by CIN bridged through MCA. No PDF, codebook or second mapping file is an input.
 - Verdict: `DEPOSITION_READY` (0 blocking reasons; every MANDATORY field positively established)
   or `DEPOSITION_BLOCKED` with `blockingReasons[]` (missing sources, header failure,
   duplicates/conflicts, MANDATORY unresolved coverage incl. tickSize) and

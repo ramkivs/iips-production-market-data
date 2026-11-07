@@ -680,7 +680,7 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
     ...(tickStatus === 'UNRESOLVED'
       ? ['tickSize: supply --tick-rules <isin,tickSize CSV> covering EVERY deposit-intended security (values restricted to 0.01, 0.05, 0.10, 0.25, 0.50, 1.00, 5.00, SHA-256 pinned), or pass --tick-size-uniform <0.01/0.05/0.10/0.25/0.50/1.00/5.00> with the value explicitly bound in the Wave-3 deposition act (as-of NSE CM price-band circular). Never defaulted.']
       : [`tickSize: evidence accepted (mode=${tickSizeEvidence.mode}${tickSizeEvidence.sha256 ? `; sha256 ${tickSizeEvidence.sha256}` : ''}) — record the binding in the act`]),
-    'industry/sector: an authoritative taxonomy deposit with named provenance for every admitted security (e.g., NSE Indices classification or an owner-licensed taxonomy)',
+    'industry/sector: an authoritative taxonomy deposit with named provenance covering EVERY admitted security (a single industry/sector keyed by ISIN, or CIN bridged through MCA — no PDF or secondary mapping file is an input)',
     'MCA linkage: either an ISIN or SYMBOL bridge column in the MCA extract, or exact COMPANY_NAME matching against the NSE file (fuzzy is never used)',
   ];
 

@@ -72,28 +72,39 @@ These findings are **requirements/analysis**, not a change. Identity resolution 
 - Web verification from this session (2026-11-07) confirms live-archive paths resolve **from the public web**, not from this sandbox; operators must acquire on a host with exchange/MCA egress (or via an owner-licensed channel).
 - NSE/BSE/MCA publish no automated bulk API suitable here; NSE/BSE operators run **zero public GitHub repositories**; npm/PyPI presence is client-side only. **No mirror may be substituted; unpinned bytes are inadmissible.**
 
-### 4.2 Dataset requirements (candidates verified by web, acquisition pending operator)
+### 4.2 Required inputs — exact implementation contract (corrected 2026-11-07)
 
-All are *references for the operator*, not acquired files. **Nothing below has been downloaded, pinned, or deposited by this record.**
+**Correction note.** The earlier revision of this section required a two-part industry taxonomy ("codebook PDF + separate ISIN→industry mapping CSV") and entertained a "12-column" superset structure. **Neither exists in the implementation, the approved Option B decision, or any artifact in this repository, and both are withdrawn.** What follows is exactly what `src/audit/source_readiness.ts` consumes — `SPECS` column rules plus the coverage-row construction — and what `scripts/source_readiness.mjs` passes to it. Nothing more is required; nothing less suffices.
 
-| # | Dataset | Locator (operator to re-verify at acquisition time) | Format / fields needed | As-of date | Role |
-|---|---|---|---|---|---|
-| A | NSE Equity List (CM) | `https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv` (legacy mirror: `https://archives.nseindia.com/content/equities/EQUITY_L.csv`) | CSV, 8 cols: `SYMBOL, NAME OF COMPANY, SERIES, DATE OF LISTING, PAID UP VALUE, MARKET LOT, ISIN NUMBER, FACE VALUE` — parser aliases already handle these headers (`isinnumber`, `dateoflisting`, `marketlot`, `facevalue`, `series`, `nameofcompany`) | Extraction date must equal the chosen as-of effective date | Issue universe + NSE symbols + ISIN + FV + MARKET LOT (lotSize) |
-| A2 | NSE SME Emerge list (only if D-8 scopes SM/ST) | `https://nsearchives.nseindia.com/content/equities/SME_EQUITY_L.csv` | Same shape as A | Same as A | SME scope decision (open D-8) |
-| B | BSE Equity list | BSE "List of Scrips" application: `https://www.bseindia.com/corporates/List_Scrips.html` → Segment=Equity, Status=Active → CSV download (per public automation write-ups; byte layout must be confirmed at acquisition — public samples show columns incl. status, group, face value, ISIN, industry, scrip code, issuer name) | CSV; columns must map via existing aliases (`scripcode`/`securitycode` family, `isin`, `facevalue`, issuer-name); **if headers differ, extend aliases in a follow-up PR — do not hand-edit bytes** | Same effective date | Cross-listing evidence + BSE codes + ISIN cross-check; sampled BSE file also appears to carry an industry column (verify; may feed taxonomy cross-check) |
-| C | MCA master data | `https://www.mca.gov.in` → MCA Services → Master Data (MCA21). No free bulk official extract exists: options are (i) licensed bulk master-data extract (recommended), (ii) per-CIN lookups for the admitted set, or (iii) an owner-licensed dataset; each requires registration and carries terms. Candidate public bulk resources on data.gov.in must be verified for currency/coverage before use | CSV/XLSX with `CIN`, company name; FV and status desirable | Registration/extraction date; name-match must hold against A/B as of same effective date | CIN bridge (identity), face value (authoritative), active status |
-| D | Industry taxonomy | Two-part requirement: (1) **codebook** — NSE Indices *Industry Classification Structure* (latest found July 2023, nsearchives.nseindia.com PDF; supersedes Nov 2022 edition) — insufficient alone; (2) **per-issuer mapping** — a pinned CSV `ISIN|symbol → industry code`. Routes: BSE List-of-Scrips industry column (if verified), a licensed mapping from an authorized vendor, or the codebook join performed by the operator with ISIN keying and evidence | CSV mapping keyed by ISIN; codebook PDF pinned by sha256 | Mapping effective as of effective date | taxonomy receipt; D-10 |
-| E | Tick-size evidence | Price-band-linked ticks (NSE CM): see §5.4 table. Best-evidence = as-of-date per-ISIN extract of the applicable tick bands (mapping NSE's published band↔tick rule at fetch time), fallback = act-bound `--tick-size-uniform 0.05` with deviation notice | CSV `isin,tickSize` (`--tick-rules`) or act uniform | Effective date of the band list | Mandatory tickSize per R-7 |
-| F | Bhavcopy (optional admissibility cross-check) | Monthly/daily CM bhavcopy from NSE archives | CSV | Same date | Recommended delta check, not a gate input |
+All four sources are MANDATORY for `DEPOSITION_READY` (an absent file ⇒ blocking `source file not supplied`):
 
-**Face value special note.** Face value is available from A (NSE EQUITY_L `FACE VALUE`), B (BSE `Face Value`), and C (MCA). The tool requires **agreement NSE↔MCA (and BSE when present)**; disagreements block. The operator must not pick MCA arbitrarily — feed the tool and let the rules decide.
+| # | Source (`--flag`) | Required columns (exact rules) | Optional columns used | Supplies MANDATORY D05 fields |
+|---|---|---|---|---|
+| A | `--nse` — NSE CM equity listing master (`https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv`; legacy mirror `https://archives.nseindia.com/content/equities/EQUITY_L.csv`) | `isin` (shape + check digit), `symbol`, `name` (aliases `isinnumber`/`isincode`, `symbol`, `nameofcompany`/`companyname`/`securityname`); plus `series`, `dateoflisting`, `marketlot` — the last three back MANDATORY coverage rows | `paid_up_value`, `face_value` (advisory cross-check only) | isin, nseSymbol, companyName, series/segment (Tier-2 EQ filter), listingStatus (as-of), effectiveFrom ← DATE OF LISTING, lotSize ← MARKET LOT |
+| B | `--bse` — BSE listing master ("List of Scrips" application `https://www.bseindia.com/corporates/List_Scrips.html` → Segment=Equity, Status=Active; layout confirmed at acquisition — samples show status/group/face value/ISIN/industry/scrip code/issuer name) | `scrip_code` (aliases `scripcode`/`securitycode`/`code`/`bssescripcode`), `isin` (valid), `name` | — | bseSymbol, bseScripCode |
+| C | `--mca` — MCA company master, CURRENT as of the act's as-of date, license-permitted machine aggregation, sha256-pinned; portal reference `https://www.mca.gov.in` → MCA Services → Master Data (MCA21; sign-in required since 2025-12); licensed bulk extract preferred, owner-authorized per-CIN capture admissible only with structured verifiable records; **ISIN or SYMBOL bridge column strongly preferred** | `cin` (regex), `name` | `face_value`, `isin`, `symbol` (bridges) | cin, faceValue ← MCA master (mandatory); bridge for taxonomy CIN rows |
+| D | `--taxonomy` — taxonomy CSV from a named, sha256-pinned, authoritative source (owner-licensed or official extract). **This file IS the ISIN/CIN → industry/sector mapping; there is no separate mapping file and no codebook input.** | `industry`, `sector` (both required, non-blank) + `isin` **or** `cin` (at least one; CIN rows are bridged through MCA). `basic_industry` optional (aliases `basicindustry`/`subindustry`) | basic_industry | industry, sector |
+| E | tick evidence — `--tick-rules <isin,tickSize CSV>` (union bands `{0.01,0.05,0.10,0.25,0.50,1.00,5.00}`; aliases `isin/isinnumber`, `ticksize/tick_size/tick/tickband/tickbandpaise`) covering **every** deposit-intended security, or `--tick-size-uniform <value>` explicitly bound in the act | complete coverage of the deposit-intended universe; divergent duplicate ISIN rows block | — | tickSize |
+| F | Bhavcopy (optional delta cross-check only) | — | — | none (not a gate input) |
+
+**Explicitly NOT required by the implementation (do not request, do not construct):**
+
+- **NSE Indices Industry Classification Structure PDF** — nothing in the tools consumes a PDF. At most, the act may name a taxonomy *source + version* as provenance; the PDF is neither an input nor admissible as evidence bytes.
+- **A second, per-issuer "mapping" file** beyond the taxonomy input — redundant; the taxonomy CSV already keys ISIN/CIN → industry/sector.
+- **A 12-column (or any superset) mapping/master CSV** — undefined in every schema, SPEC, test, plan and record in this repository; rejected as unsupported.
+- **SME listings (`SME_EQUITY_L.csv`)** — out of the Tier-2 CM EQ filter; only in scope if the PA separately extends D-8, in which case this charter and the readiness spec change by a dedicated act.
+- **NSE `FACE VALUE`** — used only for the advisory NSE↔MCA faceValue cross-check; mandatory `faceValue` comes from MCA. (`PAID UP VALUE` is captured for the act but is not a readiness input.)
+- **Any MCA dataset that is stale, unverified or license-incompatible** — inadmissible. "Current as of the act's as-of date" with machine-aggregatable, pinned bytes is mandatory. Unverified public bulk resources (including unverified data.gov.in extracts) are not acceptable substitutes; PA/procurement must license, authorize, or direct an in-scope alternative. Per-CIN manual capture is admissible only with structured, verifiable records — hand transcription without verification is not.
+- **BSE face value** — the tool requires no face value from BSE; the mandatory cross-check is NSE↔MCA (advisory).
+
+**`DEPOSITION_READY` semantics (as implemented):** zero blocking reasons ⇔ all four files present and structurally valid; zero cross-source identifier conflicts; every NSE security matched in BSE, linked in MCA and covered by taxonomy; every MANDATORY coverage row `SOURCE_PROVIDED` or `DERIVED` (tickSize always from `--tick-rules` or act-bound `--tick-size-uniform`). The NSE↔MCA faceValue cross-check and the `currency` derivation are ADVISORY and never affect the verdict.
 
 ### 4.3 SHA-256 recording and custody procedure (operator charter)
 
 1. Acquire every file on an egress-capable host to a quarantine directory `operator_drop/wave4-authentication-<YYYYMMDD>/` on a workstation (not committed yet).
 2. Record per file: filename, **sha256** (`sha256sum`), byte size, source locator/URL, retrieval timestamp (UTC), as-of effective date, license/terms, acquiring person.
-3. Verify counts: NSE rows, BSE rows, MCA rows, taxonomy rows; cross-count against expectations (roughly ≥4,000 listed securities pair) — discrepancy = acquisition failure, not a tool problem.
-4. Compute a manifest `acquisition-custody-log.json` with the §4.2 column order, plus per-file sha256; sign-off by the acquiring operator and (recommended) a second IIPS officer.
+3. Verify counts: NSE rows, BSE rows, MCA rows, taxonomy rows; cross-count against the counts stated by the exchanges and by the licensor at acquisition time — a shortfall means incomplete acquisition, not a tool problem.
+4. Compute a manifest `acquisition-custody-log.json` with the per-file custody fields (filename, sha256, bytes, locator, retrieval UTC, as-of date, license/terms, acquiring person); sign-off by the acquiring operator and (recommended) a second IIPS officer.
 5. Copy files + custody log into the repository under `evidence/operator_drop/wave4-authentication-<YYYYMMDD>/` **only after operator sign-off**, in one commit, no transformation of bytes (no CSV re-save, no re-encoding).
 6. Run the readiness check (§4.4). Commit `source-readiness.{json,csv,md}` into that same PR.
 7. Any `DEPOSITION_BLOCKED` / conflicts: **do not edit files to force-pass**; enumerate dispositions and take them to PA (§4.5).
@@ -106,12 +117,12 @@ npm ci
 npm run build:tsc                            # deterministic codegen/typecheck guard
 node scripts/source_readiness.mjs \
   --nse <dir>/EQUITY_L.csv --bse <dir>/EQUITY.csv \
-  --mca <dir>/mca_master.csv --taxonomy <dir>/taxonomy-map.csv \
+  --mca <dir>/mca_master.csv --taxonomy <dir>/taxonomy.csv \
   --tick-rules <dir>/tick-rules.csv \
   --output-dir audits/source-readiness-YYYYMMDD
 ```
 
-Expect `verdict: DEPOSITION_READY` (exit 0) only if every deposit-intended security (NSE set, or union when NSE absent) has: valid ISIN (shape+Luhn), matching identity across sources, positive lotSize, face value agreed NSE↔MCA (and BSE if supplied) or absent-BSE note, tickSize evidence covering **every** record. Fallback when tick-rules cannot be obtained: `--tick-size-uniform 0.05` **only if** bound by the act (R-7; uniform 0.05 with explicit deviation notice referencing the 2024/2025 price-linked regime). The tool exits 4 (`DEPOSITION_BLOCKED`) with `tick-size` as a blocking reason otherwise — by design.
+Expect `verdict: DEPOSITION_READY` (exit 0) only if every deposit-intended security (NSE set) has: valid ISIN (shape+Luhn), matching identity across sources, positive lotSize, faceValue established from MCA, industry/sector coverage from the taxonomy deposit, tickSize evidence covering **every** record — plus zero blocking cross-source conflicts (NSE↔BSE symbols, MCA links, taxonomy coverage). Fallback when tick-rules cannot be obtained: `--tick-size-uniform 0.05` **only if** bound by the act (R-7; uniform 0.05 with explicit deviation notice referencing the 2024/2025 price-linked regime). The tool exits 4 (`DEPOSITION_BLOCKED`) with `tick-size` as a blocking reason otherwise — by design.
 
 Output `audits/` is gitignored; the committed artifacts in the deposit PR are the pinned input files (evidence), custody log, and `source-readiness.{json,csv,md}`.
 
@@ -123,7 +134,7 @@ Output `audits/` is gitignored; the committed artifacts in the deposit PR are th
 | NSE↔MCA face-value conflict | Query MCA; if unresolved ⇒ reject record; never pick by heuristic |
 | Symbol/ISIN divergent duplicates in tick-rules | Reject file back to operator; conflicting duplicate = not an admissible input |
 | `.tickSize` gaps under price-linked regime | Re-extract band list as-of date; or act binds uniform + notice |
-| Taxonomy unmapped ISIN | Either extend mapping (operator, with evidence) or record as excluded in act; never guess a sector |
+| Taxonomy missing ISIN/CIN rows | Operator re-supplies an extended taxonomy deposit (same named source, same as-of date) or the security is recorded as excluded in the act; never guess a sector |
 | Universe size mismatch vs. exchange stated counts | Treat as incomplete acquisition; stop |
 
 ## 5. Findings that tighten the plan (amendments, append-only)
@@ -179,7 +190,7 @@ No corpus, manifest, receipt, attempt log, or runtime-asset byte changed in this
 
 1. **Egress** — NSE/BSE/MCA hosts are unreachable from this sandbox (2026-11-06 log). Acquisition must occur on a connected workstation/VM or via licensed channel. **Blocked on operator action.**
 2. **MCA bulk** — no free official bulk CSV; requires licensed extract or per-CIN manual/semi-automated capture (thousands of lookups) or verified data.gov.in resource (currency unverified). **Requires PA/Procurement decision (cost/time).**
-3. **Per-issuer taxonomy mapping** — codebook is public PDF; per-ISIN mapping is not published as a standalone official CSV. Route (BSE industry column vs licensed mapping) needs operator verification against current BSE bytes. **Pending verification in P2, not acquirable from here.**
+3. **Taxonomy deposit (industry + sector)** — an authoritative, named, sha256-pinned CSV keyed by ISIN (or CIN bridged through MCA), covering every deposit-intended security. No such bytes are fetchable from this sandbox (eligibility-governed); the operator must supply a licensed/official extract and pin it before the readiness run. (Whether a BSE List-of-Scrips industry column can be part of that provenance is verified at acquisition time; the NSE Indices codebook PDF is not an input and may only be cited as vocabulary provenance.) **External action required before P2.**
 4. **Tick band as-of extract** — either a saved NSE circular/price-band list artifact (sha256) or the act-bound uniform fallback with deviation notice. **Decision required in the act (R-7/D-9).**
 5. **SME scope (D-8)** — if in scope, A2 applies and face-value/tick evidence must cover SME series too. **Open PA decision.**
 6. **As-of date** — effective date must be named by the act before bytes are pinned (all files same-date). **Open PA decision.**
@@ -196,3 +207,15 @@ Corpus/manifest/receipt modification; revision re-pinning; identity-resolution b
 - **then and only then** may the deposit act (P3) issue revision 3 (D-7) and P9/B-06 reassessment run.
 
 *This record is documentary. It creates no security master, deposits nothing, and authorizes nothing beyond its stated scope.*
+
+---
+
+## Amendment A-2 (2026-11-07 — acquisition-requirements correction; append-only)
+
+This record previously asked operators to acquire a two-part "industry taxonomy" (an NSE Indices classification codebook PDF plus a separate per-issuer ISIN→industry mapping CSV, with a suggested 12-column superset layout). An evidence-backed review against the implementation (2026-11-07, PR against `main`) established:
+
+1. **No PDF input exists.** Nothing in `scripts/source_readiness.mjs`, `src/audit/source_readiness.ts` or `src/audit/d05_corpus_audit.ts` reads a PDF; the taxonomy input is a CSV with `industry` + `sector` keyed by ISIN or by CIN (bridged through MCA). A 12-column mapping/master structure is defined nowhere in this repository (schemas, SPECS, tests, plan, assessment) and is rejected as unsupported.
+2. **No second mapping file exists.** The taxonomy CSV *is* the ISIN/CIN → industry/sector mapping; requesting a parallel artifact duplicates evidence in two custody chains and can only diverge.
+3. **§4.2 has been rewritten** to the exact implementation contract — NSE `EQUITY_L`-class file, BSE listing master (`scrip code, ISIN, name`), MCA master (current, licensed, CIN + company name + face value, ISIN/SYMBOL bridge preferred), taxonomy CSV (industry + sector), tick-size evidence — with explicit non-inputs list (codebook PDF, separate mapping file, 12-column layout, SME list, stale MCA extracts, BSE face value).
+4. Wave-1/2/3 bytes and all pins listed in §6 are unchanged by this correction; the corpus, manifests and receipts were not touched. B-06 remains frozen to P9. Option B and every other decision in the plan are carried forward unchanged.
+5. The NSE Indices *codebook* may be cited in the act's provenance (named source of sector/industry vocabulary) but is never an input to the readiness run and confers no coverage.
