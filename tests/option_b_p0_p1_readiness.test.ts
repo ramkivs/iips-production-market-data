@@ -97,3 +97,31 @@ describe('D05 Option B post-merge P0/P1 execution record — conformance', () =>
     }
   });
 });
+
+describe('D05 Option B — acquisition-requirements correction (A-2)', () => {
+  it('record carries Amendment A-2: single taxonomy CSV; codebook-PDF and 12-column layouts withdrawn', () => {
+    const doc = repo(RECORD);
+    assert.match(doc, /Amendment A-2 \(2026-11-07/);
+    assert.match(doc, /12-column/);
+    assert.match(doc, /no PDF input|nothing in the tools consumes a PDF/i);
+    assert.doesNotMatch(doc, /taxonomy-map\.csv/);
+    assert.match(doc, /industry.*sector.*keyed by ISIN/is);
+  });
+
+  it('record names the exact implementation contract and no secondary mapping file', () => {
+    const doc = repo(RECORD);
+    assert.match(doc, /SPECS/);
+    assert.match(doc, /scrip_code/);
+    assert.match(doc, /cin/);
+    assert.match(doc, /industry.*sector.*isin.*or.*cin|isin.*or.*cin/i);
+    assert.doesNotMatch(doc, /codebook PDF pinned by sha256/);
+    assert.match(doc, /both are withdrawn|Neither exists in the implementation/);
+  });
+
+  it('plan carries Amendment A-2 referencing the corrected acquisition contract', () => {
+    const plan = repo(PLAN);
+    assert.match(plan, /Amendment A-2 \(2026-11-07/);
+    assert.match(plan, /single taxonomy CSV/i);
+    assert.match(plan, /no 12-column/i);
+  });
+});
