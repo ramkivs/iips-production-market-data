@@ -206,6 +206,14 @@ try {
     check(existsSync(join(repoRoot, entry.import)), `${subpath} runtime target is missing`);
     check(existsSync(join(repoRoot, entry.types)), `${subpath} declaration target is missing`);
   }
+  // The ./dhan-server subpath must resolve under BOTH ESM import and CJS
+  // require resolution; a missing "default" condition surfaces as
+  // ERR_PACKAGE_PATH_NOT_EXPORTED for require-context consumers (IRR server).
+  {
+    const entry = manifest.exports['./dhan-server'];
+    check(typeof entry.default === 'string' && entry.default === entry.import,
+      './dhan-server lacks a "default" condition equal to its runtime target');
+  }
 
   console.log('[package-consumer] packing built artifacts');
   const packOutput = run(npm, [...npmPrefix, 'pack', '--ignore-scripts', '--json', '--pack-destination', temporary], repoRoot);
@@ -281,6 +289,21 @@ try {
     check(existsSync(join(installedRoot, entry.import)), `${subpath} installed runtime missing`);
     check(existsSync(join(installedRoot, entry.types)), `${subpath} installed declarations missing`);
   }
+  {
+    const entry = installedManifest.exports['./dhan-server'];
+    check(typeof entry.default === 'string' && entry.default === entry.import,
+      './dhan-server installed entry lacks the "default" condition');
+  }
+
+  // Resolve ./dhan-server from the INSTALLED package in both module systems.
+  console.log('[package-consumer] resolving ./dhan-server from the installed package (ESM + CJS)');
+  const esmResolved = run(process.execPath, ['--input-type=module', '-e',
+    "import('iips-production-market-data/dhan-server').then((m) => console.log(Object.keys(m).length))"], consumer);
+  check(Number(esmResolved) > 0, './dhan-server ESM import resolved no exports from the installed package');
+  const cjsResolved = run(process.execPath, ['-e',
+    "const p = require.resolve('iips-production-market-data/dhan-server'); console.log(p)"], consumer);
+  check(cjsResolved.includes('dist/package/src/providers/dhan/package.js'),
+    `./dhan-server CJS require.resolve did not hit the published runtime: ${cjsResolved}`);
 
   const missingFromInstall = [];
   for (const modulePath of BROKER_IMPORT_PUBLISHED_MODULES) {
