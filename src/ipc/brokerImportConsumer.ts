@@ -32,8 +32,11 @@ import {
   persistBrokerImport,
   type BrokerImportOutcome,
   type BrokerImportRequest,
+  type MapBrokerImportHoldingsOptions,
 } from '../persistence/brokerImportPersistence.js';
 import type { OwnerRef } from '../persistence/portfolio_store.js';
+import type { SecurityMaster } from '../identity/security_master.js';
+import type { DhanInstrumentRegistry } from '../providers/dhan/dhan_instrument_map.js';
 
 /**
  * The whole consumer surface: one callable. Deliberately not an object with
@@ -46,10 +49,18 @@ export type BrokerImportConsumer = (owner: OwnerRef, request: BrokerImportReques
  * The one factory (act clause 1(a)). Binds the port to the caller's existing
  * handle and returns the consumer. Pure construction: no I/O, no migration, no
  * guard evaluation, no transaction.
+ *
+ * When `securityMaster` and `registry` are supplied, the consumer qualifies
+ * each holding's security identity through the governed P04 → P7 joint path
+ * before persistence. When absent, the pre-Stage-4 fallback behavior applies
+ * (D114 identity built directly from broker-supplied ISIN + series).
  */
-export function createBrokerImportConsumer(db: DatabaseSync): BrokerImportConsumer {
+export function createBrokerImportConsumer(
+  db: DatabaseSync,
+  options: MapBrokerImportHoldingsOptions = {},
+): BrokerImportConsumer {
   const port = new DurablePortfolioStorePort(db);
-  return (owner, request) => submitBrokerImport(port, owner, request);
+  return (owner, request) => submitBrokerImport(port, owner, request, options);
 }
 
 /**
@@ -62,6 +73,7 @@ export function submitBrokerImport(
   port: DurablePortfolioStorePort,
   owner: OwnerRef,
   request: BrokerImportRequest,
+  options: MapBrokerImportHoldingsOptions = {},
 ): BrokerImportOutcome {
-  return persistBrokerImport(port, owner, request);
+  return persistBrokerImport(port, owner, request, undefined, options);
 }
