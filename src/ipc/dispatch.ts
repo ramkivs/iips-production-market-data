@@ -43,6 +43,7 @@ import {
 } from '../persistence/binding.js';
 import {
   DurablePortfolioStore,
+  evaluatePortSaveGuard,
   InvalidPortfolioRequestError,
   ResourceUnavailableError,
   RevisionConflictError,
@@ -322,6 +323,14 @@ export function createConnectionHandler(
           return;
         }
 
+        // Write authorization: W-1 default deny; the explicitly authorized
+        // personal-local principal is recognized via env switch + binding.
+        const writeGuard = evaluatePortSaveGuard({
+          env: options.env ?? process.env,
+          canonicalOwnerId: owner.canonicalOwnerId,
+          tenantId: owner.tenantId,
+        });
+
         // One-request-per-connection gate (T-2).
         //
         // AF_UNIX ('half-close-required'): withhold the response until the clean
@@ -434,7 +443,7 @@ export function createConnectionHandler(
 
         let result: unknown;
         if ((IPC_WRITE_OPERATIONS as readonly string[]).includes(envelope.op)) {
-          if (!personalUse) { await writeGuarded(classAFrame(envelope.op, 'WRITE_NOT_AUTHORIZED', requestId)); return; }
+          if (!writeGuard.authorized) { await writeGuarded(classAFrame(envelope.op, 'WRITE_NOT_AUTHORIZED', requestId)); return; }
           const receipt = executeLocalPersonalWrite(store, owner, envelope);
           await writeGuarded(successFrame(envelope.op, receipt, requestId)); return;
         }

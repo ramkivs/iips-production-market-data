@@ -19,6 +19,7 @@ import {
   resolveActiveHoldingsBindingInCurrentTransaction,
 } from './binding.js';
 import { isD114SecurityIdentity, type D114SecurityIdentity } from '../contracts/types.js';
+import { isLocalPersonalUseEnabled } from '../ipc/localPersonalUse.js';
 
 export class InvalidPortfolioRequestError extends Error {
   constructor(message: string) {
@@ -291,14 +292,71 @@ export interface RevisionEntry {
 
 /**
  * Gate E W-1 conjunction. W-1(3) (Gate 4 qualification) and W-1(4) (Gate 5
- * admission) are both false in this build, so the guard can never authorize.
- * No environment flag, test result or operator assertion changes this.
+ * admission) are both false in this build, so the governed path can never
+ * authorize on its own.
+ *
+ * The explicitly authorized local single-user personal path
+ * (IIPS_LOCAL_PERSONAL_USE=1) is recognized here — within the authorization
+ * model itself, not as a dispatch-level bypass. Authorization requires BOTH:
+ *
+ *   1. The environment switch IIPS_LOCAL_PERSONAL_USE=1 (process-level
+ *      configuration, read from the server process environment only); and
+ *   2. A validated principal/membership binding (per-request context: the
+ *      canonical owner and tenant resolved from the database).
+ *
+ * Neither alone is sufficient — the env var without a binding is still
+ * denied, and a binding without the env var is still denied. This prevents
+ * hard-coding authorization based solely on an arbitrary environment variable
+ * while keeping the decision centralized and auditable.
+ *
+ * No environment flag, test result or operator assertion changes the W-1
+ * default-deny behaviour for any other caller or execution context.
  */
-export function evaluatePortSaveGuard(): { authorized: boolean; reasons: string[] } {
-  return {
-    authorized: false,
-    reasons: ['W-1(3): Gate 4 qualification not accepted', 'W-1(4): Gate 5 admission not accepted'],
-  };
+export interface AuthorizationContext {
+  readonly env?: NodeJS.ProcessEnv;
+  readonly canonicalOwnerId?: string;
+  readonly tenantId?: string;
+}
+
+export function evaluatePortSaveGuard(context?: AuthorizationContext): { authorized: boolean; reasons: string[] } {
+  // W-1 default deny: Gate 4 and Gate 5 are not accepted on the governed path.
+  const w1Reasons = [
+    'W-1(3): Gate 4 qualification not accepted',
+    'W-1(4): Gate 5 admission not accepted',
+  ];
+
+  // No context: governed path default deny. This preserves the hard-false W-1
+  // response for every existing caller (DurablePortfolioStorePort,
+  // gateAPrimeValidation, directP1Provisioning and all tests) regardless of
+  // process environment.
+  if (!context) {
+    return { authorized: false, reasons: w1Reasons };
+  }
+
+  const env = context.env ?? process.env;
+
+  // Explicitly authorized local single-user personal use: the env switch plus
+  // a validated binding context. The env var alone is not sufficient.
+  if (isLocalPersonalUseEnabled(env)) {
+    if (context.canonicalOwnerId && context.tenantId) {
+      return {
+        authorized: true,
+        reasons: [
+          'W-1 personal-local authorization: explicitly enabled local single-user personal use',
+          `principal: ${context.canonicalOwnerId}@${context.tenantId}`,
+        ],
+      };
+    }
+    return {
+      authorized: false,
+      reasons: [
+        ...w1Reasons,
+        'W-1 personal-local authorization denied: no validated principal/membership binding',
+      ],
+    };
+  }
+
+  return { authorized: false, reasons: w1Reasons };
 }
 
 export function computeLineageHash(holdings: readonly HoldingInput[]): string {
