@@ -109,3 +109,7 @@ Execution (one-time, read-only; `$0` persisted; `saveable=false`):
 - Import disposition remains **REJECTED**; `persistedRows=0`; `saveable=false` (`refusalCodes: {UNMAPPED_IDENTIFIER: 3}`); eligibility remains `NOT_ASSERTED` everywhere.
 
 Per-row outcomes (68 rows), join evidence, Appendix A verification results, and preservation checks: `evidence/integration/ws-a-dhan-68-row/identity-outcomes-reassessment-2026-11-08.json` (SHA-256 `e99989b9962a686d33df42b43746f9127929ebced9c0a99690a64e6270ae5c2e`). B-06 remains **OPEN** pending PA review of this reassessment evidence; nothing in this addendum constitutes closure. The 2026-11-05 record is retained verbatim.
+
+## WS-A-ADDENDUM-2026-11-08-D — PA review disposition of §9-A execution (append-only)
+
+The PA has reviewed the 2026-11-08 §9-A reassessment evidence and accepted it: 62/62 in-scope resolutions exact-ISIN verified against investigation Appendix A; rows 1/21/40 identities preserved; rows 44/51/63 remain UNRESOLVED/`UNMAPPED_IDENTIFIER` (§9-C declined, universe retained at 2,390); `persistedRows=0`; `saveable=false`; `importDisposition=REJECTED`; `eligibility=NOT_ASSERTED`; B-06 remains OPEN. The dated PA review disposition of record is in `evidence/cross-repository/IIPS_V3_D05_B06_68ROW_REASSESSMENT_2026-11-08.md` ("APPEND-ONLY ADDENDUM — PA REVIEW DISPOSITION"). Execution commit `80ad6d346901c936f1fb3ee98e692ec72851a309`. Documentation-only addendum; no code, rule, mapping or persistence change; no re-execution performed. Prior records retained verbatim.

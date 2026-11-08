@@ -104,3 +104,19 @@ This record was produced under your instruction of 2026-11-08 ("Proceed with the
 ## APPEND-ONLY ADDENDUM — residual-exception framing superseded (2026-11-08, later same day)
 
 This record's 2026-11-08 interpretation of the 65 UNRESOLVED rows as residual exceptions is **superseded** by `evidence/cross-repository/IIPS_V3_D05_B06_ROOT_CAUSE_INVESTIGATION_2026-11-08.md` (root cause: identifier-free observed surface; 62 of 65 rows resolve via exact ISIN present in the committed B-04 companion export; 3 rows are scope exclusions) and by the PA authorization 2026-11-08 executing §9-A (one-time ISIN-scoped reassessment). Result under execution: 65/68 RESOLVED via exact ISIN (62 previously unresolved in-scope rows per Appendix A; rows 1/21/40 preserved); rows 44/51/63 remain `UNMAPPED_IDENTIFIER` (§9-C declined; universe retained at 2,390 NSE CM EQ securities; no aliases/exceptions/alternative mappings); `saveable=false`; zero persisted. **B-06 remains OPEN pending PA review.** This record is retained verbatim otherwise; corrections here are additive only.
+
+---
+
+## APPEND-ONLY ADDENDUM — PA REVIEW DISPOSITION (2026-11-08, later same day)
+
+Governing act: PA decision 2026-11-08 — review and disposition of the §9-A execution evidence. Documentation-only, append-only. No application code, identity processing, persistence, or operational activation occurred in this pass.
+
+Recorded decisions (verbatim-preserving, this record is append-only):
+
+1. **§9-A reassessment: ACCEPTED AND COMPLETE.** All 62 in-scope positions resolved using exact ISIN against `GOVERNED_AUTHENTICATED_MASTER_2026-11-08` (evidence: `evidence/integration/ws-a-dhan-68-row/identity-outcomes-reassessment-2026-11-08.json`, SHA-256 `e99989b9962a686d33df42b43746f9127929ebced9c0a99690a64e6270ae5c2e`; per-row outcomes verified row-by-row against investigation Appendix A, 62/62). The three previously resolved canonical identities are preserved (`EQ_AGI_IN`, `EQ_GHCL_IN`, `EQ_KROSS_IN`).
+2. **§9-C disposition: ACCEPTED.** Universe expansion declined. Rows 44 (National Stock Exchange of India), 51 (Radhika Jeweltech) and 63 (Univastu) remain UNRESOLVED and excluded under the unchanged authorized 2,390 NSE CM EQ security universe. No aliases, no eligibility bypass exceptions, no alternative identity mappings were created. Fail-closed behaviour preserved.
+3. **Evidence and controls: ACCEPTED.** E7/E8 provenance and the 68/68 exact normalized display-name join are retained; quantity discrepancies on rows 1/38/54 are explicitly disclosed; `persistedRows=0`; `saveable=false`; `importDisposition=REJECTED`; `eligibility=NOT_ASSERTED`; no identity-rule, alias, normalization, mapping or persistence-control change is authorized.
+4. **Execution and publication: ACCEPTED.** The PA accepts the reported validation (1184 tests executed / 1183 passed / 1 pre-existing windows-conditional skip / exit 0), the Appendix A reconciliation (62/62) and the remote artifact verification. Execution commit `80ad6d346901c936f1fb3ee98e692ec72851a309`; verified `origin/main` = `80ad6d346901c936f1fb3ee98e692ec72851a309` (published 2026-11-08).
+5. **B-06: REMAINS OPEN.** This PA review accepts the reassessment, not B-06 closure. B-06 must not be marked complete, closed or production-accepted by any artifact derived from this decision. No persistence authorization is granted.
+
+Cross-references (all append-only): `IIPS_V3_D05_B06_ROOT_CAUSE_INVESTIGATION_2026-11-08.md` (root cause record); WS-A evidence record addenda 2026-11-08 (B and C); `identity-outcomes-reassessment-2026-11-08.json` (per-row outcomes). Earlier records are preserved unchanged; the 2026-11-08 residual-exception interpretation is formally withdrawn as recorded in the investigation report and the prior addendum to this file.
