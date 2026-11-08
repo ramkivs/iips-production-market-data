@@ -31,6 +31,7 @@ import {
   type IpcHandle,
 } from './endpoint.js';
 import { createConnectionHandler } from './dispatch.js';
+import { LOCAL_PERSONAL_USE_SETTING } from './localPersonalUse.js';
 import { createBrokerImportConsumer, type BrokerImportConsumer } from './brokerImportConsumer.js';
 
 export const DATABASE_PATH_SETTING = 'IIPS_G3_DATABASE_PATH';
@@ -131,7 +132,7 @@ export async function startIpcServer(options: StartupOptions = {}): Promise<Star
     // pipe breaks, so the pipe transport settles via the flush guard; AF_UNIX
     // keeps the airtight half-close gate.
     const settlement = settlementPolicyForEndpoint(target);
-    const handle: IpcHandle = await listenIpc(target, createConnectionHandler(db, { settlement }), {
+    const handle: IpcHandle = await listenIpc(target, createConnectionHandler(db, { settlement, env }), {
       platform,
       ...(options.serverFactory ? { serverFactory: options.serverFactory } : {}),
     });
@@ -154,7 +155,7 @@ const isMain = (): boolean => {
 };
 
 if (isMain()) {
-  startIpcServer()
+  startIpcServer({ env: { ...process.env, [LOCAL_PERSONAL_USE_SETTING]: '1' } })
     .then((outcome) => {
       if (!outcome.ok) {
         console.error(`[g3] startup refused at phase ${outcome.phase}: ${outcome.error}`);
