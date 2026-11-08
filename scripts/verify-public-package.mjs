@@ -298,7 +298,7 @@ try {
   // Resolve ./dhan-server from the INSTALLED package in both module systems.
   console.log('[package-consumer] resolving ./dhan-server from the installed package (ESM + CJS)');
   const esmResolved = run(process.execPath, ['--input-type=module', '-e',
-    "import('iips-production-market-data/dhan-server').then((m) => console.log(Object.keys(m).length))"], consumer);
+    "import('iips-production-market-data/dhan-server').then((m) => { if ('DhanServerHttpsTransport' in m) throw new Error('DhanServerHttpsTransport leaked onto ./dhan-server'); if (typeof m.MarketDataTransportClient !== 'function') throw new Error('MarketDataTransportClient missing from ./dhan-server'); console.log(Object.keys(m).length); })"], consumer);
   check(Number(esmResolved) > 0, './dhan-server ESM import resolved no exports from the installed package');
   const cjsResolved = run(process.execPath, ['-e',
     "const p = require.resolve('iips-production-market-data/dhan-server'); console.log(p)"], consumer);
@@ -364,7 +364,9 @@ try {
     'WRITE_NOT_AUTHORIZED', 'src/ipc/', 'src/persistence/', 'PitReadService',
     'HistoricalPitIngestionLoader', 'NON_PRODUCTION_D114',
     // Server-only Dhan provider must never enter the browser closure.
-    'DhanApiClient', 'PreAccessNoNetworkTransport', 'api.dhan.co', 'dhan-server',
+    'DhanApiClient', 'PreAccessNoNetworkTransport', 'DhanServerHttpsTransport',
+    'MarketDataTransportClient', 'IIPS_MARKET_DATA_TRANSPORT_TOKEN',
+    'IIPS_DHAN_ACCESS_TOKEN_SECRET_PATH', 'api.dhan.co', 'dhan-server',
   ];
   const hits = forbidden.filter((needle) => browserText.includes(needle));
   check(hits.length === 0, `browser closure contains forbidden entries: ${hits.join(', ')}`);

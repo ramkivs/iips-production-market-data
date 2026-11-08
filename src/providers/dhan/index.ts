@@ -22,6 +22,7 @@ export * from './dhan_historical_adapter.js';
 export * from './dhan_operational_controls.js';
 export * from './dhan_market_data_service.js';
 export * from './dhan_market_data_http.js';
+export * from './dhan_server_egress.js';
 export * from './dhan_instrument_master_source.js';
 export * from './dhan_instrument_master_parser.js';
 export * from './dhan_instrument_master_qualification.js';
