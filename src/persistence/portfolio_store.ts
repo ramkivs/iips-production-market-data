@@ -458,14 +458,34 @@ export interface RevisionReconciliationEvidence {
 }
 
 const MAX_REVISIONS = 4;
+const PERSONAL_USE_REVISION_LIMIT = 1000;
 
 export class DurablePortfolioStore {
   private transactionDepth = 0;
+  /**
+   * The immutable revision lifecycle is capped at MAX_REVISIONS on the governed
+   * qualification path (the D03 cap=4 contract). The explicitly authorized
+   * local single-user personal path (IIPS_LOCAL_PERSONAL_USE=1) raises the cap
+   * to PERSONAL_USE_REVISION_LIMIT so the application is usable day to day;
+   * the cap is still finite and every other revision rule is unchanged.
+   */
+  private readonly revisionCap: number;
 
   constructor(
     private readonly db: DatabaseSync,
     private readonly testHooks?: { afterMutation?: (step: string) => void; afterCommit?: () => void },
-  ) {}
+    options?: { revisionCap?: number },
+  ) {
+    const requested = options?.revisionCap;
+    if (requested === undefined) {
+      this.revisionCap = MAX_REVISIONS;
+    } else {
+      if (!Number.isInteger(requested) || requested < 1) {
+        throw new InvalidPortfolioRequestError('revisionCap must be a positive integer');
+      }
+      this.revisionCap = Math.min(requested, PERSONAL_USE_REVISION_LIMIT);
+    }
+  }
 
   private afterMutation(step: string): void {
     this.testHooks?.afterMutation?.(step);
@@ -580,6 +600,24 @@ export class DurablePortfolioStore {
       ...projectPortfolioBase(row, 'portfolio.list'),
       ...projectCurrentRevision(row, 'portfolio.list'),
     }));
+  }
+
+  /**
+   * Local personal-use path: the recorded tombstone timestamp of a portfolio
+   * tombstoned through {@link delete}. Throws ResourceUnavailableError for
+   * anything that is not a tombstoned own portfolio — never a default value.
+   */
+  deletedAtOf(owner: OwnerRef, portfolioId: string): string {
+    const row = this.db
+      .prepare(
+        `SELECT deleted_at FROM portfolios
+          WHERE canonical_owner_id = ? AND tenant_id = ? AND portfolio_id = ? AND status = 'TOMBSTONED'`,
+      )
+      .get(owner.canonicalOwnerId, owner.tenantId, portfolioId) as { deleted_at: string } | undefined;
+    if (!row || typeof row.deleted_at !== 'string' || row.deleted_at.length === 0) {
+      throw new ResourceUnavailableError();
+    }
+    return row.deleted_at;
   }
 
   private resolvePortfolio(
@@ -968,8 +1006,8 @@ export class DurablePortfolioStore {
         `expected revision ${expectedRevision} but the portfolio is at ${current.currentRevision}`,
       );
     }
-    if (current.currentRevision >= MAX_REVISIONS && operation !== 'DELETE') {
-      throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${MAX_REVISIONS}`);
+    if (current.currentRevision >= this.revisionCap && operation !== 'DELETE') {
+      throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${this.revisionCap}`);
     }
     const nextRevision = expectedRevision + 1;
     const contentDigest = contentDigestOf(request);
@@ -1367,8 +1405,8 @@ export class DurablePortfolioStore {
           contributions: 0,
         };
       }
-      if (current.currentRevision >= MAX_REVISIONS) {
-        throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${MAX_REVISIONS}`);
+      if (current.currentRevision >= this.revisionCap) {
+        throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${this.revisionCap}`);
       }
       const nextRevision = request.expectedRevision + 1;
       const contentDigest = contentDigestOf(request);
