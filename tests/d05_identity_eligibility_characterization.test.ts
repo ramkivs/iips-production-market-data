@@ -60,7 +60,9 @@ import {
   SecurityMasterEntity,
   IdentityAmbiguityError,
   getGovernedBroadSecurityMaster,
+  getGovernedLegacyWave1SecurityMaster,
   D05_BROAD_UNIVERSE_ENTITIES,
+  D05_AUTHENTICATED_UNIVERSE_ENTITIES,
 } from '../src/identity/index.js';
 import { ObjectResolverService } from '../src/transports/object_resolver.js';
 import { App } from '../frontend/src/app/App.js';
@@ -96,9 +98,14 @@ function renderAt(path: string): string {
  * only as a record that is observably NOT one of the 52 externally-named issuers, so that
  * the resolver's classification claim can be shown to be invariant across both kinds of
  * record. No D05 field carries a real/synthetic discriminator (asserted in CHAR-A-01).
+ *
+ * NOTE (one-time replacement, 2026-11-08): the authenticated universe carries NO synthetic
+ * Tier-2 filler records — all 2,390 records are genuine NSE CM EQ listings. The origin
+ * invariant is therefore asserted across arbitrarily chosen authenticated records; the
+ * historical Wave-1 fixture and its byte pins are retained by the legacy drill.
  */
-const MODELLED_TIER2_SYMBOL = 'IT0001';
 const EXTERNALLY_NAMED_SYMBOL = 'RELIANCE';
+const SECOND_NAMED_SYMBOL = 'TCS';
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
  * CHAR-A — UNSUPPORTED CLASSIFICATION CLAIMS
@@ -108,19 +115,17 @@ describe('CHAR-A: D05 classification claims are no longer literal assertions (re
   it('CHAR-A-01 [CORRECTED — REGRESSION GUARD]: the resolver asserts no REAL classification and no literal GOOD; record origin is UNKNOWN for a modelled Tier-2 record and an externally-named issuer alike', () => {
     const resolver = new ObjectResolverService(getGovernedBroadSecurityMaster());
 
-    const modelled = resolver.resolveObject({
-      identifierType: 'NSE_SYMBOL',
-      identifierValue: MODELLED_TIER2_SYMBOL,
-    });
     const named = resolver.resolveObject({
       identifierType: 'NSE_SYMBOL',
       identifierValue: EXTERNALLY_NAMED_SYMBOL,
     });
-
-    assert.strictEqual(modelled.companyId, 'EQ_IT0001_IN');
+    const other = resolver.resolveObject({
+      identifierType: 'NSE_SYMBOL',
+      identifierValue: SECOND_NAMED_SYMBOL,
+    });
 
     // ── CORRECTED: no unsupported REAL assertion on either record (C1).
-    for (const r of [modelled, named]) {
+    for (const r of [other, named]) {
       assert.notStrictEqual(r.provenance.sourceClassification, 'REAL');
       assert.strictEqual(r.provenance.sourceClassification, 'UNCLASSIFIED');
       assert.strictEqual(r.integrity.recordOrigin.classification, 'UNKNOWN');
@@ -131,7 +136,7 @@ describe('CHAR-A: D05 classification claims are no longer literal assertions (re
     // ── STILL TRUE (preserved observation): the D05 row contract exposes no field from which a
     //    real-market, synthetic, eligibility or provenance-tier value could be derived. Hence
     //    the only evidence-supported origin state is UNKNOWN — for every record (C2).
-    const corpusRowKeys = Object.keys(D05_BROAD_UNIVERSE_ENTITIES[52]).map((k) => k.toLowerCase());
+    const corpusRowKeys = Object.keys(D05_AUTHENTICATED_UNIVERSE_ENTITIES[0]).map((k) => k.toLowerCase());
     const eligibilityBearingKey = corpusRowKeys.find((k) =>
       /eligib|synthetic|real|classification|vendor|sourc|quality|tier/.test(k)
     );
@@ -144,17 +149,17 @@ describe('CHAR-A: D05 classification claims are no longer literal assertions (re
 
     // ── LIMIT: quality GOOD may still be DERIVED for a record whose assessed descriptors are
     //    complete and current (both records here). That is a completeness statement only; it
-    //    is not origin and not eligibility (C3). It does not make IT0001 real.
-    assert.strictEqual(modelled.provenance.quality, 'GOOD');
-    assert.deepStrictEqual(modelled.integrity.qualityAnomalyCodes, []);
+    //    is not origin and not eligibility (C3).
+    assert.strictEqual(other.provenance.quality, 'GOOD');
+    assert.deepStrictEqual(other.integrity.qualityAnomalyCodes, []);
   });
 
   it('CHAR-A-02 [CORRECTED — REGRESSION GUARD]: the UI08 surface renders no REAL claim and discloses unknown record origin for the modelled record', () => {
     const out = renderAt(
-      `/security-master?type=NSE_SYMBOL&value=${encodeURIComponent(MODELLED_TIER2_SYMBOL)}`
+      `/security-master?type=NSE_SYMBOL&value=${encodeURIComponent(SECOND_NAMED_SYMBOL)}`
     );
 
-    assert.ok(out.includes('EQ_IT0001_IN'), 'the modelled record resolves and is displayed (C5 bounded display)');
+    assert.ok(out.includes('EQ_TCS_IN'), 'the authenticated record resolves and is displayed (C5 bounded display)');
     assert.ok(out.includes('Source Classification'), 'the classification row remains visible');
     assert.ok(out.includes('UNCLASSIFIED'), 'the classification renders UNCLASSIFIED');
     assert.ok(!/>REAL</.test(out), 'no cell renders a bare REAL classification');
@@ -298,11 +303,12 @@ describe('CHAR-C: asOf governs identifier mapping only — and the descriptor no
     assert.strictEqual(t.descriptorBasis, 'CURRENT_SNAPSHOT');
     assert.strictEqual(t.descriptorHistoricallyVerified, false);
     assert.strictEqual(t.listingsEffectiveDated, false);
-    // EQ_AXISBANK_IN's own record window starts 2015-01-01, so 2005 is outside it.
-    assert.strictEqual(t.descriptorStatus, 'OUTSIDE_RECORD_EFFECTIVE_WINDOW');
+    // EQ_AXISBANK_IN's authenticated record window starts 1998-11-16 (the real NSE
+    // listing date, not a Wave-1 placeholder), so 2005 is INSIDE the window but the
+    // descriptor still cannot be versioned — disclosed, never silently substituted.
+    assert.strictEqual(t.descriptorStatus, 'AS_OF_NOT_VERSIONED');
     assert.strictEqual(historical.provenance.quality, 'PARTIAL');
     assert.deepStrictEqual(historical.integrity.qualityAnomalyCodes, [
-      'DESCRIPTOR_RECORD_NOT_EFFECTIVE_AT_AS_OF',
       'DESCRIPTOR_NOT_AS_OF_SCOPED',
     ]);
 
@@ -337,33 +343,66 @@ describe('CHAR-D: AIIL identity reconciliation (regression guards)', () => {
       'the original listing evidence remains preserved in the deposited corpus'
     );
 
-    const sm = getGovernedBroadSecurityMaster();
-    const authum = sm.getEntity('EQ_AIIL_IN');
-    assert.ok(authum);
-    assert.strictEqual(authum.companyName, 'Authum Investment & Infrastructure Limited');
-    assert.strictEqual(authum.isin, 'INE206F01022');
-    assert.strictEqual(authum.bseScripCode, '539177');
+    const legacy = getGovernedLegacyWave1SecurityMaster();
+    const legacyAuthum = legacy.getEntity('EQ_AIIL_IN');
+    assert.ok(legacyAuthum);
+    assert.strictEqual(legacyAuthum.companyName, 'Authum Investment & Infrastructure Limited');
+    assert.strictEqual(legacyAuthum.isin, 'INE206F01022');
+    assert.strictEqual(legacyAuthum.bseScripCode, '539177');
     assert.deepStrictEqual(
-      authum.listings.filter((l) => l.exchange === 'BSE').map((l) => l.scripCode),
+      legacyAuthum.listings.filter((l) => l.exchange === 'BSE').map((l) => l.scripCode),
       ['539177']
     );
-    assert.strictEqual(sm.resolveCompanyId({ identifierType: 'ISIN', identifierValue: 'INE206F01022' }), 'EQ_AIIL_IN');
-    assert.strictEqual(sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:539177' }), 'EQ_AIIL_IN');
+    assert.strictEqual(legacy.resolveCompanyId({ identifierType: 'ISIN', identifierValue: 'INE206F01022' }), 'EQ_AIIL_IN');
+    assert.strictEqual(legacy.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:539177' }), 'EQ_AIIL_IN');
 
     for (const asOf of ['2016-01-01T00:00:00.000Z', '2026-10-19T00:00:00.000Z']) {
       assert.throws(
-        () => sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989', asOf }),
+        () => legacy.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989', asOf }),
         /UNMAPPED_IDENTIFIER/
       );
     }
 
-    // No listing-level effective date has been invented by the runtime correction.
-    assert.strictEqual(authum.effectiveFrom, sourceAiil.effectiveFrom);
-    assert.strictEqual(authum.effectiveTo, undefined);
+    // No listing-level effective date has been invented by the correction.
+    assert.strictEqual(legacyAuthum.effectiveFrom, sourceAiil.effectiveFrom);
+    assert.strictEqual(legacyAuthum.effectiveTo, undefined);
     assert.strictEqual(
       D05_BROAD_UNIVERSE_ENTITIES.filter((e) => e.effectiveTo !== undefined).length,
       0,
       'the deposited source still carries no effectiveTo fields'
+    );
+  });
+
+  it('CHAR-D-02 [REPLACEMENT — AUTHENTICATED PROVIDER]: Sai Silks resolves to its own listing, never Authum; Authum carried natively with effectiveFrom 2024-04-23', () => {
+    const sourceAiil = D05_AUTHENTICATED_UNIVERSE_ENTITIES.find((e) => e.companyId === 'EQ_AIIL_IN');
+    assert.ok(sourceAiil, 'the authenticated deposit carries Authum natively');
+    assert.strictEqual(sourceAiil.effectiveTo, undefined);
+    assert.deepStrictEqual(
+      sourceAiil.listings.filter((l) => l.exchange === 'BSE').map((l) => l.scripCode),
+      ['539177'],
+      'the authenticated deposit records only 539177 — 543989 was never part of it'
+    );
+    assert.strictEqual(JSON.stringify(sourceAiil).includes('543989'), false);
+
+    const sm = getGovernedBroadSecurityMaster();
+    const authum = sm.getEntity('EQ_AIIL_IN');
+    assert.ok(authum);
+    assert.strictEqual(authum.isin, 'INE206F01022');
+    assert.strictEqual(authum.bseScripCode, '539177');
+    assert.strictEqual(authum.effectiveFrom, '2024-04-23T00:00:00.000Z');
+    assert.strictEqual(sm.resolveCompanyId({ identifierType: 'ISIN', identifierValue: 'INE206F01022' }), 'EQ_AIIL_IN');
+    assert.strictEqual(sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:539177' }), 'EQ_AIIL_IN');
+
+    /* Sai Silks (Kalamandir) 543989 is a genuine NSE CM EQ listing carried natively under
+       EQ_KALAMANDIR_IN — the resolver is allowed to find it and must tie it to its own
+       entity, never to Authum, and the timing claim is of the CURRENT_SNAPSHOT only. */
+    assert.strictEqual(
+      sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989' }),
+      'EQ_KALAMANDIR_IN'
+    );
+    assert.strictEqual(
+      sm.resolveCompanyId({ identifierType: 'ISIN', identifierValue: 'INE438K01021' }),
+      'EQ_KALAMANDIR_IN'
     );
   });
 });

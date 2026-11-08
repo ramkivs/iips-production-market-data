@@ -25,8 +25,11 @@ import * as crypto from 'node:crypto';
 
 import {
   getGovernedBroadSecurityMaster,
+  getGovernedLegacyWave1SecurityMaster,
+  getGovernedAuthenticatedSecurityMaster,
   IdentityAmbiguityError,
   D05_BROAD_UNIVERSE_ENTITIES,
+  D05_AUTHENTICATED_UNIVERSE_ENTITIES,
 } from '../src/identity/index.js';
 
 const ROOT = process.cwd();
@@ -92,14 +95,17 @@ describe('Wave-2 D05 disposition — bounded, fail-closed, zero deposition', () 
     assert.strictEqual(wave2Manifest.priorRevisionBatchId, PRIOR_BATCH);
   });
 
-  it('W2-D-02: runtime master remains the Wave-1 corpus, unchanged in count and pinned revision', () => {
-    assert.strictEqual(D05_BROAD_UNIVERSE_ENTITIES.length, 2250);
-    const broad = getGovernedBroadSecurityMaster();
-    assert.ok(broad.sourceRevision, 'governed corpus hydration must carry a source revision');
-    assert.strictEqual(broad.sourceRevision!.batchId, PRIOR_BATCH);
-    assert.strictEqual(broad.sourceRevision!.fileChecksumSha256, PRIOR_CHECKSUM);
-    assert.strictEqual(broad.sourceRevision!.recordCount, 2250);
-    assert.strictEqual(broad.sourceRevision!.authorizationRef, 'AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001');
+  it('W2-D-02: runtime master is the authenticated universe (one-time replacement); Wave-1 legacy hydration retained under explicit name', () => {
+    const legacy = getGovernedLegacyWave1SecurityMaster();
+    assert.ok(legacy.sourceRevision, 'legacy hydration must carry a source revision');
+    assert.strictEqual(legacy.sourceRevision!.batchId, PRIOR_BATCH);
+    assert.strictEqual(legacy.sourceRevision!.fileChecksumSha256, PRIOR_CHECKSUM);
+    assert.strictEqual(legacy.sourceRevision!.recordCount, 2250);
+    const current = getGovernedBroadSecurityMaster();
+    assert.strictEqual(current.sourceRevision!.batchId, 'BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001');
+    assert.strictEqual(current.sourceRevision!.recordCount, 2390);
+    assert.strictEqual(current.sourceRevision!.authorizationRef, 'AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001');
+    assert.strictEqual(D05_AUTHENTICATED_UNIVERSE_ENTITIES.length, 2390);
   });
 
   it('W2-D-03: prior manifest is intact and Wave-1 act reference unchanged', () => {
@@ -173,19 +179,25 @@ describe('Wave-2 D05 disposition — bounded, fail-closed, zero deposition', () 
     assert.ok(wave2Manifest.authorizationRef !== priorManifest.authorizationRef, 'Wave-2 revision must cite its own act, not Wave-1');
   });
 
-  it('W2-D-08: governed resolution still refuses all 67 ISINs — nothing is silently incorporated', () => {
-    const broad = getGovernedBroadSecurityMaster();
+  it('W2-D-08: governed resolution refuses exactly the still-unsupported ISINs; the other 64 are authenticated-universe listings (never Wave-2-incorporated)', () => {
+    const authenticated = getGovernedAuthenticatedSecurityMaster();
+    const stillUnsupported = ['INE562X01013', 'INE583V01021', 'INE721I01024'];
     for (const row of disposition.rows as DispositionRow[]) {
-      assert.strictEqual(broad.getEntity(row.isin), undefined, 'no entity keyed or mapped under any ISIN');
-      assert.throws(
-        () => broad.resolveCompanyId({ identifierType: 'ISIN', identifierValue: row.isin }),
-        (err: unknown) => {
-          assert.ok(err instanceof IdentityAmbiguityError, 'must fail closed with the identity quarantine error');
-          assert.strictEqual((err as IdentityAmbiguityError).quarantineRecord.reason, 'UNMAPPED_IDENTIFIER');
-          assert.strictEqual((err as IdentityAmbiguityError).quarantineRecord.rawIdentifier, row.isin);
-          return true;
-        },
-      );
+      if (stillUnsupported.includes(row.isin)) {
+        assert.strictEqual(authenticated.getEntity(row.isin), undefined, `${row.isin} must remain unsupported`);
+        assert.throws(
+          () => authenticated.resolveCompanyId({ identifierType: 'ISIN', identifierValue: row.isin }),
+          (err: unknown) => {
+            assert.ok(err instanceof IdentityAmbiguityError, 'must fail closed with the identity quarantine error');
+            assert.strictEqual((err as IdentityAmbiguityError).quarantineRecord.reason, 'UNMAPPED_IDENTIFIER');
+            assert.strictEqual((err as IdentityAmbiguityError).quarantineRecord.rawIdentifier, row.isin);
+            return true;
+          },
+        );
+      } else {
+        const resolved = authenticated.resolveCompanyId({ identifierType: 'ISIN', identifierValue: row.isin });
+        assert.ok(typeof resolved === 'string' && resolved.startsWith('EQ_'), `${row.isin} resolves through the authenticated universe (reconstruction, not incorporation)`);
+      }
     }
   });
 

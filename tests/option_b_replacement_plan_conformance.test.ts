@@ -74,7 +74,7 @@ describe('D05 Option B replacement plan — conformance', () => {
     assert.match(plan, /23 rows|23 enumerated/);
     // and the pin really exists in the implementation this plan describes
     const resolver = repo(RESOLVER);
-    assert.match(resolver, /recordCount !== 2250/);
+    assert.match(resolver, /recordCount !== 2390/);
   });
 
   it('plan forbids fuzzy mapping and operational promotion; defines phases P0–P9', () => {

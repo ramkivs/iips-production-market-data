@@ -4,15 +4,15 @@
  *
  * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / AD-W4-AUTH-2026-01
  *                 f3-ui08-security-master-functional-2026-09-23-001 (F-3 authority act)
- *                 AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001 (D05 data)
+ *                 AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001 (D05 authenticated universe, one-time replacement)
  * Execution Mode: NON_PRODUCTION / LOCAL_FIXTURE_AND_OFFLINE_DEV
  *
  * ══ WHAT THIS SURFACE IS ══════════════════════════════════════════════════════════════════
  *  The first functional surface beyond Portfolio authorized after the offline full-shell
  *  restoration: governed D05 identity resolution at /security-master, using the EXISTING
  *  UI08SecurityMasterModalBuilder (Contract C7 / AD-15) and the EXISTING in-process
- *  ObjectResolverService bound to the governed D05 broad security master (2,250 canonical
- *  entities, manifest BATCH-D05-TIER2-BROAD-UNIVERSE-2026-09-22-001).
+ *  ObjectResolverService bound to the governed D05 authenticated universe master (2,390
+ *  canonical entities, manifest BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001).
  *
  * ══ DESIGN CONTRACTS (F-3 act §2) ═════════════════════════════════════════════════════════
  *  · NO new identity resolver — resolution flows exclusively through the governed D05
@@ -55,8 +55,8 @@ import { CertifiedBadge } from '../../components/ui/Badges.js';
 
 export interface SecurityMasterSurfaceProps {
   /**
-   * Governed D05 security master. Optional: defaults to the cached governed broad
-   * universe singleton (2,250 entities) — the same instance the application injects
+   * Governed D05 security master. Optional: defaults to the cached governed authenticated
+   * universe singleton (2,390 entities) — the same instance the application injects
    * into the BI-08 workspace. No local/secondary master is ever constructed here.
    */
   securityMaster?: SecurityMaster;
@@ -176,7 +176,7 @@ export function SecurityMasterSurface({
         </h2>
         <div className="app-surface__meta">
           <CertifiedBadge />
-          <span data-testid="security-master-source">D05 Governed Broad Universe (2,250 entities)</span>
+          <span data-testid="security-master-source">D05 Governed Authenticated Universe (2,390 entities)</span>
         </div>
       </header>
       <p className="app-surface__subtitle">

@@ -54,16 +54,20 @@ describe('P04 / P12: Tier-2 Expanded Broad Universe Runtime Qualification & Prom
   // ──────────────────────────────────────────────────────────────────────────
   // Phase 2: Runtime Security Master Hydration
   // ──────────────────────────────────────────────────────────────────────────
-  it('QUAL-02: hydrates SecurityMaster with 2,250 canonical records and verifies multi-index integrity', () => {
+  it('QUAL-02: hydrates SecurityMaster with the 2,390 authenticated canonical records and verifies multi-index integrity', () => {
     const sm = getGovernedBroadSecurityMaster();
     assert.ok(sm instanceof SecurityMaster);
 
     const companyIds = sm.listAllCompanyIds();
-    assert.strictEqual(companyIds.length, 2250, 'SecurityMaster must contain all 2,250 canonical entities');
+    assert.strictEqual(companyIds.length, 2390, 'SecurityMaster must contain all 2,390 authenticated canonical entities');
+    assert.strictEqual(sm.sourceRevision!.batchId, 'BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001');
+    assert.strictEqual(sm.sourceRevision!.recordCount, 2390);
+    assert.strictEqual(sm.sourceRevision!.authorizationRef, 'AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001');
 
     // Multi-index resolution checks
     assert.strictEqual(sm.resolveCompanyId({ identifierType: 'ISIN', identifierValue: 'INE002A01018' }), 'EQ_RELIANCE_IN');
-    assert.strictEqual(sm.resolveCompanyId({ identifierType: 'CIN', identifierValue: 'L17110MH1973PLC019786' }), 'EQ_RELIANCE_IN');
+    /* CIN from the governed deposit — not independently verified (B1): */
+    assert.strictEqual(sm.resolveCompanyId({ identifierType: 'CIN', identifierValue: 'L77317MH1984PLC178202' }), 'EQ_RELIANCE_IN');
     assert.strictEqual(sm.resolveCompanyId({ identifierType: 'NSE_SYMBOL', identifierValue: 'RELIANCE' }), 'EQ_RELIANCE_IN');
     assert.strictEqual(sm.resolveCompanyId({ identifierType: 'BSE_SYMBOL', identifierValue: 'RELIANCE' }), 'EQ_RELIANCE_IN');
     assert.strictEqual(sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:500325' }), 'EQ_RELIANCE_IN');
@@ -148,15 +152,17 @@ INFY, 20, 1500.00, 1600.00, 30000.00, 32000.00, 2000.00, 6.67`;
   // ──────────────────────────────────────────────────────────────────────────
   // Phase 5: AIIL identity reconciliation (runtime correction; no listing dates inferred)
   // ──────────────────────────────────────────────────────────────────────────
-  it('QUAL-05: Authum resolves by NSE symbol, ISIN and BSE 539177; 543989 fails closed', () => {
+  it('QUAL-05: Authum resolves by NSE symbol, ISIN and BSE 539177; 543989 resolves to Kalamandir only', () => {
     const sm = getGovernedBroadSecurityMaster();
 
     assert.strictEqual(sm.resolveCompanyId({ identifierType: 'NSE_SYMBOL', identifierValue: 'AIIL' }), 'EQ_AIIL_IN');
     assert.strictEqual(sm.resolveCompanyId({ identifierType: 'ISIN', identifierValue: 'INE206F01022' }), 'EQ_AIIL_IN');
     assert.strictEqual(sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:539177' }), 'EQ_AIIL_IN');
-    assert.throws(
-      () => sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989' }),
-      /UNMAPPED_IDENTIFIER/
+    /* BSE:543989 is Sai Silks (Kalamandir); the authenticated universe carries that listing
+       natively. It resolves to EQ_KALAMANDIR_IN — never to EQ_AIIL_IN (Authum). */
+    assert.strictEqual(
+      sm.resolveCompanyId({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989' }),
+      'EQ_KALAMANDIR_IN'
     );
   });
 
@@ -178,7 +184,9 @@ INFY, 20, 1500.00, 1600.00, 30000.00, 32000.00, 2000.00, 6.67`;
   it('QUAL-07: contemporary NSE CM equities resolve to canonical IDs without error', () => {
     const sm = getGovernedBroadSecurityMaster();
 
-    const symbols = ['HDFCLIFE', 'INFY', 'TCS', 'RELIANCE', 'SBIN', 'ITC', 'TITAN', 'TATAMOTORS'];
+    /* TATAMOTORS was retired in the Nov-2025 demerger into TMCV (Tata Motors Ltd, INE1TAE01010)
+       and TMPV (Tata Motors Passenger Vehicles Ltd, INE155A01022) — both carried natively. */
+    const symbols = ['HDFCLIFE', 'INFY', 'TCS', 'RELIANCE', 'SBIN', 'ITC', 'TITAN', 'TMCV', 'TMPV'];
     for (const sym of symbols) {
       const cid = sm.resolveCompanyId({ identifierType: 'NSE_SYMBOL', identifierValue: sym });
       assert.strictEqual(cid, `EQ_${sym}_IN`);

@@ -34,11 +34,11 @@ export function createGovernedBrokerObservationResolver(
   const revision = master.sourceRevision;
   if (
     !revision ||
-    revision.recordCount !== 2250 ||
+    revision.recordCount !== 2390 ||
     !/^[a-f0-9]{64}$/i.test(revision.fileChecksumSha256) ||
-    revision.authorizationRef !== 'AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001'
+    revision.authorizationRef !== 'AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001'
   ) {
-    throw new Error('the broker identity source is not the governed D05 master revision');
+    throw new Error('the broker identity source is not the governed D05 authenticated universe revision (AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001)');
   }
   const sourceRevision = `${revision.batchId}:${revision.fileChecksumSha256}`;
 

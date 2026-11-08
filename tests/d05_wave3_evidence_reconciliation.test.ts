@@ -54,11 +54,13 @@ describe('D05 Wave-3 EQ consolidated evidence (2026-11-08) — conformance', () 
     assert.match(src, /placeholders are not identity claims/);
   });
 
-  it('execution-stage fail-closed protection is untouched (recordCount === 2250 hard guard)', () => {
-    assert.match(repo(RESOLVER), /recordCount\s*!==\s*2250/);
+  it('execution-stage fail-closed protection binds the 2026-11-08 authenticated universe (recordCount === 2390 hard guard, authenticated act reference)', () => {
+    assert.match(repo(RESOLVER), /recordCount\s*!==\s*2390/);
+    assert.match(repo(RESOLVER), /AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001/);
+    assert.ok(!/recordCount\s*!==\s*2250/.test(repo(RESOLVER)), 'Wave-1 execution guard must not gate broker observations');
   });
 
-  it('governed pins unchanged by this pass (corpus and runtime asset)', () => {
+  it('Wave-1 as-deposited pins unchanged by this pass (Wave-1 corpus and its runtime asset are immutable evidence)', () => {
     assert.equal(sha256(CORPUS), '7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5');
     assert.equal(sha256(RUNTIME_ASSET), '6810c28e548cf37d3efd7f06a9488cc23aca7ba05fdc06085b33870dd83a24d5');
   });

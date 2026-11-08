@@ -1,0 +1,93 @@
+index,companyId,severity,code,field,detail
+56,EQ_ADVENTHTL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+79,EQ_AGROPHOS_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-AGROPHOS
+112,EQ_AMAGI_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+117,EQ_AMBICAAGAR_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-AMBICAAGAR
+127,EQ_ANDREWYU_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-ANDREWYU
+137,EQ_ANUP_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+211,EQ_ATLANTAA_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+221,EQ_AURUS_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+232,EQ_AVL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+273,EQ_BANCOINDIA_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-BANCOINDIA
+303,EQ_BEML_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+307,EQ_BERGEPAINT_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: ALIAS-MATCH-BERGEPAINT
+335,EQ_BLACKROSE_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-BLACKROSE
+338,EQ_BLEL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+348,EQ_BLUESTARCO_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+355,EQ_BOMDYEING_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: ALIAS-MATCH-BOMDYEING
+357,EQ_BONFIG_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+427,EQ_CHAMBLFERT_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: ALIAS-MATCH-CHAMBLFERT
+435,EQ_CHEVIOT_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-CHEVIOT
+454,EQ_COASTCORP_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+472,EQ_CORONA_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+491,EQ_CSM_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+508,EQ_DBCORP_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-DBCORP
+517,EQ_DCM_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+528,EQ_DEEPAKFERT_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: ALIAS-MATCH-DEEPAKFERT
+592,EQ_EASTWEST_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+602,EQ_EIDPARRY_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-EIDPARRY
+623,EQ_EMAMIPAP_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+641,EQ_ENTERO_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+681,EQ_FIEMIND_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+691,EQ_FIVESTAR_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+743,EQ_GILLANDERS_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-GILLANDERS
+798,EQ_GRAUWEIL_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-GRAUWEIL
+807,EQ_GRMOVER_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+808,EQ_GROBTEA_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-GROBTEA
+824,EQ_GUJTHEM_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+874,EQ_HGINFRA_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-HGINFRA
+896,EQ_HNDFDS_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+920,EQ_ICIL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1024,EQ_IWP_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-IWP
+1043,EQ_JENBURPH_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1084,EQ_JUBLINGREA_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1088,EQ_JWL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1095,EQ_KALAMANDIR_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1099,EQ_KAMATHOTEL_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-KAMATHOTEL
+1112,EQ_KAUSHALYA_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1124,EQ_KERNEX_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-KERNEX
+1149,EQ_KMCSHIL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1177,EQ_KRITI_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-KRITI
+1320,EQ_MCCHRLSB_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-MCCHRLS-B
+1347,EQ_MINDACORP_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1399,EQ_MURUDCERA_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1430,EQ_NCLIND_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1486,EQ_NRBBEARING_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: ALIAS-MATCH-NRBBEARING
+1488,EQ_NTCIND_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1567,EQ_PATINTLOG_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-PATINTLOG
+1575,EQ_PDSL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1613,EQ_PNGJL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1620,EQ_POLYCAB_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1635,EQ_PRAENG_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1652,EQ_PRIMESECU_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1696,EQ_RAMANEWS_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1705,EQ_RATEGAIN_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1767,EQ_RSSOFTWARE_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1785,EQ_SSPOWER_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-S&SPOWER
+1811,EQ_SAMBHV_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1838,EQ_SBCL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1872,EQ_SGL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1909,EQ_SHREDIGCEM_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-SHREDIGCEM
+1926,EQ_SIEL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1933,EQ_SIL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1950,EQ_SKMEGGPROD_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-SKMEGGPROD
+1954,EQ_SMARTWORKS_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1977,EQ_SPAL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+1983,EQ_SPIC_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: ALIAS-MATCH-SPIC
+2014,EQ_STUDDS_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+2034,EQ_SUNDARMFIN_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+2038,EQ_SUNFLAG_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-SUNFLAG
+2078,EQ_SYMPHONY_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+2084,EQ_TAINWALCHM_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-TAINWALCHM
+2103,EQ_TATAPOWER_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+2127,EQ_TERAI_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-TERAI
+2132,EQ_TFCILTD_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+2135,EQ_TGVSL_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+2167,EQ_TOKYOPLAST_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+2218,EQ_UMIYAMRO_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-UMIYA-MRO
+2239,EQ_USK_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+2266,EQ_VENTIVE_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+2342,EQ_WENDT_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: ALIAS-MATCH-WENDT
+2357,EQ_WSI_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-WSI
+2383,EQ_ZODIACLOTH_IN,INFO,GOVERNED_EXCEPTION_UNLINKED_CIN,cin,cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)
+2385,EQ_ZSARACOM_IN,WARNING,CIN_PATTERN,cin,does not match MCA-like CIN pattern: EXEMPT-STRUCT-ZSARACOM
