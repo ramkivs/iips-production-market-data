@@ -227,6 +227,9 @@ export class DhanApiClient {
       if (candidate?.code === 'PRODUCTION_NOT_AUTHORIZED') {
         return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan credentials are not authorized');
       }
+      if (candidate?.code === 'CONFIGURATION_INCOMPLETE') {
+        return dhanFailure('CONFIGURATION_INCOMPLETE', 'Dhan credential configuration is invalid or incomplete');
+      }
       // Credential resolution internals are deliberately not echoed.
       return dhanFailure('CREDENTIALS_UNAVAILABLE', 'Dhan credential resolution failed closed');
     }

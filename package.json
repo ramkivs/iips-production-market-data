@@ -10,6 +10,7 @@
     "build:portfolio-ui-package": "tsc -p tsconfig.portfolio-ui-package.json",
     "build:pit-package": "tsc -p tsconfig.pit-package.json",
     "build:dhan-package": "tsc -p tsconfig.dhan-package.json",
+    "start:market-data-daemon": "node dist/src/providers/dhan/dhan_local_daemon.js",
     "dev": "vite",
     "test": "node scripts/run-tests.mjs",
     "test:direct": "node --test --experimental-strip-types tests/*.test.ts",
