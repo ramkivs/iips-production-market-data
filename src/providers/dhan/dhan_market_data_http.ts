@@ -1,11 +1,18 @@
 /**
  * Institutional Investment Platform System (IIPS)
- * Dhan Market-Data HTTP Transport (DHAN-P5) — server-to-server, authenticated
+ * Dhan Market-Data HTTP Transport (DHAN-P5 / Stage 1) — server-to-server, authenticated
  *
  * The existing IPD IPC endpoint (src/ipc) is portfolio-only by governed
  * contract, so this is a dedicated, minimal node:http transport for market
  * data. It exposes ONLY the composed service — consumers never see Dhan
  * primitives, vendor DTOs, Dhan instrument ids or credentials.
+ *
+ * Stage 1 non-production admission bounds:
+ *   - Local, single-user, non-production execution ONLY (production refused fail-closed).
+ *   - Loopback-only HTTP binding (`127.0.0.1`, `::1`, `localhost`).
+ *   - `MarketDataTransportClient` returns explicit typed fail-closed outcomes on
+ *     every missing/invalid credential, authentication, timeout, validation or
+ *     transport failure and never opens direct vendor egress.
  *
  * Routes (all JSON, all POST except health):
  *   POST /v1/quotes      { companyId, securityId: 'ISIN:<isin>:<series>', exchangeSegment? } -> D01 envelope or error
@@ -14,22 +21,29 @@
  *
  * Auth: `Authorization: Bearer <token>` where the token comes from env
  *   IIPS_MARKET_DATA_TRANSPORT_TOKEN. The transport credential is separate
- *   from Dhan API credentials. Missing/unset token in a non-development
- *   configuration fails CLOSED (server refuses to start). Constant-time compare.
- *   Credentials never appear in URLs, responses or logs.
+ *   from Dhan API credentials. Missing/unset token fails CLOSED (server refuses
+ *   to start). Constant-time compare. Credentials never appear in URLs,
+ *   responses or logs.
  *
  * Limits: request body <= 16 KiB, per-request execution bounded by a timeout,
  * one request per connection handled serially. Errors: {"error":{"code","message"}}.
  */
 
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
+import type { ListenOptions } from 'node:net';
 import { timingSafeEqual } from 'node:crypto';
+import { CanonicalEnvelope } from '../../contracts/envelope.js';
+import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
+import { buildD114SecurityIdentity, isD114SecurityIdentity } from '../../contracts/types.js';
+import { isDhanProductionEnvironment, type DhanEnvSource } from './dhan_config.js';
+import { DhanFailureCode } from './dhan_failures.js';
+import { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
 import {
   DhanMarketDataService,
   QuoteRequest,
   HistoricalServiceRequest,
+  ServiceHealth,
 } from './dhan_market_data_service.js';
-import { buildD114SecurityIdentity, isD114SecurityIdentity } from '../../contracts/types.js';
 
 export const MARKET_DATA_TRANSPORT_TOKEN_ENV = 'IIPS_MARKET_DATA_TRANSPORT_TOKEN';
 export const MARKET_DATA_ROUTES = {
@@ -41,6 +55,43 @@ export const MARKET_DATA_ROUTES = {
 export const MARKET_DATA_MAX_REQUEST_BYTES = 16 * 1024;
 export const MARKET_DATA_REQUEST_TIMEOUT_MS = 10_000;
 
+export type MarketDataTransportFailureCode =
+  | DhanFailureCode
+  | 'UNAUTHENTICATED'
+  | 'MALFORMED_REQUEST'
+  | 'REQUEST_TOO_LARGE'
+  | 'REQUEST_TIMEOUT'
+  | 'NOT_FOUND'
+  | 'INTERNAL_ERROR';
+
+export interface MarketDataTransportFailure {
+  readonly code: MarketDataTransportFailureCode;
+  readonly message: string;
+  readonly httpStatus?: number;
+}
+
+export type MarketDataTransportQuoteOutcome =
+  | {
+      readonly ok: true;
+      readonly envelope: CanonicalEnvelope<MarketQuotePayload>;
+      readonly freshness: 'CURRENT' | 'STALE';
+    }
+  | { readonly ok: false; readonly failure: MarketDataTransportFailure };
+
+export type MarketDataTransportHistoricalOutcome =
+  | { readonly ok: true; readonly result: DhanHistoricalNormalizationResult }
+  | { readonly ok: false; readonly failure: MarketDataTransportFailure };
+
+export type MarketDataTransportHealthOutcome =
+  | ({ readonly ok: true } & ServiceHealth)
+  | { readonly ok: false; readonly service: 'DOWN'; readonly failure: MarketDataTransportFailure };
+
+export interface MarketDataTransportClientOptions {
+  readonly timeoutMs?: number;
+  readonly fetchImpl?: typeof fetch;
+  readonly env?: DhanEnvSource;
+}
+
 export interface MarketDataHttpOptions {
   service: DhanMarketDataService;
   /** Transport credential (server-side secret; never a Dhan credential). */
@@ -48,10 +99,17 @@ export interface MarketDataHttpOptions {
   host?: string;
   port?: number;
   requestTimeoutMs?: number;
+  env?: DhanEnvSource;
 }
 
 interface ErrorBody {
   error: { code: string; message: string };
+}
+
+const LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['127.0.0.1', '::1', '[::1]', 'localhost']);
+
+export function isLoopbackTransportHost(host: string): boolean {
+  return LOOPBACK_HOSTS.has(host.trim().toLowerCase());
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
@@ -85,16 +143,33 @@ async function readBody(req: IncomingMessage, maxBytes: number): Promise<string 
 
 /**
  * Creates the authenticated market-data HTTP server. `listen` is left to the
- * caller so startup/shutdown stay deterministic and testable.
+ * caller so startup/shutdown stay deterministic and testable, with loopback
+ * binding enforced on listen.
  */
 export function createMarketDataHttpServer(options: MarketDataHttpOptions): Server {
-  const token = options.token ?? process.env[MARKET_DATA_TRANSPORT_TOKEN_ENV];
-  const timeoutMs = options.requestTimeoutMs ?? MARKET_DATA_REQUEST_TIMEOUT_MS;
+  const env: DhanEnvSource =
+    options.env ?? (typeof process !== 'undefined' && process.env ? process.env : {});
 
-  if (!token) {
+  if (isDhanProductionEnvironment(env)) {
+    throw new Error(
+      'Production market-data transport is not authorized; Stage 1 scope is restricted to local non-production execution'
+    );
+  }
+
+  const token = options.token ?? env[MARKET_DATA_TRANSPORT_TOKEN_ENV];
+  const timeoutMs = options.requestTimeoutMs ?? MARKET_DATA_REQUEST_TIMEOUT_MS;
+  const defaultHost = options.host ?? '127.0.0.1';
+
+  if (!token || !token.trim()) {
     // Fail closed: without a transport credential there is no authenticated endpoint.
     throw new Error(
       `${MARKET_DATA_TRANSPORT_TOKEN_ENV} is not set; refusing to start an unauthenticated market-data transport`
+    );
+  }
+
+  if (!isLoopbackTransportHost(defaultHost)) {
+    throw new Error(
+      `Market-data transport must bind to local loopback only (127.0.0.1, ::1, or localhost); refusing host '${defaultHost}'`
     );
   }
 
@@ -123,15 +198,15 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
         return;
       }
 
-      const body = await readBody(req, MARKET_DATA_MAX_REQUEST_BYTES);
-      if (typeof body !== 'string') {
+      const rawBody = await readBody(req, MARKET_DATA_MAX_REQUEST_BYTES);
+      if (typeof rawBody !== 'string') {
         sendError(res, 413, 'REQUEST_TOO_LARGE', 'request body exceeds the configured limit');
         return;
       }
 
       let parsed: unknown;
       try {
-        parsed = JSON.parse(body);
+        parsed = JSON.parse(rawBody);
       } catch {
         sendError(res, 400, 'MALFORMED_REQUEST', 'request body is not valid JSON');
         return;
@@ -144,16 +219,22 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
       if (path === MARKET_DATA_ROUTES.quotes) {
         const body = parsed as Record<string, unknown>;
         const securityId = body?.securityId;
-        const identity = typeof securityId === 'string' ? buildD114SecurityIdentity(
-          securityId.split(':')[1],
-          securityId.split(':')[2],
-        ) : null;
+        const parts = typeof securityId === 'string' ? securityId.split(':') : [];
+        const identity =
+          parts.length === 3 && parts[0] === 'ISIN'
+            ? buildD114SecurityIdentity(parts[1] ?? '', parts[2] ?? '')
+            : null;
         if (!identity || !isD114SecurityIdentity(identity) || typeof body?.companyId !== 'string') {
-          sendError(res, 400, 'MALFORMED_REQUEST', 'quotes require companyId and a canonical securityId (ISIN:<isin>:<series>)');
+          sendError(
+            res,
+            400,
+            'MALFORMED_REQUEST',
+            'quotes require companyId and a canonical securityId (ISIN:<isin>:<series>)'
+          );
           return;
         }
         quoteRequest = {
-          companyId: body.companyId as string,
+          companyId: body.companyId,
           securityIdentity: identity,
           ...(body.exchangeSegment === 'NSE_EQ' || body.exchangeSegment === 'BSE_EQ'
             ? { exchangeSegment: body.exchangeSegment }
@@ -184,43 +265,326 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
     });
   });
 
+  // Enforce loopback-only listener binding on TCP listen calls.
+  const rawListen = server.listen.bind(server);
+  server.listen = ((...args: unknown[]): Server => {
+    const first = args[0];
+    if (typeof first === 'number') {
+      const second = args[1];
+      if (typeof second === 'string') {
+        if (!isLoopbackTransportHost(second)) {
+          throw new Error(
+            `Market-data transport must bind to local loopback only; refusing host '${second}'`
+          );
+        }
+        return (rawListen as (...a: unknown[]) => Server)(...args);
+      }
+      return (rawListen as (...a: unknown[]) => Server)(first, defaultHost, ...args.slice(1));
+    }
+    if (typeof first === 'object' && first !== null) {
+      const listenOpts = first as ListenOptions;
+      if (!listenOpts.path) {
+        const host = listenOpts.host ?? defaultHost;
+        if (!isLoopbackTransportHost(host)) {
+          throw new Error(
+            `Market-data transport must bind to local loopback only; refusing host '${host}'`
+          );
+        }
+        return (rawListen as (...a: unknown[]) => Server)({ ...listenOpts, host }, ...args.slice(1));
+      }
+    }
+    return (rawListen as (...a: unknown[]) => Server)(...args);
+  }) as Server['listen'];
+
   return server;
 }
 
-/** Consumer-side client: IRR calls the transport, never the provider composition. */
-export class MarketDataTransportClient {
-  constructor(
-    private readonly baseUrl: string,
-    private readonly token: string
-  ) {}
+function fallbackHttpFailureCode(status: number): MarketDataTransportFailureCode {
+  if (status === 401 || status === 403) return 'UNAUTHENTICATED';
+  if (status === 400) return 'MALFORMED_REQUEST';
+  if (status === 404) return 'NOT_FOUND';
+  if (status === 413) return 'REQUEST_TOO_LARGE';
+  if (status === 429) return 'RATE_LIMITED';
+  if (status === 408 || status === 504) return 'REQUEST_TIMEOUT';
+  return 'HTTP_ERROR';
+}
 
-  private async post<T>(path: string, body: unknown): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${this.token}` },
-      body: JSON.stringify(body),
-    });
-    return (await response.json()) as T;
+function parseErrorPayload(raw: unknown, status: number): MarketDataTransportFailure {
+  if (typeof raw === 'object' && raw !== null && 'error' in raw) {
+    const errObj = (raw as { error?: unknown }).error;
+    if (typeof errObj === 'object' && errObj !== null) {
+      const code = (errObj as { code?: unknown }).code;
+      const message = (errObj as { message?: unknown }).message;
+      if (typeof code === 'string' && code.trim()) {
+        return {
+          code: code as MarketDataTransportFailureCode,
+          message: typeof message === 'string' && message.trim() ? message : 'transport request failed closed',
+          httpStatus: status,
+        };
+      }
+    }
+  }
+  return {
+    code: fallbackHttpFailureCode(status),
+    message: `market-data transport returned HTTP ${status}`,
+    httpStatus: status,
+  };
+}
+
+/**
+ * Consumer-side client: IRR calls IPD's local server-to-server transport via
+ * this provider-neutral client and never instantiates Dhan provider primitives
+ * or handles Dhan credentials. Every failure path returns an explicit typed
+ * fail-closed outcome rather than throwing raw network exceptions.
+ */
+export class MarketDataTransportClient {
+  private readonly baseUrl: string;
+  private readonly token: string;
+  private readonly timeoutMs: number;
+  private readonly fetchImpl: typeof fetch;
+  private readonly envOverride?: DhanEnvSource;
+
+  constructor(baseUrl: string, token: string, options: MarketDataTransportClientOptions = {}) {
+    this.baseUrl = (baseUrl ?? '').trim().replace(/\/+$/, '');
+    this.token = token ?? '';
+    this.timeoutMs =
+      typeof options.timeoutMs === 'number' && Number.isFinite(options.timeoutMs) && options.timeoutMs > 0
+        ? options.timeoutMs
+        : MARKET_DATA_REQUEST_TIMEOUT_MS;
+    this.fetchImpl = options.fetchImpl ?? fetch;
+    if (options.env !== undefined) {
+      this.envOverride = options.env;
+    }
   }
 
-  public getQuote(request: QuoteRequest) {
+  private preflightCheck(): MarketDataTransportFailure | null {
+    const env: DhanEnvSource =
+      this.envOverride ?? (typeof process !== 'undefined' && process.env ? process.env : {});
+    if (isDhanProductionEnvironment(env)) {
+      return {
+        code: 'PRODUCTION_NOT_AUTHORIZED',
+        message: 'Production market-data transport is not authorized',
+      };
+    }
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(this.baseUrl);
+    } catch {
+      return {
+        code: 'TRANSPORT_FAILURE',
+        message: 'MarketDataTransportClient baseUrl is malformed',
+      };
+    }
+
+    if (
+      parsedUrl.protocol !== 'http:' ||
+      !isLoopbackTransportHost(parsedUrl.hostname) ||
+      parsedUrl.username !== '' ||
+      parsedUrl.password !== '' ||
+      parsedUrl.search !== ''
+    ) {
+      return {
+        code: 'TRANSPORT_FAILURE',
+        message:
+          'MarketDataTransportClient is restricted to local loopback http:// server-to-server endpoints',
+      };
+    }
+
+    if (!this.token || !this.token.trim()) {
+      return {
+        code: 'UNAUTHENTICATED',
+        message: 'missing or empty transport credential',
+      };
+    }
+
+    return null;
+  }
+
+  private async requestJson(
+    method: 'GET' | 'POST',
+    path: string,
+    body?: unknown
+  ): Promise<{ ok: true; status: number; json: unknown } | { ok: false; failure: MarketDataTransportFailure }> {
+    const preflight = this.preflightCheck();
+    if (preflight) return { ok: false, failure: preflight };
+
+    let response: Response;
+    try {
+      response = await this.fetchImpl(`${this.baseUrl}${path}`, {
+        method,
+        headers: {
+          accept: 'application/json',
+          ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
+          authorization: `Bearer ${this.token}`,
+        },
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+        redirect: 'error',
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+    } catch (err: unknown) {
+      const name = (err as { name?: unknown } | null)?.name;
+      if (name === 'TimeoutError' || name === 'AbortError') {
+        return {
+          ok: false,
+          failure: {
+            code: 'TIMEOUT',
+            message: `market-data transport request exceeded ${this.timeoutMs}ms timeout`,
+          },
+        };
+      }
+      return {
+        ok: false,
+        failure: {
+          code: 'TRANSPORT_FAILURE',
+          message: 'market-data transport request failed closed before receiving a response',
+        },
+      };
+    }
+
+    let rawText: string;
+    try {
+      rawText = await response.text();
+    } catch {
+      return {
+        ok: false,
+        failure: {
+          code: 'TRANSPORT_FAILURE',
+          message: 'failed to read market-data transport response body',
+          httpStatus: response.status,
+        },
+      };
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      return {
+        ok: false,
+        failure: {
+          code: 'MALFORMED_RESPONSE',
+          message: 'market-data transport response is not valid JSON',
+          httpStatus: response.status,
+        },
+      };
+    }
+
+    if (response.status < 200 || response.status >= 300) {
+      return { ok: false, failure: parseErrorPayload(parsed, response.status) };
+    }
+
+    return { ok: true, status: response.status, json: parsed };
+  }
+
+  public async getQuote(request: QuoteRequest): Promise<MarketDataTransportQuoteOutcome> {
+    if (
+      !request ||
+      typeof request.companyId !== 'string' ||
+      !request.companyId.trim() ||
+      !isD114SecurityIdentity(request.securityIdentity)
+    ) {
+      return {
+        ok: false,
+        failure: {
+          code: 'MALFORMED_REQUEST',
+          message: 'quotes require companyId and a canonical D114 securityIdentity (ISIN:<isin>:<series>)',
+        },
+      };
+    }
+
     // The wire carries the canonical securityId string; the full validated
     // identity is reconstructed server-side. No Dhan identifiers ever cross.
-    return this.post(MARKET_DATA_ROUTES.quotes, {
+    const call = await this.requestJson('POST', MARKET_DATA_ROUTES.quotes, {
       companyId: request.companyId,
       securityId: request.securityIdentity.securityId,
       ...(request.exchangeSegment ? { exchangeSegment: request.exchangeSegment } : {}),
     });
+    if (!call.ok) return call;
+
+    const payload = call.json as Partial<MarketDataTransportQuoteOutcome> | null;
+    if (
+      payload &&
+      payload.ok === true &&
+      payload.envelope !== undefined &&
+      (payload.freshness === 'CURRENT' || payload.freshness === 'STALE')
+    ) {
+      return { ok: true, envelope: payload.envelope, freshness: payload.freshness };
+    }
+
+    return {
+      ok: false,
+      failure: {
+        code: 'MALFORMED_RESPONSE',
+        message: 'market-data transport returned a malformed quote envelope',
+        httpStatus: call.status,
+      },
+    };
   }
 
-  public getHistorical(request: HistoricalServiceRequest) {
-    return this.post(MARKET_DATA_ROUTES.historical, request);
+  public async getHistorical(
+    request: HistoricalServiceRequest
+  ): Promise<MarketDataTransportHistoricalOutcome> {
+    if (!request || typeof request.companyId !== 'string' || !request.companyId.trim()) {
+      return {
+        ok: false,
+        failure: {
+          code: 'MALFORMED_REQUEST',
+          message: 'historical requests require a non-empty companyId',
+        },
+      };
+    }
+
+    const call = await this.requestJson('POST', MARKET_DATA_ROUTES.historical, request);
+    if (!call.ok) return call;
+
+    const payload = call.json as Partial<MarketDataTransportHistoricalOutcome> | null;
+    if (payload && payload.ok === true && payload.result !== undefined) {
+      return { ok: true, result: payload.result };
+    }
+
+    return {
+      ok: false,
+      failure: {
+        code: 'MALFORMED_RESPONSE',
+        message: 'market-data transport returned a malformed historical response',
+        httpStatus: call.status,
+      },
+    };
   }
 
-  public async health() {
-    const response = await fetch(`${this.baseUrl}${MARKET_DATA_ROUTES.health}`, {
-      headers: { authorization: `Bearer ${this.token}` },
-    });
-    return response.json();
+  public async health(): Promise<MarketDataTransportHealthOutcome> {
+    const call = await this.requestJson('GET', MARKET_DATA_ROUTES.health);
+    if (!call.ok) {
+      return { ok: false, service: 'DOWN', failure: call.failure };
+    }
+
+    const payload = call.json as Partial<ServiceHealth> | null;
+    if (
+      payload &&
+      (payload.service === 'UP' || payload.service === 'DOWN') &&
+      (payload.providerConfiguration === 'CONFIGURED' ||
+        payload.providerConfiguration === 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE') &&
+      payload.liveProviderConnectivity === 'NOT_CHECKED_PRE_ACCESS' &&
+      payload.providerQualification === 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED'
+    ) {
+      return {
+        ok: true,
+        service: payload.service,
+        providerConfiguration: payload.providerConfiguration,
+        liveProviderConnectivity: payload.liveProviderConnectivity,
+        providerQualification: payload.providerQualification,
+      };
+    }
+
+    return {
+      ok: false,
+      service: 'DOWN',
+      failure: {
+        code: 'MALFORMED_RESPONSE',
+        message: 'market-data transport returned a malformed health payload',
+        httpStatus: call.status,
+      },
+    };
   }
 }

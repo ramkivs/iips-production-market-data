@@ -256,7 +256,14 @@ export async function withBoundedRetry<T>(
 export type RefreshOutcome =
   | { status: 'SUCCESS'; scope: DhanSecurityScope; cacheState: 'CURRENT' | 'STALE' }
   | { status: 'SKIPPED_FRESH'; scope: DhanSecurityScope; cacheState: 'CURRENT' }
-  | { status: 'FAILURE'; scope: DhanSecurityScope; code: DhanFailureCode; priorPreserved: boolean };
+  | {
+      status: 'FAILURE';
+      scope: DhanSecurityScope;
+      code: DhanFailureCode;
+      priorPreserved: boolean;
+      message?: string;
+      httpStatus?: number;
+    };
 
 export interface DhanRefreshOrchestratorOptions {
   cache: DhanBoundedCache<CanonicalEnvelope<MarketQuotePayload>>;
@@ -327,7 +334,14 @@ export class DhanRefreshOrchestrator {
                 cacheState: freshness.quality === 'GOOD' ? 'CURRENT' : 'STALE',
               } as RefreshOutcome;
             }
-            return { status: 'FAILURE', scope, code: result.failure.code, priorPreserved: cached.state !== 'MISS' } as RefreshOutcome;
+            return {
+              status: 'FAILURE',
+              scope,
+              code: result.failure.code,
+              priorPreserved: cached.state !== 'MISS',
+              message: result.failure.message,
+              ...(result.failure.httpStatus !== undefined ? { httpStatus: result.failure.httpStatus } : {}),
+            } as RefreshOutcome;
           } finally {
             this.concurrency.release(); // timeout/cancellation/failure all release the slot
           }

@@ -195,7 +195,14 @@ export class DhanMarketDataService {
       }
     }
     if (outcome.status === 'FAILURE') {
-      return { ok: false, failure: { code: outcome.code, message: 'quote refresh failed' } };
+      return {
+        ok: false,
+        failure: {
+          code: outcome.code,
+          message: outcome.message ?? 'quote refresh failed',
+          ...(outcome.httpStatus !== undefined ? { httpStatus: outcome.httpStatus } : {}),
+        },
+      };
     }
     return { ok: false, failure: dhanFailure('PROVIDER_STATUS_FAILURE', 'no quote produced').failure };
   }

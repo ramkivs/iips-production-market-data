@@ -14,7 +14,7 @@
  *    (PRE_ACCESS_CREDENTIALS_UNAVAILABLE), not an error condition to be guessed around.
  */
 
-import { SecretRef, validateSecretRef } from '../../security/secret_ref.js';
+import { SecretRef, SecretRefStatus, validateSecretRef } from '../../security/secret_ref.js';
 import { DhanFailure } from './dhan_failures.js';
 
 /** Symbolic internal provider identifier used on the provider-neutral SPI. */
@@ -40,6 +40,8 @@ export const DHAN_ENV_KEYS = {
   accessTokenSecretPath: 'IIPS_DHAN_ACCESS_TOKEN_SECRET_PATH',
   secretVaultProvider: 'IIPS_DHAN_VAULT_PROVIDER',
   secretVersion: 'IIPS_DHAN_SECRET_VERSION',
+  secretStatus: 'IIPS_DHAN_SECRET_STATUS',
+  accessTokenExpiresAt: 'IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT',
 } as const;
 
 export type DhanCredentialReadiness =
@@ -65,6 +67,16 @@ export type DhanConfigResolution =
 
 export type DhanEnvSource = Readonly<Record<string, string | undefined>>;
 
+/**
+ * Stage 1 admission guard: production credentials, production egress and
+ * production deployment are NOT AUTHORIZED.
+ */
+export function isDhanProductionEnvironment(env: DhanEnvSource = {}): boolean {
+  const nodeEnv = env['NODE_ENV']?.trim().toLowerCase();
+  const deployEnv = env['IIPS_DEPLOYMENT_ENV']?.trim().toLowerCase();
+  return nodeEnv === 'production' || deployEnv === 'production';
+}
+
 function parseTimeout(raw: string | undefined): number {
   if (!raw) return DHAN_DEFAULT_TIMEOUT_MS;
   const parsed = Number.parseInt(raw, 10);
@@ -75,14 +87,17 @@ function parseTimeout(raw: string | undefined): number {
 function buildSecretRef(
   keyPath: string,
   vaultProvider: string | undefined,
-  version: string | undefined
+  version: string | undefined,
+  status: string | undefined,
+  expiresAt?: string
 ): SecretRef | undefined {
   const ref: SecretRef = {
     secretId: `dhan-${keyPath.replace(/[^a-zA-Z0-9]+/g, '-')}`,
     vaultProvider: (vaultProvider as SecretRef['vaultProvider']) || 'LOCAL_MOCK_VAULT',
     keyPath,
     version: version || 'v1',
-    status: 'ACTIVE',
+    status: (status as SecretRefStatus) || 'ACTIVE',
+    ...(expiresAt !== undefined ? { expiresAt } : {}),
   };
   return validateSecretRef(ref).isValid ? ref : undefined;
 }
@@ -95,14 +110,38 @@ function buildSecretRef(
  * configuration (base URL / timeout) is still returned so the foundation remains
  * exercisable without credentials.
  */
-export function resolveDhanProviderConfig(env: DhanEnvSource = {}): DhanConfigResolution {
+export function resolveDhanProviderConfig(
+  env: DhanEnvSource = {},
+  now: Date = new Date()
+): DhanConfigResolution {
   const baseUrl = (env[DHAN_ENV_KEYS.baseUrl] || DHAN_DEFAULT_BASE_URL).replace(/\/+$/, '');
   const timeoutMs = parseTimeout(env[DHAN_ENV_KEYS.timeoutMs]);
+
+  if (isDhanProductionEnvironment(env)) {
+    const config: DhanProviderConfig = {
+      providerId: DHAN_PROVIDER_ID,
+      baseUrl,
+      timeoutMs,
+      readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE',
+      missingKeys: [],
+    };
+    return {
+      ok: false,
+      config,
+      failure: {
+        code: 'PRODUCTION_NOT_AUTHORIZED',
+        message:
+          'Production Dhan configuration is not authorized; Stage 1 scope is restricted to the local non-production environment.',
+      },
+    };
+  }
 
   const tokenPath = env[DHAN_ENV_KEYS.accessTokenSecretPath];
   const clientPath = env[DHAN_ENV_KEYS.clientIdSecretPath];
   const vaultProvider = env[DHAN_ENV_KEYS.secretVaultProvider];
   const version = env[DHAN_ENV_KEYS.secretVersion];
+  const secretStatus = env[DHAN_ENV_KEYS.secretStatus];
+  const tokenExpiresAt = env[DHAN_ENV_KEYS.accessTokenExpiresAt];
 
   const missingKeys: string[] = [];
   if (!tokenPath) missingKeys.push(DHAN_ENV_KEYS.accessTokenSecretPath);
@@ -126,8 +165,26 @@ export function resolveDhanProviderConfig(env: DhanEnvSource = {}): DhanConfigRe
     };
   }
 
-  const accessTokenRef = buildSecretRef(tokenPath as string, vaultProvider, version);
-  const clientIdRef = buildSecretRef(clientPath as string, vaultProvider, version);
+  if (tokenExpiresAt !== undefined && Number.isNaN(Date.parse(tokenExpiresAt))) {
+    const config: DhanProviderConfig = {
+      providerId: DHAN_PROVIDER_ID,
+      baseUrl,
+      timeoutMs,
+      readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE',
+      missingKeys,
+    };
+    return {
+      ok: false,
+      config,
+      failure: {
+        code: 'CONFIGURATION_INCOMPLETE',
+        message: 'IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT must be a valid ISO-8601 UTC timestamp when provided.',
+      },
+    };
+  }
+
+  const accessTokenRef = buildSecretRef(tokenPath as string, vaultProvider, version, secretStatus, tokenExpiresAt);
+  const clientIdRef = buildSecretRef(clientPath as string, vaultProvider, version, secretStatus);
 
   if (!accessTokenRef || !clientIdRef) {
     const config: DhanProviderConfig = {
@@ -143,6 +200,32 @@ export function resolveDhanProviderConfig(env: DhanEnvSource = {}): DhanConfigRe
       failure: {
         code: 'CONFIGURATION_INCOMPLETE',
         message: 'Dhan credential references must be well-formed SecretRef vault:// paths.',
+      },
+    };
+  }
+
+  if (
+    accessTokenRef.status === 'EXPIRED' ||
+    accessTokenRef.status === 'REVOKED' ||
+    clientIdRef.status === 'EXPIRED' ||
+    clientIdRef.status === 'REVOKED' ||
+    (accessTokenRef.expiresAt !== undefined && Date.parse(accessTokenRef.expiresAt) <= now.getTime())
+  ) {
+    const config: DhanProviderConfig = {
+      providerId: DHAN_PROVIDER_ID,
+      baseUrl,
+      timeoutMs,
+      readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE',
+      accessTokenRef,
+      clientIdRef,
+      missingKeys: [],
+    };
+    return {
+      ok: false,
+      config,
+      failure: {
+        code: 'CREDENTIALS_EXPIRED',
+        message: 'Dhan credential reference is expired or revoked.',
       },
     };
   }
@@ -184,6 +267,8 @@ export function describeDhanConfig(config: DhanProviderConfig): Record<string, s
 export interface DhanCredentialMaterial {
   readonly accessToken: string;
   readonly clientId: string;
+  /** Optional ISO-8601 UTC expiry of the short-lived Dhan access token. */
+  readonly expiresAt?: string;
 }
 
 /**

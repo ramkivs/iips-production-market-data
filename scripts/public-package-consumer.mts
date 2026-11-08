@@ -33,6 +33,14 @@ import {
   type PortfolioPortSaveOutcomeUnknown,
   type PortfolioStorePort,
 } from 'iips-production-market-data/portfolio-ui';
+import {
+  MarketDataTransportClient,
+  MARKET_DATA_ROUTES,
+  MARKET_DATA_TRANSPORT_TOKEN_ENV,
+  type MarketDataTransportHealthOutcome,
+  type MarketDataTransportQuoteOutcome,
+  type QuoteRequest,
+} from 'iips-production-market-data/dhan-server';
 
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -146,6 +154,25 @@ const portfolioUi = await import('iips-production-market-data/portfolio-ui');
 check(Object.keys(portfolioUi).length === 22, 'portfolio-ui runtime export count changed');
 check(typeof portfolioUi.BrokerImportModal === 'function', 'BrokerImportModal missing');
 check(!('PortfolioWorkspace' in portfolioUi), 'PortfolioWorkspace must remain private');
+
+// Stage 1 IRR-permitted server-side MarketDataTransportClient contract check (offline, no sockets).
+check(MARKET_DATA_ROUTES.quotes === '/v1/quotes', 'market-data quotes route drifted');
+check(MARKET_DATA_TRANSPORT_TOKEN_ENV === 'IIPS_MARKET_DATA_TRANSPORT_TOKEN', 'transport token env key drifted');
+const unauthTransport = new MarketDataTransportClient('http://127.0.0.1:1', '');
+const quoteReq: QuoteRequest = {
+  companyId: 'NON_PRODUCTION_COMPANY_KEY',
+  securityIdentity: {
+    securityId: 'ISIN:INE009A01021:EQ',
+    isin: 'INE009A01021',
+    series: 'EQ',
+    isinAuthority: 'NON_AUTHORITATIVE',
+  },
+};
+const unauthQuote: MarketDataTransportQuoteOutcome = await unauthTransport.getQuote(quoteReq);
+check(!unauthQuote.ok && unauthQuote.failure.code === 'UNAUTHENTICATED', 'empty transport token must fail closed as UNAUTHENTICATED');
+const vendorUrlTransport = new MarketDataTransportClient('https://api.dhan.co/v2', 'tok');
+const vendorRefused: MarketDataTransportHealthOutcome = await vendorUrlTransport.health();
+check(!vendorRefused.ok && vendorRefused.service === 'DOWN' && vendorRefused.failure.code === 'TRANSPORT_FAILURE', 'vendor URL must be refused by MarketDataTransportClient');
 
 console.log(JSON.stringify({
   runtime: 'PASS',

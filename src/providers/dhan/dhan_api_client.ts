@@ -21,6 +21,7 @@ import {
   DhanCredentialResolver,
   DhanProviderConfig,
   PreAccessDhanCredentialResolver,
+  isDhanProductionEnvironment,
 } from './dhan_config.js';
 import {
   DhanExchangeSegment,
@@ -63,6 +64,13 @@ export class DhanTransportUnavailableError extends Error {
   constructor(message = 'Dhan transport is unavailable') {
     super(message);
     this.name = 'DhanTransportUnavailableError';
+  }
+}
+
+export class DhanProductionNotAuthorizedError extends Error {
+  constructor(message = 'Production Dhan egress and credentials are not authorized') {
+    super(message);
+    this.name = 'DhanProductionNotAuthorizedError';
   }
 }
 
@@ -176,10 +184,49 @@ export class DhanApiClient {
     pathSuffix: string,
     body: string
   ): Promise<DhanResult<{ json: unknown; metrics: DhanApiCallMetrics }>> {
+    const runtimeEnv = typeof process !== 'undefined' && process.env ? process.env : {};
+    if (isDhanProductionEnvironment(runtimeEnv)) {
+      return dhanFailure(
+        'PRODUCTION_NOT_AUTHORIZED',
+        'Production Dhan credentials and vendor egress are not authorized'
+      );
+    }
+
+    const nowMs = this.now();
+    for (const ref of [this.config.accessTokenRef, this.config.clientIdRef]) {
+      if (!ref) continue;
+      if (ref.status === 'EXPIRED' || ref.status === 'REVOKED') {
+        return dhanFailure('CREDENTIALS_EXPIRED', 'Dhan credential reference is expired or revoked');
+      }
+      if (ref.expiresAt !== undefined) {
+        const expMs = Date.parse(ref.expiresAt);
+        if (Number.isNaN(expMs)) {
+          return dhanFailure('CONFIGURATION_INCOMPLETE', 'Dhan SecretRef expiresAt is not a valid ISO-8601 timestamp');
+        }
+        if (expMs <= nowMs) {
+          return dhanFailure('CREDENTIALS_EXPIRED', 'Dhan credential reference has expired');
+        }
+      }
+    }
+
     let credentials;
     try {
       credentials = await this.credentialResolver.resolve(this.config);
-    } catch {
+    } catch (err: unknown) {
+      if (err instanceof DhanProductionNotAuthorizedError) {
+        return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan credentials are not authorized');
+      }
+      const candidate = err as { reason?: unknown; code?: unknown } | null;
+      if (
+        candidate?.reason === 'EXPIRED' ||
+        candidate?.reason === 'REVOKED' ||
+        candidate?.code === 'CREDENTIALS_EXPIRED'
+      ) {
+        return dhanFailure('CREDENTIALS_EXPIRED', 'Dhan credentials are expired or revoked');
+      }
+      if (candidate?.code === 'PRODUCTION_NOT_AUTHORIZED') {
+        return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan credentials are not authorized');
+      }
       // Credential resolution internals are deliberately not echoed.
       return dhanFailure('CREDENTIALS_UNAVAILABLE', 'Dhan credential resolution failed closed');
     }
@@ -189,6 +236,13 @@ export class DhanApiClient {
         'CREDENTIALS_UNAVAILABLE',
         'Dhan credentials are not available; provider is operating in pre-access mode'
       );
+    }
+
+    if (credentials.expiresAt !== undefined) {
+      const expMs = Date.parse(credentials.expiresAt);
+      if (Number.isNaN(expMs) || expMs <= nowMs) {
+        return dhanFailure('CREDENTIALS_EXPIRED', 'Resolved Dhan access token has expired');
+      }
     }
 
     const request: DhanHttpRequest = {
@@ -211,6 +265,9 @@ export class DhanApiClient {
       response = await this.withTimeout(this.transport.send(request), this.config.timeoutMs);
     } catch (err: unknown) {
       const latencyMs = Math.max(0, this.now() - startedAt);
+      if (err instanceof DhanProductionNotAuthorizedError) {
+        return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan vendor egress is not authorized');
+      }
       if (err instanceof DhanTransportTimeoutError) {
         return dhanFailure('TIMEOUT', `Dhan request exceeded the configured timeout of ${this.config.timeoutMs}ms`);
       }
