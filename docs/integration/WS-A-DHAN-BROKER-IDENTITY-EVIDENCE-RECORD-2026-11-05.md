@@ -87,3 +87,11 @@ Re-running the 68 rows through the unchanged pipeline against the authenticated 
 The 65 unresolved rows require broker-supplied ISINs or exchange-scoped symbols (DHAN_WEB_UI_SUMMARY_V1 emits neither). Remediation and the full enumeration are filed at
 `evidence/cross-repository/IIPS_V3_D05_B06_68ROW_REASSESSMENT_2026-11-08.md`; per-row outcomes at
 `evidence/integration/ws-a-dhan-68-row/identity-outcomes-authenticated-2026-11-08.json`. The 2026-11-05 record above is retained verbatim.
+
+## WS-A-ADDENDUM-2026-11-08-B — B-06 root-cause investigation (append-only)
+
+Governing act: PA instruction 2026-11-08 — "B-06 — 65 UNRESOLVED ROWS: ROOT-CAUSE INVESTIGATION" (B-06 explicitly remains OPEN; no closure, no residual-exception reclassification, no persistence).
+
+Finding: the 65 UNRESOLVED rows are the result of an identifier-free observed surface (DHAN_WEB_UI_SUMMARY_V1 carries no ISIN/exchange), not of missing evidence or of an implementation defect. The committed companion broker export `evidence/operator_drop/wave2-2026-11-06/source.csv` carries ISINs for all 68 positions joined 1:1 to the observed surface; 62 of the 65 rows resolve through the existing exact-ISIN path against the authenticated replacement (verified read-only), and 3 rows (44 INE721I01024 — BSE-exclusive listing of the National Stock Exchange of India; 51 INE583V01021 — NSE series BE, BSE group T/SME; 63 INE562X01013 — NSE series BE, absent BSE active-equity) are outside the authorized NSE CM EQ universe act and fail closed by design.
+
+The full diagnostic matrix, root-cause category counts, spot-check corrections (rows 37/67 — Jio Platforms `INE0BJO01010`/`JPL` and Waaree Renewable `INE299N01021`/`WAAREERTL`; Jio Financial and Waaree Energies are irrelevant to these rows), minimum corrective actions, and the revised B-06 status are filed at `evidence/cross-repository/IIPS_V3_D05_B06_ROOT_CAUSE_INVESTIGATION_2026-11-08.md`. This addendum does not re-execute the ingress, does not persist anything, and does not alter any prior record. The "residual exceptions" framing of the 2026-11-08 B-06 reassessment record is withdrawn by that investigation report; B-06 stays OPEN pending PA disposition.
