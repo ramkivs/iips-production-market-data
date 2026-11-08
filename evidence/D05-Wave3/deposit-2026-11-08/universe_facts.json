@@ -1,0 +1,51 @@
+{
+  "recordCount": 2390,
+  "dualListed": 2290,
+  "nseExclusiveGovernedExclusions": 100,
+  "exclusionIsinsSha256": "96c1a1de3f2e1a47c79efdd3d9c881cdd3f7bc3fbf369d7f9f8cd7df1fe42247",
+  "listingDateRange": {
+    "min": "1995-02-08",
+    "max": "2026-11-06"
+  },
+  "faceValueDistinct": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "8",
+    "10",
+    "100",
+    "1000"
+  ],
+  "marketLotNonUnitRows": [
+    {
+      "symbol": "MODTHREAD",
+      "isin": "INE794W01014",
+      "lotSize": 50
+    },
+    {
+      "symbol": "PRUDMOULI",
+      "isin": "INE024D01016",
+      "lotSize": 100
+    },
+    {
+      "symbol": "TECILCHEM",
+      "isin": "INE014B01011",
+      "lotSize": 50
+    }
+  ],
+  "inputs": {
+    "bundle": {
+      "path": "evidence/D05-Wave3/D05_Wave3_EQ_Source_and_Evidence_Bundle_2026-11-07.zip",
+      "sha256": "6332b050132a160e89e5906d131e12535ac1105d4b781330fa63f0e0af1d41f4"
+    },
+    "published_latest": {
+      "path": "evidence/D05-Wave3/arena_B05_latestcsvs.zip",
+      "sha256": "73f1e3a330ab4915ced0b4520e4a3c1a7274d95258808227b3dad7dad806d0d2"
+    },
+    "nse_entry_count_eq": 2390,
+    "bse_master_equity_rows": 5131
+  }
+}

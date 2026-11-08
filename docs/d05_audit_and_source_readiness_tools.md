@@ -172,3 +172,15 @@ its own tests and the `audits/` ignore rule.
 - Wave-3 machinery: `scripts/wave3_universe_expansion.mjs`, `src/identity/universe_expansion_gate.ts`
 - Contract: `src/contracts/d05_security_master.ts` (5 enforced rules only); deposit policy carries the rest
 - Wave-3 receipt (blocker): `evidence/cross-repository/IIPS_V3_D05_WAVE3_UNIVERSE_EXPANSION_RECEIPT_2026-11-06.md`
+
+## 6. 2026-11-08 — Fail-closed addendum (PR #139)
+
+`source_readiness.ts` now enforces that a BSE `scrip_code` row must match `^[0-9]{6}$`.
+Placeholder tokens such as `UNLISTED-BSE` / `NSE-EXCLUSIVE` are **not identity claims**: rows carrying them are rejected as invalid for coverage purposes, so they cannot close the NSE↔BSE linkage gap; verification of the linkage therefore still fails closed until an authentic exchange master is supplied. The MCA side already enforced C-20 CIN format (`^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$`), which rejects `EXEMPT-STRUCT-*` / `ALIAS-MATCH-*` tokens the same way. Behaviour tests: `tests/source_readiness.test.ts` (2 new cases) and `tests/d05_wave3_evidence_reconciliation.test.ts` pin the 2026-11-08 publication and verdict. See `evidence/cross-repository/IIPS_V3_D05_WAVE3_EQ_EVIDENCE_RECONCILIATION_2026-11-08.md` for the full findings. No weakening, no defaults, no tolerated placeholders.
+
+### 6.1 2026-11-08 — One-time governed reassessment addendum (PR #139)
+
+Follow-on to the PA directive of 2026-11-08 ("Apply proportional evidence standards"). Two further facts, appended append-only:
+
+1. **Fail-closed synonym correction.** The BSE spec listed `bssescripcode` (typo, four s's) among `scrip_code` header synonyms, so any master whose header normalises to `bsescripcode` was reported `MISSING_COLUMNS` even with a valid six-digit scrip column. The synonym is corrected to `bsescripcode` — fail-closed in every other respect: the `^[0-9]{6}$` rule is unchanged, placeholder tokens remain rejected, and the 2026-11-08 submitted evidence remains `DEPOSITION_BLOCKED` after re-running against corrected inputs (`audits/source-readiness-2026-11-08-corrected/`, not committed). This is a bug fix, not a weakening.
+2. **Derived corrected artifacts + PA decision preparation.** `scripts/derive_d05_wave3_artifacts.py` now deterministically produces corrective replacements under `evidence/D05-Wave3/derived/` (B1 restored genuine registry-carried CINs; B2 exact-ISIN-join scrip codes; B3 classification-basis disclosure with correction pass; B4 fabricated references blanked and uniform-0.05 marked PENDING PA ACT BINDING). Behaviour tests: `tests/d05_wave3_evidence_reassessment.test.ts`. Full re-evaluation, the five-outcome decision table and the prepared PA decisions (D-3 / D-4 / D-9 / taxonomy acceptance / B5): `evidence/cross-repository/IIPS_V3_D05_WAVE3_EQ_EVIDENCE_REASSESSMENT_2026-11-08.md`. **The verdict remains `DEPOSITION_BLOCKED`; `recordCount !== 2250` guard intact; PR #139 unmerged; Option B (P0–P9) unexecuted.**
