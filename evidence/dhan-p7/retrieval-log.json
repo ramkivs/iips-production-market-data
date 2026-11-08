@@ -1,0 +1,24 @@
+{
+  "detailed": {
+    "url": "https://images.dhan.co/api-data/api-scrip-master-detailed.csv",
+    "retrievedAtUtc": "2026-11-06T05:04:30.439Z",
+    "httpStatus": null,
+    "contentType": null,
+    "contentLength": null,
+    "rawSha256": null,
+    "byteSize": null,
+    "ok": false,
+    "error": "TypeError: fetch failed"
+  },
+  "compact": {
+    "url": "https://images.dhan.co/api-data/api-scrip-master.csv",
+    "retrievedAtUtc": "2026-11-06T05:04:30.500Z",
+    "httpStatus": null,
+    "contentType": null,
+    "contentLength": null,
+    "rawSha256": null,
+    "byteSize": null,
+    "ok": false,
+    "error": "TypeError: fetch failed"
+  }
+}

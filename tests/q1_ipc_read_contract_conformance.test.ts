@@ -983,7 +983,7 @@ describe('q1 / IPC read path conforms to CAP-03 DR-2 Option A', () => {
 
   /* ---------------- 10. frozen interfaces, schema, routes and fences ---------------- */
 
-  it('the migration set and its SQL checksums are unchanged — no schema change', () => {
+  it('the migration set and its SQL checksums are unchanged — no unintended schema change', () => {
     assert.deepEqual(
       GATE3_MIGRATIONS.map((migration) => migration.id),
       [
@@ -991,6 +991,8 @@ describe('q1 / IPC read path conforms to CAP-03 DR-2 Option A', () => {
         '002_audit_event_sequence',
         '003_local_principal_bindings',
         '004_portfolio_contribution_provenance',
+        // G-2 durable holding identity: the single authorized additive migration.
+        '005_holding_security_identity',
       ],
     );
     assert.deepEqual(
@@ -1000,8 +1002,9 @@ describe('q1 / IPC read path conforms to CAP-03 DR-2 Option A', () => {
         '01892a862c8a877c97403a938123fb575cb43f9445d4c5345aa209f5adae47ed',
         '7967acc06584811df9cf37e05b84d78d6126b6dae979ee79e0523dfce924004e',
         '0dbf90c129154d8c547b6c5876157877c5e12790ebf2b35c741640751ea7b0ac',
+        '09fb8b68775a3c6cf799852a0c5c0146ea6971911097cb006a1782a9d415ec04',
       ],
-      'the applied schema is byte-frozen: no migration was added, removed or edited',
+      'the applied schema is byte-frozen: no migration was added, removed or edited beyond the authorized additive 005',
     );
   });
 
