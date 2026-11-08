@@ -1,0 +1,1836 @@
+{
+  "recordId": "IIPS-D05-B06-REASSESSMENT-2026-11-08",
+  "generatedAt": "2026-11-08T06:32:01.853Z",
+  "asOf": "2026-11-08T06:32:01.853Z",
+  "scope": "D05/P9/B06 one-time §9-A ISIN-scoped re-assessment (PA authorization 2026-11-08); re-assessment of committed evidence only; $0 persisted",
+  "governingActs": [
+    "PA instruction 2026-11-08 — B-06 root-cause investigation",
+    "PA authorization 2026-11-08 — §9-A execution; §9-C declined (universe stays 2,390); B-06 remains OPEN"
+  ],
+  "inputs": {
+    "positionSource": {
+      "path": "evidence/integration/ws-a-dhan-68-row/rows.json",
+      "sha256": "bfd0496e080fdd2c01f1033cf9adf2e33a218c589b9154bb5ae9ff5532a8c4d0",
+      "observedFormat": "DHAN_WEB_UI_SUMMARY_V1",
+      "rows": 68,
+      "suppliedIsin": "null (all rows)",
+      "suppliedExchange": "null (all rows)"
+    },
+    "identifierSource": {
+      "path": "evidence/operator_drop/wave2-2026-11-06/source.csv",
+      "sha256": "2dc1d1fba6e183cfa657652d0dab98daac570df6e3ef3adbbc8f2a397fcabd0d",
+      "provenance": "B-04 companion Dhan holdings export; IRR PR #496 merge 0a0aac2bba517be933dae7a91a89af2943996b51 (iips-review-recovered); committed copy sha-pinned in Wave-2 disposition",
+      "rows": 68,
+      "isinForAllRows": true
+    },
+    "joinEvidence": {
+      "method": "exact case-insensitive whitespace-normalized display-name (sourceName ↔ Scrip Name), 1:1 uniqueness enforced",
+      "matched": 68,
+      "total": 68,
+      "quantityAgreement": 65,
+      "quantityDisagreement": [
+        {
+          "rowIndex": 1,
+          "name": "AGI GREENPAC",
+          "uiQty": 25,
+          "exportedQty": 2
+        },
+        {
+          "rowIndex": 38,
+          "name": "KM SUGAR MILLS",
+          "uiQty": 14,
+          "exportedQty": 142
+        },
+        {
+          "rowIndex": 54,
+          "name": "SALASAR TECHNO ENGINEERING",
+          "uiQty": 33,
+          "exportedQty": 336
+        }
+      ],
+      "ambiguity": "none (no unmatched rows, no duplicate keys)"
+    },
+    "reportOfRecord": {
+      "path": "evidence/cross-repository/IIPS_V3_D05_B06_ROOT_CAUSE_INVESTIGATION_2026-11-08.md",
+      "sha256": "442ef23cf4b2c8dc6154f09777101652ce758d9545f1e44634bfbd92b930bee3"
+    }
+  },
+  "master": {
+    "name": "getGovernedAuthenticatedSecurityMaster",
+    "revision": "BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001:b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+    "records": 2390,
+    "asOf": "2026-11-08T06:32:01.853Z",
+    "eligibility": "NOT_ASSERTED"
+  },
+  "zeroPersistence": true,
+  "changeControl": {
+    "ruleChanges": "none",
+    "aliasesAdded": "none",
+    "universeAltered": false,
+    "fuzzyMatching": false,
+    "saveable": false
+  },
+  "runs": [
+    {
+      "label": "GOVERNED_AUTHENTICATED_MASTER_2026-11-08",
+      "purpose": "One-time §9-A re-assessment with the broker-supplied ISIN (from the committed companion export). No UNSCOPED namespace trial is relied on for the reassessed rows.",
+      "identitySummary": {
+        "evaluated": 68,
+        "resolved": 65,
+        "unresolved": 3,
+        "ambiguous": 0,
+        "notEvaluated": 0,
+        "excluded": 0,
+        "identitySource": "GOVERNED_SECURITY_MASTER",
+        "masterRevision": "BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001:b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+        "saveable": false,
+        "refusalCodes": {
+          "UNMAPPED_IDENTIFIER": 3
+        }
+      },
+      "priorResolutionPreservation": [
+        {
+          "rowIndex": 1,
+          "prior": "RESOLVED EQ_AGI_IN (UNSCOPED NSE_SYMBOL, governed alias 2022-01-01)",
+          "now": "RESOLVED EQ_AGI_IN",
+          "identical": true
+        },
+        {
+          "rowIndex": 21,
+          "prior": "RESOLVED EQ_GHCL_IN (UNSCOPED NSE_SYMBOL, verbatim key)",
+          "now": "RESOLVED EQ_GHCL_IN",
+          "identical": true
+        },
+        {
+          "rowIndex": 40,
+          "prior": "RESOLVED EQ_KROSS_IN (UNSCOPED NSE_SYMBOL, verbatim key)",
+          "now": "RESOLVED EQ_KROSS_IN",
+          "identical": true
+        }
+      ],
+      "appendixAVerification": [
+        {
+          "rowIndex": 1,
+          "prior": "EQ_AGI_IN",
+          "now": "EQ_AGI_IN"
+        },
+        {
+          "rowIndex": 2,
+          "expected": "EQ_ASKAUTOLTD_IN",
+          "now": "EQ_ASKAUTOLTD_IN"
+        },
+        {
+          "rowIndex": 3,
+          "expected": "EQ_AJAXENGG_IN",
+          "now": "EQ_AJAXENGG_IN"
+        },
+        {
+          "rowIndex": 4,
+          "expected": "EQ_ARIHANTCAP_IN",
+          "now": "EQ_ARIHANTCAP_IN"
+        },
+        {
+          "rowIndex": 5,
+          "expected": "EQ_ARKADE_IN",
+          "now": "EQ_ARKADE_IN"
+        },
+        {
+          "rowIndex": 6,
+          "expected": "EQ_ARROWGREEN_IN",
+          "now": "EQ_ARROWGREEN_IN"
+        },
+        {
+          "rowIndex": 7,
+          "expected": "EQ_ASHOKA_IN",
+          "now": "EQ_ASHOKA_IN"
+        },
+        {
+          "rowIndex": 8,
+          "expected": "EQ_BANKBARODA_IN",
+          "now": "EQ_BANKBARODA_IN"
+        },
+        {
+          "rowIndex": 9,
+          "expected": "EQ_BHARATCOAL_IN",
+          "now": "EQ_BHARATCOAL_IN"
+        },
+        {
+          "rowIndex": 10,
+          "expected": "EQ_BLUEJET_IN",
+          "now": "EQ_BLUEJET_IN"
+        },
+        {
+          "rowIndex": 11,
+          "expected": "EQ_CRAMC_IN",
+          "now": "EQ_CRAMC_IN"
+        },
+        {
+          "rowIndex": 12,
+          "expected": "EQ_MUFTI_IN",
+          "now": "EQ_MUFTI_IN"
+        },
+        {
+          "rowIndex": 13,
+          "expected": "EQ_DAMCAPITAL_IN",
+          "now": "EQ_DAMCAPITAL_IN"
+        },
+        {
+          "rowIndex": 14,
+          "expected": "EQ_ECOSMOBLTY_IN",
+          "now": "EQ_ECOSMOBLTY_IN"
+        },
+        {
+          "rowIndex": 15,
+          "expected": "EQ_EMSLIMITED_IN",
+          "now": "EQ_EMSLIMITED_IN"
+        },
+        {
+          "rowIndex": 16,
+          "expected": "EQ_EPACKPEB_IN",
+          "now": "EQ_EPACKPEB_IN"
+        },
+        {
+          "rowIndex": 17,
+          "expected": "EQ_ELECON_IN",
+          "now": "EQ_ELECON_IN"
+        },
+        {
+          "rowIndex": 18,
+          "expected": "EQ_EMAMILTD_IN",
+          "now": "EQ_EMAMILTD_IN"
+        },
+        {
+          "rowIndex": 19,
+          "expected": "EQ_ENGINERSIN_IN",
+          "now": "EQ_ENGINERSIN_IN"
+        },
+        {
+          "rowIndex": 20,
+          "expected": "EQ_FCL_IN",
+          "now": "EQ_FCL_IN"
+        },
+        {
+          "rowIndex": 21,
+          "prior": "EQ_GHCL_IN",
+          "now": "EQ_GHCL_IN"
+        },
+        {
+          "rowIndex": 22,
+          "expected": "EQ_GMRPUI_IN",
+          "now": "EQ_GMRPUI_IN"
+        },
+        {
+          "rowIndex": 23,
+          "expected": "EQ_GATEWAY_IN",
+          "now": "EQ_GATEWAY_IN"
+        },
+        {
+          "rowIndex": 24,
+          "expected": "EQ_GEEKAYWIRE_IN",
+          "now": "EQ_GEEKAYWIRE_IN"
+        },
+        {
+          "rowIndex": 25,
+          "expected": "EQ_GENUSPOWER_IN",
+          "now": "EQ_GENUSPOWER_IN"
+        },
+        {
+          "rowIndex": 26,
+          "expected": "EQ_GRAUWEIL_IN",
+          "now": "EQ_GRAUWEIL_IN"
+        },
+        {
+          "rowIndex": 27,
+          "expected": "EQ_GPPL_IN",
+          "now": "EQ_GPPL_IN"
+        },
+        {
+          "rowIndex": 28,
+          "expected": "EQ_HSCL_IN",
+          "now": "EQ_HSCL_IN"
+        },
+        {
+          "rowIndex": 29,
+          "expected": "EQ_IDFCFIRSTB_IN",
+          "now": "EQ_IDFCFIRSTB_IN"
+        },
+        {
+          "rowIndex": 30,
+          "expected": "EQ_IIFLCAPS_IN",
+          "now": "EQ_IIFLCAPS_IN"
+        },
+        {
+          "rowIndex": 31,
+          "expected": "EQ_INDRAMEDCO_IN",
+          "now": "EQ_INDRAMEDCO_IN"
+        },
+        {
+          "rowIndex": 32,
+          "expected": "EQ_INTLCONV_IN",
+          "now": "EQ_INTLCONV_IN"
+        },
+        {
+          "rowIndex": 33,
+          "expected": "EQ_IGIL_IN",
+          "now": "EQ_IGIL_IN"
+        },
+        {
+          "rowIndex": 34,
+          "expected": "EQ_JKIL_IN",
+          "now": "EQ_JKIL_IN"
+        },
+        {
+          "rowIndex": 35,
+          "expected": "EQ_JAIBALAJI_IN",
+          "now": "EQ_JAIBALAJI_IN"
+        },
+        {
+          "rowIndex": 36,
+          "expected": "EQ_JAMNAAUTO_IN",
+          "now": "EQ_JAMNAAUTO_IN"
+        },
+        {
+          "rowIndex": 37,
+          "expected": "EQ_JPL_IN",
+          "now": "EQ_JPL_IN"
+        },
+        {
+          "rowIndex": 38,
+          "expected": "EQ_KMSUGAR_IN",
+          "now": "EQ_KMSUGAR_IN"
+        },
+        {
+          "rowIndex": 39,
+          "expected": "EQ_KPEL_IN",
+          "now": "EQ_KPEL_IN"
+        },
+        {
+          "rowIndex": 40,
+          "prior": "EQ_KROSS_IN",
+          "now": "EQ_KROSS_IN"
+        },
+        {
+          "rowIndex": 41,
+          "expected": "EQ_LANDMARK_IN",
+          "now": "EQ_LANDMARK_IN"
+        },
+        {
+          "rowIndex": 42,
+          "expected": "EQ_MATRIMONY_IN",
+          "now": "EQ_MATRIMONY_IN"
+        },
+        {
+          "rowIndex": 43,
+          "expected": "EQ_MONARCH_IN",
+          "now": "EQ_MONARCH_IN"
+        },
+        {
+          "rowIndex": 44,
+          "expected": "UNMAPPED_IDENTIFIER",
+          "now": "UNMAPPED_IDENTIFIER"
+        },
+        {
+          "rowIndex": 45,
+          "expected": "EQ_OSWALPUMPS_IN",
+          "now": "EQ_OSWALPUMPS_IN"
+        },
+        {
+          "rowIndex": 46,
+          "expected": "EQ_PANAMAPET_IN",
+          "now": "EQ_PANAMAPET_IN"
+        },
+        {
+          "rowIndex": 47,
+          "expected": "EQ_PARADEEP_IN",
+          "now": "EQ_PARADEEP_IN"
+        },
+        {
+          "rowIndex": 48,
+          "expected": "EQ_PRECWIRE_IN",
+          "now": "EQ_PRECWIRE_IN"
+        },
+        {
+          "rowIndex": 49,
+          "expected": "EQ_PREMIERPOL_IN",
+          "now": "EQ_PREMIERPOL_IN"
+        },
+        {
+          "rowIndex": 50,
+          "expected": "EQ_PDMJEPAPER_IN",
+          "now": "EQ_PDMJEPAPER_IN"
+        },
+        {
+          "rowIndex": 51,
+          "expected": "UNMAPPED_IDENTIFIER",
+          "now": "UNMAPPED_IDENTIFIER"
+        },
+        {
+          "rowIndex": 52,
+          "expected": "EQ_RAJOOENG_IN",
+          "now": "EQ_RAJOOENG_IN"
+        },
+        {
+          "rowIndex": 53,
+          "expected": "EQ_RATEGAIN_IN",
+          "now": "EQ_RATEGAIN_IN"
+        },
+        {
+          "rowIndex": 54,
+          "expected": "EQ_SALASAR_IN",
+          "now": "EQ_SALASAR_IN"
+        },
+        {
+          "rowIndex": 55,
+          "expected": "EQ_SHAKTIPUMP_IN",
+          "now": "EQ_SHAKTIPUMP_IN"
+        },
+        {
+          "rowIndex": 56,
+          "expected": "EQ_SHARDAMOTR_IN",
+          "now": "EQ_SHARDAMOTR_IN"
+        },
+        {
+          "rowIndex": 57,
+          "expected": "EQ_SIGMA_IN",
+          "now": "EQ_SIGMA_IN"
+        },
+        {
+          "rowIndex": 58,
+          "expected": "EQ_SIYSIL_IN",
+          "now": "EQ_SIYSIL_IN"
+        },
+        {
+          "rowIndex": 59,
+          "expected": "EQ_STEELCAS_IN",
+          "now": "EQ_STEELCAS_IN"
+        },
+        {
+          "rowIndex": 60,
+          "expected": "EQ_SUZLON_IN",
+          "now": "EQ_SUZLON_IN"
+        },
+        {
+          "rowIndex": 61,
+          "expected": "EQ_THYROCARE_IN",
+          "now": "EQ_THYROCARE_IN"
+        },
+        {
+          "rowIndex": 62,
+          "expected": "EQ_TITAGARH_IN",
+          "now": "EQ_TITAGARH_IN"
+        },
+        {
+          "rowIndex": 63,
+          "expected": "UNMAPPED_IDENTIFIER",
+          "now": "UNMAPPED_IDENTIFIER"
+        },
+        {
+          "rowIndex": 64,
+          "expected": "EQ_VSSL_IN",
+          "now": "EQ_VSSL_IN"
+        },
+        {
+          "rowIndex": 65,
+          "expected": "EQ_VMM_IN",
+          "now": "EQ_VMM_IN"
+        },
+        {
+          "rowIndex": 66,
+          "expected": "EQ_VISHNU_IN",
+          "now": "EQ_VISHNU_IN"
+        },
+        {
+          "rowIndex": 67,
+          "expected": "EQ_WAAREERTL_IN",
+          "now": "EQ_WAAREERTL_IN"
+        },
+        {
+          "rowIndex": 68,
+          "expected": "EQ_WEBELSOLAR_IN",
+          "now": "EQ_WEBELSOLAR_IN"
+        }
+      ],
+      "rows": [
+        {
+          "rowIndex": 1,
+          "suppliedIdentifier": "AGI GREENPAC",
+          "suppliedIsin": "INE415A01038",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_AGI_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE415A01038",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_AGI_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 2,
+          "suppliedIdentifier": "ASK AUTOMOTIVE",
+          "suppliedIsin": "INE491J01022",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_ASKAUTOLTD_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE491J01022",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_ASKAUTOLTD_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 3,
+          "suppliedIdentifier": "AJAX ENGINEERING",
+          "suppliedIsin": "INE274Y01021",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_AJAXENGG_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE274Y01021",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_AJAXENGG_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 4,
+          "suppliedIdentifier": "ARIHANT CAPITAL MARKETS",
+          "suppliedIsin": "INE420B01036",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_ARIHANTCAP_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE420B01036",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_ARIHANTCAP_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 5,
+          "suppliedIdentifier": "ARKADE DEVELOPERS",
+          "suppliedIsin": "INE0QRL01017",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_ARKADE_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0QRL01017",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_ARKADE_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 6,
+          "suppliedIdentifier": "ARROW GREENTECH",
+          "suppliedIsin": "INE570D01018",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_ARROWGREEN_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE570D01018",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_ARROWGREEN_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 7,
+          "suppliedIdentifier": "ASHOKA BUILDCON",
+          "suppliedIsin": "INE442H01029",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_ASHOKA_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE442H01029",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_ASHOKA_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 8,
+          "suppliedIdentifier": "BANK OF BARODA",
+          "suppliedIsin": "INE028A01039",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_BANKBARODA_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE028A01039",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_BANKBARODA_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 9,
+          "suppliedIdentifier": "BHARAT COKING COAL",
+          "suppliedIsin": "INE05XR01022",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_BHARATCOAL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE05XR01022",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_BHARATCOAL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 10,
+          "suppliedIdentifier": "BLUE JET HEALTHCARE",
+          "suppliedIsin": "INE0KBH01020",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_BLUEJET_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0KBH01020",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_BLUEJET_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 11,
+          "suppliedIdentifier": "CANARA ROBECO ASSET MANAGEMENT COMPANY",
+          "suppliedIsin": "INE218I01013",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_CRAMC_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE218I01013",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_CRAMC_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 12,
+          "suppliedIdentifier": "CREDO BRANDS MARKETING (MUFTI)",
+          "suppliedIsin": "INE220Q01020",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_MUFTI_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE220Q01020",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_MUFTI_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 13,
+          "suppliedIdentifier": "DAM CAPITAL ADVISORS",
+          "suppliedIsin": "INE284H01025",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_DAMCAPITAL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE284H01025",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_DAMCAPITAL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 14,
+          "suppliedIdentifier": "ECOS MOBILITY & HOSPITALITY",
+          "suppliedIsin": "INE06HJ01020",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_ECOSMOBLTY_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE06HJ01020",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_ECOSMOBLTY_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 15,
+          "suppliedIdentifier": "EMS",
+          "suppliedIsin": "INE0OV601013",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_EMSLIMITED_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0OV601013",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_EMSLIMITED_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 16,
+          "suppliedIdentifier": "EPACK PREFAB TECHNOLOGIES",
+          "suppliedIsin": "INE0MLS01022",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_EPACKPEB_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0MLS01022",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_EPACKPEB_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 17,
+          "suppliedIdentifier": "ELECON ENGINEERING COMPANY",
+          "suppliedIsin": "INE205B01031",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_ELECON_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE205B01031",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_ELECON_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 18,
+          "suppliedIdentifier": "EMAMI",
+          "suppliedIsin": "INE548C01032",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_EMAMILTD_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE548C01032",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_EMAMILTD_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 19,
+          "suppliedIdentifier": "ENGINEERS INDIA",
+          "suppliedIsin": "INE510A01028",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_ENGINERSIN_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE510A01028",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_ENGINERSIN_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 20,
+          "suppliedIdentifier": "FINEOTEX CHEMICAL",
+          "suppliedIsin": "INE045J01034",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_FCL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE045J01034",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_FCL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 21,
+          "suppliedIdentifier": "GHCL",
+          "suppliedIsin": "INE539A01019",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_GHCL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE539A01019",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_GHCL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 22,
+          "suppliedIdentifier": "GMR POWER & URBAN INFRA",
+          "suppliedIsin": "INE0CU601026",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_GMRPUI_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0CU601026",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_GMRPUI_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 23,
+          "suppliedIdentifier": "GATEWAY DISTRIPARKS",
+          "suppliedIsin": "INE079J01017",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_GATEWAY_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE079J01017",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_GATEWAY_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 24,
+          "suppliedIdentifier": "GEEKAY WIRES",
+          "suppliedIsin": "INE669X01032",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_GEEKAYWIRE_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE669X01032",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_GEEKAYWIRE_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 25,
+          "suppliedIdentifier": "GENUS POWER INFRASTRUCTURES",
+          "suppliedIsin": "INE955D01029",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_GENUSPOWER_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE955D01029",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_GENUSPOWER_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 26,
+          "suppliedIdentifier": "GRAUER & WEIL",
+          "suppliedIsin": "INE266D01021",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_GRAUWEIL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE266D01021",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_GRAUWEIL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 27,
+          "suppliedIdentifier": "GUJARAT PIPAVAV PORT",
+          "suppliedIsin": "INE517F01014",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_GPPL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE517F01014",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_GPPL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 28,
+          "suppliedIdentifier": "HIMADRI SPECIALITY CHEMICAL",
+          "suppliedIsin": "INE019C01026",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_HSCL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE019C01026",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_HSCL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 29,
+          "suppliedIdentifier": "IDFC FIRST BANK",
+          "suppliedIsin": "INE092T01019",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_IDFCFIRSTB_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE092T01019",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_IDFCFIRSTB_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 30,
+          "suppliedIdentifier": "IIFL CAPITAL SERVICES",
+          "suppliedIsin": "INE489L01022",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_IIFLCAPS_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE489L01022",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_IIFLCAPS_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 31,
+          "suppliedIdentifier": "INDRAPRASTHA MEDICAL CORPORATION",
+          "suppliedIsin": "INE681B01017",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_INDRAMEDCO_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE681B01017",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_INDRAMEDCO_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 32,
+          "suppliedIdentifier": "INTERNATIONAL CONVEYORS",
+          "suppliedIsin": "INE575C01027",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_INTLCONV_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE575C01027",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_INTLCONV_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 33,
+          "suppliedIdentifier": "INTERNATIONAL GEMOLOGICAL INSTITUTE",
+          "suppliedIsin": "INE0Q9301021",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_IGIL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0Q9301021",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_IGIL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 34,
+          "suppliedIdentifier": "J KUMAR INFRAPROJECTS",
+          "suppliedIsin": "INE576I01022",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_JKIL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE576I01022",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_JKIL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 35,
+          "suppliedIdentifier": "JAI BALAJI INDUSTRIES",
+          "suppliedIsin": "INE091G01026",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_JAIBALAJI_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE091G01026",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_JAIBALAJI_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 36,
+          "suppliedIdentifier": "JAMNA AUTO INDUSTRIES",
+          "suppliedIsin": "INE039C01032",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_JAMNAAUTO_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE039C01032",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_JAMNAAUTO_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 37,
+          "suppliedIdentifier": "JIO PLATFORMS",
+          "suppliedIsin": "INE0BJO01010",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_JPL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0BJO01010",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_JPL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 38,
+          "suppliedIdentifier": "KM SUGAR MILLS",
+          "suppliedIsin": "INE157H01023",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_KMSUGAR_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE157H01023",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_KMSUGAR_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 39,
+          "suppliedIdentifier": "KP ENERGY",
+          "suppliedIsin": "INE127T01021",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_KPEL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE127T01021",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_KPEL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 40,
+          "suppliedIdentifier": "KROSS",
+          "suppliedIsin": "INE0O6601022",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_KROSS_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0O6601022",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_KROSS_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 41,
+          "suppliedIdentifier": "LANDMARK CARS",
+          "suppliedIsin": "INE559R01029",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_LANDMARK_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE559R01029",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_LANDMARK_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 42,
+          "suppliedIdentifier": "MATRIMONY.COM",
+          "suppliedIsin": "INE866R01028",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_MATRIMONY_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE866R01028",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_MATRIMONY_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 43,
+          "suppliedIdentifier": "MONARCH NETWORTH CAPITAL",
+          "suppliedIsin": "INE903D01011",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_MONARCH_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE903D01011",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_MONARCH_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 44,
+          "suppliedIdentifier": "NATIONAL STOCK EXCHANGE OF INDIA",
+          "suppliedIsin": "INE721I01024",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "UNRESOLVED",
+          "companyId": null,
+          "refusalCode": "UNMAPPED_IDENTIFIER",
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE721I01024",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineRecordId": "ident-quar-1794119521925-xptbo",
+              "details": "No active mapping found for ISIN:INE721I01024 at asOf 2026-11-08T06:32:01.853Z"
+            }
+          ],
+          "missingEvidence": "The supplied ISIN is not registered in the governed security master; an authoritative mapping (governed deposition) is required."
+        },
+        {
+          "rowIndex": 45,
+          "suppliedIdentifier": "OSWAL PUMPS",
+          "suppliedIsin": "INE0BYP01024",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_OSWALPUMPS_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0BYP01024",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_OSWALPUMPS_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 46,
+          "suppliedIdentifier": "PANAMA PETROCHEM",
+          "suppliedIsin": "INE305C01029",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_PANAMAPET_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE305C01029",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_PANAMAPET_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 47,
+          "suppliedIdentifier": "PARADEEP PHOSPHATES",
+          "suppliedIsin": "INE088F01024",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_PARADEEP_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE088F01024",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_PARADEEP_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 48,
+          "suppliedIdentifier": "PRECISION WIRES INDIA",
+          "suppliedIsin": "INE372C01037",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_PRECWIRE_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE372C01037",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_PRECWIRE_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 49,
+          "suppliedIdentifier": "PREMIER POLYFILM",
+          "suppliedIsin": "INE309M01020",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_PREMIERPOL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE309M01020",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_PREMIERPOL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 50,
+          "suppliedIdentifier": "PUDUMJEE PAPER PRODUCTS",
+          "suppliedIsin": "INE865T01018",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_PDMJEPAPER_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE865T01018",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_PDMJEPAPER_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 51,
+          "suppliedIdentifier": "RADHIKA JEWELTECH",
+          "suppliedIsin": "INE583V01021",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "UNRESOLVED",
+          "companyId": null,
+          "refusalCode": "UNMAPPED_IDENTIFIER",
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE583V01021",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineRecordId": "ident-quar-1794119521929-v9ko6",
+              "details": "No active mapping found for ISIN:INE583V01021 at asOf 2026-11-08T06:32:01.853Z"
+            }
+          ],
+          "missingEvidence": "The supplied ISIN is not registered in the governed security master; an authoritative mapping (governed deposition) is required."
+        },
+        {
+          "rowIndex": 52,
+          "suppliedIdentifier": "RAJOO ENGINEERS",
+          "suppliedIsin": "INE535F01024",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_RAJOOENG_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE535F01024",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_RAJOOENG_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 53,
+          "suppliedIdentifier": "RATEGAIN TRAVEL",
+          "suppliedIsin": "INE0CLI01024",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_RATEGAIN_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0CLI01024",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_RATEGAIN_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 54,
+          "suppliedIdentifier": "SALASAR TECHNO ENGINEERING",
+          "suppliedIsin": "INE170V01027",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_SALASAR_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE170V01027",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_SALASAR_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 55,
+          "suppliedIdentifier": "SHAKTI PUMPS",
+          "suppliedIsin": "INE908D01010",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_SHAKTIPUMP_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE908D01010",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_SHAKTIPUMP_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 56,
+          "suppliedIdentifier": "SHARDA MOTOR",
+          "suppliedIsin": "INE597I01028",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_SHARDAMOTR_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE597I01028",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_SHARDAMOTR_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 57,
+          "suppliedIdentifier": "SIGMA SOLVE",
+          "suppliedIsin": "INE0A0S01028",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_SIGMA_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE0A0S01028",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_SIGMA_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 58,
+          "suppliedIdentifier": "SIYARAM SILK MILLS",
+          "suppliedIsin": "INE076B01028",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_SIYSIL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE076B01028",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_SIYSIL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 59,
+          "suppliedIdentifier": "STEELCAST",
+          "suppliedIsin": "INE124E01038",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_STEELCAS_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE124E01038",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_STEELCAS_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 60,
+          "suppliedIdentifier": "SUZLON ENERGY",
+          "suppliedIsin": "INE040H01021",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_SUZLON_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE040H01021",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_SUZLON_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 61,
+          "suppliedIdentifier": "THYROCARE TECHNOLOGIES",
+          "suppliedIsin": "INE594H01019",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_THYROCARE_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE594H01019",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_THYROCARE_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 62,
+          "suppliedIdentifier": "TITAGARH RAIL SYSTEMS",
+          "suppliedIsin": "INE615H01020",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_TITAGARH_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE615H01020",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_TITAGARH_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 63,
+          "suppliedIdentifier": "UNIVASTU",
+          "suppliedIsin": "INE562X01013",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "UNRESOLVED",
+          "companyId": null,
+          "refusalCode": "UNMAPPED_IDENTIFIER",
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE562X01013",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "UNMAPPED_IDENTIFIER",
+              "quarantineRecordId": "ident-quar-1794119521939-0v586",
+              "details": "No active mapping found for ISIN:INE562X01013 at asOf 2026-11-08T06:32:01.853Z"
+            }
+          ],
+          "missingEvidence": "The supplied ISIN is not registered in the governed security master; an authoritative mapping (governed deposition) is required."
+        },
+        {
+          "rowIndex": 64,
+          "suppliedIdentifier": "VARDHMAN SPECIAL STEELS",
+          "suppliedIsin": "INE050M01012",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_VSSL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE050M01012",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_VSSL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 65,
+          "suppliedIdentifier": "VISHAL MEGA MART",
+          "suppliedIsin": "INE01EA01019",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_VMM_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE01EA01019",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_VMM_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 66,
+          "suppliedIdentifier": "VISHNU CHEMICALS",
+          "suppliedIsin": "INE270I01022",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_VISHNU_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE270I01022",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_VISHNU_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 67,
+          "suppliedIdentifier": "WAAREE RENEWABLE TECHNOLOGIES",
+          "suppliedIsin": "INE299N01021",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_WAAREERTL_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE299N01021",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_WAAREERTL_IN"
+            }
+          ],
+          "missingEvidence": null
+        },
+        {
+          "rowIndex": 68,
+          "suppliedIdentifier": "WEBSOL ENERGY SYSTEM",
+          "suppliedIsin": "INE855C01023",
+          "suppliedExchange": null,
+          "identifierClass": "ISIN",
+          "status": "RESOLVED",
+          "companyId": "EQ_WEBELSOLAR_IN",
+          "refusalCode": null,
+          "lookups": [
+            {
+              "identifierType": "ISIN",
+              "identifierValue": "INE855C01023",
+              "asOf": "2026-11-08T06:32:01.853Z",
+              "outcome": "RESOLVED",
+              "companyId": "EQ_WEBELSOLAR_IN"
+            }
+          ],
+          "missingEvidence": null
+        }
+      ]
+    }
+  ],
+  "outOfScope": {
+    "rows": [
+      44,
+      51,
+      63
+    ],
+    "disposition": "EXCLUDED_FROM_UNIVERSE by PA 2026-11-08",
+    "behavior": "fail-closed UNMAPPED_IDENTIFIER",
+    "aliases": "none",
+    "exceptions": "none"
+  },
+  "downstream": {
+    "importDisposition": "REJECTED",
+    "persistedRows": 0,
+    "saveable": false
+  }
+}

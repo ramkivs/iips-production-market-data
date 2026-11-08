@@ -98,3 +98,9 @@ This record was produced under your instruction of 2026-11-08 ("Proceed with the
 - Deposit CIN/descriptor facts are record-keeping facts, not independently verified (B1 discipline); every record deposits `UNCLASSIFIED`; eligibility stays `NOT_ASSERTED`.
 - No production action, operational write, or promotion was performed; P9 cannot authorise them. Wave-1 evidence is bit-identical (P8 receipt).
 - Quarantine-id strings in the JSON are freshly generated per run; the *log structure* is deterministic, values are per-execution identities by design.
+
+---
+
+## APPEND-ONLY ADDENDUM — residual-exception framing superseded (2026-11-08, later same day)
+
+This record's 2026-11-08 interpretation of the 65 UNRESOLVED rows as residual exceptions is **superseded** by `evidence/cross-repository/IIPS_V3_D05_B06_ROOT_CAUSE_INVESTIGATION_2026-11-08.md` (root cause: identifier-free observed surface; 62 of 65 rows resolve via exact ISIN present in the committed B-04 companion export; 3 rows are scope exclusions) and by the PA authorization 2026-11-08 executing §9-A (one-time ISIN-scoped reassessment). Result under execution: 65/68 RESOLVED via exact ISIN (62 previously unresolved in-scope rows per Appendix A; rows 1/21/40 preserved); rows 44/51/63 remain `UNMAPPED_IDENTIFIER` (§9-C declined; universe retained at 2,390 NSE CM EQ securities; no aliases/exceptions/alternative mappings); `saveable=false`; zero persisted. **B-06 remains OPEN pending PA review.** This record is retained verbatim otherwise; corrections here are additive only.

@@ -264,3 +264,11 @@ Minimum corrective action is **data supply, not acquisition or logic change**: P
 - This report is append-only from this version forward. Corrections to this document must be appended with date and authority; the 2026-11-08 B-06 reassessment record (E13) is superseded in part (§4-F8, §5) but retained as a historical artifact.
 
 *Prepared by Agent Mode on 2026-11-08 for the PA. Evidence executed read-only against the authenticated replacement. Eligibility `NOT_ASSERTED` everywhere. UNLISTED-BSE never resolvable; fail-closed universal.*
+
+---
+
+## APPEND-ONLY OUTCOME ADDENDUM — §9-A executed / §9-C declined (2026-11-08, later same day)
+
+Governing PA authorization 2026-11-08 (explicit B-06 acts): §9-A execution authorized as a one-time ISIN-scoped reassessment of the 62 in-scope rows using E8 as identifier source and E7 as position source; exact ISIN key only; no inference from display names; rows 44/51/63 remain fail-closed `UNMAPPED_IDENTIFIER`; universe retained at exactly 2,390; no persistence, no writes, no rule/alias/mapping/matching changes; B-06 remains OPEN pending PA review.
+
+Executed and verified: the one-time reassessment resolved **65/68** positions (62 previously unresolved in-scope rows + the three previously resolved rows, identities preserved `EQ_AGI_IN`/`EQ_GHCL_IN`/`EQ_KROSS_IN`), with every Appendix A target matched exactly (62/62) and rows 44/51/63 remaining `UNMAPPED_IDENTIFIER`. Evidence: `evidence/integration/ws-a-dhan-68-row/identity-outcomes-reassessment-2026-11-08.json` (SHA-256 `e99989b9962a686d33df42b43746f9127929ebced9c0a99690a64e6270ae5c2e`). Verification performed against E7/E8/Appendix A of this report; zero persistence; `saveable=false`; eligibility `NOT_ASSERTED`. **B-06 is not closed.** This addendum does not modify any prior content of this report; it supersedes only the *withholding* finding insofar as §9-A is now executed — the investigation's conclusions themselves are unchanged and were confirmed, not amended.
