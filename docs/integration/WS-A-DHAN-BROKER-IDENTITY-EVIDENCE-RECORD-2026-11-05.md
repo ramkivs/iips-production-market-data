@@ -73,3 +73,17 @@ Applying the corrected pipeline to the captured 68-row surface
 `tests/ws_a_dhan_broker_holdings_identity.test.ts` — 12 tests (WS-A-01 … WS-A-12), all passing;
 see the Workstream A report for the exact transcript and for the unchanged suites re-run
 (BI-03/04/05/07/08, Q1 durable import, P04 broad-universe, E2E multi-broker).
+
+## WS-A-ADDENDUM-2026-11-08 — Re-assessment against the 2026-11-08 replacement (P9 / B-06)
+
+Append-only addendum. Governing acts: PA directive 2026-11-08 FINAL-RECONCILIATION-AND-GOVERNED-REPLACEMENT; the PA "MERGE AUTHORIZED" instruction of 2026-11-08 (PR #139 merged as b60db672e298f3804942ba961bb9daed688b08da).
+
+Re-running the 68 rows through the unchanged pipeline against the authenticated replacement master yields:
+
+- Empty master: 0/68 resolved (control holds on the merged tree).
+- Legacy Wave-1 master: 1/68 resolved (`AGI GREENPAC` → `EQ_AGI_IN` — alias semantics unchanged), matching the 2026-11-05 record exactly.
+- **Authenticated replacement master: 3/68 resolved — rows 1 (`AGI GREENPAC` → `EQ_AGI_IN`), 21 (`GHCL` → `EQ_GHCL_IN`), 40 (`KROSS` → `EQ_KROSS_IN`); 65 remain `UNRESOLVED` (`UNSCOPED_NAME_OR_SYMBOL` / `NO_AUTHORITATIVE_IDENTIFIER_MATCH`); import remains REJECTED with zero rows persisted.**
+
+The 65 unresolved rows require broker-supplied ISINs or exchange-scoped symbols (DHAN_WEB_UI_SUMMARY_V1 emits neither). Remediation and the full enumeration are filed at
+`evidence/cross-repository/IIPS_V3_D05_B06_68ROW_REASSESSMENT_2026-11-08.md`; per-row outcomes at
+`evidence/integration/ws-a-dhan-68-row/identity-outcomes-authenticated-2026-11-08.json`. The 2026-11-05 record above is retained verbatim.

@@ -215,3 +215,23 @@ is executed for the D05 instrument master as a single, one-time, verified replac
 
 See `evidence/cross-repository/IIPS_V3_D05_AUTHENTICATED_UNIVERSE_REPLACEMENT_EXECUTION_2026-11-08.md` for the full execution,
 decision mapping and verification transcript references.
+
+## 8. 2026-11-08 — Post-merge: Wave-1 rollback drill (P8) and B-06 closure (P9) executed
+
+Append-only addendum, post PR #139 merge (`b60db67`, 2026-11-08T05:49:40Z).
+
+1. **P8 — historical preservation + rollback drill.** Wave-1 pins re-verified against the *merged* tree
+   (corpus `7f53540b…`, manifest `063288b3…`, Wave-2 disposition manifest `21a6b473…`, runtime asset `6810c28e…`).
+   The drill is encoded as `tests/d05_wave1_rollback_drill.test.ts` (RB-01 … RB-05) and its receipt lives at
+   `evidence/cross-repository/IIPS_V3_D05_WAVE1_ROLLBACK_DRILL_2026-11-08.md`. Drill is evidence-only; no pointer flipped.
+2. **P9 / B-06 — 68-row holdings identity reassessment, close or escalate.** Re-run against the authenticated
+   replacement with the **unchanged** merged pipeline: 3/68 resolved (rows 1 `AGI GREENPAC`→`EQ_AGI_IN`,
+   21 `GHCL`→`EQ_GHCL_IN`, 40 `KROSS`→`EQ_KROSS_IN`), 65 `UNRESOLVED` (`UNSCOPED_NAME_OR_SYMBOL` /
+   `NO_AUTHORITATIVE_IDENTIFIER_MATCH`), disposition `REJECTED`, zero rows persisted. Residuals enumerated in
+   `evidence/cross-repository/IIPS_V3_D05_B06_68ROW_REASSESSMENT_2026-11-08.md`; outcomes at
+   `evidence/integration/ws-a-dhan-68-row/identity-outcomes-authenticated-2026-11-08.json`;
+   WS-A record addendum appended (`docs/integration/WS-A-DHAN-BROKER-IDENTITY-EVIDENCE-RECORD-2026-11-05.md`).
+3. **Gates at this tree:** `npm run build:tsc` clean; `npm test` 1179 executed / 1178 passed / 1 pre-existing
+   windows-conditional skip (adds the 5 RB subtests); rollback suite RB-01…RB-05 pass.
+4. **Limits:** B-06 closes subject to PA acknowledgement of the B06 record; 65 residual rows escalate, they do not
+   disappear; eligibility `NOT_ASSERTED` everywhere; deposit CINs are record-keeping facts; no operational writes.
