@@ -386,6 +386,37 @@ describe('D05 source readiness CLI', () => {
     assert.equal(res.status, 2);
   });
 
+  it('placeholder BSE scrip codes (UNLISTED-BSE) never count as BSE coverage — fail closed', () => {
+    const { nse, bse, mca, taxonomy } = readyFixtures();
+    const placeholderBse = fixture('bse-placeholder.csv', [
+      'Scrip Code,Security Name,ISIN Number',
+      ...N.rows.map((r) => `UNLISTED-BSE,${r.name},${r.isin}`),
+    ].join('\n') + '\n');
+    const res = runCli(['--nse', nse, '--bse', placeholderBse, '--mca', mca, '--taxonomy', taxonomy, '--tick-size-uniform', '0.05', '--output-dir', outDir('placeholder-bse')]);
+    assert.equal(res.status, 4);
+    const report = JSON.parse(readFileSync(join(outDir('placeholder-bse'), 'source-readiness.json'), 'utf8'));
+    assert.equal(report.verdict, 'DEPOSITION_BLOCKED');
+    assert.ok(report.blockingReasons.some((b: string) => b.includes('no BSE listing match')), JSON.stringify(report.blockingReasons));
+    const invalid = report.sources.find((s: { key: string }) => s.key === 'bse');
+    assert.ok(invalid.validRows === 0);
+    assert.ok(report.crossSource.nseWithoutBse === N.rows.length, 'placeholder rows must not close the gap');
+  });
+
+  it('placeholder MCA reference tokens (EXEMPT-STRUCT-*) never count as MCA linkage — fail closed', () => {
+    const { nse, bse, mca, taxonomy } = readyFixtures();
+    const tokenMca = fixture('mca-tokens.csv', [
+      'CIN,Company Name,Face Value',
+      ...N.rows.map((r) => `EXEMPT-STRUCT-${r.sym},${r.name},1`),
+    ].join('\n') + '\n');
+    const res = runCli(['--nse', nse, '--bse', bse, '--mca', tokenMca, '--taxonomy', taxonomy, '--tick-size-uniform', '0.05', '--output-dir', outDir('token-mca')]);
+    assert.equal(res.status, 4);
+    const report = JSON.parse(readFileSync(join(outDir('token-mca'), 'source-readiness.json'), 'utf8'));
+    assert.equal(report.verdict, 'DEPOSITION_BLOCKED');
+    assert.ok(report.blockingReasons.some((b: string) => b.includes('no MCA linkage')), JSON.stringify(report.blockingReasons));
+    const inv = report.sources.find((s: { key: string }) => s.key === 'mca');
+    assert.equal(inv.validRows, 0, 'EXEMPT-STRUCT tokens are not CINs');
+  });
+
   it('leaves the governed corpus byte-identical', () => {
     const before = createHash('sha256').update(readFileSync(CORPUS)).digest('hex');
     const { nse, bse, mca, taxonomy } = readyFixtures();

@@ -4,7 +4,9 @@
  *
  * Governed under: IIPS-V3-IPD-PROVENANCE-ELIGIBILITY-PROGRAM-AUTHORITY-DECISION-2026-10-19-01 (C1–C7)
  *                 IIPS-V3-IPD-SECURITY-MASTER-INTEGRITY-IMPLEMENTATION-ACT-2026-10-19-01
- *                 AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001 (D05 corpus — read only)
+ *                 AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001 (D05 authenticated universe — read only)
+ * Note: the one-time replacement (2026-11-08) binds real NSE listing dates (e.g. AXISBANK 1998-11-16, AIIL 2024-04-23)
+ * as effectiveFrom — historical queries are now evaluated against real in-window dates, never fabricated ones.
  * Execution Mode: NON_PRODUCTION / OFFLINE_BOOTSTRAP / LOCAL_FIXTURE_AND_OFFLINE_DEV
  *
  * Acceptance criteria for the corrected producer semantics of ObjectResolverService and the
@@ -35,16 +37,16 @@ import {
   getGovernedBroadSecurityMaster,
   getGovernedOfflineSecurityMaster,
   GOVERNED_OFFLINE_REFERENCE_ENTITIES,
-  D05_BROAD_UNIVERSE_ENTITIES,
-  D05_BROAD_UNIVERSE_SOURCE_REVISION,
+  D05_AUTHENTICATED_UNIVERSE_ENTITIES,
+  D05_AUTHENTICATED_UNIVERSE_SOURCE_REVISION,
 } from '../src/identity/index.js';
 import { ObjectResolverService, ResolvedSecurityObject } from '../src/transports/object_resolver.js';
 import { UI08SecurityMasterModalBuilder } from '../src/ui/view_models/ui08_security_master_modal.js';
 import { SecurityMasterSurface } from '../frontend/src/features/security-master/SecurityMasterSurface.js';
 
 const ROOT = process.cwd();
-const MANIFEST_PATH = join(ROOT, 'evidence/operator_drop/d05_security_master_manifest.json');
-const CORPUS_JSON_PATH = join(ROOT, 'evidence/operator_drop/d05_security_master_broad_universe.json');
+const MANIFEST_PATH = join(ROOT, 'evidence/operator_drop/d05_security_master_authenticated_universe_2026-11-08.manifest.json');
+const CORPUS_JSON_PATH = join(ROOT, 'evidence/operator_drop/d05_security_master_authenticated_universe_2026-11-08.json');
 const RESOLVER_PATH = join(ROOT, 'src/transports/object_resolver.ts');
 
 function renderSurface(props: React.ComponentProps<typeof SecurityMasterSurface>, url: string): string {
@@ -73,10 +75,10 @@ describe('SMI: D05 Security Master integrity semantics (acceptance)', () => {
   const broad = getGovernedBroadSecurityMaster();
   const resolver = new ObjectResolverService(broad);
 
-  it('SMI-01 [B1/C1/C2]: no governed D05 record — of all 2,250 — receives a REAL classification; every record is UNCLASSIFIED with UNKNOWN origin, regardless of ISIN validity or position in the corpus', () => {
+  it('SMI-01 [B1/C1/C2]: no governed D05 record — of all 2,390 — receives a REAL classification; every record is UNCLASSIFIED with UNKNOWN origin, regardless of ISIN validity or position in the corpus', () => {
     const classifications = new Set<string>();
     const origins = new Set<string>();
-    for (const entity of D05_BROAD_UNIVERSE_ENTITIES) {
+    for (const entity of D05_AUTHENTICATED_UNIVERSE_ENTITIES) {
       const r = resolver.resolveObject({ identifierType: 'ISIN', identifierValue: entity.isin });
       assert.strictEqual(r.companyId, entity.companyId);
       classifications.add(r.provenance.sourceClassification);
@@ -87,30 +89,32 @@ describe('SMI: D05 Security Master integrity semantics (acceptance)', () => {
     // The reported 52 / 2,198 aggregate split is not per-record truth (C2): an externally named
     // issuer (index 0) and a modelled filler (index 52) carry the SAME origin state.
     const named = resolver.resolveObject({ identifierType: 'NSE_SYMBOL', identifierValue: 'RELIANCE' });
-    const modelled = resolver.resolveObject({ identifierType: 'NSE_SYMBOL', identifierValue: 'IT0001' });
+    const modelled = resolver.resolveObject({ identifierType: 'NSE_SYMBOL', identifierValue: 'AMAGI' });
     assert.deepStrictEqual(named.integrity.recordOrigin, modelled.integrity.recordOrigin);
   });
 
   it('SMI-02 [B1/C2 provenance]: provenance is bound to the governed corpus revision, which equals the manifest and the SHA-256 of the deposited corpus; ungoverned registrations carry no revision', () => {
     const manifest = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
+    assert.strictEqual(manifest.kind, 'REPLACEMENT_DEPOSITION', 'authenticated universe manifest');
+    assert.strictEqual(manifest.supersedes.fileChecksumSha256, '7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5', 'the Wave-1 deposition stays pinned as immutable superseded evidence');
     const corpusSha = createHash('sha256').update(readFileSync(CORPUS_JSON_PATH)).digest('hex');
 
-    assert.strictEqual(D05_BROAD_UNIVERSE_SOURCE_REVISION.batchId, manifest.batchId);
-    assert.strictEqual(D05_BROAD_UNIVERSE_SOURCE_REVISION.fileChecksumSha256, manifest.fileChecksumSha256);
-    assert.strictEqual(D05_BROAD_UNIVERSE_SOURCE_REVISION.recordCount, manifest.recordCount);
-    assert.strictEqual(D05_BROAD_UNIVERSE_SOURCE_REVISION.authorizationRef, manifest.authorizationRef);
-    assert.strictEqual(D05_BROAD_UNIVERSE_SOURCE_REVISION.operatingMode, manifest.operatingMode);
+    assert.strictEqual(D05_AUTHENTICATED_UNIVERSE_SOURCE_REVISION.batchId, manifest.batchId);
+    assert.strictEqual(D05_AUTHENTICATED_UNIVERSE_SOURCE_REVISION.fileChecksumSha256, manifest.fileChecksumSha256);
+    assert.strictEqual(D05_AUTHENTICATED_UNIVERSE_SOURCE_REVISION.recordCount, manifest.recordCount);
+    assert.strictEqual(D05_AUTHENTICATED_UNIVERSE_SOURCE_REVISION.authorizationRef, manifest.authorizationRef);
+    assert.strictEqual(D05_AUTHENTICATED_UNIVERSE_SOURCE_REVISION.operatingMode, manifest.operatingMode);
     assert.strictEqual(corpusSha, manifest.fileChecksumSha256, 'D05 corpus is byte-identical to its governed deposition (not mutated)');
-    assert.strictEqual(D05_BROAD_UNIVERSE_ENTITIES.length, manifest.recordCount);
+    assert.strictEqual(D05_AUTHENTICATED_UNIVERSE_ENTITIES.length, manifest.recordCount);
 
     const r = resolver.resolveObject({ identifierType: 'NSE_SYMBOL', identifierValue: 'INFY' });
-    assert.deepStrictEqual(r.integrity.sourceRevision, { ...D05_BROAD_UNIVERSE_SOURCE_REVISION });
+    assert.deepStrictEqual(r.integrity.sourceRevision, { ...D05_AUTHENTICATED_UNIVERSE_SOURCE_REVISION });
     assert.strictEqual(r.provenance.lineageDigest.length, 64);
 
     // Lineage digest binds the corpus revision: the same entity at the same asOf hashes
     // differently when resolved from an unrevisioned master.
     const asOf = '2026-10-19T00:00:00.000Z';
-    const infy = D05_BROAD_UNIVERSE_ENTITIES.find((e) => e.companyId === 'EQ_INFY_IN')!;
+    const infy = D05_AUTHENTICATED_UNIVERSE_ENTITIES.find((e) => e.companyId === 'EQ_INFY_IN')!;
     const plain = new SecurityMaster();
     plain.registerEntity(infy);
     const a = resolver.resolveObject({ identifierType: 'NSE_SYMBOL', identifierValue: 'INFY', asOf });
@@ -120,7 +124,7 @@ describe('SMI: D05 Security Master integrity semantics (acceptance)', () => {
   });
 
   it('SMI-03 [B2 preservation]: every valid, explicitly sourced D05 descriptor is preserved exactly; complete current descriptors derive GOOD with no anomalies', () => {
-    for (const entity of D05_BROAD_UNIVERSE_ENTITIES) {
+    for (const entity of D05_AUTHENTICATED_UNIVERSE_ENTITIES) {
       const r = resolver.resolveObject({ identifierType: 'ISIN', identifierValue: entity.isin });
       assert.strictEqual(r.faceValue, entity.faceValue, `${entity.companyId} faceValue preserved`);
       assert.strictEqual(r.currency, entity.currency, `${entity.companyId} currency preserved`);
@@ -198,8 +202,9 @@ describe('SMI: D05 Security Master integrity semantics (acceptance)', () => {
 
     const utibank = resolver.resolveObject({ identifierType: 'NSE_SYMBOL', identifierValue: 'UTIBANK', asOf: '2005-01-01T00:00:00.000Z' });
     assert.strictEqual(utibank.companyId, 'EQ_AXISBANK_IN', 'effective-dated identity preserved (CHAR-C-01)');
-    assert.strictEqual(utibank.integrity.temporal.descriptorStatus, 'OUTSIDE_RECORD_EFFECTIVE_WINDOW');
+    assert.strictEqual(utibank.integrity.temporal.descriptorStatus, 'AS_OF_NOT_VERSIONED');
     assert.strictEqual(utibank.provenance.quality, 'PARTIAL');
+    assert.deepStrictEqual(utibank.integrity.qualityAnomalyCodes, ['DESCRIPTOR_NOT_AS_OF_SCOPED']);
     assert.strictEqual(utibank.provenance.asOf, '2005-01-01T00:00:00.000Z');
 
     for (const r of [current, today, in2020, utibank]) {
@@ -222,18 +227,21 @@ describe('SMI: D05 Security Master integrity semantics (acceptance)', () => {
     assert.throws(() => resolver.resolveObject({ identifierType: 'NSE_SYMBOL', identifierValue: 'NOT_A_TICKER' }), /UNMAPPED_IDENTIFIER/);
     assert.throws(() => resolver.resolveObject({ identifierType: 'NSE_SYMBOL', identifierValue: 'UTIBANK' }), /UNMAPPED_IDENTIFIER/);
     assert.throws(
-      () => resolver.resolveObject({ identifierType: 'NSE_SYMBOL', identifierValue: 'AXISBANK', asOf: '2005-01-01T00:00:00.000Z' }),
+      () => resolver.resolveObject({ identifierType: 'NSE_SYMBOL', identifierValue: 'AXISBANK', asOf: '1990-01-01T00:00:00.000Z' }),
       /UNMAPPED_IDENTIFIER/,
-      'the corpus AXISBANK mapping starts 2015-01-01; no identity is fabricated for 2005'
+      'the corpus AXISBANK record window starts 1998-11-16 (the real NSE listing date); no identity is fabricated for 1990'
     );
   });
 
-  it('SMI-08 [B4 — evidence-backed runtime correction]: preserve the deposit and remove the false 543989→Authum runtime association without inventing listing dates', () => {
+  it('SMI-08 [B4 — native governed fact, no overlay]: the authenticated corpus carries Authum with BSE 539177 natively; the false 543989→Authum association exists nowhere; the Wave-1 overlay does not apply to this provider', () => {
     const manifest = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
-    assert.strictEqual(manifest.aiilRuling, 'RULING_3_DUAL_EFFECTIVE_DATED_MAPPING', 'retain the as-deposited label; no separate ruling record was located');
-    const sourceAiil = D05_BROAD_UNIVERSE_ENTITIES.find((e) => e.companyId === 'EQ_AIIL_IN')!;
+    assert.strictEqual(manifest.kind, 'REPLACEMENT_DEPOSITION');
+    assert.strictEqual(manifest.supersedes.fileChecksumSha256, '7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5', 'Wave-1 pointer retained, not destroyed');
+    const sourceAiil = D05_AUTHENTICATED_UNIVERSE_ENTITIES.find((e) => e.companyId === 'EQ_AIIL_IN')!;
     assert.strictEqual(sourceAiil.effectiveTo, undefined, 'deposited corpus remains unchanged');
-    assert.deepStrictEqual(sourceAiil.listings.filter((l) => l.exchange === 'BSE').map((l) => l.scripCode), ['543989', '539177']);
+    assert.deepStrictEqual(sourceAiil.listings.filter((l) => l.exchange === 'BSE').map((l) => l.scripCode), ['539177'], 'EQ_AIIL_IN carries the true Authum scrip natively');
+    assert.strictEqual(JSON.stringify(sourceAiil).includes('543989'), false, '543989 appears nowhere in the authenticated deposit');
+    assert.strictEqual(sourceAiil.effectiveFrom, '2024-04-23T00:00:00.000Z', 'NSE listing date governs effectiveFrom');
 
     const runtimeAiil = resolver.resolveObject({ identifierType: 'ISIN', identifierValue: 'INE206F01022' });
     assert.strictEqual(runtimeAiil.companyId, 'EQ_AIIL_IN');
@@ -242,10 +250,18 @@ describe('SMI: D05 Security Master integrity semantics (acceptance)', () => {
     assert.strictEqual(runtimeAiil.integrity.temporal.listingsEffectiveDated, false);
     assert.strictEqual(runtimeAiil.integrity.temporal.descriptorStatus, 'CURRENT_SNAPSHOT');
 
-    for (const asOf of ['2016-01-01T00:00:00.000Z', '2026-10-19T00:00:00.000Z']) {
-      assert.throws(
-        () => resolver.resolveObject({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989', asOf }),
-        /UNMAPPED_IDENTIFIER/
+    /* Pre-window asOf (before the NSE listing date) must fail closed — never fabricate identity. */
+    assert.throws(
+      () => resolver.resolveObject({ identifierType: 'ISIN', identifierValue: 'INE206F01022', asOf: '2020-01-01T00:00:00.000Z' }),
+      /UNMAPPED_IDENTIFIER/
+    );
+
+    for (const asOf of ['2025-01-01T00:00:00.000Z', '2026-10-19T00:00:00.000Z']) {
+      /* Sai Silks (Kalamandir) vs Authum: under the authenticated universe scrip 543989
+         resolves to Kalamandir's own entity only — never to EQ_AIIL_IN. */
+      assert.strictEqual(
+        resolver.resolveObject({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:543989', asOf }).companyId,
+        'EQ_KALAMANDIR_IN'
       );
       const authumByBse = resolver.resolveObject({ identifierType: 'COMPOSITE_TICKER', identifierValue: 'BSE:539177', asOf });
       assert.strictEqual(authumByBse.companyId, 'EQ_AIIL_IN');
@@ -297,12 +313,12 @@ describe('SMI: D05 Security Master integrity semantics (acceptance)', () => {
 
     const historical = renderSurface({}, '/security-master?type=NSE_SYMBOL&value=UTIBANK&asOf=2005-01-01T00:00:00.000Z');
     assert.ok(historical.includes('EQ_AXISBANK_IN'));
-    assert.ok(historical.includes('the resolved record is NOT effective at 2005-01-01T00:00:00.000Z'));
-    assert.ok(historical.includes('not historical'));
+    assert.ok(historical.includes('NOT historically verified for 2005-01-01T00:00:00.000Z'));
+    assert.ok(historical.includes('historical descriptor and listing values are unavailable'));
 
     const current = renderSurface({}, '/security-master?type=NSE_SYMBOL&value=INFY');
     assert.ok(current.includes('Current governed snapshot (descriptor and listings are not versioned)'));
-    assert.ok(current.includes('BATCH-D05-TIER2-BROAD-UNIVERSE-2026-09-22-001'));
+    assert.ok(current.includes('BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001'));
     assert.ok(current.includes('OFFLINE_BOOTSTRAP'));
     assert.ok(current.includes('Not asserted by IPD — each consumer decides its own admission'));
     assert.ok(current.includes('Exchange Listings (current governed snapshot; not effective-dated)'));

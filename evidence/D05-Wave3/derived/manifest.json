@@ -1,0 +1,52 @@
+{
+  "b1_counts": {
+    "governed_attribution": 27,
+    "restored_registry": 2296,
+    "statutory_attribution": 9,
+    "unevidenced": 58
+  },
+  "b1_format_check": {
+    "attribution_tokens": 27,
+    "empty": 58,
+    "format_valid_cins": 2305
+  },
+  "b2_counts": {
+    "dual_listed": 2290,
+    "nse_exclusive": 100
+  },
+  "b2_name_consistency": {
+    "duplicate_scrip_assignments": 0,
+    "exact_name_match": 2245,
+    "isin_join": "exact on ISIN",
+    "known_phrasing_variant": 15,
+    "root_prefix_match": 30
+  },
+  "b3_corrections_applied": 68,
+  "b4_note": "referenceClosingPriceINR blank \u2014 2026-11-08 submitted reference prices fabricated; one-time uniform 0.05 binding pending PA act (D-9)",
+  "date": "2026-11-08",
+  "generatedBy": "scripts/derive_d05_wave3_artifacts.py",
+  "inputs": {
+    "bse_active_equity_cleaned_sha256": "66362fc392c820656ebfb0ab960da8d920a643e980bd3895c93418ae6c9a9947",
+    "bundle_zip_sha256": "6332b050132a160e89e5906d131e12535ac1105d4b781330fa63f0e0af1d41f4",
+    "nse_equity_l_sha256": "da7eb83cf21156cca3a8bcc5b94ea55f825ff7348e02c89abc51658788361fa5",
+    "prior_bridge_repo_path": "evidence/D05-Wave3/D05_Wave3_EQ_Source_and_Evidence_Bundle_2026-11-07.zip -> 02_latest_prepared_candidates/arena_mca_identity_bridged.csv"
+  },
+  "outputs": {
+    "arena_bse_identity_bridged.derived.csv": {
+      "rows": 2390,
+      "sha256": "39a4fb59aaeb6bd4339d9ef376f31be0efdce2a1ec90b973f2ddde1536a9e46f"
+    },
+    "arena_mca_identity_bridged.derived.csv": {
+      "rows": 2390,
+      "sha256": "9e081614a6f2b0ef131cc611d0cb6db0ee4e09de8aaa558c81f56270fdf8531a"
+    },
+    "arena_taxonomy_submission.derived.csv": {
+      "rows": 2390,
+      "sha256": "f8d4beefa21db201cdecb08cd84c253ca6db2d139b880dc3875e2440dd47020e"
+    },
+    "arena_tick_size_evidence.derived.csv": {
+      "rows": 2390,
+      "sha256": "f5116021fa485e5184be8f1837904206496c385fa5ae40250d28199cbfec1d84"
+    }
+  }
+}

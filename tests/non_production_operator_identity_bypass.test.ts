@@ -57,8 +57,11 @@ test('Block 3M-A: Non-Production Operator Identity Bypass Architecture', async (
 
     const ambuja = res.userHoldings.find((h: UserHoldingInput) => h.symbol === 'AMBUJACEM');
     assert.ok(ambuja, 'AMBUJACEM holding should exist');
-    assert.strictEqual(ambuja.identityStatus, 'UNRESOLVED');
-    assert.strictEqual(ambuja.companyId, '', 'companyId MUST be empty string');
+    // Re-pinned by the one-time replacement (2026-11-08): AMBUJACEM is a genuine
+    // NSE CM EQ (ISIN INE079A01024) carried natively by the authenticated universe;
+    // under the Wave-1 universe (2,250) it was unmapped. It now resolves to EQ_AMBUJACEM_IN.
+    assert.strictEqual(ambuja.identityStatus, 'RESOLVED');
+    assert.strictEqual(ambuja.companyId, 'EQ_AMBUJACEM_IN');
   });
 
   await t.test('Criterion B & C: Preserves broker identity fields for unmapped equities', () => {
@@ -71,6 +74,11 @@ test('Block 3M-A: Non-Production Operator Identity Bypass Architecture', async (
     });
 
     assert.strictEqual(res.disposition, 'READY_FOR_PORTFOLIO_SAVE');
+    // Re-pinned by the one-time replacement (2026-11-08): the supplied ISIN INE758T01015
+    // now resolves — it is carried by the authenticated universe as EQ_ETERNAL_IN (the
+    // issuer, formerly Zomato, renamed to Eternal Limited; the NSE CM master no longer
+    // lists the symbol ZOMATO). The resolution is evidence-backed (ISIN registered),
+    // never name-inferred. PAYTM's ISIN remains unregistered and stays UNRESOLVED.
     const zomato = res.userHoldings.find((h: UserHoldingInput) => h.symbol === 'ZOMATO');
     assert.ok(zomato);
     assert.strictEqual(zomato.isin, 'INE758T01015');
@@ -79,7 +87,13 @@ test('Block 3M-A: Non-Production Operator Identity Bypass Architecture', async (
     assert.strictEqual(zomato.averageBuyPrice, 150.0);
     assert.strictEqual(zomato.currentPrice, 180.0);
     assert.strictEqual(zomato.marketValue, 36000.0);
-    assert.strictEqual(zomato.identityStatus, 'UNRESOLVED');
+    assert.strictEqual(zomato.identityStatus, 'RESOLVED');
+    assert.strictEqual(zomato.companyId, 'EQ_ETERNAL_IN');
+
+    const paytm = res.userHoldings.find((h: UserHoldingInput) => h.symbol === 'PAYTM');
+    assert.ok(paytm);
+    assert.strictEqual(paytm.identityStatus, 'UNRESOLVED');
+    assert.strictEqual(paytm.isin, 'INE982J01019');
   });
 
   await t.test('Criterion D: Production boundary strictly preserved with fail-closed rejection', () => {

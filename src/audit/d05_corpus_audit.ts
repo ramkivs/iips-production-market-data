@@ -56,6 +56,14 @@ export interface CorpusAuditReport {
   distributions: Record<string, Record<string, number>>;
   checks: CorpusAuditCheck[];
   findings: CorpusAuditFinding[];
+  /** Act-bound governed exceptions echoed when supplied (2026-11-08 replacement). Absent otherwise. */
+  governedExceptions?: {
+    bseMarker?: string;
+    bseMarkerRecords?: number;
+    bseMarkerIsins?: string[];
+    cinUnlinkedRecords?: number;
+    cinUnlinkedIsins?: string[];
+  };
   evidenceRefs: EvidenceRef[];
   nextSteps: string[];
 }
@@ -67,6 +75,15 @@ export interface AuditInputOptions {
   corpusSha256: string;
   /** Evidence references to embed (caller computes hashes; never mutated). */
   evidenceRefs?: EvidenceRef[];
+  /**
+   * Act-bound governed exceptions (2026-11-08 one-time replacement).
+   * bseMarker: literal marker value carried by D-3 governed NSE-exclusion records
+   *   (e.g. 'UNLISTED-BSE'). Marker values are exempt from the bseSymbol/bseScripCode
+   *   uniqueness pools and are reported as a dedicated CHECK; each exempted ISIN is listed.
+   * cinUnlinkedIsins: ISINs whose cin is absent under the B1 disclosed
+   *   unlinked-exception disposition (INFO instead of CRITICAL FIELD_MISSING).
+   */
+  governedExceptions?: { bseMarker?: string; cinUnlinkedIsins?: readonly string[] };
 }
 
 /* ── helpers ─────────────────────────────────────────────────────────────── */
@@ -146,6 +163,12 @@ export function auditCorpus(rawRecords: ReadonlyArray<Record<string, unknown>>, 
   };
 
   const recordCount = rawRecords.length;
+  const govBseMarker: string | undefined = opts.governedExceptions?.bseMarker;
+  const govCinUnlinked: ReadonlySet<string> | null = opts.governedExceptions?.cinUnlinkedIsins
+    ? new Set(opts.governedExceptions.cinUnlinkedIsins.map((i) => i.toUpperCase()))
+    : null;
+  const govBseMarkedIsins: string[] = [];
+  const govCinUnlinkedIsins: string[] = [];
   const f = (index: number, companyId: string | undefined, severity: AuditSeverity, code: string, field: string, detail: string): void => {
     findings.push({ index, companyId: nonBlank(companyId) ? companyId : '(absent)', code, severity, field, detail });
   };
@@ -167,8 +190,16 @@ export function auditCorpus(rawRecords: ReadonlyArray<Record<string, unknown>>, 
     if (isin) isins.push(isin);
     if (nonBlank(r.cin)) cins.push({ cin: r.cin.trim().toUpperCase(), index: i });
     if (nonBlank(r.nseSymbol)) nseSymbols.push({ symbol: r.nseSymbol.trim().toUpperCase(), index: i });
-    if (nonBlank(r.bseSymbol)) bseSymbols.push({ symbol: r.bseSymbol.trim().toUpperCase(), index: i });
-    if (nonBlank(r.bseScripCode)) bseScripCodes.push({ code: String(r.bseScripCode).trim(), index: i });
+    if (nonBlank(r.bseSymbol)) {
+      const v = r.bseSymbol.trim().toUpperCase();
+      if (govBseMarker !== undefined && v === govBseMarker) govBseMarkedIsins.push(isin);
+      else bseSymbols.push({ symbol: v, index: i });
+    }
+    if (nonBlank(r.bseScripCode)) {
+      const v = String(r.bseScripCode).trim().toUpperCase();
+      if (govBseMarker !== undefined && v === govBseMarker) { if (!govBseMarkedIsins.includes(isin)) govBseMarkedIsins.push(isin); }
+      else bseScripCodes.push({ code: String(r.bseScripCode).trim(), index: i });
+    }
 
     if (detectGeneratorMarker({ companyId, companyName: nonBlank(r.companyName) ? String(r.companyName) : '', isin }).length > 0) {
       markerCount += 1;
@@ -192,11 +223,17 @@ export function auditCorpus(rawRecords: ReadonlyArray<Record<string, unknown>>, 
   for (const i of Array.from({ length: recordCount }, (_, i) => i)) {
     const r = rawRecords[i] ?? {};
     const companyId = nonBlank(r.companyId) ? String(r.companyId).trim() : '';
+    const isin = nonBlank(r.isin) ? String(r.isin).trim().toUpperCase() : '';
 
     /* ── mandatory top-level field presence (deposit policy) ──────────────── */
     for (const field of TOP_LEVEL_FIELDS) {
       if (!(field in r) || r[field] === undefined || r[field] === null) {
-        f(i, companyId, 'CRITICAL', 'FIELD_MISSING', field, 'field absent');
+        if (field === 'cin' && govCinUnlinked && isin && govCinUnlinked.has(isin)) {
+          f(i, companyId, 'INFO', 'GOVERNED_EXCEPTION_UNLINKED_CIN', field, 'cin absent under act-bound B1 disclosed unlinked exception (never registry-verified)');
+          govCinUnlinkedIsins.push(isin);
+        } else {
+          f(i, companyId, 'CRITICAL', 'FIELD_MISSING', field, 'field absent');
+        }
       } else if (field !== 'listings' && typeof r[field] === 'string' && (r[field] as string).trim() === '') {
         f(i, companyId, 'CRITICAL', 'FIELD_BLANK', field, 'field blank string');
       }
@@ -294,6 +331,12 @@ export function auditCorpus(rawRecords: ReadonlyArray<Record<string, unknown>>, 
   const push = (id: string, status: CorpusAuditCheck['status'], detail: string, count: number): void => { checks.push({ id, status, detail, count }); };
 
   push('CHECK-RECORD-COUNT', 'INFO', `${recordCount} records parsed and evaluated`, recordCount);
+  if (govBseMarker) {
+    push('CHECK-GOVERNED-BSE-EXCLUSIONS', 'PASS', `${govBseMarkedIsins.length} record(s) carry the act-bound ${govBseMarker} governed-exclusion marker (excluded from BSE identifier uniqueness pools; listed: ${govBseMarkedIsins.slice(0, 10).join(', ')}${govBseMarkedIsins.length > 10 ? ', …' : ''})`, govBseMarkedIsins.length);
+  }
+  if (govCinUnlinked) {
+    push('CHECK-GOVERNED-CIN-UNLINKED', 'PASS', `${govCinUnlinkedIsins.length} record(s) omit cin under act-bound B1 unlinked exceptions (INFO, never misrepresented)`, govCinUnlinkedIsins.length);
+  }
   push('CHECK-ISIN-SHAPE', countCode('ISIN_SHAPE') === 0 ? 'PASS' : 'FAIL', 'ISO 6166 structural conformance of all non-blank ISINs', countCode('ISIN_SHAPE'));
   push('CHECK-ISIN-LUHN', countCode('ISIN_LUHN') === 0 ? 'PASS' : 'FAIL', 'ISO 6166 check digit verification for all non-blank ISINs', countCode('ISIN_LUHN'));
   push('CHECK-COMPANY-ID-CONVENTION', countCode('COMPANY_ID_CONVENTION') === 0 ? 'PASS' : 'WARN', 'companyId convention EQ_<TOKEN>_IN', countCode('COMPANY_ID_CONVENTION'));
@@ -309,6 +352,12 @@ export function auditCorpus(rawRecords: ReadonlyArray<Record<string, unknown>>, 
   const markerFreeCount = recordCount - markerCount;
   const report: CorpusAuditReport = {
     reportVersion: 1,
+    ...(govBseMarker || govCinUnlinked ? {
+      governedExceptions: {
+        ...(govBseMarker ? { bseMarker: govBseMarker, bseMarkerRecords: govBseMarkedIsins.length, bseMarkerIsins: [...new Set(govBseMarkedIsins)].sort() } : {}),
+        ...(govCinUnlinked ? { cinUnlinkedRecords: govCinUnlinkedIsins.length, cinUnlinkedIsins: [...new Set(govCinUnlinkedIsins)].sort() } : {}),
+      },
+    } : {}),
     tool: { name: 'd05-corpus-audit', version: 1 },
     input: { path: opts.path, sha256: opts.corpusSha256, recordCount },
     originPolicy: {

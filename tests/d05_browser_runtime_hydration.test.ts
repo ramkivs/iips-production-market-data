@@ -2,8 +2,12 @@
  * Institutional Investment Platform System (IIPS)
  * Focused Regression Suite: D05 Browser & Runtime Security Master Hydration
  *
- * Governed under: AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001
+ * Governed under: AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001 (one-time replacement act)
+ *                 AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001 (legacy deposition — pinned by the drill)
  * Operating Boundary: NON_PRODUCTION / OFFLINE_BOOTSTRAP / BROWSER_SAFE
+ * Note: one-time replacement (2026-11-08) — the runtime hydration surface now carries the
+ *       authenticated universe (2,390 records); the frozen Wave-1 universe is pinned by
+ *       tests/d05_wave1_rollback_drill.test.ts via getGovernedLegacyWave1SecurityMaster().
  */
 
 import { describe, it } from 'node:test';
@@ -16,30 +20,30 @@ import {
   SecurityMaster,
   getGovernedBroadSecurityMaster,
   getGovernedOfflineSecurityMaster,
-  D05_BROAD_UNIVERSE_ENTITIES,
+  D05_AUTHENTICATED_UNIVERSE_ENTITIES,
   IdentityAmbiguityError,
 } from '../src/identity/index.js';
 import { BrokerImportIngressOrchestrator } from '../frontend/src/features/portfolio/import/index.js';
 
 describe('D05 Browser Runtime Hydration & Zero-FS Qualification', () => {
-  const EXPECTED_CHECKSUM = '7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5';
-  const EXPECTED_RECORD_COUNT = 2250;
+  const EXPECTED_CHECKSUM = 'b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4';
+  const EXPECTED_RECORD_COUNT = 2390;
 
-  it('HYDRATION-01: Governed D05 build-time imported dataset contains exactly 2,250 entities matching deposition SHA-256', () => {
-    assert.strictEqual(Array.isArray(D05_BROAD_UNIVERSE_ENTITIES), true);
-    assert.strictEqual(D05_BROAD_UNIVERSE_ENTITIES.length, EXPECTED_RECORD_COUNT);
+  it('HYDRATION-01: Governed D05 build-time imported dataset contains exactly 2,390 entities matching deposition SHA-256', () => {
+    assert.strictEqual(Array.isArray(D05_AUTHENTICATED_UNIVERSE_ENTITIES), true);
+    assert.strictEqual(D05_AUTHENTICATED_UNIVERSE_ENTITIES.length, EXPECTED_RECORD_COUNT);
 
     // Verify SHA-256 of the deposited package artifact remains identical
-    const pkgPath = path.resolve(process.cwd(), 'evidence/operator_drop/d05_security_master_broad_universe.json');
+    const pkgPath = path.resolve(process.cwd(), 'evidence/operator_drop/d05_security_master_authenticated_universe_2026-11-08.json');
     const pkgBytes = fs.readFileSync(pkgPath);
     const checksum = crypto.createHash('sha256').update(pkgBytes).digest('hex');
     assert.strictEqual(checksum, EXPECTED_CHECKSUM);
 
     // Verify that the first and last records match exactly
     const depositedRecords = JSON.parse(pkgBytes.toString('utf8'));
-    assert.strictEqual(D05_BROAD_UNIVERSE_ENTITIES[0].companyId, depositedRecords[0].companyId);
+    assert.strictEqual(D05_AUTHENTICATED_UNIVERSE_ENTITIES[0].companyId, depositedRecords[0].companyId);
     assert.strictEqual(
-      D05_BROAD_UNIVERSE_ENTITIES[EXPECTED_RECORD_COUNT - 1].companyId,
+      D05_AUTHENTICATED_UNIVERSE_ENTITIES[EXPECTED_RECORD_COUNT - 1].companyId,
       depositedRecords[EXPECTED_RECORD_COUNT - 1].companyId
     );
   });
@@ -48,7 +52,7 @@ describe('D05 Browser Runtime Hydration & Zero-FS Qualification', () => {
     const sm = getGovernedBroadSecurityMaster();
     const companyIds = sm.listAllCompanyIds();
 
-    assert.strictEqual(companyIds.length, EXPECTED_RECORD_COUNT, 'Must hydrate exactly 2,250 canonical companyIds');
+    assert.strictEqual(companyIds.length, EXPECTED_RECORD_COUNT, 'Must hydrate exactly 2,390 canonical companyIds');
     assert.strictEqual(companyIds.includes('EQ_RELIANCE_IN'), true);
     assert.strictEqual(companyIds.includes('EQ_INFY_IN'), true);
     assert.strictEqual(companyIds.includes('EQ_TCS_IN'), true);
@@ -89,44 +93,43 @@ describe('D05 Browser Runtime Hydration & Zero-FS Qualification', () => {
       'EQ_AIIL_IN'
     );
 
-    // BSE:543989 is Sai Silks (Kalamandir); D05 does not contain that issuer and the
-    // runtime must fail closed rather than conflate it with Authum.
-    assert.throws(
-      () => sm.resolveCompanyId({
+    // BSE:543989 is Sai Silks (Kalamandir). Under the authenticated universe both issuers
+    // exist as genuine NSE CM EQ listings; the scrip resolves to ITS OWN entity and can
+    // never be conflated with Authum.
+    assert.strictEqual(
+      sm.resolveCompanyId({
         identifierType: 'COMPOSITE_TICKER',
         identifierValue: 'BSE:543989',
-        asOf: '2026-09-22T00:00:00.000Z',
+        asOf: '2026-10-19T00:00:00.000Z',
       }),
-      /UNMAPPED_IDENTIFIER/
+      'EQ_KALAMANDIR_IN'
     );
   });
 
-  it('HYDRATION-04: ASK AUTOMOTIVE fails closed when absent from D05 (proves zero manual fabrication)', () => {
+  it('HYDRATION-04: ASKAUTOLTD resolves natively; the verbatim operator label "ASK AUTOMOTIVE" fails closed (zero manual fabrication)', () => {
     const sm = getGovernedBroadSecurityMaster();
 
-    // Check presence in D05
-    const isPresent = D05_BROAD_UNIVERSE_ENTITIES.some(
-      (e) =>
-        e.companyId === 'EQ_ASK_AUTOMOTIVE_IN' ||
-        (e.nseSymbol && e.nseSymbol.toUpperCase() === 'ASK AUTOMOTIVE') ||
-        (e.companyName && e.companyName.toUpperCase().includes('ASK AUTOMOTIVE'))
-    );
+    // The authenticated 2026-11-08 universe carries the genuine NSE CM EQ listing
+    // (bseScrip 544022, ISIN INE491J01022, listed 2023-11-15) under its verbatim symbol.
+    const ask = D05_AUTHENTICATED_UNIVERSE_ENTITIES.find((e) => e.companyId === 'EQ_ASKAUTOLTD_IN');
+    assert.ok(ask, 'ASK Automotive Limited is a genuine NSE CM EQ listing in the authenticated universe');
+    assert.strictEqual(ask.nseSymbol, 'ASKAUTOLTD');
+    assert.strictEqual(ask.isin, 'INE491J01022');
 
-    if (isPresent) {
-      // If present in D05, it must resolve cleanly
-      const resolved = sm.resolveCompanyId({ identifierType: 'NSE_SYMBOL', identifierValue: 'ASK AUTOMOTIVE' });
-      assert.ok(resolved.startsWith('EQ_'));
-    } else {
-      // If absent in D05, it must strictly fail closed under P04 governance
-      assert.throws(
-        () => sm.resolveCompanyId({ identifierType: 'NSE_SYMBOL', identifierValue: 'ASK AUTOMOTIVE' }),
-        IdentityAmbiguityError
-      );
-      assert.throws(
-        () => sm.resolveCompanyId({ identifierType: 'BSE_SYMBOL', identifierValue: 'ASK AUTOMOTIVE' }),
-        IdentityAmbiguityError
-      );
-    }
+    // Exact governed identifiers resolve.
+    assert.strictEqual(
+      sm.resolveCompanyId({ identifierType: 'NSE_SYMBOL', identifierValue: 'ASKAUTOLTD' }),
+      'EQ_ASKAUTOLTD_IN'
+    );
+    // The operator-facing raw label is REFUSED — never fabricated via name interpolation.
+    assert.throws(
+      () => sm.resolveCompanyId({ identifierType: 'NSE_SYMBOL', identifierValue: 'ASK AUTOMOTIVE' }),
+      IdentityAmbiguityError
+    );
+    assert.throws(
+      () => sm.resolveCompanyId({ identifierType: 'BSE_SYMBOL', identifierValue: 'ASK AUTOMOTIVE' }),
+      IdentityAmbiguityError
+    );
   });
 
   it('HYDRATION-05: AGI GREENPAC resolves through exact governed alias to EQ_AGI_IN without fuzzy matching', () => {

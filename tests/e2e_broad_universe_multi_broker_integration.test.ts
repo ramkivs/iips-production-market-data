@@ -409,14 +409,16 @@ AIIL,INE206F01022,NSE,100,100,100,90.00,100.00,10000.00,1000.00,11.11`;
     });
     assert.strictEqual(authumBseResolution, 'EQ_AIIL_IN');
 
-    // BSE:543989 belongs to Sai Silks (Kalamandir), not Authum; D05 does not add Sai Silks.
-    assert.throws(
-      () => securityMaster.resolveCompanyId({
+    // BSE:543989 belongs to Sai Silks (Kalamandir), not Authum; the authenticated universe
+    // carries it natively (EQ_KALAMANDIR_IN, listed 2023-09-27). It resolves to its OWN
+    // entity and is never conflated with Authum.
+    assert.strictEqual(
+      securityMaster.resolveCompanyId({
         identifierType: 'COMPOSITE_TICKER',
         identifierValue: 'BSE:543989',
-        asOf: '2026-09-22T00:00:00.000Z',
+        asOf: '2026-10-19T00:00:00.000Z',
       }),
-      /UNMAPPED_IDENTIFIER/
+      'EQ_KALAMANDIR_IN'
     );
 
     // ISIN resolution

@@ -31,11 +31,38 @@ export interface SourceBytes {
   sha256?: string | null;
 }
 
+/**
+ * Act-bound governed exceptions (2026-11-08 PA decision directive, D-3/B1).
+ * Governed exceptions never convert an unsupported identity claim into a
+ * registry-verified one: they disposition failing rows from BLOCKING the
+ * deposit, record the class explicitly, and are reported separately.
+ * A flagged ISIN that is absent from the supplied source never satisfies
+ * linkage for that security (fail-closed).
+ */
+export interface PaDecisions {
+  /** Authorization reference for the PA decision directive (recorded in the report). */
+  authorizationRef: string;
+  /** As-of date the PA act binds (recorded in the report). */
+  effectiveDate: string;
+  /** ISINs whose bseScripCode is the D-3 marker UNLISTED-BSE (governed exclusion; never a scrip code). */
+  bseExclusionIsins: string[];
+  /** ISINs whose MCA row is a governed corporate-registry exemption (never a registry match). */
+  mcaExemptionIsins: string[];
+  /** ISINs whose MCA row carries a registry alias match (never a direct MCA registry match). */
+  mcaAliasIsins: string[];
+  /** ISINs whose MCA claim was unsupported and is rescinded; cin stays blank (disclosed unlinked exception). */
+  mcaUnlinkedRescindedIsins: string[];
+  /** Where the deposit binds faceValue from when the MCA extract carries no faceValue column. */
+  faceValueSource: 'NSE_LISTING_MASTER';
+}
+
 export type SourceInputs = Partial<Record<SourceKey, SourceBytes>> & {
   /** Optional per-ISIN tick-band extract (CSV: isin,tickSize — a member of the CM cash tick set {0.01,0.05,0.10,0.25,0.50,1.00,5.00}; the act binds the applicable regime via evidence). */
   tickRules?: SourceBytes;
   /** Optional act-bound uniform tickSize; member of the CM cash tick set. */
   tickSizeUniform?: number;
+  /** Optional act-bound governed exceptions (2026-11-08 directive). Omit to get pre-existing behavior. */
+  paDecisions?: PaDecisions;
 };
 
 export const TICK_SIZE_BANDS = [0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 5.0] as const;
@@ -43,7 +70,7 @@ export function isTickSizeBand(v: number): boolean {
   return Number.isFinite(v) && TICK_SIZE_BANDS.some((b) => Math.abs(b - v) < 1e-9);
 }
 
-export type FieldCoverageStatus = 'SOURCE_PROVIDED' | 'DERIVED' | 'UNRESOLVED';
+export type FieldCoverageStatus = 'SOURCE_PROVIDED' | 'DERIVED' | 'GOVERNED_EXCEPTION' | 'UNRESOLVED';
 export type FieldCoverageKind = 'MANDATORY' | 'ADVISORY';
 
 export interface FieldCoverageRow {
@@ -85,6 +112,9 @@ export interface SourceReadinessSourceReport {
   duplicateIsinCount: number;
   duplicateCinCount: number;
   duplicateIsinSamples: Array<{ isin: string; rows: number }>;
+  /** Rows accepted solely under an act-bound governed exception (never SOURCE_PROVIDED). */
+  governedExceptionRows?: number;
+  governedExceptionClassCounts?: Record<string, number>;
   seriesDistribution?: Record<string, number>;
   outOfTier2ScopeRows?: number;
 }
@@ -112,6 +142,18 @@ export interface SourceReadinessReport {
     taxonomyUnmappedSamples: string[];
   };
   tickSizeEvidence: TickSizeEvidence;
+  /** Act-bound governed exceptions echoed for the act’s audit trail; absent when none supplied. */
+  paDecisions?: {
+    authorizationRef: string;
+    effectiveDate: string;
+    bseExclusionIsins: number;
+    mcaExemptionIsins: number;
+    mcaAliasIsins: number;
+    mcaUnlinkedRescindedIsins: number;
+    faceValueSource: 'NSE_LISTING_MASTER';
+    /** Flagged ISINs that could not be found in the supplied source (fail-closed; must block). */
+    flaggedIsinsNotFound: Array<{ source: 'bse' | 'mca'; isin: string; disposition: string }>;
+  };
   d05FieldCoverage: FieldCoverageRow[];
   requiredEvidenceForFullCoverage: string[];
   disclaimers: string[];
@@ -241,7 +283,7 @@ const SPECS: Record<SourceKey | 'taxonomy', ColSpec[]> = {
     { canonical: 'face_value', synonyms: ['facevalue', 'facevalueofsecurity'], required: false },
   ],
   bse: [
-    { canonical: 'scrip_code', synonyms: ['scripcode', 'securitycode', 'code', 'bssescripcode'], required: true },
+    { canonical: 'scrip_code', synonyms: ['scripcode', 'securitycode', 'code', 'bsescripcode'], required: true },
     { canonical: 'isin', synonyms: ['isin', 'isinnumber', 'isinno', 'isinnumberbse'], required: true },
     { canonical: 'name', synonyms: ['securityname', 'companyname', 'name', 'security'], required: true },
   ],
@@ -263,9 +305,12 @@ const SPECS: Record<SourceKey | 'taxonomy', ColSpec[]> = {
 
 const CIN_MCA_REGEX = /^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/;
 const ISIN_REGEX = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/;
+// BSE scrip codes are six-digit numerics. Placeholder tokens (e.g. UNLISTED-BSE /
+// NSE-EXCLUSIVE / N/A) are NOT identity claims and never satisfy the coverage rule.
+const SCRIP_CODE_BSE_REGEX = /^[0-9]{6}$/;
 
 
-function parseSource(key: SourceKey, bytes: Uint8Array, label: string, sha256: string | null): {
+function parseSource(key: SourceKey, bytes: Uint8Array, label: string, sha256: string | null, pa?: PaDecisions): {
   report: SourceReadinessSourceReport;
   rows: Array<Record<string, string>>;
 } {
@@ -308,6 +353,23 @@ function parseSource(key: SourceKey, bytes: Uint8Array, label: string, sha256: s
     return idx === undefined ? '' : (row[idx] ?? '').trim();
   };
 
+  const paBseSet = pa ? new Set(pa.bseExclusionIsins) : new Set<string>();
+  const paMcaExemptSet = pa ? new Set(pa.mcaExemptionIsins) : new Set<string>();
+  const paMcaAliasSet = pa ? new Set(pa.mcaAliasIsins) : new Set<string>();
+  const paMcaUnlinkedSet = pa ? new Set(pa.mcaUnlinkedRescindedIsins) : new Set<string>();
+  const paMcaExceptionSet = new Set<string>([...paMcaExemptSet, ...paMcaAliasSet, ...paMcaUnlinkedSet]);
+  const governedClassOf = (isin: string): string | null => {
+    if (key === 'bse') return paBseSet.has(isin) ? 'BSE_D3_GOVERNED_EXCLUSION' : null;
+    if (key === 'mca') {
+      if (paMcaExemptSet.has(isin)) return 'MCA_GOVERNED_EXEMPTION';
+      if (paMcaAliasSet.has(isin)) return 'MCA_ALIAS_MATCH';
+      if (paMcaUnlinkedSet.has(isin)) return 'MCA_UNLINKED_UNSUPPORTED_CLAIM_RESCINDED';
+    }
+    return null;
+  };
+  let governedExceptionRows = 0;
+  const governedExceptionClassCounts: Record<string, number> = {};
+
   const invalidRowSamples: Array<{ line: number; reason: string }> = [];
   const rows: Array<Record<string, string>> = [];
   const isins = new Map<string, number>();
@@ -331,18 +393,42 @@ function parseSource(key: SourceKey, bytes: Uint8Array, label: string, sha256: s
       else if (!isIsinCheckDigitValid(isinCell)) { ok = false; reasons.push(`ISIN check digit fails: ${isinCell}`); }
       else rowRec.isin = isinCell;
     }
+    let governedException: string | null = null;
     if (matchedIdx.cin !== undefined) {
-      if (!CIN_MCA_REGEX.test(cinCell)) { ok = false; reasons.push(`bad CIN: ${cinCell || '(blank)'}`); }
-      else rowRec.cin = cinCell;
+      if (CIN_MCA_REGEX.test(cinCell)) rowRec.cin = cinCell;
+      else {
+        const cls = isinCell && ISIN_REGEX.test(isinCell) ? governedClassOf(isinCell) : null;
+        if (key === 'mca' && cls !== null && (!cinCell || !CIN_MCA_REGEX.test(cinCell))) {
+          /* Act-bound governed exception: not a registry match; dispositioned, never SOURCE_PROVIDED. */
+          governedException = cls;
+          if (cinCell) rowRec.cin = cinCell; /* retained verbatim for audit, flagged */
+        } else { ok = false; reasons.push(`bad CIN: ${cinCell || '(blank)'}`); }
+      }
     }
     if (matchedIdx.industry !== undefined && !rowRec.industry) { ok = false; reasons.push('industry blank'); }
     if (matchedIdx.sector !== undefined && !rowRec.sector) { ok = false; reasons.push('sector blank'); }
     if (matchedIdx.symbol !== undefined && !rowRec.symbol) { ok = false; reasons.push('symbol blank'); }
     if (matchedIdx.name !== undefined && !rowRec.name) { ok = false; reasons.push('name blank'); }
-    if (matchedIdx.scrip_code !== undefined && !(rowRec.scrip_code ?? '').trim()) { ok = false; reasons.push('scrip_code blank'); }
+    if (matchedIdx.scrip_code !== undefined) {
+      const sc = (rowRec.scrip_code ?? '').trim();
+      if (SCRIP_CODE_BSE_REGEX.test(sc)) { rowRec.scrip_code = sc; }
+      else {
+        if (!sc) { ok = false; reasons.push('scrip_code blank'); }
+        else if (key === 'bse' && sc === 'UNLISTED-BSE' && isinCell && ISIN_REGEX.test(isinCell) && paBseSet.has(isinCell)) {
+          /* D-3 governed exclusion marker: never a scrip code; the ISIN must be flagged by the act. */
+          governedException = 'BSE_D3_GOVERNED_EXCLUSION';
+          rowRec.scrip_code = sc;
+        } else { ok = false; reasons.push(`scrip_code not a 6-digit numeric BSE scrip code: ${sc || '(blank)'} (placeholders are not identity claims)`); }
+      }
+    }
     if (!ok) {
       if (invalidRowSamples.length < 10) invalidRowSamples.push({ line, reason: reasons.join('; ') });
       return;
+    }
+    if (governedException !== null) {
+      governedExceptionRows += 1;
+      governedExceptionClassCounts[governedException] = (governedExceptionClassCounts[governedException] ?? 0) + 1;
+      rowRec.__governedException = governedException;
     }
     validRows += 1;
     rows.push(rowRec);
@@ -370,6 +456,8 @@ function parseSource(key: SourceKey, bytes: Uint8Array, label: string, sha256: s
     duplicateIsinCount: duplicateIsinSamples.reduce((acc, d) => acc + d.rows - 1, 0),
     duplicateCinCount: [...cins.values()].filter((n) => n > 1).reduce((acc, n) => acc + n - 1, 0),
     duplicateIsinSamples,
+    governedExceptionRows,
+    ...(governedExceptionRows > 0 ? { governedExceptionClassCounts } : {}),
   };
   if (key === 'nse') {
     report.seriesDistribution = Object.fromEntries(Object.entries(seriesDist).sort(([a], [b]) => a.localeCompare(b)));
@@ -410,7 +498,7 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
   for (const key of KEYS) {
     const supplied = inputs[key];
     if (!supplied) { missingSources.push(key); rowMaps.set(key, []); continue; }
-    const { report, rows } = parseSource(key, supplied.bytes, supplied.path, supplied.sha256 ?? null);
+    const { report, rows } = parseSource(key, supplied.bytes, supplied.path, supplied.sha256 ?? null, inputs.paDecisions);
     sources.push(report);
     rowMaps.set(key, rows);
     if (report.headerStatus !== 'OK') {
@@ -608,6 +696,7 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
   }
 
   const coverage: FieldCoverageRow[] = [];
+  const paForCoverage = inputs.paDecisions;
   const nseOk = nse !== undefined && nse.headerStatus === 'OK';
   const bseOk = bse !== undefined && bse.headerStatus === 'OK';
   const mcaOk = mca !== undefined && (mca.headerStatus === 'OK' || (mca.matchedColumns.cin !== undefined && mca.matchedColumns.name !== undefined));
@@ -622,13 +711,41 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
   coverage.push({ field: 'effectiveFrom (listing date)', status: nseOk && nse.matchedColumns.listing_date !== undefined ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, kind: M, note: 'effectiveFrom ← listing date of the listing master; the deposit act must bind this mapping, or supply an act-bound asOf effective date instead' });
   coverage.push({ field: 'lotSize', status: nseOk && nse.matchedColumns.market_lot !== undefined && sources.find((s) => s.key === 'nse')?.validRows ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: nseOk ? 'nse' : null, kind: M, note: 'per-row MARKET LOT column required; for non-F&O cash equities the CM default is 1 and must be recorded as such in the deposit act, not as a hidden default' });
   coverage.push({ field: 'tickSize', status: tickStatus, source: tickSource, kind: M, note: tickNote });
-  coverage.push({ field: 'faceValue', status: mcaOk && mca.matchedColumns.face_value !== undefined ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: mcaOk ? 'mca' : null, kind: M, note: mcaOk ? 'MCA master data face value column' : 'supply MCA company master with CIN + face value' });
+  {
+    const mcaHasFace = mcaOk && mca.matchedColumns.face_value !== undefined;
+    const nseHasFace = nseOk && nse.matchedColumns.face_value !== undefined;
+    if (mcaHasFace) {
+      coverage.push({ field: 'faceValue', status: 'SOURCE_PROVIDED', source: 'mca', kind: M, note: 'MCA master data face value column' });
+    } else if (paForCoverage !== undefined && paForCoverage.faceValueSource === 'NSE_LISTING_MASTER' && nseHasFace) {
+      coverage.push({ field: 'faceValue', status: 'SOURCE_PROVIDED', source: 'nse', kind: M, note: 'faceValue ← NSE listing master (as-of face value per listing), bound by the deposition act; the MCA extract carries no faceValue column and no NSE↔MCA cross-check was applicable' });
+    } else {
+      coverage.push({ field: 'faceValue', status: 'UNRESOLVED', source: null, kind: M, note: 'supply MCA company master with CIN + face value, or act-bind the NSE listing master as faceValue source' });
+    }
+  }
   coverage.push({ field: 'currency', status: 'DERIVED', source: 'derived', kind: A, note: 'INR uniform for the NSE/BSE CM universe; DERIVATION must be stated by the deposit act (never inferred into corpus silently)' });
-  coverage.push({ field: 'cin', status: mcaOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: mcaOk ? 'mca' : null, kind: M, note: mcaOk ? 'MCA master data (bridged via ISIN/SYMBOL/exact COMPANY_NAME)' : 'supply MCA company master (CIN + company name + face value)' });
+  {
+    const mcaEx = mca?.governedExceptionRows ?? 0;
+    const mcaTotal = mca?.validRows ?? 0;
+    if (mcaOk && mcaEx > 0 && paForCoverage !== undefined) {
+      const counts = mca?.governedExceptionClassCounts;
+      const detail = counts ? Object.entries(counts).map(([k, v]) => `${k}=${v}`).join(', ') : `${mcaEx}`;
+      coverage.push({ field: 'cin', status: 'GOVERNED_EXCEPTION', source: 'mca', kind: M, note: `${mcaTotal - mcaEx} record(s) carry a format-valid CIN; ${detail} — act-bound governed dispositions (never registry matches); unsupported claims rescinded/reclassified per the act, not misrepresented` });
+    } else {
+      coverage.push({ field: 'cin', status: mcaOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: mcaOk ? 'mca' : null, kind: M, note: mcaOk ? 'MCA master data (bridged via ISIN/SYMBOL/exact COMPANY_NAME)' : 'supply MCA company master (CIN + company name + face value)' });
+    }
+  }
   coverage.push({ field: 'industry', status: taxOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: taxOk ? 'taxonomy' : null, kind: M, note: taxOk ? 'taxonomy deposit' : 'supply an authoritative industry/sector taxonomy (named source, sha256)' });
   coverage.push({ field: 'sector', status: taxOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: taxOk ? 'taxonomy' : null, kind: M, note: taxOk ? 'taxonomy deposit' : 'supply an authoritative sector taxonomy (named source, sha256)' });
   coverage.push({ field: 'bseSymbol', status: bseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: bseOk ? 'bse' : null, kind: M, note: bseOk ? 'BSE listing master' : 'supply BSE listing master' });
-  coverage.push({ field: 'bseScripCode', status: bseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: bseOk ? 'bse' : null, kind: M, note: bseOk ? 'BSE listing master scrip codes' : 'supply BSE listing master' });
+  {
+    const bseEx = bse?.governedExceptionRows ?? 0;
+    const bseTotal = bse?.validRows ?? 0;
+    if (bseOk && bseEx > 0 && paForCoverage !== undefined) {
+      coverage.push({ field: 'bseScripCode', status: 'GOVERNED_EXCEPTION', source: 'bse', kind: M, note: `${bseTotal - bseEx} record(s) match the BSE listing master; ${bseEx} record(s) carry the act-bound D-3 UNLISTED-BSE governed exclusion marker (never a scrip code; never a claim of permanent NSE exclusivity)` });
+    } else {
+      coverage.push({ field: 'bseScripCode', status: bseOk ? 'SOURCE_PROVIDED' : 'UNRESOLVED', source: bseOk ? 'bse' : null, kind: M, note: bseOk ? 'BSE listing master scrip codes' : 'supply BSE listing master' });
+    }
+  }
 
   /* ── advisory cross-check: NSE vs MCA faceValue (never blocking) ─────────── */
   if (nseOk && nse.matchedColumns.face_value !== undefined && mcaOk && mca.matchedColumns.face_value !== undefined) {
@@ -671,6 +788,38 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
     }
   }
 
+  /* ── PA-act governed exceptions: fail-closed coverage accounting ─────────── */
+  let paEcho: SourceReadinessReport['paDecisions'] | undefined;
+  if (inputs.paDecisions) {
+    const pa = inputs.paDecisions;
+    const bseFlag = new Set(pa.bseExclusionIsins);
+    const mcaExemptFlag = new Set(pa.mcaExemptionIsins);
+    const mcaAliasFlag = new Set(pa.mcaAliasIsins);
+    const mcaUnlinkedFlag = new Set(pa.mcaUnlinkedRescindedIsins);
+    const bseFlagRows = new Set<string>();
+    const mcaFlagRows = new Set<string>();
+    for (const r of rowMaps.get('bse') ?? []) if (r.isin) bseFlagRows.add(r.isin.toUpperCase());
+    for (const r of rowMaps.get('mca') ?? []) if (r.isin) mcaFlagRows.add(r.isin.toUpperCase());
+    const flaggedIsinsNotFound: Array<{ source: 'bse' | 'mca'; isin: string; disposition: string }> = [];
+    for (const i of [...bseFlag].sort()) if (!bseFlagRows.has(i)) flaggedIsinsNotFound.push({ source: 'bse', isin: i, disposition: 'BSE_D3_GOVERNED_EXCLUSION' });
+    for (const i of [...mcaExemptFlag].sort()) if (!mcaFlagRows.has(i)) flaggedIsinsNotFound.push({ source: 'mca', isin: i, disposition: 'MCA_GOVERNED_EXEMPTION' });
+    for (const i of [...mcaAliasFlag].sort()) if (!mcaFlagRows.has(i)) flaggedIsinsNotFound.push({ source: 'mca', isin: i, disposition: 'MCA_ALIAS_MATCH' });
+    for (const i of [...mcaUnlinkedFlag].sort()) if (!mcaFlagRows.has(i)) flaggedIsinsNotFound.push({ source: 'mca', isin: i, disposition: 'MCA_UNLINKED_UNSUPPORTED_CLAIM_RESCINDED' });
+    for (const f of flaggedIsinsNotFound) {
+      blockingReasons.push(`pa-decisions: flagged ${f.source.toUpperCase()} ISIN ${f.isin} (${f.disposition}) is absent from the supplied source — the act cannot disposition a claim for a record it does not contain`);
+    }
+    paEcho = {
+      authorizationRef: pa.authorizationRef,
+      effectiveDate: pa.effectiveDate,
+      bseExclusionIsins: bseFlag.size,
+      mcaExemptionIsins: mcaExemptFlag.size,
+      mcaAliasIsins: mcaAliasFlag.size,
+      mcaUnlinkedRescindedIsins: mcaUnlinkedFlag.size,
+      faceValueSource: pa.faceValueSource,
+      flaggedIsinsNotFound,
+    };
+  }
+
   const unresolved = coverage.filter((c) => c.status === 'UNRESOLVED' && c.kind === 'MANDATORY');
   for (const u of unresolved) blockingReasons.push(`D05 field unresolved: ${u.field} — ${u.note}`);
   for (const name of missingSources) blockingReasons.push(`${name}: source file not supplied`);
@@ -693,6 +842,7 @@ export function evaluateSourceReadiness(inputs: SourceInputs): SourceReadinessRe
     sources,
     missingSources,
     tickSizeEvidence,
+    ...(paEcho ? { paDecisions: paEcho } : {}),
     crossSource: {
       unionIsins: union.size,
       isinsPresentInAll,
@@ -774,6 +924,17 @@ export function readinessToMarkdown(report: SourceReadinessReport): string {
     '',
     ...(report.blockingReasons.length ? report.blockingReasons.map((b) => `- ${b}`) : ['- none']),
     '',
+    ...(report.paDecisions ? [
+      '## PA act-bound governed exceptions',
+      '',
+      `- authorization: ${report.paDecisions.authorizationRef}`,
+      `- effective as-of: ${report.paDecisions.effectiveDate}`,
+      `- D-3 BSE exclusion ISINs: ${report.paDecisions.bseExclusionIsins}`,
+      `- MCA governed exemptions: ${report.paDecisions.mcaExemptionIsins} · aliases: ${report.paDecisions.mcaAliasIsins} · unlinked (claim rescinded): ${report.paDecisions.mcaUnlinkedRescindedIsins}`,
+      `- faceValue source binding: ${report.paDecisions.faceValueSource === 'NSE_LISTING_MASTER' ? 'NSE listing master' : report.paDecisions.faceValueSource}`,
+      ...(report.paDecisions.flaggedIsinsNotFound.length ? [`- FLAGGED-NOT-FOUND (fail-closed blockers): ${report.paDecisions.flaggedIsinsNotFound.map((f) => `${f.source}:${f.isin}`).join(' | ')}`] : ['- flagged ISINs all located in supplied sources']),
+      '',
+    ] : []),
     '## D05 field coverage',
     '',
     '| Field | Status | Source | Kind | Note |',

@@ -24,6 +24,8 @@ function fail(code, msg) { process.stderr.write(`d05_corpus_audit: ${msg}\n`); p
 
 const corpusRel = argValue('--corpus') ?? 'evidence/operator_drop/d05_security_master_broad_universe.json';
 const outDirRel = argValue('--output-dir') ?? 'audits/d05-corpus';
+const governedBseMarker = argValue('--governed-bse-marker');
+const unlinkedArg = argValue('--mca-unlinked-isins');
 const corpusPath = resolve(repoRoot, corpusRel);
 const outDir = resolve(repoRoot, outDirRel);
 
@@ -67,7 +69,20 @@ const evidenceRefs = evidenceCandidates.map(({ ref, path, note }) => {
   }
 });
 
-const report = auditCorpus(records, { path: corpusRel.replace(/\\/g, '/'), corpusSha256, evidenceRefs });
+let governedExceptions;
+if (governedBseMarker !== undefined || unlinkedArg !== undefined) {
+  let cinUnlinkedIsins;
+  if (unlinkedArg !== undefined) {
+    const p = resolve(process.cwd(), unlinkedArg);
+    let parsed;
+    try { parsed = JSON.parse(readFileSync(p, 'utf8')); }
+    catch (err) { fail(3, `--mca-unlinked-isins unreadable at ${p}: ${err.message}`); }
+    if (!Array.isArray(parsed.mcaUnlinkedRescindedIsins)) fail(2, '--mca-unlinked-isins must contain mcaUnlinkedRescindedIsins array');
+    cinUnlinkedIsins = parsed.mcaUnlinkedRescindedIsins.map(String);
+  }
+  governedExceptions = { ...(governedBseMarker !== undefined ? { bseMarker: governedBseMarker } : {}), ...(cinUnlinkedIsins ? { cinUnlinkedIsins } : {}) };
+}
+const report = auditCorpus(records, { path: corpusRel.replace(/\\/g, '/'), corpusSha256, evidenceRefs, governedExceptions });
 
 mkdirSync(outDir, { recursive: true });
 writeFileSync(resolve(outDir, 'corpus-audit.json'), reportToJson(report));

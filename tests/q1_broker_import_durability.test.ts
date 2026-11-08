@@ -173,7 +173,7 @@ describe('q1 / durable broker-ingestion persistence boundary', () => {
       // revision; an ungoverned or fixture master fails closed at construction.
       assert.throws(
         () => createGovernedBrokerObservationResolver(new SecurityMaster()),
-        /not the governed D05 master revision/,
+        /authenticated universe revision/,
       );
     });
 

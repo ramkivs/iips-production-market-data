@@ -1,0 +1,71 @@
+{
+  "batchId": "BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001",
+  "domain": "D05_SECURITY_MASTER",
+  "kind": "REPLACEMENT_DEPOSITION",
+  "fileChecksumSha256": "b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+  "recordCount": 2390,
+  "droppedAt": "2026-11-08T04:56:19Z",
+  "operatorId": "OPERATOR_ADMIN_GOVERNED_01",
+  "authorizationRef": "AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001",
+  "operatingMode": "OFFLINE_BOOTSTRAP",
+  "selectedTier": "TIER_2_ACTIVE_NSE_CM",
+  "universeSource": {
+    "source": "NSE CM EQ tier (EQUITY_L(1).csv, series=EQ, 2,390 rows) as pinned in the Wave-3 EQ bundle",
+    "bundleRelativeMember": "01_source_material/NSE/EQUITY_L(1).csv",
+    "bundleMemberSha256": "da7eb83cf21156cca3a8bcc5b94ea55f825ff7348e02c89abc51658788361fa5",
+    "order": "bundle member order",
+    "asOf": "2026-11-08 (one-time replacement act)"
+  },
+  "fieldBindings": {
+    "faceValue": "NSE listing master (FACE VALUE of each EQ listing; act-bound source; the MCA extract carries no faceValue column)",
+    "tickSize": "0.05 uniform (D-9 documented one-time limitation; reference prices omitted; act-bound; never a code default)",
+    "cin": "arena_mca_identity_bridged.csv (published latest; verbatim, including blanks/exemptions/aliases; classes never misrepresented)",
+    "bseScripCode": "2290 records: exact-ISIN join to the supplied BSE active-equity export (Security Code); 100 records: UNLISTED-BSE governed exclusion marker (D-3, act-bound; never a six-digit claim)",
+    "bseSymbol": "BSE Security Id for dual listings; UNLISTED-BSE marker for governed exclusions",
+    "industry": "arena_taxonomy_submission.csv basicIndustry (published latest, B3 act-bound; systematic-classification limitation disclosed)",
+    "sector": "arena_taxonomy_submission.csv sector (published latest, B3 act-bound)",
+    "effectiveFrom": "NSE listing master DATE OF LISTING (ISO instant); act-bound mapping",
+    "lotSize": "NSE listing master MARKET LOT (verbatim: 2,387 rows at 1, MODTHREAD 50, PRUDMOULI 100, TECILCHEM 50)",
+    "companyId": "D-4 (i) EQ_<TOKEN>_IN derivation from NSE listing master SYMBOL (uppercase alnum only); zero collisions",
+    "currency": "INR (uniform derivation; stated in the act)",
+    "listingStatus": "ACTIVE as-of the act (listing master as-of; no assertion of future status)"
+  },
+  "inputs": [
+    {
+      "label": "Wave-3 EQ bundle (universe of record + BSE supplied master)",
+      "path": "evidence/D05-Wave3/D05_Wave3_EQ_Source_and_Evidence_Bundle_2026-11-07.zip",
+      "sha256": "6332b050132a160e89e5906d131e12535ac1105d4b781330fa63f0e0af1d41f4"
+    },
+    {
+      "label": "Published latest CSV bundle (B1/B2/B3/B4 classes; limitation-labelled)",
+      "path": "evidence/D05-Wave3/arena_B05_latestcsvs.zip",
+      "sha256": "73f1e3a330ab4915ced0b4520e4a3c1a7274d95258808227b3dad7dad806d0d2"
+    },
+    {
+      "label": "Verified B2 deposit bridge (exact-ISIN reconstruction)",
+      "path": "evidence/D05-Wave3/deposit-2026-11-08/arena_bse_identity_bridged.deposit.csv",
+      "sha256": "307cf96d3afb2568f4c10091b6bc8c2a5a195ab476fd862c82ede46615530c99"
+    },
+    {
+      "label": "PA act-bound governed exceptions (D-3/B1)",
+      "path": "evidence/D05-Wave3/deposit-2026-11-08/pa_decisions.json",
+      "sha256": "a3219f407b29826e4d88619bec243c619e74508747ce367fd23d0e842c04e064"
+    }
+  ],
+  "supersedes": {
+    "kind": "OFFLINE_BOOTSTRAP",
+    "authorizationRef": "AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001",
+    "recordCount": 2250,
+    "fileChecksumSha256": "7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5",
+    "artifact": "evidence/operator_drop/d05_security_master_broad_universe.json",
+    "disposition": "RETAINED_IMMUTABLE_AS_LEGACY_EVIDENCE_NEVER_DELETED"
+  },
+  "residualLimitations": [
+    "MCA registry-match authenticity is not establishable inside this repository: successive artifact generations disagree byte-wise (bundle bridge vs 2026-11-08 submission vs 2026-11-08 latest); B1 acceptance rests on the act alone; no independent registry cross-check was performed; the deposit preserves the published classes, never upgrades an attribution",
+    "Taxonomy is a systematic-classification claim (1,495 Industrial Products; quota-shaped distribution; one non-codebook label present 1x), accepted for this one-time replacement only; downstream consumers must not re-derive semantics from it",
+    "Tick regime is uniform 0.05 under D-9 capacity-exempt limitation disclosure (reference prices omitted; non-compliant with price-linked compliance); re-admission requires price-band evidence",
+    "100 NSE-exclusion records are act-bound governed dispositions (absent from the supplied BSE master); they are NOT assertions of permanent exclusivity and are not registry/exchange claims of any kind",
+    "58 blank-CIN records are disclosed unlinked exceptions (claims rescinded); 27 governed exemptions and 7 registry alias matches are preserved as separate classes; 9 statutory/government attributions remain non-registry-verified",
+    "BSE evidence pinned by instrument=Equity & status=Active in the supplied export; exchange masters as-of the bundle date; future staleness is possible; re-admission requires a fresh export and full revalidation"
+  ]
+}

@@ -25,14 +25,17 @@
  *   6. The observed P04 refusal for 'AGI GREENPAC' is reproduced verbatim when the mapping is
  *      genuinely absent, and P04 still refuses the whole import.
  *   7. Only rows with authoritative mapping evidence resolve (governed alias AGI GREENPAC ->
- *      EQ_AGI_IN); the other 67 remain unresolved with the precise reason.
+ *      EQ_AGI_IN, plus GHCL and KROSS — NSE CM EQ listings carried natively by the authenticated
+ *      universe); the other 65 remain unresolved with the precise reason.
  *   8. The digest is deterministic and content-sensitive.
  *   9. Exchange-scoped identifiers are never resolved through the other exchange.
  *  10. No master supplied is NOT_EVALUATED, never a resolved identity claim.
  *  11. The durable leg refuses an unresolved import with zero store effect.
  *
  * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / BI-03-AUTH-2026-01 / BI-05-AUTH-2026-01 /
- * P04-P12-IDENTITY-GOVERNANCE / AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001.
+ * P04-P12-IDENTITY-GOVERNANCE / AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001
+ * (runtime resolution under the one-time replacement; AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001
+ *  pinned separately by the rollback drill).
  */
 
 import { describe, it } from 'node:test';
@@ -325,14 +328,18 @@ describe('WS-A / Dhan 68-row import: evidence, identity, P04', () => {
     const resolved = assessments.filter((a) => a.status === 'RESOLVED');
     assert.deepEqual(
       resolved.map((a) => [a.rowIndex, a.suppliedIdentifier, a.companyId]),
-      [[1, 'AGI GREENPAC', 'EQ_AGI_IN']],
-      'exactly one row has authoritative mapping evidence (the governed AGI GREENPAC alias)',
+      [
+        [1, 'AGI GREENPAC', 'EQ_AGI_IN'],
+        [21, 'GHCL', 'EQ_GHCL_IN'],
+        [40, 'KROSS', 'EQ_KROSS_IN'],
+      ],
+      'exactly three rows have authoritative mapping evidence (the governed AGI GREENPAC alias, plus GHCL and KROSS carried natively by the authenticated universe)',
     );
-    assert.equal(result.identitySummary?.resolved, 1);
-    assert.equal(result.identitySummary?.unresolved, 67);
+    assert.equal(result.identitySummary?.resolved, 3);
+    assert.equal(result.identitySummary?.unresolved, 65);
     assert.equal(
       result.identitySummary?.masterRevision,
-      'BATCH-D05-TIER2-BROAD-UNIVERSE-2026-09-22-001:7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5',
+      'BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001:b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4',
     );
     // The import is STILL refused: one resolved row does not authorize the other 67.
     assert.equal(result.disposition, 'REJECTED');

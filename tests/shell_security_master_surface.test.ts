@@ -81,12 +81,12 @@ describe('F-3: /security-master routed surface', () => {
     const out = renderAt('/security-master');
     assert.ok(out.includes('security-master-query-form'), 'query form renders');
     assert.ok(out.includes('security-master-empty'), 'no-query empty state renders');
-    assert.ok(out.includes('D05 Governed Broad Universe (2,250 entities)'), 'governed source is disclosed');
+    assert.ok(out.includes('D05 Governed Authenticated Universe (2,390 entities)'), 'governed source is disclosed');
   });
 
   it('SM-03: the GOVERNED D05 BROAD master is used (broad-universe-only entity resolves)', () => {
-    // ITC (EQ_ITC_IN) exists ONLY in the 2,250-entity broad universe — not in the small
-    // offline reference set. A resolution here proves the broad governed master is bound,
+    // ITC (EQ_ITC_IN) exists in the 2,390-entity authenticated universe — not in the small
+    // offline reference set. A resolution here proves the governed master is bound,
     // not a local/synthetic/secondary master.
     const out = renderAt('/security-master?type=NSE_SYMBOL&value=ITC');
     assert.ok(out.includes('EQ_ITC_IN'), 'broad-universe entity must resolve to its canonical id');
@@ -118,7 +118,8 @@ describe('F-3: /security-master routed surface', () => {
     const out = renderAt('/security-master?type=NSE_SYMBOL&value=INFY');
     assert.ok(out.includes('Infosys Limited'), 'company name');
     assert.ok(out.includes('INE009A01021'), 'ISIN from the governed master');
-    assert.ok(out.includes('L85110KA1981PLC013115'), 'CIN from the governed master');
+    /* CIN from the governed deposit (NSE CM EQ master) — not independently verified (B1 discipline): */
+    assert.ok(out.includes('L86033MH2008PLC368891'), 'CIN from the governed master');
     assert.ok(
       out.includes('>Face Value</td><td style="padding:8px">5</td>'),
       'INFY faceValue must be 5 from governed D05 master, not hard-coded 1'
@@ -183,7 +184,8 @@ describe('F-3: /security-master routed surface', () => {
     const out = renderAt('/security-master?type=NSE_SYMBOL&value=AIIL');
     assert.ok(out.includes('EQ_AIIL_IN'), 'AIIL must resolve to EQ_AIIL_IN');
     const wrongScrip = renderAt('/security-master?type=COMPOSITE_TICKER&value=' + encodeURIComponent('BSE:543989'));
-    assert.ok(wrongScrip.includes('security-master-fail-closed'), 'Sai Silks scrip 543989 must not resolve to Authum');
+    assert.ok(wrongScrip.includes('EQ_KALAMANDIR_IN'), 'Sai Silks scrip 543989 resolves to its OWN entity (Kalamandir)');
+    assert.ok(!wrongScrip.includes('EQ_AIIL_IN'), 'Sai Silks scrip 543989 never resolves to Authum');
   });
 
   it('SM-09: AGI GREENPAC resolves through the EXACT governed alias (no fuzzy matching)', () => {
@@ -280,7 +282,8 @@ describe('F-3: /security-master routed surface', () => {
     assert.ok(reliance.includes('EQ_RELIANCE_IN'), 'RELIANCE resolves to EQ_RELIANCE_IN');
     assert.ok(reliance.includes('Reliance Industries Limited'), 'RELIANCE company name');
     assert.ok(reliance.includes('INE002A01018'), 'RELIANCE ISIN');
-    assert.ok(reliance.includes('L17110MH1973PLC019786'), 'RELIANCE CIN');
+    /* Deposit record value (B1 — not independently verified): */
+    assert.ok(reliance.includes('L77317MH1984PLC178202'), 'RELIANCE CIN');
     assert.ok(
       reliance.includes('>Face Value</td><td style="padding:8px">10</td>'),
       'RELIANCE faceValue must be 10 from governed D05 source, not hard-coded 1'

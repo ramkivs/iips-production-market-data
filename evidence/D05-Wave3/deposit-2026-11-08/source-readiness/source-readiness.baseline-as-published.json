@@ -1,0 +1,352 @@
+{
+  "reportVersion": 2,
+  "tool": {
+    "name": "source-readiness",
+    "version": 2
+  },
+  "verdict": "DEPOSITION_BLOCKED",
+  "blockingReasons": [
+    "100 of 2390 NSE securities have no BSE listing match (bseSymbol/bseScripCode cannot be provisioned)",
+    "92 of 2390 NSE securities have no MCA linkage (cin/faceValue cannot be provisioned)",
+    "D05 field unresolved: faceValue — supply MCA company master with CIN + face value, or act-bind the NSE listing master as faceValue source"
+  ],
+  "warnings": [],
+  "sources": [
+    {
+      "key": "nse",
+      "path": "/tmp/nse_eq_master.csv",
+      "present": true,
+      "sha256": "620789245fe50170393fdd11569ac09ed7455bcbca6df930c0671c75f209ec04",
+      "bytes": 168740,
+      "headerStatus": "OK",
+      "matchedColumns": {
+        "isin": "ISIN NUMBER",
+        "symbol": "SYMBOL",
+        "name": "NAME OF COMPANY",
+        "series": "SERIES",
+        "listing_date": "DATE OF LISTING",
+        "market_lot": "MARKET LOT",
+        "paid_up_value": "PAID UP VALUE",
+        "face_value": "FACE VALUE"
+      },
+      "missingRequiredColumns": [],
+      "warnings": [],
+      "totalRows": 2390,
+      "validRows": 2390,
+      "invalidRowSamples": [],
+      "distinctIsins": 2390,
+      "distinctCins": 0,
+      "duplicateIsinCount": 0,
+      "duplicateCinCount": 0,
+      "duplicateIsinSamples": [],
+      "governedExceptionRows": 0,
+      "seriesDistribution": {
+        "EQ": 2390
+      },
+      "outOfTier2ScopeRows": 0
+    },
+    {
+      "key": "bse",
+      "path": "/tmp/b05/extracted/arena_bse_identity_bridged.csv",
+      "present": true,
+      "sha256": "a4d0ac883b3dcde4154445332b5eb194d962a3c5b71d0b337fa19a30802b2636",
+      "bytes": 515773,
+      "headerStatus": "OK",
+      "matchedColumns": {
+        "scrip_code": "bseScripCode",
+        "isin": "isin",
+        "name": "companyName"
+      },
+      "missingRequiredColumns": [],
+      "warnings": [],
+      "totalRows": 2390,
+      "validRows": 2290,
+      "invalidRowSamples": [
+        {
+          "line": 47,
+          "reason": "scrip_code not a 6-digit numeric BSE scrip code: UNLISTED-BSE (placeholders are not identity claims)"
+        },
+        {
+          "line": 59,
+          "reason": "scrip_code not a 6-digit numeric BSE scrip code: UNLISTED-BSE (placeholders are not identity claims)"
+        },
+        {
+          "line": 103,
+          "reason": "scrip_code not a 6-digit numeric BSE scrip code: UNLISTED-BSE (placeholders are not identity claims)"
+        },
+        {
+          "line": 114,
+          "reason": "scrip_code not a 6-digit numeric BSE scrip code: UNLISTED-BSE (placeholders are not identity claims)"
+        },
+        {
+          "line": 182,
+          "reason": "scrip_code not a 6-digit numeric BSE scrip code: UNLISTED-BSE (placeholders are not identity claims)"
+        },
+        {
+          "line": 191,
+          "reason": "scrip_code not a 6-digit numeric BSE scrip code: UNLISTED-BSE (placeholders are not identity claims)"
+        },
+        {
+          "line": 214,
+          "reason": "scrip_code not a 6-digit numeric BSE scrip code: UNLISTED-BSE (placeholders are not identity claims)"
+        },
+        {
+          "line": 221,
+          "reason": "scrip_code not a 6-digit numeric BSE scrip code: UNLISTED-BSE (placeholders are not identity claims)"
+        },
+        {
+          "line": 232,
+          "reason": "scrip_code not a 6-digit numeric BSE scrip code: UNLISTED-BSE (placeholders are not identity claims)"
+        },
+        {
+          "line": 241,
+          "reason": "scrip_code not a 6-digit numeric BSE scrip code: UNLISTED-BSE (placeholders are not identity claims)"
+        }
+      ],
+      "distinctIsins": 2290,
+      "distinctCins": 0,
+      "duplicateIsinCount": 0,
+      "duplicateCinCount": 0,
+      "duplicateIsinSamples": [],
+      "governedExceptionRows": 0
+    },
+    {
+      "key": "mca",
+      "path": "/tmp/b05/extracted/arena_mca_identity_bridged.csv",
+      "present": true,
+      "sha256": "930df3ca9d3365b1a55182b841d19c3c27ec468123f163375b7319c0a9974bae",
+      "bytes": 436875,
+      "headerStatus": "OK",
+      "matchedColumns": {
+        "cin": "cin",
+        "name": "companyName",
+        "isin": "isin",
+        "symbol": "symbol"
+      },
+      "missingRequiredColumns": [],
+      "warnings": [],
+      "totalRows": 2390,
+      "validRows": 2298,
+      "invalidRowSamples": [
+        {
+          "line": 58,
+          "reason": "bad CIN: (blank)"
+        },
+        {
+          "line": 81,
+          "reason": "bad CIN: EXEMPT-STRUCT-AGROPHOS"
+        },
+        {
+          "line": 114,
+          "reason": "bad CIN: (blank)"
+        },
+        {
+          "line": 119,
+          "reason": "bad CIN: EXEMPT-STRUCT-AMBICAAGAR"
+        },
+        {
+          "line": 129,
+          "reason": "bad CIN: EXEMPT-STRUCT-ANDREWYU"
+        },
+        {
+          "line": 139,
+          "reason": "bad CIN: (blank)"
+        },
+        {
+          "line": 213,
+          "reason": "bad CIN: (blank)"
+        },
+        {
+          "line": 223,
+          "reason": "bad CIN: (blank)"
+        },
+        {
+          "line": 234,
+          "reason": "bad CIN: (blank)"
+        },
+        {
+          "line": 275,
+          "reason": "bad CIN: EXEMPT-STRUCT-BANCOINDIA"
+        }
+      ],
+      "distinctIsins": 2298,
+      "distinctCins": 2298,
+      "duplicateIsinCount": 0,
+      "duplicateCinCount": 0,
+      "duplicateIsinSamples": [],
+      "governedExceptionRows": 0
+    },
+    {
+      "key": "taxonomy",
+      "path": "/tmp/b05/extracted/arena_taxonomy_submission.csv",
+      "present": true,
+      "sha256": "4965ad0c9086c7229e2c9a7ba65af32009cb329a10b7856fb4f1ab0c98c1d762",
+      "bytes": 294370,
+      "headerStatus": "OK",
+      "matchedColumns": {
+        "isin": "isin",
+        "industry": "industry",
+        "sector": "sector",
+        "basic_industry": "basicIndustry"
+      },
+      "missingRequiredColumns": [],
+      "warnings": [],
+      "totalRows": 2390,
+      "validRows": 2390,
+      "invalidRowSamples": [],
+      "distinctIsins": 2390,
+      "distinctCins": 0,
+      "duplicateIsinCount": 0,
+      "duplicateCinCount": 0,
+      "duplicateIsinSamples": [],
+      "governedExceptionRows": 0
+    }
+  ],
+  "missingSources": [],
+  "tickSizeEvidence": {
+    "mode": "uniform",
+    "path": null,
+    "sha256": null,
+    "uniformValue": 0.05,
+    "validRows": 2390,
+    "coveredIsins": 2390,
+    "denominator": 2390,
+    "missingSamples": [],
+    "invalidSamples": []
+  },
+  "crossSource": {
+    "unionIsins": 2390,
+    "isinsPresentInAll": 2202,
+    "nseWithoutBse": 100,
+    "nseWithoutMca": 92,
+    "nseWithoutTaxonomy": 0,
+    "mcaUnmapped": 0,
+    "mcaAmbiguousNameBridge": 0,
+    "taxonomyUnmapped": 0,
+    "conflicts": [],
+    "mcaUnmappedSamples": [],
+    "mcaAmbiguousNameSamples": [],
+    "taxonomyUnmappedSamples": []
+  },
+  "d05FieldCoverage": [
+    {
+      "field": "isin",
+      "status": "SOURCE_PROVIDED",
+      "source": "nse",
+      "kind": "MANDATORY",
+      "note": "NSE listing master"
+    },
+    {
+      "field": "nseSymbol",
+      "status": "SOURCE_PROVIDED",
+      "source": "nse",
+      "kind": "MANDATORY",
+      "note": "NSE listing master"
+    },
+    {
+      "field": "companyName",
+      "status": "SOURCE_PROVIDED",
+      "source": "nse",
+      "kind": "MANDATORY",
+      "note": "NSE listing master (issuer name)"
+    },
+    {
+      "field": "series/segment (Tier-2 EQ filter)",
+      "status": "SOURCE_PROVIDED",
+      "source": "nse",
+      "kind": "MANDATORY",
+      "note": "series column present"
+    },
+    {
+      "field": "listingStatus (as-of)",
+      "status": "SOURCE_PROVIDED",
+      "source": "nse",
+      "kind": "MANDATORY",
+      "note": "status asserted for the listing as of the deposition asOf; no assertion of future status"
+    },
+    {
+      "field": "effectiveFrom (listing date)",
+      "status": "SOURCE_PROVIDED",
+      "source": "nse",
+      "kind": "MANDATORY",
+      "note": "effectiveFrom ← listing date of the listing master; the deposit act must bind this mapping, or supply an act-bound asOf effective date instead"
+    },
+    {
+      "field": "lotSize",
+      "status": "SOURCE_PROVIDED",
+      "source": "nse",
+      "kind": "MANDATORY",
+      "note": "per-row MARKET LOT column required; for non-F&O cash equities the CM default is 1 and must be recorded as such in the deposit act, not as a hidden default"
+    },
+    {
+      "field": "tickSize",
+      "status": "DERIVED",
+      "source": "derived",
+      "kind": "MANDATORY",
+      "note": "uniform tickSize 0.05 bound by the Wave-3 deposition act (as-of NSE CM price-band circular); stated explicitly by --tick-size-uniform, never a hard default"
+    },
+    {
+      "field": "faceValue",
+      "status": "UNRESOLVED",
+      "source": null,
+      "kind": "MANDATORY",
+      "note": "supply MCA company master with CIN + face value, or act-bind the NSE listing master as faceValue source"
+    },
+    {
+      "field": "currency",
+      "status": "DERIVED",
+      "source": "derived",
+      "kind": "ADVISORY",
+      "note": "INR uniform for the NSE/BSE CM universe; DERIVATION must be stated by the deposit act (never inferred into corpus silently)"
+    },
+    {
+      "field": "cin",
+      "status": "SOURCE_PROVIDED",
+      "source": "mca",
+      "kind": "MANDATORY",
+      "note": "MCA master data (bridged via ISIN/SYMBOL/exact COMPANY_NAME)"
+    },
+    {
+      "field": "industry",
+      "status": "SOURCE_PROVIDED",
+      "source": "taxonomy",
+      "kind": "MANDATORY",
+      "note": "taxonomy deposit"
+    },
+    {
+      "field": "sector",
+      "status": "SOURCE_PROVIDED",
+      "source": "taxonomy",
+      "kind": "MANDATORY",
+      "note": "taxonomy deposit"
+    },
+    {
+      "field": "bseSymbol",
+      "status": "SOURCE_PROVIDED",
+      "source": "bse",
+      "kind": "MANDATORY",
+      "note": "BSE listing master"
+    },
+    {
+      "field": "bseScripCode",
+      "status": "SOURCE_PROVIDED",
+      "source": "bse",
+      "kind": "MANDATORY",
+      "note": "BSE listing master scrip codes"
+    }
+  ],
+  "requiredEvidenceForFullCoverage": [
+    "tickSize: evidence accepted (mode=uniform) — record the binding in the act",
+    "industry/sector: an authoritative taxonomy deposit with named provenance covering EVERY admitted security (a single industry/sector keyed by ISIN, or CIN bridged through MCA — no PDF or secondary mapping file is an input)",
+    "MCA linkage: either an ISIN or SYMBOL bridge column in the MCA extract, or exact COMPANY_NAME matching against the NSE file (fuzzy is never used)"
+  ],
+  "disclaimers": [
+    "Source files are validated as supplied; this tool never downloads anything and never treats mirrors as authoritative.",
+    "A CLEAN report means the files are structurally valid and internally consistent — it does NOT prove issuer truth, ACTIVE listing truth, realtime staleness or eligibility for any downstream use.",
+    "COMPANY_NAME bridging (when no ISIN/SYMBOL bridge exists in MCA) uses exact normalized string equality only; ambiguous candidates are reported, never guessed.",
+    "tickSize is never defaulted by this tool: DEPOSITION_READY is impossible without --tick-rules covering every deposit-intended security or --tick-size-uniform bound in the act.",
+    "DEPOSITION_READY means every MANDATORY D05 field is positively established from supplied local evidence (SOURCE_PROVIDED) or explicitly derived and stated (DERIVED), AND the files are structurally consistent. It does NOT authorize a deposit act, create a corpus revision, re-pin governed constants, or substitute for the Wave-3 gate and reviewed PR.",
+    "ADVISORY coverage rows (kind=ADVISORY, e.g. currency derivation, NSE↔MCA faceValue cross-check) are reported for the act’s attention and never affect the verdict.",
+    "A DEPOSITION_READY verdict still requires a separate Wave-3 deposition act, the merged corpus re-render, governed-constant re-pinning and a reviewed PR."
+  ]
+}
