@@ -18,6 +18,7 @@ import {
   resolveActiveBindingInCurrentTransaction,
   resolveActiveHoldingsBindingInCurrentTransaction,
 } from './binding.js';
+import { isD114SecurityIdentity, type D114SecurityIdentity } from '../contracts/types.js';
 
 export class InvalidPortfolioRequestError extends Error {
   constructor(message: string) {
@@ -85,6 +86,13 @@ export interface HoldingInput {
   lineageDigest: string;
   identityStatus: string;
   resolutionDisposition: string;
+  /**
+   * The exact canonical P04 `D114SecurityIdentity` (`ISIN:<isin>:<series>`),
+   * persisted verbatim when authoritative evidence supplied it. `null`/absent
+   * means EXPLICITLY UNRESOLVED — it is never reconstructed from symbol,
+   * company name, ISIN-only or exchange listing alone.
+   */
+  securityIdentity?: D114SecurityIdentity | null;
 }
 
 export type ContributionSemantics = 'SAVED_NEW_BATCH' | 'MERGED_INTO_EXISTING' | 'RESET' | 'REPLACE';
@@ -458,14 +466,34 @@ export interface RevisionReconciliationEvidence {
 }
 
 const MAX_REVISIONS = 4;
+const PERSONAL_USE_REVISION_LIMIT = 1000;
 
 export class DurablePortfolioStore {
   private transactionDepth = 0;
+  /**
+   * The immutable revision lifecycle is capped at MAX_REVISIONS on the governed
+   * qualification path (the D03 cap=4 contract). The explicitly authorized
+   * local single-user personal path (IIPS_LOCAL_PERSONAL_USE=1) raises the cap
+   * to PERSONAL_USE_REVISION_LIMIT so the application is usable day to day;
+   * the cap is still finite and every other revision rule is unchanged.
+   */
+  private readonly revisionCap: number;
 
   constructor(
     private readonly db: DatabaseSync,
     private readonly testHooks?: { afterMutation?: (step: string) => void; afterCommit?: () => void },
-  ) {}
+    options?: { revisionCap?: number },
+  ) {
+    const requested = options?.revisionCap;
+    if (requested === undefined) {
+      this.revisionCap = MAX_REVISIONS;
+    } else {
+      if (!Number.isInteger(requested) || requested < 1) {
+        throw new InvalidPortfolioRequestError('revisionCap must be a positive integer');
+      }
+      this.revisionCap = Math.min(requested, PERSONAL_USE_REVISION_LIMIT);
+    }
+  }
 
   private afterMutation(step: string): void {
     this.testHooks?.afterMutation?.(step);
@@ -582,6 +610,24 @@ export class DurablePortfolioStore {
     }));
   }
 
+  /**
+   * Local personal-use path: the recorded tombstone timestamp of a portfolio
+   * tombstoned through {@link delete}. Throws ResourceUnavailableError for
+   * anything that is not a tombstoned own portfolio — never a default value.
+   */
+  deletedAtOf(owner: OwnerRef, portfolioId: string): string {
+    const row = this.db
+      .prepare(
+        `SELECT deleted_at FROM portfolios
+          WHERE canonical_owner_id = ? AND tenant_id = ? AND portfolio_id = ? AND status = 'TOMBSTONED'`,
+      )
+      .get(owner.canonicalOwnerId, owner.tenantId, portfolioId) as { deleted_at: string } | undefined;
+    if (!row || typeof row.deleted_at !== 'string' || row.deleted_at.length === 0) {
+      throw new ResourceUnavailableError();
+    }
+    return row.deleted_at;
+  }
+
   private resolvePortfolio(
     owner: OwnerRef,
     portfolioId: string,
@@ -642,7 +688,7 @@ export class DurablePortfolioStore {
       .prepare(
         `SELECT holding_key, symbol, company_id, quantity, average_buy_price, current_price,
                 market_value, weight_percentage, active, source_broker, lineage_digest,
-                identity_status, resolution_disposition
+                identity_status, resolution_disposition, security_identity
            FROM portfolio_holdings
           WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?
           ORDER BY holding_key`,
@@ -933,7 +979,30 @@ export class DurablePortfolioStore {
       lineageDigest: String(r.lineage_digest),
       identityStatus: String(r.identity_status),
       resolutionDisposition: String(r.resolution_disposition),
+      securityIdentity: this.projectedSecurityIdentity(r.security_identity, String(r.symbol)),
     };
+  }
+
+  /**
+   * NULL stays explicitly unresolved (`null`); a stored value must conform to
+   * the canonical P04 D114 grammar or the read refuses instead of projecting
+   * a fabricated identity.
+   */
+  private projectedSecurityIdentity(raw: unknown, symbol: string): D114SecurityIdentity | null {
+    if (raw === null || raw === undefined) return null;
+    if (typeof raw !== 'string') {
+      throw new ContractEnvelopeViolationError(`holding ${symbol} has a non-string stored security_identity`);
+    }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      throw new ContractEnvelopeViolationError(`holding ${symbol} has a stored security_identity that is not valid JSON`);
+    }
+    if (!isD114SecurityIdentity(parsed)) {
+      throw new ContractEnvelopeViolationError(`holding ${symbol} has a stored security_identity that does not conform to the P04 D114 grammar`);
+    }
+    return parsed;
   }
 
   private validate(request: PortfolioSaveRequest): void {
@@ -953,6 +1022,57 @@ export class DurablePortfolioStore {
     if (keys.size !== request.holdings.length) {
       throw new InvalidPortfolioRequestError('duplicate holding symbols in the request');
     }
+    for (const h of request.holdings) {
+      if (h.securityIdentity !== undefined && h.securityIdentity !== null && !isD114SecurityIdentity(h.securityIdentity)) {
+        throw new InvalidPortfolioRequestError(
+          `holding ${h.symbol} carries a security identity that does not conform to the canonical P04 D114 grammar`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Silent series replacement is refused: if the previous revision stored an
+   * exact D114 identity for a holding key, a later revision may keep it or
+   * explicitly supply the SAME identity, and may associate one where none was
+   * stored — but it may never drop it or silently swap another series in.
+   */
+  private assertNoSilentIdentityReplacement(
+    owner: OwnerRef,
+    portfolioId: string,
+    currentRevision: number,
+    request: PortfolioSaveRequest,
+  ): void {
+    if (currentRevision < 1) return;
+    const prior = this.db
+      .prepare(
+        `SELECT holding_key, security_identity FROM portfolio_holdings
+          WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`,
+      )
+      .all(owner.canonicalOwnerId, portfolioId, currentRevision) as unknown as Array<{
+      holding_key: string;
+      security_identity: string | null;
+    }>;
+    const priorByKey = new Map(prior.map((r) => [r.holding_key, r.security_identity]));
+    for (const h of request.holdings) {
+      const priorIdentity = priorByKey.get(h.symbol);
+      if (priorIdentity == null) continue;
+      let priorParsed: unknown;
+      try {
+        priorParsed = JSON.parse(priorIdentity);
+      } catch {
+        throw new ContractEnvelopeViolationError(`stored security_identity for holding ${h.symbol} is not valid JSON`);
+      }
+      if (!isD114SecurityIdentity(priorParsed)) {
+        throw new ContractEnvelopeViolationError(`stored security_identity for holding ${h.symbol} does not conform to the P04 D114 grammar`);
+      }
+      const next = h.securityIdentity ?? null;
+      if (next === null || next.securityId !== priorParsed.securityId) {
+        throw new InvalidPortfolioRequestError(
+          `holding ${h.symbol} would silently replace stored security identity ${priorParsed.securityId}; an explicit identical identity is required`,
+        );
+      }
+    }
   }
 
   private writeRevision(
@@ -968,9 +1088,10 @@ export class DurablePortfolioStore {
         `expected revision ${expectedRevision} but the portfolio is at ${current.currentRevision}`,
       );
     }
-    if (current.currentRevision >= MAX_REVISIONS && operation !== 'DELETE') {
-      throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${MAX_REVISIONS}`);
+    if (current.currentRevision >= this.revisionCap && operation !== 'DELETE') {
+      throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${this.revisionCap}`);
     }
+    this.assertNoSilentIdentityReplacement(owner, portfolioId, current.currentRevision, request);
     const nextRevision = expectedRevision + 1;
     const contentDigest = contentDigestOf(request);
     // Gate E W-8 / BI-08: a save whose content digest matches an ALREADY
@@ -1034,8 +1155,8 @@ export class DurablePortfolioStore {
       `INSERT INTO portfolio_holdings
          (canonical_owner_id, portfolio_id, revision, holding_key, symbol, company_id,
           quantity, average_buy_price, current_price, market_value, weight_percentage,
-          active, source_broker, lineage_digest, identity_status, resolution_disposition, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          active, source_broker, lineage_digest, identity_status, resolution_disposition, security_identity, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const h of request.holdings) {
       insertHolding.run(
@@ -1055,6 +1176,7 @@ export class DurablePortfolioStore {
         h.lineageDigest,
         h.identityStatus,
         h.resolutionDisposition,
+        h.securityIdentity ? JSON.stringify(h.securityIdentity) : null,
         now,
       );
       this.afterMutation(`holding-insert:${h.symbol}`);
@@ -1367,8 +1489,8 @@ export class DurablePortfolioStore {
           contributions: 0,
         };
       }
-      if (current.currentRevision >= MAX_REVISIONS) {
-        throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${MAX_REVISIONS}`);
+      if (current.currentRevision >= this.revisionCap) {
+        throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${this.revisionCap}`);
       }
       const nextRevision = request.expectedRevision + 1;
       const contentDigest = contentDigestOf(request);

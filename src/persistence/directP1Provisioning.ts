@@ -292,6 +292,7 @@ const EXPECTED_MIGRATION_IDS = [
   '002_audit_event_sequence',
   '003_local_principal_bindings',
   '004_portfolio_contribution_provenance',
+  '005_holding_security_identity',
 ] as const;
 
 const EXPECTED_TABLE_COLUMNS: Readonly<Record<string, readonly ExpectedColumnSpec[]>> = {
@@ -341,6 +342,7 @@ const EXPECTED_TABLE_COLUMNS: Readonly<Record<string, readonly ExpectedColumnSpe
     { name: 'identity_status', type: 'TEXT', notnull: 0, pk: 0 },
     { name: 'resolution_disposition', type: 'TEXT', notnull: 0, pk: 0 },
     { name: 'created_at', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'security_identity', type: 'TEXT', notnull: 0, pk: 0 },
   ],
   portfolio_contributions: [
     { name: 'canonical_owner_id', type: 'TEXT', notnull: 1, pk: 1 },

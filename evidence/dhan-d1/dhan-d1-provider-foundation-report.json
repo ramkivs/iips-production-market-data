@@ -1,0 +1,118 @@
+{
+  "$schema": "https://iips.institutional/schemas/dhan-d1-provider-foundation-report.json",
+  "gateId": "DHAN-D1-PROVIDER-FOUNDATION",
+  "governingStandards": "AD-01..AD-18 / AD-CHARTER-2026-01",
+  "effectiveDate": "2026-09-25",
+  "executionMode": "PRE_ACCESS_NO_LIVE_CREDENTIALS / LOCAL_FIXTURE_AND_OFFLINE_DEV",
+  "accessStatus": {
+    "dhanCredentialsAvailable": false,
+    "realAuthenticationAttempted": false,
+    "realApiCallPerformed": false,
+    "connectivityProven": false,
+    "productionReadinessClaimed": false
+  },
+  "authoritativeBaseline": {
+    "remote": "origin",
+    "remoteUrl": "https://github.com/ramkivs/iips-production-market-data.git",
+    "baselineBranch": "main",
+    "baselineSha": "4d3e1cdca3a33da0ec3be8b336b17128108a502c",
+    "productionBranchModified": false
+  },
+  "architecture": {
+    "principle": "DHAN_IMPLEMENTED_AS_PROVIDER_BEHIND_EXISTING_PROVIDER_NEUTRAL_SPI",
+    "flow": [
+      "Dhan API",
+      "DhanApiClient",
+      "DhanMarketDataSource (implements existing MarketDataSource<T> SPI)",
+      "CanonicalEnvelope<MarketQuotePayload> (existing canonical contract)",
+      "Existing IIPS consumers"
+    ],
+    "newCanonicalContractIntroduced": false,
+    "existingContractReused": [
+      "src/spi/provider_spi.ts :: MarketDataSource<T>",
+      "src/contracts/d01_quotes.ts :: MarketQuotePayload / validateMarketQuotePayload",
+      "src/contracts/envelope.ts :: CanonicalEnvelope / createCanonicalEnvelope",
+      "src/contracts/provenance.ts :: DataProvenanceDTO / computeLineageHash",
+      "src/quality/freshness_evaluator.ts :: evaluateFreshness",
+      "src/security/secret_ref.ts :: SecretRef / validateSecretRef"
+    ]
+  },
+  "filesCreated": [
+    "src/providers/index.ts",
+    "src/providers/dhan/index.ts",
+    "src/providers/dhan/dhan_failures.ts",
+    "src/providers/dhan/dhan_config.ts",
+    "src/providers/dhan/dhan_dto.ts",
+    "src/providers/dhan/dhan_instrument_map.ts",
+    "src/providers/dhan/dhan_api_client.ts",
+    "src/providers/dhan/dhan_normalizer.ts",
+    "src/providers/dhan/dhan_market_data_source.ts",
+    "tests/fixtures/dhan_d1_fixtures.json",
+    "tests/dhan_d1_provider_foundation.test.ts",
+    "docs/DHAN-D1-PROVIDER-FOUNDATION.md",
+    "evidence/dhan-d1/dhan-d1-provider-foundation-report.json",
+    "evidence/dhan-d1/dhan-d1-provider-foundation-report.md"
+  ],
+  "filesModified": [
+    "src/index.ts"
+  ],
+  "credentialHandling": {
+    "mechanism": "EXTERNAL_SECRETREF_VAULT_POINTERS_RESOLVED_AT_CALL_TIME",
+    "environmentKeys": [
+      "IIPS_DHAN_BASE_URL",
+      "IIPS_DHAN_TIMEOUT_MS",
+      "IIPS_DHAN_ACCESS_TOKEN_SECRET_PATH",
+      "IIPS_DHAN_CLIENT_ID_SECRET_PATH",
+      "IIPS_DHAN_VAULT_PROVIDER",
+      "IIPS_DHAN_SECRET_VERSION"
+    ],
+    "credentialsCommitted": false,
+    "tokenHardCoded": false,
+    "defaultState": "PRE_ACCESS_CREDENTIALS_UNAVAILABLE"
+  },
+  "instrumentMapping": {
+    "registryShipsEmpty": true,
+    "realDhanSecurityIdsCommitted": false,
+    "unresolvedBehaviour": [
+      "NO_MAPPING_DATA_LOADED",
+      "UNMAPPED_COMPANY_ID"
+    ],
+    "silentFallbackPermitted": false
+  },
+  "syntheticFixtures": {
+    "file": "tests/fixtures/dhan_d1_fixtures.json",
+    "scenarios": [
+      "validQuote",
+      "staleQuoteConcession",
+      "staleQuoteSuppressed",
+      "malformedResponse",
+      "missingRequiredField",
+      "missingOhlcField",
+      "instrumentAbsentFromResponse",
+      "providerStatusFailure",
+      "authenticationFailure",
+      "rateLimited",
+      "serverError",
+      "transportTimeout",
+      "transportFailure"
+    ],
+    "containsCredentials": false,
+    "containsRealSecurityIds": false
+  },
+  "validation": {
+    "typecheck": "npx tsc --noEmit :: PASS",
+    "build": "npx tsc :: PASS",
+    "dhanGateSuite": "node --test dist/tests/dhan_d1_provider_foundation.test.js :: 21/21 PASS",
+    "fullRepositorySuite": "npm test :: 563/563 PASS, 0 FAIL",
+    "secretScan": "scanDirectoryForSecrets(src|tests|frontend) :: PASS (0 violations)"
+  },
+  "scopeControl": {
+    "nseChanges": "NONE",
+    "uiChanges": "NONE",
+    "unrelatedRefactoring": "NONE",
+    "canonicalArchitectureReplaced": false,
+    "mergedIntoProductionBranch": false,
+    "d115AuthorizationRequested": false
+  },
+  "nextExecutableGate": "DHAN-D2 (NOT STARTED — requires separate authorization)"
+}

@@ -1,0 +1,44 @@
+{
+  "url": "http://localhost:5173/dev/dhan-d2?scenario=stale",
+  "scenario": "stale",
+  "mounted": true,
+  "disclosure": "PRE_ACCESS / SYNTHETIC / OFFLINEDHAN is shown as a ROUTE/OPERATOR label only. The data below is SYNTHETIC FIXTURE DATA — it is not live Dhan data, no Dhan access has been granted, no Dhan credential exists in this application, and no Dhan API request is made by this page.PRE_ACCESS / SYNTHETIC / OFFLINE: qualification harness output; not live provider data",
+  "scenarioLabel": "STALE — aged synthetic quote",
+  "routeStates": {
+    "INFY": "▲STALESTALE",
+    "TCS": "▲STALESTALE",
+    "UNMAPPEDCO": "✕UNAVAILABLEUNAVAILABLE"
+  },
+  "routePrices": {
+    "INFY": "1,519",
+    "TCS": "3,845",
+    "UNMAPPEDCO": "not displayed"
+  },
+  "positionCurrent": {
+    "INFY": "151,900",
+    "TCS": "192,250",
+    "UNMAPPEDCO": "not displayed"
+  },
+  "positionPnl": {
+    "INFY": "6,850",
+    "TCS": "2,250",
+    "UNMAPPEDCO": "not displayed"
+  },
+  "positionLtp": {
+    "INFY": "1,519",
+    "TCS": "3,845",
+    "UNMAPPEDCO": "not displayed"
+  },
+  "portfolioState": "UNAVAILABLE",
+  "externalRequestCount": "0",
+  "governanceStripPresent": true,
+  "networkAttempts": [],
+  "consoleMessages": [
+    "[warn] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+    "[warn] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
+  ],
+  "tables": [
+    "Provider (route/operator) | Company | Market Data State | Price (LTP) | As Of | Quality | Unavailable Reason\nDHAN | INFY | ▲STALESTALE | 1,519 | 2026-09-25T09:40:00.000Z | STALE | —\nDHAN | TCS | ▲STALESTALE | 3,845 | 2026-09-25T09:40:00.000Z | STALE | —\nDHAN | UNMAPPEDCO | ✕UNAVAILABLEUNAVAILABLE | not displayed | not displayed | UNAVAILABLE | UNRESOLVED_INSTRUMENT",
+    "Symbol | Qty | Avg Buy | Invested | LTP | Current Value | Unrealised P&L | P&L % | Day Change | State | Disposition\nINFY | 100 | 1,450.5 | 145,050 | 1,519 | 151,900 | 6,850 | 4.72 | 1,100 | ▲STALESTALE | PRICED_FROM_CANONICAL_MARKET_DATA\nTCS | 50 | 3,800 | 190,000 | 3,845 | 192,250 | 2,250 | 1.18 | 1,750 | ▲STALESTALE | PRICED_FROM_CANONICAL_MARKET_DATA\nUNMAPPEDCO | 10 | 100 | 1,000 | not displayed | not displayed | not displayed | not displayed | not displayed | ✕UNAVAILABLEUNAVAILABLE | UNPRICED_NO_MARKET_DATA"
+  ]
+}

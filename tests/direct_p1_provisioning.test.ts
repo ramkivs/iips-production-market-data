@@ -5,10 +5,10 @@
  *
  * Covers:
  *   1. Runtime & dependency validation (Node >= 22.13.0, built-in node:sqlite,
- *      ordered migrations 001..004, PA-determined S1 identity constants).
+ *      ordered migrations 001..005, PA-determined S1 identity constants).
  *   2. Database destination validation (Windows & POSIX path rules, Git-worktree
  *      refusal, symlink target/ancestor refusal, non-file path refusal).
- *   3. Fresh provisioning end-to-end (migrations 001..004, user-portfolio schema,
+ *   3. Fresh provisioning end-to-end (migrations 001..005, user-portfolio schema,
  *      initial binding/membership/audit records, constraints, indexes, full G3 IPC
  *      server startup + wire v1 `portfolio.list`).
  *   4. Atomic transaction rollback & clean incomplete-file removal on fault.
@@ -337,7 +337,7 @@ function analyzePowerShell51Script(source: string): {
 }
 
 describe('Direct P1 Provisioning — Runtime & Dependency Validation', () => {
-  it('validates supported Node >= 22.13.0, flag-free node:sqlite, migrations 001..004, and S1 identity constants', () => {
+  it('validates supported Node >= 22.13.0, flag-free node:sqlite, migrations 001..005, and S1 identity constants', () => {
     const report = validateRuntimeAndDependencies();
     assert.equal(report.minimumNodeVersion, '22.13.0');
     assert.equal(report.foreignKeysPragmaSupported, true);
@@ -347,6 +347,7 @@ describe('Direct P1 Provisioning — Runtime & Dependency Validation', () => {
       '002_audit_event_sequence',
       '003_local_principal_bindings',
       '004_portfolio_contribution_provenance',
+      '005_holding_security_identity',
     ]);
     assert.equal(report.principalLabel, 'ramki-personal-local');
     assert.equal(report.tenantId, 'ipd-personal-local');
@@ -466,7 +467,7 @@ describe('Direct P1 Provisioning — Destination Path Validation', () => {
 });
 
 describe('Direct P1 Provisioning — Fresh Provisioning, Schema, Constraints & IPC Compatibility', () => {
-  it('initializes migrations 001..004, user-portfolio schema, initial binding/membership/audit records, and passes all verifiers', () =>
+  it('initializes migrations 001..005, user-portfolio schema, initial binding/membership/audit records, and passes all verifiers', () =>
     withTempWorkspace((dir) => {
       const storePath = join(dir, 'iips-data', 'iips', 'user-portfolio.sqlite');
       const identity = resolveDesignatedIdentityTriple();
@@ -491,7 +492,7 @@ describe('Direct P1 Provisioning — Fresh Provisioning, Schema, Constraints & I
       }
 
       // Schema & migration ledger checks
-      assert.equal(result.schema.migrationCount, 4);
+      assert.equal(result.schema.migrationCount, 5);
       assert.deepEqual(
         result.schema.appliedMigrations.map((m) => m.migrationId),
         GATE3_MIGRATIONS.map((m) => m.id),

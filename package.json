@@ -4,17 +4,18 @@
   "description": "Institutional Investment Platform System (IIPS) - Production Market Data & Intelligence Pipeline",
   "type": "module",
   "scripts": {
-    "build": "tsc && vite build && npm run build:portfolio-ui-package && npm run build:pit-package",
+    "build": "tsc && vite build && npm run build:portfolio-ui-package && npm run build:pit-package && npm run build:dhan-package",
     "build:tsc": "tsc",
     "build:vite": "vite build",
     "build:portfolio-ui-package": "tsc -p tsconfig.portfolio-ui-package.json",
     "build:pit-package": "tsc -p tsconfig.pit-package.json",
+    "build:dhan-package": "tsc -p tsconfig.dhan-package.json",
     "dev": "vite",
     "test": "node scripts/run-tests.mjs",
     "test:direct": "node --test --experimental-strip-types tests/*.test.ts",
-    "test:package-consumer": "npm run build:portfolio-ui-package && npm run build:pit-package && node scripts/verify-public-package.mjs",
-    "prepack": "npm run build:portfolio-ui-package && npm run build:pit-package",
-    "prepare": "npm run build:portfolio-ui-package && npm run build:pit-package"
+    "test:package-consumer": "npm run build:portfolio-ui-package && npm run build:pit-package && npm run build:dhan-package && node scripts/verify-public-package.mjs",
+    "prepack": "npm run build:portfolio-ui-package && npm run build:pit-package && npm run build:dhan-package",
+    "prepare": "npm run build:portfolio-ui-package && npm run build:pit-package && npm run build:dhan-package"
   },
   "keywords": [
     "iips",
@@ -55,6 +56,11 @@
     "./operator-drop": {
       "types": "./dist/package/src/operator_drop/package.d.ts",
       "import": "./dist/package/src/operator_drop/package.js"
+    },
+    "./dhan-server": {
+      "types": "./dist/package/src/providers/dhan/package.d.ts",
+      "import": "./dist/package/src/providers/dhan/package.js",
+      "default": "./dist/package/src/providers/dhan/package.js"
     }
   },
   "files": [

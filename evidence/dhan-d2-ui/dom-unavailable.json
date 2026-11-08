@@ -1,0 +1,44 @@
+{
+  "url": "http://localhost:5173/dev/dhan-d2?scenario=unavailable",
+  "scenario": "unavailable",
+  "mounted": true,
+  "disclosure": "PRE_ACCESS / SYNTHETIC / OFFLINEDHAN is shown as a ROUTE/OPERATOR label only. The data below is SYNTHETIC FIXTURE DATA — it is not live Dhan data, no Dhan access has been granted, no Dhan credential exists in this application, and no Dhan API request is made by this page.PRE_ACCESS / SYNTHETIC / OFFLINE: qualification harness output; not live provider data",
+  "scenarioLabel": "UNAVAILABLE — rejected synthetic quote",
+  "routeStates": {
+    "INFY": "✕UNAVAILABLEUNAVAILABLE",
+    "TCS": "✕UNAVAILABLEUNAVAILABLE",
+    "UNMAPPEDCO": "✕UNAVAILABLEUNAVAILABLE"
+  },
+  "routePrices": {
+    "INFY": "not displayed",
+    "TCS": "not displayed",
+    "UNMAPPEDCO": "not displayed"
+  },
+  "positionCurrent": {
+    "INFY": "not displayed",
+    "TCS": "not displayed",
+    "UNMAPPEDCO": "not displayed"
+  },
+  "positionPnl": {
+    "INFY": "not displayed",
+    "TCS": "not displayed",
+    "UNMAPPEDCO": "not displayed"
+  },
+  "positionLtp": {
+    "INFY": "not displayed",
+    "TCS": "not displayed",
+    "UNMAPPEDCO": "not displayed"
+  },
+  "portfolioState": "UNAVAILABLE",
+  "externalRequestCount": "0",
+  "governanceStripPresent": true,
+  "networkAttempts": [],
+  "consoleMessages": [
+    "[warn] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.",
+    "[warn] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
+  ],
+  "tables": [
+    "Provider (route/operator) | Company | Market Data State | Price (LTP) | As Of | Quality | Unavailable Reason\nDHAN | INFY | ✕UNAVAILABLEUNAVAILABLE | not displayed | not displayed | UNAVAILABLE | CANONICAL_VALIDATION_FAILURE\nDHAN | TCS | ✕UNAVAILABLEUNAVAILABLE | not displayed | not displayed | UNAVAILABLE | INSTRUMENT_NOT_IN_RESPONSE\nDHAN | UNMAPPEDCO | ✕UNAVAILABLEUNAVAILABLE | not displayed | not displayed | UNAVAILABLE | UNRESOLVED_INSTRUMENT",
+    "Symbol | Qty | Avg Buy | Invested | LTP | Current Value | Unrealised P&L | P&L % | Day Change | State | Disposition\nINFY | 100 | 1,450.5 | 145,050 | not displayed | not displayed | not displayed | not displayed | not displayed | ✕UNAVAILABLEUNAVAILABLE | UNPRICED_NO_MARKET_DATA\nTCS | 50 | 3,800 | 190,000 | not displayed | not displayed | not displayed | not displayed | not displayed | ✕UNAVAILABLEUNAVAILABLE | UNPRICED_NO_MARKET_DATA\nUNMAPPEDCO | 10 | 100 | 1,000 | not displayed | not displayed | not displayed | not displayed | not displayed | ✕UNAVAILABLEUNAVAILABLE | UNPRICED_NO_MARKET_DATA"
+  ]
+}

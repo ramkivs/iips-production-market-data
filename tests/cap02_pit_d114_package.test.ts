@@ -383,12 +383,14 @@ describe('CAP-02 B-1R public entry and manifest conformance', () => {
     const manifest = JSON.parse(readFileSync(resolve(REPO_ROOT, 'package.json'), 'utf8')) as {
       exports: Record<string, { import: string; types: string }>;
     };
-    // REG-06 admission (2026-11-01) added ./operator-drop to the authorized map.
+    // REG-06 admission (2026-11-01) added ./operator-drop; DHAN-D3-A added the
+    // server-only ./dhan-server provider boundary.
     assert.deepStrictEqual(Object.keys(manifest.exports), [
       './portfolio-ui',
       './pit',
       './d114-non-production',
       './operator-drop',
+      './dhan-server',
     ]);
     for (const entry of Object.values(manifest.exports)) {
       assert.ok(existsSync(resolve(REPO_ROOT, entry.import)), `missing ${entry.import}`);

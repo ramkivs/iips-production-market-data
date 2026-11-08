@@ -14,6 +14,11 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist-frontend',
-    sourcemap: true,
+    // Release artifacts must not embed original source in source maps: dev-only
+    // harness code and provider-adjacent modules would otherwise be recoverable
+    // from the published .map files. Internal debugging uses the dev server
+    // (vite serves maps in dev regardless of this setting) and the unpublished
+    // tsc `dist/` output, which keeps sourceMap: true in tsconfig.json.
+    sourcemap: false,
   },
 });

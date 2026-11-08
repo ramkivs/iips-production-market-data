@@ -6,8 +6,14 @@
  * closed read/write set. Every pre-authorization failure is Class P: zero bytes
  * and connection close, with the reason confined to the bounded local diagnostic
  * sink. Post-authorization failures are Class A typed, non-disclosing envelopes.
- * All four writes return WRITE_NOT_AUTHORIZED before any store mutation while the
- * W-1 conjunction is unmet.
+ *
+ * The v1 write operations historically returned WRITE_NOT_AUTHORIZED before any
+ * store mutation while the W-1 conjunction was unmet. Under the explicitly
+ * authorized local single-user personal path (IIPS_LOCAL_PERSONAL_USE=1 — see
+ * ./localPersonalUse.ts) the same four operations are READ-PATH-PRESERVING and
+ * fully execute: validation, binding resolution, transaction atomicity and
+ * duplicate protection all remain authoritative. With the setting absent, the
+ * historical refusal is byte-for-byte unchanged.
  *
  * This module deliberately has no import edge to persistence/provisioning.ts:
  * Gate A′ provisioning is unreachable from every IPC operation (static regression).
@@ -37,10 +43,23 @@ import {
 } from '../persistence/binding.js';
 import {
   DurablePortfolioStore,
+  InvalidPortfolioRequestError,
   ResourceUnavailableError,
+  RevisionConflictError,
+  type OwnerRef,
 } from '../persistence/portfolio_store.js';
+import {
+  isLocalPersonalUseEnabled,
+  revisionCapFor,
+} from './localPersonalUse.js';
+import {
+  mapManualRequest,
+  requireExpectedRevision,
+} from '../persistence/manualPersonalPortfolio.js';
 
 const RESOURCE_UNAVAILABLE_DETAIL = 'the requested resource is not available';
+const PERSONAL_PORTFOLIO_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+const DEFAULT_PORTFOLIO_ID = 'DEFAULT_PORTFOLIO';
 
 export interface ConnectionHandlerOptions {
   /**
@@ -50,6 +69,11 @@ export interface ConnectionHandlerOptions {
    */
   readonly settlement?: FrameSettlementPolicy;
   readonly idleTimeoutMs?: number;
+  /**
+   * Server-owned environment. The local personal-use switch is read from here
+   * (never from the request); defaults to the process environment.
+   */
+  readonly env?: NodeJS.ProcessEnv;
 }
 
 function refuseClassP(socket: Socket, reason: ClassPReason, detail: string): void {
@@ -92,11 +116,150 @@ function endFrame(socket: Socket, frame: Buffer): Promise<void> {
   });
 }
 
+/** Reads a trimmed portfolio identifier from a wire payload, with the local default. */
+function personalPortfolioId(payload: Record<string, unknown>): string {
+  const raw = payload.portfolioId;
+  if (raw === undefined || raw === null) return DEFAULT_PORTFOLIO_ID;
+  if (typeof raw !== 'string' || !PERSONAL_PORTFOLIO_ID_PATTERN.test(raw.trim())) {
+    throw new InvalidPortfolioRequestError('portfolioId is not admissible');
+  }
+  return raw.trim();
+}
+
+/** Reads an optional portfolio name (100-char bound) from a wire payload. */
+function personalPortfolioName(payload: Record<string, unknown>): string | undefined {
+  const raw = payload.portfolioName ?? payload.name;
+  if (raw === undefined || raw === null) return undefined;
+  if (typeof raw !== 'string') {
+    throw new InvalidPortfolioRequestError('portfolioName must be a string');
+  }
+  const trimmed = raw.trim();
+  if (trimmed.length === 0 || trimmed.length > 100) {
+    throw new InvalidPortfolioRequestError('portfolioName must be 1–100 characters');
+  }
+  return trimmed;
+}
+
+/**
+ * v1 view projection under the local personal-use mode: identical to the
+ * governed projection except the contribution ledger is scoped out of the
+ * wire. The frozen G2 consumer contract has no honest mapping for contribution
+ * rows (it requires a per-batch holdingsCount the v1 rows do not carry), so a
+ * non-empty list would be refused upstream instead of passed through. The
+ * ledger is still written to the database — audit history remains queryable
+ * via `portfolio.revisions` and the local store — and this projection scope is
+ * recorded in the local save receipt and the local-personal-use documentation.
+ */
+function personalGet(
+  store: DurablePortfolioStore,
+  owner: OwnerRef,
+  portfolioId: string,
+): ReturnType<DurablePortfolioStore['get']> {
+  const detail = store.get(owner, portfolioId);
+  return { ...detail, contributions: [] };
+}
+
+interface PersonalWriteReceipt {
+  readonly disposition: 'SAVED_NEW_BATCH' | 'MERGED_INTO_EXISTING' | 'ALREADY_IMPORTED_NO_OP';
+  readonly revision: number;
+  readonly isDuplicate: boolean;
+  readonly holdingsSavedCount: number;
+  readonly totalMarketValue: number;
+  readonly weightSumPercentage: number;
+  readonly savedAt: string;
+  readonly provenanceDigest: string;
+  readonly portfolio: ReturnType<DurablePortfolioStore['get']>;
+}
+
+function personalReceipt(
+  store: DurablePortfolioStore,
+  owner: OwnerRef,
+  portfolioId: string,
+  revision: number,
+  heldCount: number,
+  isDuplicate: boolean,
+  disposition: PersonalWriteReceipt['disposition'],
+): PersonalWriteReceipt {
+  const detail = personalGet(store, owner, portfolioId);
+  return {
+    disposition,
+    revision,
+    isDuplicate,
+    holdingsSavedCount: isDuplicate ? 0 : heldCount,
+    totalMarketValue: detail.totalMarketValue,
+    weightSumPercentage: detail.weightSumPercentage,
+    savedAt: detail.lastUpdated,
+    provenanceDigest: detail.provenanceDigest,
+    portfolio: detail,
+  };
+}
+
+/**
+ * Executes one v1 write op under the local single-user personal path. Callers
+ * must have checked `isLocalPersonalUseEnabled` and resolved the binding. All
+ * validation stays authoritative; errors are typed InvalidPortfolioRequestError
+ * (400 INVALID_REQUEST) or RevisionConflictError (409), mapped by the caller's
+ * typed catch block. Nothing is defaulted silently; no partial state survives a
+ * failure (every op runs in one IMMEDIATE transaction inside the store).
+ */
+function executeLocalPersonalWrite(
+  store: DurablePortfolioStore,
+  owner: OwnerRef,
+  envelope: AnyRequestEnvelope,
+): PersonalWriteReceipt | { readonly portfolioId: string; readonly deletedAt: string } {
+  const requestId = envelope.requestId;
+  void requestId;
+  const payload = (envelope.payload ?? {}) as Record<string, unknown>;
+  const options =
+    payload.options !== null && typeof payload.options === 'object' && !Array.isArray(payload.options)
+      ? (payload.options as Record<string, unknown>)
+      : {};
+  const mode = options.mode === 'REPLACE' || payload.operation === 'REPLACE' ? 'REPLACE' : 'MERGE';
+  const op = envelope.op;
+
+  switch (op) {
+    case 'portfolio.create': {
+      const portfolioId = personalPortfolioId(payload);
+      const portfolioName = personalPortfolioName(payload);
+      const request = mapManualRequest(payload.holdings, 'MERGE');
+      const revision = store.create(owner, portfolioId, {
+        ...request,
+        ...(portfolioName !== undefined ? { name: portfolioName } : {}),
+      });
+      return personalReceipt(store, owner, portfolioId, revision, request.holdings.length, false, 'SAVED_NEW_BATCH');
+    }
+    case 'portfolio.save':
+    case 'portfolio.reset': {
+      const portfolioId = personalPortfolioId(payload);
+      const expectedRevision = requireExpectedRevision(payload.expectedRevision);
+      const request = mapManualRequest(payload.holdings, mode);
+      const next = op === 'portfolio.reset'
+        ? store.reset(owner, portfolioId, request, expectedRevision)
+        : store.save(owner, portfolioId, request, expectedRevision);
+      const isDuplicate = next === expectedRevision;
+      const disposition = isDuplicate ? 'ALREADY_IMPORTED_NO_OP' : 'MERGED_INTO_EXISTING';
+      return personalReceipt(store, owner, portfolioId, next, request.holdings.length, isDuplicate, disposition);
+    }
+    case 'portfolio.delete': {
+      const portfolioId = personalPortfolioId(payload);
+      const expectedRevision = requireExpectedRevision(payload.expectedRevision);
+      store.delete(owner, portfolioId, expectedRevision);
+      // The store tombstoned the row inside the same transaction; report the
+      // delete timestamp it recorded (never a local guess).
+      const deletedAt = store.deletedAtOf(owner, portfolioId);
+      return { portfolioId, deletedAt };
+    }
+    default:
+      throw new InvalidPortfolioRequestError(`op ${String(op)} is not a local personal write`);
+  }
+}
+
 export function createConnectionHandler(
   db: DatabaseSync,
   options: ConnectionHandlerOptions = {},
 ): (socket: Socket) => void {
-  const store = new DurablePortfolioStore(db);
+  const personalUse = isLocalPersonalUseEnabled(options.env ?? process.env);
+  const store = new DurablePortfolioStore(db, undefined, { revisionCap: revisionCapFor(options.env ?? process.env) });
   const settlement: FrameSettlementPolicy = options.settlement ?? 'half-close-required';
 
   return (socket: Socket): void => {
@@ -269,14 +432,13 @@ export function createConnectionHandler(
           return;
         }
 
+        let result: unknown;
         if ((IPC_WRITE_OPERATIONS as readonly string[]).includes(envelope.op)) {
-          // Gate E W-1(3) and W-1(4) are false: refuse before any mutation. No
-          // environment flag, test result or operator assertion can enable writes.
-          await writeGuarded(classAFrame(envelope.op, 'WRITE_NOT_AUTHORIZED', requestId));
-          return;
+          if (!personalUse) { await writeGuarded(classAFrame(envelope.op, 'WRITE_NOT_AUTHORIZED', requestId)); return; }
+          const receipt = executeLocalPersonalWrite(store, owner, envelope);
+          await writeGuarded(successFrame(envelope.op, receipt, requestId)); return;
         }
 
-        let result: unknown;
         switch (envelope.op) {
           case 'portfolio.list':
             // Contract v1 §6: the `portfolio.list` result IS `PortfolioSummary[]`.
@@ -286,9 +448,9 @@ export function createConnectionHandler(
             result = store.list(owner);
             break;
           case 'portfolio.get': {
-            const portfolioId = String(payload.portfolioId ?? 'DEFAULT_PORTFOLIO');
+            const portfolioId = personalUse ? personalPortfolioId(payload) : String(payload.portfolioId ?? 'DEFAULT_PORTFOLIO');
             // Contract v1 §6: the `portfolio.get` result IS `PortfolioDetail`.
-            result = store.get(owner, portfolioId);
+            result = personalUse ? personalGet(store, owner, portfolioId) : store.get(owner, portfolioId);
             break;
           }
           case 'portfolio.revisions': {
@@ -310,6 +472,14 @@ export function createConnectionHandler(
         if (error instanceof ResourceUnavailableError) {
           // Missing, foreign and tombstoned portfolios share one byte-stable outcome.
           await write(classAFrame(envelope.op, 'RESOURCE_UNAVAILABLE', envelope.requestId, RESOURCE_UNAVAILABLE_DETAIL, responseVersion));
+          return;
+        }
+        if (error instanceof InvalidPortfolioRequestError) {
+          await write(classAFrame(envelope.op, 'INVALID_REQUEST', envelope.requestId, 'the request is not admissible', responseVersion));
+          return;
+        }
+        if (error instanceof RevisionConflictError) {
+          await write(classAFrame(envelope.op, 'REVISION_CONFLICT', envelope.requestId, 'the revision guard does not match the current revision', responseVersion));
           return;
         }
         const outcome: ClassAOutcome = 'UNAVAILABLE';
