@@ -1,33 +1,26 @@
 /**
- * O5-A — the single authorized shipped-code consumer of the durable
- * broker-import leg.
+ * The broker-import consumer surface: one callable plus its construction.
  *
- * Authority: PA decision act `IIPS-V3-O05-PRODUCTION-CONSUMER-PA-DECISION-2026-10-30-01`
- * (option `O5-A`), clause 1(a). Scope is fixed by that act: this module and its
- * one call site make the durable leg reachable from shipped code and
- * demonstrate, in the product path, that every write is refused.
+ * It deliberately exposes only what the O5-A act authorizes. The consumer is
+ * reachable from exactly one composed call site in `entrypoint.ts` and is not
+ * an IPC operation.
  *
- * What this module is:
- *   - a factory over the caller's ALREADY-OPEN `node:sqlite` handle. It opens no
- *     connection, no file, no directory and no transaction;
- *   - a consumer that constructs `DurablePortfolioStorePort` — the designated
- *     write-gate boundary — and delegates every import to `persistBrokerImport`.
+ * AUTHORIZATION (2026-11-09)
+ *   The write gate is unchanged and still decides. What changed is that the
+ *   durable port is now constructed with the SERVER-OWNED environment, so the
+ *   explicit local single-user carve-out (`IIPS_LOCAL_PERSONAL_USE=1` plus a
+ *   validated ACTIVE local principal binding that equals the owner the import
+ *   targets) reaches `evaluatePortSaveGuard` through the port instead of being
+ *   structurally unreachable.
  *
- * What it is not, and must not become:
- *   - not a write authorization. `evaluatePortSaveGuard()` is hard-false for
- *     W-1(3)/W-1(4), so the port refuses before a transaction begins and
- *     `persistBrokerImport` returns `WRITE_NOT_AUTHORIZED` with
- *     `storeEffect: 'NONE'`;
- *   - not an IPC operation, route, endpoint or caller surface: `dispatch.ts` and
- *     `protocol.ts` are untouched and the closed operation set is unchanged;
- *   - not a second identity source: the owner is supplied by the in-repository
- *     caller and is never derived from request content;
- *   - never a direct construction of `DurablePortfolioStore`. That class is the
- *     lower-level component used by qualification fixtures; constructing it here
- *     would step around the W-1 boundary the port enforces.
+ *   A consumer constructed without options — the historical shape, and every
+ *   pre-existing caller — still refuses every import with
+ *   `WRITE_NOT_AUTHORIZED` and zero store effect. Qualification never implies
+ *   authorization; this module never qualifies, maps or authorizes anything
+ *   itself.
  */
 import type { DatabaseSync } from 'node:sqlite';
-import { DurablePortfolioStorePort } from '../persistence/durablePortfolioStorePort.js';
+import { DurablePortfolioStorePort, type DurablePortfolioStorePortOptions } from '../persistence/durablePortfolioStorePort.js';
 import {
   persistBrokerImport,
   type BrokerImportOutcome,
@@ -46,6 +39,15 @@ import type { DhanInstrumentRegistry } from '../providers/dhan/dhan_instrument_m
 export type BrokerImportConsumer = (owner: OwnerRef, request: BrokerImportRequest) => BrokerImportOutcome;
 
 /**
+ * Construction options. `identity` is the Stage 4 governed P04 + P7 pair;
+ * `authorization` carries the server-owned environment and the named write
+ * scope for the durable port's write gate.
+ */
+export interface CreateBrokerImportConsumerOptions extends MapBrokerImportHoldingsOptions {
+  readonly authorization?: Pick<DurablePortfolioStorePortOptions, 'env' | 'revisionCap'>;
+}
+
+/**
  * The one factory (act clause 1(a)). Binds the port to the caller's existing
  * handle and returns the consumer. Pure construction: no I/O, no migration, no
  * guard evaluation, no transaction.
@@ -54,20 +56,32 @@ export type BrokerImportConsumer = (owner: OwnerRef, request: BrokerImportReques
  * each holding's security identity through the governed P04 → P7 joint path
  * before persistence. When absent, the pre-Stage-4 fallback behavior applies
  * (D114 identity built directly from broker-supplied ISIN + series).
+ *
+ * When `authorization` is supplied, the durable port resolves the write
+ * authorization per call from that environment plus the ACTIVE binding. When
+ * absent, the port is constructed exactly as before: no authorization context,
+ * guard default-deny, `WRITE_NOT_AUTHORIZED`.
  */
 export function createBrokerImportConsumer(
   db: DatabaseSync,
-  options: MapBrokerImportHoldingsOptions = {},
+  options: CreateBrokerImportConsumerOptions = {},
 ): BrokerImportConsumer {
-  const port = new DurablePortfolioStorePort(db);
-  return (owner, request) => submitBrokerImport(port, owner, request, options);
+  const { authorization, ...identity } = options;
+  const port = authorization
+    ? new DurablePortfolioStorePort(db, {
+        scope: 'BROKER_OBSERVED_IMPORT',
+        ...(authorization.env !== undefined ? { env: authorization.env } : {}),
+        ...(authorization.revisionCap !== undefined ? { revisionCap: authorization.revisionCap } : {}),
+      })
+    : new DurablePortfolioStorePort(db);
+  return (owner, request) => submitBrokerImport(port, owner, request, identity);
 }
 
 /**
  * The one delegating function (act clause 1(a)). The port's own mutating methods
- * evaluate the frozen Gate E W-1 conjunction first, so an otherwise saveable
- * import still returns `WRITE_NOT_AUTHORIZED` with `storeEffect: 'NONE'` and no
- * row is touched.
+ * evaluate the frozen Gate E W-1 conjunction first, so an unauthorized import
+ * returns `WRITE_NOT_AUTHORIZED` with `storeEffect: 'NONE'` and no row is
+ * touched.
  */
 export function submitBrokerImport(
   port: DurablePortfolioStorePort,

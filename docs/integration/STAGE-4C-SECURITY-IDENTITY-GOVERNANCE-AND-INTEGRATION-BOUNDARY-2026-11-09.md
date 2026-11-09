@@ -62,11 +62,19 @@ Stage 4 implements the governed, non-production security identity ingestion and 
 |---|---|
 | Identity qualification tests | 27/27 pass (`tests/irr_stage4_security_identity.test.ts`) |
 | Ingestion integration tests | 7/7 pass (`tests/irr_stage4_ingestion_integration.test.ts`) |
-| Combined Stage 4 tests | 36/36 pass |
+| Combined Stage 4 tests | 35/35 pass (27 + 8; see CORRECTION-2026-11-09 below) |
 | TypeScript typecheck | `tsc --noEmit` exit 0 |
 | Package-consumer test | PASS (bundle purity: `forbiddenHits: []`) |
 | Full test suite | 1,403 passed, 0 failed, 1 skipped (pre-existing unrelated) |
 | PR #144 CI `typecheck · build · test` | pass |
+
+> **CORRECTION-2026-11-09 (append-only correction; prior text retained verbatim above).**
+> This document recorded "7/7 pass (`tests/irr_stage4_ingestion_integration.test.ts`)" and "Combined
+> Stage 4 tests **36/36**" while also recording "27/27 (`tests/irr_stage4_security_identity.test.ts`)".
+> Measured on `main` at `709fd13c77e90df05900859d23ba57d1004197a0`, the ingestion suite executes **8**
+> subtests, so the combined Stage 4 total is **27 + 8 = 35**, not 36. The "36/36" figure is withdrawn;
+> the qualification in the following paragraph is unaffected. Evidence:
+> `docs/integration/BROKER-IMPORT-IDENTITY-RECONCILIATION-AND-W1-ADMISSION-ASSESSMENT-2026-11-09.md` §1.4.
 
 **Limitation on claims:** The above evidence demonstrates the tested persistence capability through direct-store fixtures. It does **not** demonstrate normal application integration through the authorized consumer path, which remains blocked (see §4 and §5).
 

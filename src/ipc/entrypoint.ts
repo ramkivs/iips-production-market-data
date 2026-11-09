@@ -31,8 +31,14 @@ import {
   type IpcHandle,
 } from './endpoint.js';
 import { createConnectionHandler } from './dispatch.js';
-import { LOCAL_PERSONAL_USE_SETTING } from './localPersonalUse.js';
+import { LOCAL_PERSONAL_USE_SETTING, revisionCapFor } from './localPersonalUse.js';
 import { createBrokerImportConsumer, type BrokerImportConsumer } from './brokerImportConsumer.js';
+import {
+  brokerImportConsumerOptions,
+  composeBrokerImportIdentityDependencies,
+  type BrokerImportIdentityDependencies,
+  type ComposeBrokerImportIdentityDependenciesOptions,
+} from './brokerImportComposition.js';
 
 export const DATABASE_PATH_SETTING = 'IIPS_G3_DATABASE_PATH';
 
@@ -44,7 +50,7 @@ export const GATE3_MIGRATIONS: readonly Migration[] = [
   migration005HoldingSecurityIdentity,
 ];
 
-export type StartupPhase = 'validate' | 'connect' | 'migrate' | 'verify' | 'bind';
+export type StartupPhase = 'validate' | 'connect' | 'migrate' | 'verify' | 'compose' | 'bind';
 
 export interface StartupOutcome {
   readonly ok: boolean;
@@ -59,14 +65,42 @@ export interface StartupOutcome {
    * refused by the frozen Gate E W-1 conjunction with zero store effect; it
    * exists to make the durable leg reachable from shipped code, not to enable a
    * write. Nothing dispatches to it.
+   *
+   * Stage 4: this consumer is composed with the governed P04 security master
+   * and retained P7 instrument registry, so importing holdings qualifies each
+   * security identity through the existing joint P04 → P7 path. The write gate
+   * is unchanged: qualification never implies authorization.
    */
   readonly brokerImportConsumer?: BrokerImportConsumer;
+  /**
+   * The identity dependencies the consumer above was actually composed with,
+   * so the composed path is inspectable rather than inferred. Provenance only:
+   * it records which governed sources were wired, not that any holding
+   * qualified and not that any write is authorized.
+   */
+  readonly brokerImportIdentity?: BrokerImportIdentityProvenance;
+}
+
+/** Provenance of the composed broker-import identity dependencies. */
+export interface BrokerImportIdentityProvenance {
+  /** Governed P04 corpus revision, when the master carries one. */
+  readonly securityMasterRevision: string | null;
+  /** Instrument mappings actually available for P7 series evidence. */
+  readonly registryMappingCount: number;
 }
 
 export interface StartupOptions {
   env?: NodeJS.ProcessEnv;
   platform?: NodeJS.Platform;
   serverFactory?: (path: string) => import('node:net').Server;
+  /**
+   * Explicit governed identity dependencies for broker-import qualification.
+   * Omitted in normal operation, where the composition root loads the governed
+   * P04 master and retained P7 registry itself. Tests use this seam to supply
+   * fixtures; it can never weaken qualification, because the consumer's Stage 4
+   * path fails closed on any unresolved evidence.
+   */
+  brokerImportIdentity?: ComposeBrokerImportIdentityDependenciesOptions;
 }
 
 function fail(phase: StartupPhase, error: unknown): StartupOutcome {
@@ -118,13 +152,44 @@ export async function startIpcServer(options: StartupOptions = {}): Promise<Star
     return fail('verify', error);
   }
 
-  // 4b. O5-A single authorized call site (PA act `...-PA-DECISION-2026-10-30-01`
+  // 4b. Stage 4 composition of the governed identity dependencies, then the
+  // O5-A single authorized call site (PA act `...-PA-DECISION-2026-10-30-01`
   // clause 1(b)): construct the durable broker-import consumer over the handle
-  // this process already opened. Construction opens no file, begins no
-  // transaction and writes nothing; the consumer refuses every import at the
-  // write-gate boundary. No route, endpoint or operation is added, and no
-  // existing caller changes.
-  const brokerImportConsumer = createBrokerImportConsumer(db);
+  // this process already opened, now supplied with the SAME governed P04
+  // security master and retained P7 registry the rest of the application uses,
+  // so broker-import holdings are qualified through the existing joint
+  // P04 → P7 path instead of the pre-Stage-4 fallback.
+  //
+  // Construction opens no file other than the retained P7 qualification
+  // manifest, begins no transaction and writes nothing. The consumer still
+  // refuses every import at the write-gate boundary: composing qualification
+  // does not authorize a write, and no route, endpoint or operation is added.
+  let brokerImportConsumer: BrokerImportConsumer;
+  let brokerImportIdentity: BrokerImportIdentityProvenance;
+  try {
+    const identityDependencies: BrokerImportIdentityDependencies =
+      composeBrokerImportIdentityDependencies(options.brokerImportIdentity ?? {});
+    // The authorization half is supplied from SERVER-OWNED state only: the
+    // process environment (`IIPS_LOCAL_PERSONAL_USE`) and the ACTIVE local
+    // principal binding, which the durable port resolves per call and must
+    // match the owner the import targets. Absent the switch or a matching
+    // binding, the port still supplies no context and the guard still returns
+    // its unchanged hard-false Gate 4 / Gate 5 refusal.
+    brokerImportConsumer = createBrokerImportConsumer(db, {
+      ...brokerImportConsumerOptions(identityDependencies),
+      authorization: { env, revisionCap: revisionCapFor(env) },
+    });
+    brokerImportIdentity = Object.freeze({
+      securityMasterRevision: identityDependencies.securityMaster.sourceRevision?.batchId ?? null,
+      registryMappingCount: identityDependencies.registry.list().length,
+    });
+  } catch (error) {
+    // Fail closed at a bounded, explicitly named phase. There is no fallback to
+    // an unqualified consumer: a governed identity source that cannot be
+    // composed refuses startup rather than silently reverting to pre-Stage-4
+    // identity construction.
+    return fail('compose', error);
+  }
 
   // 5. bind the same-host endpoint
   try {
@@ -136,7 +201,7 @@ export async function startIpcServer(options: StartupOptions = {}): Promise<Star
       platform,
       ...(options.serverFactory ? { serverFactory: options.serverFactory } : {}),
     });
-    return { ok: true, target: handle.target, handle, brokerImportConsumer };
+    return { ok: true, target: handle.target, handle, brokerImportConsumer, brokerImportIdentity };
   } catch (error) {
     if (
       error instanceof EndpointCollisionError ||

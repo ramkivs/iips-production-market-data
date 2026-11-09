@@ -265,6 +265,39 @@ export interface PortfolioDetail extends PortfolioSummary {
 }
 
 /**
+ * One retained broker-import evidence entry, as exposed to the local
+ * single-user application by `portfolio.get`.
+ *
+ * This is the durable contribution ledger projected into the per-import shape
+ * the application actually needs to answer "which broker file produced this
+ * portfolio, and when". Every value is read from the stored row; a fact that
+ * was never recorded stays `null` rather than being defaulted or inferred.
+ */
+export interface PortfolioImportEvidence {
+  /** SHA-256 of the uploaded file's bytes — the file's own evidence identity. */
+  readonly contentDigest: string | null;
+  /** SHA-256 over the normalised holdings that were committed. */
+  readonly lineageDigest: string | null;
+  readonly fileName: string | null;
+  readonly sourceBroker: string | null;
+  /** The broker statement's import instant, as recorded. */
+  readonly importedAt: string | null;
+  /** When the revision was committed. */
+  readonly contributedAt: string;
+  /** What the import did: new batch, merge, reset or replace. */
+  readonly semantics: ContributionSemantics | null;
+}
+
+/**
+ * The `portfolio.get` projection for the explicitly authorized local
+ * single-user path: the governed detail, the governed contribution rows
+ * withheld (see `dispatch.personalGet`), plus the retained import evidence.
+ */
+export interface LocalPortfolioDetail extends PortfolioDetail {
+  readonly importEvidence: PortfolioImportEvidence[];
+}
+
+/**
  * `RevisionEntry` (contract v1 §6, `portfolio.revisions`) plus the three
  * DR-2 / DQ-1 stored-row values. Every value comes from THIS historical row;
  * no current-revision value is borrowed and `isSaved` is deliberately absent
