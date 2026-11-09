@@ -128,3 +128,7 @@ export type { MarketDataDTO } from '../../transports/market_data_dto.js';
 export * from './dhan_instrument_master_source.js';
 export * from './dhan_instrument_master_parser.js';
 export * from './dhan_instrument_master_qualification.js';
+
+export { DhanIdentityApiService } from './dhan_identity_api.js';
+export type { IdentityApiResult, ExactIdentityRequest, InstrumentSearchResult } from './dhan_identity_api.js';
+export type { HoldingIdentityInput, SecurityIdentityQualificationResult, SecurityIdentityQualified, SecurityIdentityUnresolved } from './dhan_security_identity_service.js';
