@@ -32,7 +32,7 @@ Set-StrictMode -Version Latest
 # Verified 2026-11-05 from the live repositories.
 # ----------------------------------------------------------------------------------------------
 $script:IipsExpectedIrrCommit = '9e0a0415b76571fc4db1747b2da63c73fa0447d3'
-$script:IipsExpectedIpdCommit = 'b605a61458a655bb555c6f340332fcf77a85c870'
+$script:IipsExpectedIpdCommit = 'ae393aafdb35869bd039e1354b988e4232b26f7c'
 $script:IipsMinimumNodeMajor = 22
 $script:IipsMinimumNodeMinor = 13
 $script:IipsMinimumNodePatch = 0
@@ -406,7 +406,13 @@ function Start-IipsService {
     $outLog = Join-Path $LogDirectory "$Label.out.log"
     $errLog = Join-Path $LogDirectory "$Label.err.log"
 
-    foreach ($k in $Environment.Keys) { Set-Item -Path "Env:\$k" -Value $Environment[$k] }
+    # Save and set environment variables for child-process inheritance only.
+    # Restored immediately after Start-Process so they never leak beyond this script.
+    $savedEnv = @{}
+    foreach ($k in $Environment.Keys) {
+        $savedEnv[$k] = [Environment]::GetEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+        [Environment]::SetEnvironmentVariable($k, $Environment[$k], [System.EnvironmentVariableTarget]::Process)
+    }
 
     Write-IipsInfo "START $Label"
     Write-IipsInfo "      exe  : $Executable"
@@ -421,6 +427,15 @@ function Start-IipsService {
         -RedirectStandardOutput $outLog `
         -RedirectStandardError $errLog `
         -PassThru
+
+    # Restore environment variables now - the child process already inherited its own copy.
+    foreach ($k in $savedEnv.Keys) {
+        if ($savedEnv[$k] -eq $null) {
+            [Environment]::RemoveEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+            continue
+        }
+        [Environment]::SetEnvironmentVariable($k, $savedEnv[$k], [System.EnvironmentVariableTarget]::Process)
+    }
 
     if ($null -eq $proc) { throw "$Label : Start-Process returned no process object." }
     Start-Sleep -Milliseconds 900
@@ -457,6 +472,27 @@ function Stop-IipsProcessTree {
         Write-IipsInfo "PID $ProcessId $Label is no longer running"
         return 0
     }
+    # Verify this is an IIPS process before terminating - never kill unrelated applications.
+    $cmdLine = ''
+    try {
+        $wmiProc = Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction Stop
+        $cmdLine = $wmiProc.CommandLine
+    }
+    catch {
+        throw "PID $ProcessId $Label: could not inspect process command line. Refusing to terminate an unverified process."
+    }
+
+    $isIisProcess = $false
+    if ($null -ne $cmdLine -and $cmdLine.Length -gt 0) {
+        if ($cmdLine -like '*iips-production-market-data*') { $isIisProcess = $true }
+        if ($cmdLine -like '*iips-review-recovered*') { $isIisProcess = $true }
+        if ($cmdLine -like '*executive-transport*') { $isIisProcess = $true }
+        if ($cmdLine -like '*dist\src\ipc\entrypoint*') { $isIisProcess = $true }
+    }
+    if (-not $isIisProcess) {
+        throw "PID $ProcessId $Label is not an IIPS process (command line: $cmdLine). Refusing to terminate unrelated applications."
+    }
+
     $taskkill = Join-Path $env:SystemRoot 'System32\taskkill.exe'
     if (-not (Test-Path -LiteralPath $taskkill)) { throw "taskkill.exe was not found at $taskkill - cannot terminate a process tree safely." }
 
@@ -741,8 +777,9 @@ function Test-IipsCommitPin {
         [Parameter(Mandatory = $true)][string] $ExpectedCommit,
         [Parameter(Mandatory = $true)][string] $GitExe
     )
-    $head = (Invoke-IipsCapture -Executable $GitExe -Arguments @('-C', $RepoDir, 'rev-parse', 'HEAD')).Combined
-    if ($LASTEXITCODE -ne 0) { throw "$Label : 'git rev-parse HEAD' failed: $head" }
+    $result = Invoke-IipsCapture -Executable $GitExe -Arguments @('-C', $RepoDir, 'rev-parse', 'HEAD')
+    if ($result.ExitCode -ne 0) { throw "$Label : 'git rev-parse HEAD' failed: $($result.Combined)" }
+    $head = $result.StdOut.Trim()
     if ($head.Length -ne 40) { throw "$Label : HEAD is not a 40-character SHA: '$head'" }
 
     $drifted = -not [string]::Equals($head, $ExpectedCommit, [System.StringComparison]::OrdinalIgnoreCase)
@@ -768,8 +805,9 @@ function Assert-IipsCleanTree {
         [Parameter(Mandatory = $true)][string] $Label,
         [Parameter(Mandatory = $true)][string] $GitExe
     )
-    $status = (Invoke-IipsCapture -Executable $GitExe -Arguments @('-C', $RepoDir, 'status', '--porcelain')).Combined
-    if ($LASTEXITCODE -ne 0) { throw "$Label : 'git status --porcelain' failed." }
+    $result = Invoke-IipsCapture -Executable $GitExe -Arguments @('-C', $RepoDir, 'status', '--porcelain')
+    if ($result.ExitCode -ne 0) { throw "$Label : 'git status --porcelain' failed: $($result.Combined)" }
+    $status = $result.StdOut.Trim()
     if ($status.Length -ne 0) { throw "$Label : working tree is not clean after a fresh clone:`n$status" }
     Write-IipsOk "$Label working tree clean (0 modified, 0 untracked)"
 }
