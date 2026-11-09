@@ -152,8 +152,14 @@ that same compilation emits `dist\src\ipc\entrypoint.js`.
 
 ### 6.4 Startup Order, Diagnostics and Exit Codes
 
-Startup order is fixed: **validate → connect → migrate → verify → bind**. There is no fallback,
-retry or downgrade; any fault returns a phase-coded outcome and creates no endpoint.
+Startup order is fixed: **validate → connect → migrate → verify → compose → bind**. There is no
+fallback, retry or downgrade; any fault returns a phase-coded outcome and creates no endpoint.
+
+Phase `compose` resolves the governed identity dependencies the broker-import consumer is built
+with: the governed D05 authenticated-universe security master and the retained P7 qualification
+manifest registry. It reads only that local, already-retained manifest — it opens no provider
+connection, resolves no credential and qualifies no holding. If a governed source cannot be
+composed, startup refuses at `compose` rather than reverting to the pre-Stage-4 identity path.
 
 - All diagnostics are written to **stderr**, never stdout.
 - Success prints `[g3] listening on windows-named-pipe \\.\pipe\iips-user-portfolio-v1` and the

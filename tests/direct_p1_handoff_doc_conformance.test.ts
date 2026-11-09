@@ -217,7 +217,7 @@ describe('Direct P1 operator instructions — Windows provider startup', () => {
   });
 
   it('documents the fixed startup order and the stderr diagnostic contract', () => {
-    assert.match(doc, /validate → connect → migrate → verify → bind/);
+    assert.match(doc, /validate → connect → migrate → verify → compose → bind/);
     const entrypoint = repo('src/ipc/entrypoint.ts');
     assert.match(entrypoint, /console\.error\(`\[g3\] startup refused at phase/);
     assert.match(doc, /\[g3\] startup refused at phase <phase>: <error>/);
