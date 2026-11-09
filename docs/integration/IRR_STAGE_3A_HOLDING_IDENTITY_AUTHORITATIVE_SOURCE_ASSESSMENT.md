@@ -125,6 +125,18 @@ Not applicable — no such path exists. W-1 hard-false (`WRITE_NOT_AUTHORIZED`, 
 1. **`DHAN_DETAILED_HOLDINGS_V1` does not exist** in either repo (BLOCKED-EXTERNAL). Operator must supply the 11-column CSV with ISIN + Exchange. Even then it lacks `series`, so it is necessary but insufficient for `ISIN:<isin>:<series>`.
 2. **A-5 → A-6 → A-7 sequence is strict and externally blocked:** `DHAN_DETAILED_HOLDINGS_V1` availability (A-5) → security master expansion/deposition act (A-6) → new master revision (A-7). Master `BATCH-D05-TIER2-BROAD-UNIVERSE-2026-09-22-001` is UNCHANGED; 100% resolution only for entities already present.
 3. **ISIN index for the 67 unresolved 68-row summary rows is UNTESTED** — the summary omits ISIN entirely, so the index cannot be applied without re-export.
+
+> **CORRECTION-2026-11-09 (append-only; the text above is retained verbatim).** Two statements above
+> are stale. (a) §4 cites `B04-DHAN-68-ISIN-NSE-REASSESSMENT-2026-11-06.md`, which **does not exist in
+> this repository** (`git ls-files` returns nothing); the superseding records are
+> `evidence/cross-repository/IIPS_V3_D05_B06_ROOT_CAUSE_INVESTIGATION_2026-11-08.md` and the §9-A
+> reassessment evidence. (b) The ISIN index is **no longer untested**: under a one-time PA-authorized
+> reassessment, exact-ISIN lookup resolved **65/68** against the authenticated master, with rows 44,
+> 51 and 63 failing closed as out-of-universe. The **1/68** figures above and in §4 are correct
+> measurements against the **Wave-1** master on the **name surface**; they are not current for the
+> authenticated master, and they are not the same measurement as 65/68. Full reconciliation:
+> `docs/integration/BROKER-IMPORT-IDENTITY-RECONCILIATION-AND-W1-ADMISSION-ASSESSMENT-2026-11-09.md`
+> §1. No identity rule, alias or universe scope was changed by that reassessment.
 4. **`series` capture:** no IRR surface or broker variant captures `series`; IPD ingestion must be extended to accept and store it.
 
 Decision owner: **IPD platform identity team (D05 governed security master)** — IRR cannot unilaterally resolve identity (standing rule) and cannot supply `series`.

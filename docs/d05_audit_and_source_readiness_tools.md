@@ -235,3 +235,19 @@ Append-only addendum, post PR #139 merge (`b60db67`, 2026-11-08T05:49:40Z).
    windows-conditional skip (adds the 5 RB subtests); rollback suite RB-01…RB-05 pass.
 4. **Limits:** B-06 closes subject to PA acknowledgement of the B06 record; 65 residual rows escalate, they do not
    disappear; eligibility `NOT_ASSERTED` everywhere; deposit CINs are record-keeping facts; no operational writes.
+
+> **CORRECTION-2026-11-09 (append-only; the numbered items above are retained verbatim).** The §8 heading
+> ("B-06 closure (P9) executed") and item 4 ("B-06 closes subject to PA acknowledgement") are
+> **superseded**. The PA review disposition of record states: "**B-06: REMAINS OPEN.** This PA review
+> accepts the reassessment, not B-06 closure. B-06 must not be marked complete, closed or
+> production-accepted by any artifact derived from this decision." Source of record:
+> `evidence/cross-repository/IIPS_V3_D05_B06_68ROW_REASSESSMENT_2026-11-08.md`
+> ("APPEND-ONLY ADDENDUM — PA REVIEW DISPOSITION", item 5). Status at `main`
+> `709fd13c77e90df05900859d23ba57d1004197a0`: **B-06 OPEN.**
+>
+> The three identity results quoted across this program are reconciled in
+> `docs/integration/BROKER-IMPORT-IDENTITY-RECONCILIATION-AND-W1-ADMISSION-ASSESSMENT-2026-11-09.md`
+> §1: item 2 above and §7 item 4 both quote the **3/68 name-surface** measurement against the
+> authenticated master (`DHAN_WEB_UI_SUMMARY_V1`, no ISIN / no exchange), which is correct. The
+> **65/68** figure is a *different* measurement — exact-ISIN against the authenticated master using
+> the separately committed B-04 companion export — and is not a re-run of the summary surface.
