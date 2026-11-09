@@ -88,10 +88,6 @@ param(
     [ValidateRange(1, 65535)]
     [int] $IpdShellPort = 5174,
 
-    # Bind address is hard-coded to 127.0.0.1 for the personal single-user application.
-    # It is NOT a parameter - no other interface is permitted.
-    [string] $BindAddress = '127.0.0.1',
-
     [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
     [string] $PipeName = 'iips-user-portfolio-v1',
@@ -117,9 +113,10 @@ $common = Join-Path $PSScriptRoot 'Iips-Common.ps1'
 if (-not (Test-Path -LiteralPath $common)) { throw "Iips-Common.ps1 not found at $common" }
 . $common
 
-# Bind address is hard-coded to loopback-only. The parameter is accepted for signature
-# compatibility but the value is overridden to 127.0.0.1 immediately.
-$BindAddress = '127.0.0.1'
+# Bind address is hard-coded to 127.0.0.1 for the personal single-user application.
+# It is NOT a parameter - no other interface is permitted. All references use the
+# literal script-scoped address below; no configurable bind address exists.
+$script:BindAddress = '127.0.0.1'
 
 if ([string]::IsNullOrWhiteSpace($RuntimeRoot)) { $RuntimeRoot = 'H:\IIPS\runtime' }
 if ([string]::IsNullOrWhiteSpace($LogRoot)) { $LogRoot = 'H:\IIPS\logs' }
@@ -282,26 +279,43 @@ function Test-IipsIpcApplicationReadiness {
             $client.Write($header, 0, 4)
             $client.Write($body, 0, $body.Length)
 
-            # Read the response length header.
+            # Bounded IPC exchange: enforce a per-read timeout and an overall deadline
+            # so the readiness check can never block indefinitely.
+            $client.ReadTimeout = 5000
+            $readDeadline = (Get-Date).AddSeconds($TimeoutSeconds)
+
+            # Read the response length header (exactly 4 bytes).
             $lenBuf = New-Object byte[] 4
             $totalRead = 0
             while ($totalRead -lt 4) {
+                if ((Get-Date) -gt $readDeadline) { throw "the IPC provider did not send the response length header within $TimeoutSeconds seconds." }
                 $read = $client.Read($lenBuf, $totalRead, 4 - $totalRead)
                 if ($read -eq 0) { throw "the IPC provider closed the connection before sending the response length." }
                 $totalRead += $read
             }
             $respLen = [BitConverter]::ToInt32($lenBuf, 0)
 
-            # Read the response body.
+            # Validate response length before allocating the buffer.
+            # Reject negative, zero, or oversized lengths - a malformed provider must
+            # never cause us to allocate an unreasonably large buffer.
+            $maxResponseBytes = 1048576  # 1 MiB upper bound for a readiness response
+            if ($respLen -le 0) { throw "the IPC provider returned an invalid response length: $respLen." }
+            if ($respLen -gt $maxResponseBytes) { throw "the IPC provider returned an oversized response length: $respLen bytes (maximum $maxResponseBytes)." }
+
+            # Read the response body (exactly $respLen bytes) within the overall deadline.
             $respBuf = New-Object byte[] $respLen
             $totalRead = 0
             while ($totalRead -lt $respLen) {
+                if ((Get-Date) -gt $readDeadline) { throw "the IPC provider did not send the complete response body within $TimeoutSeconds seconds." }
                 $read = $client.Read($respBuf, $totalRead, $respLen - $totalRead)
-                if ($read -eq 0) { throw "the IPC provider closed the connection before sending the response body." }
+                if ($read -eq 0) { throw "the IPC provider closed the connection before sending the complete response body." }
                 $totalRead += $read
             }
+            if ($totalRead -ne $respLen) { throw "the IPC provider returned a truncated response: expected $respLen bytes, received $totalRead." }
+
             $respJson = [System.Text.Encoding]::UTF8.GetString($respBuf)
-            $resp = $respJson | ConvertFrom-Json -Depth 5
+            # ConvertFrom-Json -Depth is not supported in Windows PowerShell 5.1.
+            $resp = $respJson | ConvertFrom-Json
 
             # Verify the response is a success, not an error.
             if ($null -eq $resp -or $null -eq $resp.outcome) {
@@ -334,7 +348,7 @@ try {
     Write-IipsInfo "IRR root  : $IrrRoot"
     Write-IipsInfo "IPD root  : $IpdRoot"
     Write-IipsInfo "Database  : $DatabasePath (Direct P1, preserved, never provisioned here)"
-    Write-IipsInfo "Bind addr : $BindAddress (localhost only - personal single-user application)"
+    Write-IipsInfo "Bind addr : $script:BindAddress (localhost only - personal single-user application)"
     Write-IipsInfo "Run stamp : $($script:RunStamp)"
 
     # --- Preflight 01: checkouts ---------------------------------------------------------------
@@ -433,57 +447,61 @@ try {
     if ($existingPipe.Count -gt 0) {
         Write-IipsInfo "existing named pipe detected: $($existingPipe[0])"
 
-        # Find the process that owns the pipe by checking all listeners on any port
-        # The IPC provider is a node.exe process running dist\src\ipc\entrypoint.js
-        $ipcProcessFound = $false
-        # Check each IIPS port for a listener that might be the IPC provider
-        foreach ($port in @($TransportPort, $FrontendPort, $IpdShellPort)) {
-            $listeners = Get-IipsAllPortListeners -Port $port
-            if ($null -ne $listeners) {
-                foreach ($l in $listeners) {
-                    $pid = [int]$l.OwningProcess
-                    try {
-                        $wmiProc = Get-CimInstance Win32_Process -Filter "ProcessId = $pid" -ErrorAction Stop
-                        $cmdLine = $wmiProc.CommandLine
-                        if ($null -ne $cmdLine -and $cmdLine.Length -gt 0 -and $cmdLine -like '*dist\src\ipc\entrypoint*') {
-                            # Verify it belongs to the expected IPD checkout
-                            if ($cmdLine -like "*$IpdRoot*") {
-                                $ipcProcessFound = $true
-                                $ipcReusable = $true
-                                Write-IipsOk "existing IPC provider found at PID $pid, belongs to expected IPD checkout"
-                                break
-                            }
-                        }
-                    }
-                    catch {
-                        # Cannot inspect this process - skip it
-                    }
-                }
-                if ($ipcReusable) { break }
-            }
+        # A named-pipe provider does not listen on TCP ports, so scanning TCP listeners
+        # cannot identify its owning process. Instead, connect to the pipe and send a
+        # read-only portfolio.list readiness request to verify the provider is alive.
+        $ipcReadinessOk = $false
+        try {
+            Test-IipsIpcApplicationReadiness -PipeName $PipeName -TimeoutSeconds 5
+            $ipcReadinessOk = $true
+        }
+        catch {
+            Write-IipsInfo "existing pipe is not ready: $($_.Exception.Message)"
         }
 
-        if (-not $ipcReusable) {
-            # Existing pipe exists but provider is not from the expected IPD checkout.
-            # Stop it through the safety rules, then we'll start a new one.
-            foreach ($port in @($TransportPort, $FrontendPort, $IpdShellPort)) {
-                $listeners = Get-IipsAllPortListeners -Port $port
-                if ($null -ne $listeners) {
-                    foreach ($l in $listeners) {
-                        $pid = [int]$l.OwningProcess
-                        try {
-                            $wmiProc = Get-CimInstance Win32_Process -Filter "ProcessId = $pid" -ErrorAction Stop
-                            $cmdLine = $wmiProc.CommandLine
-                            if ($null -ne $cmdLine -and $cmdLine.Length -gt 0 -and $cmdLine -like '*dist\src\ipc\entrypoint*') {
-                                Stop-IipsProcessTree -ProcessId $pid -Label 'incompatible IPC provider'
-                                Write-IipsOk "stopped incompatible IPC provider at PID $pid"
-                            }
-                        }
-                        catch {
-                            # Cannot inspect - skip
-                        }
-                    }
+        if ($ipcReadinessOk) {
+            # Pipe exists and responds. Verify the owning process identity by finding
+            # the node.exe process that runs the IPC entrypoint from the expected IPD checkout.
+            $ipcProcesses = Get-CimInstance Win32_Process | Where-Object {
+                $_.Name -eq 'node.exe' -and
+                $null -ne $_.CommandLine -and $_.CommandLine.Length -gt 0 -and
+                $_.CommandLine -like '*dist\src\ipc\entrypoint*' -and
+                $_.CommandLine -like "*$IpdRoot*"
+            }
+            if ($ipcProcesses.Count -eq 1) {
+                $ipcPid = [int]$ipcProcesses[0].ProcessId
+                $ipcReusable = $true
+                Write-IipsOk "existing IPC provider verified at PID $ipcPid, belongs to expected IPD checkout"
+            }
+            if ($ipcProcesses.Count -ne 1) {
+                throw "pipe exists and responds but cannot uniquely identify the provider process (found $($ipcProcesses.Count) candidates). Failing closed."
+            }
+        }
+        if (-not $ipcReadinessOk) {
+            # Pipe exists but provider is not ready or not from the expected checkout.
+            # Stop incompatible provider processes through the safety rules.
+            $ipcProcesses = Get-CimInstance Win32_Process | Where-Object {
+                $_.Name -eq 'node.exe' -and
+                $null -ne $_.CommandLine -and $_.CommandLine.Length -gt 0 -and
+                $_.CommandLine -like '*dist\src\ipc\entrypoint*'
+            }
+            foreach ($proc in $ipcProcesses) {
+                $procPid = [int]$proc.ProcessId
+                $procCmdLine = $proc.CommandLine
+                # Verify this is an IIPS process before terminating - never kill unrelated applications.
+                $isIisProcess = $false
+                if ($null -ne $procCmdLine -and $procCmdLine.Length -gt 0) {
+                    if ($procCmdLine -like "*$IpdRoot*") { $isIisProcess = $true }
+                    if ($procCmdLine -like '*iips-production-market-data*') { $isIisProcess = $true }
+                    if ($procCmdLine -like '*iips-review-recovered*') { $isIisProcess = $true }
+                    if ($procCmdLine -like '*executive-transport*') { $isIisProcess = $true }
+                    if ($procCmdLine -like '*dist\src\ipc\entrypoint*') { $isIisProcess = $true }
                 }
+                if (-not $isIisProcess) {
+                    throw "PID $procPid is not an IIPS process (command line: $procCmdLine). Refusing to terminate unrelated applications."
+                }
+                Stop-IipsProcessTree -ProcessId $procPid -Label 'incompatible IPC provider'
+                Write-IipsOk "stopped incompatible IPC provider at PID $procPid"
             }
         }
     }
@@ -607,11 +625,11 @@ try {
         -LogDirectory $script:ServiceLogDir -Environment $transportEnv
     $script:Started.Add($transport)
 
-    $health = Wait-IipsHttpReady -Url "http://$BindAddress`:$TransportPort/api/health" -Label 'the IRR transport' -TimeoutSeconds $ReadyTimeoutSeconds
+    $health = Wait-IipsHttpReady -Url "http://$script:BindAddress`:$TransportPort/api/health" -Label 'the IRR transport' -TimeoutSeconds $ReadyTimeoutSeconds
     if ($health.Content -notmatch '"status"\s*:\s*"ok"') { throw "health endpoint returned an unexpected body: $($health.Content)" }
     Write-IipsOk "health body verified: $($health.Content)"
 
-    $listen = Wait-IipsPortListening -Port $TransportPort -Label 'the IRR transport' -TimeoutSeconds 30 -ExpectedAddress $BindAddress
+    $listen = Wait-IipsPortListening -Port $TransportPort -Label 'the IRR transport' -TimeoutSeconds 30 -ExpectedAddress $script:BindAddress
     Write-IipsOk "transport bound loopback-only: $($listen.LocalAddress):$TransportPort"
 }
 catch {
@@ -652,31 +670,37 @@ try {
     }
 
     $vite = Start-IipsService -Label 'irr-frontend' -Executable $toolchain.NpmCmd `
-        -Arguments @('run', 'dev', '--', '--host', $BindAddress, '--port', "$FrontendPort", '--strictPort') `
+        -Arguments @('run', 'dev', '--', '--host', $script:BindAddress, '--port', "$FrontendPort", '--strictPort') `
         -WorkingDirectory $irrFrontend -LogDirectory $script:ServiceLogDir -Environment $viteEnv
     $script:Started.Add($vite)
 
-    $viteListen = Wait-IipsPortListening -Port $FrontendPort -Label 'the IRR Vite dev server' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $BindAddress
+    $viteListen = Wait-IipsPortListening -Port $FrontendPort -Label 'the IRR Vite dev server' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $script:BindAddress
     Write-IipsOk "Vite bound loopback-only: $($viteListen.LocalAddress):$FrontendPort"
 
-    # Verify frontend root route.
-    $doc = Wait-IipsHttpReady -Url "http://$BindAddress`:$FrontendPort/" -Label 'the IRR Vite document' -TimeoutSeconds 60
+    # Verify frontend root route - must be the actual Vite-served SPA, not a generic fallback.
+    $doc = Wait-IipsHttpReady -Url "http://$script:BindAddress`:$FrontendPort/" -Label 'the IRR Vite document' -TimeoutSeconds 60
     if ($doc.Content -notmatch '<div id="root">') {
         $head = $doc.Content.Substring(0, [Math]::Min(200, $doc.Content.Length))
         throw "the Vite document did not contain the React root element. Body head: $head"
     }
+    if ($doc.Content -notmatch '<script type="module"') {
+        throw "the Vite document did not contain a Vite module script reference - this may be a generic fallback page, not the actual SPA."
+    }
     Write-IipsOk 'Vite is serving the application shell at root route /'
 
     # Verify frontend Personal Portfolio route /portfolio through the frontend server/proxy.
-    $portfolio = Wait-IipsHttpReady -Url "http://$BindAddress`:$FrontendPort/portfolio" -Label 'the IRR Vite portfolio route' -TimeoutSeconds 60
+    $portfolio = Wait-IipsHttpReady -Url "http://$script:BindAddress`:$FrontendPort/portfolio" -Label 'the IRR Vite portfolio route' -TimeoutSeconds 60
     if ($portfolio.Content -notmatch '<div id="root">') {
         $head = $portfolio.Content.Substring(0, [Math]::Min(200, $portfolio.Content.Length))
         throw "the /portfolio route did not contain the React root element. Body head: $head"
     }
+    if ($portfolio.Content -notmatch '<script type="module"') {
+        throw "the /portfolio document did not contain a Vite module script reference - this may be a generic fallback page, not the actual SPA."
+    }
     Write-IipsOk 'Personal Portfolio route /portfolio verified through frontend proxy'
 
     # Verify the frontend-to-IRR API health path through the proxy.
-    $proxied = Wait-IipsHttpReady -Url "http://$BindAddress`:$FrontendPort/api/health" -Label 'the proxied health check' -TimeoutSeconds 60
+    $proxied = Wait-IipsHttpReady -Url "http://$script:BindAddress`:$FrontendPort/api/health" -Label 'the proxied health check' -TimeoutSeconds 60
     if ($proxied.Content -notmatch '"status"\s*:\s*"ok"') { throw "the proxied health check returned an unexpected body: $($proxied.Content). The Vite /api proxy is not reaching the transport." }
     Write-IipsOk "proxied /api/health -> $($proxied.StatusCode) with the expected body"
     Write-IipsOk 'the browser path to the backend is confirmed working'
@@ -715,11 +739,11 @@ try {
         Write-IipsStep '07-ipd-shell' 'Starting the IPD structural shell on 127.0.0.1 only'
 
         $ipdShell = Start-IipsService -Label 'ipd-shell' -Executable $toolchain.NpmCmd `
-            -Arguments @('run', 'dev', '--', '--host', $BindAddress, '--port', "$IpdShellPort", '--strictPort') `
+            -Arguments @('run', 'dev', '--', '--host', $script:BindAddress, '--port', "$IpdShellPort", '--strictPort') `
             -WorkingDirectory $IpdRoot -LogDirectory $script:ServiceLogDir -Environment @{}
         $script:Started.Add($ipdShell)
 
-        $shellListen = Wait-IipsPortListening -Port $IpdShellPort -Label 'the IPD shell' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $BindAddress
+        $shellListen = Wait-IipsPortListening -Port $IpdShellPort -Label 'the IPD shell' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $script:BindAddress
         Write-IipsOk "IPD shell bound loopback-only: $($shellListen.LocalAddress):$IpdShellPort"
     }
     if (-not $StartIpdShell) {
@@ -773,7 +797,7 @@ try {
         runStamp      = $script:RunStamp
         irrRoot       = $IrrRoot
         ipdRoot       = $IpdRoot
-        bindAddress   = $BindAddress
+        bindAddress   = $script:BindAddress
         transportPort = $TransportPort
         frontendPort  = $FrontendPort
         ipdShellPort  = $manifestShellPort
@@ -792,7 +816,7 @@ try {
 
     Write-Host ''
     Write-Host '  APPLICATION  ' -NoNewline -ForegroundColor White
-    Write-Host "http://$BindAddress`:$FrontendPort/" -ForegroundColor Cyan
+    Write-Host "http://$script:BindAddress`:$FrontendPort/" -ForegroundColor Cyan
     Write-Host ''
     $urls = @(
         @('Executive Dashboard',      '/executive'),
@@ -820,12 +844,12 @@ try {
     foreach ($u in $urls) {
         $label = $u[0].PadRight(26)
         Write-Host "    $label" -NoNewline -ForegroundColor Gray
-        Write-Host "http://$BindAddress`:$FrontendPort$($u[1])" -ForegroundColor Green
+        Write-Host "http://$script:BindAddress`:$FrontendPort$($u[1])" -ForegroundColor Green
     }
     if ($StartIpdShell) {
         Write-Host ''
         Write-Host '    IPD structural shell        ' -NoNewline -ForegroundColor Gray
-        Write-Host "http://$BindAddress`:$IpdShellPort/" -ForegroundColor Green
+        Write-Host "http://$script:BindAddress`:$IpdShellPort/" -ForegroundColor Green
     }
     Write-Host ''
     Write-Host '  Conditional screens:' -ForegroundColor Yellow

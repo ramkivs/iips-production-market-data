@@ -384,14 +384,17 @@ function Invoke-IipsCommand {
         throw "$Purpose : working directory does not exist: $WorkingDirectory"
     }
 
-    # Save original environment variable values (including presence) before setting.
-    $savedCmdEnv = @{}
-    foreach ($k in $Environment.Keys) {
-        $savedCmdEnv[$k] = [Environment]::GetEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
-        [Environment]::SetEnvironmentVariable($k, $Environment[$k], [System.EnvironmentVariableTarget]::Process)
-    }
-
     try {
+        # Save original environment variable values (including presence) before setting,
+        # then set them - all inside the protected block so restoration is guaranteed
+        # on success, non-zero exit, process-creation failure and exceptions during
+        # environment setup. Temporary changes never leak into later operations.
+        $savedCmdEnv = @{}
+        foreach ($k in $Environment.Keys) {
+            $savedCmdEnv[$k] = [Environment]::GetEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+            [Environment]::SetEnvironmentVariable($k, $Environment[$k], [System.EnvironmentVariableTarget]::Process)
+        }
+
         Write-IipsInfo "RUN  & '$Executable' $($Arguments -join ' ')"
         Write-IipsInfo "     cwd: $WorkingDirectory"
 
@@ -410,7 +413,9 @@ function Invoke-IipsCommand {
         # Restore environment variables on success.
         foreach ($k in $savedCmdEnv.Keys) {
             if ($savedCmdEnv[$k] -eq $null) {
-                [Environment]::RemoveEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+                # SetEnvironmentVariable with a null value removes a process-level variable.
+                # [Environment]::RemoveEnvironmentVariable does not exist in .NET / PowerShell 5.1.
+                [Environment]::SetEnvironmentVariable($k, $null, [System.EnvironmentVariableTarget]::Process)
                 continue
             }
             [Environment]::SetEnvironmentVariable($k, $savedCmdEnv[$k], [System.EnvironmentVariableTarget]::Process)
@@ -420,7 +425,7 @@ function Invoke-IipsCommand {
         # Restore environment variables on failure before re-throwing.
         foreach ($k in $savedCmdEnv.Keys) {
             if ($savedCmdEnv[$k] -eq $null) {
-                [Environment]::RemoveEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+                [Environment]::SetEnvironmentVariable($k, $null, [System.EnvironmentVariableTarget]::Process)
                 continue
             }
             [Environment]::SetEnvironmentVariable($k, $savedCmdEnv[$k], [System.EnvironmentVariableTarget]::Process)
@@ -458,15 +463,17 @@ function Start-IipsService {
     $outLog = Join-Path $LogDirectory "$Label.out.log"
     $errLog = Join-Path $LogDirectory "$Label.err.log"
 
-    # Save and set environment variables for child-process inheritance only.
-    # Restored immediately after Start-Process so they never leak beyond this script.
-    $savedEnv = @{}
-    foreach ($k in $Environment.Keys) {
-        $savedEnv[$k] = [Environment]::GetEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
-        [Environment]::SetEnvironmentVariable($k, $Environment[$k], [System.EnvironmentVariableTarget]::Process)
-    }
-
     try {
+        # Save and set environment variables for child-process inheritance only,
+        # inside the protected block so restoration is guaranteed on success,
+        # process-creation failure and exceptions during environment setup.
+        # Restored immediately after Start-Process so they never leak beyond this script.
+        $savedEnv = @{}
+        foreach ($k in $Environment.Keys) {
+            $savedEnv[$k] = [Environment]::GetEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+            [Environment]::SetEnvironmentVariable($k, $Environment[$k], [System.EnvironmentVariableTarget]::Process)
+        }
+
         Write-IipsInfo "START $Label"
         Write-IipsInfo "      exe  : $Executable"
         Write-IipsInfo "      args : $($Arguments -join ' ')"
@@ -484,7 +491,7 @@ function Start-IipsService {
         # Restore environment variables now - the child process already inherited its own copy.
         foreach ($k in $savedEnv.Keys) {
             if ($savedEnv[$k] -eq $null) {
-                [Environment]::RemoveEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+                [Environment]::SetEnvironmentVariable($k, $null, [System.EnvironmentVariableTarget]::Process)
                 continue
             }
             [Environment]::SetEnvironmentVariable($k, $savedEnv[$k], [System.EnvironmentVariableTarget]::Process)
@@ -505,11 +512,11 @@ function Start-IipsService {
     catch {
         # Restore environment variables on failure before re-throwing.
         foreach ($k in $savedEnv.Keys) {
-            if ($savedCmdEnv[$k] -eq $null) {
-                [Environment]::RemoveEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+            if ($savedEnv[$k] -eq $null) {
+                [Environment]::SetEnvironmentVariable($k, $null, [System.EnvironmentVariableTarget]::Process)
                 continue
             }
-            [Environment]::SetEnvironmentVariable($k, $savedCmdEnv[$k], [System.EnvironmentVariableTarget]::Process)
+            [Environment]::SetEnvironmentVariable($k, $savedEnv[$k], [System.EnvironmentVariableTarget]::Process)
         }
         throw
     }
@@ -797,6 +804,14 @@ function Wait-IipsPortListening {
         $attempt++
         $listeners = Get-IipsAllPortListeners -Port $Port
         if ($null -ne $listeners) {
+            # Verify EVERY listener, not just the first. Reject wildcard, LAN, public
+            # and duplicate listeners - a personal single-user application must have
+            # exactly one loopback listener per port.
+            $listenerCount = @($listeners).Count
+            if ($listenerCount -gt 1) {
+                $addrs = @($listeners | ForEach-Object { $_.LocalAddress }) -join ', '
+                throw "$Label has $listenerCount listeners on port $Port ($addrs). A personal single-user application must have exactly one listener per port."
+            }
             foreach ($l in $listeners) {
                 if ($l.LocalAddress -ne $ExpectedAddress) {
                     throw "$Label bound to $($l.LocalAddress):$Port but must bind $ExpectedAddress only. This is a personal single-user application and must not be reachable from the network."
@@ -949,9 +964,16 @@ function Assert-IipsCleanTree {
     operatingContext - must be "personal-local" or "single-user"
     ownerId          - non-empty string, the canonical owner identifier
     tenantId         - non-empty string, the tenant identifier
+    schemaVersion    - optional; if present, must be a non-empty string
 
 .OUTPUTS
     [pscustomobject] Valid, OwnerId, TenantId, OperatingContext, Reason
+
+.LIMITATIONS
+    This script has no authoritative source outside the owner-context artifact itself
+    against which to validate ownerId or tenantId. It accepts them as self-declared
+    and checks only that they are present, non-empty and not contradictory. No identity
+    is invented, modified or changed.
 #>
 function Test-IipsOwnerContext {
     param(
@@ -970,7 +992,9 @@ function Test-IipsOwnerContext {
 
     $json = $null
     try {
-        $json = $raw | ConvertFrom-Json -Depth 5
+        # ConvertFrom-Json -Depth is not supported in Windows PowerShell 5.1.
+        # Depth limiting is handled by the schema validation below.
+        $json = $raw | ConvertFrom-Json
     }
     catch {
         throw "$Label : owner-context artifact at $Path is not valid JSON: $($_.Exception.Message)"
@@ -978,6 +1002,11 @@ function Test-IipsOwnerContext {
 
     if ($null -eq $json) {
         throw "$Label : owner-context artifact at $Path did not deserialize to an object."
+    }
+
+    # The artifact must deserialize to an object with properties, not an array or scalar.
+    if ($null -eq $json.PSObject.Properties) {
+        throw "$Label : owner-context artifact at $Path did not deserialize to an object with properties."
     }
 
     # Required field: operatingContext
@@ -1004,6 +1033,25 @@ function Test-IipsOwnerContext {
     }
     $tenantIdStr = "$tenantId"
 
+    # Consistency: ownerId and tenantId must not be identical - that would indicate
+    # a misconfigured context where owner and tenant are the same entity.
+    if ([string]::Equals($ownerIdStr, $tenantIdStr, [System.StringComparison]::Ordinal)) {
+        throw "$Label : owner-context 'ownerId' and 'tenantId' are identical ('$ownerIdStr'). They must be distinct identifiers."
+    }
+
+    # Optional field: schemaVersion - validate if present, note limitation if absent.
+    $schemaVersion = $json.schemaVersion
+    if ($null -ne $schemaVersion -and -not [string]::IsNullOrWhiteSpace("$schemaVersion")) {
+        $schemaVersionStr = "$schemaVersion"
+        Write-IipsInfo "$Label owner-context schemaVersion=$schemaVersionStr"
+    }
+    if ($null -eq $schemaVersion -or [string]::IsNullOrWhiteSpace("$schemaVersion")) {
+        Write-IipsInfo "$Label owner-context has no schemaVersion field - no external contract source available to validate schema version."
+    }
+
+    # ownerId and tenantId are accepted as self-declared. This script has no authoritative
+    # source outside the artifact itself against which to validate them. No identity is
+    # invented, modified or changed.
     Write-IipsOk "$Label owner-context valid: operatingContext=$opCtxStr, ownerId=$ownerIdStr, tenantId=$tenantIdStr"
 
     return [pscustomobject]@{
