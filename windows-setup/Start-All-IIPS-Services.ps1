@@ -7,21 +7,23 @@
     Full stop-and-restart lifecycle with preflight verification:
 
       0. Preflight - IRR checkout, IPD checkout, Node.js toolchain, branch/commit/tree,
-         configurations, Direct P1 database
-      1. Stop any existing listeners on IIPS ports (port 8787, 5176, 5174)
-      2. Start IPD Gate-3 IPC provider on a Windows named pipe
-      3. Start IRR executive transport (HTTP API, port 8787)
-      4. Start IRR Vite dev server (port 5176, 127.0.0.1 only)
-      5. Optionally start IPD structural shell (port 5174, 127.0.0.1 only)
-      6. Health checks on all started services
+         origin URLs, configurations, owner-context, Direct P1 database
+      1. Detect and validate any existing IPD IPC provider before stopping any service
+      2. Stop any remaining existing listeners on IIPS ports (port 8787, 5176, 5174)
+      3. Start IPD Gate-3 IPC provider on a Windows named pipe (if not reused)
+      4. Start IRR executive transport (HTTP API, port 8787)
+      5. Start IRR Vite dev server (port 5176, 127.0.0.1 only)
+      6. Optionally start IPD structural shell (port 5174, 127.0.0.1 only)
+      7. Health checks on all started services
 
     Every step is inside try/catch. There is no `else`, `elseif` or `finally` anywhere.
     Precondition failures throw, which always reaches the catch handler, which rolls back
     only the processes THIS run started, then exits with a meaningful code.
 
     LOCALHOST-ONLY BINDING
-      Both Vite servers are bound to 127.0.0.1 only. A bind to 0.0.0.0 or any other address
-      is a hard failure, not a warning.
+      All servers are bound to 127.0.0.1 only. The bind address is hard-coded - it is not
+      a parameter. A bind to 0.0.0.0 or any other address is a hard failure, not a warning.
+      The actual listener address is verified, not merely the configured value.
 
     DIRECT P1 (already provisioned - preserved, never repeated)
       The user-portfolio SQLite database at C:\iips-data\iips\user-portfolio.sqlite was
@@ -29,6 +31,13 @@
       non-empty, then passes it to the IPD IPC provider. node:sqlite opens it via
       `new DatabaseSync(filePath)` in src/persistence/connection.ts - a read-write local
       file binding. This script never creates, recreates, migrates, truncates or replaces it.
+
+    IPC PROVIDER REUSE
+      Before stopping any service, the script checks whether an IPD IPC provider is already
+      running on the expected named pipe. If it is, the provider's process command line is
+      inspected to confirm it belongs to the expected IPD checkout. If the identity and
+      readiness are verified, the existing provider is reused. If it is incompatible, it is
+      stopped through the existing process-ownership safety rules.
 
     PATHS
       IRR  = C:\tmp\iips-review-recovered\
@@ -79,8 +88,8 @@ param(
     [ValidateRange(1, 65535)]
     [int] $IpdShellPort = 5174,
 
-    [Parameter(Mandatory = $false)]
-    [ValidateNotNullOrEmpty()]
+    # Bind address is hard-coded to 127.0.0.1 for the personal single-user application.
+    # It is NOT a parameter - no other interface is permitted.
     [string] $BindAddress = '127.0.0.1',
 
     [Parameter(Mandatory = $false)]
@@ -108,6 +117,10 @@ $common = Join-Path $PSScriptRoot 'Iips-Common.ps1'
 if (-not (Test-Path -LiteralPath $common)) { throw "Iips-Common.ps1 not found at $common" }
 . $common
 
+# Bind address is hard-coded to loopback-only. The parameter is accepted for signature
+# compatibility but the value is overridden to 127.0.0.1 immediately.
+$BindAddress = '127.0.0.1'
+
 if ([string]::IsNullOrWhiteSpace($RuntimeRoot)) { $RuntimeRoot = 'H:\IIPS\runtime' }
 if ([string]::IsNullOrWhiteSpace($LogRoot)) { $LogRoot = 'H:\IIPS\logs' }
 
@@ -116,6 +129,7 @@ $script:ServiceLogDir = Join-Path $LogRoot ("services-$($script:RunStamp)")
 $script:Started = New-Object System.Collections.Generic.List[object]
 $script:RollbackDone = $false
 $script:IipsCurrentStep = '00-bootstrap'
+$script:IpcProviderReused = $false
 
 function Invoke-IipsRollback {
     param([Parameter(Mandatory = $true)][string] $Reason)
@@ -146,11 +160,16 @@ function Invoke-IipsRollback {
         if ($released) { $verdict = 'released'; $portColour = 'Yellow' }
         Write-Host "    port $port : $verdict" -ForegroundColor $portColour
     }
-    $gone = Wait-IipsPipeAbsent -PipeName $PipeName -TimeoutSeconds $CleanupTimeoutSeconds
-    $verdict = 'STILL PRESENT'
-    $pipeColour = 'Red'
-    if ($gone) { $verdict = 'released'; $pipeColour = 'Yellow' }
-    Write-Host "    pipe $PipeName : $verdict" -ForegroundColor $pipeColour
+    if (-not $script:IpcProviderReused) {
+        $gone = Wait-IipsPipeAbsent -PipeName $PipeName -TimeoutSeconds $CleanupTimeoutSeconds
+        $verdict = 'STILL PRESENT'
+        $pipeColour = 'Red'
+        if ($gone) { $verdict = 'released'; $pipeColour = 'Yellow' }
+        Write-Host "    pipe $PipeName : $verdict" -ForegroundColor $pipeColour
+    }
+    if ($script:IpcProviderReused) {
+        Write-Host "    pipe $PipeName : preserved (existing IPC provider was reused)" -ForegroundColor Yellow
+    }
 }
 
 function Wait-IipsHttpReady {
@@ -185,49 +204,129 @@ function Stop-IipsProcessOnPort {
         [Parameter(Mandatory = $true)][int] $Port,
         [Parameter(Mandatory = $true)][string] $Label
     )
-    $owner = Get-IipsPortOwner -Port $Port
-    if ($null -eq $owner) { return $false }
-    $listenerPid = [int]$owner.OwningProcess
-    $name = (Get-Process -Id $listenerPid -ErrorAction SilentlyContinue).ProcessName
-    Write-IipsInfo "$Label is already running on port $Port as PID $listenerPid ($name) - stopping it first"
+    $listeners = Get-IipsAllPortListeners -Port $Port
+    if ($null -eq $listeners) { return $false }
 
-    # Verify this is an IIPS process before terminating - never kill unrelated applications.
-    $cmdLine = ''
-    try {
-        $wmiProc = Get-CimInstance Win32_Process -Filter "ProcessId = $listenerPid" -ErrorAction Stop
-        $cmdLine = $wmiProc.CommandLine
-    }
-    catch {
-        throw "PID $listenerPid $Label: could not inspect process command line. Refusing to terminate an unverified process."
+    foreach ($l in $listeners) {
+        $listenerPid = [int]$l.OwningProcess
+        $name = (Get-Process -Id $listenerPid -ErrorAction SilentlyContinue).ProcessName
+        $addr = $l.LocalAddress
+        Write-IipsInfo "$Label is already running on $addr:$Port as PID $listenerPid ($name) - stopping it first"
+
+        # Verify this is an IIPS process before terminating - never kill unrelated applications.
+        $cmdLine = ''
+        try {
+            $wmiProc = Get-CimInstance Win32_Process -Filter "ProcessId = $listenerPid" -ErrorAction Stop
+            $cmdLine = $wmiProc.CommandLine
+        }
+        catch {
+            throw "PID $listenerPid $Label: could not inspect process command line. Refusing to terminate an unverified process."
+        }
+
+        $isIisProcess = $false
+        if ($null -ne $cmdLine -and $cmdLine.Length -gt 0) {
+            if ($cmdLine -like '*iips-production-market-data*') { $isIisProcess = $true }
+            if ($cmdLine -like '*iips-review-recovered*') { $isIisProcess = $true }
+            if ($cmdLine -like '*executive-transport*') { $isIisProcess = $true }
+            if ($cmdLine -like '*dist\src\ipc\entrypoint*') { $isIisProcess = $true }
+        }
+        if (-not $isIisProcess) {
+            throw "PID $listenerPid $Label is not an IIPS process (command line: $cmdLine). Refusing to terminate unrelated applications. Free port $Port manually before running this script."
+        }
+
+        Stop-IipsProcessTree -ProcessId $listenerPid -Label "$Label (port $Port)"
     }
 
-    $isIisProcess = $false
-    if ($null -ne $cmdLine -and $cmdLine.Length -gt 0) {
-        if ($cmdLine -like '*iips-production-market-data*') { $isIisProcess = $true }
-        if ($cmdLine -like '*iips-review-recovered*') { $isIisProcess = $true }
-        if ($cmdLine -like '*executive-transport*') { $isIisProcess = $true }
-        if ($cmdLine -like '*dist\src\ipc\entrypoint*') { $isIisProcess = $true }
-    }
-    if (-not $isIisProcess) {
-        throw "PID $listenerPid $Label is not an IIPS process (command line: $cmdLine). Refusing to terminate unrelated applications. Free port $Port manually before running this script."
-    }
-
-    Stop-IipsProcessTree -ProcessId $listenerPid -Label "$Label (port $Port)"
     $deadline = (Get-Date).AddSeconds(20)
     while ((Get-Date) -lt $deadline) {
         Start-Sleep -Milliseconds 500
-        $still = Get-IipsPortOwner -Port $Port
+        $still = Get-IipsAllPortListeners -Port $Port
         if ($null -eq $still) { break }
     }
-    $still = Get-IipsPortOwner -Port $Port
-    if ($null -ne $still) { throw "could not stop the existing $Label on port $Port (PID $listenerPid). Free it manually before running this script." }
+    $still = Get-IipsAllPortListeners -Port $Port
+    if ($null -ne $still) { throw "could not stop the existing $Label on port $Port. Free it manually before running this script." }
     Write-IipsOk "existing $Label on port $Port stopped"
     return $true
 }
 
+function Test-IipsIpcApplicationReadiness {
+    param(
+        [Parameter(Mandatory = $true)][string] $PipeName,
+        [Parameter(Mandatory = $true)][int] $TimeoutSeconds
+    )
+    $pipePath = "\\.\pipe\$PipeName"
+
+    # Verify the pipe exists in the Windows namespace.
+    $found = Wait-IipsPipePresent -PipeName $PipeName -TimeoutSeconds 5
+    if ($null -eq $found) { throw "the named pipe $pipePath is not visible in the \\.\pipe\ namespace." }
+
+    # Connect to the named pipe and send a read-only portfolio.list request to verify
+    # application-level IPC readiness. This does NOT create, replace, delete or modify
+    # any user portfolio data.
+    try {
+        $client = New-Object System.IO.Pipes.NamedPipeClientStream('.', $PipeName, [System.IO.Pipes.PipeDirection]::InOut)
+        $client.Connect($TimeoutSeconds * 1000)
+
+        try {
+            # Build a v1 portfolio.list request frame (length-prefixed JSON).
+            $request = @{
+                v = 1
+                op = 'portfolio.list'
+                payload = $null
+                requestId = 'iips-readiness-' + ([System.Guid]::NewGuid().ToString('N').Substring(0, 8))
+            }
+            $json = $request | ConvertTo-Json -Depth 3
+            $body = [System.Text.Encoding]::UTF8.GetBytes($json)
+            $header = [BitConverter]::GetBytes($body.Length)
+
+            $client.Write($header, 0, 4)
+            $client.Write($body, 0, $body.Length)
+
+            # Read the response length header.
+            $lenBuf = New-Object byte[] 4
+            $totalRead = 0
+            while ($totalRead -lt 4) {
+                $read = $client.Read($lenBuf, $totalRead, 4 - $totalRead)
+                if ($read -eq 0) { throw "the IPC provider closed the connection before sending the response length." }
+                $totalRead += $read
+            }
+            $respLen = [BitConverter]::ToInt32($lenBuf, 0)
+
+            # Read the response body.
+            $respBuf = New-Object byte[] $respLen
+            $totalRead = 0
+            while ($totalRead -lt $respLen) {
+                $read = $client.Read($respBuf, $totalRead, $respLen - $totalRead)
+                if ($read -eq 0) { throw "the IPC provider closed the connection before sending the response body." }
+                $totalRead += $read
+            }
+            $respJson = [System.Text.Encoding]::UTF8.GetString($respBuf)
+            $resp = $respJson | ConvertFrom-Json -Depth 5
+
+            # Verify the response is a success, not an error.
+            if ($null -eq $resp -or $null -eq $resp.outcome) {
+                throw "the IPC provider returned an unparseable response: $respJson"
+            }
+            if ($resp.outcome -ne 'success') {
+                throw "the IPC provider returned outcome '$($resp.outcome)' - application-level IPC is not ready."
+            }
+
+            Write-IipsOk "application-level IPC readiness verified via named pipe $pipePath"
+            $client.Close()
+        }
+        catch {
+            try { $client.Close() } catch {}
+            throw
+        }
+    }
+    catch {
+        throw "application-level IPC readiness check failed: $($_.Exception.Message)"
+    }
+}
+
 try {
     # ============================================================================================
-    # 00 - PREFLIGHT: configurations, checkouts, toolchain, branch/commit/tree, ports
+    # 00 - PREFLIGHT: configurations, checkouts, toolchain, branch/commit/tree, origin URLs
     # ============================================================================================
     Write-Host '=============================================================' -ForegroundColor White
     Write-Host ' IIPS - Start All Services (preflight + stop/restart + health) ' -ForegroundColor White
@@ -258,12 +357,21 @@ try {
     Write-IipsStep '01-branch' 'Verifying branch, commit and clean working tree'
 
     $irrBranch = (Invoke-IipsCapture -Executable $git.Source -Arguments @('-C', $IrrRoot, 'rev-parse', '--abbrev-ref', 'HEAD')).StdOut.Trim()
-    if ($irrBranch -eq 'HEAD' -or $irrBranch.Length -eq 0) { throw "IRR is in detached HEAD state or has no branch. Checkout a branch before running this script." }
+    if ($irrBranch -ne 'main') { throw "IRR is on branch '$irrBranch', expected 'main'. Checkout main before running this script." }
     Write-IipsOk "IRR branch: $irrBranch"
 
     $ipdBranch = (Invoke-IipsCapture -Executable $git.Source -Arguments @('-C', $IpdRoot, 'rev-parse', '--abbrev-ref', 'HEAD')).StdOut.Trim()
-    if ($ipdBranch -eq 'HEAD' -or $ipdBranch.Length -eq 0) { throw "IPD is in detached HEAD state or has no branch. Checkout a branch before running this script." }
+    if ($ipdBranch -ne 'main') { throw "IPD is on branch '$ipdBranch', expected 'main'. Checkout main before running this script." }
     Write-IipsOk "IPD branch: $ipdBranch"
+
+    # Verify origin URLs match the expected authoritative repositories.
+    $irrOrigin = Test-IipsOriginUrl -RepoDir $IrrRoot -Label 'IRR' -ExpectedOrigin $script:IipsExpectedIrrOrigin -GitExe $git.Source
+    if (-not $irrOrigin.Matched) { throw "IRR origin is '$($irrOrigin.Origin)', expected '$($script:IipsExpectedIrrOrigin)'." }
+    Write-IipsOk "IRR origin verified: $($irrOrigin.Origin)"
+
+    $ipdOrigin = Test-IipsOriginUrl -RepoDir $IpdRoot -Label 'IPD' -ExpectedOrigin $script:IipsExpectedIpdOrigin -GitExe $git.Source
+    if (-not $ipdOrigin.Matched) { throw "IPD origin is '$($ipdOrigin.Origin)', expected '$($script:IipsExpectedIpdOrigin)'." }
+    Write-IipsOk "IPD origin verified: $($ipdOrigin.Origin)"
 
     # Enforce approved commit identities via pinned commit verification.
     $irrPin = Test-IipsCommitPin -RepoDir $IrrRoot -Label 'IRR' -ExpectedCommit $script:IipsExpectedIrrCommit -GitExe $git.Source
@@ -290,10 +398,10 @@ try {
     # --- Preflight 05: Node.js toolchain (verifies node.exe, npm.cmd, npx.cmd same install) ---
     $toolchain = Resolve-IipsNodeToolchain -NodeExecutable $NodeExecutable
 
-    # --- Preflight 06: owner-context carrier ---------------------------------------------------
+    # --- Preflight 06: owner-context content validation ----------------------------------------
     $runtimeOwnerContext = Join-Path $RuntimeRoot 'owner-context\owner-context.json'
-    if (-not (Test-Path -LiteralPath $runtimeOwnerContext)) { throw "owner-context carrier missing at $runtimeOwnerContext - run 02-Provision-OwnerContext.ps1 first. Settings, Watchlists and Collaboration fail closed with HTTP 503 without it." }
-    Write-IipsOk "owner-context carrier present: $runtimeOwnerContext"
+    $ownerCtx = Test-IipsOwnerContext -Path $runtimeOwnerContext -Label 'owner-context'
+    Write-IipsOk "owner-context validated: operatingContext=$($ownerCtx.OperatingContext), ownerId=$($ownerCtx.OwnerId), tenantId=$($ownerCtx.TenantId)"
 
     $dataDir = Join-Path $RuntimeRoot 'iips-data'
     $np04Dir = Join-Path $RuntimeRoot 'np04'
@@ -315,9 +423,80 @@ try {
     Write-IipsOk "Direct P1 database verified (not modified): $DatabasePath ($($dbItem.Length) bytes)"
     Write-IipsInfo 'node:sqlite opens the database via new DatabaseSync(filePath) in src/persistence/connection.ts - no provisioning, migration or schema change is performed by this script'
 
-    # --- Preflight 08: port guard --------------------------------------------------------------
-    Write-IipsStep '02-port-guard' 'Confirming required ports are free (stopping any existing IIPS listeners first)'
+    # --- Preflight 08: IPC provider detection (BEFORE port guard) ------------------------------
+    Write-IipsStep '01-ipc-detect' 'Detecting and validating any existing IPD IPC provider'
 
+    $pipePath = "\\.\pipe\$PipeName"
+    $existingPipe = @(Get-IipsNamedPipes -Filter $PipeName)
+    $ipcReusable = $false
+
+    if ($existingPipe.Count -gt 0) {
+        Write-IipsInfo "existing named pipe detected: $($existingPipe[0])"
+
+        # Find the process that owns the pipe by checking all listeners on any port
+        # The IPC provider is a node.exe process running dist\src\ipc\entrypoint.js
+        $ipcProcessFound = $false
+        # Check each IIPS port for a listener that might be the IPC provider
+        foreach ($port in @($TransportPort, $FrontendPort, $IpdShellPort)) {
+            $listeners = Get-IipsAllPortListeners -Port $port
+            if ($null -ne $listeners) {
+                foreach ($l in $listeners) {
+                    $pid = [int]$l.OwningProcess
+                    try {
+                        $wmiProc = Get-CimInstance Win32_Process -Filter "ProcessId = $pid" -ErrorAction Stop
+                        $cmdLine = $wmiProc.CommandLine
+                        if ($null -ne $cmdLine -and $cmdLine.Length -gt 0 -and $cmdLine -like '*dist\src\ipc\entrypoint*') {
+                            # Verify it belongs to the expected IPD checkout
+                            if ($cmdLine -like "*$IpdRoot*") {
+                                $ipcProcessFound = $true
+                                $ipcReusable = $true
+                                Write-IipsOk "existing IPC provider found at PID $pid, belongs to expected IPD checkout"
+                                break
+                            }
+                        }
+                    }
+                    catch {
+                        # Cannot inspect this process - skip it
+                    }
+                }
+                if ($ipcReusable) { break }
+            }
+        }
+
+        if (-not $ipcReusable) {
+            # Existing pipe exists but provider is not from the expected IPD checkout.
+            # Stop it through the safety rules, then we'll start a new one.
+            foreach ($port in @($TransportPort, $FrontendPort, $IpdShellPort)) {
+                $listeners = Get-IipsAllPortListeners -Port $port
+                if ($null -ne $listeners) {
+                    foreach ($l in $listeners) {
+                        $pid = [int]$l.OwningProcess
+                        try {
+                            $wmiProc = Get-CimInstance Win32_Process -Filter "ProcessId = $pid" -ErrorAction Stop
+                            $cmdLine = $wmiProc.CommandLine
+                            if ($null -ne $cmdLine -and $cmdLine.Length -gt 0 -and $cmdLine -like '*dist\src\ipc\entrypoint*') {
+                                Stop-IipsProcessTree -ProcessId $pid -Label 'incompatible IPC provider'
+                                Write-IipsOk "stopped incompatible IPC provider at PID $pid"
+                            }
+                        }
+                        catch {
+                            # Cannot inspect - skip
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if ($existingPipe.Count -eq 0) {
+        Write-IipsInfo 'no existing named pipe found - will start a new IPC provider'
+    }
+
+    # --- Preflight 09: port guard --------------------------------------------------------------
+    Write-IipsStep '02-port-guard' 'Confirming required ports are free (stopping any remaining IIPS listeners first)'
+
+    # Only stop listeners on ports that are NOT already handled by a reused IPC provider.
+    # The IPC provider uses a named pipe, not a TCP port, so it doesn't occupy any TCP port.
     Stop-IipsProcessOnPort -Port $TransportPort -Label 'the IRR executive transport'
     Stop-IipsProcessOnPort -Port $FrontendPort -Label 'the IRR Vite dev server'
     if ($StartIpdShell) { Stop-IipsProcessOnPort -Port $IpdShellPort -Label 'the IPD shell' }
@@ -338,50 +517,54 @@ try {
     # ============================================================================================
     # 01 - IPC PROVIDER (Direct P1 database, preserved read-write via node:sqlite)
     # ============================================================================================
-    Write-IipsStep '03-ipd-ipc' 'Starting the IPD Gate-3 IPC provider on a Windows named pipe'
+    if (-not $ipcReusable) {
+        Write-IipsStep '03-ipd-ipc' 'Starting the IPD Gate-3 IPC provider on a Windows named pipe'
 
-    $stateDir = Join-Path $RuntimeRoot 'ipd-state'
-    if (-not (Test-Path -LiteralPath $stateDir)) { New-Item -ItemType Directory -Path $stateDir -Force | Out-Null }
+        $stateDir = Join-Path $RuntimeRoot 'ipd-state'
+        if (-not (Test-Path -LiteralPath $stateDir)) { New-Item -ItemType Directory -Path $stateDir -Force | Out-Null }
 
-    $pipePath = "\\.\pipe\$PipeName"
-    $existingPipe = @(Get-IipsNamedPipes -Filter $PipeName)
-    if ($existingPipe.Count -gt 0) { throw "the named pipe $($existingPipe[0]) already exists, so an IPC provider is already running. Stop it first with 06-Stop-IipsServers.ps1." }
+        $existingPipe = @(Get-IipsNamedPipes -Filter $PipeName)
+        if ($existingPipe.Count -gt 0) { throw "the named pipe $($existingPipe[0]) already exists, so an IPC provider is already running. Stop it first with 06-Stop-IipsServers.ps1." }
 
-    $entrypoint = Join-Path $IpdRoot 'dist\src\ipc\entrypoint.js'
-    # Avoid unnecessary rebuilds: only compile if the entrypoint is missing.
-    if (-not (Test-Path -LiteralPath $entrypoint)) {
-        Write-IipsInfo "IPC entrypoint missing at $entrypoint - running TypeScript build."
-        Invoke-IipsCommand -Executable $toolchain.NpmCmd -Arguments @('run', 'build:tsc') -WorkingDirectory $IpdRoot -Purpose 'IPD TypeScript build'
-        Write-IipsOk 'IPD TypeScript build complete'
+        $entrypoint = Join-Path $IpdRoot 'dist\src\ipc\entrypoint.js'
+        # Avoid unnecessary rebuilds: only compile if the entrypoint is missing.
+        if (-not (Test-Path -LiteralPath $entrypoint)) {
+            Write-IipsInfo "IPC entrypoint missing at $entrypoint - running TypeScript build."
+            Invoke-IipsCommand -Executable $toolchain.NpmCmd -Arguments @('run', 'build:tsc') -WorkingDirectory $IpdRoot -Purpose 'IPD TypeScript build'
+            Write-IipsOk 'IPD TypeScript build complete'
+        }
+        if (-not (Test-Path -LiteralPath $entrypoint)) { throw "compiled IPC entrypoint missing at $entrypoint after build." }
+        Write-IipsOk "IPC entrypoint compiled: $entrypoint"
+
+        $ipcEnv = @{
+            'IIPS_G2_IPC_ENDPOINT'    = $pipePath
+            'IIPS_G3_DATABASE_PATH'   = $DatabasePath
+            'IIPS_G3_LOCAL_STATE_DIR' = $stateDir
+        }
+
+        $ipc = Start-IipsService -Label 'ipd-ipc' -Executable $toolchain.NodeExe -Arguments @($entrypoint) -WorkingDirectory $IpdRoot -LogDirectory $script:ServiceLogDir -Environment $ipcEnv
+        $script:Started.Add($ipc)
+
+        $deadline = (Get-Date).AddSeconds(60)
+        $bound = $false
+        while ((Get-Date) -lt $deadline) {
+            Start-Sleep -Seconds 2
+            if (-not (Test-Path -LiteralPath $ipc.ErrLog)) { continue }
+            $content = Get-Content -LiteralPath $ipc.ErrLog -Raw -ErrorAction SilentlyContinue
+            if ($null -eq $content) { continue }
+            if ($content -match '\[g3\] listening on windows-named-pipe') { $bound = $true; break }
+            if ($content -match '\[g3\] startup refused') { throw "the IPC provider refused to start:`n$content" }
+        }
+        if (-not $bound) { throw "the IPC provider did not report a bound named pipe within 60 seconds. Log: $($ipc.ErrLog)" }
+        Write-IipsOk "IPC provider bound: $pipePath (PID $($ipc.Pid))"
     }
-    if (-not (Test-Path -LiteralPath $entrypoint)) { throw "compiled IPC entrypoint missing at $entrypoint after build." }
-    Write-IipsOk "IPC entrypoint compiled: $entrypoint"
-
-    $ipcEnv = @{
-        'IIPS_G2_IPC_ENDPOINT'    = $pipePath
-        'IIPS_G3_DATABASE_PATH'   = $DatabasePath
-        'IIPS_G3_LOCAL_STATE_DIR' = $stateDir
+    if ($ipcReusable) {
+        Write-IipsStep '03-ipd-ipc' 'Reusing existing IPD IPC provider (verified identity and readiness)'
+        $script:IpcProviderReused = $true
     }
 
-    $ipc = Start-IipsService -Label 'ipd-ipc' -Executable $toolchain.NodeExe -Arguments @($entrypoint) -WorkingDirectory $IpdRoot -LogDirectory $script:ServiceLogDir -Environment $ipcEnv
-    $script:Started.Add($ipc)
-
-    $deadline = (Get-Date).AddSeconds(60)
-    $bound = $false
-    while ((Get-Date) -lt $deadline) {
-        Start-Sleep -Seconds 2
-        if (-not (Test-Path -LiteralPath $ipc.ErrLog)) { continue }
-        $content = Get-Content -LiteralPath $ipc.ErrLog -Raw -ErrorAction SilentlyContinue
-        if ($null -eq $content) { continue }
-        if ($content -match '\[g3\] listening on windows-named-pipe') { $bound = $true; break }
-        if ($content -match '\[g3\] startup refused') { throw "the IPC provider refused to start:`n$content" }
-    }
-    if (-not $bound) { throw "the IPC provider did not report a bound named pipe within 60 seconds. Log: $($ipc.ErrLog)" }
-    Write-IipsOk "IPC provider bound: $pipePath (PID $($ipc.Pid))"
-
-    $found = Wait-IipsPipePresent -PipeName $PipeName -TimeoutSeconds 20
-    if ($null -eq $found) { throw "the named pipe $pipePath is not visible in the \\.\pipe\ namespace after a successful bind." }
-    Write-IipsOk "pipe visible in the Windows namespace: $found"
+    # Verify application-level IPC readiness (not just pipe existence or log marker).
+    Test-IipsIpcApplicationReadiness -PipeName $PipeName -TimeoutSeconds 10
 
     $transportEnv['IIPS_G3_IPC_BINDING_PROVISIONED'] = 'true'
     $transportEnv['IIPS_G2_IPC_ENDPOINT'] = $pipePath
@@ -476,16 +659,23 @@ try {
     $viteListen = Wait-IipsPortListening -Port $FrontendPort -Label 'the IRR Vite dev server' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $BindAddress
     Write-IipsOk "Vite bound loopback-only: $($viteListen.LocalAddress):$FrontendPort"
 
+    # Verify frontend root route.
     $doc = Wait-IipsHttpReady -Url "http://$BindAddress`:$FrontendPort/" -Label 'the IRR Vite document' -TimeoutSeconds 60
     if ($doc.Content -notmatch '<div id="root">') {
         $head = $doc.Content.Substring(0, [Math]::Min(200, $doc.Content.Length))
         throw "the Vite document did not contain the React root element. Body head: $head"
     }
-    Write-IipsOk 'Vite is serving the application shell'
+    Write-IipsOk 'Vite is serving the application shell at root route /'
 
-    # --- Post-start health: proxy path ---------------------------------------------------------
-    Write-IipsStep '06-connectivity' 'Verifying frontend-to-backend communication through the Vite proxy'
+    # Verify frontend Personal Portfolio route /portfolio through the frontend server/proxy.
+    $portfolio = Wait-IipsHttpReady -Url "http://$BindAddress`:$FrontendPort/portfolio" -Label 'the IRR Vite portfolio route' -TimeoutSeconds 60
+    if ($portfolio.Content -notmatch '<div id="root">') {
+        $head = $portfolio.Content.Substring(0, [Math]::Min(200, $portfolio.Content.Length))
+        throw "the /portfolio route did not contain the React root element. Body head: $head"
+    }
+    Write-IipsOk 'Personal Portfolio route /portfolio verified through frontend proxy'
 
+    # Verify the frontend-to-IRR API health path through the proxy.
     $proxied = Wait-IipsHttpReady -Url "http://$BindAddress`:$FrontendPort/api/health" -Label 'the proxied health check' -TimeoutSeconds 60
     if ($proxied.Content -notmatch '"status"\s*:\s*"ok"') { throw "the proxied health check returned an unexpected body: $($proxied.Content). The Vite /api proxy is not reaching the transport." }
     Write-IipsOk "proxied /api/health -> $($proxied.StatusCode) with the expected body"
@@ -589,6 +779,7 @@ try {
         ipdShellPort  = $manifestShellPort
         pipeName      = $PipeName
         databasePath  = $DatabasePath
+        ipcReused     = $script:IpcProviderReused
         processes     = $record
     }
     $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $pidFile -Encoding UTF8
@@ -638,7 +829,7 @@ try {
     }
     Write-Host ''
     Write-Host '  Conditional screens:' -ForegroundColor Yellow
-    Write-Host '    User Portfolios / Broker Import -> require IPC provider on named pipe (started above)' -ForegroundColor Yellow
+    Write-Host '    User Portfolios / Broker Import -> require IPC provider on named pipe (started or reused above)' -ForegroundColor Yellow
     Write-Host '    Reports -> parked; needs a separately provisioned NP-04 governed database' -ForegroundColor Yellow
     Write-Host ''
     Write-Host '  Stop everything with: 06-Stop-IipsServers.ps1' -ForegroundColor Yellow

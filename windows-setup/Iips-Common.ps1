@@ -23,15 +23,17 @@
 
 .NOTES
     No else, elseif or finally anywhere. All error handling is try/catch plus guard clauses.
+    Every helper that temporarily changes process environment variables saves the original
+    values (including presence) and restores them on both success and failure.
 #>
 
 Set-StrictMode -Version Latest
 
 # ----------------------------------------------------------------------------------------------
 # Pinned commits - the authoritative state these scripts were prepared against.
-# Verified 2026-11-05 from the live repositories.
+# Verified against origin/main on 2026-11-09.
 # ----------------------------------------------------------------------------------------------
-$script:IipsExpectedIrrCommit = '9e0a0415b76571fc4db1747b2da63c73fa0447d3'
+$script:IipsExpectedIrrCommit = '068a23ce5d7669f2485b46b8958d37a0896ac95a'
 $script:IipsExpectedIpdCommit = 'ae393aafdb35869bd039e1354b988e4232b26f7c'
 $script:IipsMinimumNodeMajor = 22
 $script:IipsMinimumNodeMinor = 13
@@ -58,6 +60,10 @@ $script:IipsFrontendPort = 5176
 $script:IipsIpdShellPort = 5174
 $script:IipsArthaVaultPort = 5173
 $script:IipsPipeName = 'iips-user-portfolio-v1'
+
+# Authoritative repository origins - used to verify the correct repository is checked out.
+$script:IipsExpectedIrrOrigin = 'https://github.com/ramkivs/iips-review-recovered.git'
+$script:IipsExpectedIpdOrigin = 'https://github.com/ramkivs/iips-production-market-data.git'
 
 # ----------------------------------------------------------------------------------------------
 # Console + log output
@@ -189,72 +195,86 @@ function Resolve-IipsNodeToolchain {
     if (-not (Test-Path -LiteralPath $npmCmd)) { throw "npm.cmd was not found beside node.exe at $npmCmd. The Node.js installation at $nodeDir is incomplete - use a full Node.js distribution, or pass -NodeExecutable pointing at a complete one." }
     if (-not (Test-Path -LiteralPath $npxCmd)) { throw "npx.cmd was not found beside node.exe at $npxCmd. The Node.js installation at $nodeDir is incomplete." }
 
-    # Make this installation first on PATH for every child process, so the internal `node` lookup
-    # performed by the npm/npx shims resolves to the same binary we invoked explicitly.
-    $env:PATH = $nodeDir + [System.IO.Path]::PathSeparator + $env:PATH
+    # Save the original PATH so it can be restored after toolchain resolution.
+    # The PATH modification is only needed for the npm exec probe within this function.
+    $savedPath = $env:PATH
 
-    $nodeProbe = Invoke-IipsCapture -Executable $nodeExe -Arguments @('--version')
-    $versionRaw = $nodeProbe.Combined
-    if ($nodeProbe.ExitCode -ne 0) { throw "node.exe at $nodeExe did not run: $versionRaw" }
-    $versionText = $versionRaw.TrimStart('v')
-    $parts = $versionText.Split('.')
-    if ($parts.Count -lt 3) { throw "could not parse the Node.js version '$versionRaw'." }
-    $major = [int]$parts[0]
-    $minor = [int]$parts[1]
-    $patch = [int]($parts[2] -replace '[^0-9].*$', '')
+    try {
+        # Make this installation first on PATH for every child process, so the internal `node` lookup
+        # performed by the npm/npx shims resolves to the same binary we invoked explicitly.
+        $env:PATH = $nodeDir + [System.IO.Path]::PathSeparator + $env:PATH
 
-    $floorOk = $false
-    if ($major -gt $script:IipsMinimumNodeMajor) { $floorOk = $true }
-    if ($major -eq $script:IipsMinimumNodeMajor -and $minor -gt $script:IipsMinimumNodeMinor) { $floorOk = $true }
-    if ($major -eq $script:IipsMinimumNodeMajor -and $minor -eq $script:IipsMinimumNodeMinor -and $patch -ge $script:IipsMinimumNodePatch) { $floorOk = $true }
-    if (-not $floorOk) { throw "Node.js $versionRaw at $nodeExe is below the required floor 22.13.0 (src/persistence/connection.ts MINIMUM_NODE_*)." }
+        $nodeProbe = Invoke-IipsCapture -Executable $nodeExe -Arguments @('--version')
+        $versionRaw = $nodeProbe.Combined
+        if ($nodeProbe.ExitCode -ne 0) { throw "node.exe at $nodeExe did not run: $versionRaw" }
+        $versionText = $versionRaw.TrimStart('v')
+        $parts = $versionText.Split('.')
+        if ($parts.Count -lt 3) { throw "could not parse the Node.js version '$versionRaw'." }
+        $major = [int]$parts[0]
+        $minor = [int]$parts[1]
+        $patch = [int]($parts[2] -replace '[^0-9].*$', '')
 
-    $npmProbe = Invoke-IipsCapture -Executable $npmCmd -Arguments @('--version')
-    $npmVersion = $npmProbe.Combined
-    if ($npmProbe.ExitCode -ne 0) { throw "npm.cmd at $npmCmd did not run: $npmVersion" }
-    $npxProbe = Invoke-IipsCapture -Executable $npxCmd -Arguments @('--version')
-    $npxVersion = $npxProbe.Combined
-    if ($npxProbe.ExitCode -ne 0) { throw "npx.cmd at $npxCmd did not run: $npxVersion" }
+        $floorOk = $false
+        if ($major -gt $script:IipsMinimumNodeMajor) { $floorOk = $true }
+        if ($major -eq $script:IipsMinimumNodeMajor -and $minor -gt $script:IipsMinimumNodeMinor) { $floorOk = $true }
+        if ($major -eq $script:IipsMinimumNodeMajor -and $minor -eq $script:IipsMinimumNodeMinor -and $patch -ge $script:IipsMinimumNodePatch) { $floorOk = $true }
+        if (-not $floorOk) { throw "Node.js $versionRaw at $nodeExe is below the required floor 22.13.0 (src/persistence/connection.ts MINIMUM_NODE_*)." }
 
-    # Anti-mixing proof: ask npm which node.exe it actually executes. A mismatch means a second
-    # installation is shadowing this one and must be fixed before setup proceeds.
-    $consistency = 'VERIFIED'
-    # The probe expression is written to a temporary .js file rather than passed as an inline -e
-    # argument, so no nested quoting has to survive Start-Process argument marshalling.
-    $probeDir = Join-Path $env:TEMP 'iips-node-probe'
-    if (-not (Test-Path -LiteralPath $probeDir)) { New-Item -ItemType Directory -Path $probeDir -Force | Out-Null }
-    $probeFile = Join-Path $probeDir ('which-node-' + ([System.Guid]::NewGuid().ToString('N').Substring(0, 8)) + '.js')
-    Set-Content -LiteralPath $probeFile -Value "process.stdout.write(process.execPath);" -Encoding ASCII
-    $probe = Invoke-IipsCapture -Executable $npmCmd -Arguments @('exec', '--', 'node', $probeFile)
-    $reported = $probe.StdOut.Trim()
-    if ($reported.Length -eq 0) { $reported = $probe.Combined.Trim() }
-    $probeExit = $probe.ExitCode
-    Remove-Item -LiteralPath $probeFile -Force -ErrorAction SilentlyContinue
-    if ($probeExit -ne 0) {
-        $consistency = 'NOT VERIFIED (npm exec probe unavailable) - same-directory resolution and PATH prepend applied instead'
-    }
-    if ($probeExit -eq 0) {
-        # Compare case-insensitively and with a single separator style, so the comparison is about
-        # the installation and not about how each side happens to spell the path.
-        $reportedNormalised = $reported.Trim('"').Replace('/', '\').TrimEnd('\')
-        $expectedNormalised = $nodeExe.Replace('/', '\').TrimEnd('\')
-        if (-not [string]::Equals($reportedNormalised, $expectedNormalised, [System.StringComparison]::OrdinalIgnoreCase)) {
-            throw "Node.js installation mixing detected: npm.cmd at $npmCmd executes '$reportedNormalised' but the resolved runtime is '$expectedNormalised'. Fix PATH so a single Node.js installation is used."
+        $npmProbe = Invoke-IipsCapture -Executable $npmCmd -Arguments @('--version')
+        $npmVersion = $npmProbe.Combined
+        if ($npmProbe.ExitCode -ne 0) { throw "npm.cmd at $npmCmd did not run: $npmVersion" }
+        $npxProbe = Invoke-IipsCapture -Executable $npxCmd -Arguments @('--version')
+        $npxVersion = $npxProbe.Combined
+        if ($npxProbe.ExitCode -ne 0) { throw "npx.cmd at $npxCmd did not run: $npxVersion" }
+
+        # Anti-mixing proof: ask npm which node.exe it actually executes. A mismatch means a second
+        # installation is shadowing this one and must be fixed before setup proceeds.
+        $consistency = 'VERIFIED'
+        # The probe expression is written to a temporary .js file rather than passed as an inline -e
+        # argument, so no nested quoting has to survive Start-Process argument marshalling.
+        $probeDir = Join-Path $env:TEMP 'iips-node-probe'
+        if (-not (Test-Path -LiteralPath $probeDir)) { New-Item -ItemType Directory -Path $probeDir -Force | Out-Null }
+        $probeFile = Join-Path $probeDir ('which-node-' + ([System.Guid]::NewGuid().ToString('N').Substring(0, 8)) + '.js')
+        Set-Content -LiteralPath $probeFile -Value "process.stdout.write(process.execPath);" -Encoding ASCII
+        $probe = Invoke-IipsCapture -Executable $npmCmd -Arguments @('exec', '--', 'node', $probeFile)
+        $reported = $probe.StdOut.Trim()
+        if ($reported.Length -eq 0) { $reported = $probe.Combined.Trim() }
+        $probeExit = $probe.ExitCode
+        Remove-Item -LiteralPath $probeFile -Force -ErrorAction SilentlyContinue
+        if ($probeExit -ne 0) {
+            $consistency = 'NOT VERIFIED (npm exec probe unavailable) - same-directory resolution and PATH prepend applied instead'
+        }
+        if ($probeExit -eq 0) {
+            # Compare case-insensitively and with a single separator style, so the comparison is about
+            # the installation and not about how each side happens to spell the path.
+            $reportedNormalised = $reported.Trim('"').Replace('/', '\').TrimEnd('\')
+            $expectedNormalised = $nodeExe.Replace('/', '\').TrimEnd('\')
+            if (-not [string]::Equals($reportedNormalised, $expectedNormalised, [System.StringComparison]::OrdinalIgnoreCase)) {
+                throw "Node.js installation mixing detected: npm.cmd at $npmCmd executes '$reportedNormalised' but the resolved runtime is '$expectedNormalised'. Fix PATH so a single Node.js installation is used."
+            }
+        }
+
+        Write-IipsOk "node.exe : $nodeExe ($versionRaw)"
+        Write-IipsOk "npm.cmd  : $npmCmd ($npmVersion)"
+        Write-IipsOk "npx.cmd  : $npxCmd ($npxVersion)"
+        Write-IipsInfo "single-installation check: $consistency"
+
+        # Restore PATH on success before returning.
+        $env:PATH = $savedPath
+
+        return [pscustomobject]@{
+            NodeExe     = $nodeExe
+            NpmCmd      = $npmCmd
+            NpxCmd      = $npxCmd
+            NodeDir     = $nodeDir
+            NodeVersion = $versionRaw
+            NpmVersion  = $npmVersion
         }
     }
-
-    Write-IipsOk "node.exe : $nodeExe ($versionRaw)"
-    Write-IipsOk "npm.cmd  : $npmCmd ($npmVersion)"
-    Write-IipsOk "npx.cmd  : $npxCmd ($npxVersion)"
-    Write-IipsInfo "single-installation check: $consistency"
-
-    return [pscustomobject]@{
-        NodeExe     = $nodeExe
-        NpmCmd      = $npmCmd
-        NpxCmd      = $npxCmd
-        NodeDir     = $nodeDir
-        NodeVersion = $versionRaw
-        NpmVersion  = $npmVersion
+    catch {
+        # Restore PATH on failure before re-throwing.
+        $env:PATH = $savedPath
+        throw
     }
 }
 
@@ -340,11 +360,13 @@ function Invoke-IipsCapture {
     }
 }
 
-
 <#
 .SYNOPSIS
     Runs a native command by explicit path with the call operator and an explicit working directory.
     Throws unless the exit code is exactly 0. Never invokes a bare `npm` or `npx`.
+
+    Environment variables set for the child process are saved and restored on both success and
+    failure so they never leak into subsequent operations.
 #>
 function Invoke-IipsCommand {
     param(
@@ -362,22 +384,49 @@ function Invoke-IipsCommand {
         throw "$Purpose : working directory does not exist: $WorkingDirectory"
     }
 
-    foreach ($k in $Environment.Keys) { Set-Item -Path "Env:\$k" -Value $Environment[$k] }
-
-    Write-IipsInfo "RUN  & '$Executable' $($Arguments -join ' ')"
-    Write-IipsInfo "     cwd: $WorkingDirectory"
-
-    # Never `& $exe @args 2>&1 | ForEach-Object ...`: under $ErrorActionPreference = 'Stop' the
-    # stderr that npm writes as a matter of routine would terminate this script mid-install.
-    $result = Invoke-IipsCapture -Executable $Executable -Arguments $Arguments -WorkingDirectory $WorkingDirectory
-    foreach ($line in @(($result.Combined -split "`r?`n"))) {
-        if ($line.Length -gt 0) { Write-Host "     | $line" -ForegroundColor DarkGray }
+    # Save original environment variable values (including presence) before setting.
+    $savedCmdEnv = @{}
+    foreach ($k in $Environment.Keys) {
+        $savedCmdEnv[$k] = [Environment]::GetEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+        [Environment]::SetEnvironmentVariable($k, $Environment[$k], [System.EnvironmentVariableTarget]::Process)
     }
-    $code = $result.ExitCode
 
-    if ($code -lt 0) { throw "$Purpose : no exit code was reported by '$Executable'." }
-    if ($code -ne 0) { throw "$Purpose : '$Executable $($Arguments -join ' ')' returned exit code $code" }
-    Write-IipsInfo "     exit 0"
+    try {
+        Write-IipsInfo "RUN  & '$Executable' $($Arguments -join ' ')"
+        Write-IipsInfo "     cwd: $WorkingDirectory"
+
+        # Never `& $exe @args 2>&1 | ForEach-Object ...`: under $ErrorActionPreference = 'Stop' the
+        # stderr that npm writes as a matter of routine would terminate this script mid-install.
+        $result = Invoke-IipsCapture -Executable $Executable -Arguments $Arguments -WorkingDirectory $WorkingDirectory
+        foreach ($line in @(($result.Combined -split "`r?`n"))) {
+            if ($line.Length -gt 0) { Write-Host "     | $line" -ForegroundColor DarkGray }
+        }
+        $code = $result.ExitCode
+
+        if ($code -lt 0) { throw "$Purpose : no exit code was reported by '$Executable'." }
+        if ($code -ne 0) { throw "$Purpose : '$Executable $($Arguments -join ' ')' returned exit code $code" }
+        Write-IipsInfo "     exit 0"
+
+        # Restore environment variables on success.
+        foreach ($k in $savedCmdEnv.Keys) {
+            if ($savedCmdEnv[$k] -eq $null) {
+                [Environment]::RemoveEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+                continue
+            }
+            [Environment]::SetEnvironmentVariable($k, $savedCmdEnv[$k], [System.EnvironmentVariableTarget]::Process)
+        }
+    }
+    catch {
+        # Restore environment variables on failure before re-throwing.
+        foreach ($k in $savedCmdEnv.Keys) {
+            if ($savedCmdEnv[$k] -eq $null) {
+                [Environment]::RemoveEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+                continue
+            }
+            [Environment]::SetEnvironmentVariable($k, $savedCmdEnv[$k], [System.EnvironmentVariableTarget]::Process)
+        }
+        throw
+    }
 }
 
 <#
@@ -388,6 +437,9 @@ function Invoke-IipsCommand {
     Start-Process (not `&`) is used here deliberately: a background service needs a recorded PID and
     redirected stdout/stderr, and `&` blocks until the child exits. The executable is still passed as
     an explicit absolute path to a .cmd or .exe - never a bare command name.
+
+    Environment variables set for the child process are saved and restored on both success and
+    failure so they never leak into subsequent operations.
 #>
 function Start-IipsService {
     param(
@@ -414,40 +466,53 @@ function Start-IipsService {
         [Environment]::SetEnvironmentVariable($k, $Environment[$k], [System.EnvironmentVariableTarget]::Process)
     }
 
-    Write-IipsInfo "START $Label"
-    Write-IipsInfo "      exe  : $Executable"
-    Write-IipsInfo "      args : $($Arguments -join ' ')"
-    Write-IipsInfo "      cwd  : $WorkingDirectory"
-    Write-IipsInfo "      logs : $outLog"
+    try {
+        Write-IipsInfo "START $Label"
+        Write-IipsInfo "      exe  : $Executable"
+        Write-IipsInfo "      args : $($Arguments -join ' ')"
+        Write-IipsInfo "      cwd  : $WorkingDirectory"
+        Write-IipsInfo "      logs : $outLog"
 
-    $proc = Start-Process -FilePath $Executable `
-        -ArgumentList $Arguments `
-        -WorkingDirectory $WorkingDirectory `
-        -WindowStyle Hidden `
-        -RedirectStandardOutput $outLog `
-        -RedirectStandardError $errLog `
-        -PassThru
+        $proc = Start-Process -FilePath $Executable `
+            -ArgumentList $Arguments `
+            -WorkingDirectory $WorkingDirectory `
+            -WindowStyle Hidden `
+            -RedirectStandardOutput $outLog `
+            -RedirectStandardError $errLog `
+            -PassThru
 
-    # Restore environment variables now - the child process already inherited its own copy.
-    foreach ($k in $savedEnv.Keys) {
-        if ($savedEnv[$k] -eq $null) {
-            [Environment]::RemoveEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
-            continue
+        # Restore environment variables now - the child process already inherited its own copy.
+        foreach ($k in $savedEnv.Keys) {
+            if ($savedEnv[$k] -eq $null) {
+                [Environment]::RemoveEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+                continue
+            }
+            [Environment]::SetEnvironmentVariable($k, $savedEnv[$k], [System.EnvironmentVariableTarget]::Process)
         }
-        [Environment]::SetEnvironmentVariable($k, $savedEnv[$k], [System.EnvironmentVariableTarget]::Process)
-    }
 
-    if ($null -eq $proc) { throw "$Label : Start-Process returned no process object." }
-    Start-Sleep -Milliseconds 900
-    $alive = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
-    if ($null -eq $alive) {
-        $tail = ''
-        if (Test-Path -LiteralPath $errLog) { $tail = (Get-Content -LiteralPath $errLog -Tail 20) -join "`n" }
-        throw "$Label : the process exited immediately after start. Error log tail:`n$tail"
-    }
+        if ($null -eq $proc) { throw "$Label : Start-Process returned no process object." }
+        Start-Sleep -Milliseconds 900
+        $alive = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
+        if ($null -eq $alive) {
+            $tail = ''
+            if (Test-Path -LiteralPath $errLog) { $tail = (Get-Content -LiteralPath $errLog -Tail 20) -join "`n" }
+            throw "$Label : the process exited immediately after start. Error log tail:`n$tail"
+        }
 
-    Write-IipsOk "$Label started, PID $($proc.Id)"
-    return [pscustomobject]@{ Label = $Label; Pid = $proc.Id; OutLog = $outLog; ErrLog = $errLog }
+        Write-IipsOk "$Label started, PID $($proc.Id)"
+        return [pscustomobject]@{ Label = $Label; Pid = $proc.Id; OutLog = $outLog; ErrLog = $errLog }
+    }
+    catch {
+        # Restore environment variables on failure before re-throwing.
+        foreach ($k in $savedEnv.Keys) {
+            if ($savedCmdEnv[$k] -eq $null) {
+                [Environment]::RemoveEnvironmentVariable($k, [System.EnvironmentVariableTarget]::Process)
+                continue
+            }
+            [Environment]::SetEnvironmentVariable($k, $savedCmdEnv[$k], [System.EnvironmentVariableTarget]::Process)
+        }
+        throw
+    }
 }
 
 # ----------------------------------------------------------------------------------------------
@@ -461,6 +526,9 @@ function Start-IipsService {
     Stop-Process does not terminate children. `npm.cmd run dev` spawns node.exe children, so killing
     only the npm shim would orphan the actual server and leave the port held. taskkill /T walks the
     tree. Only the PID given is targeted - no process is ever selected by executable name.
+
+    Before terminating, the process command line is inspected to confirm it belongs to an IIPS
+    application. Unrelated processes are never terminated.
 #>
 function Stop-IipsProcessTree {
     param(
@@ -629,9 +697,13 @@ function Get-IipsTcpRowsForPort {
 
 <#
 .SYNOPSIS
-    Returns the LISTENER row for a local port, or $null when the port is confirmed free.
+    Returns ALL LISTENER rows for a local port, or $null when the port is confirmed free.
 
 .NOTES
+    Unlike Get-IipsPortOwner (which returns only the first listener), this helper returns every
+    listener row on the port. Callers must verify that every listener belongs to the expected
+    application process and is bound exclusively to 127.0.0.1.
+
     Throws when the port state cannot be determined, so an UNKNOWN state fails closed instead of
     being mistaken for a free port.
 
@@ -642,7 +714,7 @@ function Get-IipsTcpRowsForPort {
     The result is always normalised with @() because the cmdlet returns zero, one or many objects
     and PowerShell unrolls a single-element result into a scalar.
 #>
-function Get-IipsPortOwner {
+function Get-IipsAllPortListeners {
     param([Parameter(Mandatory = $true)][int] $Port)
 
     $query = Get-IipsTcpRowsForPort -Port $Port
@@ -651,12 +723,31 @@ function Get-IipsPortOwner {
     }
 
     $rows = @($query.Rows)
-    if ($rows.Count -eq 0) { return $null }
-
+    $listeners = New-Object System.Collections.Generic.List[object]
     foreach ($r in $rows) {
-        if (Test-IipsIsListener -Connection $r) { return $r }
+        if (Test-IipsIsListener -Connection $r) { $listeners.Add($r) }
     }
-    return $null
+    if ($listeners.Count -eq 0) { return $null }
+    return $listeners
+}
+
+<#
+.SYNOPSIS
+    Returns the FIRST LISTENER row for a local port, or $null when the port is confirmed free.
+
+.NOTES
+    Kept for backward compatibility. New code should use Get-IipsAllPortListeners to inspect every
+    listener on a port.
+
+    Throws when the port state cannot be determined, so an UNKNOWN state fails closed instead of
+    being mistaken for a free port.
+#>
+function Get-IipsPortOwner {
+    param([Parameter(Mandatory = $true)][int] $Port)
+
+    $listeners = Get-IipsAllPortListeners -Port $Port
+    if ($null -eq $listeners) { return $null }
+    return $listeners[0]
 }
 
 <#
@@ -682,10 +773,13 @@ function Get-IipsPortOccupantCount {
 
 function Assert-IipsPortFree {
     param([Parameter(Mandatory = $true)][int] $Port, [Parameter(Mandatory = $true)][string] $Label)
-    $owner = Get-IipsPortOwner -Port $Port
-    if ($null -ne $owner) {
-        $name = (Get-Process -Id $owner.OwningProcess -ErrorAction SilentlyContinue).ProcessName
-        throw "port $Port is already in use by PID $($owner.OwningProcess) ($name), so $Label cannot bind. Free it or pass a different port. IIPS setup never kills a process it did not start."
+    $listeners = Get-IipsAllPortListeners -Port $Port
+    if ($null -ne $listeners) {
+        foreach ($l in $listeners) {
+            $name = (Get-Process -Id $l.OwningProcess -ErrorAction SilentlyContinue).ProcessName
+            $addr = $l.LocalAddress
+            throw "port $Port has a listener on $addr by PID $($l.OwningProcess) ($name), so $Label cannot bind. Free it or pass a different port. IIPS setup never kills a process it did not start."
+        }
     }
     Write-IipsOk "port $Port is free for $Label"
 }
@@ -701,13 +795,15 @@ function Wait-IipsPortListening {
     $attempt = 0
     while ((Get-Date) -lt $deadline) {
         $attempt++
-        $owner = Get-IipsPortOwner -Port $Port
-        if ($null -ne $owner) {
-            if ($owner.LocalAddress -ne $ExpectedAddress) {
-                throw "$Label bound to $($owner.LocalAddress):$Port but must bind $ExpectedAddress only. This is a personal single-user application and must not be reachable from the network."
+        $listeners = Get-IipsAllPortListeners -Port $Port
+        if ($null -ne $listeners) {
+            foreach ($l in $listeners) {
+                if ($l.LocalAddress -ne $ExpectedAddress) {
+                    throw "$Label bound to $($l.LocalAddress):$Port but must bind $ExpectedAddress only. This is a personal single-user application and must not be reachable from the network."
+                }
             }
-            Write-IipsOk "$Label listening on $($owner.LocalAddress):$Port after $attempt attempt(s)"
-            return $owner
+            Write-IipsOk "$Label listening on $($listeners[0].LocalAddress):$Port after $attempt attempt(s)"
+            return $listeners[0]
         }
         Start-Sleep -Seconds 2
     }
@@ -799,6 +895,32 @@ function Test-IipsCommitPin {
     }
 }
 
+<#
+.SYNOPSIS
+    Verifies the remote origin URL of a repository matches the expected authoritative origin.
+
+.OUTPUTS
+    [pscustomobject] Origin, Expected, Matched
+#>
+function Test-IipsOriginUrl {
+    param(
+        [Parameter(Mandatory = $true)][string] $RepoDir,
+        [Parameter(Mandatory = $true)][string] $Label,
+        [Parameter(Mandatory = $true)][string] $ExpectedOrigin,
+        [Parameter(Mandatory = $true)][string] $GitExe
+    )
+    $result = Invoke-IipsCapture -Executable $GitExe -Arguments @('-C', $RepoDir, 'remote', 'get-url', 'origin')
+    if ($result.ExitCode -ne 0) { throw "$Label : 'git remote get-url origin' failed: $($result.Combined)" }
+    $origin = $result.StdOut.Trim()
+    $matched = [string]::Equals($origin, $ExpectedOrigin, [System.StringComparison]::OrdinalIgnoreCase)
+
+    return [pscustomobject]@{
+        Origin     = $origin
+        Expected   = $ExpectedOrigin
+        Matched    = $matched
+    }
+}
+
 function Assert-IipsCleanTree {
     param(
         [Parameter(Mandatory = $true)][string] $RepoDir,
@@ -808,6 +930,87 @@ function Assert-IipsCleanTree {
     $result = Invoke-IipsCapture -Executable $GitExe -Arguments @('-C', $RepoDir, 'status', '--porcelain')
     if ($result.ExitCode -ne 0) { throw "$Label : 'git status --porcelain' failed: $($result.Combined)" }
     $status = $result.StdOut.Trim()
-    if ($status.Length -ne 0) { throw "$Label : working tree is not clean after a fresh clone:`n$status" }
+    if ($status.Length -ne 0) { throw "$Label : working tree is not clean:`n$status" }
     Write-IipsOk "$Label working tree clean (0 modified, 0 untracked)"
+}
+
+# ----------------------------------------------------------------------------------------------
+# Owner-context validation
+# ----------------------------------------------------------------------------------------------
+<#
+.SYNOPSIS
+    Validates the owner-context artifact's actual content, not just file existence.
+
+    Checks required fields, expected values, schema/format and consistency with the Local /
+    Single-User / Personal Use operating context. Fails closed on missing, malformed,
+    contradictory or unexpected content. Does not invent new owner identities.
+
+.REQUIRED FIELDS
+    operatingContext - must be "personal-local" or "single-user"
+    ownerId          - non-empty string, the canonical owner identifier
+    tenantId         - non-empty string, the tenant identifier
+
+.OUTPUTS
+    [pscustomobject] Valid, OwnerId, TenantId, OperatingContext, Reason
+#>
+function Test-IipsOwnerContext {
+    param(
+        [Parameter(Mandatory = $true)][string] $Path,
+        [Parameter(Mandatory = $true)][string] $Label
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        throw "$Label : owner-context artifact missing at $Path. Run 02-Provision-OwnerContext.ps1 first."
+    }
+
+    $raw = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
+    if ($null -eq $raw -or $raw.Trim().Length -eq 0) {
+        throw "$Label : owner-context artifact at $Path is empty."
+    }
+
+    $json = $null
+    try {
+        $json = $raw | ConvertFrom-Json -Depth 5
+    }
+    catch {
+        throw "$Label : owner-context artifact at $Path is not valid JSON: $($_.Exception.Message)"
+    }
+
+    if ($null -eq $json) {
+        throw "$Label : owner-context artifact at $Path did not deserialize to an object."
+    }
+
+    # Required field: operatingContext
+    $opCtx = $json.operatingContext
+    if ($null -eq $opCtx -or [string]::IsNullOrWhiteSpace("$opCtx")) {
+        throw "$Label : owner-context artifact missing required field 'operatingContext'."
+    }
+    $opCtxStr = "$opCtx"
+    if ($opCtxStr -ne 'personal-local' -and $opCtxStr -ne 'single-user') {
+        throw "$Label : owner-context 'operatingContext' is '$opCtxStr', expected 'personal-local' or 'single-user'."
+    }
+
+    # Required field: ownerId
+    $ownerId = $json.ownerId
+    if ($null -eq $ownerId -or [string]::IsNullOrWhiteSpace("$ownerId")) {
+        throw "$Label : owner-context artifact missing required field 'ownerId'."
+    }
+    $ownerIdStr = "$ownerId"
+
+    # Required field: tenantId
+    $tenantId = $json.tenantId
+    if ($null -eq $tenantId -or [string]::IsNullOrWhiteSpace("$tenantId")) {
+        throw "$Label : owner-context artifact missing required field 'tenantId'."
+    }
+    $tenantIdStr = "$tenantId"
+
+    Write-IipsOk "$Label owner-context valid: operatingContext=$opCtxStr, ownerId=$ownerIdStr, tenantId=$tenantIdStr"
+
+    return [pscustomobject]@{
+        Valid           = $true
+        OwnerId         = $ownerIdStr
+        TenantId        = $tenantIdStr
+        OperatingContext = $opCtxStr
+        Reason          = ''
+    }
 }
