@@ -254,6 +254,48 @@ broker-import port is in scope of the local personal-use carve-out or continues 
 governed path. Items (a)–(c) are Program Authority decisions; no implementation change is authorized
 by this assessment and none was made.
 
+### 2.8 RESOLVED 2026-11-09 — the standing decision, and what was implemented
+
+**Append-only.** §2.1–§2.7 above are the assessment as recorded on 2026-11-09 and are not rewritten.
+The Program Authority then issued a standing decision resolving item (c) of §2.7 explicitly:
+
+> The local personal-use carve-out **is** extended to broker-observed holdings for the local,
+> non-production, single-user application. Implement an **explicit local single-user authorization
+> path** — do **not** weaken or silently remove Gate 4 / Gate 5 globally. Supply the required
+> authorization context to the durable write guard and have it validate the actual local principal,
+> binding and authorization scope. Do not bypass identity qualification, transaction safeguards,
+> audit integrity, revision checks or idempotency. Preserve fail-closed for invalid bindings,
+> unauthorized principals and unresolved or ambiguous identities. No further approval rounds.
+
+Items (a) and (b) — the Gate 4 result-acceptance act and the Gate 5 admission act — remain
+**outstanding Program Authority decisions** and are **not** claimed. They continue to gate the
+governed path. The decision addresses only item (c) and the local carve-out.
+
+**What changed in this repository** (`main` basis `709fd13`, this branch):
+
+| Element | Before (§2.7 finding) | After |
+|---|---|---|
+| `DurablePortfolioStorePort.assertWritable()` | `evaluatePortSaveGuard()` with **no context** — context branch structurally unreachable | evaluates once per mutating call; with construction options it resolves an explicit context; **without** options it still calls `evaluatePortSaveGuard()` with no context (byte-identical default deny) |
+| Authorization source | none | `src/persistence/localSingleUserAuthorization.ts` — pinned server env switch **and** ACTIVE binding equal to the write's target owner+tenant; binding read in-transaction when one is already open |
+| Consumer composition | `createBrokerImportConsumer(db, identityOptions)` | `createBrokerImportConsumer(db, { …identity, authorization: { env, revisionCap } })` at the same single `entrypoint.ts` call site |
+| Application path | none | `src/ui/brokerImportApplicationPath.ts` — parse → qualify → preview → summary → durable request; UI identity claims structurally dropped |
+| `portfolio.get` (personal path) | `contributions: []` | `contributions: []` plus projected `importEvidence[]` from the same durable ledger |
+| Gate 4 / Gate 5 | NOT MET | **NOT MET — unchanged.** `evaluatePortSaveGuard()` with no context still returns the two literals; a port with no options is refused exactly as before |
+
+**Integrated verification** (`tests/broker_import_local_authorization.test.ts`, 11 tests, all passing)
+drives the real components end-to-end: BC-05 ingress on real CSV bytes → governed P04
+qualification → preview with zero writes → the consumer composed by `startIpcServer` → durable
+commit → `portfolio.get` over the real IPC UDS socket → merge without duplication → idempotent
+re-import (`ALREADY_IMPORTED_NO_OP`, zero store effect) → retained `importEvidence` → **restart on a
+fresh connection with the same database path** → cross-principal refusal → switch-off / no-binding /
+revoked-binding / unrelated-flag refusal → manual path intact and distinguishable.
+
+**Still true, and unchanged by this decision:** identity qualification is not bypassed (an
+unregistered ISIN still refuses the whole import and stays unresolved); WS-A rows 44 / 51 / 63
+remain unresolved with no alias and no exception; B-06 remains open; no master, corpus or mapping
+was altered; `QE-1`…`QE-11` are still 0/11. This is **not** production acceptance, **not**
+institutional certification, and **not** a multi-user or hosted capability.
+
 ---
 
 ## 3. Verification performed
@@ -271,7 +313,8 @@ by this assessment and none was made.
 | Stage 4 test counts | 27 + 8 = 35 (4C's "36" corrected) |
 | `evaluatePortSaveGuard()` no-context | `authorized: false`, W-1(3)/(4) |
 | `evaluatePortSaveGuard(ctx)` with switch + binding | `authorized: true` (personal-local) |
-| Broker import port with switch on, binding present, qualified identities | `WRITE_NOT_AUTHORIZED`, `storeEffect: NONE`, `isTransaction: false`, 0 rows |
+| Broker import port with switch on, binding present, qualified identities — **as assessed (§2.7 era, before §2.8)** | `WRITE_NOT_AUTHORIZED`, `storeEffect: NONE`, `isTransaction: false`, 0 rows |
+| Same, after the 2026-11-09 authorization path (§2.8) | committed: `SAVED_NEW_BATCH`, `storeEffect: REVISION_COMMITTED`, revision 1 |
 | v1 `portfolio.create` via real dispatch with switch on | executed; 1/1/1/1 rows — manual path is live |
 
 ## 4. Explicit non-claims
@@ -282,4 +325,7 @@ by this assessment and none was made.
   persistence layer are unchanged.
 - No Gate 4 / Gate 5 work; no production deployment, acceptance or qualification.
 - IRR untouched and read-only; no Dhan API or live-provider access.
-- Broker-import durable save remains refused and is **not** claimed to work.
+- Broker-import durable save is no longer refused **on the explicitly authorized local single-user
+  path only** (§2.8). It is **not** claimed for the governed path, not claimed as production
+  acceptance, and not claimed as institutional certification. The §2.7-era "refused" measurement
+  above stands as the record of what was true before that authorization.

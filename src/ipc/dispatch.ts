@@ -47,6 +47,7 @@ import {
   InvalidPortfolioRequestError,
   ResourceUnavailableError,
   RevisionConflictError,
+  type LocalPortfolioDetail,
   type OwnerRef,
 } from '../persistence/portfolio_store.js';
 import {
@@ -142,22 +143,43 @@ function personalPortfolioName(payload: Record<string, unknown>): string | undef
 }
 
 /**
- * v1 view projection under the local personal-use mode: identical to the
- * governed projection except the contribution ledger is scoped out of the
- * wire. The frozen G2 consumer contract has no honest mapping for contribution
- * rows (it requires a per-batch holdingsCount the v1 rows do not carry), so a
- * non-empty list would be refused upstream instead of passed through. The
- * ledger is still written to the database — audit history remains queryable
- * via `portfolio.revisions` and the local store — and this projection scope is
- * recorded in the local save receipt and the local-personal-use documentation.
+ * v1 view projection under the local personal-use mode.
+ *
+ * The frozen G2 consumer contract has no honest mapping for raw contribution
+ * rows (it requires a per-batch `holdingsCount` the v1 rows do not carry, and
+ * the broker-import `content_digest` never equals the revision digest), so the
+ * governed row shape is NOT placed on the wire: a non-empty governed-shaped
+ * list would be refused upstream instead of passed through.
+ *
+ * What IS on the wire, since the 2026-11-09 authorization extended the local
+ * path to broker-observed holdings, is the import evidence the operator needs
+ * to confirm what was imported: one entry per committed import carrying the
+ * file name, source broker, import instant, content digest, lineage digest and
+ * contribution semantics. These are the same durable ledger values, projected
+ * into the honest per-import shape — nothing is synthesized, and an import with
+ * no recorded provenance keeps `null` rather than being defaulted.
+ *
+ * The ledger itself is written exactly as before; `portfolio.revisions`
+ * continues to expose the revision ledger.
  */
 function personalGet(
   store: DurablePortfolioStore,
   owner: OwnerRef,
   portfolioId: string,
-): ReturnType<DurablePortfolioStore['get']> {
+): LocalPortfolioDetail {
   const detail = store.get(owner, portfolioId);
-  return { ...detail, contributions: [] };
+  const importEvidence: LocalPortfolioDetail['importEvidence'] = store
+    .contributions(owner, portfolioId)
+    .map((row) => ({
+      contentDigest: row.contentDigest,
+      lineageDigest: row.lineageDigest,
+      fileName: row.fileName,
+      sourceBroker: row.sourceBroker,
+      importedAt: row.importedAt,
+      contributedAt: row.contributedAt,
+      semantics: row.semantics,
+    }));
+  return { ...detail, contributions: [], importEvidence };
 }
 
 interface PersonalWriteReceipt {

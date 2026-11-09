@@ -171,7 +171,28 @@ composed, startup refuses at `compose` rather than reverting to the pre-Stage-4 
 ### 6.5 What the Provider Does and Does Not Authorize
 
 The provider serves the three v1 read operations (`portfolio.list`, `portfolio.get`,
-`portfolio.revisions`) and refuses all four write operations with `WRITE_NOT_AUTHORIZED` before
-any store mutation, because Gate E W-1(3) and W-1(4) remain false. **Starting the provider does
-not authorize a durable portfolio write**, does not change Gate 4 or Gate 5 status, and does not
-constitute production activation.
+`portfolio.revisions`). Gate E W-1(3) (Gate 4 qualification) and W-1(4) (Gate 5 admission) remain
+false, so on the governed path the provider refuses all four write operations with
+`WRITE_NOT_AUTHORIZED` before any store mutation. **Starting the provider does not authorize a durable portfolio write** on the governed path, does
+not change Gate 4 or Gate 5 status, and does not constitute production activation.
+
+**CORRECTION-2026-11-09 — local single-user write path.** This section previously stated
+unconditionally that all four write operations are refused. That is still true for every governed
+caller, and for any process without the pinned switch. It is no longer true of the one explicitly
+authorized local single-user path, which was recognized by this provider's dispatch layer from
+2026-11-08 and extended to broker-observed holdings by the Program Authority standing decision of
+2026-11-09:
+
+| Condition | Provider behaviour |
+|---|---|
+| `IIPS_LOCAL_PERSONAL_USE` absent or not `1` | all four v1 write operations refused `WRITE_NOT_AUTHORIZED`, zero store effect (unchanged) |
+| switch `=1`, **no** ACTIVE binding | same refusal (unchanged) |
+| switch `=1`, ACTIVE binding for a **different** principal than the write targets | same refusal |
+| switch `=1`, ACTIVE binding **equal** to the write's target owner + tenant | the four v1 write operations execute against the durable store |
+| the composed broker-import consumer | the same four-condition ladder, evaluated through `DurablePortfolioStorePort` with an explicit authorization context |
+
+The broker-import consumer is composed once in the provider process (`createBrokerImportConsumer`)
+and is **not** an IPC operation: no new operation, route or HTTP surface exists, and the closed
+write set on the wire is unchanged. Identity qualification is not bypassed — an unresolved or
+ambiguous holding still refuses the whole import. See
+`docs/LOCAL-PERSONAL-USE-PERSISTENCE.md` §7 for the full path and its non-claims.

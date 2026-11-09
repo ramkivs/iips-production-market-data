@@ -322,6 +322,28 @@ None of these are falsely marked accepted, waived or completed. They remain as h
 
 **This is a personal-use functional limitation**, not a reason to pursue external production admission. The guard must not be disabled, bypassed, weakened, or altered. No workaround is invented or authorized.
 
+> **CORRECTION-2026-11-09 (append-only; the paragraph above is the audit record as written and is
+> not rewritten).** The Program Authority subsequently issued a standing decision for this local,
+> non-production, single-user application: the existing `IIPS_LOCAL_PERSONAL_USE=1` carve-out is
+> extended to broker-observed holdings, implemented as an **explicit local single-user authorization
+> path** supplied to the durable write guard, and **not** by weakening or removing Gate 4 / Gate 5
+> globally. Consequences for the two lists below:
+>
+> - The four v1 write operations and the durable broker-import save are no longer blocked under the
+>   switch + a matching ACTIVE binding. `evaluatePortSaveGuard()` with **no** context still returns
+>   the two W-1 literals unchanged, and any port constructed without an authorization context is
+>   still refused exactly as recorded above.
+> - The "What still works / What is blocked" lists below describe the pre-decision posture. They
+>   remain accurate for the governed path, for a process without the switch, and for a binding that
+>   does not match the write's target owner.
+> - Identity qualification is untouched: an unresolved or ambiguous holding still refuses the whole
+>   import. WS-A rows 44 / 51 / 63 remain unresolved.
+> - `QE-1`…`QE-11` remain 0/11; Gate 4 and Gate 5 remain **NOT MET** and are still required for the
+>   governed path. This correction is **not** a production, institutional or multi-user claim.
+>
+> See `docs/LOCAL-PERSONAL-USE-PERSISTENCE.md` §7 and
+> `docs/integration/BROKER-IMPORT-IDENTITY-RECONCILIATION-AND-W1-ADMISSION-ASSESSMENT-2026-11-09.md` §2.8.
+
 **What still works for personal use:**
 - Read-only portfolio queries through the IPC provider (GET /api/user-portfolios, detail, revisions)
 - Database verification (DP-V1–DP-V9, integrity check, FK check)

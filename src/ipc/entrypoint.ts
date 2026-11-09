@@ -31,7 +31,7 @@ import {
   type IpcHandle,
 } from './endpoint.js';
 import { createConnectionHandler } from './dispatch.js';
-import { LOCAL_PERSONAL_USE_SETTING } from './localPersonalUse.js';
+import { LOCAL_PERSONAL_USE_SETTING, revisionCapFor } from './localPersonalUse.js';
 import { createBrokerImportConsumer, type BrokerImportConsumer } from './brokerImportConsumer.js';
 import {
   brokerImportConsumerOptions,
@@ -169,10 +169,16 @@ export async function startIpcServer(options: StartupOptions = {}): Promise<Star
   try {
     const identityDependencies: BrokerImportIdentityDependencies =
       composeBrokerImportIdentityDependencies(options.brokerImportIdentity ?? {});
-    brokerImportConsumer = createBrokerImportConsumer(
-      db,
-      brokerImportConsumerOptions(identityDependencies),
-    );
+    // The authorization half is supplied from SERVER-OWNED state only: the
+    // process environment (`IIPS_LOCAL_PERSONAL_USE`) and the ACTIVE local
+    // principal binding, which the durable port resolves per call and must
+    // match the owner the import targets. Absent the switch or a matching
+    // binding, the port still supplies no context and the guard still returns
+    // its unchanged hard-false Gate 4 / Gate 5 refusal.
+    brokerImportConsumer = createBrokerImportConsumer(db, {
+      ...brokerImportConsumerOptions(identityDependencies),
+      authorization: { env, revisionCap: revisionCapFor(env) },
+    });
     brokerImportIdentity = Object.freeze({
       securityMasterRevision: identityDependencies.securityMaster.sourceRevision?.batchId ?? null,
       registryMappingCount: identityDependencies.registry.list().length,
