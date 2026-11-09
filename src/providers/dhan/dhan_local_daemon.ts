@@ -1,3 +1,4 @@
+import { DhanIdentityApiService } from './dhan_identity_api.js';
 /**
  * Institutional Investment Platform System (IIPS)
  * IPD-Owned Local Market-Data HTTP Daemon Launcher (Stage 1 Operational Wiring)
@@ -368,6 +369,7 @@ export async function startMarketDataDaemon(
   try {
     server = createMarketDataHttpServer({
       service,
+      identityService: new DhanIdentityApiService(securityMaster, instrumentRegistry),
       token: transportToken,
       host,
       ...(options.requestTimeoutMs !== undefined ? { requestTimeoutMs: options.requestTimeoutMs } : {}),

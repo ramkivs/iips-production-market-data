@@ -11,6 +11,7 @@
  * PRE-ACCESS: no live Dhan call is possible; all behaviour is synthetic-safe.
  */
 
+import { freshnessStatus, type FreshnessStatus, type RefreshStatus } from './dhan_freshness_status.js';
 import { CanonicalEnvelope } from '../../contracts/envelope.js';
 import { isD114SecurityIdentity, type D114SecurityIdentity } from '../../contracts/types.js';
 import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
@@ -92,6 +93,8 @@ export class DhanMarketDataService {
   private readonly limiter: DhanRateLimiter;
   private readonly client: DhanApiClient;
   private readonly now: () => Date;
+  // Bounded diagnostic history, separate from observation cache; never affects execution.
+  private readonly refreshStatus = new Map<string, RefreshStatus>();
   private running = false;
 
   constructor(options: DhanMarketDataServiceOptions) {
@@ -188,6 +191,16 @@ export class DhanMarketDataService {
 
     const outcomes = await this.orchestrator.refresh([scope]);
     const outcome = outcomes[0]!;
+    const key = dhanQuoteCacheKey(scope);
+    const previous = this.refreshStatus.get(key);
+    this.refreshStatus.delete(key);
+    this.refreshStatus.set(key, {
+      outcome: outcome.status,
+      lastFailure: outcome.status === 'FAILURE'
+        ? { code: 'REFRESH_FAILED', priorPreserved: outcome.priorPreserved }
+        : previous?.lastFailure ?? null,
+    });
+    if (this.refreshStatus.size > 256) this.refreshStatus.delete(this.refreshStatus.keys().next().value!);
     if (outcome.status === 'SKIPPED_FRESH' || outcome.status === 'SUCCESS') {
       const entry = this.cache.get(dhanQuoteCacheKey(scope), this.now().toISOString());
       if (entry.entry) {
@@ -205,6 +218,17 @@ export class DhanMarketDataService {
       };
     }
     return { ok: false, failure: dhanFailure('PROVIDER_STATUS_FAILURE', 'no quote produced').failure };
+  }
+
+  /** Read-only status: never touches LRU order, refreshes or invokes the provider. */
+  public getFreshness(request: { domain: 'D01_QUOTES'; companyId: string; exchangeSegment: DhanExchangeSegment; securityIdentity: D114SecurityIdentity } | { domain: 'D02_OHLCV' }): FreshnessStatus {
+    const evaluatedAt = this.now().toISOString();
+    const unknown: RefreshStatus = { outcome: 'UNKNOWN', lastFailure: null };
+    // The composed D02 adapter does not use DhanHistoricalCache or the refresh orchestrator.
+    if (request.domain === 'D02_OHLCV') return freshnessStatus(request.domain, null, evaluatedAt, unknown);
+    const scope: DhanSecurityScope = { companyId: request.companyId, exchangeSegment: request.exchangeSegment, isin: request.securityIdentity.isin, series: request.securityIdentity.series };
+    const key = dhanQuoteCacheKey(scope);
+    return freshnessStatus(request.domain, this.cache.peek(key, evaluatedAt), evaluatedAt, this.refreshStatus.get(key) ?? unknown);
   }
 
   /** Canonical historical request through the existing D02 adapter path. */

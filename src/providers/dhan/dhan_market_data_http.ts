@@ -29,12 +29,13 @@
  * one request per connection handled serially. Errors: {"error":{"code","message"}}.
  */
 
+import { DhanIdentityApiService } from './dhan_identity_api.js';
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { ListenOptions } from 'node:net';
 import { timingSafeEqual } from 'node:crypto';
 import { CanonicalEnvelope } from '../../contracts/envelope.js';
 import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
-import { buildD114SecurityIdentity, isD114SecurityIdentity } from '../../contracts/types.js';
+import { buildD114SecurityIdentity, isD114SecurityId, isD114SecurityIdentity } from '../../contracts/types.js';
 import { isDhanProductionEnvironment, type DhanEnvSource } from './dhan_config.js';
 import { DhanFailureCode } from './dhan_failures.js';
 import { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
@@ -50,6 +51,10 @@ export const MARKET_DATA_ROUTES = {
   quotes: '/v1/quotes',
   historical: '/v1/historical',
   health: '/v1/health',
+  freshness: '/v1/freshness',
+  instrumentSearch: '/v1/instruments/search',
+  identityResolve: '/v1/identity/resolve',
+  identityQualify: '/v1/identity/qualify',
 } as const;
 
 export const MARKET_DATA_MAX_REQUEST_BYTES = 16 * 1024;
@@ -94,6 +99,7 @@ export interface MarketDataTransportClientOptions {
 
 export interface MarketDataHttpOptions {
   service: DhanMarketDataService;
+  identityService?: DhanIdentityApiService;
   /** Transport credential (server-side secret; never a Dhan credential). */
   token?: string;
   host?: string;
@@ -193,7 +199,30 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
         return;
       }
 
-      if (req.method !== 'POST' || (path !== MARKET_DATA_ROUTES.quotes && path !== MARKET_DATA_ROUTES.historical)) {
+      if (path === MARKET_DATA_ROUTES.freshness && req.method === 'GET') {
+        const params = url.searchParams;
+        const allowed = new Set(['domain', 'companyId', 'exchangeSegment', 'securityId']);
+        if ((req.url?.length ?? 0) > 2048 || [...params.keys()].some(k => !allowed.has(k) || params.getAll(k).length !== 1)) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'invalid freshness query'); return;
+        }
+        const domain = params.get('domain');
+        if (domain === 'D02_OHLCV' && params.size === 1) {
+          sendJson(res, 200, service.getFreshness({ domain })); return;
+        }
+        const companyId = params.get('companyId');
+        const segment = params.get('exchangeSegment');
+        const securityId = params.get('securityId');
+        const parts = securityId?.split(':') ?? [];
+        const identity = securityId && isD114SecurityId(securityId) ? buildD114SecurityIdentity(parts[1], parts[2]) : null;
+        if (domain !== 'D01_QUOTES' || !companyId?.trim() || companyId.length > 100 ||
+            (segment !== 'NSE_EQ' && segment !== 'BSE_EQ') || !identity || securityId!.length > 100) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'freshness requires a valid domain and exact quote scope'); return;
+        }
+        sendJson(res, 200, service.getFreshness({ domain, companyId, exchangeSegment: segment, securityIdentity: identity })); return;
+      }
+
+      const identityRoute = path === MARKET_DATA_ROUTES.instrumentSearch || path === MARKET_DATA_ROUTES.identityResolve || path === MARKET_DATA_ROUTES.identityQualify;
+      if (req.method !== 'POST' || (path !== MARKET_DATA_ROUTES.quotes && path !== MARKET_DATA_ROUTES.historical && !(identityRoute && options.identityService))) {
         sendError(res, 404, 'NOT_FOUND', 'unknown route');
         return;
       }
@@ -210,6 +239,36 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
       } catch {
         sendError(res, 400, 'MALFORMED_REQUEST', 'request body is not valid JSON');
         return;
+      }
+
+      if (identityRoute && options.identityService) {
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'request body must be an object'); return;
+        }
+        const body = parsed as Record<string, unknown>;
+        const keys = path === MARKET_DATA_ROUTES.instrumentSearch ? ['query'] : path === MARKET_DATA_ROUTES.identityResolve ? ['companyId', 'exchange', 'securityId'] : ['isin', 'exchange', 'symbol'];
+        if (Object.keys(body).some(key => !keys.includes(key))) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'unexpected request field'); return;
+        }
+        if (path === MARKET_DATA_ROUTES.instrumentSearch) {
+          if (typeof body.query !== 'string' || !body.query.trim() || body.query.length > 100) {
+            sendError(res, 400, 'MALFORMED_REQUEST', 'query must be a nonempty string of at most 100 characters'); return;
+          }
+          sendJson(res, 200, { results: options.identityService.search(body.query) }); return;
+        }
+        if ((body.exchange !== 'NSE' && body.exchange !== 'BSE') || (body.symbol !== undefined && (typeof body.symbol !== 'string' || body.symbol.length > 100))) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'valid exchange and optional symbol are required'); return;
+        }
+        if (path === MARKET_DATA_ROUTES.identityQualify) {
+          if (body.isin !== undefined && (typeof body.isin !== 'string' || body.isin.length > 100)) {
+            sendError(res, 400, 'MALFORMED_REQUEST', 'isin must be a string'); return;
+          }
+          sendJson(res, 200, options.identityService.qualify({ isin: (body.isin as string | undefined) ?? '', exchange: body.exchange, ...(typeof body.symbol === 'string' ? { symbol: body.symbol } : {}) })); return;
+        }
+        if (typeof body.companyId !== 'string' || !body.companyId.trim() || body.companyId.length > 100 || typeof body.securityId !== 'string' || body.securityId.length > 100) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'companyId and securityId are required'); return;
+        }
+        sendJson(res, 200, options.identityService.resolve({ companyId: body.companyId, exchange: body.exchange, securityId: body.securityId })); return;
       }
 
       // Quote requests must carry the exact canonical P04 security id; a
