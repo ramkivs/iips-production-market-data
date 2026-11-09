@@ -540,32 +540,55 @@ function Start-IipsService {
 function Stop-IipsProcessTree {
     param(
         [Parameter(Mandatory = $true)][int] $ProcessId,
-        [Parameter(Mandatory = $false)][string] $Label = ''
+        [Parameter(Mandatory = $false)][string] $Label = '',
+        [Parameter(Mandatory = $false)][string] $ExpectedExecutableName = 'node.exe',
+        [Parameter(Mandatory = $false)][string[]] $ExpectedCommandLinePatterns = @()
     )
     $existing = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
     if ($null -eq $existing) {
         Write-IipsInfo "PID $ProcessId $Label is no longer running"
         return 0
     }
-    # Verify this is an IIPS process before terminating - never kill unrelated applications.
+    # Verify process identity before terminating - never kill unrelated applications.
     $cmdLine = ''
+    $exePath = ''
+    $processOwner = ''
     try {
         $wmiProc = Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction Stop
         $cmdLine = $wmiProc.CommandLine
+        $exePath = $wmiProc.ExecutablePath
+        $processOwner = $wmiProc.GetOwner().User
     }
     catch {
-        throw "PID $ProcessId $Label: could not inspect process command line. Refusing to terminate an unverified process."
+        throw "PID $ProcessId $Label: could not inspect process command line or owner. Refusing to terminate an unverified process."
     }
 
-    $isIisProcess = $false
-    if ($null -ne $cmdLine -and $cmdLine.Length -gt 0) {
-        if ($cmdLine -like '*iips-production-market-data*') { $isIisProcess = $true }
-        if ($cmdLine -like '*iips-review-recovered*') { $isIisProcess = $true }
-        if ($cmdLine -like '*executive-transport*') { $isIisProcess = $true }
-        if ($cmdLine -like '*dist\src\ipc\entrypoint*') { $isIisProcess = $true }
+    # Verify the executable is node.exe (all IIPS services run on Node.js).
+    if (-not [string]::IsNullOrWhiteSpace($exePath)) {
+        $fileName = Split-Path -Leaf $exePath
+        if ($fileName -ne $ExpectedExecutableName) {
+            throw "PID $ProcessId $Label executable is '$exePath', expected '$ExpectedExecutableName'. Refusing to terminate unverified process."
+        }
     }
-    if (-not $isIisProcess) {
-        throw "PID $ProcessId $Label is not an IIPS process (command line: $cmdLine). Refusing to terminate unrelated applications."
+
+    # Verify the process is owned by the current user (we started it or it belongs to our session).
+    $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+    if (-not [string]::IsNullOrWhiteSpace($processOwner) -and -not [string]::IsNullOrWhiteSpace($currentUser)) {
+        if (-not [string]::Equals($processOwner, $currentUser, [System.StringComparison]::OrdinalIgnoreCase)) {
+            throw "PID $ProcessId $Label is owned by '$processOwner', current user is '$currentUser'. Refusing to terminate a process owned by another user."
+        }
+    }
+
+    # Verify command line matches expected IIPS service patterns (if any are provided).
+    if ($ExpectedCommandLinePatterns.Count -gt 0) {
+        $matched = $false
+        foreach ($pattern in $ExpectedCommandLinePatterns) {
+            if ($null -ne $cmdLine -and $cmdLine.Length -gt 0 -and $cmdLine -like $pattern) { $matched = $true; break }
+        }
+        if (-not $matched) {
+            $patterns = $ExpectedCommandLinePatterns -join ', '
+            throw "PID $ProcessId $Label command line does not match expected IIPS service patterns ($patterns). Refusing to terminate unverified process (command line: $cmdLine)."
+        }
     }
 
     $taskkill = Join-Path $env:SystemRoot 'System32\taskkill.exe'
@@ -580,6 +603,7 @@ function Stop-IipsProcessTree {
     }
     throw "PID $ProcessId $Label did not terminate within 20 seconds."
 }
+
 
 # ----------------------------------------------------------------------------------------------
 # Ports and named pipes
@@ -796,7 +820,8 @@ function Wait-IipsPortListening {
         [Parameter(Mandatory = $true)][int] $Port,
         [Parameter(Mandatory = $true)][string] $Label,
         [Parameter(Mandatory = $true)][int] $TimeoutSeconds,
-        [Parameter(Mandatory = $false)][string] $ExpectedAddress = '127.0.0.1'
+        [Parameter(Mandatory = $false)][string] $ExpectedAddress = '127.0.0.1',
+        [Parameter(Mandatory = $false)][string[]] $ExpectedCommandLinePatterns = @()
     )
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     $attempt = 0
@@ -817,6 +842,29 @@ function Wait-IipsPortListening {
                     throw "$Label bound to $($l.LocalAddress):$Port but must bind $ExpectedAddress only. This is a personal single-user application and must not be reachable from the network."
                 }
             }
+
+            # Verify the owning process belongs to the expected IIPS service.
+            if ($ExpectedCommandLinePatterns.Count -gt 0) {
+                $listenerPid = [int]$listeners[0].OwningProcess
+                $cmdLine = ''
+                try {
+                    $wmiProc = Get-CimInstance Win32_Process -Filter "ProcessId = $listenerPid" -ErrorAction Stop
+                    $cmdLine = $wmiProc.CommandLine
+                }
+                catch {
+                    throw "$Label: could not inspect the owning process (PID $listenerPid) of port $Port. Refusing to proceed with an unverified listener."
+                }
+                $matched = $false
+                foreach ($pattern in $ExpectedCommandLinePatterns) {
+                    if ($null -ne $cmdLine -and $cmdLine.Length -gt 0 -and $cmdLine -like $pattern) { $matched = $true; break }
+                }
+                if (-not $matched) {
+                    $patterns = $ExpectedCommandLinePatterns -join ', '
+                    throw "$Label listener on port $Port is owned by PID $listenerPid but its command line does not match expected IIPS service patterns ($patterns) (command line: $cmdLine). Refusing to proceed with an unverified listener."
+                }
+                Write-IipsOk "$Label listener on port $Port owned by PID $listenerPid matches expected service patterns."
+            }
+
             Write-IipsOk "$Label listening on $($listeners[0].LocalAddress):$Port after $attempt attempt(s)"
             return $listeners[0]
         }
@@ -824,6 +872,7 @@ function Wait-IipsPortListening {
     }
     throw "$Label did not open port $Port within $TimeoutSeconds seconds."
 }
+
 
 function Wait-IipsPortReleased {
     param([Parameter(Mandatory = $true)][int] $Port, [Parameter(Mandatory = $true)][int] $TimeoutSeconds)

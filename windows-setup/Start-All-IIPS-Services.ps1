@@ -199,7 +199,8 @@ function Wait-IipsHttpReady {
 function Stop-IipsProcessOnPort {
     param(
         [Parameter(Mandatory = $true)][int] $Port,
-        [Parameter(Mandatory = $true)][string] $Label
+        [Parameter(Mandatory = $true)][string] $Label,
+        [Parameter(Mandatory = $false)][string[]] $ExpectedCommandLinePatterns = @()
     )
     $listeners = Get-IipsAllPortListeners -Port $Port
     if ($null -eq $listeners) { return $false }
@@ -210,28 +211,11 @@ function Stop-IipsProcessOnPort {
         $addr = $l.LocalAddress
         Write-IipsInfo "$Label is already running on $addr:$Port as PID $listenerPid ($name) - stopping it first"
 
-        # Verify this is an IIPS process before terminating - never kill unrelated applications.
-        $cmdLine = ''
-        try {
-            $wmiProc = Get-CimInstance Win32_Process -Filter "ProcessId = $listenerPid" -ErrorAction Stop
-            $cmdLine = $wmiProc.CommandLine
-        }
-        catch {
-            throw "PID $listenerPid $Label: could not inspect process command line. Refusing to terminate an unverified process."
-        }
-
-        $isIisProcess = $false
-        if ($null -ne $cmdLine -and $cmdLine.Length -gt 0) {
-            if ($cmdLine -like '*iips-production-market-data*') { $isIisProcess = $true }
-            if ($cmdLine -like '*iips-review-recovered*') { $isIisProcess = $true }
-            if ($cmdLine -like '*executive-transport*') { $isIisProcess = $true }
-            if ($cmdLine -like '*dist\src\ipc\entrypoint*') { $isIisProcess = $true }
-        }
-        if (-not $isIisProcess) {
-            throw "PID $listenerPid $Label is not an IIPS process (command line: $cmdLine). Refusing to terminate unrelated applications. Free port $Port manually before running this script."
-        }
-
-        Stop-IipsProcessTree -ProcessId $listenerPid -Label "$Label (port $Port)"
+        # Stop-IipsProcessTree performs full identity verification:
+        #   * executable must be node.exe
+        #   * process owner must match current user
+        #   * command line must match expected IIPS service patterns (if provided)
+        Stop-IipsProcessTree -ProcessId $listenerPid -Label "$Label (port $Port)" -ExpectedCommandLinePatterns $ExpectedCommandLinePatterns
     }
 
     $deadline = (Get-Date).AddSeconds(20)
@@ -462,6 +446,7 @@ try {
         if ($ipcReadinessOk) {
             # Pipe exists and responds. Verify the owning process identity by finding
             # the node.exe process that runs the IPC entrypoint from the expected IPD checkout.
+            # Match both the IPC entrypoint AND the IPD root path - never do global Node.js cleanup.
             $ipcProcesses = Get-CimInstance Win32_Process | Where-Object {
                 $_.Name -eq 'node.exe' -and
                 $null -ne $_.CommandLine -and $_.CommandLine.Length -gt 0 -and
@@ -469,7 +454,15 @@ try {
                 $_.CommandLine -like "*$IpdRoot*"
             }
             if ($ipcProcesses.Count -eq 1) {
-                $ipcPid = [int]$ipcProcesses[0].ProcessId
+                $ipcProc = $ipcProcesses[0]
+                $ipcPid = [int]$ipcProc.ProcessId
+                $ipcOwner = $ipcProc.GetOwner().User
+                $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+                if (-not [string]::IsNullOrWhiteSpace($ipcOwner) -and -not [string]::IsNullOrWhiteSpace($currentUser)) {
+                    if (-not [string]::Equals($ipcOwner, $currentUser, [System.StringComparison]::OrdinalIgnoreCase)) {
+                        throw "existing IPC provider at PID $ipcPid is owned by '$ipcOwner', current user is '$currentUser'. Refusing to reuse a provider owned by another user."
+                    }
+                }
                 $ipcReusable = $true
                 Write-IipsOk "existing IPC provider verified at PID $ipcPid, belongs to expected IPD checkout"
             }
@@ -478,32 +471,28 @@ try {
             }
         }
         if (-not $ipcReadinessOk) {
-            # Pipe exists but provider is not ready or not from the expected checkout.
-            # Stop incompatible provider processes through the safety rules.
+            # Pipe exists but provider is not ready. Stop only incompatible provider processes
+            # from our own IPD checkout - never perform global Node.js process cleanup.
             $ipcProcesses = Get-CimInstance Win32_Process | Where-Object {
                 $_.Name -eq 'node.exe' -and
                 $null -ne $_.CommandLine -and $_.CommandLine.Length -gt 0 -and
-                $_.CommandLine -like '*dist\src\ipc\entrypoint*'
+                $_.CommandLine -like '*dist\src\ipc\entrypoint*' -and
+                $_.CommandLine -like "*$IpdRoot*"
             }
             foreach ($proc in $ipcProcesses) {
                 $procPid = [int]$proc.ProcessId
-                $procCmdLine = $proc.CommandLine
-                # Verify this is an IIPS process before terminating - never kill unrelated applications.
-                $isIisProcess = $false
-                if ($null -ne $procCmdLine -and $procCmdLine.Length -gt 0) {
-                    if ($procCmdLine -like "*$IpdRoot*") { $isIisProcess = $true }
-                    if ($procCmdLine -like '*iips-production-market-data*') { $isIisProcess = $true }
-                    if ($procCmdLine -like '*iips-review-recovered*') { $isIisProcess = $true }
-                    if ($procCmdLine -like '*executive-transport*') { $isIisProcess = $true }
-                    if ($procCmdLine -like '*dist\src\ipc\entrypoint*') { $isIisProcess = $true }
+                $procOwner = $proc.GetOwner().User
+                $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+                if (-not [string]::IsNullOrWhiteSpace($procOwner) -and -not [string]::IsNullOrWhiteSpace($currentUser)) {
+                    if (-not [string]::Equals($procOwner, $currentUser, [System.StringComparison]::OrdinalIgnoreCase)) {
+                        throw "incompatible IPC provider at PID $procPid is owned by '$procOwner', current user is '$currentUser'. Refusing to terminate a process owned by another user."
+                    }
                 }
-                if (-not $isIisProcess) {
-                    throw "PID $procPid is not an IIPS process (command line: $procCmdLine). Refusing to terminate unrelated applications."
-                }
-                Stop-IipsProcessTree -ProcessId $procPid -Label 'incompatible IPC provider'
+                Stop-IipsProcessTree -ProcessId $procPid -Label 'incompatible IPC provider' -ExpectedCommandLinePatterns @('*dist\src\ipc\entrypoint*', "*$IpdRoot*")
                 Write-IipsOk "stopped incompatible IPC provider at PID $procPid"
             }
         }
+
     }
 
     if ($existingPipe.Count -eq 0) {
@@ -515,9 +504,9 @@ try {
 
     # Only stop listeners on ports that are NOT already handled by a reused IPC provider.
     # The IPC provider uses a named pipe, not a TCP port, so it doesn't occupy any TCP port.
-    Stop-IipsProcessOnPort -Port $TransportPort -Label 'the IRR executive transport'
-    Stop-IipsProcessOnPort -Port $FrontendPort -Label 'the IRR Vite dev server'
-    if ($StartIpdShell) { Stop-IipsProcessOnPort -Port $IpdShellPort -Label 'the IPD shell' }
+    Stop-IipsProcessOnPort -Port $TransportPort -Label 'the IRR executive transport' -ExpectedCommandLinePatterns @('*server:dev*')
+    Stop-IipsProcessOnPort -Port $FrontendPort -Label 'the IRR Vite dev server' -ExpectedCommandLinePatterns @('*vite*', '*--port*')
+    if ($StartIpdShell) { Stop-IipsProcessOnPort -Port $IpdShellPort -Label 'the IPD shell' -ExpectedCommandLinePatterns @('*vite*', '*--port*') }
 
     Assert-IipsPortFree -Port $TransportPort -Label 'the IRR executive transport'
     Assert-IipsPortFree -Port $FrontendPort -Label 'the IRR Vite dev server'
@@ -629,7 +618,7 @@ try {
     if ($health.Content -notmatch '"status"\s*:\s*"ok"') { throw "health endpoint returned an unexpected body: $($health.Content)" }
     Write-IipsOk "health body verified: $($health.Content)"
 
-    $listen = Wait-IipsPortListening -Port $TransportPort -Label 'the IRR transport' -TimeoutSeconds 30 -ExpectedAddress $script:BindAddress
+    $listen = Wait-IipsPortListening -Port $TransportPort -Label 'the IRR transport' -TimeoutSeconds 30 -ExpectedAddress $script:BindAddress -ExpectedCommandLinePatterns @('*server:dev*')
     Write-IipsOk "transport bound loopback-only: $($listen.LocalAddress):$TransportPort"
 }
 catch {
@@ -674,7 +663,7 @@ try {
         -WorkingDirectory $irrFrontend -LogDirectory $script:ServiceLogDir -Environment $viteEnv
     $script:Started.Add($vite)
 
-    $viteListen = Wait-IipsPortListening -Port $FrontendPort -Label 'the IRR Vite dev server' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $script:BindAddress
+    $viteListen = Wait-IipsPortListening -Port $FrontendPort -Label 'the IRR Vite dev server' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $script:BindAddress -ExpectedCommandLinePatterns @('*vite*', '*--port*')
     Write-IipsOk "Vite bound loopback-only: $($viteListen.LocalAddress):$FrontendPort"
 
     # Verify frontend root route - must be the actual Vite-served SPA, not a generic fallback.
@@ -743,7 +732,7 @@ try {
             -WorkingDirectory $IpdRoot -LogDirectory $script:ServiceLogDir -Environment @{}
         $script:Started.Add($ipdShell)
 
-        $shellListen = Wait-IipsPortListening -Port $IpdShellPort -Label 'the IPD shell' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $script:BindAddress
+        $shellListen = Wait-IipsPortListening -Port $IpdShellPort -Label 'the IPD shell' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $script:BindAddress -ExpectedCommandLinePatterns @('*vite*', '*--port*')
         Write-IipsOk "IPD shell bound loopback-only: $($shellListen.LocalAddress):$IpdShellPort"
     }
     if (-not $StartIpdShell) {
