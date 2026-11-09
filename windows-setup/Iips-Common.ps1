@@ -542,6 +542,7 @@ function Stop-IipsProcessTree {
         [Parameter(Mandatory = $true)][int] $ProcessId,
         [Parameter(Mandatory = $false)][string] $Label = '',
         [Parameter(Mandatory = $false)][string] $ExpectedExecutableName = 'node.exe',
+        [Parameter(Mandatory = $false)][string] $ExpectedExecutablePath = '',
         [Parameter(Mandatory = $false)][string[]] $ExpectedCommandLinePatterns = @(),
         [Parameter(Mandatory = $false)][string] $ExpectedRepositoryPath = ''
     )
@@ -570,10 +571,17 @@ function Stop-IipsProcessTree {
         throw "PID $ProcessId $Label: executable path is unavailable. Refusing to terminate an unverified process."
     }
 
-    # Verify the executable name.
+    # Verify the executable name matches.
     $fileName = Split-Path -Leaf $exePath
     if ($fileName -ne $ExpectedExecutableName) {
         throw "PID $ProcessId $Label executable is '$exePath', expected '$ExpectedExecutableName'. Refusing to terminate unverified process."
+    }
+
+    # Verify the full executable path matches when an expected path is provided.
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedExecutablePath)) {
+        if (-not [string]::Equals($exePath, $ExpectedExecutablePath, [System.StringComparison]::OrdinalIgnoreCase)) {
+            throw "PID $ProcessId $Label executable path is '$exePath', expected '$ExpectedExecutablePath'. Refusing to terminate unverified process."
+        }
     }
 
     # Fail closed if process owner is unavailable.

@@ -140,7 +140,10 @@ function Invoke-IipsRollback {
     for ($i = $script:Started.Count - 1; $i -ge 0; $i--) {
         $p = $script:Started[$i]
         try {
-            Stop-IipsProcessTree -ProcessId $p.Pid -Label $p.Label
+            Stop-IipsProcessTree -ProcessId $p.Pid -Label $p.Label `
+                -ExpectedExecutablePath $p.ExecutablePath `
+                -ExpectedCommandLinePatterns $p.CommandLinePatterns `
+                -ExpectedRepositoryPath $p.RepositoryPath
             Write-Host "  stopped $($p.Label) (PID $($p.Pid)) and its children" -ForegroundColor Yellow
         }
         catch {
@@ -432,8 +435,8 @@ try {
         Write-IipsInfo "existing named pipe detected: $($existingPipe[0])"
 
         # A named-pipe provider does not listen on TCP ports, so scanning TCP listeners
-        # cannot identify its owning process. Instead, connect to the pipe and send a
-        # read-only portfolio.list readiness request to verify the provider is alive.
+        # cannot identify its owning process. Connect to the pipe and send a read-only
+        # portfolio.list readiness request to verify the provider is alive.
         $ipcReadinessOk = $false
         try {
             Test-IipsIpcApplicationReadiness -PipeName $PipeName -TimeoutSeconds 5
@@ -443,80 +446,17 @@ try {
             Write-IipsInfo "existing pipe is not ready: $($_.Exception.Message)"
         }
 
+        # Windows PowerShell 5.1 has no built-in API to map a named pipe to its owning
+        # process. There is no Win32_NamedPipe WMI class, no Get-NamedPipe cmdlet, and no
+        # .NET method to enumerate pipe-to-process ownership. Matching a Node.js command
+        # line does NOT prove that a specific process owns this specific named pipe.
+        # Therefore: fail closed. Do not reuse, do not terminate, preserve the existing
+        # process, and report the ambiguity.
         if ($ipcReadinessOk) {
-            # Pipe exists and responds. Establish actual ownership of the named pipe
-            # before reusing its provider. Matching a Node.js command line alone does
-            # NOT prove pipe ownership. Use targeted process discovery (Name = 'node.exe')
-            # rather than scanning all processes globally, then verify each candidate's
-            # full identity: executable, owner, PID, command-line patterns (AND), and
-            # repository path.
-            $ipcProcesses = @(Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" -ErrorAction SilentlyContinue)
-            $verifiedCandidates = @()
-            foreach ($proc in $ipcProcesses) {
-                $cmdLine = $proc.CommandLine
-                if ($null -eq $cmdLine -or $cmdLine.Length -eq 0) { continue }
-                if ($cmdLine -notlike '*dist\src\ipc\entrypoint*') { continue }
-                if ($cmdLine -notlike "*$IpdRoot*") { continue }
-
-                $procPid = [int]$proc.ProcessId
-                $procOwner = $proc.GetOwner().User
-                $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-
-                # Fail closed if owner unavailable or mismatched.
-                if ([string]::IsNullOrWhiteSpace($procOwner)) { continue }
-                if (-not [string]::Equals($procOwner, $currentUser, [System.StringComparison]::OrdinalIgnoreCase)) { continue }
-
-                $verifiedCandidates += @{ Pid = $procPid; CommandLine = $cmdLine }
-            }
-
-            if ($verifiedCandidates.Count -eq 1) {
-                $ipcPid = $verifiedCandidates[0].Pid
-                $ipcReusable = $true
-                Write-IipsOk "existing IPC provider verified at PID $ipcPid, owns named pipe $PipeName"
-            }
-            if ($verifiedCandidates.Count -gt 1) {
-                $pids = ($verifiedCandidates | ForEach-Object { $_.Pid }) -join ', '
-                throw "pipe $PipeName exists and responds but $($verifiedCandidates.Count) candidate processes match (PIDs $pids). Cannot establish actual pipe ownership. Failing closed and preserving existing process."
-            }
-            if ($verifiedCandidates.Count -eq 0) {
-                throw "pipe $PipeName exists and responds but no candidate process could be identified as its owner. Failing closed and preserving existing process."
-            }
+            throw "named pipe $PipeName exists and responds to readiness checks, but Windows PowerShell 5.1 cannot establish which process owns this specific named pipe. Command-line matching alone is not proof of pipe ownership. Failing closed and preserving existing process. Stop the existing IPC provider manually with 06-Stop-IipsServers.ps1 before re-running this script."
         }
         if (-not $ipcReadinessOk) {
-            # Pipe exists but provider is not ready. Stop only incompatible provider processes
-            # from our own IPD checkout - never perform global Node.js process cleanup.
-            # Establish actual pipe ownership before terminating; preserve the process if
-            # ownership cannot be determined.
-            $ipcProcesses = @(Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" -ErrorAction SilentlyContinue)
-            $verifiedCandidates = @()
-            foreach ($proc in $ipcProcesses) {
-                $cmdLine = $proc.CommandLine
-                if ($null -eq $cmdLine -or $cmdLine.Length -eq 0) { continue }
-                if ($cmdLine -notlike '*dist\src\ipc\entrypoint*') { continue }
-                if ($cmdLine -notlike "*$IpdRoot*") { continue }
-
-                $procPid = [int]$proc.ProcessId
-                $procOwner = $proc.GetOwner().User
-                $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-
-                if ([string]::IsNullOrWhiteSpace($procOwner)) { continue }
-                if (-not [string]::Equals($procOwner, $currentUser, [System.StringComparison]::OrdinalIgnoreCase)) { continue }
-
-                $verifiedCandidates += @{ Pid = $procPid; CommandLine = $cmdLine }
-            }
-
-            if ($verifiedCandidates.Count -eq 1) {
-                $procPid = $verifiedCandidates[0].Pid
-                Stop-IipsProcessTree -ProcessId $procPid -Label 'incompatible IPC provider' -ExpectedCommandLinePatterns @('*dist\src\ipc\entrypoint*', "*$IpdRoot*") -ExpectedRepositoryPath $IpdRoot
-                Write-IipsOk "stopped incompatible IPC provider at PID $procPid"
-            }
-            if ($verifiedCandidates.Count -gt 1) {
-                $pids = ($verifiedCandidates | ForEach-Object { $_.Pid }) -join ', '
-                Write-IipsInfo "pipe $PipeName exists but is not ready and $($verifiedCandidates.Count) candidate processes match (PIDs $pids). Cannot establish actual pipe ownership. Preserving existing processes."
-            }
-            if ($verifiedCandidates.Count -eq 0) {
-                Write-IipsInfo "pipe $PipeName exists but is not ready and no candidate process could be identified as its owner. Preserving existing process."
-            }
+            throw "named pipe $PipeName exists but is not ready, and Windows PowerShell 5.1 cannot establish which process owns this specific named pipe. Failing closed and preserving existing process. Stop the existing IPC provider manually with 06-Stop-IipsServers.ps1 before re-running this script."
         }
 
     }
@@ -525,19 +465,15 @@ try {
         Write-IipsInfo 'no existing named pipe found - will start a new IPC provider'
     }
 
-
-    if ($existingPipe.Count -eq 0) {
-        Write-IipsInfo 'no existing named pipe found - will start a new IPC provider'
-    }
 
     # --- Preflight 09: port guard --------------------------------------------------------------
     Write-IipsStep '02-port-guard' 'Confirming required ports are free (stopping any remaining IIPS listeners first)'
 
     # Only stop listeners on ports that are NOT already handled by a reused IPC provider.
     # The IPC provider uses a named pipe, not a TCP port, so it doesn't occupy any TCP port.
-    Stop-IipsProcessOnPort -Port $TransportPort -Label 'the IRR executive transport' -ExpectedCommandLinePatterns @('*server:dev*') -ExpectedRepositoryPath $IrrRoot
-    Stop-IipsProcessOnPort -Port $FrontendPort -Label 'the IRR Vite dev server' -ExpectedCommandLinePatterns @('--host', '--port') -ExpectedRepositoryPath $IrrRoot
-    if ($StartIpdShell) { Stop-IipsProcessOnPort -Port $IpdShellPort -Label 'the IPD shell' -ExpectedCommandLinePatterns @('--host', '--port') -ExpectedRepositoryPath $IpdRoot }
+    Stop-IipsProcessOnPort -Port $TransportPort -Label 'the IRR executive transport' -ExpectedCommandLinePatterns @('*run server:dev*', "*$IrrRoot*") -ExpectedRepositoryPath $IrrRoot
+    Stop-IipsProcessOnPort -Port $FrontendPort -Label 'the IRR Vite dev server' -ExpectedCommandLinePatterns @('*run dev*', "*--host $script:BindAddress*", "*--port $FrontendPort*", '*--strictPort*', "*$IrrRoot*") -ExpectedRepositoryPath $IrrRoot
+    if ($StartIpdShell) { Stop-IipsProcessOnPort -Port $IpdShellPort -Label 'the IPD shell' -ExpectedCommandLinePatterns @('*run dev*', "*--host $script:BindAddress*", "*--port $IpdShellPort*", '*--strictPort*', "*$IpdRoot*") -ExpectedRepositoryPath $IpdRoot }
 
     Assert-IipsPortFree -Port $TransportPort -Label 'the IRR executive transport'
     Assert-IipsPortFree -Port $FrontendPort -Label 'the IRR Vite dev server'
@@ -581,6 +517,9 @@ try {
         }
 
         $ipc = Start-IipsService -Label 'ipd-ipc' -Executable $toolchain.NodeExe -Arguments @($entrypoint) -WorkingDirectory $IpdRoot -LogDirectory $script:ServiceLogDir -Environment $ipcEnv
+        $ipc | Add-Member -MemberType NoteProperty -Name 'ExecutablePath' -Value $toolchain.NodeExe -Force
+        $ipc | Add-Member -MemberType NoteProperty -Name 'RepositoryPath' -Value $IpdRoot -Force
+        $ipc | Add-Member -MemberType NoteProperty -Name 'CommandLinePatterns' -Value @('*dist\src\ipc\entrypoint*', "*$IpdRoot*") -Force
         $script:Started.Add($ipc)
 
         $deadline = (Get-Date).AddSeconds(60)
@@ -643,13 +582,16 @@ try {
     $transport = Start-IipsService -Label 'irr-transport' -Executable $toolchain.NpmCmd `
         -Arguments @('run', 'server:dev') -WorkingDirectory $irrFrontend `
         -LogDirectory $script:ServiceLogDir -Environment $transportEnv
+    $transport | Add-Member -MemberType NoteProperty -Name 'ExecutablePath' -Value $toolchain.NpmCmd -Force
+    $transport | Add-Member -MemberType NoteProperty -Name 'RepositoryPath' -Value $IrrRoot -Force
+    $transport | Add-Member -MemberType NoteProperty -Name 'CommandLinePatterns' -Value @('*run server:dev*', "*$IrrRoot*") -Force
     $script:Started.Add($transport)
 
     $health = Wait-IipsHttpReady -Url "http://$script:BindAddress`:$TransportPort/api/health" -Label 'the IRR transport' -TimeoutSeconds $ReadyTimeoutSeconds
     if ($health.Content -notmatch '"status"\s*:\s*"ok"') { throw "health endpoint returned an unexpected body: $($health.Content)" }
     Write-IipsOk "health body verified: $($health.Content)"
 
-    $listen = Wait-IipsPortListening -Port $TransportPort -Label 'the IRR transport' -TimeoutSeconds 30 -ExpectedAddress $script:BindAddress -ExpectedCommandLinePatterns @('*server:dev*') -ExpectedRepositoryPath $IrrRoot
+    $listen = Wait-IipsPortListening -Port $TransportPort -Label 'the IRR transport' -TimeoutSeconds 30 -ExpectedAddress $script:BindAddress -ExpectedCommandLinePatterns @('*run server:dev*', "*$IrrRoot*") -ExpectedRepositoryPath $IrrRoot
     Write-IipsOk "transport bound loopback-only: $($listen.LocalAddress):$TransportPort"
 }
 catch {
@@ -692,9 +634,12 @@ try {
     $vite = Start-IipsService -Label 'irr-frontend' -Executable $toolchain.NpmCmd `
         -Arguments @('run', 'dev', '--', '--host', $script:BindAddress, '--port', "$FrontendPort", '--strictPort') `
         -WorkingDirectory $irrFrontend -LogDirectory $script:ServiceLogDir -Environment $viteEnv
+    $vite | Add-Member -MemberType NoteProperty -Name 'ExecutablePath' -Value $toolchain.NpmCmd -Force
+    $vite | Add-Member -MemberType NoteProperty -Name 'RepositoryPath' -Value $IrrRoot -Force
+    $vite | Add-Member -MemberType NoteProperty -Name 'CommandLinePatterns' -Value @('*run dev*', "*--host $script:BindAddress*", "*--port $FrontendPort*", '*--strictPort*') -Force
     $script:Started.Add($vite)
 
-    $viteListen = Wait-IipsPortListening -Port $FrontendPort -Label 'the IRR Vite dev server' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $script:BindAddress -ExpectedCommandLinePatterns @('--host', '--port') -ExpectedRepositoryPath $IrrRoot
+    $viteListen = Wait-IipsPortListening -Port $FrontendPort -Label 'the IRR Vite dev server' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $script:BindAddress -ExpectedCommandLinePatterns @('*run dev*', "*--host $script:BindAddress*", "*--port $FrontendPort*", '*--strictPort*', "*$IrrRoot*") -ExpectedRepositoryPath $IrrRoot
     Write-IipsOk "Vite bound loopback-only: $($viteListen.LocalAddress):$FrontendPort"
 
     # Verify frontend root route - must be the actual Vite-served SPA, not a generic fallback.
@@ -750,9 +695,12 @@ try {
         $ipdShell = Start-IipsService -Label 'ipd-shell' -Executable $toolchain.NpmCmd `
             -Arguments @('run', 'dev', '--', '--host', $script:BindAddress, '--port', "$IpdShellPort", '--strictPort') `
             -WorkingDirectory $IpdRoot -LogDirectory $script:ServiceLogDir -Environment @{}
+        $ipdShell | Add-Member -MemberType NoteProperty -Name 'ExecutablePath' -Value $toolchain.NpmCmd -Force
+        $ipdShell | Add-Member -MemberType NoteProperty -Name 'RepositoryPath' -Value $IpdRoot -Force
+        $ipdShell | Add-Member -MemberType NoteProperty -Name 'CommandLinePatterns' -Value @('*run dev*', "*--host $script:BindAddress*", "*--port $IpdShellPort*", '*--strictPort*') -Force
         $script:Started.Add($ipdShell)
 
-        $shellListen = Wait-IipsPortListening -Port $IpdShellPort -Label 'the IPD shell' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $script:BindAddress -ExpectedCommandLinePatterns @('--host', '--port') -ExpectedRepositoryPath $IpdRoot
+        $shellListen = Wait-IipsPortListening -Port $IpdShellPort -Label 'the IPD shell' -TimeoutSeconds $ReadyTimeoutSeconds -ExpectedAddress $script:BindAddress -ExpectedCommandLinePatterns @('*run dev*', "*--host $script:BindAddress*", "*--port $IpdShellPort*", '*--strictPort*', "*$IpdRoot*") -ExpectedRepositoryPath $IpdRoot
         Write-IipsOk "IPD shell bound loopback-only: $($shellListen.LocalAddress):$IpdShellPort"
     }
     if (-not $StartIpdShell) {
