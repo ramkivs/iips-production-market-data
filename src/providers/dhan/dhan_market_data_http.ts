@@ -35,7 +35,7 @@ import type { ListenOptions } from 'node:net';
 import { timingSafeEqual } from 'node:crypto';
 import { CanonicalEnvelope } from '../../contracts/envelope.js';
 import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
-import { buildD114SecurityIdentity, isD114SecurityIdentity } from '../../contracts/types.js';
+import { buildD114SecurityIdentity, isD114SecurityId, isD114SecurityIdentity } from '../../contracts/types.js';
 import { isDhanProductionEnvironment, type DhanEnvSource } from './dhan_config.js';
 import { DhanFailureCode } from './dhan_failures.js';
 import { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
@@ -51,6 +51,7 @@ export const MARKET_DATA_ROUTES = {
   quotes: '/v1/quotes',
   historical: '/v1/historical',
   health: '/v1/health',
+  freshness: '/v1/freshness',
   instrumentSearch: '/v1/instruments/search',
   identityResolve: '/v1/identity/resolve',
   identityQualify: '/v1/identity/qualify',
@@ -196,6 +197,28 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
       if (path === MARKET_DATA_ROUTES.health && req.method === 'GET') {
         sendJson(res, 200, await service.health());
         return;
+      }
+
+      if (path === MARKET_DATA_ROUTES.freshness && req.method === 'GET') {
+        const params = url.searchParams;
+        const allowed = new Set(['domain', 'companyId', 'exchangeSegment', 'securityId']);
+        if ((req.url?.length ?? 0) > 2048 || [...params.keys()].some(k => !allowed.has(k) || params.getAll(k).length !== 1)) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'invalid freshness query'); return;
+        }
+        const domain = params.get('domain');
+        if (domain === 'D02_OHLCV' && params.size === 1) {
+          sendJson(res, 200, service.getFreshness({ domain })); return;
+        }
+        const companyId = params.get('companyId');
+        const segment = params.get('exchangeSegment');
+        const securityId = params.get('securityId');
+        const parts = securityId?.split(':') ?? [];
+        const identity = securityId && isD114SecurityId(securityId) ? buildD114SecurityIdentity(parts[1], parts[2]) : null;
+        if (domain !== 'D01_QUOTES' || !companyId?.trim() || companyId.length > 100 ||
+            (segment !== 'NSE_EQ' && segment !== 'BSE_EQ') || !identity || securityId!.length > 100) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'freshness requires a valid domain and exact quote scope'); return;
+        }
+        sendJson(res, 200, service.getFreshness({ domain, companyId, exchangeSegment: segment, securityIdentity: identity })); return;
       }
 
       const identityRoute = path === MARKET_DATA_ROUTES.instrumentSearch || path === MARKET_DATA_ROUTES.identityResolve || path === MARKET_DATA_ROUTES.identityQualify;

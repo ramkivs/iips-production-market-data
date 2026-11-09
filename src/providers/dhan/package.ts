@@ -132,3 +132,5 @@ export * from './dhan_instrument_master_qualification.js';
 export { DhanIdentityApiService } from './dhan_identity_api.js';
 export type { IdentityApiResult, ExactIdentityRequest, InstrumentSearchResult } from './dhan_identity_api.js';
 export type { HoldingIdentityInput, SecurityIdentityQualificationResult, SecurityIdentityQualified, SecurityIdentityUnresolved } from './dhan_security_identity_service.js';
+
+export type { FreshnessDomain, FreshnessStatus, RefreshStatus } from './dhan_freshness_status.js';

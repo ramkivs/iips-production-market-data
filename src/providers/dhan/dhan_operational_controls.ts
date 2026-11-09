@@ -75,7 +75,20 @@ export class DhanBoundedCache<T extends { provenance: { asOf: string } }> {
     // LRU touch
     this.map.delete(key);
     this.map.set(key, entry);
-    const freshness = evaluateFreshness(entry.provenance.asOf, 'D01_QUOTES', nowIso);
+    return this.classify(entry, nowIso);
+  }
+
+  /** Inspect without touching LRU order or otherwise changing the cache. */
+  public peek(key: string, nowIso: string): CacheLookup<T> {
+    const entry = this.map.get(key);
+    if (!entry) return { state: 'MISS' };
+    // Malformed runtime evidence must never be exposed as CURRENT by status reads.
+    if (typeof entry.provenance?.asOf !== 'string') return { state: 'UNAVAILABLE', entry };
+    return this.classify(entry, nowIso);
+  }
+
+  private classify(entry: T, nowIso: string): CacheLookup<T> {
+    const freshness = evaluateFreshness(entry.provenance?.asOf, 'D01_QUOTES', nowIso);
     if (freshness.suppressExecution) return { state: 'UNAVAILABLE', entry };
     return { state: freshness.quality === 'GOOD' ? 'CURRENT' : 'STALE', entry };
   }
