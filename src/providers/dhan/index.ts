@@ -28,3 +28,4 @@ export * from './dhan_local_daemon.js';
 export * from './dhan_instrument_master_source.js';
 export * from './dhan_instrument_master_parser.js';
 export * from './dhan_instrument_master_qualification.js';
+export * from './dhan_security_identity_service.js';

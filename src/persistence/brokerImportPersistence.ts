@@ -1,5 +1,15 @@
 import { createHash } from 'node:crypto';
-import { buildD114SecurityIdentity } from '../contracts/types.js';
+import {
+  buildD114SecurityIdentity,
+  type D114SecurityIdentity,
+} from '../contracts/types.js';
+import {
+  qualifyHoldingSecurityIdentity,
+  isQualifiedSecurityIdentity,
+  type SecurityIdentityQualificationResult,
+} from '../providers/dhan/dhan_security_identity_service.js';
+import type { DhanInstrumentRegistry } from '../providers/dhan/dhan_instrument_map.js';
+import { SecurityMaster } from '../identity/security_master.js';
 import {
   CommitOutcomeUnknownError,
   InvalidPortfolioRequestError,
@@ -172,25 +182,66 @@ export function evaluateBrokerImportIdentityGate(
   return resolveHoldings(request, resolver).gate;
 }
 
-export function mapBrokerImportHoldings(holdings: readonly ResolvedBrokerImportHolding[]): HoldingInput[] {
+export interface MapBrokerImportHoldingsOptions {
+  /** P04 security master for exact ISIN correspondence and ACTIVE listing checks. */
+  readonly securityMaster?: SecurityMaster;
+  /** P7 vendor-master registry for series evidence (DHAN_INSTRUMENT_MASTER provenance). */
+  readonly registry?: DhanInstrumentRegistry;
+}
+
+/**
+ * Maps resolved broker-import holdings to durable `HoldingInput[]`.
+ *
+ * When both `securityMaster` and `registry` are supplied, each holding with
+ * ISIN + exchange is qualified through the governed P04 → P7 joint path
+ * (`qualifyHoldingSecurityIdentity`). The resulting D114 canonical identity
+ * carries `isinAuthority: NON_AUTHORITATIVE`. When qualification fails
+ * closed, `securityIdentity` is null (unresolved) and the holding is still
+ * persisted — identity is additive metadata, not a blocker for portfolio data.
+ *
+ * When either input is absent, falls back to building the D114 identity
+ * directly from broker-supplied ISIN + series (never inferred), preserving
+ * the pre-Stage-4 behavior.
+ */
+export function mapBrokerImportHoldings(
+  holdings: readonly ResolvedBrokerImportHolding[],
+  options: MapBrokerImportHoldingsOptions = {},
+): HoldingInput[] {
+  const { securityMaster, registry } = options;
   return [...holdings]
     .sort((a, b) => (a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0))
-    .map((h) => ({
-      symbol: h.symbol,
-      companyId: h.companyId,
-      quantity: h.quantity,
-      averageBuyPrice: h.averageBuyPrice,
-      currentPrice: h.currentPrice,
-      marketValue: h.marketValue,
-      weightPercentage: h.weightPercentage,
-      active: h.active,
-      sourceBroker: h.sourceBroker,
-      lineageDigest: h.lineageDigest,
-      identityStatus: h.identityStatus,
-      resolutionDisposition: h.resolutionDisposition,
-      // Exact identity only from explicit ISIN + series evidence; never inferred.
-      securityIdentity: buildD114SecurityIdentity(h.isin, h.series) ?? null,
-    }));
+    .map((h) => {
+      let securityIdentity: D114SecurityIdentity | null = null;
+      if (h.isin && h.exchange && securityMaster && registry) {
+        const result = qualifyHoldingSecurityIdentity(
+          { isin: h.isin, exchange: h.exchange, symbol: h.symbol },
+          securityMaster,
+          registry,
+        );
+        if (isQualifiedSecurityIdentity(result)) {
+          securityIdentity = result.securityIdentity;
+        }
+        // Unresolved → securityIdentity stays null; holding is still mapped
+        // and persisted (identity is additive, never blocks portfolio data).
+      } else {
+        securityIdentity = buildD114SecurityIdentity(h.isin, h.series) ?? null;
+      }
+      return {
+        symbol: h.symbol,
+        companyId: h.companyId,
+        quantity: h.quantity,
+        averageBuyPrice: h.averageBuyPrice,
+        currentPrice: h.currentPrice,
+        marketValue: h.marketValue,
+        weightPercentage: h.weightPercentage,
+        active: h.active,
+        sourceBroker: h.sourceBroker,
+        lineageDigest: h.lineageDigest,
+        identityStatus: h.identityStatus,
+        resolutionDisposition: h.resolutionDisposition,
+        securityIdentity,
+      };
+    });
 }
 
 export function computeBrokerImportProvenance(request: BrokerImportRequest): string {
@@ -256,6 +307,7 @@ export function persistBrokerImport(
   owner: OwnerRef,
   request: BrokerImportRequest,
   resolver: BrokerObservationResolver = createGovernedBrokerObservationResolver(),
+  options: MapBrokerImportHoldingsOptions = {},
 ): BrokerImportOutcome {
   const invalid = validateRequest(request);
   if (invalid) return refusal('INVALID_REQUEST', invalid);
@@ -265,7 +317,7 @@ export function persistBrokerImport(
     return refusal('REFUSED_UNRESOLVED_IDENTITY', gate.disabledReason ?? 'The import has no single canonical identity.', gate.refusedHoldings);
   }
 
-  const holdings = mapBrokerImportHoldings(resolved);
+  const holdings = mapBrokerImportHoldings(resolved, options);
   const provenanceDigest = computeBrokerImportProvenance(request);
   const run = (transactionWriter: BrokerImportWriter): BrokerImportSuccess => {
     const existing = transactionWriter.list(owner).find((p) => p.portfolioId === request.portfolioId);
@@ -405,12 +457,13 @@ export interface DerivedV1IntendedEvidence {
 export function deriveV1IntendedEvidence(
   request: BrokerImportRequest,
   resolver: BrokerObservationResolver = createGovernedBrokerObservationResolver(),
+  options: MapBrokerImportHoldingsOptions = {},
 ): DerivedV1IntendedEvidence | undefined {
   if (!request || typeof request !== 'object' || Array.isArray(request)) return undefined;
   if (validateRequest(request)) return undefined;
   const { resolved, gate } = resolveHoldings(request, resolver);
   if (!gate.saveable || !resolved) return undefined;
-  const holdings = mapBrokerImportHoldings(resolved);
+  const holdings = mapBrokerImportHoldings(resolved, options);
   const provenanceDigest = computeBrokerImportProvenance(request);
   const expectedSuccessorRevision = request.expectedRevision + 1;
   if (!Number.isSafeInteger(expectedSuccessorRevision) || expectedSuccessorRevision < 1) return undefined;
@@ -889,6 +942,7 @@ export interface DerivedV2IntendedEvidence {
 export function deriveV2IntendedEvidence(
   request: SnapshotSaveV2Request,
   resolver: BrokerObservationResolver = createGovernedBrokerObservationResolver(),
+  options: MapBrokerImportHoldingsOptions = {},
 ): DerivedV2IntendedEvidence | undefined {
   if (!request || typeof request !== 'object' || Array.isArray(request)) return undefined;
   const shape = validateSnapshotV2Shape(request);
@@ -911,7 +965,7 @@ export function deriveV2IntendedEvidence(
   if (invalid) return undefined;
   const { resolved, gate } = resolveHoldings(brokerRequest, resolver);
   if (!gate.saveable || !resolved) return undefined;
-  const holdings = mapBrokerImportHoldings(resolved);
+  const holdings = mapBrokerImportHoldings(resolved, options);
   const provenanceDigest = computeBrokerImportProvenance(brokerRequest);
   return {
     holdings,
