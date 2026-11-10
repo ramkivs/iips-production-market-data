@@ -22,5 +22,11 @@ try {
   if($e.W06.observations[0].ipdIdentity -ne 'QUALIFIED' -or $e.W06.observations[0].market -ne 'GOOD' -or $e.W06.historical -ne 'NOT_AVAILABLE') {throw 'freshness failed'}
   foreach($secret in @('SENSITIVE_SYNTHETIC_SYMBOL','PORTFOLIO-SECRET','COMP-SECRET','ISSUER-SECRET','SECRET_TOKEN','PRIVATE_PROVIDER','PRIVATE_LICENCE','PRIVATE_BASIS','PRIVATE_NOTE')) {if($raw.Contains($secret)){throw 'sanitization failed'}}
   $failed=$false;try {& (Join-Path $root 'scripts/Collect-IipsStage2Evidence.ps1') -IrrPort $ports.irr -OutputFile $output -ConfirmNonProduction } catch {$failed=$true};if(-not $failed){throw 'existing output overwritten'}
+  $manifest.sourceRights.basis='';[IO.File]::WriteAllText((Join-Path $dir 'manifest.json'),($manifest|ConvertTo-Json -Depth 10),[Text.UTF8Encoding]::new($false))
+  $second=Join-Path $temp 'missing.json'; Remove-Item Env:IIPS_MARKET_DATA_TRANSPORT_TOKEN
+  & (Join-Path $root 'scripts/Collect-IipsStage2Evidence.ps1') -IrrPort $ports.irr -MarketPort $ports.market -PipeName ('missing-'+[guid]::NewGuid().ToString('N')) -DataRoot (Join-Path $temp 'data') -OutputFile $second -ConfirmNonProduction
+  $missing=Get-Content -LiteralPath $second -Raw|ConvertFrom-Json
+  if($missing.W03.portfolioStatus -ne 'UNKNOWN' -or $missing.W03.portfolioCount -ne 'UNKNOWN' -or $missing.W06.historical -ne 'UNKNOWN') {throw 'unavailable became empty or fresh'}
+  if($missing.W05.rightsState -ne 'UNKNOWN' -or $missing.W05.rightsDeclarationValidity -ne 'INVALID') {throw 'malformed rights not disclosed'}
   Write-Output 'Windows synthetic collector assertions passed.'
 } finally { Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue; Remove-Item Env:IIPS_MARKET_DATA_TRANSPORT_TOKEN -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force $temp -ErrorAction SilentlyContinue }
