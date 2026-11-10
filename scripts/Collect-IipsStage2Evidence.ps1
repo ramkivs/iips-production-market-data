@@ -79,7 +79,7 @@ $token=$env:IIPS_MARKET_DATA_TRANSPORT_TOKEN
 $headers=@{}; if ($MarketPort -gt 0 -and -not [string]::IsNullOrWhiteSpace($token)) {$headers.Authorization="Bearer $token"}
 $ipdList=PipeRead 'portfolio.list'
 $irrList=AsMap (GetLocal $IrrPort '/api/user-portfolios')
-$ports=[System.Collections.Generic.List[object]]::new(); $identityCounts=[ordered]@{}; $identityReasons=[ordered]@{}; $bridgeBasis=[ordered]@{}; $financialCounts=[ordered]@{}; $market=[System.Collections.Generic.List[object]]::new()
+$ports=[System.Collections.Generic.List[object]]::new(); $identityCounts=[ordered]@{}; $identityReasons=[ordered]@{}; $bridgeBasis=[ordered]@{}; $financialCounts=[ordered]@{}; $identityUnavailable=0; $identityObserved=0; $market=[System.Collections.Generic.List[object]]::new()
 $investment=AsMap (GetLocal $IrrPort '/api/investment/coverage/investment'); $issuerRows=Prop $investment 'issuers'
 if ($null -ne $ipdList -and $ipdList -is [array]) {
   $e.W03.portfolioStatus='AVAILABLE';$e.W03.portfolioCount=$ipdList.Count; $idx=0
@@ -97,14 +97,14 @@ if ($null -ne $ipdList -and $ipdList -is [array]) {
       if ($null -ne $after -and (Prop $summary 'revision') -eq $entry.revision -and (Prop $after 'revision') -eq $entry.revision -and (Prop $summary 'holdingsCount') -eq $holds.Count -and (Prop $detail 'holdingsCount') -eq $holds.Count -and $historyEntry.Count -eq 1 -and (Prop $historyEntry[0] 'holdingsCount') -eq $holds.Count) {$entry.reconciled='MATCHED_AT_READS'} else {$entry.reconciled='MISMATCH_OR_UNAVAILABLE'}
       $c=Prop $consumer 'portfolio';if ($null -ne $c) { if ((Prop $c 'revision') -eq $entry.revision -and (Prop $c 'totalHoldingsCount') -eq $holds.Count) {$entry.consumer='MATCHED_AT_READ'} else {$entry.consumer='MISMATCH'} }
       $items=Prop $identities 'identities'; if ($items -is [array] -and $items.Count -eq $holds.Count) {
-        $entry.identity='OBSERVED_UNVERSIONED';foreach($row in $items){
+        $entry.identity='OBSERVED_UNVERSIONED';$identityObserved += $items.Count;foreach($row in $items){
           $state=Prop $row 'state'; if ($state -notin @('RESOLVED','AMBIGUOUS','UNMATCHED','INELIGIBLE','OUT_OF_SCOPE_SECURITY','STALE_REFERENCE','REJECTED_MALFORMED_ISIN','ISSUER_KEY_CONFLICT','AMBIGUOUS_LISTING')) {$state='UNKNOWN'}; CountState $identityCounts $state
           $reason=Prop $row 'reason'; if ($reason -notin @('SECTOR_REFERENCE_NOT_AN_IDENTITY','NO_IDENTIFIER_PROVIDED','ISIN_FORMAT_INVALID','ISIN_CHECK_DIGIT_FAILED','ISIN_NOT_IN_ROSTER','SYMBOL_NOT_IN_LISTING_MAP','DUPLICATE_ACTIVE_SYMBOL','SYMBOL_REUSED_BY_OTHER_SECURITY','LISTING_WINDOW_EXPIRED','LISTING_NOT_YET_EFFECTIVE','MULTIPLE_SECURITIES_SHARE_LISTING','NO_LISTING_FOR_SECURITY','SECURITY_NOT_LISTED','INSTRUMENT_NOT_ASSESSABLE','NON_INDIAN_ISSUER','EXCHANGE_NOT_SUPPORTED','ISSUER_KEY_CONFLICT','ISSUER_NOT_ELIGIBLE')) {$reason='UNKNOWN_OR_NONE'}; CountState $identityReasons $reason
           $basis=Prop $row 'resolutionBasis'; if($basis -notin @('ISIN','EXCHANGE_SYMBOL')) {$basis='UNKNOWN'}; CountState $bridgeBasis $basis
           $issuer=Prop $row 'issuerId';$financial='UNKNOWN'; if ($state -eq 'RESOLVED' -and $issuer -is [string] -and $issuerRows -is [array]) {$matches=@($issuerRows | Where-Object { (Prop $_ 'issuerId') -eq $issuer }); if ($matches.Count -eq 0) {$financial='NOT_IN_DATASET'} elseif($matches.Count -eq 1) {$financial=Prop $matches[0] 'state';if($financial -notin @('COVERED','NO_FINANCIALS','SECTOR_NOT_MEASURED','ISSUED_DATA')){$financial='UNKNOWN'}}};CountState $financialCounts $financial
         }
         $directory=Prop $identities 'directory'; $entry.identityRosterVersion=SafeHash (Prop $directory 'rosterVersion'); $entry.identityRosterDigest=SafeHash (Prop $directory 'rosterDigest')
-      }
+      } else { $identityUnavailable += $holds.Count }
       $hidx=0
       foreach($h in $holds) {
         $hidx++;$ob=[ordered]@{portfolio=$entry.token;holding="row-$hidx";ipdIdentity='UNKNOWN';ipdReason='UNKNOWN';market='UNKNOWN';asOf='UNKNOWN';receivedAt='UNKNOWN';evaluatedAt='UNKNOWN';observationEvaluatedAt='UNKNOWN';eligibleForUse='UNKNOWN';source='UNKNOWN'}
@@ -120,17 +120,17 @@ if ($null -ne $ipdList -and $ipdList -is [array]) {
     }
     $ports.Add($entry)
   }
-  $e.W03.portfolios=@($ports.ToArray());$e.W04.outcomes=$identityCounts;$e.W04.reasons=$identityReasons;$e.W08.resolutionBasisCounts=$bridgeBasis;$e.W08.bridge='OBSERVED_UNVERSIONED_NOT_QUALIFIED';$e.W05.issuerHoldingCoverage=$financialCounts;$e.W06.observations=@($market.ToArray());$e.W06.status='PER_ROW_PARTIAL'
+  $e.W03.portfolios=@($ports.ToArray());$e.W04.outcomes=$identityCounts;$e.W04.observedRows=$identityObserved;$e.W04.unavailableRows=$identityUnavailable;$e.W04.reasons=$identityReasons;$e.W08.resolutionBasisCounts=$bridgeBasis;$e.W08.bridge='OBSERVED_UNVERSIONED_NOT_QUALIFIED';$e.W05.issuerHoldingCoverage=$financialCounts;$e.W06.observations=@($market.ToArray());$e.W06.status='PER_ROW_PARTIAL'
   if ($null -ne $irrList -and (Prop $irrList 'portfolios') -is [array]) {$e.W09.consumer='LIST_OBSERVED';$e.W09.irrPortfolioCount=$irrList.portfolios.Count}
 }
 if ($MarketPort -gt 0 -and $headers.Count -gt 0) {$hist=AsMap (GetLocal $MarketPort '/v1/freshness?domain=D02_OHLCV' $headers);if ((Prop $hist 'cacheState') -in @('NOT_AVAILABLE','MISS','CURRENT','STALE','UNAVAILABLE')) {$e.W06.historical=Prop $hist 'cacheState'}}
 if ($DataRoot -and [IO.Path]::IsPathFullyQualified($DataRoot)) {
  try {
   $dir=Join-Path $DataRoot 'investment/dataset';$manifestPath=Join-Path $dir 'manifest.json';$periodsPath=Join-Path $dir 'periods.json';$m=Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json -AsHashtable
-  $state=Prop (Prop $m 'sourceRights') 'state';$basis=Prop (Prop $m 'sourceRights') 'basis'
-  if($state -notin @('SYNTHETIC','OPERATOR_ASSERTED','UNKNOWN') -or ($state -eq 'OPERATOR_ASSERTED' -and ($basis -isnot [string] -or -not $basis.Trim()))) {$state='UNKNOWN'}
+  $decl=Prop $m 'sourceRights';$state=Prop $decl 'state';$basis=Prop $decl 'basis';$declarationValidity='VALID'
+  if ($null -eq $decl) { $state='UNKNOWN';$declarationValidity='ABSENT' } elseif ($state -notin @('SYNTHETIC','OPERATOR_ASSERTED','UNKNOWN') -or ($state -eq 'OPERATOR_ASSERTED' -and ($basis -isnot [string] -or -not $basis.Trim()))) {$state='UNKNOWN';$declarationValidity='INVALID'}
   $coverage=Prop $m 'coverage';$cov=[ordered]@{};foreach($k in @('issuers','securities','listings','annualPeriods','quarterlyPeriods','operatingMetricRecords','corporateActions','prices')) {$cov[$k]=SafeNum (Prop $coverage $k)}
-  $e.W05=@{status='MANIFEST_READ_UNVERIFIED';manifestSha256=(Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant();datasetVersion=SafeHash (Prop $m 'datasetVersion');contentDigest=SafeHash (Prop $m 'contentDigest');dataAsOf=SafeTime (Prop $m 'dataAsOf');knownAsOf=SafeTime (Prop $m 'knownAsOf');lastImportAt=SafeTime (Prop $m 'lastImportAt');rightsState=$state;rightsBasisPresent=($state -eq 'OPERATOR_ASSERTED');independentPermission='UNKNOWN';coverage=$cov;periods='UNKNOWN';sourceAndLicence='UNKNOWN';issuerHoldingCoverage=$financialCounts;providerLabelSha256=TextHash (Prop $m 'provider');licenceLabelSha256=TextHash (Prop $m 'licence');rightsBasisSha256=TextHash $basis}
+  $e.W05=@{status='MANIFEST_READ_UNVERIFIED';manifestSha256=(Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant();datasetVersion=SafeHash (Prop $m 'datasetVersion');contentDigest=SafeHash (Prop $m 'contentDigest');dataAsOf=SafeTime (Prop $m 'dataAsOf');knownAsOf=SafeTime (Prop $m 'knownAsOf');lastImportAt=SafeTime (Prop $m 'lastImportAt');rightsState=$state;rightsDeclarationValidity=$declarationValidity;rightsBasisPresent=($state -eq 'OPERATOR_ASSERTED');independentPermission='UNKNOWN';coverage=$cov;periods='UNKNOWN';sourceAndLicence='UNKNOWN';issuerHoldingCoverage=$financialCounts;providerLabelSha256=TextHash (Prop $m 'provider');licenceLabelSha256=TextHash (Prop $m 'licence');rightsBasisSha256=TextHash $basis}
   $expected=SafeHash (Prop (Prop $m 'files') 'periods.json'); if ($expected -ne 'UNKNOWN' -and (Get-FileHash -LiteralPath $periodsPath -Algorithm SHA256).Hash.ToLowerInvariant() -eq $expected) {
     $periods=Get-Content -LiteralPath $periodsPath -Raw | ConvertFrom-Json -AsHashtable -NoEnumerate; if ($periods -is [array]) {$groups=[ordered]@{};foreach($p in $periods){$pd=Prop $p 'period';$type=Prop $pd 'periodType';$scope=Prop $pd 'statementScope';$basis=Prop $p 'basis';if($type -notin @('ANNUAL','QUARTER','TTM')){$type='UNKNOWN'};if($scope -notin @('CONSOLIDATED','STANDALONE')){$scope='UNKNOWN'};if($basis -notin @('AS_FILED','RESTATED')){$basis='UNKNOWN'};CountState $groups "$type/$scope/$basis"};$e.W05.periods=@{count=$periods.Count;classification=$groups;fileSha256=$expected;earliestPeriodEnd=SafeTime (Prop $coverage 'earliestPeriodEnd');latestPeriodEnd=SafeTime (Prop $coverage 'latestPeriodEnd')}}
   }
