@@ -2,7 +2,7 @@
 
 The local non-production market-data daemon exposes these authenticated read-only POST routes using the same bearer token, loopback binding, 16 KiB body limit and JSON error envelope as the market-data transport. They use the daemon's existing P04 security master and governed P7 registry; no provider connection or credentials are needed for these operations. Starting the daemon still follows its existing admission/configuration requirements.
 
-* `/v1/instruments/search`: `{ "query": "SYN" }` searches registry symbol or ISIN case-insensitively (substring), returning `{ "results": [{ "symbol", "exchange", "result" }] }`, at most 100 rows in registry order. Search results are evidence candidates, not independently qualified identities. An empty array means no candidates; duplicate rows are possible.
+* `/v1/instruments/search`: `{ "query": "SYN" }` searches registry symbol or ISIN, or a P04 listing symbol for the same company, ISIN and exchange, case-insensitively (substring), returning `{ "results": [{ "symbol", "exchange", "result" }] }`, at most 100 rows in registry order. Search results are evidence candidates, not independently qualified identities. An empty array means no candidates; duplicate rows are possible.
 * `/v1/identity/resolve`: `{ "companyId": "...", "exchange": "NSE" | "BSE", "securityId": "ISIN:<isin>:<series>" }`. Requires the exact company, segment and canonical identity; does not fall back to partial matching. Malformed/incomplete identity returns an unresolved outcome. A conflicting series is ambiguous.
 * `/v1/identity/qualify`: `{ "isin": "...", "exchange": "NSE" | "BSE", "symbol"?: "..." }`. ISIN may be omitted to obtain the typed `MISSING_ISIN` outcome. Symbol is context only, not matching evidence.
 
