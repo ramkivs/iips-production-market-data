@@ -20,6 +20,8 @@ jobs:
           node-version: '22'
       - name: Exercise synthetic read-only collector
         shell: pwsh
-        run: ./tests/stage2/collector-windows.test.ps1
+        run: |
+          try { ./tests/stage2/collector-windows.test.ps1 }
+          catch { Write-Output "::error::$($_.Exception.Message) at $($_.InvocationInfo.ScriptLineNumber) $($_.InvocationInfo.Line)"; exit 1 }
       - name: Test NP-04 read-only helper
         run: node --test tests/stage2/readonly-reports.test.cjs
