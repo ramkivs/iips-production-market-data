@@ -26,7 +26,11 @@ try {
     const versions = db.prepare('SELECT COUNT(*) AS n FROM (SELECT chain_id, COUNT(*) n, MIN(artifact_version) lo, MAX(artifact_version) hi, COUNT(DISTINCT artifact_version) d FROM governed_artifacts WHERE tenant_id=? AND user_id=? GROUP BY chain_id HAVING lo <> 1 OR hi <> n OR d <> n)').get(...pair);
     const badLinks = db.prepare(`SELECT COUNT(*) AS n FROM governed_artifacts a LEFT JOIN governed_artifacts b ON a.supersedes_report_id=b.report_id WHERE a.tenant_id=? AND a.user_id=? AND ((a.artifact_version=1 AND a.supersedes_report_id IS NOT NULL) OR (a.artifact_version>1 AND (b.report_id IS NULL OR b.tenant_id<>a.tenant_id OR b.user_id<>a.user_id OR b.chain_id<>a.chain_id OR b.artifact_version<>a.artifact_version-1)))`).get(...pair);
     const types = db.prepare('SELECT COUNT(DISTINCT report_type) AS n FROM governed_artifacts WHERE tenant_id=? AND user_id=?').get(...pair);
+    const knownTypes = ['investment.company-assessment','investment.holding-disposition','investment.change-report'];
+    const groups = db.prepare('SELECT report_type, COUNT(*) AS versions, COUNT(DISTINCT chain_id) AS chains FROM governed_artifacts WHERE tenant_id=? AND user_id=? GROUP BY report_type').all(...pair);
+    const typeCounts = {};
+    for (const group of groups) { const key=knownTypes.includes(group.report_type) ? group.report_type : 'OTHER'; if (!typeCounts[key]) typeCounts[key]={versions:0,chains:0}; typeCounts[key].versions+=group.versions; typeCounts[key].chains+=group.chains; }
     db.exec('COMMIT');
-    console.log(JSON.stringify({status:'AVAILABLE',chains:total.chains,versions:total.n,distinctReportTypes:types.n,invalidVersionSequences:versions.n,invalidLinks:badLinks.n,revisionLinkage:'UNKNOWN',readAt:new Date().toISOString(),schema:'NP04_2e11fa3b_baseline'}));
+    console.log(JSON.stringify({status:'AVAILABLE',chains:total.chains,versions:total.n,distinctReportTypes:types.n,reportTypes:typeCounts,invalidVersionSequences:versions.n,invalidLinks:badLinks.n,revisionLinkage:'UNKNOWN',readAt:new Date().toISOString(),schema:'NP04_2e11fa3b_baseline'}));
   } finally { db.close(); }
 } catch { console.log(JSON.stringify({status:'UNKNOWN'})); process.exitCode=1; }
