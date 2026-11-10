@@ -469,14 +469,15 @@ describe('Stage 4 — broker-import identity composition root', () => {
       assert.ok(code.includes('loadGovernedP7InstrumentRegistry'));
     });
 
-    it('keeps the consumer surface and the closed IPC operation set unchanged', () => {
+    it('keeps the existing consumer and injects it into IPC dispatch', () => {
       const consumerSource = readFileSync(resolve(REPO_ROOT, 'src/ipc/brokerImportConsumer.ts'), 'utf8');
       const code = consumerSource.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
       assert.ok(/new\s+DurablePortfolioStorePort\(/.test(code));
       assert.ok(!/new\s+DurablePortfolioStore\s*\(/.test(code));
 
       const dispatchSource = readFileSync(resolve(REPO_ROOT, 'src/ipc/dispatch.ts'), 'utf8');
-      for (const token of ['brokerImportConsumer', 'brokerImportComposition', 'createBrokerImportConsumer']) {
+      assert.ok(dispatchSource.includes('brokerImportConsumer'));
+      for (const token of ['brokerImportComposition', 'createBrokerImportConsumer']) {
         assert.ok(
           !dispatchSource.includes(token),
           `the composition must remain unreachable from IPC dispatch: ${token}`,

@@ -1008,16 +1008,16 @@ describe('q1 / IPC read path conforms to CAP-03 DR-2 Option A', () => {
     );
   });
 
-  it('the closed IPC operation set is unchanged — no new operation or route', () => {
+  it('the bounded IPC operation set includes the broker import operation', () => {
     assert.deepEqual(
       [...IPC_READ_OPERATIONS].sort(),
       ['portfolio.get', 'portfolio.list', 'portfolio.revisions'],
     );
     assert.deepEqual(
       [...IPC_WRITE_OPERATIONS].sort(),
-      ['portfolio.create', 'portfolio.delete', 'portfolio.reset', 'portfolio.save'],
+      ['portfolio.create', 'portfolio.delete', 'portfolio.importBroker', 'portfolio.reset', 'portfolio.save'],
     );
-    assert.equal(IPC_OPERATIONS.length, 7);
+    assert.equal(IPC_OPERATIONS.length, 8);
     assert.deepEqual([...IPC_RESERVED_OPERATIONS], ['portfolio.analytics']);
     assert.ok(!(IPC_OPERATIONS as readonly string[]).includes('portfolio.analytics'), 'the reserved operation stays outside the closed set');
   });
