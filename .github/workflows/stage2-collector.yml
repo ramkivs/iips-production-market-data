@@ -1,0 +1,25 @@
+name: Stage 2 collector Windows fixtures
+on:
+  pull_request:
+    paths:
+      - 'scripts/Collect-IipsStage2Evidence.ps1'
+      - 'scripts/stage2/**'
+      - 'tests/stage2/**'
+      - '.github/workflows/stage2-collector.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-fixtures:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Exercise synthetic read-only collector
+        shell: pwsh
+        run: ./tests/stage2/collector-windows.test.ps1
+      - name: Test NP-04 read-only helper
+        run: node --test tests/stage2/readonly-reports.test.cjs
