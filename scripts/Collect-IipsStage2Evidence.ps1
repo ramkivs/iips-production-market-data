@@ -17,7 +17,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 if (-not $ConfirmNonProduction) { throw 'Explicit non-production confirmation is required.' }
 $started = [DateTime]::UtcNow.ToString('o')
-function Prop($o,[string]$name) { if ($null -ne $o -and $o.Contains($name)) { return $o[$name] }; return $null }
+function Prop($o,[string]$name) { if ($null -ne $o -and $o.Contains($name)) { return ,$o[$name] }; return $null }
 function SafeTime($v) { $d=[datetimeoffset]::MinValue; if ($v -is [string] -and [datetimeoffset]::TryParse($v,[ref]$d)) { return $d.ToUniversalTime().ToString('o') }; return 'UNKNOWN' }
 function DocumentHash($p) { if (-not $p -or -not [IO.Path]::IsPathFullyQualified($p)) {return 'UNKNOWN'}; try { return (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant() } catch { return 'UNKNOWN' } }
 function TextHash($v) { if ($v -isnot [string] -or -not $v.Trim()) { return 'UNKNOWN' }; $bytes=[Text.Encoding]::UTF8.GetBytes($v); return [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant() }
