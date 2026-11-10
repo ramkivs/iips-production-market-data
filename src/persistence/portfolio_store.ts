@@ -620,6 +620,21 @@ export class DurablePortfolioStore {
     }
   }
 
+  /** Keep multi-query read projections on one SQLite snapshot. Reuse an
+   * existing caller transaction; never commit or roll it back here. */
+  private withReadSnapshot<T>(work: () => T): T {
+    if (this.db.isTransaction) return work();
+    this.db.exec('BEGIN;');
+    try {
+      const result = work();
+      this.db.exec('COMMIT;');
+      return result;
+    } catch (error) {
+      if (this.db.isTransaction) this.db.exec('ROLLBACK;');
+      throw error;
+    }
+  }
+
   /**
    * Runs one broker-import request under one SQLite write transaction and
    * revalidates the sole active owner while revocation is serialized.
@@ -752,6 +767,10 @@ export class DurablePortfolioStore {
    * defaults are removed). `durable`/`durability` are not emitted.
    */
   get(owner: OwnerRef, portfolioId: string): PortfolioDetail {
+    return this.withReadSnapshot(() => this.getSnapshot(owner, portfolioId));
+  }
+
+  private getSnapshot(owner: OwnerRef, portfolioId: string): PortfolioDetail {
     const resolved = this.resolvePortfolio(owner, portfolioId);
     const base = projectPortfolioBase(
       {
@@ -801,8 +820,10 @@ export class DurablePortfolioStore {
    * refuse the whole read instead of being passed through.
    */
   getV2(owner: OwnerRef, portfolioId: string): PortfolioDetail {
-    const detail = this.get(owner, portfolioId);
-    return { ...detail, contributions: this.contributionsValidated(owner, portfolioId) };
+    return this.withReadSnapshot(() => {
+      const detail = this.getSnapshot(owner, portfolioId);
+      return { ...detail, contributions: this.contributionsValidated(owner, portfolioId) };
+    });
   }
 
   /**
@@ -903,6 +924,10 @@ export class DurablePortfolioStore {
    * history-entry shape. `committedAt` stays the v1 wire name.
    */
   revisions(owner: OwnerRef, portfolioId: string): RevisionEntry[] {
+    return this.withReadSnapshot(() => this.revisionsSnapshot(owner, portfolioId));
+  }
+
+  private revisionsSnapshot(owner: OwnerRef, portfolioId: string): RevisionEntry[] {
     this.resolvePortfolio(owner, portfolioId);
     const rows = this.db
       .prepare(
