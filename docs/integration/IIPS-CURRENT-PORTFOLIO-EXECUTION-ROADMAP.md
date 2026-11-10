@@ -123,7 +123,7 @@ For all items, **decision authority: the principal under the standing grant**; r
 **Status:** historic certification and existing owner/artifact boundaries are established; preservation after new changes remains to be verified. **Execution:** IRR/IPD teams in their own repositories, with independent technical review where feasible. **Deliverable:** baseline digest inventory and relevant post-change tests. **Acceptance/evidence:** frozen 13-engine/golden output, owner isolation, IID/NP-04/NP-06 persistence/readback, honest reference/alias and IPD cache/orchestrator/freshness regression, exact commits and hashes. **Ready:** read-only baseline planning now; final verification follows affected changes. No need to repeat historic certification investigation.
 
 ### W20 — Real-holder end-to-end acceptance
-**Status:** historical real-issuer runs exist, not the actual user's complete revision→issuer→engine/CSIP→IID→report/version journey. **Execution:** IRR/IPD teams and host operator; principal accepts based on technical evidence. **Deliverable:** privacy-preserving reproducible non-production evidence package. **Acceptance/evidence:** all section K links, actual persisted holding and qualified issuer—not synthetic/reference—plus independently checked two-version readback/comparison. **Blocker:** W03–17 and W19 evidence, host access and applicable rights. No extra human authority is invented; current instruction prohibits host data access and artifact writes during this correction.
+**Status:** historical real-issuer runs exist, not the actual user's complete revision→issuer→engine/CSIP→IID→report/version journey. **Execution:** IRR/IPD teams and host operator; principal accepts based on technical evidence. **Deliverable:** privacy-preserving reproducible non-production evidence package. **Acceptance/evidence:** reconcile every holding in one captured persisted revision; disclose total, eligible, excluded, unresolved and withheld counts with a reason and treatment for every uncovered/excluded row; measure eligible-portfolio identity, financial and substantive-engine coverage against the hard thresholds defined under section K. Reproduce position-level and portfolio-level monetary calculations from qualified inputs; prove all portfolio-wide thresholds and section K links, including independently checked two-version readback/comparison. One successful holding is not portfolio acceptance. **Blocker:** W03–17 and W19 evidence, host access, applicable rights and the presently unestablished evidence-based coverage thresholds in section K. No extra human authority is invented; current instruction prohibits host data access and artifact writes during this correction.
 
 ## C. Complete audit-reference traceability
 
@@ -172,17 +172,33 @@ The following many-to-many mapping is deliberate: audit references describe over
 
 ## D–E. Dependencies and execution sequence
 
-The item index contains the full predecessor list. Arrows below show the primary delivery path; read-only design can begin in parallel and does not create a new approval round.
+The work-item index remains authoritative. The following explicit predecessor → successor graph includes every indexed execution dependency; a `*` edge is conditional or applies to final acceptance rather than a read-only start. External host access precedes W03; technical evidence and source rights remain separate prerequisites.
 
 ```text
-W01 (authority applied, not a recurring gate)
-W02 ──────────────> W08 ───┬─> W11 ───────────┬─> W14 ─┬─> W17 ─> W20
-                   W09 ────┘                   │        │           ↑
-W03 ─> W04 ─> W05 ─> W07 ─> W10 ──────────────┘        │           │
-  └────> W06 ──────> W12 ─────────> W13 ──────────────┘           │
-W05/W07/W08/W09 ─> W15 ─> W16 ─────────────────> W17 ────────────┤
-W18 scope disposition; W19 regression after affected changes ──────┘
+W01 -> W02
+host access -> W03
+W03 -> W04, W05, W06, W09, W20
+W04 -> W05, W06, W08, W10, W20
+W05 -> W07, W10, W12, W15, W20
+W06 -> W12, W13, W15*, W20
+W07 -> W10, W15, W20
+W02 -> W08, W09
+W08 -> W11, W13, W15, W20
+W09 -> W11, W13, W15, W16, W17, W20
+W10 -> W11, W20
+W11 -> W14, W16*, W18*, W20
+W12 -> W13, W14, W20
+W13 -> W14, W16*, W17, W20
+W14 -> W17, W18*, W20
+W15 -> W16*, W17, W20
+W16 -> W17, W20
+W17 -> W20
+W18 disposition -> W20
+W19 -> W20
+Any affected implementation -> W19* (final regression gate)
 ```
+
+`W06 -> W15*` applies if the IID policy uses price; `W11/W13/W15 -> W16*` apply for the corresponding producer; `W11/W14 -> W18*` applies only to current analytical extensions. W19's final regression follows the affected implementation, not a prerequisite for its read-only planning. W20's direct W03–W17 edges ensure all required core evidence is present; W18's disposition rather than every optional extension is required.
 
 W10, W12, W16, W18 and W19 can start read-only design/inventory without waiting for host access; final technical output requires the indexed inputs. W15 can proceed parallel to engines once its dependencies are met; price evidence W06 applies only when the chosen policy uses it. W18's optional extensions do not block core acceptance if explicitly retained as reference. W20 needs the W18 scope disposition and actual evidence from applicable W03–17 and W19; independent technical verification does not imply a separate human approval committee.
 
@@ -229,13 +245,32 @@ W10, W12, W16, W18 and W19 can start read-only design/inventory without waiting 
 
 The principal can accept the non-production personal capability based on an evidence package with reproducible tests and independent technical checks where feasible. Standing authority alone is not evidence that the work is done. All conditions apply:
 
-1. **Real revision and isolation:** owner-bound actual persisted portfolio and active holding count, captured revision, empty/unavailable distinction; isolation and race behavior verified against the accepted contract.
-2. **Qualified security and fundamentals:** chosen actual holding → exact security/series/listing → issuer; qualified source/rights, filing/period/scope, dataset digest and mapped/withheld metrics traced; coverage across the agreed portfolio scope is disclosed.
-3. **Price and meaningful calculations:** where used, IPD-qualified market observations carry source/as-of/received/evaluated and verdict; stored and observed prices are distinct; denominators, currency and partial/stale cases are reproducible. Count exposure is not mislabeled as monetary weight.
-4. **Real analytical result:** at least one eligible actual holding produces a substantive compatible sector-engine output and meaningful approved-scope portfolio/CSIP result with issuer input provenance; missing data is withheld rather than replaced by frozen reference. No coverage or certification is claimed beyond demonstrated scope.
-5. **IID and durable history:** actual issuer assessment and holding disposition bind subject and captured revision to source/policy/model/assessment evidence. Owner-scoped NP-04 report readback includes at least two legitimately distinct persisted versions and subsequent comparison; chain identity, source vs generation dates and non-version-producing attempts are represented honestly. Necessary artifact writes are outside this documentation pass.
-6. **Running application:** non-production browser/API evidence displays actual holdings and outputs, current/reference/degraded states, source times and incomplete/stale/unavailable data, with no silent reference fallback. Application startup alone is insufficient.
-7. **Preservation:** W19 verifies frozen assets, owner isolation, IID/NP-04/NP-06 and IPD freshness behavior after changes; W18 records scope for optional surfaces. The principal accepts only what evidence supports. A missing mandatory link prevents acceptance.
+1. **Real revision and isolation:** reconcile **all holdings** in one captured, persisted owner-scoped portfolio revision, including inactive or otherwise excluded rows. Demonstrate revision consistency, empty vs unavailable and owner isolation/race behavior. A revision change during capture requires recapture of one persisted revision; never merge two revisions as one.
+2. **Complete holding census:** disclose total holdings, eligible, excluded, unresolved identity and withheld counts. Total = eligible + excluded, with each row assigned once. Unresolved and withheld are separately disclosed overlapping reason categories, not added to that partition. For **every** excluded or uncovered holding record the reason, its treatment and supporting evidence; authorized reports use non-identifying row tokens or sanitized aggregation. Exclusion is permitted only for an objectively documented, applicable scope rule established independently of coverage outcome (for example inactive rows if the approved analysis is active positions only); missing identity, financials, price or output is **not** an exclusion rule. Unknown eligibility blocks a complete census rather than being silently excluded.
+3. **Portfolio-wide qualified coverage:** calculate all identity, financial and analytical ratios for the same eligible population and captured revision using the methodology and hard thresholds below. Disclose each numerator, denominator, threshold, missing row reason and result; prove the evidence-based thresholds are met. One successful holding is necessary evidence for a specific real-issuer path but is never sufficient for portfolio-wide acceptance. Any unsupported/missing value remains uncovered, not a success.
+4. **Position and portfolio money:** reproduce position-level and portfolio-level monetary calculations using qualified quantities, currency, eligible IPD price/freshness and the W12 policy, showing source times, rounding, denominators and excluded/withheld amounts. Count weights are not monetary weights. Verify the included position values reconcile to the aggregate; an incomplete/unknown price or currency cannot be silently zeroed or presented as a complete portfolio total. Clearly disclose partial valuation and coverage; prove the approved portfolio-wide monetary coverage requirement before acceptance. If no reliable denominator can be established, withhold the complete total and block acceptance.
+5. **Real analytical result:** qualified actual issuer observations produce compatible, substantive sector-engine outputs and meaningful portfolio/CSIP results meeting the portfolio-wide analytical threshold below; output lineage includes issuer inputs, engine/calibration and missingness. Frozen reference inputs do not silently fill gaps and no certification or coverage is claimed beyond proven scope.
+6. **IID and durable history:** actual issuer assessment and holding disposition bind subject and captured revision to source/policy/model/assessment evidence. Owner-scoped NP-04 report readback includes at least two legitimately distinct persisted versions and subsequent comparison; chain identity, source vs generation dates and non-version-producing attempts are represented honestly. Necessary artifact writes are outside this documentation pass.
+7. **Running application:** non-production browser/API evidence displays actual holdings and outputs, current/reference/degraded states, source times and incomplete/stale/unavailable data, with no silent reference fallback. Application startup alone is insufficient.
+8. **Preservation:** W19 verifies frozen assets, owner isolation, IID/NP-04/NP-06 and IPD freshness behavior after changes; W18 records scope for optional surfaces. The principal accepts only what evidence supports. A missing mandatory link or unmet coverage gate prevents acceptance.
+
+### Portfolio coverage methodology and hard acceptance thresholds
+
+**Population and census.** Let `T` be all holding rows in the one captured persisted revision; let `E` be the nonempty subset eligible under documented objective product-scope rules fixed before coverage is evaluated; let `X = T − E`. Do not remove ambiguous identity, missing/uncertain financials, stale or absent quotes, or withheld/no engine output from `E` merely to improve a ratio. Record revision and capture time, source identities/versions and per-row evidence securely; publish only sanitized counts/reasons. `|T| = |E| + |X|` must hold, each row must have a disposition, and `|E| = 0` gives **not applicable / W20 blocked**, never 100%.
+
+For all three hard coverage metrics below, the denominator is exactly `|E|`, not the number of resolved or selected holdings. Compute counts and exact ratios from the row-level evidence; round only for display and evaluate the unrounded ratio. Multiple positions in the same issuer count as separate portfolio holding rows: a shared issuer dataset may support each only if each position's own identity and applicable method are qualified.
+
+| Metric | Numerator: number of eligible holding rows meeting every stated condition | Hard acceptance threshold / present status |
+|---|---|---|
+| Identity | Exact security identity and eligible listing/series are qualified and traceably resolve to one issuer under applicable source versions; ambiguous/unresolved/unavailable rows are failures. | `identity numerator / eligible count ≥ θI`, where **θI is not yet established**. Block W20 until the evidence-based threshold process below produces and records a defensible numeric value and the observed ratio meets it. |
+| Financial | Identity passes, and qualified, rights-permitted issuer filings/dataset contain all mandatory validated financial inputs for the applicable analysis and period/basis; missing, unvalidated, inapplicable or withheld mandatory input is a failure, never zero. | `financial numerator / eligible count ≥ θF`; **θF not yet established**. Block W20 until established and met. |
+| Analytical | Identity and financial conditions pass, and an applicable engine actually produces a substantive validated output from qualified issuer-specific inputs, within required vintage/coverage and without reference substitution; withheld, failed, unavailable or merely structurally executable outputs are failures. | `analytical numerator / eligible count ≥ θA`; **θA not yet established**. Block W20 until established and met; at least one real output is necessary but not a portfolio threshold. |
+
+**Threshold-setting and proof under standing authority:** W03–06 supply a permitted actual-revision census and per-row qualification/financial/quote evidence; W10–14 supply method-specific mandatory inputs, actual engine outcomes, feasible portfolio methodology and the consequences of omissions. Before evaluating W20 acceptance, use these observed distributions and the analytical purpose to record explicit numeric `θI`, `θF`, `θA`, and the monetary coverage requirement: state the absolute and value-weighted exposure left uncovered, materiality/concentration risks, reason each allowed gap is tolerable for the claimed use, treatment of unknown values, and how the threshold prevents a small successful subset from being represented as the whole portfolio. Establish the thresholds against that evidence and purpose, not merely to pass an observed result. A change after seeing the acceptance result requires a documented rationale and fresh evaluation against the unchanged eligible census; it must not silently relax a failed gate. The standing PA grant covers these in-scope decisions; no additional human approval cycle is introduced.
+
+**Currently insufficient evidence:** the audit has no actual revision/holding counts, eligible scope and exposures, per-row identity and financial coverage, available qualified prices, engine outputs, or quantified consequences of omitted holdings. Therefore no defensible numeric `θI`, `θF`, `θA` or portfolio monetary-coverage threshold can be asserted now. **W20 portfolio-wide acceptance is BLOCKED / NOT ACCEPTED** until those exact observations and justification exist, thresholds are recorded and the observed ratios and monetary requirement meet them. This does not block the roadmap's existing read-only starts or change its readiness counts.
+
+**Informational metrics, not substitute gates:** also show total/excluded counts, each reason category and sector distribution, and, only when the relevant position values and a reliable total denominator are qualified, the monetary share represented by identity, financial, analytical and valuation coverage. If the value denominator or any material position value is unknown, report the value-weighted share as unknown/partial, never 100% or zero by default. Informational percentages do not override the hard holding-count gates or the separately established monetary coverage requirement. Explicitly show all uncovered/excluded rows and whether each is withheld, excluded under a rule, or otherwise not evaluated; overlapping reason counts must not be summed as disjoint holdings.
 
 ## L. Completeness and correction reconciliation
 
