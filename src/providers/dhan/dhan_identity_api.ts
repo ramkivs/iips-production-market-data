@@ -46,7 +46,15 @@ export class DhanIdentityApiService {
 
   search(query: string): readonly InstrumentSearchResult[] {
     const term = query.trim().toUpperCase();
-    return this.registry.list().filter(m => m.symbol.toUpperCase().includes(term) || (m.isin?.toUpperCase().includes(term) ?? false))
-      .slice(0, 100).map(m => ({ symbol: m.symbol, exchange: m.exchange, result: this.qualify({ isin: m.isin ?? '', exchange: m.exchange }) }));
+    return this.registry.list().filter(m => {
+      if (m.symbol.toUpperCase().includes(term) || (m.isin?.toUpperCase().includes(term) ?? false)) return true;
+      // A P7 display name need not be the exchange ticker. Use the existing P04
+      // listing symbol for discovery only, and only when company, ISIN and
+      // exchange evidence agree. Qualification below remains unchanged.
+      if (!m.isin) return false;
+      const entity = this.master.getEntity(m.companyId);
+      if (!entity || entity.isin.trim().toUpperCase() !== m.isin.trim().toUpperCase()) return false;
+      return entity.listings.some(listing => listing.exchange === m.exchange && listing.symbol.toUpperCase().includes(term));
+    }).slice(0, 100).map(m => ({ symbol: m.symbol, exchange: m.exchange, result: this.qualify({ isin: m.isin ?? '', exchange: m.exchange }) }));
   }
 }
