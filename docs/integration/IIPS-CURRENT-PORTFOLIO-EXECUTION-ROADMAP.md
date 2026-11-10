@@ -1,0 +1,289 @@
+# IIPS current-portfolio execution roadmap
+
+**ROADMAP COMPLETE / AUTHORIZATION ESTABLISHED / EXECUTION READY FOR IDENTIFIED READ-ONLY STARTS / PRODUCT NOT ACCEPTED.** This is the authoritative execution-plan companion to the [consolidated architectural audit](IIPS-CONSOLIDATED-SNAPSHOT-TO-CURRENT-ARCHITECTURAL-AUDIT.md), the controlling source for technical findings and historical evidence. This correction supersedes the earlier roadmap's enterprise-style governance, approval and readiness interpretations, including audit roadmap owner labels insofar as they were proposed rather than actual authority. The audit itself is unchanged. Source audit commit `bd29185ddfdcc7e95fbfa97cccd6ccf50e4992f0`; original audit baselines IPD `1aee57fe093b4fb15eaf3a9ac67532ee40262fe2`, IRR `0e393516958f9340c07245b29d76b08d65c2de3b`. Technical baseline is historical, not a claim that current deployment or later commits have been assessed.
+
+**Principal and outcome:** Ramki is the PERSONAL APPLICATION PRINCIPAL and single decision authority for this local, single-user, non-production personal application. The goal is a running application that analyses actual owner-scoped persisted IPD holdings through qualified security/issuer identity, sourced financials and market observations, compatible engines, meaningful portfolio calculations, IID assessment/disposition, and durable versioned report lineage. Revision, quote, financial, calculation and report vintages must remain distinct; missing, stale and reference data must never masquerade as current. An unavailable or wholly withheld analysis is not end-to-end acceptance.
+
+**Current evidence:** the audit found reference Executive/Portfolio data rather than actual user holdings, existing IPD read/identity/freshness contracts, bounded 13-engine v1.2 certification, IID and NP-04/NP-06 mechanisms, and 14 passing synthetic read tests. Actual data coverage, concurrency, current integration and real-holder E2E remain unverified. No general startup outage was established; availability is checked only as needed for the actual data journey. No personal portfolio, credentials or production were accessed for this correction.
+
+## Authority and operating model
+
+- **Project-wide standing grant:** IRR [`docs/integration/IIPS_v3.0_OWNER_CONTEXT_F3_MECHANISM_AND_IMPLEMENTATION_PA_DECISION.md` §1.2](https://github.com/ramkivs/iips-review-recovered/blob/c78a8024cd34004ec52f5dcff294ac5b1bbc106d/docs/integration/IIPS_v3.0_OWNER_CONTEXT_F3_MECHANISM_AND_IMPLEMENTATION_PA_DECISION.md) records the single user's global decision and execution authority for this project, covering necessary decisions, records, implementation, tests, corrections and publication **within established scope**, without repeated approval for individual decisions or routine steps. It prohibits fabricated evidence, weakened safeguards, unrelated scope expansion and unverified success claims. Its own F-3 implementation act is separately bounded; the quotation is evidence of the wider standing grant, not an inference that all F-3 provisions apply here. Blob `c4c9f7d79ef181af96f6c4e5cc108288ef22fd02` was matched against current IRR main `c78a8024cd34004ec52f5dcff294ac5b1bbc106d`.
+- **Reconciliation:** IRR [`docs/integration/2026-10-21/DEC-06-PA-STANDING-AUTHORIZATION-AND-P11-MAIN-ADMISSION-AUTHORITY-RECONCILIATION-2026-10-21.md` §§1, 4](https://github.com/ramkivs/iips-review-recovered/blob/c78a8024cd34004ec52f5dcff294ac5b1bbc106d/docs/integration/2026-10-21/DEC-06-PA-STANDING-AUTHORIZATION-AND-P11-MAIN-ADMISSION-AUTHORITY-RECONCILIATION-2026-10-21.md), blob `4be3ea578a51a1a949337e5d218b89841c04892d`, explains the grant is project-wide within scope, not a repeated-approval requirement. Its specific DEC-06 disposition is confined to its own lineage; it does not itself perform or prove an admission. Actual publication, tests and acceptance must still be verified, not presumed from authority.
+- **One-pass precedent:** IRR [`docs/integration/IIPS_v3.0_CAP03_PA_BLANKET_WAIVER_AND_ONE_PASS_AUTHORIZATION_2026-11-01.md` §§1, 4](https://github.com/ramkivs/iips-review-recovered/blob/c78a8024cd34004ec52f5dcff294ac5b1bbc106d/docs/integration/IIPS_v3.0_CAP03_PA_BLANKET_WAIVER_AND_ONE_PASS_AUTHORIZATION_2026-11-01.md), blob `3177e60d2a7a40851396c1224d6d027bbabc040f`, records a one-pass direction for its **specific CAP-03 scope**; it is not a blanket waiver of unrelated protected operations. The present user instruction applies the one-pass operating principle here. Do not confuse the historical candidate `IIPS_v3.0_GLOBAL_NO_AUTH_PROGRAM_AUTHORITY_DECISION.md` with the standing grant or use it to weaken owner/security guards.
+- **Ownership and verification:** IRR executes IRR consumer, analysis, UI and report work; IPD executes its portfolio, identity, provider and freshness work. No cross-repository write is inferred from decision authority. Technical checks should be independent of the original assertion where feasible (reproduction, separate process, peer/automated review, remote readback); no separately appointed human approver is required for every item. The principal can accept the personal capability on objective evidence. Existing scoped IID operator policies remain in force; broader single-user decisions are not seven new approval cycles.
+- **Current task boundary:** this specific work item is documentation/read-only only; no application changes, mutating tests, personal data, credentials or production. That is a current instruction restriction, **not** evidence the standing PA grant is absent. In future properly scoped execution, in-scope implementation and tests are covered by the standing grant and do not need repeated PA approval. Host access, source rights, security boundaries, protected scope and repository write restrictions must still be respected. Do not invent missing facts, host values, entitlement, results or a human signature.
+
+## W01 and GD-1–GD-7 — one-pass decision application
+
+W01 is a short enabling action, not a new governance workstream. The above records establish the applicable standing authority. The following are **roadmap decisions/technical operating outcomes made under the present instruction and standing grant**, not claims that the principal personally chose a numerical threshold or that data is qualified. Where evidence is missing, resolve the technical question during execution and record the result; do not issue seven approval requests.
+
+| GD | In-scope outcome under existing global PA grant | Responsible repository / technical verification | Genuine external dependency or unresolved technical question |
+|---|---|---|---|
+| GD-1 scope | Deliver local, single-user actual persisted portfolio analysis; separate reference/current/degraded, fail closed on missing evidence. | IRR integration/UI; IPD owner reads; test captured revision and no fallback. | Actual host and coverage (W03–06); exact achievable coverage is measured, not fabricated. |
+| GD-2 engine inputs | Use only traceable issuer-specific inputs compatible with each engine; withhold unsupported metrics; preserve historic calibration. | IRR W10–11; per-engine schema, source and golden regressions. | Source coverage/rights and credible issuer-metric mappings; no automatic new certification claim. |
+| GD-3 sources and classification | Use qualified evidence with provenance and rights, retain missing/ambiguous status. | IPD identity, IRR resolver/data; W04–08 and W10 verification. | External rights where applicable and actual filings/rosters; classification evidence cannot be invented. |
+| GD-4 valuation | Distinguish count from money; use transparent per-position value weighting where valid values/coverage permit, document denominator, currencies, time and exclusion rules; withhold when inputs cannot support it. | IPD freshness; IRR W12–14; reproducible vectors and partial/stale cases. | Actual eligible quotes/values and applicable terms; exact thresholds/rounding are technical design choices under the grant, not preselected facts. |
+| GD-5 presentation | Show actual/reference/degraded modes, revision, coverage and source dates, without silent fallback or misleading live badges. | IRR W17–18; browser/API tests. | Real data required to demonstrate actual mode. |
+| GD-6 report lineage | Retain NP-04/NP-06 chains; compare available revision/data/model/quote times; explicitly label unknown/stale and preserve old versions. | IRR W15–16; owner-scoped persistence, restart/readback and comparison tests. | Existing artifacts and potential generation depend on host access; no claim every attempt creates a version. |
+| GD-7 acceptance | Verify engine, CSIP, IID and Screener independently to their relevant scopes; no certification by transitivity. Principal accepts personal capability based on evidence. | IRR/IPD W18–20; reproducible tests, independent technical checks where feasible, remote verification. | Real-holder evidence and actual permitted sources; historical certification remains bounded. |
+
+These decisions do not assert external rights, introduce new certifications or supersede expressly protected scope/security boundaries. A real exception must name its action, binding restriction and evidence; uncertainty about a human approver is not a blocker.
+
+## Readiness model and counts
+
+A work item is **ready now** if it has at least one substantive read-only investigation/design action that can be done under this documentation-only instruction; this does not mean its implementation or closure is ready. **External** means actual host/source evidence or access is needed to complete it, including inherited downstream dependencies. **Implementation** means implementation or conditional remediation is part of its defined outcome, not that another PA approval is required. **Technical predecessor** means a non-external technical outcome must be established before the final delivery/acceptance of that item; parallel analysis is still possible. **Rights** flags direct potential third-party rights-holder decisions, conditional on the chosen source, not a finding that rights are denied. Flags overlap.
+
+| ID | Priority / distinct outcome | Type | Predecessors for final outcome | Now | External | Implementation | Technical predecessor | Rights |
+|---|---|---|---|:---:|:---:|:---:|:---:|:---:|
+| W01 | P0 Apply standing authority and scope | decision / investigation | — | Y | — | — | — | — |
+| W02 | P0 Revision/owner/concurrency | investigation / test / conditional fix | consistency requirements from W01 | Y | — | Y | — | — |
+| W03 | P0 Actual revision/report inventory | external / investigation | host access | — | Y | — | — | — |
+| W04 | P0 Actual identity coverage | external / investigation | W03 | — | Y | — | — | — |
+| W05 | P0 Financial coverage and rights | external / source verification | W03, W04 | — | Y | — | — | Y |
+| W06 | P0 Market observations and freshness | external / source verification | W03, W04 | — | Y | — | — | Y |
+| W07 | P1 Issuer limitation semantics | source analysis | W05 | — | Y | — | — | Y |
+| W08 | P1 Security-to-issuer bridge | investigation / implementation | W02, W04 | — | Y | Y | Y | — |
+| W09 | P1 Revision-aware portfolio consumer | implementation / test | W02, W03 | — | Y | Y | Y | — |
+| W10 | P1 Issuer-to-engine input mapping | investigation / decision | W04, W05, W07 | Y | Y | — | — | — |
+| W11 | P2 Issuer-engine execution | implementation / test | W08, W09, W10 | — | Y | Y | Y | — |
+| W12 | P1 Valuation and alignment methodology | decision / design | W05, W06 for final feasible terms | Y | Y | — | — | — |
+| W13 | P2 Position valuation and coverage | implementation / test | W06, W08, W09, W12 | — | Y | Y | Y | — |
+| W14 | P2 Portfolio and cross-sector analytics | implementation / test | W11, W12, W13 | — | Y | Y | Y | — |
+| W15 | P2 IID assessment and disposition | integration / conditional implementation | W05, W07–W09; W06 if price used | — | Y | Y | Y | — |
+| W16 | P2 Lineage, staleness and comparison | design / conditional implementation | W09; W11, W13, W15 for relevant producers | Y | Y | Y | Y | — |
+| W17 | P2 Current/reference/degraded experience | implementation / test | W09, W13–W16 | — | Y | Y | Y | — |
+| W18 | P1 Other surfaces and capability boundaries | decision / conditional implementation | current extensions depend on W11/W14 | Y | — | Y | — | — |
+| W19 | P2 Preservation/regression | test / technical verification | affected implementation for final gate | Y | — | — | Y | — |
+| W20 | P3 Real-holder E2E acceptance | integration / verification | W03–W17, W19 and W18 disposition | — | Y | — | Y | — |
+
+**Counts:** 20 work items; **7** have a read-only start now (W01, W02, W10, W12, W16, W18, W19); **16** require external evidence/access for completion (W03–W17, W20); **10** include implementation or conditional remediation (W02, W08–09, W11, W13–18); **10** have a technical predecessor blocking final delivery (W08–09, W11, W13–17, W19–20); **3** have a direct, source-dependent external rights-holder question (W05–07). Downstream items inherit those dependencies; the rights count is not a count of confirmed denials. **0 items require a new PA approval solely because they are in-scope implementation.** No currently specified action is established as exceeding global PA authority. The present documentation-only instruction separately prevents implementation or mutating tests in this task. If a later action would exceed scope or cross a protected boundary, identify the exact evidence and obtain only the permission actually required; do not preemptively create an approval gate.
+
+**Correction of prior counts:** the 19 “governance-blocked” flags were artificial: **0 items are blocked solely by a missing ordinary PA decision or separate governance approver**. The 20 “unassigned accountable owners” are replaced by the established principal and repository responsibility, not reassigned to invented committees. The 20 “unassigned independent verifier” slots are removed: verification is technical and independent where practical, not a prerequisite for appointing 20 separate humans. These counts do not imply that technical, external or current-task restrictions disappeared.
+
+## Work-item specifications and closure evidence
+
+For all items, **decision authority: the principal under the standing grant**; repository execution is identified below. The listed tests and readback are objective closure evidence, with independent technical checks where feasible. They do not impose a separate human sign-off. No product action is performed in this documentation pass.
+
+### W01 — Apply authority, scope and decisions
+**Status:** standing grant and applicable records located and remotely blob-verified; seven outcomes above specified. **Execution:** IPD roadmap, respective IRR/IPD owners for later decisions. **Deliverable:** maintain concise scope and exceptions with evidence. **Acceptance:** record applies the grant without claiming fictitious signatures or authorizing production, source rights, weakening safeguards or cross-repository writes. **Evidence:** the three cited remote record blobs and current user instruction. **Ready now:** yes; no repeated approval.
+
+### W02 — Read consistency and owner isolation
+**Status:** 14 selected synthetic settled-state tests passed; revision/contribution and multi-process races not verified, not established as failures. **Execution:** IPD portfolio tests; IRR checks consumer consequences. **Deliverable:** controlled two-connection synthetic race results and agreed revision/mismatch contract; fix only if evidence shows a gap. **Acceptance/evidence:** revision-change, list/detail/history, tombstone/reset, contribution, retention/cap, multiple owners/bindings and independently timed quote tests, barrier logs and fail-closed no-disclosure assertions. **Ready:** read-only test design now; mutation of even temporary fixtures is outside this task, but routine future tests/fixes are within standing authority subject to repository boundaries.
+
+### W03 — Actual portfolio and report inventory
+**Status:** host portfolio/reports not observed. **Execution:** host operator using IPD owner reads and IRR report reads. **Deliverable:** sanitized revision/holding counts, existing artifact types/linkage and read times. **Acceptance/evidence:** counts reconcile to captured revision, empty/unavailable/unknown distinguished, no identifiers, values, secrets or sensitive errors published. **Blocker:** usable non-production host access, subject to its owner controls; no assumption of startup failure. No personal data is accessed in this task.
+
+### W04 — Actual security and issuer coverage
+**Status:** exact qualification/resolution exists, user-row coverage unverified. **Execution:** IPD identity owner and IRR resolver, host operator. **Deliverable:** same-revision qualified/resolved, ambiguous, missing, expired/ineligible and unavailable counts with source and listing/series versions. **Acceptance/evidence:** reconciled rows and exact security→listing→issuer mapping; no symbol-only identity. **Blocker:** W03 actual data/access and appropriate source use.
+
+### W05 — Financial coverage and source rights
+**Status:** local dataset mechanism exists; actual per-issuer coverage and rights unknown. **Execution:** IRR financial data and host/source operator; IPD boundaries intact. **Deliverable:** source/rights, filing/period/basis, issuer/sector/method coverage and dataset-digest dossier. **Acceptance/evidence:** verify entitlement and retention where applicable, distinguish period from import clock and zero/nil from missing/unmapped, reconcile to W04. **Blocker:** host/source evidence; a third-party rights-holder decision only if the selected source requires one. No inferred approval from provider string.
+
+### W06 — Market observations and freshness
+**Status:** IPD D01 contract exists; actual eligible quote coverage unverified; D02 unknown/unavailable. **Execution:** IPD market/freshness and IRR consumer, host operator. **Deliverable:** per-identity source/as-of/received/evaluated/verdict/eligibility and aggregate coverage. **Acceptance/evidence:** same-revision reconciliation, stale/unknown/unavailable handling, no candle-derived freshness and no claim cache hit proves live connectivity. **Blocker:** host/provider evidence and any applicable external terms. No refresh endpoint, scheduler, timer or automatic refresh.
+
+### W07 — Issuer limitation semantics
+**Status:** cited L-038/L-039 remain open in the audit evidence, L-040 correction preserved; L-035 resolved, L-037 partially resolved. **Execution:** IRR IID/data, principal/operator within existing policy; source custodian as applicable. **Deliverable:** evidence-backed treatment and supersession for affected metrics. **Acceptance/evidence:** contextualized filed values or documented permitted policy, with missing/not reported retained when uncertain; unaffected valid methods may proceed. **Blocker:** actual source evidence or source-holder rights where required; not a demand to repeat a settled decision.
+
+### W08 — Exact security-to-issuer bridge
+**Status:** IPD D114 object not explicitly consumed by IID mapper; actual mapping unproved. **Execution:** IRR adapter/resolver; IPD identity contract remains IPD-owned. **Deliverable:** minimal compatible mapping, implemented only where evidence shows a gap. **Acceptance/evidence:** ISIN/series and separately evidenced exchange/listing→issuer, missing, ambiguous, reused-symbol, multi-series and expired tests; owner guard preserved. **Blocker:** W02/W04 results and actual source evidence; routine in-scope code does not require new PA approval.
+
+### W09 — Revision-aware portfolio consumer
+**Status:** reads exist; mixed-call/contribution coherence unproved. **Execution:** IRR consumer, IPD only for demonstrated IPD-side gaps. **Deliverable:** capture revision or vector and clearly handle mismatch/partial/unavailable without duplicate store. **Acceptance/evidence:** race, multi-portfolio, contributions and owner isolation tests, no assertion of cross-service atomicity without proof. **Blocker:** W02 test findings and W03 data evidence for final acceptance.
+
+### W10 — Issuer-to-engine mapping
+**Status:** 13 input schemas exist; actual issuer mappings not established. **Execution:** IRR sector/data. **Deliverable:** per-engine schema/source/period/qualitative metric matrix and eligible/withheld disposition. **Acceptance/evidence:** exact input and calibration, traceable source, missing/invalid cases, no golden fallback; preserve historic certified contracts. **Ready:** schema mapping analysis now; final mapping depends on W04–07 data.
+
+### W11 — Issuer-engine execution
+**Status:** request-input execution structurally exists; real portfolio linkage unverified. **Execution:** IRR engines/consumer. **Deliverable:** compatible adapters/execution only as necessary. **Acceptance/evidence:** actual issuer input lineage, bounded reproducible engine output, missing/partial refusal and unchanged frozen golden regressions. **Blocker:** W08–10. Historical v1.2 certification is not recertified or transferred to arbitrary data.
+
+### W12 — Valuation methodology
+**Status:** reference CSIP weights counts, not money. **Execution:** IRR portfolio methodology, IPD quote semantics. **Deliverable:** practical value-weighting formula, denominator, inclusion, currency, time alignment and partial/stale policy plus vectors, within GD-4. **Acceptance/evidence:** reproducible arithmetic, clear distinction count/monetary weighting and honest withheld cases; final choices reflect actual data. **Ready:** technical design now; final feasibility depends on W05/W06. No new approval cycle.
+
+### W13 — Position valuation and coverage
+**Status:** stored prices are revision facts, not proven live quotes. **Execution:** IRR valuation consumer; IPD owns freshness. **Deliverable:** per-position valuation and coverage using qualified observations. **Acceptance/evidence:** distinguish stored and observed price, currency/units, as-of/received/evaluated, partial/stale/unknown, independent arithmetic and no fabricated zero. **Blocker:** W06/W08/W09/W12.
+
+### W14 — Portfolio and cross-sector analytics
+**Status:** frozen CSIP uses normalized outputs and count-based aggregation; actual holdings pipeline unproved. **Execution:** IRR analytics. **Deliverable:** meaningful, disclosed aggregation over eligible W11 outputs and W13 positions. **Acceptance/evidence:** denominator and partial-coverage vectors, output→holding/engine/input trace, reproduction and historical CSIP preservation. **Blocker:** W11–13. In-scope method selection uses existing authority, not implied certification.
+
+### W15 — IID assessment and holding disposition
+**Status:** existing IID/NP-04 mechanisms verified in bounded scope; actual portfolio-linked disposition unproved. **Execution:** IRR IID and local operator. **Deliverable:** assessment and holding disposition through existing chain for actual qualified issuer/revision, with limits. **Acceptance/evidence:** exact subject and revision, dataset/model/policy/assessment digests, withheld values and owner-scoped readback; no automatic repricing or replacement store. **Blocker:** W05/W07–09, W06 if price required and actual access; artifact generation is not performed in this task.
+
+### W16 — Lineage, staleness and comparison
+**Status:** NP-04/NP-06 version mechanisms exist; generic revision/quote lineage and read-time staleness not universal. **Execution:** IRR reports/IID. **Deliverable:** per-producer provenance and comparison using existing chains, with compatible changes only if needed. **Acceptance/evidence:** actual revision, issuer, dataset, source/quote times, model/policy, calculation/report times and readback; immutable historical versions, chain identity and input-changed/content-identical non-write preserved; unknown build digest stays unknown. **Ready:** contract design now; final evidence depends on W09/W11/W13/W15 and actual artifacts.
+
+### W17 — User-facing modes
+**Status:** Executive/reference views use frozen inputs; non-snapshot badge branch can mislabel future modes. **Execution:** IRR UI/consumer. **Deliverable:** actual/reference/degraded experience displaying revision, source dates and coverage. **Acceptance/evidence:** browser/API evidence of actual data, empty vs unavailable, stale vs unknown, no misleading live badge or silent reference substitution. **Blocker:** W09/W13–16 and host evidence; no general startup workstream.
+
+### W18 — Independent surfaces and scope
+**Status:** audit F lists reference, persisted, dataset, IPD, macro and placeholder surfaces; separate Screener acceptance remains. **Execution:** IRR surface owners; IPD retains market freshness. **Deliverable:** route-by-route retain/extend disposition and truthful labels for Research Company/Sector/Cross-Sector/Engines; Intelligence Opportunities/Risks/Rankings/Decision Matrix; AI; Screener; Watchlists/Alerts; Evidence/Snapshots/Replay; Macro; Collaboration; Settings; DHAN Search/Status/Quotes/History/Freshness and placeholders. User portfolios, both coverage pages and IID are covered by W04–17. **Acceptance/evidence:** per-surface source, scope and tests; no invented quadrants, personalized AI, monitoring, live universe, durable replay, settings selector or standalone Alerts. **Ready:** scope/label review now; extension uses standing authority within boundaries and requires W11/W14 where relevant, not a new approval cycle. Optional declined extensions do not block core acceptance.
+
+### W19 — Preservation and regression
+**Status:** historic certification and existing owner/artifact boundaries are established; preservation after new changes remains to be verified. **Execution:** IRR/IPD teams in their own repositories, with independent technical review where feasible. **Deliverable:** baseline digest inventory and relevant post-change tests. **Acceptance/evidence:** frozen 13-engine/golden output, owner isolation, IID/NP-04/NP-06 persistence/readback, honest reference/alias and IPD cache/orchestrator/freshness regression, exact commits and hashes. **Ready:** read-only baseline planning now; final verification follows affected changes. No need to repeat historic certification investigation.
+
+### W20 — Real-holder end-to-end acceptance
+**Status:** historical real-issuer runs exist, not the actual user's complete revision→issuer→engine/CSIP→IID→report/version journey. **Execution:** IRR/IPD teams and host operator; principal accepts based on technical evidence. **Deliverable:** privacy-preserving reproducible non-production evidence package. **Acceptance/evidence:** reconcile every holding in one captured persisted revision; disclose total, eligible, excluded, unresolved and withheld counts with a reason and treatment for every uncovered/excluded row; measure eligible-portfolio identity, financial, substantive-engine and monetary coverage against the hard thresholds defined under section K, including mandatory θM. Reproduce position-level and portfolio-level monetary calculations from qualified inputs; prove all portfolio-wide thresholds and section K links, including independently checked two-version readback/comparison. One successful holding is not portfolio acceptance. **Blocker:** W03–17 and W19 evidence, host access, applicable rights and the presently unestablished evidence-based coverage thresholds in section K. No extra human authority is invented; current instruction prohibits host data access and artifact writes during this correction.
+
+## C. Complete audit-reference traceability
+
+The following many-to-many mapping is deliberate: audit references describe overlapping concerns; each W item is a separately verifiable decision, implementation, investigation or acceptance outcome. A mapped reference is not thereby closed.
+
+| Audit reference | Roadmap IDs | Treatment |
+|---|---|---|
+| CL-01 | W01 | Authority and scope; distinct from domain decisions. |
+| CL-02 | W03 | Actual revision/count and report inventory. |
+| CL-03 | W04, W08 | Split measurement from compatible identity bridge. |
+| CL-04 | W05, W10 | Split rights/coverage from engine use. |
+| CL-05 | W06, W13 | Split quote evidence from valuation. |
+| CL-06 | W02, W09 | Split race evidence from any necessary integration. |
+| CL-07 | W02, W09, W13 | Revision vectors and independently timed quotes. |
+| CL-08 | W05, W10, W11 | Source qualification, decision and implementation separate. |
+| CL-09 | W12, W13, W14 | Methodology, valuation and CSIP implementation separate. |
+| CL-10 | W17, W18 | Core mode vs independent surface scope. |
+| CL-11 | W04, W08 | Coverage vs identity bridge. |
+| CL-12 | W01, W15, W16 | Policy, IID linkage and report lineage. |
+| CL-13 | W20 | Real end-to-end technical verification and principal acceptance. |
+| CL-14 | W18 | Independent surface/monitoring decision. |
+| CL-15 | W19, W20 | Preservation regression and end-to-end technical verification. |
+| CL-16 | W07 | Real issuer missingness and historical correction. |
+| RA-01 | W01, W10, W12 | Authority, input and weighting decisions. |
+| RA-02 | W03, W04, W05, W06 | Separate portfolio, identity, fundamentals and quotes. |
+| RA-03 | W02, W09 | Investigation and conditional integration. |
+| RA-04 | W04, W08 | Actual coverage and bridge. |
+| RA-05 | W05, W07, W10 | Financial source, limitations and engine qualification. |
+| RA-06 | W06, W12, W13 | IPD quote evidence, methodology and valuation. |
+| RA-07 | W17 | Explicit modes and portfolio UI. |
+| RA-08 | W10, W11, W19 | Mapping, execution and frozen regression. |
+| RA-09 | W12, W14 | Weighting decision and cross-sector implementation. |
+| RA-10 | W15, W16 | IID and staleness/version linkage. |
+| RA-11 | W16, W20 | Report provenance and real version/readback acceptance. |
+| RA-12 | W17, W18 | Current core and separately governed surfaces. |
+| RA-13 | W18 | Optional watchlist/alert decision, not invented delivery. |
+| RA-14 | W16, W18, W19 | Real lineage, alias/replay scope and preservation. |
+| RA-15 | W06, W18, W19 | IPD freshness; independent surfaces; unchanged cache/orchestrator. |
+| GD-1 | W01, W17 | Scope and mode. |
+| GD-2 | W01, W10, W11 | Input authorization and execution. |
+| GD-3 | W01, W05, W07, W10 | Rights, coverage, unresolved semantics, use. |
+| GD-4 | W01, W12, W13, W14 | Decision followed by qualified valuation and aggregation. |
+| GD-5 | W01, W17, W18 | Presentation and route-specific scope. |
+| GD-6 | W01, W15, W16 | IID-scoped and cross-report lineage/staleness. |
+| GD-7 | W01, W11, W14, W18, W19, W20 | Separate scope and independent capability/overall acceptance. |
+
+## D–E. Dependencies and execution sequence
+
+The work-item index remains authoritative. The following explicit predecessor → successor graph includes every indexed execution dependency; a `*` edge is conditional or applies to final acceptance rather than a read-only start. External host access precedes W03; technical evidence and source rights remain separate prerequisites.
+
+```text
+W01 -> W02
+host access -> W03
+W03 -> W04, W05, W06, W09, W20
+W04 -> W05, W06, W08, W10, W20
+W05 -> W07, W10, W12, W15, W20
+W06 -> W12, W13, W15*, W20
+W07 -> W10, W15, W20
+W02 -> W08, W09
+W08 -> W11, W13, W15, W20
+W09 -> W11, W13, W15, W16, W17, W20
+W10 -> W11, W20
+W11 -> W14, W16*, W18*, W20
+W12 -> W13, W14, W20
+W13 -> W14, W16*, W17, W20
+W14 -> W17, W18*, W20
+W15 -> W16*, W17, W20
+W16 -> W17, W20
+W17 -> W20
+W18 disposition -> W20
+W19 -> W20
+Any affected implementation -> W19* (final regression gate)
+```
+
+`W06 -> W15*` applies if the IID policy uses price; `W11/W13/W15 -> W16*` apply for the corresponding producer; `W11/W14 -> W18*` applies only to current analytical extensions. W19's final regression follows the affected implementation, not a prerequisite for its read-only planning. W20's direct W03–W17 edges ensure all required core evidence is present; W18's disposition rather than every optional extension is required.
+
+W10, W12, W16, W18 and W19 can start read-only design/inventory without waiting for host access; final technical output requires the indexed inputs. W15 can proceed parallel to engines once its dependencies are met; price evidence W06 applies only when the chosen policy uses it. W18's optional extensions do not block core acceptance if explicitly retained as reference. W20 needs the W18 scope disposition and actual evidence from applicable W03–17 and W19; independent technical verification does not imply a separate human approval committee.
+
+1. **Immediately under this task:** W01 authority application; W02 race-test planning; W10 input-schema analysis; W12 methodology design; W16 lineage design; W18 scope/label analysis; W19 baseline inventory. These are read-only starts, not proof of implementation readiness.
+2. **Data and technical foundations:** secure permitted host/source evidence for W03–07; run W02 temporary-fixture tests in a future execution task; establish W08 identity and W09 revision handling. Standing authorization covers ordinary in-scope work; this documentation-only instruction must not be treated as permission to implement during this pass.
+3. **Delivery when actual prerequisites exist:** execute W11, W13–17 in their owning repositories; close W10/W12 with qualified data; handle W18 decisions under the standing grant. Validate as work proceeds in one pass rather than pausing for redundant approvals. W19 checks each changed boundary.
+4. **Final integration:** W20 uses real non-production holdings, qualified inputs and durable versions, with reproducible technical checks and principal acceptance; no production claim.
+
+## F–G. Decision, ownership and verification register
+
+| Domain | Decision authority | Execution ownership | Technical check and remaining boundary |
+|---|---|---|---|
+| Application scope and GD-1–7 | Ramki, PERSONAL APPLICATION PRINCIPAL, under standing global PA grant; outcomes above. | IRR for UI, analysis and reports; IPD for portfolio, identity, provider and freshness. | Tests/reproduction and evidence; decisions need no seven individual approval cycles. |
+| IID policies | Same single-user operator within recorded IID policy scope, preserved under the global model. | IRR IID, existing NP-04 mechanisms. | Verify source/period, revision and artifact readback; do not reopen completed work. |
+| Host access | Host/system access control remains with its owner, not inferred from a repository decision. | Authorized host operator; no host access this task. | Need a usable permitted mechanism and sanitized evidence; another owner's system requires that owner's permission. |
+| External source rights | External rightsholder controls its own rights if terms demand it; no claim of denial or entitlement. | Source operator with IRR/IPD data owners. | Verify terms and permissible use/retention; no provider label as proof. |
+| Repository changes | PA grant covers in-scope project work; it does not grant this session cross-repository write authority or override task restrictions. | Each repository executes its own changes. | Test, inspect diff, commit and independently verify remote artifact in the permitted repository; no fabricated completion. |
+| Technical review | Principal may accept on objective evidence. | Responsible repository team; separate-process/readback or independent check when practical. | No mandatory separately appointed human governance approver per item. Document limitations when independent check is infeasible. |
+
+## I. Genuine blocker and exception register
+
+| ID | Exact action and evidence-based restriction | Affected items / resolution |
+|---|---|---|
+| B01 Current instruction | This correction expressly permits documentation/read-only only and prohibits application changes, personal data, credentials and production. This limits **this pass**, not the recorded global PA grant. | W02 test execution and W08–18 implementation occur only in an appropriately scoped future execution task; do not request repetitive PA approval for routine in-scope work. |
+| B02 Actual host data | Audit J/M establishes no authorized access or sanitized actual-user readiness evidence was supplied; it does not establish an outage. | W03–07 and dependent W08–17/W20 need a permitted access mechanism or operator-supplied sanitized evidence. Permission from another owner is required only if that owner controls the system. |
+| B03 External terms | Audit B/J finds source rights and qualification unknown, not denied. | W05–07 must verify the actual source's permissible use and retention. Obtain third-party permission only if its terms require it; do not assume the PA grants another party's rights. |
+| B04 Revision and identity | Audit A/K establishes settled-state tests but not race guarantees; the IID mapper does not explicitly consume IPD's identity object. Neither a concurrency failure nor a fixed solution is proven. | W02/W08/W09 tests and mapping evidence precede dependent integration; preserve ownership and fail closed. |
+| B05 Qualified analytical inputs | Audit C/M establishes no actual issuer→engine mapping and no current-holding CSIP chain. | W10–14 need sourced metrics, mapping, quotation/coverage and reproducible calculations; missing inputs remain withheld. |
+| B06 Real reports and acceptance | Audit D/M establishes immutable mechanics but not current report lineage or real-holder two-version E2E proof. | W15–17/W20 need actual subject/revision, data/model/quote vintages, permitted artifact generation and readback; no fabricated linkage or automatic version assumption. |
+| B07 Repository and security scope | Standing grant §1.2 forbids weakened safeguards; present instructions preserve repository write boundaries and exclude Broker Import, production and personal-data access. | IRR implementation occurs in IRR, IPD implementation in IPD; no cross-repository write, protected-scope or production action in this task. A concrete future exception needs the relevant boundary owner's permission or revised instruction, not generic governance. |
+| B08 Unresolved source semantics | Audit M documents L-038/L-039 open and L-040 correction. | W07 retains missing semantics until evidence supports an outcome; affected outputs withheld, unrelated covered methods can proceed. |
+
+**Actual actions outside existing authority identified:** none in the defined non-production work items solely by virtue of being implementation. Access to another party's host or rights-controlled data may require that party's permission (B02/B03); whether such a third party exists for a particular source is not yet known. Production and excluded Broker Import are explicitly out of scope, not future work authorized here. This session is IPD-branch documentation-only and cannot write IRR. A protected operation explicitly limited by another binding record must be evaluated against its exact record before execution; no blanket waiver is inferred.
+
+## J. Completed capabilities and preservation
+
+- Preserve historical v1.1 LTS and frozen snapshots and the v1.2 E2E-030 **13-engine certification** and CSIP within their documented historical scope. Do not rerun completed certification investigations absent contradictory evidence; new actual-data usage is not certified by transitivity.
+- Preserve IPD owner-bound portfolio list/get/history, revisions, security/owner guards, identity qualification and provider freshness. Do not duplicate persistence, infer issuer from symbol, or add endpoints without a demonstrated gap. No refresh endpoint, scheduler, timer or automatic refresh; preserve market-data service/cache/orchestrator and D02 unknown.
+- Preserve completed IID-0–6 and scoped operator policies, observation missingness, NP-04 durable versioning and NP-06 Reports. Do not rebuild them, mutate historical artifacts, invent source lineage, or assume each reassessment creates a version.
+- Keep CSIP, Screener and IID acceptance technically distinct. Keep reference/replay aliases honest, identity/investment coverage distinct, and macro/collaboration/settings/DHAN source boundaries intact.
+- Broker Import is an accepted separate baseline and excluded from investigation and delivery dependencies. IPD is `ramkivs/iips-production-market-data`, not the separate IPO Screening Engine. Production remains out of scope.
+
+## K. Overall current-portfolio experience acceptance
+
+The principal can accept the non-production personal capability based on an evidence package with reproducible tests and independent technical checks where feasible. Standing authority alone is not evidence that the work is done. All conditions apply:
+
+1. **Real revision and isolation:** reconcile **all holdings** in one captured, persisted owner-scoped portfolio revision, including inactive or otherwise excluded rows. Demonstrate revision consistency, empty vs unavailable and owner isolation/race behavior. A revision change during capture requires recapture of one persisted revision; never merge two revisions as one.
+2. **Complete holding census:** disclose total holdings, eligible, excluded, unresolved identity and withheld counts. Total = eligible + excluded, with each row assigned once. Unresolved and withheld are separately disclosed overlapping reason categories, not added to that partition. For **every** excluded or uncovered holding record the reason, its treatment and supporting evidence; authorized reports use non-identifying row tokens or sanitized aggregation. Exclusion is permitted only for an objectively documented, applicable scope rule established independently of coverage outcome (for example inactive rows if the approved analysis is active positions only); missing identity, financials, price or output is **not** an exclusion rule. Unknown eligibility blocks a complete census rather than being silently excluded.
+3. **Portfolio-wide qualified coverage:** calculate all identity, financial and analytical ratios for the same eligible population and captured revision using the methodology and hard thresholds below. Disclose each numerator, denominator, threshold, missing row reason and result; prove the evidence-based thresholds are met. One successful holding is necessary evidence for a specific real-issuer path but is never sufficient for portfolio-wide acceptance. Any unsupported/missing value remains uncovered, not a success.
+4. **Position and portfolio money:** reproduce position-level and portfolio-level monetary calculations using qualified quantities, currency, eligible IPD price/freshness and the W12 policy, showing source times, rounding, denominators and excluded/withheld amounts. Count weights are not monetary weights. Verify the included position values reconcile to the aggregate; an incomplete/unknown price or currency cannot be silently zeroed or presented as a complete portfolio total. Clearly disclose partial valuation and coverage; prove the mandatory θM portfolio-wide monetary coverage requirement before acceptance. If the exact whole-eligible-portfolio denominator is not reliably established, report actual monetary coverage UNKNOWN and block acceptance unless the independently evidenced conservative-bound test below proves θM is met.
+5. **Real analytical result:** qualified actual issuer observations produce compatible, substantive sector-engine outputs and meaningful portfolio/CSIP results meeting the portfolio-wide analytical threshold below; output lineage includes issuer inputs, engine/calibration and missingness. Frozen reference inputs do not silently fill gaps and no certification or coverage is claimed beyond proven scope.
+6. **IID and durable history:** actual issuer assessment and holding disposition bind subject and captured revision to source/policy/model/assessment evidence. Owner-scoped NP-04 report readback includes at least two legitimately distinct persisted versions and subsequent comparison; chain identity, source vs generation dates and non-version-producing attempts are represented honestly. Necessary artifact writes are outside this documentation pass.
+7. **Running application:** non-production browser/API evidence displays actual holdings and outputs, current/reference/degraded states, source times and incomplete/stale/unavailable data, with no silent reference fallback. Application startup alone is insufficient.
+8. **Preservation:** W19 verifies frozen assets, owner isolation, IID/NP-04/NP-06 and IPD freshness behavior after changes; W18 records scope for optional surfaces. The principal accepts only what evidence supports. A missing mandatory link or unmet coverage gate prevents acceptance.
+
+### Portfolio coverage methodology and hard acceptance thresholds
+
+**Population and census.** Let `T` be all holding rows in the one captured persisted revision; let `E` be the nonempty subset eligible under documented objective product-scope rules fixed before coverage is evaluated; let `X = T − E`. Do not remove ambiguous identity, missing/uncertain financials, stale or absent quotes, or withheld/no engine output from `E` merely to improve a ratio. Record revision and capture time, source identities/versions and per-row evidence securely; publish only sanitized counts/reasons. `|T| = |E| + |X|` must hold, each row must have a disposition, and `|E| = 0` gives **not applicable / W20 blocked**, never 100%.
+
+For all three hard coverage metrics below, the denominator is exactly `|E|`, not the number of resolved or selected holdings. Compute counts and exact ratios from the row-level evidence; round only for display and evaluate the unrounded ratio. Multiple positions in the same issuer count as separate portfolio holding rows: a shared issuer dataset may support each only if each position's own identity and applicable method are qualified.
+
+| Metric | Numerator: number of eligible holding rows meeting every stated condition | Hard acceptance threshold / present status |
+|---|---|---|
+| Identity | Exact security identity and eligible listing/series are qualified and traceably resolve to one issuer under applicable source versions; ambiguous/unresolved/unavailable rows are failures. | `identity numerator / eligible count ≥ θI`, where **θI is not yet established**. Block W20 until the evidence-based threshold process below produces and records a defensible numeric value and the observed ratio meets it. |
+| Financial | Identity passes, and qualified, rights-permitted issuer filings/dataset contain all mandatory validated financial inputs for the applicable analysis and period/basis; missing, unvalidated, inapplicable or withheld mandatory input is a failure, never zero. | `financial numerator / eligible count ≥ θF`; **θF not yet established**. Block W20 until established and met. |
+| Analytical | Identity and financial conditions pass, and an applicable engine actually produces a substantive validated output from qualified issuer-specific inputs, within required vintage/coverage and without reference substitution; withheld, failed, unavailable or merely structurally executable outputs are failures. | `analytical numerator / eligible count ≥ θA`; **θA not yet established**. Block W20 until established and met; at least one real output is necessary but not a portfolio threshold. |
+
+**Monetary coverage — mandatory θM gate.** For the same revision and eligible set `E`, choose and record a reporting currency `C` and valuation as-of instant `t`, with a documented alignment/freshness policy (including acceptable quote and FX observation ages and time zones). For each eligible holding `i`, exposure `Vᵢ` is the independently reproducible, non-negative gross monetary exposure in `C` at `t`: absolute revision quantity × qualified unit price × qualified conversion rate to `C` (rate 1 for the same currency), with instrument units and any applicable multiplier accounted for under W12. Do not net long and short values in a way that hides exposure. Record quantity/revision, security and price key, units, quote source/as-of/received/evaluated and IPD freshness/eligibility, FX pair/rate/source/as-of, applicable rights and conversion/rounding policy. Observations need not be simultaneous, but each must meet the documented `t` alignment/freshness policy; record actual timestamps, never call stale or unknown observations fresh. Use unrounded values for the gate and round only for presentation. Stored revision prices or weights alone do not establish an independently qualified current price.
+
+- **Numerator `N` — Qualified Covered Eligible Exposure:** sum `Vᵢ` only for eligible holdings that satisfy **all** identity, financial and substantive analytical qualifications in the table above **and** whose quantity, price, market-data freshness/eligibility, currency conversion and valuation are independently established and reproducible. An unresolved issuer, withheld financial or engine result, missing quantity/price, stale or otherwise unqualified quote, missing FX rate, currency mismatch or unverified position valuation contributes no covered exposure; disclose the reason, not a fabricated zero value.
+- **Denominator `D` — Total Eligible Portfolio Exposure:** sum `Vᵢ` for **every** eligible holding in `E`, regardless of identity, financial, valuation or analytical coverage. It is not the sum of only successfully valued or covered rows. Unresolved issuer mapping or withheld analysis can still have a reliable monetary value if the position and market-price key are independently evidenced; such value belongs in `D` but not `N`. Missing or unreliable quantity, price, FX, currency or independent position valuation means that row's exposure is unknown: it remains in `E` and cannot silently disappear from `D`. Exact `D` is reliable only when every eligible row has independently supported, reproducible valuation evidence under the same `C`/`t` policy, and the non-negative total is finite and strictly positive. The numerator is reliable only when each included row also meets every qualification above and its value is reproducible under that policy.
+- **Calculation and hard threshold:** `Monetary Coverage = Qualified Covered Eligible Exposure / Total Eligible Portfolio Exposure = N / D`. With reliable exact `N` and `D > 0`, W20 requires unrounded `N / D ≥ θM`; exact uncovered exposure is `D − N`, with reasons by eligible row. A zero or indeterminate denominator does not yield 100% or a pass. `θM` is presently **not established** and must be determined from actual evidence under the process below; no estimated threshold or coverage pass is invented.
+- **Unknown and conservative bound:** if exact whole-portfolio `D` cannot be reliably established, report actual monetary coverage **UNKNOWN**, not 100%, zero or an estimated pass; W20 remains blocked unless an independently evidenced finite conservative upper bound `U ≥ D > 0` includes **every** eligible holding and its uncertainty, in the same `C`/`t` policy. Evidence must support the bound for each unresolved position (including quantity, price and FX ranges as applicable), its source, time, assumptions and independent reproducibility; an unsupported guess, stale value treated as fresh, or covered-only sum is not a bound. With reliable exact `N`, `N / U` is a conservative **lower bound** on actual coverage. Only if `N / U ≥ θM` can the monetary gate pass on this bound; report actual ratio and exact `D` as UNKNOWN, label `U` and `N / U` as a bound, and report the conservative upper bound `U − N` for uncovered exposure, not as an exact amount. If the lower bound is below θM, the outcome is **BLOCKED / inconclusive**, not a demonstrated failure of the unknown actual ratio; if no defensible finite `U` exists, it is BLOCKED. Other W20 conditions still apply.
+- **Required result:** report `N`, exact `D` or UNKNOWN, `C`, `t`, exact coverage percentage or UNKNOWN, uncovered exposure and reasons (exact or explicitly bounded/unknown), `θM` or NOT ESTABLISHED, and PASS / FAIL / BLOCKED disposition. If the conservative test is used, also report `U`, the lower-bound percentage, method and supporting evidence. Exact reliable `N / D < θM` is FAIL; missing threshold, unknown exact coverage without a sufficient bound, absent evidence, a zero denominator, or an unknown denominator without a sufficient bound is BLOCKED. A successful lower-bound test is a gate PASS, not a claim that the actual ratio is known or that the product is accepted.
+
+**Threshold-setting and proof under standing authority:** W03–06 supply a permitted actual-revision census and per-row qualification/financial/quote evidence; W10–14 supply method-specific mandatory inputs, actual engine outcomes, feasible portfolio methodology and the consequences of omissions. Before evaluating W20 acceptance, use these observed distributions and the analytical purpose to record explicit numeric `θI`, `θF`, `θA`, and `θM`: state the absolute and value-weighted exposure left uncovered, materiality/concentration risks, reason each allowed gap is tolerable for the claimed use, treatment of unknown values, and how the threshold prevents a small successful subset from being represented as the whole portfolio. Establish the thresholds against that evidence and purpose, not merely to pass an observed result. A change after seeing the acceptance result requires a documented rationale and fresh evaluation against the unchanged eligible census; it must not silently relax a failed gate. The standing PA grant covers these in-scope decisions; no additional human approval cycle is introduced.
+
+**Currently insufficient evidence:** the audit has no actual revision/holding counts, eligible scope and exposures, per-row identity and financial coverage, available qualified prices, engine outputs, or quantified consequences of omitted holdings. Therefore no defensible numeric `θI`, `θF`, `θA` or `θM` can be asserted now. **W20 portfolio-wide acceptance is BLOCKED / NOT ACCEPTED** until those exact observations and justification exist, thresholds are recorded and the observed ratios, including the monetary coverage test against θM, meet them. This does not block the roadmap's existing read-only starts or change its readiness counts.
+
+**Informational metrics, not substitute gates:** also show total/excluded counts, each reason category and sector distribution, and, only when the relevant position values and a reliable total denominator are qualified, the monetary share represented by identity, financial, analytical and valuation coverage. If the full eligible value denominator or any eligible position value is unknown, report the exact value-weighted share as UNKNOWN, never 100% or zero by default; a separately labeled conservative bound may be used only as specified below. Informational percentages do not override the hard holding-count gates or the separately established monetary coverage requirement. Explicitly show all uncovered/excluded rows and whether each is withheld, excluded under a rule, or otherwise not evaluated; overlapping reason counts must not be summed as disjoint holdings.
+
+## L. Completeness and correction reconciliation
+
+- **Traceability:** all CL-01–CL-16, RA-01–RA-15 and GD-1–GD-7 map in section C to W01–W20. Each W item has status, type, predecessor, execution repository, deliverable, measurable evidence and readiness; decision authority and technical verification are defined once globally and apply to all. No known audit reference is unmapped.
+- **Overlapping audit work deliberately split:** host identity coverage W04 versus contract bridge W08; race investigation W02 versus consumer W09; financial rights W05, issuer semantics W07, input mapping W10 and engine execution W11; methodology W12, position valuation W13 and aggregation W14; IID linkage W15 versus report lineage W16; core presentation W17 versus other surface scope W18; regression W19 versus real-holder acceptance W20. These are distinct evidence outcomes, not separate approval ceremonies.
+- **Audit A–D:** portfolio/isolation W02/W09; identity/fundamentals W04–08; 13 engines/CSIP/IID W10–15; report persistence/staleness W15–16. **E–I:** authority W01, preserved certification W19, routes W17–18, reference/provenance W16–19. **J–M:** actual host W03–06, concurrency W02/W09, GD decisions above, real-issuer links W04–16/W20. **N–O:** all closure and remaining limitations map to section C and blockers. W09/W13/W14/W17/W20 explicitly cover integration steps distributed across audit rows, not newly assumed capabilities.
+- **Corrections:** the earlier roadmap erroneously treated ordinary decision authority and separate human verifiers as missing; this document supersedes that interpretation under the established standing grant. Audit owner labels were proposals and do not displace the principal. The earlier fixture-test permission does not override this task's read-only restriction. Historic source records, including record-specific acts and dates, are not silently rewritten. IRR main advanced to `c78a8024cd34004ec52f5dcff294ac5b1bbc106d`; cited authority record blobs were individually verified unchanged, but the technical audit baselines were not re-audited at that later head.
+- **Four distinct states:** **ROADMAP COMPLETE** means mapped and dependency-ordered; **AUTHORIZATION ESTABLISHED** means the recorded standing grant applies within scope, not external permissions or proof of action; **EXECUTION READY** currently applies only to the seven read-only starts under this task, not blocked implementation or full delivery; **PRODUCT ACCEPTED: NO**, pending K evidence and principal acceptance. Unknown future discoveries may add genuine technical or external blockers, never speculative approval cycles.
