@@ -48,7 +48,8 @@ export type IpcOperation =
   | 'portfolio.create'
   | 'portfolio.save'
   | 'portfolio.reset'
-  | 'portfolio.delete';
+  | 'portfolio.delete'
+  | 'portfolio.importBroker';
 
 export const IPC_READ_OPERATIONS: readonly IpcOperation[] = [
   'portfolio.list',
@@ -60,6 +61,7 @@ export const IPC_WRITE_OPERATIONS: readonly IpcOperation[] = [
   'portfolio.save',
   'portfolio.reset',
   'portfolio.delete',
+  'portfolio.importBroker',
 ];
 export const IPC_OPERATIONS: readonly IpcOperation[] = [...IPC_READ_OPERATIONS, ...IPC_WRITE_OPERATIONS];
 export const IPC_RESERVED_OPERATIONS: readonly string[] = ['portfolio.analytics'];

@@ -482,7 +482,7 @@ describe('CAP-02 Increment A — T-PKG-6: write denial unchanged', () => {
       'the write set is no longer refused before dispatch',
     );
     assert.ok(
-      gateBlock.indexOf("'WRITE_NOT_AUTHORIZED'") < gateBlock.indexOf('switch (envelope.op)'),
+      dispatch.indexOf("'WRITE_NOT_AUTHORIZED'", gateIndex) < dispatch.indexOf('options.brokerImportConsumer', gateIndex),
       'the refusal must precede operation dispatch',
     );
     const protocol = readFileSync(resolve(REPO_ROOT, 'src/ipc/protocol.ts'), 'utf8');

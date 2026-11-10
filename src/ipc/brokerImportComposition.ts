@@ -28,7 +28,7 @@
  *     retained evidence artifact.
  *   - It does not authorize a write. Gate E W-1(3)/W-1(4) are unchanged, so the
  *     consumer still refuses every import with `WRITE_NOT_AUTHORIZED`.
- *   - It does not add an IPC operation, route or caller surface.
+ *   - It does not itself register an IPC operation, route or caller surface.
  */
 import type { SecurityMaster } from '../identity/security_master.js';
 import { getGovernedBroadSecurityMaster } from '../identity/governed_fixture_master.js';

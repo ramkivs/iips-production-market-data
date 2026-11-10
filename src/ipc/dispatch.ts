@@ -20,6 +20,8 @@
  */
 import type { DatabaseSync } from 'node:sqlite';
 import type { Socket } from 'node:net';
+import type { BrokerImportConsumer } from './brokerImportConsumer.js';
+import type { BrokerImportRequest } from '../contracts/broker_import_ipc.js';
 import {
   ClassPError,
   classAFrame,
@@ -76,6 +78,8 @@ export interface ConnectionHandlerOptions {
    * (never from the request); defaults to the process environment.
    */
   readonly env?: NodeJS.ProcessEnv;
+  /** The single consumer composed by the entrypoint, never constructed here. */
+  readonly brokerImportConsumer?: BrokerImportConsumer;
 }
 
 function refuseClassP(socket: Socket, reason: ClassPReason, detail: string): void {
@@ -277,6 +281,29 @@ function executeLocalPersonalWrite(
   }
 }
 
+/** Validate untrusted wire structure before passing it to the existing consumer. */
+function brokerImportRequest(value: Record<string, unknown>): BrokerImportRequest {
+  const allowed = ['portfolioId', 'expectedRevision', 'holdings', 'contentDigest', 'fileName', 'sourceBroker', 'importedAt', 'mode'];
+  const holdingKeys = ['symbol', 'isin', 'exchange', 'series', 'quantity', 'averageBuyPrice', 'currentPrice', 'marketValue', 'weightPercentage', 'active', 'sourceBroker', 'lineageDigest'];
+  const invalid = () => { throw new InvalidPortfolioRequestError('invalid broker import payload'); };
+  if (Object.keys(value).some(k => !allowed.includes(k)) || typeof value.portfolioId !== 'string' || !PERSONAL_PORTFOLIO_ID_PATTERN.test(value.portfolioId) ||
+      !Number.isSafeInteger(value.expectedRevision) || (value.expectedRevision as number) < 0 ||
+      !Array.isArray(value.holdings) || value.holdings.length === 0 ||
+      !['contentDigest', 'fileName', 'sourceBroker', 'importedAt'].every(k => typeof value[k] === 'string' && (value[k] as string).trim().length > 0) ||
+      (value.mode !== undefined && value.mode !== 'MERGE' && value.mode !== 'REPLACE')) invalid();
+  for (const raw of value.holdings as unknown[]) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) invalid();
+    const h = raw as Record<string, unknown>;
+    if (Object.keys(h).some(k => !holdingKeys.includes(k)) ||
+        !['symbol', 'sourceBroker', 'lineageDigest'].every(k => typeof h[k] === 'string' && (h[k] as string).trim().length > 0) ||
+        !['quantity', 'averageBuyPrice', 'currentPrice', 'marketValue', 'weightPercentage'].every(k => typeof h[k] === 'number' && Number.isFinite(h[k])) ||
+        typeof h.active !== 'boolean' ||
+        (h.isin !== undefined && typeof h.isin !== 'string') || (h.series !== undefined && typeof h.series !== 'string') ||
+        (h.exchange !== undefined && h.exchange !== 'NSE' && h.exchange !== 'BSE')) invalid();
+  }
+  return value as unknown as BrokerImportRequest;
+}
+
 export function createConnectionHandler(
   db: DatabaseSync,
   options: ConnectionHandlerOptions = {},
@@ -466,6 +493,11 @@ export function createConnectionHandler(
         let result: unknown;
         if ((IPC_WRITE_OPERATIONS as readonly string[]).includes(envelope.op)) {
           if (!writeGuard.authorized) { await writeGuarded(classAFrame(envelope.op, 'WRITE_NOT_AUTHORIZED', requestId)); return; }
+          if (envelope.op === 'portfolio.importBroker') {
+            if (!options.brokerImportConsumer) { await writeGuarded(classAFrame(envelope.op, 'UNAVAILABLE', requestId, 'broker import is unavailable')); return; }
+            const outcome = options.brokerImportConsumer(owner, brokerImportRequest(payload));
+            await writeGuarded(successFrame(envelope.op, outcome, requestId)); return;
+          }
           const receipt = executeLocalPersonalWrite(store, owner, envelope);
           await writeGuarded(successFrame(envelope.op, receipt, requestId)); return;
         }

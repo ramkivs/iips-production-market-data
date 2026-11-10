@@ -16,7 +16,7 @@
  *   - It is NOT a second product host and NOT an application shell. The IPD `frontend/src/app/**`
  *     shell and `PortfolioWorkspace` are deliberately NOT exported (CAP-02 U0 decision, item 2).
  *   - It carries NO owner, tenant, principal, credential or authorization-scope parameter, and it
- *     exposes nothing from `src/ipc/**` or `src/persistence/**`. Durable persistence, SQLite, binding
+ *     exposes no runtime implementation from `src/ipc/**` or `src/persistence/**`. Durable persistence, SQLite, binding
  *     resolution, the IPC wire contract and the write gate stay IPD-internal and server-side, out of
  *     every browser-facing import graph (verified by `tests/portfolio_ui_package.test.ts`).
  *   - It grants no write and claims no durability. The only shipped port implementation declares
@@ -156,3 +156,6 @@ export type {
 export { getGovernedBroadSecurityMaster } from '../../src/identity/governed_fixture_master.js';
 export { IdentityAmbiguityError } from '../../src/identity/quarantine.js';
 export type { IdentityQuarantineRecord } from '../../src/identity/quarantine.js';
+
+// Browser-safe type-only contract; the IPC transport and implementation remain server-side.
+export type { BrokerImportIpcOperation, BrokerImportIpcRequest, BrokerImportIpcResponse, BrokerImportHolding, BrokerImportRequest, BrokerImportOutcome, BrokerImportSuccess, BrokerImportRefusal, BrokerImportOutcomeUnknown, BrokerImportRefusalCode, BrokerImportRefusedHolding } from '../contracts/broker_import_ipc.js';

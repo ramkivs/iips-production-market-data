@@ -2,8 +2,8 @@
  * The broker-import consumer surface: one callable plus its construction.
  *
  * It deliberately exposes only what the O5-A act authorizes. The consumer is
- * reachable from exactly one composed call site in `entrypoint.ts` and is not
- * an IPC operation.
+ * constructed at one call site in `entrypoint.ts` and injected into the
+ * authenticated, owner-bound local IPC dispatch path.
  *
  * AUTHORIZATION (2026-11-09)
  *   The write gate is unchanged and still decides. What changed is that the

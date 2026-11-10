@@ -268,7 +268,7 @@ describe('q1 / O5-A durable broker-import consumer', () => {
       assert.ok(/persistBrokerImport\(/.test(source), 'the consumer must delegate to the durable leg');
     });
 
-    it('keeps the guard hard-false and the closed IPC operation set unchanged', () => {
+    it('keeps the default-deny guard and bounded IPC operation set', () => {
       const guard = evaluatePortSaveGuard();
       assert.equal(guard.authorized, false);
       assert.deepEqual(guard.reasons, [
@@ -279,9 +279,9 @@ describe('q1 / O5-A durable broker-import consumer', () => {
       assert.deepEqual([...IPC_READ_OPERATIONS].sort(), ['portfolio.get', 'portfolio.list', 'portfolio.revisions']);
       assert.deepEqual(
         [...IPC_WRITE_OPERATIONS].sort(),
-        ['portfolio.create', 'portfolio.delete', 'portfolio.reset', 'portfolio.save'],
+        ['portfolio.create', 'portfolio.delete', 'portfolio.importBroker', 'portfolio.reset', 'portfolio.save'],
       );
-      assert.equal(IPC_OPERATIONS.length, 7, 'no new operation was added');
+      assert.equal(IPC_OPERATIONS.length, 8);
       assert.deepEqual([...IPC_RESERVED_OPERATIONS], ['portfolio.analytics']);
       assert.ok(!(IPC_OPERATIONS as readonly string[]).includes('portfolio.analytics'));
 
@@ -297,9 +297,10 @@ describe('q1 / O5-A durable broker-import consumer', () => {
       assert.ok(protocolSource.includes('IPC_REFUSED_WIRE_KEYS'), 'the C7 caller-authority refusal list changed');
     });
 
-    it('is unreachable from the IPC dispatch path — no operation, route or caller change', () => {
+    it('dispatches the injected consumer only after the write guard', () => {
       const dispatchSource = stripComments(readRepoSource('src/ipc/dispatch.ts'));
-      for (const token of ['brokerImportConsumer', 'createBrokerImportConsumer', 'submitBrokerImport', 'persistBrokerImport']) {
+      assert.ok(dispatchSource.includes('options.brokerImportConsumer'));
+      for (const token of ['createBrokerImportConsumer', 'submitBrokerImport', 'persistBrokerImport']) {
         assert.ok(!dispatchSource.includes(token), `dispatch.ts must not reach the consumer: ${token}`);
       }
       // The refusal branch is still present and still precedes dispatch.
@@ -307,7 +308,7 @@ describe('q1 / O5-A durable broker-import consumer', () => {
       assert.ok(gateIndex >= 0, 'the write-set gate disappeared from the dispatch path');
       const gateBlock = dispatchSource.slice(gateIndex, gateIndex + 400);
       assert.ok(gateBlock.includes("'WRITE_NOT_AUTHORIZED'"), 'the write set is no longer refused');
-      assert.ok(gateBlock.indexOf("'WRITE_NOT_AUTHORIZED'") < gateBlock.indexOf('switch (envelope.op)'), 'the refusal must precede operation dispatch');
+      assert.ok(gateBlock.indexOf("'WRITE_NOT_AUTHORIZED'") < gateBlock.indexOf('options.brokerImportConsumer'), 'the refusal must precede operation dispatch');
 
       const entrypointSource = stripComments(readRepoSource('src/ipc/entrypoint.ts'));
       const callSites = entrypointSource.split('createBrokerImportConsumer(').length - 1;

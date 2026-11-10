@@ -32,6 +32,8 @@ import {
   type PortfolioPortSaveOutcome,
   type PortfolioPortSaveOutcomeUnknown,
   type PortfolioStorePort,
+  type BrokerImportIpcRequest,
+  type BrokerImportIpcResponse,
 } from 'iips-production-market-data/portfolio-ui';
 import {
   MarketDataTransportClient,
@@ -41,6 +43,11 @@ import {
   type MarketDataTransportQuoteOutcome,
   type QuoteRequest,
 } from 'iips-production-market-data/dhan-server';
+
+// Compile the browser-safe IPC contract from the installed public subpath.
+const ipcRequest: BrokerImportIpcRequest = { v: 1, op: 'portfolio.importBroker', payload: { portfolioId: 'TEST', expectedRevision: 0, holdings: [], contentDigest: 'digest', fileName: 'file', sourceBroker: 'fixture', importedAt: '2026-11-09T00:00:00.000Z' } };
+const ipcResponse: BrokerImportIpcResponse = { v: 1, op: ipcRequest.op, ok: false, outcome: 'WRITE_NOT_AUTHORIZED' };
+if (ipcResponse.outcome !== 'WRITE_NOT_AUTHORIZED') throw new Error('IPC contract mismatch');
 
 function check(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);

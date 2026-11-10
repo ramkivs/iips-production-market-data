@@ -61,10 +61,8 @@ export interface StartupOutcome {
   /**
    * O5-A (PA act `IIPS-V3-O05-PRODUCTION-CONSUMER-PA-DECISION-2026-10-30-01`
    * clause 1(b)): the durable broker-import consumer this process constructed
-   * over its own handle. Present on success only. Its every write attempt is
-   * refused by the frozen Gate E W-1 conjunction with zero store effect; it
-   * exists to make the durable leg reachable from shipped code, not to enable a
-   * write. Nothing dispatches to it.
+   * over its own handle. Present on success only. It remains subject to the
+   * existing server-owned local authorization guard and default-deny policy.
    *
    * Stage 4: this consumer is composed with the governed P04 security master
    * and retained P7 instrument registry, so importing holdings qualifies each
@@ -162,8 +160,7 @@ export async function startIpcServer(options: StartupOptions = {}): Promise<Star
   //
   // Construction opens no file other than the retained P7 qualification
   // manifest, begins no transaction and writes nothing. The consumer still
-  // refuses every import at the write-gate boundary: composing qualification
-  // does not authorize a write, and no route, endpoint or operation is added.
+  // remains subject to the existing write gate; qualification does not authorize a write.
   let brokerImportConsumer: BrokerImportConsumer;
   let brokerImportIdentity: BrokerImportIdentityProvenance;
   try {
@@ -197,7 +194,7 @@ export async function startIpcServer(options: StartupOptions = {}): Promise<Star
     // pipe breaks, so the pipe transport settles via the flush guard; AF_UNIX
     // keeps the airtight half-close gate.
     const settlement = settlementPolicyForEndpoint(target);
-    const handle: IpcHandle = await listenIpc(target, createConnectionHandler(db, { settlement, env }), {
+    const handle: IpcHandle = await listenIpc(target, createConnectionHandler(db, { settlement, env, brokerImportConsumer }), {
       platform,
       ...(options.serverFactory ? { serverFactory: options.serverFactory } : {}),
     });
