@@ -143,7 +143,15 @@ function Get-RetainedMetadata {
             }
             if ($Key -eq 'trailingData' -and $Raw -is [bool]) { $Result.trailingData = $Raw }
             if (@('connectedAt','writeAt','closedAt') -contains $Key) { $Result[$Key] = Get-SafeTimestamp $Raw }
-            if (@('commit','headCommit','buildCommit') -contains $Key -and $Raw -is [string] -and $Raw -cmatch '^[0-9a-f]{40}$') { $Result.claimedCommit = $Raw }
+            if (@('commit','headCommit','buildCommit') -contains $Key -and $Raw -is [string] -and $Raw -cmatch '^[0-9a-f]{40}$') {
+                $ClaimHasher = [System.Security.Cryptography.SHA256]::Create()
+                try {
+                    $ClaimDigest = [BitConverter]::ToString($ClaimHasher.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($Raw))).Replace('-', '')
+                    $ClaimHasher.Dispose()
+                }
+                catch { $ClaimHasher.Dispose(); throw }
+                $Result.claimedCommit = [ordered]@{ matchesIncidentSource = ($Raw -ceq '29a789a07132c03ebb43bdfa862d113b04f4d924'); sha256OfClaim = $ClaimDigest }
+            }
             if (($Raw -is [System.Array] -or $Raw -is [System.Management.Automation.PSCustomObject]) -and $Queue.Count -lt 512) { $Queue.Enqueue(@{ value = $Raw; depth = ($Entry.depth + 1) }) }
         }
     }

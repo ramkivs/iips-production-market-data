@@ -85,7 +85,9 @@ Collected evidence:
   are suppressed, NOT regex-redacted and then dumped.
 - Allowlisted retained JSON metadata: v/op, request ID TYPE, depth-tagged nested key
   names (unrecognized names redacted), recorded frame lengths, trailing-data flag,
-  recorded connection/write/close ISO timestamps, claimed build commit. Claims
+  recorded connection/write/close ISO timestamps, and a digest of a claimed build
+  commit plus whether it matches the incident source. Raw untrusted commit values
+  are suppressed too (a secret could resemble a commit hash). Claims
   are uncorrelated, not verified loaded-artifact provenance. Missing fields are
   null/UNAVAILABLE; no request or frame bytes are reconstructed or replayed.
 

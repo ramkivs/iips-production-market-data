@@ -88,7 +88,7 @@ function fixture() {
   for (const name of artifactNames) { const path = join(repo, 'dist', 'src', name); mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, '// synthetic artifact, never executed\n'); }
   const file = join(logs, 'irr-transport.err.log');
   writeFileSync(file, '2026-11-11T16:27:51Z ipc-class-p-refusal token=CANARY_SECRET_9981\nBINDING_INVALID password=CANARY_SECRET_9981\n');
-  writeFileSync(join(logs, 'ipc-request.json'), JSON.stringify({ v: 1, op: 'portfolio.importBroker', requestId: 'CANARY_SECRET_9981', payload: { holdings: [{ symbol: 'CANARY_SECRET_9981', companyId: 'CANARY_SECRET_9981', CANARY_SECRET_9981: 'CANARY_SECRET_9981' }] }, metadata: { declaredLength: 123, actualUtf8Length: 123, trailingData: false, connectedAt: '2026-11-11T16:27:51Z' }, token: 'CANARY_SECRET_9981' }));
+  writeFileSync(join(logs, 'ipc-request.json'), JSON.stringify({ v: 1, op: 'portfolio.importBroker', requestId: 'CANARY_SECRET_9981', payload: { holdings: [{ symbol: 'CANARY_SECRET_9981', companyId: 'CANARY_SECRET_9981', CANARY_SECRET_9981: 'CANARY_SECRET_9981' }] }, buildCommit: '1234567890abcdef1234567890abcdef12345678', metadata: { declaredLength: 123, actualUtf8Length: 123, trailingData: false, connectedAt: '2026-11-11T16:27:51Z' }, token: 'CANARY_SECRET_9981' }));
   return { root, repo, logs, output, file };
 }
 function command(f, extra = '', mock = '') {
@@ -108,7 +108,7 @@ test('native synthetic collection: redaction, metadata, hashes, rerun no overwri
       assert.ok(!result.stdout.includes('CANARY_SECRET_9981'));
     }
     const all = reports(f); assert.equal(all.length,2);
-    const text=JSON.stringify(all); assert.ok(!text.includes('CANARY_SECRET_9981'));
+    const text=JSON.stringify(all); assert.ok(!text.includes('CANARY_SECRET_9981')); assert.ok(!text.includes('1234567890abcdef1234567890abcdef12345678'));
     const r=all[0]; assert.equal(r.state,'COLLECTION_COMPLETE_NOT_INCIDENT_RESOLVED');
     assert.equal(r.artifacts.length,11); assert.equal(r.processes[0].pid,14484);
     const m=r.logs.find(x=>x.retainedMetadata)?.retainedMetadata;
