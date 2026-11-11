@@ -8,7 +8,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { ensureMigrations } from '../src/persistence/migration_ledger.js';
 import { GATE3_MIGRATIONS, startIpcServer } from '../src/ipc/entrypoint.js';
 import { createConnectionHandler } from '../src/ipc/dispatch.js';
-import { listenIpc, resolveEndpointTarget } from '../src/ipc/endpoint.js';
+import { closeDatabase } from '../src/persistence/connection.js';
+import { listenIpc, resolveEndpointTarget, settlementPolicyForEndpoint } from '../src/ipc/endpoint.js';
 import type { BrokerImportRequest, BrokerImportOutcome } from '../src/contracts/broker_import_ipc.js';
 
 const req: BrokerImportRequest = { portfolioId:'BROKER-IPC', expectedRevision:0, contentDigest:'abc123', fileName:'holdings.csv', sourceBroker:'DHAN', importedAt:'2026-11-09T12:00:00.000Z', holdings:[{symbol:'INFY',isin:'INE009A01021',exchange:'NSE',quantity:5,averageBuyPrice:1500,currentPrice:1600,marketValue:8000,weightPercentage:100,active:true,sourceBroker:'DHAN',lineageDigest:'lineage'}] };
@@ -35,20 +36,20 @@ test('real Stage 4 IPC commit, refusal, duplicate and retrieval', async () => {
   const duplicate=await call(path,'portfolio.importBroker',{...req,expectedRevision:1}); assert.equal(duplicate?.result.disposition,'ALREADY_IMPORTED_NO_OP'); assert.equal(duplicate?.result.revision,1);
   const get=await call(path,'portfolio.get',{portfolioId:req.portfolioId}); assert.equal(get?.ok,true); assert.equal(get?.result.revision,1); assert.equal(get?.result.holdings.length,1); assert.equal(get?.result.holdings[0].securityIdentity.securityId,'ISIN:INE009A01021:EQ');
   assert.equal((await call(path,'portfolio.importBroker',{...req,owner:'spoof'})),null);
- } finally { await started.handle!.stop(); db.close(); rmSync(root,{recursive:true,force:true}); }
+ } finally { await started.handle!.stop(); closeDatabase(); db.close(); rmSync(root,{recursive:true,force:true}); }
 });
 
 test('IPC requires binding and authorization; missing operation and exceptions fail closed', async () => {
  const root=mkdtempSync(join(tmpdir(),'stage4-guard-')); const db=new DatabaseSync(':memory:'); ensureMigrations(db,GATE3_MIGRATIONS);
  const target=resolveEndpointTarget({IIPS_G2_IPC_ENDPOINT:'test',IIPS_G3_LOCAL_STATE_DIR:join(root,'state')},process.platform);
  let calls=0; const stub=() => {calls++; throw new Error('SECRET');};
- let server=await listenIpc(target,createConnectionHandler(db,{env:{IIPS_LOCAL_PERSONAL_USE:'1'},brokerImportConsumer:stub}));
+ let server=await listenIpc(target,createConnectionHandler(db,{settlement:settlementPolicyForEndpoint(target),env:{IIPS_LOCAL_PERSONAL_USE:'1'},brokerImportConsumer:stub}));
  try { assert.equal(await call(target.path,'portfolio.importBroker',req),null); assert.equal(calls,0); } finally {await server.stop();}
  seed(db);
- server=await listenIpc(target,createConnectionHandler(db,{env:{},brokerImportConsumer:stub}));
+ server=await listenIpc(target,createConnectionHandler(db,{settlement:settlementPolicyForEndpoint(target),env:{},brokerImportConsumer:stub}));
  try { assert.equal((await call(target.path,'portfolio.importBroker',req))?.outcome,'WRITE_NOT_AUTHORIZED'); assert.equal(calls,0); } finally {await server.stop();}
- server=await listenIpc(target,createConnectionHandler(db,{env:{IIPS_LOCAL_PERSONAL_USE:'1'}}));
+ server=await listenIpc(target,createConnectionHandler(db,{settlement:settlementPolicyForEndpoint(target),env:{IIPS_LOCAL_PERSONAL_USE:'1'}}));
  try {assert.equal((await call(target.path,'portfolio.importBroker',req))?.outcome,'UNAVAILABLE');} finally {await server.stop();}
- server=await listenIpc(target,createConnectionHandler(db,{env:{IIPS_LOCAL_PERSONAL_USE:'1'},brokerImportConsumer:stub}));
+ server=await listenIpc(target,createConnectionHandler(db,{settlement:settlementPolicyForEndpoint(target),env:{IIPS_LOCAL_PERSONAL_USE:'1'},brokerImportConsumer:stub}));
  try {const result=await call(target.path,'portfolio.importBroker',req); assert.equal(result?.outcome,'UNAVAILABLE'); assert.ok(!JSON.stringify(result).includes('SECRET')); assert.equal(calls,1);} finally {await server.stop(); db.close(); rmSync(root,{recursive:true,force:true});}
 });

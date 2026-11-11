@@ -163,7 +163,9 @@ independent concurrent process writers; injected pre-fsync and post-publication 
 missing paths; unsafe modes/configuration; corrupt/untrusted records; nonmutating viewer;
 and Class P zero-wire-byte behavior. Adjacent existing framing (including emulated
 Windows flush guards), startup, C7, write-gate Class A, and Stage 4 IPC tests are targeted.
-The dedicated workflow runs these targets on Ubuntu and native Windows; local Linux
+The Stage 4 test harness closes its startup-owned SQLite handle before cleanup and
+uses endpoint-selected settlement for manually constructed handlers, matching normal
+startup on native Windows. The dedicated workflow runs these targets on Ubuntu and native Windows; local Linux
 results must not be described as native Windows evidence.
 
 Local checks: `npm run build:tsc`; the six targeted compiled test files (176 tests,
