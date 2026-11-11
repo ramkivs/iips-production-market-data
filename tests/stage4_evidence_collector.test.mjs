@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, readdirSync, statSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, readdirSync, statSync, rmSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -82,7 +82,7 @@ test('native Windows PowerShell 5.1 parser accepts script', { skip: !windows }, 
 
 const artifactNames = ['ipc/entrypoint.js','ipc/dispatch.js','ipc/protocol.js','ipc/endpoint.js','ipc/brokerImportConsumer.js','ipc/brokerImportComposition.js','persistence/brokerImportPersistence.js','persistence/durablePortfolioStorePort.js','persistence/localSingleUserAuthorization.js','persistence/portfolio_store.js','persistence/binding.js'];
 function fixture() {
-  const root = mkdtempSync(join(tmpdir(), 'ipd-evidence-test-'));
+  const root = realpathSync.native(mkdtempSync(join(tmpdir(), 'ipd-evidence-test-')));
   const repo = join(root, 'repo'); const logs = join(root, 'logs'); const output = join(root, 'ipd-stage4-evidence');
   mkdirSync(logs); mkdirSync(output);
   for (const name of artifactNames) { const path = join(repo, 'dist', 'src', name); mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, '// synthetic artifact, never executed\n'); }
@@ -93,7 +93,7 @@ function fixture() {
 }
 function command(f, extra = '', mock = '') {
   const entry = join(f.repo, 'dist', 'src', 'ipc', 'entrypoint.js');
-  const fake = `function global:Get-CimInstance { param($ClassName,$Filter) Write-Host ('SYNTHETIC_EXPECTED=' + ${quote(entry)}); Write-Host ('SYNTHETIC_COMMAND=' + ('node.exe ' + [char]34 + ${quote(entry)} + [char]34)); if($Filter -eq 'ProcessId=1'){return [pscustomobject]@{ProcessId=1;Name='powershell.exe';CreationDate=[datetime]'2026-11-11T15:00:00Z'}}; return [pscustomobject]@{ProcessId=14484;ParentProcessId=1;CreationDate=[datetime]'2026-11-11T16:00:00Z';ExecutablePath='C:\\Windows\\node.exe';CommandLine=('node.exe ' + [char]34 + ${quote(entry)} + [char]34 + ' --secret=CANARY_SECRET_9981')} };`;
+  const fake = `function global:Get-CimInstance { param($ClassName,$Filter) if($Filter -eq 'ProcessId=1'){return [pscustomobject]@{ProcessId=1;Name='powershell.exe';CreationDate=[datetime]'2026-11-11T15:00:00Z'}}; return [pscustomobject]@{ProcessId=14484;ParentProcessId=1;CreationDate=[datetime]'2026-11-11T16:00:00Z';ExecutablePath='C:\\Windows\\node.exe';CommandLine=('node.exe ' + [char]34 + ${quote(entry)} + [char]34 + ' --secret=CANARY_SECRET_9981')} };`;
   return `${fake}${mock} & ${quote(script)} -RepositoryRoot ${quote(f.repo)} -LogDirectories ${quote(f.logs)} -OutputDirectory ${quote(f.output)} ${extra}; exit $LASTEXITCODE`;
 }
 function reports(f) { return readdirSync(f.output).map(x => JSON.parse(readFileSync(join(f.output,x),'utf8'))); }
