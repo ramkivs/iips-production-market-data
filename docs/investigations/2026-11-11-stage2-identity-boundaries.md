@@ -214,25 +214,48 @@ W07 is a historical register position, not a measurement of these 64 holdings.
 The collector hardcodes the cited statuses; this run did not recertify them.
 IRR's pinned evidence records establish the outstanding closure requirements:
 
-- **L-038 (Marico)**: residual debt-component period alignment requires a register-
-  owner decision about anchoring to an earlier complete annual instant and its
-  payload/valuation labels; the cash-side period-alignment contract also needs an
-  explicit policy disposition. Preference capital still needs a primary filing
-  showing issued/paid-up preference amount or admissible explicit nil disclosure.
-  An authorised-capital table or omission is not issued-capital/nil evidence.
-  Earlier-period complete arithmetic alone does not close the limitation.
-- **L-039 (KEC)**: a primary filing with a current-investments amount; or admissible
-  explicit nil disclosure **and** an authorised cash-aggregation nil treatment;
-  or a register-owner governed grammar decision distinguishing absent caption
-  from NOT_REPORTED. Cash/bank balances, noncurrent investments, omission and
-  company name are not substitutes. No silent zero is permitted.
+- **L-038 (Marico)**: read the latest register §§17.23–17.24, not just
+  the earlier residual docket. The owner decisions have **already been made**:
+  strict same-instant debt is retained (no earlier-period fallback), and cash-side
+  and debt-versus-cash same-instant guards were implemented. Those are not pending
+  decisions to reopen. The remaining preference-capital evidence is still
+  MISSING/NOT_REPORTED after three audited consolidated reports and the formerly
+  unread share-capital page were examined. Closure needs an admissible audited
+  consolidated issued-preference-capital amount, explicit nil/absence statement,
+  redemption schedule or exhaustive class-of-shares wording with source provenance.
+  Authorised capital, equity-only wording, omitted captions, arithmetic residuals
+  and prior-year carry-forward do not supply it. Published period-mismatch
+  refusals remain intact; settling a policy does not produce a computable number.
+- **L-039 (KEC)**: latest register §17.25 includes a **real reported machine zero**,
+  not merely an absent caption: audited consolidated 2026-03-31 XBRL
+  CurrentInvestments=0. The fact-level follow-up resolved context/INR/instant/no
+  dimensions, but concluded **outcome C, indeterminate source semantics**. Precision
+  is decimals=-7 (₹1 crore accuracy); it is not proof of exact economic zero.
+  The relative taxonomy entry point returned 404; definitions, labels, schema-
+  default dimensions and presentation remain unverified. Standalone and
+  September zeros do not prove template-default filling. Neither issuer economic
+  zero nor template default has been established, and no mapping is authorised.
+  Needed: independently verified issuer/exchange correspondence and taxonomy/
+  rendering semantics for that fact, with owner adjudication, or a separately
+  disclosed same-instant consolidated amount. A verified numeric zero can be
+  PRESENT; do not reject it merely for being zero. A nil-disclosure route is
+  distinct and still requires admissible wording and governed cash-aggregation
+  treatment. Never substitute bank balances, noncurrent assets, silence or a
+  residual. The original MISSING/NOT_REPORTED and OPEN status remain unchanged.
 - **L-040** remains RESOLVED as supplied/pinned; do not edit its historical payload.
 
-Authoritative inspected records (IRR pin):
-`evidence/real-issuer/WI7-L038-RESIDUAL-2026-11-08/determination-l038-residual.json`
-and `evidence/real-issuer/WI8-L039-CASH-SIDE-2026-11-07/determination-l039.json`.
-These are required evidence/policy actions in their owning workstreams, not
-permission to change certification here.
+Authoritative latest inspected records at the IRR pin:
+
+- `docs/integration/IIPS_V3_IID_LIMITATION_AND_COVERAGE_REGISTER_2026-11-06.md`
+  §§17.23, 17.24, 17.25 including the fact-level follow-up.
+- `evidence/WI11-L038-CONTRACT-DECISION-2026-11-08/decision-owner-authorization.json`.
+- `evidence/real-issuer/WI12-L038-PREFERENCE-CAPITAL-2026-11-08/determination.json`.
+- `evidence/real-issuer/WI12-L039-CURRENT-INVESTMENTS-2026-11-05/determination.json`.
+
+The earlier WI7 residual and WI8 cash-side determinations were also read but are
+not used to resurrect policy questions or fact-context gaps closed by these later
+entries. These findings identify owned evidence/adjudication actions; they do not
+change certification here. No new external filing retrieval was performed.
 
 ## 7. Tests and implementation disposition
 
