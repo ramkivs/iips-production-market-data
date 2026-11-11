@@ -30,23 +30,43 @@ function GetLocal([int]$port,[string]$path,[hashtable]$headers=@{}) {
 function PostIdentity([int]$port,[hashtable]$headers,[hashtable]$body) {
   try { return Invoke-RestMethod -Uri "http://127.0.0.1:$port/v1/identity/resolve" -Method Post -Headers $headers -ContentType 'application/json' -Body ($body | ConvertTo-Json -Compress) -TimeoutSec 10 -MaximumRedirection 0 -NoProxy } catch { return $null }
 }
+$script:PipeOutcomes=@{}
 function PipeRead([string]$op,[string]$id='') {
   # The server's named-pipe flush guard permits one request and answers before close.
+  $script:PipeOutcomes[$op]='ENDPOINT_NOT_CONFIGURED'
   if ([string]::IsNullOrWhiteSpace($PipeName)) { return $null }
   $name=$PipeName
   if ($name.StartsWith('\\.\pipe\')) { $name=$name.Substring(9) }
+  $script:PipeOutcomes[$op]='ENDPOINT_FORMAT_INVALID'
   if ($name -notmatch '^[A-Za-z0-9_.-]+$') { return $null }
   $pipe=$null
   try {
     $pipe=[System.IO.Pipes.NamedPipeClientStream]::new('.', $name, [System.IO.Pipes.PipeDirection]::InOut, [System.IO.Pipes.PipeOptions]::Asynchronous)
+    $script:PipeOutcomes[$op]='CONNECT_FAILED_OR_TIMED_OUT'
     $pipe.Connect(2500)
+    $script:PipeOutcomes[$op]='REQUEST_WRITE_OR_FLUSH_FAILED'
     $r=@{v=1;op=$op}; if ($op -ne 'portfolio.list') {$r.payload=@{portfolioId=$id}}
     $body=[Text.Encoding]::UTF8.GetBytes(($r | ConvertTo-Json -Compress -Depth 5)); $prefix=[BitConverter]::GetBytes([int]$body.Length); if ([BitConverter]::IsLittleEndian) {[array]::Reverse($prefix)}
     $pipe.Write($prefix,0,4);$pipe.Write($body,0,$body.Length);$pipe.Flush()
-    function ReadExact($stream,[int]$n) { $buf=[byte[]]::new($n); $offset=0; while($offset -lt $n) { $task=$stream.ReadAsync($buf,$offset,$n-$offset); if(-not $task.Wait(5000)) {throw 'timeout'}; $read=$task.Result; if($read -le 0){throw 'closed'}; $offset += $read }; return ,$buf }
-    $head=ReadExact $pipe 4; if([BitConverter]::IsLittleEndian){[array]::Reverse($head)}; $len=[BitConverter]::ToInt32($head,0); if($len -le 0 -or $len -gt 16777216){throw 'frame'}
-    $reply=[Text.Encoding]::UTF8.GetString((ReadExact $pipe $len)) | ConvertFrom-Json -AsHashtable
-    if ((Prop $reply 'ok') -ne $true -or (Prop $reply 'op') -ne $op -or (Prop $reply 'v') -ne 1) {return $null}; return ,$reply.result
+    $script:PipeOutcomes[$op]='RESPONSE_READ_FAILED'
+    function ReadExact($stream,[int]$n) { $buf=[byte[]]::new($n); $offset=0; while($offset -lt $n) { $task=$stream.ReadAsync($buf,$offset,$n-$offset); if(-not $task.Wait(5000)) {$script:PipeOutcomes[$op]='RESPONSE_READ_TIMEOUT';throw 'timeout'}; $read=$task.Result; if($read -le 0){$script:PipeOutcomes[$op]='RESPONSE_CLOSED_BEFORE_COMPLETE_FRAME';throw 'closed'}; $offset += $read }; return ,$buf }
+    $head=ReadExact $pipe 4; if([BitConverter]::IsLittleEndian){[array]::Reverse($head)}; $len=[BitConverter]::ToInt32($head,0); if($len -le 0 -or $len -gt 262144){$script:PipeOutcomes[$op]='RESPONSE_LENGTH_INVALID';throw 'frame'}
+    $bodyReply=ReadExact $pipe $len
+    $script:PipeOutcomes[$op]='RESPONSE_JSON_INVALID'
+    $reply=[Text.Encoding]::UTF8.GetString($bodyReply) | ConvertFrom-Json -AsHashtable
+    $script:PipeOutcomes[$op]='RESPONSE_ENVELOPE_INVALID'
+    if ((Prop $reply 'op') -ne $op -or (Prop $reply 'v') -ne 1) {return $null}
+    if ((Prop $reply 'ok') -eq $false) {
+      $outcome=Prop $reply 'outcome'
+      if ($outcome -in @('RESOURCE_UNAVAILABLE','INVALID_REQUEST','WRITE_NOT_AUTHORIZED','UNAVAILABLE','REVISION_CONFLICT')) {$script:PipeOutcomes[$op]="CLASS_A_$outcome"}
+      return $null
+    }
+    if ((Prop $reply 'ok') -ne $true) {return $null}
+    $value=Prop $reply 'result'
+    if ($op -in @('portfolio.list','portfolio.revisions') -and $value -isnot [array]) {$script:PipeOutcomes[$op]='RESPONSE_RESULT_NOT_ARRAY';return $null}
+    if ($op -eq 'portfolio.get' -and $value -isnot [System.Collections.IDictionary]) {$script:PipeOutcomes[$op]='RESPONSE_RESULT_NOT_OBJECT';return $null}
+    $script:PipeOutcomes[$op]='OBSERVED'
+    return ,$value
   } catch { return $null } finally { if ($null -ne $pipe) {$pipe.Dispose()} }
 }
 function AsMap($value) { if ($null -eq $value) { return $null }; try { return ($value | ConvertTo-Json -Depth 60 -Compress | ConvertFrom-Json -AsHashtable) } catch { return $null } }
@@ -65,9 +85,9 @@ function ReadReportInventory {
   } catch {return @{status='UNKNOWN';reason='UNAVAILABLE_OR_UNVERIFIED';chains='UNKNOWN';versions='UNKNOWN'}} finally {Remove-Item Env:IIPS_COLLECT_REPORT_DB,Env:IIPS_COLLECT_REPORT_OWNER -ErrorAction SilentlyContinue}
 }
 $e=[ordered]@{
- schema='IIPS_STAGE2_SANITIZED_EVIDENCE_V1'; startedAt=$started; completedAt='UNKNOWN';
+ schema='IIPS_STAGE2_SANITIZED_EVIDENCE_V1';collectorSha256=(DocumentHash $PSCommandPath); startedAt=$started; completedAt='UNKNOWN';
  sources=@{ portfolio='IPD v1 owner-scoped named pipe'; consumer='IRR GET /api/user-portfolios'; identities='IRR GET /api/investment/portfolio/:id/identities and IPD exact identity'; market='IPD GET /v1/freshness'; dataset='IRR investment/dataset manifest and periods'; reports='NP-04 pinned schema read-only owner-filtered SQLite'; crossServiceAtomic=$false };
- W03=@{ portfolioStatus='UNKNOWN';portfolioCount='UNKNOWN';portfolios=@();reports=(ReadReportInventory) };
+ W03=@{ portfolioStatus='UNKNOWN';portfolioCount='UNKNOWN';portfolios=$null;discovery=@{operation='portfolio.list';reason='NOT_OBSERVED';enumerationObserved=$false;endpointSha256=(TextHash $PipeName);ownerContext='IPD_SERVER_ACTIVE_BINDING_NOT_INDEPENDENTLY_ATTESTED'};reports=(ReadReportInventory) };
  W04=@{outcomes='UNKNOWN';note='IRR identity reads lack a revision; before/after checks do not prove an atomic join.'};
  W05=@{status='UNKNOWN';rightsState='UNKNOWN';independentPermission='UNKNOWN';coverage='UNKNOWN';periods='UNKNOWN'};
  W06=@{status='UNKNOWN';observations=@();historical='UNKNOWN';rights='UNKNOWN'};
@@ -78,23 +98,35 @@ $e=[ordered]@{
 $token=$env:IIPS_MARKET_DATA_TRANSPORT_TOKEN
 $headers=@{}; if ($MarketPort -gt 0 -and -not [string]::IsNullOrWhiteSpace($token)) {$headers.Authorization="Bearer $token"}
 $ipdList=PipeRead 'portfolio.list'
+$e.W03.discovery.reason=$script:PipeOutcomes['portfolio.list']
 $irrList=AsMap (GetLocal $IrrPort '/api/user-portfolios')
 $ports=[System.Collections.Generic.List[object]]::new(); $identityCounts=[ordered]@{}; $identityReasons=[ordered]@{}; $bridgeBasis=[ordered]@{}; $financialCounts=[ordered]@{}; $identityUnavailable=0; $identityObserved=0; $market=[System.Collections.Generic.List[object]]::new()
 $investment=AsMap (GetLocal $IrrPort '/api/investment/coverage/investment'); $issuerRows=Prop $investment 'issuers'
 if ($null -ne $ipdList -and $ipdList -is [array]) {
+  $e.W03.discovery.enumerationObserved=$true
   $e.W03.portfolioStatus='AVAILABLE';$e.W03.portfolioCount=$ipdList.Count; $idx=0
   foreach($summary in $ipdList) {
-    $idx++;$id=Prop $summary 'portfolioId'; if ($id -isnot [string] -or [string]::IsNullOrWhiteSpace($id)) { $e.W03.portfolioStatus='INVALID'; continue }
-    $before=[DateTime]::UtcNow.ToString('o');$detail=PipeRead 'portfolio.get' $id;$history=PipeRead 'portfolio.revisions' $id
+    $idx++;$id=Prop $summary 'portfolioId'; if ($id -isnot [string] -or [string]::IsNullOrWhiteSpace($id)) { $e.W03.portfolioStatus='UNKNOWN';$e.W03.portfolioCount='UNKNOWN';$e.W03.discovery.reason='LIST_ENTRY_INVALID'; continue }
+    $before=[DateTime]::UtcNow.ToString('o');$detail=PipeRead 'portfolio.get' $id;$detailReason=$script:PipeOutcomes['portfolio.get'];$history=PipeRead 'portfolio.revisions' $id;$historyReason=$script:PipeOutcomes['portfolio.revisions']
     $url=[uri]::EscapeDataString($id);$consumer=AsMap (GetLocal $IrrPort "/api/user-portfolios/$url");$identities=AsMap (GetLocal $IrrPort "/api/investment/portfolio/$url/identities")
-    $after=PipeRead 'portfolio.get' $id;$end=[DateTime]::UtcNow.ToString('o')
-    $entry=[ordered]@{token="portfolio-$idx";readStartedAt=$before;readCompletedAt=$end;revision='UNKNOWN';holdings='UNKNOWN';active='UNKNOWN';inactive='UNKNOWN';contributions='UNKNOWN';historyCount='UNKNOWN';reconciled='UNKNOWN';consumer='UNKNOWN';identity='UNKNOWN'}
+    $after=PipeRead 'portfolio.get' $id;$afterReason=$script:PipeOutcomes['portfolio.get'];$end=[DateTime]::UtcNow.ToString('o')
+    $entry=[ordered]@{token="portfolio-$idx";readStartedAt=$before;readCompletedAt=$end;revision='UNKNOWN';holdings='UNKNOWN';active='UNKNOWN';inactive='UNKNOWN';contributions='UNKNOWN';historyCount='UNKNOWN';reconciled='UNKNOWN';consumer='UNKNOWN';identity='UNKNOWN';persistenceStatus='UNKNOWN';operation='UNKNOWN';isSaved='UNKNOWN';committedAt='UNKNOWN';provenanceDigest='UNKNOWN';weightSumPercentage='UNKNOWN';readReasons=@{detail=$detailReason;history=$historyReason;after=$afterReason}}
     if ($null -ne $detail -and (Prop $detail 'holdings') -is [array]) {
       $holds=$detail.holdings;$entry.revision=SafeNum (Prop $detail 'revision');$entry.holdings=$holds.Count;$entry.active=@($holds | Where-Object { (Prop $_ 'active') -eq $true }).Count;$entry.inactive=@($holds | Where-Object { (Prop $_ 'active') -eq $false }).Count
       if ((Prop $detail 'contributions') -is [array]) {$entry.contributions=$detail.contributions.Count}
       if ($history -is [array]) {$entry.historyCount=$history.Count}
       $historyEntry=@($history | Where-Object { (Prop $_ 'revision') -eq $entry.revision })
       if ($null -ne $after -and (Prop $summary 'revision') -eq $entry.revision -and (Prop $after 'revision') -eq $entry.revision -and (Prop $summary 'holdingsCount') -eq $holds.Count -and (Prop $detail 'holdingsCount') -eq $holds.Count -and $historyEntry.Count -eq 1 -and (Prop $historyEntry[0] 'holdingsCount') -eq $holds.Count) {$entry.reconciled='MATCHED_AT_READS'} else {$entry.reconciled='MISMATCH_OR_UNAVAILABLE'}
+      # Persistence is established by owner-scoped stored revision/holdings reads,
+      # never by isSaved (INITIAL and RESET legitimately project false).
+      if ($entry.reconciled -eq 'MATCHED_AT_READS' -and $entry.revision -is [ValueType] -and $entry.revision -gt 0 -and (Prop $detail 'portfolioId') -ceq $id -and (Prop $after 'portfolioId') -ceq $id) {
+        $entry.persistenceStatus='PERSISTED'
+        $op=Prop $historyEntry[0] 'operation';if($op -in @('INITIAL','MERGE','REPLACE','RESET','DELETE','RESTORE')) {$entry.operation=$op}
+        $saved=Prop $detail 'isSaved';if($saved -is [bool]) {$entry.isSaved=$saved}
+        $entry.committedAt=SafeTime (Prop $historyEntry[0] 'committedAt')
+        $entry.provenanceDigest=SafeHash (Prop $detail 'provenanceDigest')
+        $weight=Prop $detail 'weightSumPercentage';if(($weight -is [double] -or $weight -is [decimal] -or $weight -is [int] -or $weight -is [long]) -and [double]::IsFinite([double]$weight) -and $weight -ge 0) {$entry.weightSumPercentage=$weight}
+      }
       $c=Prop $consumer 'portfolio';if ($null -ne $c) { if ((Prop $c 'revision') -eq $entry.revision -and (Prop $c 'totalHoldingsCount') -eq $holds.Count) {$entry.consumer='MATCHED_AT_READ'} else {$entry.consumer='MISMATCH'} }
       $items=Prop $identities 'identities'; if ($items -is [array] -and $items.Count -eq $holds.Count) {
         $entry.identity='OBSERVED_UNVERSIONED';$identityObserved += $items.Count;foreach($row in $items){
@@ -120,7 +152,7 @@ if ($null -ne $ipdList -and $ipdList -is [array]) {
     }
     $ports.Add($entry)
   }
-  $e.W03.portfolios=@($ports.ToArray());$e.W04.outcomes=$identityCounts;$e.W04.observedRows=$identityObserved;$e.W04.unavailableRows=$identityUnavailable;$e.W04.reasons=$identityReasons;$e.W08.resolutionBasisCounts=$bridgeBasis;$e.W08.bridge='OBSERVED_UNVERSIONED_NOT_QUALIFIED';$e.W05.issuerHoldingCoverage=$financialCounts;$e.W06.observations=@($market.ToArray());$e.W06.status='PER_ROW_PARTIAL'
+  $e.W03.portfolios=@($ports.ToArray());if($e.W03.portfolioStatus -ne 'AVAILABLE') {$e.W03.portfolios=$null;$e.W03.discovery.enumerationObserved=$false};$e.W04.outcomes=$identityCounts;$e.W04.observedRows=$identityObserved;$e.W04.unavailableRows=$identityUnavailable;$e.W04.reasons=$identityReasons;$e.W08.resolutionBasisCounts=$bridgeBasis;$e.W08.bridge='OBSERVED_UNVERSIONED_NOT_QUALIFIED';$e.W05.issuerHoldingCoverage=$financialCounts;$e.W06.observations=@($market.ToArray());$e.W06.status='PER_ROW_PARTIAL'
   if ($null -ne $irrList -and (Prop $irrList 'portfolios') -is [array]) {$e.W09.consumer='LIST_OBSERVED';$e.W09.irrPortfolioCount=$irrList.portfolios.Count}
 }
 if ($MarketPort -gt 0 -and $headers.Count -gt 0) {$hist=AsMap (GetLocal $MarketPort '/v1/freshness?domain=D02_OHLCV' $headers);if ((Prop $hist 'cacheState') -in @('NOT_AVAILABLE','MISS','CURRENT','STALE','UNAVAILABLE')) {$e.W06.historical=Prop $hist 'cacheState'}}

@@ -40,3 +40,62 @@ IRR manifest `sourceRights.state` is `SYNTHETIC`, `OPERATOR_ASSERTED` (nonempty 
 ## Reproducible synthetic tests
 
 `node --test tests/stage2/readonly-reports.test.cjs` exercises only temporary synthetic data and verifies owner filtering, unchanged DB bytes, invalid carrier and WAL refusal. On Windows with PowerShell 7 and Node 22, `./tests/stage2/collector-windows.test.ps1` runs a local synthetic named-pipe and loopback HTTP fixture, checks aggregation and secret exclusion, and checks refusal to overwrite output. The GitHub Windows workflow runs both. No actual data or credentials are needed.
+
+## Portfolio discovery correction (2026-11-11)
+
+The collector never filtered `isSaved`. IPD `DurablePortfolioStore.list` filters
+`canonical_owner_id`, `tenant_id`, and ACTIVE status, not saved-operation state.
+`INITIAL`/`RESET` deliberately project `isSaved=false`; a nonempty INITIAL revision
+can be persisted. The collector uses only v1 `portfolio.list`, `portfolio.get` and
+`portfolio.revisions`, with no caller-supplied owner: the serving IPD resolves its
+ACTIVE binding independently on every request. IRR is a secondary comparison read,
+not a fallback enumeration authority. No preview, browser state, guessed default
+portfolio ID, SQLite query, alternate owner or v2 path is substituted.
+
+The supplied runtime `UNKNOWN / UNKNOWN / []` cannot establish which failure
+occurred. Before this correction every pipe failure, bad envelope or rejected
+result became null (or an ignored non-array) and the original empty placeholder
+remained. A successful original Windows synthetic singleton-list test already
+passed; there is no evidence of a universal singleton-array or `isSaved` filter
+bug. Missing invocation/endpoint identity and discarded transport/response status
+prevent exact historical attribution. The UI proves its observed persisted view,
+not that the collector reached that same endpoint/binding at that time. Neither
+owner identity nor historical binding equivalence can be attested by these reads.
+
+Corrected evidence uses:
+
+- `W03.discovery`: `operation`, sanitized `reason`, `enumerationObserved`, an
+  endpoint-setting SHA-256 (not the setting itself), and an explicit statement
+  that the server-resolved binding is not independently attested.
+- Failed/unobserved enumeration: `portfolioStatus="UNKNOWN"`,
+  `portfolioCount="UNKNOWN"`, **`portfolios=null`**, and a bounded failure reason.
+  Only an observed valid empty list yields AVAILABLE / 0 / []. Consumers must
+  not interpret null as an empty list. Schema name remains V1 with additive fields
+  and this corrected UNKNOWN representation.
+- Reasons identify the observed stage: missing/invalid endpoint, connection
+  failed/timed out, request write/flush failure, response read failure/timeout/
+  premature close, invalid length/JSON/envelope, allowlisted Class A outcome,
+  invalid result shape or list entry. A premature close does not disclose an IPD
+  Class P cause. No raw exception, response, owner, path or credential is emitted.
+- Each portfolio has detail/history/after `readReasons`; discovery does not imply
+  detail success. `persistenceStatus="PERSISTED"` requires reconciled list,
+  detail, history and second-detail counts/revisions plus matching requested IDs
+  and a positive stored revision. This includes valid empty stored revisions.
+  `operation`, boolean `isSaved`, revision commit time, weight sum and validated
+  provenance digest are separate facts. Unknown/mismatched reads do not establish
+  persistence; matching reads still do not prove cross-call atomicity.
+- `collectorSha256` identifies the executed script bytes for diagnosis.
+
+For a successfully reconciled single portfolio matching the operator's described
+INITIAL revision, expect AVAILABLE / 1, `enumerationObserved=true`, `reason=OBSERVED`,
+and one anonymous entry with `persistenceStatus=PERSISTED`, `revision=1`,
+`holdings=64`, `active=64`, `inactive=0`, `operation=INITIAL`, `isSaved=false`,
+`weightSumPercentage=100`, and the stored `committedAt` and `provenanceDigest`.
+The runtime timestamp/digest must be read, not prefilled from the incident report.
+The synthetic regression uses a different timestamp and digest. Discovery of
+additional same-owner portfolios legitimately increases the count above one.
+A UI digest may only be compared after confirming it is the same provenance-digest
+field; this collector does not relabel or fabricate a canonical digest.
+
+NP-04 helper and WAL/SHM/journal refusal rules are unchanged. No report database
+fallback is used to discover portfolios, and no runtime record is modified.
