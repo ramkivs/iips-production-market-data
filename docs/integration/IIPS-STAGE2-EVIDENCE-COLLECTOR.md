@@ -97,5 +97,9 @@ additional same-owner portfolios legitimately increases the count above one.
 A UI digest may only be compared after confirming it is the same provenance-digest
 field; this collector does not relabel or fabricate a canonical digest.
 
+PowerShell versions that deserialize ISO timestamps as DateTime/DateTimeOffset
+are handled explicitly; the former string-only SafeTime helper reported UNKNOWN
+for those parsed values. Unspecified-kind DateTime is not assigned a guessed timezone.
+
 NP-04 helper and WAL/SHM/journal refusal rules are unchanged. No report database
 fallback is used to discover portfolios, and no runtime record is modified.
