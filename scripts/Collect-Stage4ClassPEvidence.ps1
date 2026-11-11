@@ -189,7 +189,7 @@ function Get-ProcessEvidence {
         if ($Candidates.Count -gt 128) { Add-Issue 'process-query' 'PROCESS_COUNT_LIMIT'; return @() }
         foreach ($Process in ($Candidates | Sort-Object ProcessId)) {
             $Command = [string] $Process.CommandLine
-            $Pattern = '(?i)(?:^|[\s"' + "'" + '])' + [regex]::Escape($EntryPath) + '(?:$|[\s"' + "'" + '])'
+            $Pattern = '(?i)^\s*(?:"[^"]*node\.exe"|[^\s"]*node\.exe)\s+"?' + [regex]::Escape($EntryPath) + '"?(?:$|\s)'
             if ($Command -notmatch $Pattern) { continue }
             if ([string]::IsNullOrEmpty([string] $Process.ExecutablePath) -or [System.IO.Path]::GetFileName($Process.ExecutablePath) -ine 'node.exe') { Add-Issue 'process-query' 'EXECUTABLE_IDENTITY_UNAVAILABLE'; continue }
             $Again = Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId=' + [int] $Process.ProcessId)
