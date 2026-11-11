@@ -1,0 +1,25 @@
+name: Stage 4 evidence collector safety
+on:
+  pull_request:
+    paths:
+      - scripts/Collect-Stage4ClassPEvidence.ps1
+      - tests/stage4_evidence_collector.test.mjs
+      - .github/workflows/stage4-evidence-collector.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  collector:
+    name: Windows PowerShell 5.1 targeted safety tests
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Static and native synthetic collector tests only
+        shell: powershell
+        run: |
+          node --test tests/stage4_evidence_collector.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
