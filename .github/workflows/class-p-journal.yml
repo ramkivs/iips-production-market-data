@@ -23,4 +23,13 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run build:tsc
       - name: Synthetic journal and adjacent Class A/P contracts only
-        run: node --test dist/tests/class_p_journal.test.js dist/tests/g3_ipc_framing.test.js dist/tests/g3_startup_validation.test.js dist/tests/g3_caller_authority.test.js dist/tests/g3_write_gate.test.js dist/tests/stage4_broker_import_ipc.test.js
+        shell: bash
+        run: |
+          set +e
+          node --test dist/tests/class_p_journal.test.js dist/tests/g3_ipc_framing.test.js dist/tests/g3_startup_validation.test.js dist/tests/g3_caller_authority.test.js dist/tests/g3_write_gate.test.js dist/tests/stage4_broker_import_ipc.test.js > targeted-tests.log 2>&1
+          code=$?
+          cat targeted-tests.log
+          if [ "$code" -ne 0 ]; then
+            node --input-type=module -e 'import fs from "node:fs"; const lines=fs.readFileSync("targeted-tests.log","utf8").split("\n"); for(let i=0;i<lines.length;i++) if(lines[i].includes("not ok")) { const detail=lines.slice(Math.max(0,i-2),i+35).join("\n").replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"); console.log("::error title=Targeted test failure::"+detail); }'
+          fi
+          exit "$code"
