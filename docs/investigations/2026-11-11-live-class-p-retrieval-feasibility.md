@@ -1,5 +1,10 @@
 # Stage 4 Class P: live diagnostic retrieval feasibility
 
+> Historical assessment of the pre-journal runtime. The subsequently authorized
+> [prospective local journal](CLASS-P-LOCAL-JOURNAL.md) requires deployment/restart
+> and does not expose or recover PID 14484’s old in-memory sink. The disposition
+> below is unchanged for that incident/runtime.
+
 ## 1. Disposition: RETRIEVAL NOT AVAILABLE
 
 No already-supported, non-invasive application interface in authoritative IPD
