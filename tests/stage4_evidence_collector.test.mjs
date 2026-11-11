@@ -93,7 +93,7 @@ function fixture() {
 }
 function command(f, extra = '', mock = '') {
   const entry = join(f.repo, 'dist', 'src', 'ipc', 'entrypoint.js');
-  const fake = `function global:Get-CimInstance { param($ClassName,$Filter)  if($Filter -eq 'ProcessId=1'){return [pscustomobject]@{ProcessId=1;Name='powershell.exe';CreationDate=[datetime]'2026-11-11T15:00:00Z'}}; return [pscustomobject]@{ProcessId=14484;ParentProcessId=1;CreationDate=[datetime]'2026-11-11T16:00:00Z';ExecutablePath='C:\\Windows\\node.exe';CommandLine=('node.exe ' + [char]34 + ${quote(entry)} + [char]34 + ' --secret=CANARY_SECRET_9981')} };`;
+  const fake = `function global:Get-CimInstance { param($ClassName,$Filter) Write-Host ('SYNTHETIC_EXPECTED=' + ${quote(entry)}); Write-Host ('SYNTHETIC_COMMAND=' + ('node.exe ' + [char]34 + ${quote(entry)} + [char]34)); if($Filter -eq 'ProcessId=1'){return [pscustomobject]@{ProcessId=1;Name='powershell.exe';CreationDate=[datetime]'2026-11-11T15:00:00Z'}}; return [pscustomobject]@{ProcessId=14484;ParentProcessId=1;CreationDate=[datetime]'2026-11-11T16:00:00Z';ExecutablePath='C:\\Windows\\node.exe';CommandLine=('node.exe ' + [char]34 + ${quote(entry)} + [char]34 + ' --secret=CANARY_SECRET_9981')} };`;
   return `${fake}${mock} & ${quote(script)} -RepositoryRoot ${quote(f.repo)} -LogDirectories ${quote(f.logs)} -OutputDirectory ${quote(f.output)} ${extra}; exit $LASTEXITCODE`;
 }
 function reports(f) { return readdirSync(f.output).map(x => JSON.parse(readFileSync(join(f.output,x),'utf8'))); }
@@ -104,7 +104,7 @@ test('native synthetic collection: redaction, metadata, hashes, rerun no overwri
     const paths = [f.file, ...artifactNames.map(x => join(f.repo,'dist','src',x))];
     const before = paths.map(p => [hash(p), statSync(p).mtimeMs]);
     for(let i=0;i<2;i++) {
-      const result = runPS(command(f)); assert.equal(result.status,0,result.stdout+result.stderr+JSON.stringify(reports(f).map(r=>({issues:r.issues,processes:r.processes,logs:r.logs.map(l=>({matches:l.matches,metadata:l.retainedMetadata}))}))));
+      const result = runPS(command(f)); assert.equal(result.status,0,result.stdout+result.stderr+JSON.stringify(reports(f).map(r=>({issues:r.issues,selection:r.processSelection,processes:r.processes,logs:r.logs.map(l=>({matches:l.matches,metadata:l.retainedMetadata}))}))));
       assert.ok(!result.stdout.includes('CANARY_SECRET_9981'));
     }
     const all = reports(f); assert.equal(all.length,2);

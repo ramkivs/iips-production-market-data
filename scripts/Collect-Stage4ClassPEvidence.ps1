@@ -25,6 +25,7 @@ $ErrorActionPreference = 'Stop'
 $script:Incomplete = $false
 $script:Issues = New-Object System.Collections.Generic.List[object]
 $script:TotalMatchCount = 0
+$script:ProcessSelection = New-Object System.Collections.Generic.List[object]
 $script:KnownKeys = @('v','op','payload','requestId','portfolioId','expectedRevision','holdings','contentDigest','fileName','sourceBroker','importedAt','mode','symbol','isin','exchange','series','quantity','averageBuyPrice','currentPrice','marketValue','weightPercentage','active','lineageDigest','owner','ownerId','tenant','tenantId','companyId','runtimeCompanyId','identityStatus','resolutionDisposition','identity','scope','request','metadata','declaredLength','actualUtf8Length','trailingData','connectedAt','writeAt','closedAt','commit','headCommit','buildCommit','protocolVersion','operation')
 $script:Signals = @('MALFORMED_FRAME','OVERSIZE_FRAME','PROTOCOL_VERSION_UNSUPPORTED','UNKNOWN_OPERATION','CALLER_SUPPLIED_AUTHORITY','BINDING_ABSENT','BINDING_INVALID','CAPACITY_EXCEEDED','IDLE_TIMEOUT','UNAVAILABLE','WRITE_NOT_AUTHORIZED','ipc-class-p-refusal','EPIPE','ECONNRESET','ETIMEDOUT','ERR_STREAM_DESTROYED','UnhandledPromiseRejection','unhandled rejection','socket error','connection drop','write failed','startup refused','listening on')
 
@@ -158,7 +159,7 @@ function Get-LogEvidence {
     $Hits = New-Object System.Collections.Generic.List[object]
     $Metadata = $null
     try {
-        $Text = [System.Text.Encoding]::UTF8.GetString((Read-BoundedBytes $Path $MaxLogBytes))
+        $Text = [System.Text.Encoding]::UTF8.GetString((Read-BoundedBytes $Path $MaxLogBytes)).TrimStart([char]0xFEFF)
         $Number = 0
         foreach ($Line in ($Text -split '\r?\n')) {
             $Number++
@@ -190,7 +191,9 @@ function Get-ProcessEvidence {
         foreach ($Process in ($Candidates | Sort-Object ProcessId)) {
             $Command = [string] $Process.CommandLine
             $Pattern = '(?i)^\s*(?:"[^"]*node\.exe"|[^\s"]*node\.exe)\s+"?' + [regex]::Escape($EntryPath) + '"?(?:$|\s)'
-            if ($Command -notmatch $Pattern) { continue }
+            $ScriptMatch = ($Command -match $Pattern)
+            $script:ProcessSelection.Add([ordered]@{ pid = $Process.ProcessId; entrypointMention = ($Command.IndexOf($EntryPath, [StringComparison]::OrdinalIgnoreCase) -ge 0); scriptArgumentMatch = $ScriptMatch; expectedScriptPath = $EntryPath })
+            if (-not $ScriptMatch) { continue }
             if ([string]::IsNullOrEmpty([string] $Process.ExecutablePath) -or [System.IO.Path]::GetFileName($Process.ExecutablePath) -ine 'node.exe') { Add-Issue 'process-query' 'EXECUTABLE_IDENTITY_UNAVAILABLE'; continue }
             $Again = Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId=' + [int] $Process.ProcessId)
             if ($null -eq $Again -or $Again.CreationDate -ne $Process.CreationDate -or $Again.CommandLine -cne $Process.CommandLine) { Add-Issue 'process-query' 'PROCESS_IDENTITY_CHANGED'; continue }
@@ -263,7 +266,7 @@ try {
         formatVersion = 1; collectedAtUtc = [DateTime]::UtcNow.ToString('o'); state = $State
         sourceAuthority = '29a789a07132c03ebb43bdfa862d113b04f4d924 (incident reference, not verification of current HEAD)'
         incident = 'PID 14484; 2026-11-11 startup evidence; original trigger NOT YET PROVEN'
-        processes = $Processes; artifacts = @($Artifacts.ToArray()); logs = @($Logs.ToArray()); issues = @($script:Issues.ToArray())
+        processSelection = @($script:ProcessSelection.ToArray()); processes = $Processes; artifacts = @($Artifacts.ToArray()); logs = @($Logs.ToArray()); issues = @($script:Issues.ToArray())
         limitations = @('CONFIRMED means observed now, not incident attribution','Current artifact hashes cannot recover incident-time loaded bytes','Working directory and raw command arguments are not collected via invasive process reads','Class P sink is bounded process memory; cannot recover it from a different process','Absent retained frame lengths and timing remain UNAVAILABLE; requests are never reconstructed','Unknown JSON keys and all raw log values are suppressed; key paths include depth only','Both existing import IDs remain quarantined; no reproduction authorized')
     }
     $ReportPath = Join-Path $Output ('ipd-stage4-class-p-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '-' + [guid]::NewGuid().ToString('N') + '.json')
