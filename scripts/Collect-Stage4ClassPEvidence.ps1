@@ -192,7 +192,7 @@ function Get-ProcessEvidence {
             $Command = [string] $Process.CommandLine
             $Pattern = '(?i)^\s*(?:"[^"]*node\.exe"|[^\s"]*node\.exe)\s+"?' + [regex]::Escape($EntryPath) + '"?(?:$|\s)'
             $ScriptMatch = ($Command -match $Pattern)
-            $script:ProcessSelection.Add([ordered]@{ pid = $Process.ProcessId; entrypointMention = ($Command.IndexOf($EntryPath, [StringComparison]::OrdinalIgnoreCase) -ge 0); scriptArgumentMatch = $ScriptMatch; expectedScriptPath = $EntryPath })
+            $script:ProcessSelection.Add([ordered]@{ classification = 'INCONCLUSIVE'; pid = $Process.ProcessId; entrypointMention = ($Command.IndexOf($EntryPath, [StringComparison]::OrdinalIgnoreCase) -ge 0); scriptArgumentMatch = $ScriptMatch; expectedScriptPath = $EntryPath })
             if (-not $ScriptMatch) { continue }
             if ([string]::IsNullOrEmpty([string] $Process.ExecutablePath) -or [System.IO.Path]::GetFileName($Process.ExecutablePath) -ine 'node.exe') { Add-Issue 'process-query' 'EXECUTABLE_IDENTITY_UNAVAILABLE'; continue }
             $Again = Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId=' + [int] $Process.ProcessId)
@@ -259,6 +259,12 @@ try {
         catch { Add-Issue $Directory (Get-ErrorKind $_) }
     }
     if ($Count -eq 0) { Add-Issue 'logs' 'NO_ALLOWLISTED_FILES_FOUND' }
+    $Retained = @($Logs.ToArray() | Where-Object { $null -ne $_.retainedMetadata -and $_.retainedMetadata.operation -eq 'portfolio.importBroker' })
+    $OriginalEvidence = [ordered]@{ classification = 'UNAVAILABLE'; reason = 'NO_ALLOWLISTED_RETAINED_ORIGINAL_IPC_METADATA_FOUND'; files = @() }
+    if ($Retained.Count -gt 0) {
+        $OriginalEvidence = [ordered]@{ classification = 'INCONCLUSIVE'; reason = 'RETAINED_METADATA_NOT_CORRELATED_TO_INCIDENT'; files = @($Retained | ForEach-Object { $_.file.path }) }
+    }
+    if ($Retained.Count -eq 0) { Add-Issue 'original-ipc-metadata' 'NO_RETAINED_ORIGINAL_IPC_METADATA_FOUND' }
     $State = 'COLLECTION_COMPLETE_NOT_INCIDENT_RESOLVED'
     $ExitCode = 0
     if ($script:Incomplete) { $State = 'PARTIAL_COLLECTION'; $ExitCode = 2 }
@@ -266,6 +272,7 @@ try {
         formatVersion = 1; collectedAtUtc = [DateTime]::UtcNow.ToString('o'); state = $State
         sourceAuthority = '29a789a07132c03ebb43bdfa862d113b04f4d924 (incident reference, not verification of current HEAD)'
         incident = 'PID 14484; 2026-11-11 startup evidence; original trigger NOT YET PROVEN'
+        originalIpcMetadataAvailability = $OriginalEvidence
         processSelection = @($script:ProcessSelection.ToArray()); processes = $Processes; artifacts = @($Artifacts.ToArray()); logs = @($Logs.ToArray()); issues = @($script:Issues.ToArray())
         limitations = @('CONFIRMED means observed now, not incident attribution','Current artifact hashes cannot recover incident-time loaded bytes','Working directory and raw command arguments are not collected via invasive process reads','Class P sink is bounded process memory; cannot recover it from a different process','Absent retained frame lengths and timing remain UNAVAILABLE; requests are never reconstructed','Unknown JSON keys and all raw log values are suppressed; key paths include depth only','Both existing import IDs remain quarantined; no reproduction authorized')
     }

@@ -153,3 +153,18 @@ test('native limits, malformed metadata and invalid output path fail explicitly'
     const invalid=runPS(command({...f,output:f.repo})); assert.equal(invalid.status,3);
   } finally { rmSync(f.root,{recursive:true,force:true}); }
 });
+
+
+test('native PID reuse is rejected and non-recursive discovery does not read nested secrets', { skip: !windows }, () => {
+  const f=fixture();
+  try {
+    const nested=join(f.logs,'nested'); mkdirSync(nested);
+    writeFileSync(join(nested,'ipc-crash.log'),'BINDING_INVALID CANARY_SECRET_9981');
+    const entry=join(f.repo,'dist','src','ipc','entrypoint.js');
+    const mock=`function global:Get-CimInstance { param($ClassName,$Filter) $date=[datetime]'2026-11-11T16:00:00Z'; if($Filter -eq 'ProcessId=14484'){$date=$date.AddSeconds(1)}; return [pscustomobject]@{ProcessId=14484;ParentProcessId=1;CreationDate=$date;ExecutablePath='C:\\Windows\\node.exe';CommandLine=('node.exe ' + [char]34 + ${quote(entry)} + [char]34)} };`;
+    const result=runPS(command(f,'',mock)); assert.equal(result.status,2,result.stdout+result.stderr);
+    const r=reports(f)[0]; assert.ok(r.issues.some(x=>x.reason==='PROCESS_IDENTITY_CHANGED'));
+    assert.equal(r.processes.length,0); assert.equal(r.logs.length,2);
+    assert.ok(!JSON.stringify(r).includes('CANARY_SECRET_9981'));
+  } finally { rmSync(f.root,{recursive:true,force:true}); }
+});

@@ -59,7 +59,7 @@ Exit codes:
 - **0:** configured bounded collection completed, NOT evidence of incident closure.
   Explicit historical limitations still apply.
 - **2:** partial collection: missing/inaccessible files/process identity, malformed
-  retained JSON, changed files, or any collection limit. Inspect `issues`; do not
+  retained JSON, no original IPC metadata found, changed files, or any collection limit. Inspect `issues`; do not
   describe this as complete collection.
 - **3:** invalid configuration or inability to publish a report. Console error is
   deliberately non-sensitive. No product action is attempted.
@@ -69,12 +69,14 @@ metadata as INCONCLUSIVE, and missing/denied/limited evidence as UNAVAILABLE.
 
 Collected evidence:
 - Current `node.exe` providers whose command line contains this exact checkout's
-  entrypoint path, rechecked by PID/start time/command line. PID 14484 is a marker,
+  entrypoint as the script argument (not merely text inside another argument), rechecked by PID/start time/command line. PID 14484 is a marker,
   not an identity assumption. Current parent candidate is checked against child
   start time. Parent name is allowlisted; raw parent paths/arguments are suppressed.
 - Provider executable, sanitized command shape, PID and UTC process start. Working
   directory is explicitly UNAVAILABLE: Win32_Process has no supported CWD field.
-  No invasive process-memory reads are used to fill that gap.
+  No invasive process-memory reads are used to fill that gap. Command-path aliases
+  or Node flags before the script can prevent exact recognition and are reported
+  as unavailable rather than guessed.
 - Eleven fixed compiled artifact paths, sizes, creation/write timestamps, SHA-256,
   and explicit current-file-only provenance. Files are not imported or executed.
 - Selected direct-child retained logs/manifests: path, timestamps, SHA-256, line
