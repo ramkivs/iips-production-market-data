@@ -233,7 +233,7 @@ function executeLocalPersonalWrite(
   store: DurablePortfolioStore,
   owner: OwnerRef,
   envelope: AnyRequestEnvelope,
-): PersonalWriteReceipt | { readonly portfolioId: string; readonly deletedAt: string } {
+): PersonalWriteReceipt | ReturnType<DurablePortfolioStore['restore']> | { readonly portfolioId: string; readonly deletedAt: string } {
   const requestId = envelope.requestId;
   void requestId;
   const payload = (envelope.payload ?? {}) as Record<string, unknown>;
@@ -266,6 +266,10 @@ function executeLocalPersonalWrite(
       const isDuplicate = next === expectedRevision;
       const disposition = isDuplicate ? 'ALREADY_IMPORTED_NO_OP' : 'MERGED_INTO_EXISTING';
       return personalReceipt(store, owner, portfolioId, next, request.holdings.length, isDuplicate, disposition);
+    }
+    case 'portfolio.restore': {
+      if (Object.keys(payload).some(k => !['portfolioId', 'expectedRevision', 'idempotencyKey'].includes(k))) throw new InvalidPortfolioRequestError('unknown restore payload field');
+      return store.restore(owner, personalPortfolioId(payload), requireExpectedRevision(payload.expectedRevision), payload.idempotencyKey as string);
     }
     case 'portfolio.delete': {
       const portfolioId = personalPortfolioId(payload);

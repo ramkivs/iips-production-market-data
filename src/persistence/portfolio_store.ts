@@ -1,3 +1,5 @@
+import type { PortfolioRestoreReceipt } from '../contracts/portfolio_restore_ipc.js';
+import { appendAuditEvent } from './audit.js';
 /**
  * Gate 3 — owner-scoped durable portfolio store.
  *
@@ -405,7 +407,7 @@ export function computeLineageHash(holdings: readonly HoldingInput[]): string {
  * ------------------------------------------------------------------ */
 
 /** The closed stored operation vocabulary (contract v1 §6). */
-const STORED_OPERATIONS: readonly string[] = ['INITIAL', 'MERGE', 'REPLACE', 'RESET', 'DELETE'];
+const STORED_OPERATIONS: readonly string[] = ['INITIAL', 'MERGE', 'REPLACE', 'RESET', 'DELETE', 'RESTORE'];
 
 /** The closed stored contribution semantics vocabulary (migration 004 / DR-4r). */
 const STORED_CONTRIBUTION_SEMANTICS: readonly string[] = ['SAVED_NEW_BATCH', 'MERGED_INTO_EXISTING', 'RESET', 'REPLACE'];
@@ -461,6 +463,7 @@ function storedOperation(row: StoredRow, field: string, shape: string): string {
  * The DQ-1 current-revision materialized-state rule, and NOTHING else:
  * MERGE/REPLACE => true, INITIAL/RESET => false. A DELETE or unknown current
  * operation has no lawful `isSaved` value, so no result is emitted at all.
+ * RESTORE is projected separately using its preserved receipt state.
  */
 function isSavedForCurrentOperation(operation: string, shape: string): boolean {
   if (operation === 'MERGE' || operation === 'REPLACE') return true;
@@ -492,6 +495,12 @@ function projectPortfolioBase(row: StoredRow, shape: string): ProjectionBase {
   };
 }
 
+function restoredSavedState(row: StoredRow, shape: string): boolean {
+  const value = storedNonNegativeInteger(row, 'restored_is_saved', shape);
+  if (value !== 0 && value !== 1) return refuseStoredValue(shape, 'restored_is_saved', 'a stored boolean');
+  return value === 1;
+}
+
 function projectCurrentRevision(row: StoredRow, shape: string): CurrentRevisionProjection {
   return {
     holdingsCount: storedNonNegativeInteger(row, 'holdings_count', shape),
@@ -499,7 +508,9 @@ function projectCurrentRevision(row: StoredRow, shape: string): CurrentRevisionP
     weightSumPercentage: storedFiniteNumber(row, 'weight_sum_percentage', shape),
     // An empty digest is a legitimate stored fact. Only a non-string is refused.
     provenanceDigest: storedString(row, 'provenance_digest', shape),
-    isSaved: isSavedForCurrentOperation(storedOperation(row, 'operation', shape), shape),
+    isSaved: row.operation === 'RESTORE'
+      ? restoredSavedState(row, shape)
+      : isSavedForCurrentOperation(storedOperation(row, 'operation', shape), shape),
   };
 }
 
@@ -700,7 +711,8 @@ export class DurablePortfolioStore {
                 r.total_market_value AS total_market_value,
                 r.weight_sum_percentage AS weight_sum_percentage,
                 r.provenance_digest  AS provenance_digest,
-                r.operation          AS operation
+                r.operation          AS operation,
+                (SELECT is_saved FROM portfolio_restore_receipts rr WHERE rr.canonical_owner_id = r.canonical_owner_id AND rr.portfolio_id = r.portfolio_id AND rr.restored_revision = r.revision) AS restored_is_saved
            FROM portfolios p
            LEFT JOIN portfolio_revisions r
              ON r.canonical_owner_id = p.canonical_owner_id
@@ -783,7 +795,8 @@ export class DurablePortfolioStore {
     );
     const revisionRow = this.db
       .prepare(
-        `SELECT holdings_count, total_market_value, weight_sum_percentage, provenance_digest, operation
+        `SELECT holdings_count, total_market_value, weight_sum_percentage, provenance_digest, operation,
+                (SELECT is_saved FROM portfolio_restore_receipts rr WHERE rr.canonical_owner_id = portfolio_revisions.canonical_owner_id AND rr.portfolio_id = portfolio_revisions.portfolio_id AND rr.restored_revision = portfolio_revisions.revision) AS restored_is_saved
            FROM portfolio_revisions
           WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`,
       )
@@ -1731,6 +1744,46 @@ export class DurablePortfolioStore {
     return this.withTransaction(() => {
       this.validate(request);
       return this.writeRevision(owner, portfolioId, request, 'RESET', expectedRevision);
+    });
+  }
+
+  /** Only the existing personal default tombstone may be restored. Caller must authenticate owner. */
+  restore(owner: OwnerRef, portfolioId: string, expectedRevision: number, idempotencyKey: string): PortfolioRestoreReceipt {
+    return this.withTransaction(() => {
+      if (portfolioId !== 'DEFAULT_PORTFOLIO' || !Number.isSafeInteger(expectedRevision) || expectedRevision < 1 ||
+          typeof idempotencyKey !== 'string' || !idempotencyKey.trim() || idempotencyKey.length > 200) {
+        throw new InvalidPortfolioRequestError('restore requires DEFAULT_PORTFOLIO, expectedRevision and an idempotencyKey of 1–200 characters');
+      }
+      const p = this.db.prepare('SELECT * FROM portfolios WHERE canonical_owner_id = ? AND tenant_id = ? AND portfolio_id = ?')
+        .get(owner.canonicalOwnerId, owner.tenantId, portfolioId);
+      if (!p) throw new ResourceUnavailableError();
+      const fingerprint = JSON.stringify(['RESTORE', owner.canonicalOwnerId, owner.tenantId, portfolioId, expectedRevision]);
+      const prior = this.db.prepare('SELECT * FROM portfolio_restore_receipts WHERE canonical_owner_id = ? AND portfolio_id = ? AND idempotency_key = ?')
+        .get(owner.canonicalOwnerId, portfolioId, idempotencyKey);
+      if (prior) {
+        if (prior.tenant_id !== owner.tenantId || prior.request_fingerprint !== fingerprint) throw new RevisionConflictError('restore idempotency key conflicts with original request');
+        return { portfolioId, revision: Number(prior.restored_revision), restoredAt: String(prior.restored_at), isSaved: prior.is_saved === 1 };
+      }
+      if (p.status !== 'TOMBSTONED' || !p.deleted_at) throw new InvalidPortfolioRequestError('restore requires a tombstone with deletion evidence');
+      if (p.current_revision !== expectedRevision) throw new RevisionConflictError('stale restore expectedRevision');
+      const last = this.db.prepare('SELECT revision, operation FROM portfolio_revisions WHERE canonical_owner_id = ? AND portfolio_id = ? ORDER BY revision DESC LIMIT 1').get(owner.canonicalOwnerId, portfolioId);
+      if (!last || last.operation !== 'DELETE' || last.revision !== expectedRevision + 1) throw new InvalidPortfolioRequestError('invalid deletion history');
+      const source = this.db.prepare('SELECT * FROM portfolio_revisions WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?').get(owner.canonicalOwnerId, portfolioId, expectedRevision);
+      if (!source) throw new InvalidPortfolioRequestError('missing last active snapshot');
+      const isSaved = source.operation === 'RESTORE'
+        ? this.db.prepare('SELECT is_saved FROM portfolio_restore_receipts WHERE canonical_owner_id = ? AND portfolio_id = ? AND restored_revision = ?').get(owner.canonicalOwnerId, portfolioId, expectedRevision)?.is_saved
+        : Number(isSavedForCurrentOperation(String(source.operation), 'restore source'));
+      if (isSaved !== 0 && isSaved !== 1) throw new InvalidPortfolioRequestError('missing restored saved state');
+      const revision = Number(last.revision) + 1;
+      if (revision > this.revisionCap) throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${this.revisionCap}`);
+      const restoredAt = new Date().toISOString();
+      this.db.prepare(`INSERT INTO portfolio_revisions SELECT portfolio_id, canonical_owner_id, ?, 'RESTORE', total_market_value, weight_sum_percentage, holdings_count, provenance_digest, content_digest, ? FROM portfolio_revisions WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`).run(revision, restoredAt, owner.canonicalOwnerId, portfolioId, expectedRevision);
+      this.db.prepare(`INSERT INTO portfolio_holdings SELECT canonical_owner_id, portfolio_id, ?, holding_key, symbol, company_id, quantity, average_buy_price, current_price, market_value, weight_percentage, active, source_broker, lineage_digest, identity_status, resolution_disposition, created_at, security_identity FROM portfolio_holdings WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`).run(revision, owner.canonicalOwnerId, portfolioId, expectedRevision);
+      this.db.prepare("UPDATE portfolios SET status = 'ACTIVE', current_revision = ?, updated_at = ? WHERE canonical_owner_id = ? AND tenant_id = ? AND portfolio_id = ?").run(revision, restoredAt, owner.canonicalOwnerId, owner.tenantId, portfolioId);
+      this.db.prepare('INSERT INTO portfolio_restore_receipts VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(owner.canonicalOwnerId, owner.tenantId, portfolioId, idempotencyKey, fingerprint, revision, restoredAt, isSaved);
+      this.afterMutation('restore-receipt-insert');
+      appendAuditEvent(this.db, { eventType: 'RESTORE', subjectType: 'portfolio', subjectId: portfolioId, detail: { canonicalOwnerId: owner.canonicalOwnerId, tenantId: owner.tenantId, sourceRevision: expectedRevision, revision } });
+      return { portfolioId, revision, restoredAt, isSaved: isSaved === 1 };
     });
   }
 
