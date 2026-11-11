@@ -1,3 +1,5 @@
+import { ClassPJournal, CLASS_P_DIRECTORY_SETTING } from './classPJournal.js';
+import { migration006PortfolioRestore } from '../persistence/migrations/006_portfolio_restore.js';
 /**
  * Gate 3 — process entrypoint (act §4.2 item 14; C2/C5.3; T-E).
  *
@@ -7,7 +9,7 @@
  * persistence/provisioning.ts, so Gate A′ code is unreachable from startup.
  */
 import type { DatabaseSync } from 'node:sqlite';
-import { isAbsolute } from 'node:path';
+import { dirname, join, isAbsolute } from 'node:path';
 import { assertSupportedRuntime, openDatabase, RuntimeUnsupportedError } from '../persistence/connection.js';
 import {
   ensureMigrations,
@@ -48,9 +50,10 @@ export const GATE3_MIGRATIONS: readonly Migration[] = [
   migration003LocalPrincipalBindings,
   migration004PortfolioContributionProvenance,
   migration005HoldingSecurityIdentity,
+  migration006PortfolioRestore,
 ];
 
-export type StartupPhase = 'validate' | 'connect' | 'migrate' | 'verify' | 'compose' | 'bind';
+export type StartupPhase = 'validate' | 'connect' | 'migrate' | 'verify' | 'diagnostics' | 'compose' | 'bind';
 
 export interface StartupOutcome {
   readonly ok: boolean;
@@ -150,6 +153,14 @@ export async function startIpcServer(options: StartupOptions = {}): Promise<Star
     return fail('verify', error);
   }
 
+  // A configured, writable journal is mandatory for normal application startup.
+  let diagnosticJournal: ClassPJournal;
+  try {
+    diagnosticJournal = new ClassPJournal(env[CLASS_P_DIRECTORY_SETTING] ?? join(dirname(env[DATABASE_PATH_SETTING] as string), 'ipc-diagnostics'));
+  } catch {
+    return fail('diagnostics', new Error('local Class P journal initialization failed; check diagnostic directory permissions/configuration'));
+  }
+
   // 4b. Stage 4 composition of the governed identity dependencies, then the
   // O5-A single authorized call site (PA act `...-PA-DECISION-2026-10-30-01`
   // clause 1(b)): construct the durable broker-import consumer over the handle
@@ -194,7 +205,7 @@ export async function startIpcServer(options: StartupOptions = {}): Promise<Star
     // pipe breaks, so the pipe transport settles via the flush guard; AF_UNIX
     // keeps the airtight half-close gate.
     const settlement = settlementPolicyForEndpoint(target);
-    const handle: IpcHandle = await listenIpc(target, createConnectionHandler(db, { settlement, env, brokerImportConsumer }), {
+    const handle: IpcHandle = await listenIpc(target, createConnectionHandler(db, { settlement, env, brokerImportConsumer, diagnosticJournal }), {
       platform,
       ...(options.serverFactory ? { serverFactory: options.serverFactory } : {}),
     });

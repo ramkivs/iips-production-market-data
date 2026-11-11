@@ -293,6 +293,7 @@ const EXPECTED_MIGRATION_IDS = [
   '003_local_principal_bindings',
   '004_portfolio_contribution_provenance',
   '005_holding_security_identity',
+  '006_portfolio_restore',
 ] as const;
 
 const EXPECTED_TABLE_COLUMNS: Readonly<Record<string, readonly ExpectedColumnSpec[]>> = {
@@ -343,6 +344,16 @@ const EXPECTED_TABLE_COLUMNS: Readonly<Record<string, readonly ExpectedColumnSpe
     { name: 'resolution_disposition', type: 'TEXT', notnull: 0, pk: 0 },
     { name: 'created_at', type: 'TEXT', notnull: 1, pk: 0 },
     { name: 'security_identity', type: 'TEXT', notnull: 0, pk: 0 },
+  ],
+  portfolio_restore_receipts: [
+    { name: 'canonical_owner_id', type: 'TEXT', notnull: 1, pk: 1 },
+    { name: 'tenant_id', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'portfolio_id', type: 'TEXT', notnull: 1, pk: 2 },
+    { name: 'idempotency_key', type: 'TEXT', notnull: 1, pk: 3 },
+    { name: 'request_fingerprint', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'restored_revision', type: 'INTEGER', notnull: 1, pk: 0 },
+    { name: 'restored_at', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'is_saved', type: 'INTEGER', notnull: 1, pk: 0 },
   ],
   portfolio_contributions: [
     { name: 'canonical_owner_id', type: 'TEXT', notnull: 1, pk: 1 },
@@ -411,6 +422,7 @@ const EXPECTED_EXPLICIT_INDEXES: Readonly<Record<string, ExpectedIndexSpec>> = {
 };
 
 const EXPECTED_FOREIGN_KEYS: readonly ExpectedForeignKeySpec[] = [
+  { fromTable: 'portfolio_restore_receipts', toTable: 'portfolio_revisions', columnPairs: [['canonical_owner_id', 'canonical_owner_id'], ['portfolio_id', 'portfolio_id'], ['restored_revision', 'revision']] },
   {
     fromTable: 'portfolio_revisions',
     toTable: 'portfolios',
@@ -446,7 +458,7 @@ const EXPECTED_FOREIGN_KEYS: readonly ExpectedForeignKeySpec[] = [
 const EXPECTED_TABLE_CHECK_FRAGMENTS: Readonly<Record<string, readonly string[]>> = {
   portfolios: ["CHECK (status IN ('ACTIVE', 'TOMBSTONED'))"],
   portfolio_revisions: [
-    "CHECK (operation IN ('INITIAL', 'MERGE', 'REPLACE', 'RESET', 'DELETE'))",
+    "CHECK (operation IN ('INITIAL', 'MERGE', 'REPLACE', 'RESET', 'DELETE', 'RESTORE'))",
   ],
   local_principal_bindings: ["CHECK (status IN ('ACTIVE', 'REVOKED'))"],
   local_principal_memberships: ["CHECK (status IN ('ACTIVE', 'REVOKED'))"],

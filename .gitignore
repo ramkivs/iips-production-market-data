@@ -5,3 +5,6 @@ dist-frontend/
 .DS_Store
 run-d114-acquisition.ps1
 audits/
+
+# Private runtime IPC refusal evidence; never commit local journal segments.
+ipc-diagnostics/

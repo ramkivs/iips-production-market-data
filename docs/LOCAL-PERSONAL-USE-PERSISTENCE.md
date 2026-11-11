@@ -238,3 +238,37 @@ This is **not** production acceptance, **not** institutional certification,
 **not** Gate 4 qualification and **not** Gate 5 admission. `QE-1`…`QE-11` and
 B-06 remain open. It is a local, single-user, non-production capability
 exercised on the operator's own machine.
+
+## Authenticated tombstone restoration
+
+The v1 IPC write `portfolio.restore` accepts only `{ portfolioId:
+"DEFAULT_PORTFOLIO", expectedRevision, idempotencyKey }` (the default ID may
+be omitted). It requires the same enabled personal-use path and freshly
+resolved ACTIVE local binding/membership as ordinary personal writes. Caller
+owner/tenant claims remain forbidden; v2 writes remain unauthorized.
+
+`expectedRevision` is the tombstone's last-active pointer, not the DELETE
+revision. A valid tombstone with last active revision 2 and DELETE revision 3
+is restored at revision 4, explicitly labeled `RESTORE`. Metadata, deletion
+timestamp, all historical rows and all contribution rows are retained. The
+new holdings snapshot copies the last active snapshot, including unresolved
+identity facts; its prior `isSaved` is retained in a restoration receipt, not
+inferred as a new save. Restoration does not contribute capital.
+
+The receipt is `{ portfolioId, revision, restoredAt, isSaved }`. An exact retry
+using the same authenticated owner/tenant, idempotency key and expected revision
+returns that original receipt, even after subsequent lifecycle changes, with no
+additional revision or audit event. A reused key with changed request content
+is rejected. A different request against an active portfolio is rejected.
+Other IDs cannot use this operation; create still cannot reuse tombstones.
+
+Migration 006 rebuilds the revision CHECK and referencing holdings table in a
+single migration transaction with foreign keys enabled, preserving all existing
+row values and uniqueness. It appends restoration receipts and leaves migrations
+001–005 byte-unchanged. Successful restore appends one chained RESTORE audit
+event atomically with its revision and receipt.
+
+The personal-use cap remains **1,000**. Required restore revisions above 1,000
+are rejected without changes. Restore at 1,000 succeeds, but subsequent ordinary
+saves remain blocked by the existing cap. This implementation does not run a
+restore against any actual portfolio; an authenticated caller must request it.

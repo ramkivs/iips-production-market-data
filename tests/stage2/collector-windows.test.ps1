@@ -28,5 +28,38 @@ try {
   $missing=Get-Content -LiteralPath $second -Raw|ConvertFrom-Json
   if($missing.W03.portfolioStatus -ne 'UNKNOWN' -or $missing.W03.portfolioCount -ne 'UNKNOWN' -or $missing.W06.historical -ne 'UNKNOWN') {throw 'unavailable became empty or fresh'}
   if($missing.W05.rightsState -ne 'UNKNOWN' -or $missing.W05.rightsDeclarationValidity -ne 'INVALID') {throw 'malformed rights not disclosed'}
-  Write-Output 'Windows synthetic collector assertions passed.'
+  # Each server is a fresh synthetic endpoint. No real portfolio DB is opened.
+  foreach($case in @('initial','empty','multi','invalid-shape','closed','class-a','bad-json','mismatch')) {
+    $caseReady=Join-Path $temp ($case+'-ready.json');$casePipe='iips-stage2-'+[guid]::NewGuid().ToString('N')
+    $caseServer=Start-Process node -ArgumentList @('"'+$mock+'"',$casePipe,'"'+$caseReady+'"',$case) -PassThru -WindowStyle Hidden
+    try {
+      for($i=0;$i -lt 100 -and -not (Test-Path -LiteralPath $caseReady);$i++){Start-Sleep -Milliseconds 100}
+      if(-not (Test-Path -LiteralPath $caseReady)){throw "fixture not ready: $case"}
+      $cp=Get-Content -Raw -LiteralPath $caseReady|ConvertFrom-Json
+      $caseOutput=Join-Path $temp ($case+'.json')
+      & (Join-Path $root 'scripts/Collect-IipsStage2Evidence.ps1') -IrrPort $cp.irr -PipeName $casePipe -OutputFile $caseOutput -ConfirmNonProduction
+      $caseRaw=Get-Content -LiteralPath $caseOutput -Raw;$ce=$caseRaw|ConvertFrom-Json
+      if($case -eq 'initial') {
+        $p=$ce.W03.portfolios[0]
+        if($ce.W03.portfolioStatus -ne 'AVAILABLE' -or $ce.W03.portfolioCount -ne 1 -or -not $ce.W03.discovery.enumerationObserved){throw 'INITIAL not discovered'}
+        if($p.persistenceStatus -ne 'PERSISTED' -or $p.operation -ne 'INITIAL' -or $p.isSaved -ne $false -or $p.revision -ne 1 -or $p.holdings -ne 64 -or $p.active -ne 64 -or $p.inactive -ne 0 -or $p.weightSumPercentage -ne 100 -or $p.provenanceDigest -ne ('c'*64) -or ([datetimeoffset]$p.committedAt).ToUniversalTime() -ne [datetimeoffset]'2026-01-01T00:00:00Z'){throw ('INITIAL persisted facts misclassified: '+($p|ConvertTo-Json -Compress -Depth 5))}
+      } elseif($case -eq 'empty') {
+        if($ce.W03.portfolioCount -ne 0 -or $ce.W03.portfolioStatus -ne 'AVAILABLE' -or @($ce.W03.portfolios).Count -ne 0){throw 'observed empty list lost'}
+      } elseif($case -eq 'multi') {
+        if($ce.W03.portfolioCount -ne 2 -or @($ce.W03.portfolios).Count -ne 2){throw 'multiple portfolios lost'}
+      } elseif($case -eq 'mismatch') {
+        if($ce.W03.portfolios[0].persistenceStatus -ne 'UNKNOWN'){throw 'revision mismatch classified persisted'}
+      } else {
+        $expected=@{'invalid-shape'='RESPONSE_RESULT_NOT_ARRAY';closed='RESPONSE_CLOSED_BEFORE_COMPLETE_FRAME';'class-a'='CLASS_A_RESOURCE_UNAVAILABLE';'bad-json'='RESPONSE_JSON_INVALID'}[$case]
+        if($ce.W03.portfolioStatus -ne 'UNKNOWN' -or $ce.W03.portfolioCount -ne 'UNKNOWN' -or $null -ne $ce.W03.portfolios -or $ce.W03.discovery.enumerationObserved -ne $false -or $ce.W03.discovery.reason -ne $expected){throw "unavailable discovery failed: $case"}
+      }
+      foreach($secret in @('PORTFOLIO-SECRET','PORTFOLIO-SECOND','SENSITIVE_SYNTHETIC_SYMBOL')){if($caseRaw.Contains($secret)){throw 'portfolio identifiers leaked'}}
+    } finally {Stop-Process -Id $caseServer.Id -Force -ErrorAction SilentlyContinue}
+  }
+  $unset=Join-Path $temp 'unset.json'
+  & (Join-Path $root 'scripts/Collect-IipsStage2Evidence.ps1') -IrrPort $ports.irr -PipeName '' -OutputFile $unset -ConfirmNonProduction
+  $ue=Get-Content -Raw -LiteralPath $unset|ConvertFrom-Json
+  if($ue.W03.discovery.reason -ne 'ENDPOINT_NOT_CONFIGURED' -or $null -ne $ue.W03.portfolios){throw 'missing endpoint reason lost'}
+  Write-Output 'Windows synthetic collector assertions passed (INITIAL64, empty, multiple, mismatch and explicit discovery failures).'
+
 } finally { Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue; Remove-Item Env:IIPS_MARKET_DATA_TRANSPORT_TOKEN -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force $temp -ErrorAction SilentlyContinue }
