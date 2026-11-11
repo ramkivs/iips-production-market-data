@@ -104,7 +104,7 @@ test('native synthetic collection: redaction, metadata, hashes, rerun no overwri
     const paths = [f.file, ...artifactNames.map(x => join(f.repo,'dist','src',x))];
     const before = paths.map(p => [hash(p), statSync(p).mtimeMs]);
     for(let i=0;i<2;i++) {
-      const result = runPS(command(f)); assert.equal(result.status,0,result.stdout+result.stderr);
+      const result = runPS(command(f)); assert.equal(result.status,0,result.stdout+result.stderr+JSON.stringify(reports(f)));
       assert.ok(!result.stdout.includes('CANARY_SECRET_9981'));
     }
     const all = reports(f); assert.equal(all.length,2);

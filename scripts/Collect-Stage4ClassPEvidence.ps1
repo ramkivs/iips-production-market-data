@@ -13,9 +13,8 @@ Exit 3: invalid configuration or report publication failure.
 [CmdletBinding()]
 param(
     [string] $RepositoryRoot = 'H:\IIPS\iips-production-market-data',
-    [Parameter(Mandatory = $true)]
-    [ValidateCount(1, 8)] [string[]] $LogDirectories,
-    [Parameter(Mandatory = $true)] [string] $OutputDirectory,
+    [ValidateCount(1, 8)] [string[]] $LogDirectories = @(),
+    [string] $OutputDirectory = '',
     [ValidateRange(1, 128)] [int] $MaxFiles = 64,
     [ValidateRange(1024, 4194304)] [int] $MaxLogBytes = 1048576,
     [ValidateRange(1, 100)] [int] $MaxMatchesPerFile = 20,
@@ -211,6 +210,7 @@ function Get-ProcessEvidence {
 }
 
 try {
+    if ($LogDirectories.Count -lt 1) { throw 'EXPLICIT_LOG_DIRECTORIES_REQUIRED' }
     $Repo = Get-LocalPath $RepositoryRoot
     $Output = Get-LocalPath $OutputDirectory
     if (-not (Test-Path -LiteralPath $Repo -PathType Container) -or -not (Test-Path -LiteralPath $Output -PathType Container)) { throw 'EXISTING_REPOSITORY_AND_OUTPUT_DIRECTORIES_REQUIRED' }
@@ -226,6 +226,7 @@ try {
     foreach ($Directory in ($LogDirectories | Sort-Object -Unique)) {
         try {
             $SafeDirectory = Get-LocalPath $Directory
+            if ($SafeDirectory.TrimEnd('\') -eq [System.IO.Path]::GetPathRoot($SafeDirectory).TrimEnd('\')) { throw 'LOG_DRIVE_ROOT_REFUSED' }
             if ($Output.Equals($SafeDirectory, [StringComparison]::OrdinalIgnoreCase) -or $Output.StartsWith($SafeDirectory.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'OUTPUT_MUST_BE_OUTSIDE_LOG_DIRECTORIES' }
             if (-not (Test-Path -LiteralPath $SafeDirectory -PathType Container)) { Add-Issue $Directory 'LOG_DIRECTORY_MISSING'; continue }
             # Enumerate only this explicitly selected directory, never descendants.

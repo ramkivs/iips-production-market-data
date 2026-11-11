@@ -21,5 +21,14 @@ jobs:
       - name: Static and native synthetic collector tests only
         shell: powershell
         run: |
-          node --test tests/stage4_evidence_collector.test.mjs
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $Log = Join-Path $env:RUNNER_TEMP 'collector-targeted-tests.log'
+          & node --test tests/stage4_evidence_collector.test.mjs *> $Log
+          $Code = $LASTEXITCODE
+          Get-Content -LiteralPath $Log
+          if ($Code -ne 0) {
+            $Detail = Get-Content -LiteralPath $Log -Raw
+            $Detail = $Detail.Substring(0, [Math]::Min(16000, $Detail.Length))
+            $Detail = $Detail.Replace('%','%25').Replace("`r",'%0D').Replace("`n",'%0A')
+            Write-Output "::error title=Native collector test failure::$Detail"
+            exit $Code
+          }
