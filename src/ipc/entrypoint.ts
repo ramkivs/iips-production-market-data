@@ -1,3 +1,4 @@
+import { migration006PortfolioRestore } from '../persistence/migrations/006_portfolio_restore.js';
 /**
  * Gate 3 — process entrypoint (act §4.2 item 14; C2/C5.3; T-E).
  *
@@ -48,6 +49,7 @@ export const GATE3_MIGRATIONS: readonly Migration[] = [
   migration003LocalPrincipalBindings,
   migration004PortfolioContributionProvenance,
   migration005HoldingSecurityIdentity,
+  migration006PortfolioRestore,
 ];
 
 export type StartupPhase = 'validate' | 'connect' | 'migrate' | 'verify' | 'compose' | 'bind';

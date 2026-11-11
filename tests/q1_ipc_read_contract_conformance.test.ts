@@ -993,6 +993,7 @@ describe('q1 / IPC read path conforms to CAP-03 DR-2 Option A', () => {
         '004_portfolio_contribution_provenance',
         // G-2 durable holding identity: the single authorized additive migration.
         '005_holding_security_identity',
+        '006_portfolio_restore',
       ],
     );
     assert.deepEqual(
@@ -1003,8 +1004,9 @@ describe('q1 / IPC read path conforms to CAP-03 DR-2 Option A', () => {
         '7967acc06584811df9cf37e05b84d78d6126b6dae979ee79e0523dfce924004e',
         '0dbf90c129154d8c547b6c5876157877c5e12790ebf2b35c741640751ea7b0ac',
         '09fb8b68775a3c6cf799852a0c5c0146ea6971911097cb006a1782a9d415ec04',
+        '989a75518ca2fb4803a037e4e59df9053a2e10f38b42a40e67fa4bea01e3f342',
       ],
-      'the applied schema is byte-frozen: no migration was added, removed or edited beyond the authorized additive 005',
+      'the applied schema is byte-frozen: no migration was added, removed or edited beyond authorized migrations 005 and 006',
     );
   });
 
@@ -1015,9 +1017,9 @@ describe('q1 / IPC read path conforms to CAP-03 DR-2 Option A', () => {
     );
     assert.deepEqual(
       [...IPC_WRITE_OPERATIONS].sort(),
-      ['portfolio.create', 'portfolio.delete', 'portfolio.importBroker', 'portfolio.reset', 'portfolio.save'],
+      ['portfolio.create', 'portfolio.delete', 'portfolio.importBroker', 'portfolio.reset', 'portfolio.restore', 'portfolio.save'],
     );
-    assert.equal(IPC_OPERATIONS.length, 8);
+    assert.equal(IPC_OPERATIONS.length, 9);
     assert.deepEqual([...IPC_RESERVED_OPERATIONS], ['portfolio.analytics']);
     assert.ok(!(IPC_OPERATIONS as readonly string[]).includes('portfolio.analytics'), 'the reserved operation stays outside the closed set');
   });

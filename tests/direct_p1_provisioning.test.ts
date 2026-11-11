@@ -348,6 +348,7 @@ describe('Direct P1 Provisioning — Runtime & Dependency Validation', () => {
       '003_local_principal_bindings',
       '004_portfolio_contribution_provenance',
       '005_holding_security_identity',
+      '006_portfolio_restore',
     ]);
     assert.equal(report.principalLabel, 'ramki-personal-local');
     assert.equal(report.tenantId, 'ipd-personal-local');
@@ -492,7 +493,7 @@ describe('Direct P1 Provisioning — Fresh Provisioning, Schema, Constraints & I
       }
 
       // Schema & migration ledger checks
-      assert.equal(result.schema.migrationCount, 5);
+      assert.equal(result.schema.migrationCount, 6);
       assert.deepEqual(
         result.schema.appliedMigrations.map((m) => m.migrationId),
         GATE3_MIGRATIONS.map((m) => m.id),

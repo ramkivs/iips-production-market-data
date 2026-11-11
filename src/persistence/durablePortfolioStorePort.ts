@@ -146,6 +146,11 @@ export class DurablePortfolioStorePort implements PortfolioStorePort {
     return this.store.reset(owner, portfolioId, request, expectedRevision);
   }
 
+  restore(owner: OwnerRef, portfolioId: string, expectedRevision: number, idempotencyKey: string): ReturnType<DurablePortfolioStore['restore']> {
+    this.assertWritable(owner);
+    return this.store.restore(owner, portfolioId, expectedRevision, idempotencyKey);
+  }
+
   delete(owner: OwnerRef, portfolioId: string, expectedRevision: number): void {
     this.assertWritable(owner);
     this.store.delete(owner, portfolioId, expectedRevision);

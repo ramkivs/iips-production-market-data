@@ -134,7 +134,7 @@ describe('REG-06 durable PIT store — durability and restart recovery', () => {
     // The Gate 3 / Gate A' migration set is 001-004 plus the single authorized
     // additive 005_holding_security_identity (G-2 durable holding identity).
     // This PIT store must not have extended it.
-    assert.equal(GATE3_MIGRATIONS.length, 5);
+    assert.equal(GATE3_MIGRATIONS.length, 6);
     assert.equal(GATE3_MIGRATIONS[4]?.id, '005_holding_security_identity');
     assert.equal(GATE3_MIGRATIONS.some((m) => m.id.startsWith('pit')), false);
     assert.equal(ids.some((id) => id.startsWith('00')), false);

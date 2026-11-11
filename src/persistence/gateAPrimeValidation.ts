@@ -1,3 +1,4 @@
+import { migration006PortfolioRestore } from './migrations/006_portfolio_restore.js';
 /**
  * CAP-02 — Gate A′ successor read-only validation.
  *
@@ -59,6 +60,7 @@ export const DESIGNATED_MIGRATION_BLOBS = Object.freeze({
   '003_local_principal_bindings': '32b125bf962bb76a6ae59d3b262203dbbb988197',
   '004_portfolio_contribution_provenance': '6bad5a5095b6bb94ce91a86a4b65f7ab915c516c',
   '005_holding_security_identity': '09fb8b68775a3c6cf799852a0c5c0146ea697191',
+  '006_portfolio_restore': '989a75518ca2fb4803a037e4e59df9053a2e10f38',
 });
 
 /** Kept local to the act rather than importing the IPC/startup module. */
@@ -68,6 +70,7 @@ export const GATE3_MIGRATIONS: readonly Migration[] = [
   migration003LocalPrincipalBindings,
   migration004PortfolioContributionProvenance,
   migration005HoldingSecurityIdentity,
+  migration006PortfolioRestore,
 ];
 
 export interface GateAPrimeValidationInput {
