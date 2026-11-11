@@ -42,7 +42,7 @@ try {
       if($case -eq 'initial') {
         $p=$ce.W03.portfolios[0]
         if($ce.W03.portfolioStatus -ne 'AVAILABLE' -or $ce.W03.portfolioCount -ne 1 -or -not $ce.W03.discovery.enumerationObserved){throw 'INITIAL not discovered'}
-        if($p.persistenceStatus -ne 'PERSISTED' -or $p.operation -ne 'INITIAL' -or $p.isSaved -ne $false -or $p.revision -ne 1 -or $p.holdings -ne 64 -or $p.active -ne 64 -or $p.inactive -ne 0 -or $p.weightSumPercentage -ne 100 -or $p.provenanceDigest -ne ('c'*64) -or $p.committedAt -notlike '2026-01-01T00:00:00*'){throw ('INITIAL persisted facts misclassified: '+($p|ConvertTo-Json -Compress -Depth 5))}
+        if($p.persistenceStatus -ne 'PERSISTED' -or $p.operation -ne 'INITIAL' -or $p.isSaved -ne $false -or $p.revision -ne 1 -or $p.holdings -ne 64 -or $p.active -ne 64 -or $p.inactive -ne 0 -or $p.weightSumPercentage -ne 100 -or $p.provenanceDigest -ne ('c'*64) -or ([datetimeoffset]$p.committedAt).ToUniversalTime() -ne [datetimeoffset]'2026-01-01T00:00:00Z'){throw ('INITIAL persisted facts misclassified: '+($p|ConvertTo-Json -Compress -Depth 5))}
       } elseif($case -eq 'empty') {
         if($ce.W03.portfolioCount -ne 0 -or $ce.W03.portfolioStatus -ne 'AVAILABLE' -or @($ce.W03.portfolios).Count -ne 0){throw 'observed empty list lost'}
       } elseif($case -eq 'multi') {
