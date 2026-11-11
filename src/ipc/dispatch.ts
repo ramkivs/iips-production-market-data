@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+import { ClassPJournal, type ClassPContext } from './classPJournal.js';
 /**
  * Gate 3 — closed operation dispatch (act §4.2 item 13; contract v1 §5/§6; C6/C7).
  *
@@ -80,10 +82,13 @@ export interface ConnectionHandlerOptions {
   readonly env?: NodeJS.ProcessEnv;
   /** The single consumer composed by the entrypoint, never constructed here. */
   readonly brokerImportConsumer?: BrokerImportConsumer;
+  /** Constructed by normal startup; test harnesses may use an isolated journal. */
+  readonly diagnosticJournal?: ClassPJournal;
 }
 
-function refuseClassP(socket: Socket, reason: ClassPReason, detail: string): void {
-  diagnosticSink.record(reason, detail);
+function refuseClassP(socket: Socket, reason: ClassPReason, detail: string, context: ClassPContext, journal?: ClassPJournal): void {
+  const entry = diagnosticSink.record(reason, detail);
+  if (journal) entry.journalOutcome = journal.append(reason, detail, context);
   // Class P is zero bytes: destroy without writing anything. Destroy also
   // cancels any pending write, so a response queued before the guard tripped
   // never reaches a pipelining peer.
@@ -317,7 +322,16 @@ export function createConnectionHandler(
   const settlement: FrameSettlementPolicy = options.settlement ?? 'half-close-required';
 
   return (socket: Socket): void => {
+    const context: ClassPContext = { connectionId: randomUUID(), connectedAt: new Date().toISOString(), settlement, frame: {} };
+    let refused = false;
+    const refuse = (reason: ClassPReason, detail: string): void => {
+      if (refused) return;
+      refused = true;
+      refuseClassP(socket, reason, detail, context, options.diagnosticJournal);
+    };
     socket.on('error', () => {
+      context.frame.transportError = true;
+      refuse('MALFORMED_FRAME', 'transport error');
       // A peer reset is a transport event; nothing may be written after it.
       socket.destroy();
     });
@@ -328,15 +342,17 @@ export function createConnectionHandler(
       try {
         reader = await readSingleFrame(socket, {
           settlement,
+          onEnvelope: value => { context.envelope = value; },
+          onFrameMetadata: value => { context.frame = value; },
           ...(options.idleTimeoutMs ? { idleTimeoutMs: options.idleTimeoutMs } : {}),
         });
         envelope = reader.envelope;
       } catch (error) {
         if (error instanceof ClassPError) {
-          refuseClassP(socket, error.reason, error.message);
+          refuse(error.reason, error.message);
           return;
         }
-        refuseClassP(socket, 'MALFORMED_FRAME', error instanceof Error ? error.message : String(error));
+        refuse('MALFORMED_FRAME', error instanceof Error ? error.message : String(error));
         return;
       }
 
@@ -352,7 +368,7 @@ export function createConnectionHandler(
         // store access, at top level and inside payload/options alike.
         const refusedKeys = findRefusedWireKeys(envelope);
         if (refusedKeys.length > 0) {
-          refuseClassP(socket, 'CALLER_SUPPLIED_AUTHORITY', `refused keys: ${refusedKeys.join(', ')}`);
+          refuse('CALLER_SUPPLIED_AUTHORITY', `refused keys: ${refusedKeys.join(', ')}`);
           return;
         }
 
@@ -365,14 +381,14 @@ export function createConnectionHandler(
           owner = responseVersion === 2 ? resolveActiveHoldingsBinding(db) : resolveActiveBinding(db);
         } catch (error) {
           if (error instanceof BindingAbsentError) {
-            refuseClassP(socket, 'BINDING_ABSENT', error.message);
+            refuse('BINDING_ABSENT', error.message);
             return;
           }
           if (error instanceof BindingInvalidError) {
-            refuseClassP(socket, 'BINDING_INVALID', error.message);
+            refuse('BINDING_INVALID', error.message);
             return;
           }
-          refuseClassP(socket, 'BINDING_INVALID', 'binding resolution failed');
+          refuse('BINDING_INVALID', 'binding resolution failed');
           return;
         }
 
@@ -401,10 +417,10 @@ export function createConnectionHandler(
             await reader.whenSettled;
           } catch (error) {
             if (error instanceof ClassPError) {
-              refuseClassP(socket, error.reason, error.message);
+              refuse(error.reason, error.message);
               return;
             }
-            refuseClassP(socket, 'MALFORMED_FRAME', error instanceof Error ? error.message : String(error));
+            refuse('MALFORMED_FRAME', error instanceof Error ? error.message : String(error));
             return;
           }
         }
@@ -417,7 +433,7 @@ export function createConnectionHandler(
         writeGuarded = async (frame: Buffer): Promise<boolean> => {
           if (!reader.isGuardIntact()) {
             const fault = await reader.whenGuardTripped;
-            refuseClassP(socket, fault.reason, fault.message);
+            refuse(fault.reason, fault.message);
             return false;
           }
           try {
@@ -451,10 +467,10 @@ export function createConnectionHandler(
             return true;
           } catch (error) {
             if (error instanceof ClassPError) {
-              refuseClassP(socket, error.reason, error.message);
+              refuse(error.reason, error.message);
               return false;
             }
-            refuseClassP(socket, 'MALFORMED_FRAME', error instanceof Error ? error.message : String(error));
+            refuse('MALFORMED_FRAME', error instanceof Error ? error.message : String(error));
             return false;
           }
         };
@@ -487,7 +503,7 @@ export function createConnectionHandler(
               v2Result = store.revisions(owner, String(payload.portfolioId));
               break;
             default:
-              refuseClassP(socket, 'UNKNOWN_OPERATION', `not dispatched: ${String(op)}`);
+              refuse('UNKNOWN_OPERATION', `not dispatched: ${String(op)}`);
               return;
           }
           await writeGuarded(successFrame(op, v2Result, requestId, 2));
@@ -528,7 +544,7 @@ export function createConnectionHandler(
           }
           default:
             // The parser already closes the operation set; stay fail-closed.
-            refuseClassP(socket, 'UNKNOWN_OPERATION', `not dispatched: ${envelope.op}`);
+            refuse('UNKNOWN_OPERATION', `not dispatched: ${envelope.op}`);
             return;
         }
         await writeGuarded(successFrame(envelope.op, result, requestId));

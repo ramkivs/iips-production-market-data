@@ -6,8 +6,10 @@
  * the request and v / ok / op / requestId / result|outcome / detail on responses.
  * One request and at most one response per connection; pipelined frames are
  * refused. Class P refusals emit zero bytes and record the reason only in the
- * bounded in-memory diagnostic sink — never on the wire (C6).
+ * bounded in-memory diagnostic sink and, on configured application startup,
+ * the local redacted journal — never on the wire (C6).
  */
+import type { FrameEvidence, EnvelopeEvidence, JournalOutcome } from './classPJournal.js';
 import type { Socket } from 'node:net';
 
 export const IPC_PROTOCOL_VERSION = 1;
@@ -128,16 +130,19 @@ export interface DiagnosticEntry {
   readonly at: string;
   readonly reason: ClassPReason;
   readonly detail: string;
+  journalOutcome?: JournalOutcome;
 }
 
 class DiagnosticSink {
   private entries: DiagnosticEntry[] = [];
 
-  record(reason: ClassPReason, detail: string): void {
-    this.entries.push({ at: new Date().toISOString(), reason, detail });
+  record(reason: ClassPReason, detail: string): DiagnosticEntry {
+    const entry: DiagnosticEntry = { at: new Date().toISOString(), reason, detail };
+    this.entries.push(entry);
     if (this.entries.length > DIAGNOSTIC_SINK_LIMIT) {
       this.entries = this.entries.slice(-DIAGNOSTIC_SINK_LIMIT);
     }
+    return entry;
   }
 
   drain(): DiagnosticEntry[] {
@@ -207,7 +212,7 @@ export function successFrame(op: IpcOperation | IpcV2Operation, result: unknown,
  * needed. A declared length over the cap, a truncated body or trailing bytes
  * after the first frame are Class P protocol violations.
  */
-export function parseSingleFrame(buffer: Buffer): { envelope: AnyRequestEnvelope; totalLength: number } | null {
+export function parseSingleFrame(buffer: Buffer, onEnvelope?: (value: EnvelopeEvidence) => void): { envelope: AnyRequestEnvelope; totalLength: number } | null {
   if (buffer.byteLength < IPC_LENGTH_PREFIX_BYTES) return null;
   const declared = buffer.readUInt32BE(0);
   if (declared > IPC_REQUEST_MAX_BYTES) {
@@ -229,6 +234,7 @@ export function parseSingleFrame(buffer: Buffer): { envelope: AnyRequestEnvelope
     throw new ClassPError('MALFORMED_FRAME', 'the frame body is not a JSON object');
   }
   const record = body as Record<string, unknown>;
+  onEnvelope?.({ v: record.v, op: record.op, requestId: typeof record.requestId === 'string' ? record.requestId : undefined, requestIdType: record.requestId === null ? 'null' : Array.isArray(record.requestId) ? 'array' : typeof record.requestId });
   for (const key of Object.keys(record)) {
     if (!['v', 'op', 'payload', 'requestId'].includes(key)) {
       // A certified caller-identity/authority key at the envelope level is the
@@ -426,6 +432,9 @@ function validateV2Envelope(record: Record<string, unknown>): void {
 export type FrameSettlementPolicy = 'half-close-required' | 'flush-guard';
 
 export interface ReadFrameOptions {
+  /** Server-only metadata observers; never receives a holding/payload. */
+  readonly onEnvelope?: (value: EnvelopeEvidence) => void;
+  readonly onFrameMetadata?: (value: FrameEvidence) => void;
   readonly idleTimeoutMs?: number;
   readonly settlement?: FrameSettlementPolicy;
 }
@@ -497,6 +506,9 @@ export function readSingleFrame(
   return new Promise((resolveReader, rejectReader) => {
     const chunks: Buffer[] = [];
     let total = 0;
+    let prefix = Buffer.alloc(0);
+    const evidence: FrameEvidence = { receivedBytes: 0 };
+    const observe = (): void => normalized.onFrameMetadata?.({ ...evidence });
     let phase: 'reading' | 'guarding' | 'done' = 'reading';
     let timer: NodeJS.Timeout | undefined;
     let settledResolve: (() => void) | undefined;
@@ -562,6 +574,13 @@ export function readSingleFrame(
     function onData(chunk: Buffer): void {
       if (phase === 'done') return;
 
+      total += chunk.byteLength;
+      if (prefix.length < 4) prefix = Buffer.concat([prefix, chunk.subarray(0, 4 - prefix.length)]);
+      const now = new Date().toISOString();
+      evidence.firstByteAt ??= now; evidence.lastByteAt = now; evidence.receivedBytes = total;
+      if (prefix.length === 4) evidence.declaredBodyBytes = prefix.readUInt32BE(0);
+      observe();
+
       // Guarding: the single permitted frame already parsed. Any further byte
       // — a whole second frame, a partial prefix, or stray trailing data — is a
       // pipelining violation regardless of which data event delivers it.
@@ -575,14 +594,13 @@ export function readSingleFrame(
         return;
       }
 
-      total += chunk.byteLength;
       if (total > IPC_LENGTH_PREFIX_BYTES + IPC_REQUEST_MAX_BYTES) {
         fail(new ClassPError('OVERSIZE_FRAME', `frame exceeds the ${IPC_REQUEST_MAX_BYTES}-byte request cap`));
         return;
       }
       chunks.push(chunk);
       try {
-        const parsed = parseSingleFrame(Buffer.concat(chunks));
+        const parsed = parseSingleFrame(Buffer.concat(chunks), normalized.onEnvelope);
         if (!parsed) {
           // Still incomplete; chunk boundaries need not match write boundaries.
           armTimer();
@@ -620,6 +638,7 @@ export function readSingleFrame(
     }
 
     function onEnd(): void {
+      evidence.endedAt = new Date().toISOString(); observe();
       if (phase === 'done') return;
       if (phase === 'reading') {
         fail(new ClassPError('MALFORMED_FRAME', 'connection ended before a complete frame arrived'));
@@ -633,6 +652,7 @@ export function readSingleFrame(
     }
 
     function onError(error: Error): void {
+      evidence.transportError = true; observe();
       if (phase === 'done') return;
       fail(new ClassPError('MALFORMED_FRAME', `transport error: ${error.message}`));
     }

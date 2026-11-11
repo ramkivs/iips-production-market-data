@@ -1,0 +1,34 @@
+name: Stage 4 evidence collector safety
+on:
+  pull_request:
+    paths:
+      - scripts/Collect-Stage4ClassPEvidence.ps1
+      - tests/stage4_evidence_collector.test.mjs
+      - .github/workflows/stage4-evidence-collector.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  collector:
+    name: Windows PowerShell 5.1 targeted safety tests
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Static and native synthetic collector tests only
+        shell: powershell
+        run: |
+          $Log = Join-Path $env:RUNNER_TEMP 'collector-targeted-tests.log'
+          & node --test tests/stage4_evidence_collector.test.mjs *> $Log
+          $Code = $LASTEXITCODE
+          Get-Content -LiteralPath $Log
+          if ($Code -ne 0) {
+            $Detail = Get-Content -LiteralPath $Log -Raw
+            $Detail = $Detail.Substring(0, [Math]::Min(16000, $Detail.Length))
+            $Detail = $Detail.Replace('%','%25').Replace("`r",'%0D').Replace("`n",'%0A')
+            Write-Output "::error title=Native collector test failure::$Detail"
+            exit $Code
+          }
