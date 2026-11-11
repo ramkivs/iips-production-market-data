@@ -93,7 +93,7 @@ function fixture() {
 }
 function command(f, extra = '', mock = '') {
   const entry = join(f.repo, 'dist', 'src', 'ipc', 'entrypoint.js');
-  const fake = `function Get-CimInstance { param($ClassName,$Filter) if($Filter -eq 'ProcessId=1'){return [pscustomobject]@{ProcessId=1;Name='powershell.exe';CreationDate=[datetime]'2026-11-11T15:00:00Z'}}; return [pscustomobject]@{ProcessId=14484;ParentProcessId=1;CreationDate=[datetime]'2026-11-11T16:00:00Z';ExecutablePath='C:\\Windows\\node.exe';CommandLine=('node.exe "' + ${quote(entry)} + '" --secret=CANARY_SECRET_9981')} };`;
+  const fake = `function global:Get-CimInstance { param($ClassName,$Filter) Write-Host ('SYNTHETIC_QUERY=' + $Filter); if($Filter -eq 'ProcessId=1'){return [pscustomobject]@{ProcessId=1;Name='powershell.exe';CreationDate=[datetime]'2026-11-11T15:00:00Z'}}; return [pscustomobject]@{ProcessId=14484;ParentProcessId=1;CreationDate=[datetime]'2026-11-11T16:00:00Z';ExecutablePath='C:\\Windows\\node.exe';CommandLine=('node.exe "' + ${quote(entry)} + '" --secret=CANARY_SECRET_9981')} };`;
   return `${fake}${mock} & ${quote(script)} -RepositoryRoot ${quote(f.repo)} -LogDirectories ${quote(f.logs)} -OutputDirectory ${quote(f.output)} ${extra}; exit $LASTEXITCODE`;
 }
 function reports(f) { return readdirSync(f.output).map(x => JSON.parse(readFileSync(join(f.output,x),'utf8'))); }
