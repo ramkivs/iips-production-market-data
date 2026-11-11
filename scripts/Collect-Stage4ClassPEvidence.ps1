@@ -40,7 +40,7 @@ function Get-ErrorKind {
     if ($Record.CategoryInfo.Category -eq 'PermissionDenied') { return 'ACCESS_DENIED' }
     if ($Record.CategoryInfo.Category -eq 'ObjectNotFound') { return 'FILE_OR_DIRECTORY_MISSING' }
     if (@('INVALID_LOCAL_PATH','LOCAL_FIXED_DRIVE_REQUIRED','REPARSE_POINT_REFUSED','FILE_SIZE_LIMIT','OUTPUT_MUST_BE_OUTSIDE_LOG_DIRECTORIES') -contains $Record.Exception.Message) { return $Record.Exception.Message }
-    return 'READ_FAILED_DETAILS_SUPPRESSED'
+    return ('READ_FAILED_' + $Record.Exception.GetType().Name + '_AT_LINE_' + $Record.InvocationInfo.ScriptLineNumber)
 }
 
 function Get-LocalPath {
