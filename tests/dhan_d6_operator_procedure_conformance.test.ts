@@ -53,6 +53,8 @@ import { DHAN_ENV_KEYS } from '../src/providers/dhan/dhan_config.js';
 import { MARKET_DATA_TRANSPORT_TOKEN_ENV } from '../src/providers/dhan/dhan_market_data_http.js';
 
 const DOC = 'docs/integration/DHAN-D6-OPERATOR-TOKEN-ACQUISITION-AND-REPLACEMENT-2026-11-12.md';
+/** The Windows-host rehearsal record D-6's exit criterion is closed on. */
+const EVIDENCE = 'docs/integration/DHAN-D6-WINDOWS-HOST-REHEARSAL-EVIDENCE-2026-11-12.md';
 const CLI_SOURCE = 'src/providers/dhan/dhan_credential_store_cli.ts';
 const UTILITY_SOURCE = 'src/providers/dhan/dhan_credential_store_utility.ts';
 const NOW = new Date('2026-11-12T06:30:00.000Z');
@@ -67,6 +69,11 @@ const document = repoText(DOC);
 /** Whitespace-collapsed copy, so a phrase is asserted independently of how Markdown wraps. */
 const flat = document.replace(/\s+/g, ' ');
 const says = (phrase: string): boolean => flat.includes(phrase.replace(/\s+/g, ' '));
+
+const evidence = repoText(EVIDENCE);
+const evidenceFlat = evidence.replace(/\s+/g, ' ');
+const evidenceSays = (phrase: string): boolean =>
+  evidenceFlat.includes(phrase.replace(/\s+/g, ' '));
 
 /** Minimal DPAPI stand-in so the documented commands can be parsed and executed in-process. */
 const fakeRunner: DpapiProcessRunner = async (
@@ -573,5 +580,185 @@ describe('D-6 — operator procedure document', () => {
     assert.ok(says('It cannot prove vendor acceptance, because it never calls the vendor'));
     // The rehearsal must not be presented as having been performed here.
     assert.ok(says('No credential is recorded here and none was obtained'));
+  });
+
+  it('D6-14: the Windows-host rehearsal record is linked, honest and credential-free', () => {
+    // The procedure must point at the record, and the record must point back at the procedure.
+    assert.ok(
+      says(EVIDENCE),
+      'the procedure must link the Windows-host rehearsal evidence'
+    );
+    assert.ok(evidence.includes('DHAN-D6-OPERATOR-TOKEN-ACQUISITION-AND-REPLACEMENT-2026-11-12.md'));
+
+    // It must be the *second* rehearsal, not a relabelling of the first one.
+    assert.ok(evidenceSays('Mechanical rehearsal (procedure §14.1)'));
+    assert.ok(evidenceSays('**Windows-host rehearsal (this file)**'));
+    assert.ok(evidenceSays('the governed Windows workstation'));
+    assert.ok(evidenceSays('DPAPI | emulated child'));
+
+    // Environment and isolation facts the operator supplied.
+    assert.ok(evidence.includes('H:\\IIPS\\iips-production-market-data'));
+    assert.ok(evidence.includes('arena/84d1e063-iips-production-market-data'));
+    assert.ok(evidence.includes('d6-rehearsal-20261112-231202'));
+    assert.ok(evidenceSays('outside the Git working tree and outside the default carrier directory'));
+    assert.ok(evidenceSays('PASS: Synthetic rehearsal store removed.'));
+
+    // Every command it shows must be implemented vocabulary. `--expires-at` on a client id is the
+    // documented refusal probe (E2), so it is allowed only inside a refusal context.
+    const allowedVerbs = new Set(['provision', 'rotate', 'verify', '--help']);
+    const allowedFlags = new Set([
+      '--carrier-directory',
+      '--version',
+      '--expires-at',
+      '--expires-in-hours',
+      '--json',
+      '--help',
+    ]);
+    const invocations = evidence.match(/npm(?:\.cmd)? run dhan:credential -- [^\n`|]*/g) ?? [];
+    assert.ok(invocations.length >= 8, 'the record must show the commands that were run');
+    for (const invocation of invocations) {
+      const tokens = invocation
+        .replace(/npm(?:\.cmd)? run dhan:credential --/, '')
+        .trim()
+        .split(/\s+/)
+        .filter((token) => token.length > 0);
+      assert.ok(allowedVerbs.has(tokens[0] ?? ''), `unknown subcommand in the evidence: ${tokens[0]}`);
+      for (const token of tokens.slice(1)) {
+        if (!token.startsWith('-')) continue;
+        assert.ok(allowedFlags.has(token.split('=')[0] ?? token), `the CLI does not implement ${token}`);
+      }
+      if (tokens.includes('--expires-at') || tokens.includes('--expires-in-hours')) {
+        const position = evidence.indexOf(invocation);
+        const context = evidence.slice(Math.max(0, position - 400), position + invocation.length + 800);
+        assert.ok(
+          tokens.includes('access-token') || /reject|refus/i.test(context),
+          `expiry quoted for a role that takes none, outside a refusal probe: ${invocation}`
+        );
+      }
+    }
+
+    // Exit codes and statuses it quotes must be the shipped ones.
+    assert.ok(evidenceSays('exit code **`6`**'), 'the empty-store exit code must be recorded');
+    assert.strictEqual(DHAN_CREDENTIAL_EXIT.VERIFY_FAILED, 6);
+    assert.ok(evidence.includes('VERIFY_EXIT=0'));
+    assert.ok(evidence.includes('DUPLICATE_PROVISION_EXIT=7'));
+    assert.strictEqual(DHAN_CREDENTIAL_EXIT.STATE_REFUSED, 7);
+    for (const status of ['PRESENT_OK', 'ABSENT']) {
+      assert.ok(evidence.includes(status), `${status} must appear as the observed status vocabulary`);
+    }
+
+    // Fingerprints are truncated CLI identifiers: exactly 12 hex characters, never a full digest.
+    const fingerprints: string[] = evidence.match(/sha256:[0-9a-zA-Z]+/g) ?? [];
+    assert.deepStrictEqual(
+      fingerprints.filter((value) => !/^sha256:[0-9a-f]{12}$/.test(value)),
+      [],
+      'a recorded digest must be the CLI\'s 12-hex-character identifier'
+    );
+    assert.ok(!/sha256:[0-9a-f]{13,}/.test(evidence), 'no full digest may be recorded');
+    for (const identifier of ['sha256:d870961faf91', 'sha256:75cc355bf6cf', 'sha256:c17b225823cf']) {
+      assert.ok(fingerprints.includes(identifier), `${identifier} must be preserved verbatim`);
+    }
+    // The rotation evidence is only meaningful if the identifier actually changed.
+    assert.notStrictEqual('sha256:75cc355bf6cf', 'sha256:c17b225823cf');
+
+    // Nothing credential-shaped, and no vendor material.
+    assert.ok(!evidence.includes('eyJ'), 'no JWT may appear in the evidence');
+    // A commit id is the only long hex run allowed here, and the record must name the tree it ran on.
+    const commits: string[] = evidence.match(/\b[0-9a-f]{40}\b/g) ?? [];
+    assert.ok(commits.includes('2cced8f3a384609fe8389d42a4821508433e9fcb'), 'the rehearsed commit must be named');
+    assert.deepStrictEqual(
+      evidence.replace(/\b[0-9a-f]{40}\b/g, '<commit>').match(/[A-Za-z0-9+/]{40,}={0,2}/g) ?? [],
+      [],
+      'no encoded blob'
+    );
+    assert.ok(!/\b1000\d{6}\b/.test(evidence), 'no Dhan-client-id-shaped number may appear');
+    assert.ok(evidenceSays('No credential value, no client id, no token, no ciphertext'));
+
+    // The E2 limitation must be stated, not smoothed over: no claim that the past date decided it,
+    // and no claim that expiry is validated before the prompt.
+    assert.ok(evidenceSays('the client id has no lifecycle of its own and takes no expiry'));
+    assert.ok(evidenceSays('does **not** independently evidence the past-instant rule'));
+    assert.ok(evidenceSays('expiry is validated before the operator is asked for the value'));
+    assert.ok(evidenceSays('E5'), 'the partial-transcript limitation must be named');
+    assert.ok(evidenceSays('inventing the intermediate lines would be fabrication'));
+
+    // The four-way distinction, and no W-06 claim.
+    assert.ok(evidenceSays('Real Dhan credentials | **not used**'));
+    assert.ok(evidenceSays('Dhan vendor requests | **none**'));
+    assert.ok(evidenceSays('**not tested** (W-06)'));
+    assert.ok(evidenceSays('Production readiness | **not established**'));
+    assert.ok(evidenceSays('W-06 | **not started**, not authorised by this document'));
+    assert.ok(
+      !/W-06[^\n]{0,40}\b(complete|completed|passed|succeeded)\b/i.test(evidence),
+      'the record must never present W-06 as done'
+    );
+  });
+
+  it('D6-15: the refusal and expiry rules the record quotes are the rules the CLI enforces', async () => {
+    const clientDirectory = mkdtempSync(path.join(os.tmpdir(), 'iips-d6-evidence-client-'));
+    const tokenDirectory = mkdtempSync(path.join(os.tmpdir(), 'iips-d6-evidence-token-'));
+    const lifecycleDirectory = mkdtempSync(path.join(os.tmpdir(), 'iips-d6-evidence-life-'));
+    try {
+      // E1: an empty store is a finding — both roles absent, exit 6, never 0.
+      const empty = await runDocumented(['verify'], clientDirectory);
+      assert.strictEqual(empty.exitCode, DHAN_CREDENTIAL_EXIT.VERIFY_FAILED);
+      assert.match(empty.stdout, /client-id {4}: ABSENT \(/);
+      assert.match(empty.stdout, /access-token : ABSENT \(/);
+
+      // E2: the client-id expiry refusal is the role rule, exactly as the record states it.
+      const clientExpiry = await runDocumented(
+        ['provision', 'client-id', '--expires-at', '2020-01-01T00:00:00.000Z'],
+        clientDirectory
+      );
+      assert.strictEqual(clientExpiry.exitCode, DHAN_CREDENTIAL_EXIT.INPUT_INVALID);
+      assert.match(clientExpiry.stderr, /refused \[EXPIRY_INVALID\]: the client id has no lifecycle/);
+
+      // The past-instant rule belongs to the access token (the record says E2 does not prove it).
+      const tokenPast = await runDocumented(
+        ['provision', 'access-token', '--expires-at', '2020-01-01T00:00:00.000Z'],
+        tokenDirectory
+      );
+      assert.strictEqual(tokenPast.exitCode, DHAN_CREDENTIAL_EXIT.INPUT_INVALID);
+      assert.match(tokenPast.stderr, /refused \[EXPIRY_INVALID\]: the expiry is not in the future/);
+
+      // E3/E4/E7: the lifecycle the record describes, in shape, on a fresh store.
+      const created = await runDocumented(['provision', 'client-id'], lifecycleDirectory);
+      assert.strictEqual(created.exitCode, DHAN_CREDENTIAL_EXIT.OK);
+      assert.match(created.stdout, /^\[ipd-dhan-credential\] provision client-id: OK$/m);
+      assert.match(created.stdout, /replaced {5}: no/);
+      assert.match(created.stdout, /roundTrip {4}: verified before swap/);
+      assert.match(created.stdout, /location {5}: withheld/);
+
+      const token = await runDocumented(
+        ['provision', 'access-token', '--expires-at', '2026-11-13T06:30:00.000Z'],
+        lifecycleDirectory
+      );
+      assert.strictEqual(token.exitCode, DHAN_CREDENTIAL_EXIT.OK);
+      assert.match(token.stdout, /expiresAtUtc : 2026-11-13T06:30:00\.000Z/);
+
+      const verified = await runDocumented(['verify'], lifecycleDirectory);
+      assert.strictEqual(verified.exitCode, DHAN_CREDENTIAL_EXIT.OK);
+      // The E7 lines, verbatim in shape: both roles PRESENT_OK with every flag satisfied.
+      assert.match(
+        verified.stdout,
+        /client-id {4}: PRESENT_OK \(present=yes readable=yes aclOwnerOnly=yes schemaValid=yes expired=no version=v1\)/
+      );
+      assert.match(
+        verified.stdout,
+        /access-token : PRESENT_OK \(present=yes readable=yes aclOwnerOnly=yes schemaValid=yes expired=no version=v1 expiresAtUtc=2026-11-13T06:30:00\.000Z\)/
+      );
+
+      // E8: the duplicate-provision refusal, sentence and exit code, exactly as recorded.
+      const duplicate = await runDocumented(['provision', 'client-id'], lifecycleDirectory);
+      assert.strictEqual(duplicate.exitCode, DHAN_CREDENTIAL_EXIT.STATE_REFUSED);
+      assert.strictEqual(
+        duplicate.stderr,
+        '[ipd-dhan-credential] refused [ALREADY_PROVISIONED]: a carrier for this secret already exists; use rotate to replace it'
+      );
+    } finally {
+      for (const directory of [clientDirectory, tokenDirectory, lifecycleDirectory]) {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    }
   });
 });

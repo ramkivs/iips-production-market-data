@@ -1,6 +1,7 @@
 # DHAN D-6 — Operator Token-Acquisition and Replacement Procedure
 
 **Status:** DOCUMENTED — procedure only. No credential is recorded here and none was obtained.
+**Rehearsal:** COMPLETE (2026-11-12) — mechanical §14.1, and on the governed Windows host §14.2; synthetic values only, no vendor call.
 **Decision:** D-6 (roadmap v1.1) — owner of the procedure: the Operator; owner of this document: IPD.
 **Roadmap authority:** `ramkivs/iips-review-recovered` → `docs/integration/DHAN-LIVE-INTEGRATION-IMPLEMENTATION-ROADMAP-2026-11-11.md` (v1.1), §D-6
 **Implementation this procedure drives:** W-02 (store backend), W-04 (provisioning/rotation/verification CLI, published at `0fa4da4`), W-03 (daemon selector and diagnostics), D-7 (state model and disclosure policy)
@@ -433,7 +434,8 @@ For the rehearsal (D-6 exit criterion) and for W-06, record:
 - the `verify` output for both roles;
 - the daemon startup line (selector, backend id, readiness, egress mode, credential-readiness code,
   provider state);
-- token **expiry** timestamp and the rotation time.
+- token **expiry** timestamp and the rotation time;
+- the completed record itself: [`DHAN-D6-WINDOWS-HOST-REHEARSAL-EVIDENCE-2026-11-12.md`](DHAN-D6-WINDOWS-HOST-REHEARSAL-EVIDENCE-2026-11-12.md) — verbatim outputs, contract cross-check and evidence limitations.
 
 Never record: the token, the client id, a ciphertext, a `vault://` value, a carrier path from a
 running system, or a screenshot of the console while a secret is on screen.
@@ -467,9 +469,18 @@ against the shipped code, and the document is checked for anything that looks li
 
 ## 14. Rehearsal (D-6 exit criterion) and the route to W-06
 
-D-6 closes when this procedure has been **documented and rehearsed once with a throwaway value** —
+D-6 closes on a procedure that has been **documented and rehearsed once with a throwaway value** —
 exactly as written here, on the governed host, with a synthetic string in place of each real secret.
-The rehearsal proves the mechanics: hidden prompt, atomic write, round-trip proof, `verify`,
+Both rehearsals are recorded, and they are deliberately separate:
+
+- **§14.1 — mechanical**, host-independent (Arena, 2026-11-12): every documented invocation, exit code,
+  status and failure code reproduced against the shipped CLI;
+- **§14.2 — governed Windows host** (operator, 2026-11-12): the same lifecycle through real DPAPI, the
+  real owner-only DACL, the real filesystem and the real launcher, in an isolated rehearsal store that
+  was removed afterwards; full record in
+  [`DHAN-D6-WINDOWS-HOST-REHEARSAL-EVIDENCE-2026-11-12.md`](DHAN-D6-WINDOWS-HOST-REHEARSAL-EVIDENCE-2026-11-12.md).
+
+Together the rehearsals prove the mechanics: hidden prompt, atomic write, round-trip proof, `verify`,
 `rotate`, expiry refusal and the failure messages. It cannot prove vendor acceptance, because it
 never calls the vendor.
 
@@ -489,7 +500,7 @@ are:
 W-06 closes milestone **M1 only**. It does not qualify quotes, history or freshness, and it does not
 authorise any subsequent live activity.
 
-### 14.1 Rehearsal record — mechanical half (executed)
+### 14.1 Rehearsal record — mechanical half (Arena, executed 2026-11-12)
 
 | Field | Value |
 | --- | --- |
@@ -498,14 +509,35 @@ authorise any subsequent live activity.
 | Secret used | a synthetic throwaway string generated for the rehearsal; never a Dhan credential |
 | DPAPI child | emulated (`protect` / `unprotect` / `read-acl` / `apply-acl` / `describe-acl`), so the rehearsal is host-independent |
 | Platform gate | `win32` asserted in-process; no Windows call is made and no real DPAPI blob is written |
-| Suite | `tests/dhan_d6_operator_procedure_conformance.test.ts` (D6-01…D6-13), 13/13 |
+| Suite | `tests/dhan_d6_operator_procedure_conformance.test.ts` (D6-01…D6-15), 15/15 |
 | Result | provision → `PRESENT_OK`; re-provision refused (`ALREADY_PROVISIONED`, exit `7`); `verify` → `PRESENT_OK` with `location: withheld`; `rotate` → replacement with `createdAtUtc` preserved; expiry refusal on `client-id` and on a past instant; every quoted exit code, status and failure code observed exactly as documented |
 
 What this record **does** establish: the document and the shipped CLI agree — every documented command is
 accepted, every documented exit code and failure code is reproduced, and no printed output contains a value,
 a `vault://` reference or a carrier path.
 
-What it **does not** establish: DPAPI behaviour on the governed Windows host (that is the W-02 acceptance
-evidence) and vendor acceptance of a real token (that is W-06). The single remaining closing step for D-6 is
-the same sequence run once on the governed workstation with a throwaway value, which is an operator action and
-requires no change to this document or to the tree.
+What it **does not** establish: DPAPI behaviour on the governed Windows host — that is §14.2, backed by the
+W-02 acceptance evidence — and vendor acceptance of a real token, which is W-06. It is not a substitute for
+either, and the two records must not be conflated.
+
+### 14.2 Rehearsal record — governed Windows host (executed 2026-11-12)
+
+| Field | Value |
+| --- | --- |
+| Host / shell | the governed Windows workstation, Windows PowerShell |
+| Working directory | `H:\IIPS\iips-production-market-data`, branch `arena/84d1e063-iips-production-market-data` at `2cced8f` |
+| Build | TypeScript CLI build PASS — the launcher ran the built CLI, not a stale one |
+| Isolated store | `H:\IIPS\runtime\d6-rehearsal-20261112-231202`, used only through `--carrier-directory`, outside the Git working tree and outside the default carrier directory; removed afterwards |
+| Values | synthetic throwaway strings. No Dhan credential was used, obtained or provisioned, and no vendor request was made |
+| Steps recorded | empty-store `verify` (both roles absent, exit `6`); client-id expiry refusal; client-id `provision` (round-trip verified before swap, `location: withheld`); access-token `provision` with `--expires-at` (expiry recorded, future); `verify` (exit `0`); access-token `rotate` (creation stamp preserved, rotation stamp advanced, fingerprint changed, new expiry); `verify` after rotation (both `PRESENT_OK`, exit `0`); duplicate `provision` refused with `ALREADY_PROVISIONED`, exit `7`; isolated store removed, cleanup confirmed |
+| Full record | `docs/integration/DHAN-D6-WINDOWS-HOST-REHEARSAL-EVIDENCE-2026-11-12.md` ([link](DHAN-D6-WINDOWS-HOST-REHEARSAL-EVIDENCE-2026-11-12.md)) — verbatim outputs, contract cross-check, and the limitations of the evidence |
+
+What this adds: real Windows DPAPI, the real owner-only DACL, the real filesystem and the real launcher,
+under the Windows account that would hold production carriers. What it still does **not** prove: that Dhan
+accepts the credentials (W-06), and how a **real** token behaves near its expiry — a synthetic value never
+approaches it.
+
+The rehearsal left nothing installed: the isolated directory was deleted, the default carrier directory was
+never the target of a rehearsal command, and this document records no value, no fingerprint and no carrier
+content. **D-6's rehearsal criterion is therefore met**; live connectivity is not, and the next step remains
+W-06.
