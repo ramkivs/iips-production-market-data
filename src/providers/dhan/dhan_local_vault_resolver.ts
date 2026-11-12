@@ -36,13 +36,22 @@ import {
   isDhanProductionEnvironment,
 } from './dhan_config.js';
 import { DhanProductionNotAuthorizedError } from './dhan_api_client.js';
+import type { DpapiCarrierFailureReason } from './dhan_dpapi_carrier.js';
 
+/**
+ * Distinct, scrubbed resolution outcomes.
+ *
+ * The original Stage-1 reasons remain; W-02 adds the carrier and child-process reasons so
+ * a DPAPI failure can be diagnosed without ever exposing a path, a value or child output.
+ */
 export type DhanVaultFailureReason =
   | 'EXPIRED'
   | 'REVOKED'
   | 'INVALID_SECRET_REF'
   | 'VERSION_MISMATCH'
-  | 'BACKEND_FAILURE';
+  | 'BACKEND_FAILURE'
+  | 'CHILD_PROCESS_FAILURE'
+  | DpapiCarrierFailureReason;
 
 export type DhanVaultMappedCode =
   | 'CREDENTIALS_EXPIRED'
@@ -98,6 +107,16 @@ export interface LocalHostVaultBackendReadiness {
 export interface LocalHostVaultSecretBackend {
   readonly backendId: string;
   describeReadiness(): LocalHostVaultBackendReadiness;
+  /**
+   * Optional asynchronous readiness probe (W-02).
+   *
+   * A backend whose readiness requires I/O — a DPAPI probe read, an owner-only DACL
+   * check — cannot answer synchronously. When this is present the resolver awaits it
+   * instead of trusting the synchronous verdict, so live resolution is gated on real
+   * evidence. Backends that omit it (including `DisabledWindowsHostVaultBackend`) keep
+   * the Stage-1 behaviour exactly.
+   */
+  probeReadiness?(ref?: SecretRef): Promise<LocalHostVaultBackendReadiness>;
   readSecret(ref: SecretRef, asOfUtc: string): Promise<LocalHostVaultSecretRecord | null>;
 }
 
@@ -285,7 +304,12 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     this.validateRefPreFlight(config.clientIdRef, nowMs);
     this.validateRefPreFlight(config.accessTokenRef, nowMs);
 
-    if (!this.backend.describeReadiness().liveResolutionSupported) {
+    // Prefer the asynchronous, evidence-based probe when the backend offers one (W-02);
+    // otherwise the Stage-1 synchronous verdict is authoritative.
+    const readiness = this.backend.probeReadiness
+      ? await this.backend.probeReadiness()
+      : this.backend.describeReadiness();
+    if (!readiness.liveResolutionSupported) {
       // Live credential resolution remains disabled until an approved host-vault backend is provisioned.
       return null;
     }

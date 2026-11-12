@@ -142,3 +142,8 @@ changes. W-02 still owes the parts of D-1 that W-01 deliberately did not impleme
 
 W-04 then owns the interactive provisioning/rotation utility, and W-03 the allow-listed backend
 selector (`IIPS_DHAN_VAULT_BACKEND=disabled/windows-dpapi`, default `disabled`).
+
+> **Follow-up (2026-11-12):** items 1–4 were delivered by W-02 — see
+> `docs/integration/DHAN-W02-WINDOWS-DPAPI-BACKEND-2026-11-12.md`. Item 5's `secretId`/`version`
+> agreement is enforced by the backend (`SECRET_ID_MISMATCH`, `VERSION_MISMATCH`), and the key-path
+> → carrier mapping is by final secret segment, so the two paths can never share a carrier.
