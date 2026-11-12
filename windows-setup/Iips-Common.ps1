@@ -344,6 +344,64 @@ function Resolve-IipsNodeToolchain {
 # ----------------------------------------------------------------------------------------------
 <#
 .SYNOPSIS
+    Facts about a failed process creation, with no path, no arguments and no payload.
+
+.DESCRIPTION
+    `Process.Start()` throws `System.ComponentModel.Win32Exception` and the native code is the
+    only thing that distinguishes "the image is missing" from "access denied" from "invalid
+    command line". That code was previously discarded by a bare `catch { $started = $false }`,
+    which left the caller with an opaque PROCESS_START_FAILED and no evidence. It is reported
+    here as `win32=<code> (<category>)`, or `type=<ExceptionType>` when no native code exists.
+
+    Deliberately NOT included: the executable path, the argument line, the stdin payload, or the
+    exception message (a message can carry a path).
+#>
+function Get-IipsStartFailureDetail {
+    param(
+        [Parameter(Mandatory = $false)]
+        $ErrorRecord = $null
+    )
+
+    if ($null -eq $ErrorRecord) {
+        return 'the operating system reported no process (Process.Start() returned false)'
+    }
+
+    $exception = $ErrorRecord.Exception
+    if ($null -eq $exception) { return 'the failure carried no exception object' }
+    if ($null -ne $exception.InnerException) { $exception = $exception.InnerException }
+
+    $nativeProperty = $exception.PSObject.Properties['NativeErrorCode']
+    if ($null -ne $nativeProperty) {
+        $code = [int] $nativeProperty.Value
+        return ('win32={0} ({1})' -f $code, (Get-IipsWin32Reason -Code $code))
+    }
+
+    return ('type=' + $exception.GetType().Name)
+}
+
+<#
+.SYNOPSIS
+    A fixed category for the Win32 codes that process creation actually produces.
+#>
+function Get-IipsWin32Reason {
+    param(
+        [Parameter(Mandatory = $true)]
+        [int] $Code
+    )
+
+    if ($Code -eq 2) { return 'file-not-found' }
+    if ($Code -eq 3) { return 'path-not-found' }
+    if ($Code -eq 5) { return 'access-denied' }
+    if ($Code -eq 87) { return 'invalid-parameter' }
+    if ($Code -eq 193) { return 'not-a-valid-application' }
+    if ($Code -eq 206) { return 'filename-too-long' }
+    if ($Code -eq 267) { return 'invalid-directory' }
+    if ($Code -eq 740) { return 'elevation-required' }
+    return 'unclassified'
+}
+
+<#
+.SYNOPSIS
     Runs a native executable with bounded execution and captures stdout and stderr SEPARATELY.
 
 .DESCRIPTION
@@ -399,7 +457,7 @@ function Invoke-IipsProcess {
     )
 
     if (-not (Test-Path -LiteralPath $FilePath -PathType Leaf)) {
-        throw 'PROCESS_START_FAILED: the executable does not exist at the explicit path given.'
+        throw 'PROCESS_EXECUTABLE_NOT_FOUND: the executable does not exist at the explicit path given.'
     }
 
     $wantsStdin = $PSBoundParameters.ContainsKey('StandardInput')
@@ -424,9 +482,15 @@ function Invoke-IipsProcess {
 
     try {
         $started = $false
+        $startError = $null
         try { $started = $process.Start() }
-        catch { $started = $false }
-        if (-not $started) { throw 'PROCESS_START_FAILED' }
+        catch {
+            $started = $false
+            $startError = $_
+        }
+        if (-not $started) {
+            throw ('PROCESS_START_FAILED: {0}' -f (Get-IipsStartFailureDetail -ErrorRecord $startError))
+        }
 
         # Begin BOTH reads immediately, before waiting. Waiting first can deadlock on a full pipe.
         $stdoutTask = $process.StandardOutput.ReadToEndAsync()

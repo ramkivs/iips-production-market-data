@@ -98,12 +98,84 @@ with a named rule.
 | `W-02-INF-02` | deterministic PATH-based resolution, no `npm exec`, no hardcoded install path, shims via `cmd.exe /d /s /c` |
 | `W-02-INF-03` | the launcher resolves the helper locally, calls it with declared parameters only, and uses stdin + byte count |
 | `W-02-INF-04` | the structural validator enforces those contracts and passes for both directories |
+| `W-02-INF-06` | the generated child command lines are correct and carry no data (pure; runs everywhere) |
 | `W-02-INF-05` | **the real runner executed** on request (`IIPS_POWERSHELL_RUNTIME_TESTS=1`): non-zero exit, separate streams, 200 KB on each stream simultaneously, stdin delivery absent from the child's command line, timeout with a **killed child** (pid verified gone), and the resolver's sanitized failure |
 
 `W-02-INF-05` resolves the interpreter to an **absolute path** before driving it, because the runner
 deliberately rejects a bare command name. It skips where PowerShell is absent — this sandbox. It runs wherever `pwsh` exists (the
 CI image); on Windows it defers to the acceptance run, because the runner deliberately requires an
 absolute executable path.
+
+## 4a. Windows-host result for `W-02-INF-05`, and the correction (2026-11-12)
+
+The operator ran `node --test dist/tests/w02_acceptance_process.test.js` on the Windows host:
+
+| Test | Result |
+| --- | --- |
+| `W-02-INF-01` | PASS |
+| `W-02-INF-02` | PASS |
+| `W-02-INF-03` | PASS |
+| `W-02-INF-04` | SKIPPED (no Python 3 on that host) |
+| `W-02-INF-05` | **FAIL — `case 'large' failed: CASE_ERROR: PROCESS_START_FAILED`** |
+
+### What that message actually is
+
+`PROCESS_START_FAILED` is this repository's own code, thrown by `Invoke-IipsProcess` when
+`Process.Start()` returns `false` **or throws**. The old code caught the exception with a bare
+`catch { $started = $false }` and threw a bare string — so **the one piece of evidence that matters,
+the Win32 error code, was discarded by us.** That is a defect in the runner, not in the test: a
+failure that cannot name its cause cannot be fixed from the message.
+
+### Where the failure is localised
+
+Three of the five runtime cases passed on that host (`nonZeroExit`, `streams`, and — before them —
+the resolver case is independent), and **the two that failed are exactly the two that passed an
+external script path to the child through `-File`.** The inline `-Command` cases passed. The child
+command line was therefore the differing factor, and it was built like this:
+
+```powershell
+-Arguments '-NoProfile -NonInteractive -File '{0}'child-streams.ps1' -TimeoutMilliseconds 120000
+```
+
+That is a **PowerShell single-quoted literal nested inside a PowerShell single-quoted literal**. In
+argument mode the segments concatenate, so the value that reached `ProcessStartInfo.Arguments` is not
+the value intended: the path ends up unquoted, and on a host whose temporary path contains a space
+the interpreter's own argument parsing splits it. The runner was handed a command line that differed
+from the one the test meant to pass.
+
+### The correction
+
+1. **The native failure is never suppressed again.** `Process.Start()` failures are captured and
+   reported as
+   `PROCESS_START_FAILED: win32=<code> (<category>)`, where the category is one of
+   `file-not-found`, `path-not-found`, `access-denied`, `invalid-parameter`, `not-a-valid-application`,
+   `filename-too-long`, `invalid-directory`, `elevation-required`, `unclassified` — or
+   `type=<ExceptionType>` when there is no native code. No path, no arguments, no payload.
+2. **A missing executable is a different code.** The pre-check now throws
+   `PROCESS_EXECUTABLE_NOT_FOUND`, so "Test-Path said no" can never be mistaken for "the OS refused
+   to create the process".
+3. **Child programs are inline and encoded.** Every runtime case now passes
+   `-NoProfile -NonInteractive -EncodedCommand <base64 UTF-16LE>` — the same mechanism the production
+   DPAPI child boundary uses. There is no script path on any command line and no token that a parser
+   can re-split.
+4. **A platform-independent guard replaces trust.** `W-02-INF-06` asserts the *generated* suite text:
+   no `-File`, no `-Command`, exactly five `-Arguments` values each a single quoted literal starting
+   with `-EncodedCommand`, no path inside any of them, balanced quotes, and the stdin payload
+   appearing exactly once (as `-StandardInput`). That test runs everywhere, including here, and would
+   have caught the nested-quote defect before the host ever saw it.
+
+### Status
+
+`W-02-INF-05` remains **FAIL-UNPROVEN** until it is executed again on the Windows host:
+
+```powershell
+npm run build:tsc
+$env:IIPS_POWERSHELL_RUNTIME_TESTS='1'; node --test dist/tests/w02_acceptance_process.test.js
+```
+
+If it fails again, the message now carries `win32=<code> (<category>)`, which identifies the exact
+Windows error instead of hiding it. Arena cannot execute PowerShell 5.1 and does not claim this case
+passes.
 
 ## 5. A. User-supplied Windows evidence (not executed by Arena)
 

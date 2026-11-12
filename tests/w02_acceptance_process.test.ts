@@ -110,6 +110,159 @@ function whichPowerShell(): string | null {
 }
 
 /**
+ * Win32 command-line quoting (CommandLineToArgvW rules): backslashes before a quote are doubled,
+ * inner quotes are escaped, and a token containing whitespace is wrapped in quotes.
+ *
+ * This exists because the previous version of this file built the interpreter's `-Arguments`
+ * string with a PowerShell literal inside a PowerShell literal. That produced a nested `'`
+ * sequence which PowerShell re-parsed as several arguments, so the child was started with a
+ * command line that differed from the one intended — the only construct in this suite that could
+ * (and on the Windows host did) fail at process creation.
+ */
+export function quoteWin32(value: string): string {
+  if (value.length === 0) return '""';
+  if (!/[\s"]/.test(value)) return value;
+  let out = '"';
+  let backslashes = 0;
+  for (const character of value) {
+    if (character === '\\') {
+      backslashes += 1;
+      continue;
+    }
+    if (character === '"') {
+      out += '\\'.repeat(backslashes * 2 + 1) + '"';
+      backslashes = 0;
+      continue;
+    }
+    if (backslashes > 0) {
+      out += '\\'.repeat(backslashes);
+      backslashes = 0;
+    }
+    out += character;
+  }
+  if (backslashes > 0) out += '\\'.repeat(backslashes * 2);
+  return out + '"';
+}
+
+/**
+ * A PowerShell single-quoted literal, safe to embed in a generated script: the only character
+ * that needs doubling is the single quote itself. Used for the payload and for data paths.
+ */
+export function psLiteral(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+/**
+ * A static child program encoded for `-EncodedCommand` (UTF-16LE base64), exactly as the
+ * production DPAPI child boundary encodes its programs.
+ */
+export function encodeCommand(script: string): string {
+  return Buffer.from(script, 'utf16le').toString('base64');
+}
+
+/**
+ * The complete argument string for a child interpreter.
+ *
+ * No file path and no payload ever appear here: the program is inline and encoded, so
+ * `CreateProcess` receives a command line that cannot vary with quoting of paths, and the
+ * "nothing on argv" property becomes structural rather than incidental.
+ */
+export function interpreterArguments(script: string): string {
+  return `-NoProfile -NonInteractive -EncodedCommand ${encodeCommand(script)}`;
+}
+
+export interface AcceptanceSuiteInputs {
+  readonly shellPath: string;
+  readonly commonPath: string;
+  readonly payload: string;
+  readonly pidFile: string;
+  readonly resultFile: string;
+}
+
+/**
+ * The PowerShell suite that drives the real runner, as a single string.
+ *
+ * Kept as a pure builder so its TEXT can be asserted on any platform — the previous inline
+ * version embedded a PowerShell literal inside a PowerShell literal, which produced a nested
+ * quote sequence and a child command line that differed from the intended one. Every
+ * `-Arguments` value here is one single-quoted literal of a complete argument string, and every
+ * child program is inline and encoded, so no path and no payload can be re-split by a parser.
+ */
+export function buildAcceptanceSuite(inputs: AcceptanceSuiteInputs): string {
+  const q = (value: string): string => psLiteral(value);
+
+  const stdinProgram = [
+    '$value = [Console]::In.ReadToEnd()',
+    '[Console]::Out.Write($value)',
+    "$commandLine = ''",
+    'try { $commandLine = [string][Environment]::CommandLine } catch { $commandLine = "" }',
+    '[Console]::Error.Write($commandLine)',
+  ].join('\n');
+
+  const streamsProgram = [
+    "$chunk = 'x' * 1024",
+    'for ($i = 0; $i -lt 200; $i++) {',
+    '    [Console]::Out.Write($chunk)',
+    '    [Console]::Error.Write($chunk)',
+    '}',
+  ].join('\n');
+
+  const sleepProgram = [
+    `[System.IO.File]::WriteAllText(${q(inputs.pidFile)}, [string]$PID)`,
+    'Start-Sleep -Seconds 30',
+  ].join('\n');
+
+  return [
+    "$ErrorActionPreference = 'Stop'",
+    `. ${q(inputs.commonPath)}`,
+    '$results = @{}',
+    // Each case is isolated: a failure is recorded (sanitized) and the rest still run, so one
+    // problem cannot hide the others behind an opaque non-zero exit.
+    'function Invoke-Case {',
+    '    param([string] $Name, [scriptblock] $Body)',
+    '    try {',
+    '        $results[$Name] = & $Body',
+    '    }',
+    '    catch {',
+    "        $results[$Name] = ('CASE_ERROR: ' + [string]$_.Exception.Message)",
+    '    }',
+    '}',
+    // (10) non-zero exit is data
+    `Invoke-Case 'nonZeroExit' { (Invoke-IipsProcess -FilePath ${q(inputs.shellPath)} -Arguments ${q(interpreterArguments('exit 3'))} -TimeoutMilliseconds 60000).ExitCode }`,
+    // (9) separate streams
+    `Invoke-Case 'streams' { $r = Invoke-IipsProcess -FilePath ${q(inputs.shellPath)} -Arguments ${q(interpreterArguments("[Console]::Out.Write('OUT'); [Console]::Error.Write('ERR')"))} -TimeoutMilliseconds 60000; @{ out = $r.StdOut; err = $r.StdErr; errBytes = $r.StdErrByteLength } }`,
+    // (9) both streams past a pipe buffer at the same time: only concurrent draining survives
+    `Invoke-Case 'large' { $r = Invoke-IipsProcess -FilePath ${q(inputs.shellPath)} -Arguments ${q(interpreterArguments(streamsProgram))} -TimeoutMilliseconds 120000; @{ out = $r.StdOut.Length; err = $r.StdErr.Length } }`,
+    // (11) stdin delivery; the payload must not appear on the child's command line
+    `Invoke-Case 'stdin' { $r = Invoke-IipsProcess -FilePath ${q(inputs.shellPath)} -Arguments ${q(interpreterArguments(stdinProgram))} -TimeoutMilliseconds 60000 -StandardInput ${q(inputs.payload)}; @{ echo = $r.StdOut; commandLine = $r.StdErr } }`,
+    // (7)(8) bounded timeout with a killed child
+    'Invoke-Case "timeout" {',
+    '    $started = [DateTime]::UtcNow',
+    '    $timedOut = $false',
+    '    try {',
+    `        $null = Invoke-IipsProcess -FilePath ${q(inputs.shellPath)} -Arguments ${q(interpreterArguments(sleepProgram))} -TimeoutMilliseconds 1500`,
+    '    }',
+    '    catch {',
+    "        $timedOut = ([string]$_.Exception.Message).StartsWith('PROCESS_TIMEOUT')",
+    '    }',
+    '    @{ timedOut = $timedOut; elapsedMs = [int](([DateTime]::UtcNow - $started).TotalMilliseconds) }',
+    '}',
+    // (1)(3)(5) sanitized resolver failure where no node.exe/npm.cmd pair exists
+    'Invoke-Case "resolver" {',
+    '    try {',
+    '        $null = Resolve-IipsNodeToolchain',
+    '        "RESOLVED_UNEXPECTEDLY"',
+    '    }',
+    '    catch {',
+    '        [string]$_.Exception.Message',
+    '    }',
+    '}',
+    `$results | ConvertTo-Json -Compress -Depth 5 | Set-Content -LiteralPath ${q(inputs.resultFile)} -Encoding UTF8`,
+    'exit 0',
+  ].join('\n');
+}
+
+/**
  * Executes a PowerShell script file and returns its stdout. The script is written by the caller;
  * the repository helper is dot-sourced from its real location, so the code under test is the
  * shipped one.
@@ -148,6 +301,19 @@ describe('W-02 / repository-owned process runner and toolchain resolver', () => 
     assert.ok(plain.includes('$process.Dispose()'), 'the process must be disposed');
     assert.ok(plain.includes('PROCESS_TIMEOUT'), 'timeout must be a distinct, sanitized failure');
     assert.ok(plain.includes('PROCESS_START_FAILED'), 'start failure must be distinct');
+    assert.ok(
+      plain.includes('PROCESS_EXECUTABLE_NOT_FOUND'),
+      'a missing executable must not be reported as a refused process creation'
+    );
+    // The native code is the only evidence that distinguishes file-not-found from access-denied
+    // from an invalid command line; discarding it leaves an opaque failure.
+    assert.ok(plain.includes('Get-IipsStartFailureDetail'), 'the start failure must be classified');
+    assert.ok(plain.includes('NativeErrorCode'), 'the Win32 native code must be reported');
+    assert.ok(plain.includes('win32='), 'the native code must be visible in the failure message');
+    assert.ok(
+      !/throw 'PROCESS_START_FAILED'\s*$/.test(plain.split('\n').filter((line) => line.includes("throw 'PROCESS_START_FAILED'")).join('\n')),
+      'the bare, evidence-free PROCESS_START_FAILED must not return'
+    );
 
     // No file-based capture and no shell in the middle.
     assert.ok(!plain.includes('-Wait '), 'no Start-Process -Wait (whole process tree, unbounded)');
@@ -223,6 +389,62 @@ describe('W-02 / repository-owned process runner and toolchain resolver', () => 
     }
   });
 
+  it('W-02-INF-06: the child command lines are built correctly and carry no data', () => {
+    // Pure, so it runs everywhere — including the hosts where the runtime case cannot.
+    assert.strictEqual(psLiteral("a'b"), "'a''b'");
+    assert.strictEqual(psLiteral('plain-value'), "'plain-value'");
+    assert.strictEqual(quoteWin32('plain'), 'plain');
+    assert.strictEqual(quoteWin32(''), '""');
+    assert.strictEqual(quoteWin32('C:\\Program Files\\PowerShell\\7\\pwsh.exe'), '"C:\\Program Files\\PowerShell\\7\\pwsh.exe"');
+    assert.strictEqual(quoteWin32('say "hi"'), '"say \\"hi\\""');
+    assert.strictEqual(quoteWin32('trailing\\'), 'trailing\\');
+    assert.strictEqual(quoteWin32('a b\\'), '"a b\\\\"');
+
+    const script = "Write-Output 'hello'";
+    assert.strictEqual(Buffer.from(encodeCommand(script), 'base64').toString('utf16le'), script);
+
+    const args = interpreterArguments(script);
+    assert.ok(args.startsWith('-NoProfile -NonInteractive -EncodedCommand '));
+    assert.ok(!args.includes('.ps1'), 'no script path may appear on the child command line');
+    assert.ok(!/[\s"]/.test(args.split(' ').pop() as string), 'the encoded program is a single token');
+    assert.strictEqual(
+      Buffer.from(args.split(' ').pop() as string, 'base64').toString('utf16le'),
+      script
+    );
+
+    // The generated suite text: this is the guard that would have caught the nested-quote defect
+    // that failed at process creation on the Windows host.
+    const payload = 'stdin-payload-W02-INF-06-9a1c';
+    const generated = buildAcceptanceSuite({
+      shellPath: 'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
+      commonPath: 'C:\\repo\\windows-setup\\Iips-Common.ps1',
+      payload,
+      pidFile: 'C:\\Temp\\child.pid',
+      resultFile: 'C:\\Temp\\result.json',
+    });
+
+    assert.ok(!/-File\s/.test(generated), 'no child program may be passed as -File');
+    assert.ok(!/-Command\s/.test(generated), 'no child program may be passed as -Command text');
+
+    // Every -Arguments value is ONE single-quoted literal: no nested quotes to re-split.
+    const argumentLiterals = generated.match(/-Arguments '[^']*'/g) ?? [];
+    assert.strictEqual(argumentLiterals.length, 5, 'each runner call passes one quoted argument string');
+    for (const literal of argumentLiterals) {
+      assert.ok(
+        literal.startsWith("-Arguments '-NoProfile -NonInteractive -EncodedCommand "),
+        `unexpected argument literal: ${literal.slice(0, 60)}`
+      );
+      assert.ok(!/[\\/]/.test(literal), 'no path may appear inside a child command line');
+    }
+
+    // An odd number of quotes is a parse error waiting to happen.
+    assert.strictEqual((generated.match(/'/g) ?? []).length % 2, 0, 'quotes must be balanced');
+
+    // The payload appears exactly once, as the stdin value — never inside a command line.
+    assert.strictEqual(generated.split(payload).length - 1, 1, 'the payload must appear once, on stdin');
+    assert.ok(generated.includes(`-StandardInput '${payload}'`), 'the payload must be the stdin argument');
+  });
+
   it('W-02-INF-05: the real runner is bounded, non-deadlocking and stdin-only (executed on request)', (t) => {
     // WHY THIS ONE IS OPT-IN.
     // It executes the actual PowerShell runner, so it needs PowerShell AND an interpreter that can
@@ -248,95 +470,19 @@ describe('W-02 / repository-owned process runner and toolchain resolver', () => 
 
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'w02proc-'));
     const resultFile = path.join(dir, 'result.json');
-    const payload = 'stdin-payload-W02-INF-05-6c1f2a';
     const pidFile = path.join(dir, 'child.pid');
-
-    const q = (value: string): string => `'${value.replace(/'/g, "''")}'`;
-
-    const childStdin = path.join(dir, 'child-stdin.ps1');
-    fs.writeFileSync(
-      childStdin,
-      [
-        '$value = [Console]::In.ReadToEnd()',
-        '[Console]::Out.Write($value)',
-        "$commandLine = ''",
-        'try { $commandLine = [string][Environment]::CommandLine } catch { $commandLine = "" }',
-        '[Console]::Error.Write($commandLine)',
-      ].join('\n'),
-      'utf8'
-    );
-
-    const childStreams = path.join(dir, 'child-streams.ps1');
-    fs.writeFileSync(
-      childStreams,
-      [
-        "$chunk = 'x' * 1024",
-        'for ($i = 0; $i -lt 200; $i++) {',
-        '    [Console]::Out.Write($chunk)',
-        '    [Console]::Error.Write($chunk)',
-        '}',
-      ].join('\n'),
-      'utf8'
-    );
-
-    const childSleep = path.join(dir, 'child-sleep.ps1');
-    fs.writeFileSync(
-      childSleep,
-      [`[System.IO.File]::WriteAllText(${q(pidFile)}, [string]$PID)`, 'Start-Sleep -Seconds 30'].join('\n'),
-      'utf8'
-    );
+    const payload = 'stdin-payload-W02-INF-05-6c1f2a';
 
     const suite = path.join(dir, 'suite.ps1');
     fs.writeFileSync(
       suite,
-      [
-        "$ErrorActionPreference = 'Stop'",
-        `. ${q(COMMON)}`,
-        '$results = @{}',
-        // Each case is isolated: a failure is recorded (sanitized) and the rest still run, so one
-        // problem cannot hide the others behind an opaque non-zero exit.
-        'function Invoke-Case {',
-        '    param([string] $Name, [scriptblock] $Body)',
-        '    try {',
-        '        $results[$Name] = & $Body',
-        '    }',
-        '    catch {',
-        "        $results[$Name] = ('CASE_ERROR: ' + [string]$_.Exception.Message)",
-        '    }',
-        '}',
-        // (10) non-zero exit is data
-        `Invoke-Case 'nonZeroExit' { (Invoke-IipsProcess -FilePath ${q(shell)} -Arguments '-NoProfile -NonInteractive -Command "exit 3"' -TimeoutMilliseconds 60000).ExitCode }`,
-        // (9) separate streams
-        `Invoke-Case 'streams' { $r = Invoke-IipsProcess -FilePath ${q(shell)} -Arguments '-NoProfile -NonInteractive -Command "[Console]::Out.Write(''OUT''); [Console]::Error.Write(''ERR''); exit 0"' -TimeoutMilliseconds 60000; @{ out = $r.StdOut; err = $r.StdErr; errBytes = $r.StdErrByteLength } }`,
-        // (9) both streams past a pipe buffer at the same time: only concurrent draining survives
-        `Invoke-Case 'large' { $r = Invoke-IipsProcess -FilePath ${q(shell)} -Arguments '-NoProfile -NonInteractive -File ${q(childStreams)}' -TimeoutMilliseconds 120000; @{ out = $r.StdOut.Length; err = $r.StdErr.Length } }`,
-        // (11) stdin delivery; the payload must not appear on the child's command line
-        `Invoke-Case 'stdin' { $r = Invoke-IipsProcess -FilePath ${q(shell)} -Arguments '-NoProfile -NonInteractive -File ${q(childStdin)}' -TimeoutMilliseconds 60000 -StandardInput ${q(payload)}; @{ echo = $r.StdOut; commandLine = $r.StdErr } }`,
-        // (7)(8) bounded timeout with a killed child
-        'Invoke-Case "timeout" {',
-        '    $started = [DateTime]::UtcNow',
-        '    $timedOut = $false',
-        '    try {',
-        `        $null = Invoke-IipsProcess -FilePath ${q(shell)} -Arguments '-NoProfile -NonInteractive -File ${q(childSleep)}' -TimeoutMilliseconds 1500`,
-        '    }',
-        '    catch {',
-        "        $timedOut = ([string]$_.Exception.Message).StartsWith('PROCESS_TIMEOUT')",
-        '    }',
-        '    @{ timedOut = $timedOut; elapsedMs = [int](([DateTime]::UtcNow - $started).TotalMilliseconds) }',
-        '}',
-        // (1)(3)(5) sanitized resolver failure where no node.exe/npm.cmd pair exists
-        'Invoke-Case "resolver" {',
-        '    try {',
-        '        $null = Resolve-IipsNodeToolchain',
-        '        "RESOLVED_UNEXPECTEDLY"',
-        '    }',
-        '    catch {',
-        '        [string]$_.Exception.Message',
-        '    }',
-        '}',
-        `$results | ConvertTo-Json -Compress -Depth 5 | Set-Content -LiteralPath ${q(resultFile)} -Encoding UTF8`,
-        'exit 0',
-      ].join('\n'),
+      buildAcceptanceSuite({
+        shellPath: shell,
+        commonPath: COMMON,
+        payload,
+        pidFile,
+        resultFile,
+      }),
       'utf8'
     );
 
@@ -357,7 +503,7 @@ describe('W-02 / repository-owned process runner and toolchain resolver', () => 
       return value as Record<string, unknown>;
     };
 
-    // (10) non-zero exit is data, not a crash
+    // (10) non-zero exit is data, not a crash — the child reports 3 through the runner.
     assert.strictEqual(results.nonZeroExit, 3, `non-zero exit:\n${detail}`);
 
     // (9) stdout and stderr captured separately

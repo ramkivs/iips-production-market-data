@@ -373,6 +373,10 @@ for path in TARGET_SCRIPTS:
               "supports stdin delivery and closes it")
         check("PROCESS_TIMEOUT" in plain and "PROCESS_START_FAILED" in plain,
               "reports sanitized process failures")
+        check("PROCESS_EXECUTABLE_NOT_FOUND" in plain,
+              "distinguishes a missing executable from a refused process creation")
+        check("Get-IipsStartFailureDetail" in plain and "NativeErrorCode" in plain and "win32=" in plain,
+              "reports the native start-failure code instead of discarding it")
         check("Start-Process" not in plain or "-Wait" not in plain,
               "never uses Start-Process -Wait (it waits for the whole tree, unbounded)")
         check("Get-Command node.exe -All" in plain, "discovers node.exe through PATH enumeration")
