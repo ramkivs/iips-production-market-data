@@ -50,6 +50,10 @@ import {
   type QuoteRequest,
 } from '../src/providers/dhan/dhan_market_data_service.js';
 import { DhanIdentityApiService } from '../src/providers/dhan/dhan_identity_api.js';
+import {
+  DhanRateLimiter,
+  isTransientFailure,
+} from '../src/providers/dhan/dhan_operational_controls.js';
 import { loadGovernedP7InstrumentRegistry } from '../src/providers/dhan/dhan_local_daemon.js';
 import { getGovernedBroadSecurityMaster } from '../src/identity/governed_fixture_master.js';
 import { buildD114SecurityIdentity } from '../src/contracts/types.js';
@@ -107,7 +111,11 @@ function countingTransport(respond: (request: DhanHttpRequest) => DhanHttpRespon
 
 function governedService(
   transport: DhanHttpTransport,
-  options: { readonly now?: () => Date; readonly resolver?: DhanCredentialResolver } = {}
+  options: {
+    readonly now?: () => Date;
+    readonly resolver?: DhanCredentialResolver;
+    readonly limiter?: DhanRateLimiter;
+  } = {}
 ): DhanMarketDataService {
   const service = new DhanMarketDataService({
     client: new DhanApiClient({
@@ -118,6 +126,7 @@ function governedService(
     securityMaster: getGovernedBroadSecurityMaster(),
     instrumentRegistry: loadGovernedP7InstrumentRegistry(),
     ...(options.now ? { now: options.now } : {}),
+    ...(options.limiter ? { limiter: options.limiter } : {}),
   });
   service.start();
   return service;
@@ -386,13 +395,114 @@ describe('W-06 — first authenticated request evidence', () => {
     assert.strictEqual(full.thresholdSeconds, 900, 'D01 nominal threshold, in seconds');
   });
 
+  it('W06-08: the capture procedure uses only the implemented routes, body and capture seams', () => {
+    const record = repoText(RECORD);
+
+    // Routes: the procedure names the implemented paths, nothing invented.
+    assert.ok(record.includes(MARKET_DATA_ROUTES.health));
+    assert.ok(record.includes(MARKET_DATA_ROUTES.quotes));
+    assert.ok(record.includes(MARKET_DATA_ROUTES.freshness));
+    for (const route of record.match(/\/v1\/[a-z/]+/g) ?? []) {
+      assert.ok(
+        Object.values(MARKET_DATA_ROUTES).includes(route as never),
+        `the procedure must not invent a route: ${route}`
+      );
+    }
+
+    // Body: exactly the operator request, with only the keys the quotes handler reads.
+    const bodyLine = record.match(/\$QuoteBody = '([^']+)'/)?.[1];
+    assert.ok(bodyLine, 'the procedure must define the request body once');
+    const parsedBody = JSON.parse(bodyLine) as Record<string, unknown>;
+    assert.deepStrictEqual(Object.keys(parsedBody).sort(), ['companyId', 'exchangeSegment', 'securityId']);
+    assert.deepStrictEqual(parsedBody, {
+      companyId: OPERATOR_COMPANY,
+      securityId: OPERATOR_SECURITY_ID,
+      exchangeSegment: 'NSE_EQ',
+    });
+
+    // Credential handling: the token is expanded from the environment, never written as a value.
+    assert.ok(record.includes('$env:IIPS_MARKET_DATA_TRANSPORT_TOKEN'));
+    assert.ok(!/Bearer\s+[A-Za-z0-9._-]{16,}/.test(record), 'a literal bearer value must never be documented');
+
+    // Capture seams that the first attempt lacked.
+    assert.ok(record.includes('-SkipHttpErrorCheck'), 'PowerShell 7 must be captured without throwing');
+    assert.ok(record.includes('$_.ErrorDetails.Message'), 'PowerShell 5.1 bodies must be read from ErrorDetails');
+    assert.ok(record.includes('GetResponseStream'), 'a stream fallback must exist');
+    assert.ok(record.includes('[math]::Floor($status / 100)'), 'the status class must be derived, not guessed');
+
+    // The retry bound the stop table depends on.
+    assert.ok(/at most \*\*3\*\*/.test(record), 'the procedure must state the retry bound');
+    for (const code of ['RATE_LIMITED', 'TIMEOUT', 'TRANSPORT_FAILURE', 'HTTP_ERROR']) {
+      assert.ok(record.includes(code), `${code} must be named as a transient code`);
+    }
+    assert.ok(record.includes('never retried'), 'the procedure must state that auth/expiry are not retried');
+  });
+
+  it('W06-09: the decisive codes cannot arise without a vendor answer; the ambiguous ones can', async () => {
+    // Non-transient: never retried, one send, decisive.
+    const rejecting = countingTransport(() => ({ status: 401, bodyText: '{"errorMessage":"denied"}' }));
+    const authService = governedService(rejecting);
+    const authQuote = await authService.getQuote(operatorQuoteRequest);
+    assert.strictEqual(authQuote.ok, false);
+    if (!authQuote.ok) assert.strictEqual(authQuote.failure.code, 'AUTHENTICATION_FAILURE');
+    assert.strictEqual(rejecting.calls.length, 1, 'an auth failure is never retried');
+
+    // Transient 5xx: bounded retry, three sends — the "one request, up to three vendor sends" fact.
+    const failing = countingTransport(() => ({ status: 500, bodyText: '{"errorMessage":"boom"}' }));
+    const serverErrorService = governedService(failing);
+    const serverErrorQuote = await serverErrorService.getQuote(operatorQuoteRequest);
+    assert.strictEqual(serverErrorQuote.ok, false);
+    if (!serverErrorQuote.ok) assert.strictEqual(serverErrorQuote.failure.code, 'HTTP_ERROR');
+    assert.strictEqual(failing.calls.length, 3, 'a transient failure is retried to the bound of three');
+
+    // 200 with an unparseable body: the vendor answered, so the code is decisive without retrying.
+    const unparseable = countingTransport(() => ({ status: 200, bodyText: 'not-json' }));
+    const malformedQuote = await governedService(unparseable).getQuote(operatorQuoteRequest);
+    assert.strictEqual(malformedQuote.ok, false);
+    if (!malformedQuote.ok) assert.strictEqual(malformedQuote.failure.code, 'MALFORMED_RESPONSE');
+    assert.strictEqual(unparseable.calls.length, 1);
+
+    // Ambiguous: a local pre-flight refusal and a local rate-limit denial both answer without a send.
+    const untouched = countingTransport(() => ({ status: 200, bodyText: '{}' }));
+    const credentialFailure = await governedService(untouched, {
+      resolver: { resolve: async () => null },
+    }).getQuote(operatorQuoteRequest);
+    assert.strictEqual(credentialFailure.ok, false);
+    if (!credentialFailure.ok) assert.strictEqual(credentialFailure.failure.code, 'CREDENTIALS_UNAVAILABLE');
+    assert.deepStrictEqual(untouched.calls, []);
+
+    const exhaustedBudget = new DhanRateLimiter({
+      maxRequests: 0,
+      windowMs: 60_000,
+      now: () => Date.parse('2026-11-12T18:58:23.526Z'),
+    });
+    const rateLimited = await governedService(untouched, { limiter: exhaustedBudget }).getQuote(
+      operatorQuoteRequest
+    );
+    assert.strictEqual(rateLimited.ok, false);
+    if (!rateLimited.ok) assert.strictEqual(rateLimited.failure.code, 'RATE_LIMITED');
+    assert.deepStrictEqual(untouched.calls, [], 'a local rate-limit denial never reaches the vendor');
+
+    // The retry contract the procedure quotes, asserted directly.
+    assert.strictEqual(isTransientFailure('AUTHENTICATION_FAILURE'), false);
+    assert.strictEqual(isTransientFailure('CREDENTIALS_UNAVAILABLE'), false);
+    assert.strictEqual(isTransientFailure('CREDENTIALS_EXPIRED'), false);
+    assert.strictEqual(isTransientFailure('STALE_DATA_SUPPRESSED'), false);
+    assert.strictEqual(isTransientFailure('MALFORMED_RESPONSE'), false);
+    assert.strictEqual(isTransientFailure('RATE_LIMITED'), true);
+    assert.strictEqual(isTransientFailure('TIMEOUT'), true);
+    assert.strictEqual(isTransientFailure('TRANSPORT_FAILURE'), true);
+    assert.strictEqual(isTransientFailure('HTTP_ERROR', 500), true);
+    assert.strictEqual(isTransientFailure('HTTP_ERROR', 400), false);
+  });
+
   it('W06-06: the evidence record states the gap, claims nothing, and carries no credential material', () => {
     const record = repoText(RECORD);
     const flat = record.replace(/\s+/g, ' ');
 
     // It must not be read as a closure of W-06.
     assert.ok(flat.includes('W-06 NOT CLOSED'), 'the record must state the status plainly');
-    assert.ok(flat.includes('No second vendor request was made'));
+    assert.ok(flat.includes('No second vendor request has been made'));
     assert.match(record, /\*\*W-06 is NOT closed\.\*\*/);
     assert.ok(flat.includes('the typed failure code of the one authorised request was never persisted'));
 
@@ -436,17 +546,27 @@ describe('W-06 — first authenticated request evidence', () => {
     assert.ok(!/typed (failure )?code (was|has been) recovered/i.test(flat));
     assert.ok(flat.includes('the typed failure code of the one authorised request was never persisted'));
 
+    // §10.5 necessarily spells the search patterns it tells the operator to run. Everything outside
+    // that one fenced block must be free of them.
+    const patternStart = record.indexOf('Select-String -Path $ProbeFiles');
+    assert.ok(patternStart > 0, 'the redaction step must be documented');
+    const patternEnd = record.indexOf('```', patternStart);
+    const scannable = record.slice(0, patternStart) + record.slice(patternEnd);
+
     // No credential-shaped content, no location, no digest.
-    assert.ok(!record.includes('eyJ'), 'no JWT may appear');
+    assert.ok(!scannable.includes('eyJ'), 'no JWT may appear outside the search patterns');
+    assert.ok(!scannable.includes('dhan-secrets'), 'no store path may appear outside the search patterns');
     assert.ok(!record.includes('sha256:'), 'no fingerprint may appear');
     assert.ok(!/[A-Za-z0-9+/]{60,}={0,2}/.test(record.replace(/\b[0-9a-f]{7,40}\b/g, '<hex>')), 'no encoded blob');
     assert.ok(!/\b1000\d{6}\b/.test(record), 'no Dhan-client-id-shaped number');
-    // Backticks stripped first: the record may name the prohibition, never a reference.
-    for (const match of record.replace(/`/g, '').match(/vault:\/\/\S+/g) ?? []) {
-      assert.fail(`a vault reference must not appear: ${match}`);
-    }
-    for (const location of ['dhan-secrets', 'dhan-client-id.carrier', 'dhan-access-token.carrier', 'H:\\IIPS']) {
+    for (const location of ['dhan-client-id.carrier', 'dhan-access-token.carrier', 'H:\\IIPS']) {
       assert.ok(!record.includes(location), `no carrier location may appear: ${location}`);
     }
+    // A secret-reference pointer needs an identifier after the scheme; the pattern literal does not.
+    assert.deepStrictEqual(
+      scannable.replace(/`/g, '').match(/vault:\/\/[A-Za-z0-9]/g) ?? [],
+      [],
+      'no vault reference may appear'
+    );
   });
 });

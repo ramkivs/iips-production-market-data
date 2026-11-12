@@ -4,8 +4,11 @@
 outcome was not captured and cannot be recovered from the daemon, the repository or any retained
 artefact. A local `/v1/freshness` read of the same daemon (§2 step 8, §4.1) now shows that the request
 **entered the provider refresh path and failed there** — one bit of narrowing, still no typed code, and
-still no statement about what the vendor did. No second vendor request was made, and none is authorised
-by this document.
+still no statement about what the vendor did. No second vendor request has been made.
+
+**Owner authorisation, 2026-11-12:** multiple controlled `/v1/quotes` attempts are authorised on the
+currently provisioned token, until its expiry, to repair the capture defect of the first attempt. §1.1
+states how that sits against the roadmap's one-request scope; §10 is the procedure to run them.
 **Roadmap authority:** `ramkivs/iips-review-recovered` → `docs/integration/DHAN-LIVE-INTEGRATION-IMPLEMENTATION-ROADMAP-2026-11-11.md` (v1.1), §W-06 (read-only; not modified).
 **Repository:** `ramkivs/iips-production-market-data`, branch `arena/84d1e063-iips-production-market-data`, W-06 executed against `2cced8f`/`a70ed15`.
 **Host:** the governed Windows workstation, Windows PowerShell, market-data daemon on `http://127.0.0.1:8791`.
@@ -21,16 +24,41 @@ by this document.
 
 | Item | State |
 | --- | --- |
-| Vendor requests authorised | **exactly one** controlled authenticated request |
-| Vendor requests executed | **one** — `POST /v1/quotes` (§4) |
+| Vendor requests authorised | **one** originally; **extended by the owner on 2026-11-12** to multiple controlled `/v1/quotes` attempts on the same provisioned token, until it expires (§1.1) |
+| Vendor requests executed | **one** so far — `POST /v1/quotes` (§4), outcome uncaptured |
 | Vendor requests made while preparing this record | **none** (this record is built from local code, local state and the operator's captured output) |
-| Second request, retry, `/v1/historical` or any other vendor interaction | **not authorised**; not performed |
+| `/v1/historical`, or any vendor interaction other than `/v1/quotes` | **not authorised**; not performed |
 
 Roadmap W-06 (v1.1) is quoted verbatim for the criteria this record is assessed against:
 
 - **Scope:** "…issues **one** controlled authenticated request. Record: startup diagnostics line, selector and backend readiness, credential-resolution outcome, request outcome, HTTP status class, and a full grep of daemon stdout/stderr and the response for both secret values and for any location string."
 - **Verification:** "The previously observed `CREDENTIALS_UNAVAILABLE` no longer occurs; the outcome is a structural success or a typed auth failure; zero occurrences of either secret, any `vault://` string and any carrier path in all captured output."
 - **Exit criteria:** "One authenticated vendor interaction completes; the secret and its location are absent from every artefact."
+
+### 1.1 How the owner's expanded authorisation sits against "one controlled request"
+
+The roadmap is read-only here and its W-06 scope says **one** controlled authenticated request. The
+owner's extension does not amend the roadmap; it governs the *attempts*, and it is recorded with these
+bounds:
+
+1. **The evidence unit is still one decisive interaction.** W-06 closes on the first attempt whose
+   outcome is captured and decisive (§10.4) — a structural success, a typed authentication failure, or
+   another vendor-answered rejection. Subsequent attempts do not add evidence and are not authorised
+   once that happens.
+2. **The extension repairs a capture defect, not an outcome.** Attempt #1 was made and its body lost to
+   the caller's own error handling (§4, §6.1). The additional attempts exist because nothing about
+   attempt #1 was recorded, not to retry a captured failure or to obtain a more favourable result.
+3. **Every attempt is recorded.** Each `POST /v1/quotes` is a numbered, individually captured entry —
+   status, typed code, class, timing, body — and the record states how many attempts were made. An
+   attempt that is not captured is recorded as uncaptured; it is never silently dropped.
+4. **One POST may be several vendor sends.** The service wraps each provider fetch in a bounded retry
+   of at most **3** attempts for transient failures only (`RATE_LIMITED`, `TIMEOUT`, `TRANSPORT_FAILURE`,
+   `HTTP_ERROR` with a 5xx status); auth, expiry, credential and validation failures are never retried
+   (`dhan_operational_controls.ts`, `withBoundedRetry`). The roadmap's "one request" never governed that
+   internal bound, and the record states the true range: vendor sends ≥ captured POSTs, ≤ 3 × the
+   POSTs whose outcome was transient.
+5. **No adaptation between attempts.** Same identity, same route, same body (§10.3). Nothing is tuned
+   to make an attempt succeed; that would turn an observation into a search.
 
 ---
 
@@ -247,27 +275,157 @@ recover the code, and it does not convert a failed attempt into an authenticated
 Recording W-06 as complete on a bare `502` plus a redacted `REFRESH_FAILED` would be manufacturing
 evidence.
 
-**No second request is authorised.** Path B has been executed and exhausted (§4.1). Closing W-06 now
-requires either a successful Path A recovery (the PowerShell error record) that identifies the typed
-code, or an explicit new authorisation for one further controlled request run under the capture
-protocol in §10.
+**Further requests are authorised (owner, 2026-11-12) under §1.1.** Path B has been executed and
+exhausted (§4.1). Closing W-06 now requires either a successful Path A recovery (the PowerShell error
+record) that identifies the typed code, or a captured decisive outcome from the attempts permitted by
+§10 — a structural success, a typed authentication failure, or another vendor-answered rejection.
 
 ---
 
-## 10. Capture protocol for any future authorised request
+## 10. Capture procedure for the authorised attempts
 
-Not performed here; recorded so the gap cannot recur:
+Everything here runs on the workstation, against the daemon already running on `127.0.0.1:8791`.
+Nothing in it makes a vendor request except the `/v1/quotes` probe in §10.3, and nothing in it puts a
+secret on a command line, in the shell history or on disk.
 
-1. Capture status **and** body together: PowerShell 7 `Invoke-WebRequest -SkipHttpErrorCheck`, or
-   Windows PowerShell 5.1 `try/catch` reading `$_.ErrorDetails.Message`, or `curl.exe -i` — writing the
-   exchange to a file, not to the scrollback.
-2. Immediately before and after, run the two local reads that need no vendor call: `GET /v1/health` and
-   the scoped `GET /v1/freshness` of §7-B.
-3. Never retry: one authorised request means exactly one (the client has no retry path for
-   auth/expiry by design).
-4. Grep the captured file, the daemon stderr and the transcript for both secret values, any `vault://`
-   string and any carrier path **before** the evidence is accepted.
-5. Keep the capture file out of Git; record only the sanitised code, class and message.
+### 10.1 Preconditions
+
+- The daemon from the W-06 start is **still running** — do not restart it. Restarting clears the
+  in-memory refresh state that §4.1 depends on, and loses the console text.
+- The transport token is in the session environment. If it is not, enter it once with hidden input
+  (§10.2); it is never typed into the command line.
+- Evidence goes to `%TEMP%\w06-evidence` — outside the Git worktree, never committed.
+
+### 10.2 Session setup and capture function (paste as one block)
+
+```powershell
+$Base = 'http://127.0.0.1:8791'
+if (-not $env:IIPS_MARKET_DATA_TRANSPORT_TOKEN) {
+  $ss = Read-Host -AsSecureString 'Transport token (hidden input)'
+  $env:IIPS_MARKET_DATA_TRANSPORT_TOKEN = [System.Net.NetworkCredential]::new('', $ss).Password
+  Remove-Variable ss
+}
+$Headers  = @{ Authorization = "Bearer $env:IIPS_MARKET_DATA_TRANSPORT_TOKEN" }   # in-process only
+$Evidence = Join-Path $env:TEMP 'w06-evidence'
+New-Item -ItemType Directory -Force -Path $Evidence | Out-Null
+$QuoteBody = '{"companyId":"EQ_RELIANCE_IN","securityId":"ISIN:INE002A01018:EQ","exchangeSegment":"NSE_EQ"}'
+$FreshPath = '/v1/freshness?domain=D01_QUOTES&companyId=EQ_RELIANCE_IN&exchangeSegment=NSE_EQ&securityId=ISIN:INE002A01018:EQ'
+
+function Invoke-IpdProbe {
+  param([Parameter(Mandatory)][string]$Name, [Parameter(Mandatory)][string]$Path,
+        [string]$Method = 'GET', [string]$Body)
+  $sw = [System.Diagnostics.Stopwatch]::StartNew()
+  $status = $null; $text = $null; $caught = $null
+  try {
+    $p = @{ Uri = "$Base$Path"; Method = $Method; Headers = $Headers; TimeoutSec = 30 }
+    if ($Body) { $p.Body = $Body; $p.ContentType = 'application/json' }
+    if ($PSVersionTable.PSVersion.Major -ge 7) { $r = Invoke-WebRequest @p -SkipHttpErrorCheck }
+    else                                       { $r = Invoke-WebRequest @p -UseBasicParsing }
+    $status = [int]$r.StatusCode; $text = $r.Content
+  } catch {
+    $caught = $_.Exception.Message
+    if ($_.Exception.Response) { $status = [int]$_.Exception.Response.StatusCode }
+    if ($_.ErrorDetails -and $_.ErrorDetails.Message) { $text = $_.ErrorDetails.Message }
+    elseif ($_.Exception.Response) {
+      try {
+        $sr = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+        $text = $sr.ReadToEnd(); $sr.Dispose()
+      } catch { }
+    }
+  }
+  $sw.Stop()
+  $rec = [ordered]@{
+    probe = $Name; method = $Method; path = $Path
+    atUtc = (Get-Date).ToUniversalTime().ToString('o')
+    elapsedMs = [int]$sw.ElapsedMilliseconds
+    httpStatus = $status
+    statusClass = if ($status) { '{0}xx' -f [int][math]::Floor($status / 100) } else { 'NO_RESPONSE' }
+    typedCode = $null; message = $null; freshness = $null; exceptionMessage = $caught; body = $text
+  }
+  if ($text) {
+    try {
+      $j = $text | ConvertFrom-Json
+      if ($j.error)        { $rec.typedCode = $j.error.code; $rec.message = $j.error.message }
+      elseif ($j.ok)       { $rec.typedCode = 'OK'; $rec.freshness = $j.freshness }
+      elseif ($j.service)  { $rec.typedCode = 'HEALTH' }
+      elseif ($j.lastRefresh) { $rec.typedCode = $j.lastRefresh.outcome }
+    } catch { $rec.typedCode = 'UNPARSEABLE' }
+  }
+  $rec | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 (Join-Path $Evidence "$Name.json")
+  '{0} -> HTTP {1} ({2}) code={3} {4}ms' -f $Name, $rec.httpStatus, $rec.statusClass, $rec.typedCode, $rec.elapsedMs
+}
+```
+
+The status is taken from the response object on success and from the exception's response on failure;
+the body from the response on success and from `ErrorDetails.Message` (with a stream fallback) on
+failure — the two paths whose absence lost the first attempt's body (§6.1). One JSON file is written
+per probe; the console shows one summary line.
+
+### 10.3 Sequence — five probes, then stop or repeat step 3
+
+```powershell
+Invoke-IpdProbe -Name 'w06-01-health-before'    -Path '/v1/health'
+Invoke-IpdProbe -Name 'w06-02-freshness-before' -Path $FreshPath
+Invoke-IpdProbe -Name 'w06-03-quotes-attempt1' -Method POST -Path '/v1/quotes' -Body $QuoteBody
+Invoke-IpdProbe -Name 'w06-04-health-after'     -Path '/v1/health'
+Invoke-IpdProbe -Name 'w06-05-freshness-after'  -Path $FreshPath
+```
+
+Read `w06-03-quotes-attempt1.json` against §10.4. **Decisive** → stop; do not repeat. **Not decisive** →
+repeat probe 3 only, as `-Name 'w06-03-quotes-attempt2'`, then probes 4–5 again. Same identity, same
+route, same body, one attempt at a time, never in a loop.
+
+### 10.4 Stop table — what each captured outcome establishes
+
+The daemon returns `200` with `{ok:true,…}`, `429` for a `RATE_LIMITED` failure, and `502` for every
+other typed failure, always as `{"error":{"code","message"}}`. A single POST can be up to three vendor
+sends (§1.1 item 4); the codes marked **vendor** are the ones that cannot arise without a vendor answer.
+
+| Captured on the `/v1/quotes` probe | What it establishes | Action |
+| --- | --- | --- |
+| `200` `{ok:true, envelope, freshness}` | **vendor** 2xx, credentials accepted, quote produced | **decisive — M1 authentication established.** Stop. This is not quote qualification (W-06 qualifies nothing) |
+| `502 STALE_DATA_SUPPRESSED` | **vendor** 2xx and a parseable quote: suppression happens after the call, when the quote is older than twice the 15-minute D01 threshold | **decisive for authentication.** Stop — expected outside market hours. Do not repeat for a "fresher" quote |
+| `502 MALFORMED_RESPONSE` / `CANONICAL_VALIDATION_FAILURE` / `MISSING_REQUIRED_FIELD` | **vendor** 2xx with a body this pipeline rejects | **decisive for authentication.** Stop; record the payload-level defect separately |
+| `502 AUTHENTICATION_FAILURE` | **vendor** 4xx (401/403): the credentials were presented and rejected | **decisive — typed auth failure.** Stop; fix the credential before any later work |
+| `502 HTTP_ERROR` (message carries the number) | **vendor** answered non-2xx | decisive — vendor interaction with its class. Stop |
+| `429 RATE_LIMITED` | ambiguous: the local per-minute budget (no vendor send) **or** a vendor 429 | wait ≥60 s, one more attempt |
+| `502 TRANSPORT_FAILURE` / `502 TIMEOUT` | ambiguous: no vendor verdict (and up to 3 sends may have been attempted) | one more attempt after ≥5 s, at most 3 attempts in total |
+| `502 CREDENTIALS_UNAVAILABLE` / `CREDENTIALS_EXPIRED` | local pre-flight, **no vendor send** | re-run the W-04 `verify all`, repair the store, then one more attempt |
+| `401 UNAUTHENTICATED` | the transport token is wrong — the request never reached the service | fix the token in-session; recapture |
+| `400 MALFORMED_REQUEST` | our body or scope was wrong — no vendor send | correct it and recapture; do not change the identity without recording why |
+| `413 REQUEST_TOO_LARGE` | our body exceeded the daemon's configured limit — no vendor send | not expected with this 93-byte body; if captured, stop and report it rather than trimming and retrying |
+| `504 REQUEST_TIMEOUT` (layer) | the call may have been in flight when the 10 s layer bound closed | ambiguous; one more attempt |
+
+### 10.5 Redaction evidence — required before any attempt is accepted
+
+```powershell
+$ProbeFiles = (Get-ChildItem $Evidence -Filter *.json).FullName
+Select-String -Path $ProbeFiles -Pattern 'eyJ','vault://','dhan-secrets','dhan-client-id\.carrier',
+  'dhan-access-token\.carrier','H:\\IIPS\\runtime','1000\d{6}' -AllMatches |
+  Select-Object Path, LineNumber, Pattern
+```
+
+Any output means the evidence is **not** acceptable — a JWT prefix, a secret reference, a carrier path
+or a client-id-shaped number reached a captured artefact. Also run the same pattern list over the
+daemon's console text.
+
+Optional exact-value check, without exposing either value (hidden input, never printed, never on argv):
+
+```powershell
+$ss = Read-Host -AsSecureString 'Access token, one-shot grep (hidden)'
+$plain = [System.Net.NetworkCredential]::new('', $ss).Password
+if (Select-String -Path $ProbeFiles -Pattern ([regex]::Escape($plain)) -Quiet) { 'SECRET FOUND - REJECT EVIDENCE' } else { 'token absent' }
+$plain = $null; Remove-Variable ss, plain
+```
+
+Repeat for the client id if it is available in the same form.
+
+### 10.6 What to hand back, and what not to do
+
+- **Hand back:** the `w06-0*.json` files (or their `httpStatus`, `statusClass`, `typedCode`, `message`,
+  `elapsedMs`, `atUtc` and — for the quotes probe — `body` fields) and the daemon console text.
+- **Do not:** restart the daemon; repeat after a decisive capture; use `/v1/historical`; change the
+  identity or the body between attempts; put the token on a command line; commit the evidence files.
 
 ---
 
@@ -278,4 +436,5 @@ Not performed here; recorded so the gap cannot recur:
 - Not quoted or reconstructed: the response body, the request time, latency, the vendor status.
 - No credential value, client-id value, token, ciphertext, `vault://` reference or carrier path appears
   in this file; none was captured during the execution.
-- This document grants no authorisation. The one-request authorisation was consumed.
+- This document grants no authorisation of its own: it records the owner's 2026-11-12 extension (§1.1)
+  and the procedure that operates it (§10).
