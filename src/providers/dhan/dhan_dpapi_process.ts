@@ -11,6 +11,8 @@
  *  - the PowerShell script is STATIC and carries no data; it is passed with
  *    `-EncodedCommand` and never assembled from values;
  *  - request data travels on **stdin** only; the result is read from **stdout** only;
+ *  - `protect` (W-04) is the only program that ever receives a plaintext secret, and it receives
+ *    it on stdin under exactly the same rules — no argv, no file, no environment, no echo;
  *  - no temporary file is written, nothing is passed on argv, nothing is put in a shell
  *    string that could land in shell history (no shell is involved: `spawn` without one);
  *  - the script never echoes its input and reports a coarse failure category only, never
@@ -24,7 +26,7 @@
 
 import { spawn } from 'node:child_process';
 
-export type DpapiProcessOperation = 'describe-acl' | 'read-acl' | 'apply-acl' | 'unprotect';
+export type DpapiProcessOperation = 'describe-acl' | 'read-acl' | 'apply-acl' | 'unprotect' | 'protect';
 
 export interface DpapiProcessRequest {
   readonly operation: DpapiProcessOperation;
@@ -178,11 +180,41 @@ const UNPROTECT_SCRIPT = [
   '}',
 ].join('\n');
 
+/**
+ * DPAPI protect (user scope) — W-04. Accepts `{ plaintextB64 }` and returns
+ * `{ ok: true, ciphertextB64 }` — or `{ ok: false, kind: 'DPAPI_PROTECT_FAILED' }` with no
+ * exception text.
+ *
+ * This is the only program in the boundary that receives a plaintext secret, and it receives it
+ * on **stdin** only: never argv, never a temporary file, never an environment variable, never a
+ * shell string. It writes the ciphertext to stdout and nothing else, and it never echoes or
+ * re-reads its own input. `DataProtectionScope::CurrentUser` is the same scope the read path
+ * unprotects under, so a carrier is decryptable only by the account that wrote it.
+ *
+ * W-02 deliberately did not own this program (the W-02 acceptance harness carries its own static
+ * copy so that its evidence stays reproducible); W-04 is the work item that adds it to the
+ * shipped tree.
+ */
+const PROTECT_SCRIPT = [
+  "$ErrorActionPreference = 'Stop'",
+  'try {',
+  '  Add-Type -AssemblyName System.Security',
+  '  $raw = [Console]::In.ReadToEnd()',
+  '  $req = $raw | ConvertFrom-Json',
+  '  $bytes = [Convert]::FromBase64String([string]$req.plaintextB64)',
+  '  $prot = [System.Security.Cryptography.ProtectedData]::Protect($bytes, $null, [System.Security.Cryptography.DataProtectionScope]::CurrentUser)',
+  '  @{ ok = $true; ciphertextB64 = [Convert]::ToBase64String($prot) } | ConvertTo-Json -Compress',
+  '} catch {',
+  "  @{ ok = $false; kind = 'DPAPI_PROTECT_FAILED' } | ConvertTo-Json -Compress",
+  '}',
+].join('\n');
+
 const SCRIPT_BY_OPERATION: Readonly<Record<DpapiProcessOperation, string>> = Object.freeze({
   'describe-acl': ACL_SCRIPT,
   'read-acl': READ_ACL_SCRIPT,
   'apply-acl': APPLY_ACL_SCRIPT,
   unprotect: UNPROTECT_SCRIPT,
+  protect: PROTECT_SCRIPT,
 });
 
 /**

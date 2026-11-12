@@ -30,6 +30,7 @@ export * from './dhan_dpapi_process.js';
 export * from './dhan_dpapi_vault_backend.js';
 export * from './dhan_local_daemon.js';
 export * from './dhan_provider_state.js';
+export * from './dhan_credential_store_utility.js';
 export * from './dhan_instrument_master_source.js';
 export * from './dhan_instrument_master_parser.js';
 export * from './dhan_instrument_master_qualification.js';
