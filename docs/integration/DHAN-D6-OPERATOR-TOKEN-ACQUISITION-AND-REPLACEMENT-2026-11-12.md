@@ -488,3 +488,24 @@ are:
 
 W-06 closes milestone **M1 only**. It does not qualify quotes, history or freshness, and it does not
 authorise any subsequent live activity.
+
+### 14.1 Rehearsal record — mechanical half (executed)
+
+| Field | Value |
+| --- | --- |
+| Date | 2026-11-12 |
+| Subject | every `dhan:credential` invocation printed in this document (§4–§10, §13) |
+| Secret used | a synthetic throwaway string generated for the rehearsal; never a Dhan credential |
+| DPAPI child | emulated (`protect` / `unprotect` / `read-acl` / `apply-acl` / `describe-acl`), so the rehearsal is host-independent |
+| Platform gate | `win32` asserted in-process; no Windows call is made and no real DPAPI blob is written |
+| Suite | `tests/dhan_d6_operator_procedure_conformance.test.ts` (D6-01…D6-13), 13/13 |
+| Result | provision → `PRESENT_OK`; re-provision refused (`ALREADY_PROVISIONED`, exit `7`); `verify` → `PRESENT_OK` with `location: withheld`; `rotate` → replacement with `createdAtUtc` preserved; expiry refusal on `client-id` and on a past instant; every quoted exit code, status and failure code observed exactly as documented |
+
+What this record **does** establish: the document and the shipped CLI agree — every documented command is
+accepted, every documented exit code and failure code is reproduced, and no printed output contains a value,
+a `vault://` reference or a carrier path.
+
+What it **does not** establish: DPAPI behaviour on the governed Windows host (that is the W-02 acceptance
+evidence) and vendor acceptance of a real token (that is W-06). The single remaining closing step for D-6 is
+the same sequence run once on the governed workstation with a throwaway value, which is an operator action and
+requires no change to this document or to the tree.
