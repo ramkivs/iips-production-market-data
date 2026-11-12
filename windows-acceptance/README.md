@@ -84,7 +84,7 @@ authenticated request, or anything about production readiness. It is a store-lev
   it. A hit is redacted and the run is marked `FAIL`.
 * **No repair.** The run writes only inside the acceptance directory and deletes it afterwards.
 
-## Optional: exercise the process runner itself
+## Exercise the process runner itself
 
 The bounded runner (`Invoke-IipsProcess`) and the deterministic resolver can be executed directly,
 without any DPAPI or Windows ACL involvement:
@@ -94,8 +94,17 @@ $env:IIPS_POWERSHELL_RUNTIME_TESTS='1'; npm test
 ```
 
 That runs `W-02-INF-05` against the real helper (timeout with a killed child, non-zero exit, both
-streams, stdin delivery, sanitized resolver failure). Without the variable the case reports a skip,
-so the default suite stays deterministic on hosts without PowerShell.
+streams, 200 KB on both streams at once, stdin delivery absent from the child's command line, a
+resolved toolchain that is one installation, and a resolver failure that echoes no path).
+
+CI always runs it: the main job sets the flag on `ubuntu-latest` (`pwsh`), and the
+`W-02 process runner (PowerShell)` workflow runs the same case on `windows-latest`, i.e. on Windows
+PowerShell 5.1 — the interpreter the launcher targets. The skip only applies to a local run on a host
+with no PowerShell at all, so a developer machine without one does not fail on a missing interpreter.
+
+If the case fails, the message names the cause: a child that could not be created reports
+`PROCESS_START_FAILED: win32=<code> (<category>)` (or `type=<ExceptionType>`), and a child that never
+appeared at its path reports `PROCESS_EXECUTABLE_NOT_FOUND`.
 
 ## Relationship to the automated suite
 

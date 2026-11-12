@@ -99,7 +99,7 @@ with a named rule.
 | `W-02-INF-03` | the launcher resolves the helper locally, calls it with declared parameters only, and uses stdin + byte count |
 | `W-02-INF-04` | the structural validator enforces those contracts and passes for both directories |
 | `W-02-INF-06` | the generated child command lines are correct and carry no data (pure; runs everywhere) |
-| `W-02-INF-05` | **the real runner executed** on request (`IIPS_POWERSHELL_RUNTIME_TESTS=1`): non-zero exit, separate streams, 200 KB on each stream simultaneously, stdin delivery absent from the child's command line, timeout with a **killed child** (pid verified gone), and the resolver's sanitized failure |
+| `W-02-INF-05` | **the real runner executed** (CI sets `IIPS_POWERSHELL_RUNTIME_TESTS=1` on both platforms): non-zero exit, separate streams, 200 KB on each stream simultaneously, stdin delivery absent from the child's command line, timeout with a **killed child** (pid verified gone), a resolved toolchain that is one installation, and a resolver failure that echoes no path |
 
 `W-02-INF-05` resolves the interpreter to an **absolute path** before driving it, because the runner
 deliberately rejects a bare command name. It skips where PowerShell is absent — this sandbox. It runs wherever `pwsh` exists (the
@@ -164,18 +164,39 @@ from the one the test meant to pass.
    appearing exactly once (as `-StandardInput`). That test runs everywhere, including here, and would
    have caught the nested-quote defect before the host ever saw it.
 
-### Status
+### Executed evidence, after the correction
 
-`W-02-INF-05` remains **FAIL-UNPROVEN** until it is executed again on the Windows host:
+The case is no longer only-on-request. It is executed in CI, on both PowerShell hosts:
+
+| Where | Host | PowerShell | Result |
+| --- | --- | --- | --- |
+| `CI` → `Test (guarded)` | `ubuntu-latest` | `pwsh` | **PASS** — executed, not skipped (1535 tests executed, 1534 passed, 0 failed) |
+| `W-02 process runner (PowerShell)` | `ubuntu-latest` | `pwsh` | **PASS** |
+| `W-02 process runner (PowerShell)` | `windows-latest` | **Windows PowerShell 5.1** | **PASS** |
+
+All six runner cases pass on Windows PowerShell 5.1: non-zero exit reported as data, stdout and
+stderr captured separately, **200 KB on both streams at the same time** (the case that failed on the
+operator's host), stdin delivery with the payload provably absent from the child's command line, a
+bounded timeout whose child pid is gone afterwards, a resolved toolchain that is one installation,
+and a sanitized resolver failure that never echoes the path it was given.
+
+The local suite still skips the case when PowerShell is not present (`IIPS_POWERSHELL_RUNTIME_TESTS`
+unset) — a developer machine without PowerShell should not fail on a missing interpreter — but CI
+never relies on that: both workflows set the flag, and the Windows job is the 5.1 authority.
+
+### Remaining acceptance
+
+`W-02-INF-05` still has to pass on the **operator's** host, which is the environment the launcher
+actually runs in (its own `H:\IIPS` layout, its own Node installation):
 
 ```powershell
 npm run build:tsc
 $env:IIPS_POWERSHELL_RUNTIME_TESTS='1'; node --test dist/tests/w02_acceptance_process.test.js
 ```
 
-If it fails again, the message now carries `win32=<code> (<category>)`, which identifies the exact
-Windows error instead of hiding it. Arena cannot execute PowerShell 5.1 and does not claim this case
-passes.
+If anything still refuses, the message now carries `win32=<code> (<category>)`, which names the
+exact Windows error instead of hiding it. Arena does not execute PowerShell 5.1 itself and does not
+claim the operator's run passes.
 
 ## 5. A. User-supplied Windows evidence (not executed by Arena)
 
