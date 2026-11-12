@@ -186,7 +186,8 @@ class FakeDpapiHost {
         // Windows call is emulated here. A file path carries the file inheritance flags, a
         // directory path the directory flags, exactly as the child program reports them.
         const target = String((request.payload as { path?: unknown }).path ?? '');
-        const looksLikeFile = /\.(json|tmp|carrier)$/i.test(target);
+        // Suffix test, not a regex: the beside-file ends in `.tmp`, the carrier in `.json`.
+        const looksLikeFile = target.endsWith('.tmp') || target.endsWith('.json');
         const inheritanceFlags = looksLikeFile
           ? DPAPI_ACL_INHERITANCE_NONE
           : DPAPI_ACL_INHERITANCE_DIRECTORY;
