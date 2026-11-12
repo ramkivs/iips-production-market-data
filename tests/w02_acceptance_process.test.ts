@@ -247,14 +247,26 @@ export function buildAcceptanceSuite(inputs: AcceptanceSuiteInputs): string {
     '    }',
     '    @{ timedOut = $timedOut; elapsedMs = [int](([DateTime]::UtcNow - $started).TotalMilliseconds) }',
     '}',
-    // (1)(3)(5) sanitized resolver failure where no node.exe/npm.cmd pair exists
+    // (1)(3)(5) the resolver on THIS host: either a co-located trio, or a sanitized failure
     'Invoke-Case "resolver" {',
     '    try {',
-    '        $null = Resolve-IipsNodeToolchain',
-    '        "RESOLVED_UNEXPECTEDLY"',
+    '        $toolchain = Resolve-IipsNodeToolchain',
+    '        @{ resolved = $true; node = $toolchain.NodeExe; npm = $toolchain.NpmCmd; npx = $toolchain.NpxCmd }',
     '    }',
     '    catch {',
-    '        [string]$_.Exception.Message',
+    '        @{ resolved = $false; message = [string]$_.Exception.Message }',
+    '    }',
+    '}',
+    // (5) sanitization is proven deterministically: a path that cannot exist must fail with reason
+    // codes only, never with the path that was asked for.
+    'Invoke-Case "resolverMissing" {',
+    "    $absent = Join-Path ([System.IO.Path]::GetTempPath()) 'iips-absent-toolchain-7d3e'",
+    '    try {',
+    '        $null = Resolve-IipsNodeToolchain -NodeExecutable (Join-Path $absent \"node.exe\")',
+    '        @{ threw = $false; message = \"\"; absent = $absent }',
+    '    }',
+    '    catch {',
+    '        @{ threw = $true; message = [string]$_.Exception.Message; absent = $absent }',
     '    }',
     '}',
     `$results | ConvertTo-Json -Compress -Depth 5 | Set-Content -LiteralPath ${q(inputs.resultFile)} -Encoding UTF8`,
@@ -536,10 +548,28 @@ describe('W-02 / repository-owned process runner and toolchain resolver', () => 
     }
     assert.strictEqual(alive, false, 'the timed-out child must be killed, not orphaned');
 
-    // (1)(3)(5) the resolver fails sanitized: no node.exe/npm.cmd pair on this host
-    const resolverMessage = String(caseOf('resolver'));
-    assert.ok(resolverMessage.includes('NODE_TOOLCHAIN_NOT_RESOLVED'), `resolver:\n${detail}`);
-    assert.ok(!resolverMessage.includes(os.homedir()), 'the failure must not leak a personal path');
+    // (1)(3)(5) a successful resolution is a single installation: node.exe, npm.cmd and npx.cmd
+    // in ONE directory. A failure is sanitized: reason codes only, no path, no personal data.
+    const resolver = caseOf('resolver');
+    if (resolver.resolved === true) {
+      const trio = [resolver.node, resolver.npm, resolver.npx].map((value) => String(value));
+      for (const member of trio) assert.ok(fs.existsSync(member), `the toolchain must exist: ${member}`);
+      const directory = path.dirname(trio[0]);
+      assert.strictEqual(path.dirname(trio[1]), directory, 'npm.cmd must sit beside node.exe');
+      assert.strictEqual(path.dirname(trio[2]), directory, 'npx.cmd must sit beside node.exe');
+    } else {
+      const message = String(resolver.message);
+      assert.ok(message.startsWith('NODE_TOOLCHAIN_NOT_RESOLVED'), `resolver:\n${detail}`);
+      assert.ok(!message.includes(os.homedir()), 'the failure must not leak a personal path');
+    }
+
+    // (5) sanitization, deterministically: the path that was asked for must not come back out.
+    const missing = caseOf('resolverMissing');
+    assert.strictEqual(missing.threw, true, `an absent toolchain must fail:\n${detail}`);
+    const missingMessage = String(missing.message);
+    assert.ok(missingMessage.startsWith('NODE_TOOLCHAIN_NOT_RESOLVED'), `resolverMissing:\n${detail}`);
+    assert.ok(!missingMessage.includes(String(missing.absent)), 'the failure must not echo the path');
+    assert.ok(!missingMessage.includes(os.homedir()), 'the failure must not leak a personal path');
 
     fs.rmSync(dir, { recursive: true, force: true });
   });

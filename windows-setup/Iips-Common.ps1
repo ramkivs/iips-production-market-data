@@ -257,7 +257,7 @@ function Resolve-IipsNodeToolchain {
             $nodeProbe = Invoke-IipsProcess -FilePath $nodePath -Arguments '--version' -TimeoutMilliseconds $script:IipsVersionProbeTimeoutMilliseconds
         }
         catch {
-            $reasons.Add('node-version-probe-failed')
+            $reasons.Add('node-version-probe-failed:' + (Get-IipsFailureCode -Message ([string]$_.Exception.Message)))
             continue
         }
         if ($nodeProbe.ExitCode -ne 0) {
@@ -282,7 +282,7 @@ function Resolve-IipsNodeToolchain {
             $npmProbe = Invoke-IipsCmdShim -ShimPath $npmPath -Arguments @('--version') -TimeoutMilliseconds $script:IipsVersionProbeTimeoutMilliseconds
         }
         catch {
-            $reasons.Add('npm-version-probe-failed')
+            $reasons.Add('npm-version-probe-failed:' + (Get-IipsFailureCode -Message ([string]$_.Exception.Message)))
             continue
         }
         if ($npmProbe.ExitCode -ne 0) {
@@ -300,7 +300,7 @@ function Resolve-IipsNodeToolchain {
             $npxProbe = Invoke-IipsCmdShim -ShimPath $npxPath -Arguments @('--version') -TimeoutMilliseconds $script:IipsVersionProbeTimeoutMilliseconds
         }
         catch {
-            $reasons.Add('npx-version-probe-failed')
+            $reasons.Add('npx-version-probe-failed:' + (Get-IipsFailureCode -Message ([string]$_.Exception.Message)))
             continue
         }
         if ($npxProbe.ExitCode -ne 0) {
@@ -383,6 +383,29 @@ function Get-IipsStartFailureDetail {
 .SYNOPSIS
     A fixed category for the Win32 codes that process creation actually produces.
 #>
+<#
+.SYNOPSIS
+    The failure code of a caught runner exception, and nothing else.
+
+.DESCRIPTION
+    Reason codes are concatenated into NODE_TOOLCHAIN_NOT_RESOLVED messages, which must stay free
+    of paths and personal data. This whitelists the only two shapes the runner produces
+    (`PROCESS_X` and `PROCESS_X:win32=<n> (<category>)`) and returns `unknown` for anything else,
+    so no message text can reach the caller through this path.
+#>
+function Get-IipsFailureCode {
+    param(
+        [Parameter(Mandatory = $false)]
+        [string] $Message = ''
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Message)) { return 'unknown' }
+    $match = [regex]::Match($Message, '^(PROCESS_[A-Z_]+)(:\s*win32=\d+\s*\([a-z-]+\))?')
+    if (-not $match.Success) { return 'unknown' }
+    if (-not $match.Groups[2].Success) { return $match.Groups[1].Value }
+    return ($match.Groups[1].Value + ':' + ($match.Groups[2].Value -replace '^:\s*', ''))
+}
+
 function Get-IipsWin32Reason {
     param(
         [Parameter(Mandatory = $true)]

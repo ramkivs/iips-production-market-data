@@ -377,6 +377,8 @@ for path in TARGET_SCRIPTS:
               "distinguishes a missing executable from a refused process creation")
         check("Get-IipsStartFailureDetail" in plain and "NativeErrorCode" in plain and "win32=" in plain,
               "reports the native start-failure code instead of discarding it")
+        check(plain.count("(Get-IipsFailureCode -Message ([string]$_.Exception.Message))") == 3,
+              "every toolchain probe failure carries the sanitized runner code")
         check("Start-Process" not in plain or "-Wait" not in plain,
               "never uses Start-Process -Wait (it waits for the whole tree, unbounded)")
         check("Get-Command node.exe -All" in plain, "discovers node.exe through PATH enumeration")
