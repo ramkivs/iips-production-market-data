@@ -185,19 +185,26 @@ The local suite still skips the case when PowerShell is not present (`IIPS_POWER
 unset) — a developer machine without PowerShell should not fail on a missing interpreter — but CI
 never relies on that: both workflows set the flag, and the Windows job is the 5.1 authority.
 
-### Remaining acceptance
+### Operator-host outcome (2026-11-12)
 
-`W-02-INF-05` still has to pass on the **operator's** host, which is the environment the launcher
-actually runs in (its own `H:\IIPS` layout, its own Node installation):
+The operator's Windows acceptance run completed **19/19 PASS** on `DESKTOP-NO0NHTP` (Windows
+PowerShell 5.1, Node v22.16.0 at `C:\Node22\node-v22.16.0-win-x64\node.exe`); the evidence is
+recorded in `docs/integration/DHAN-W02-WINDOWS-ACCEPTANCE-EVIDENCE-2026-11-12.md` §B. Its
+`[01-preconditions]` toolchain row reads `node v22.16.0 at C:\Node22\…\node.exe`, so the resolver
+correction from §4b is proven **on that host**, against an explicitly supplied `-NodeExecutable`.
+
+The standalone runtime case can still be run there, and is the way to re-verify the runner after a
+change to it:
 
 ```powershell
 npm run build:tsc
 $env:IIPS_POWERSHELL_RUNTIME_TESTS='1'; node --test dist/tests/w02_acceptance_process.test.js
 ```
 
-If anything still refuses, the message now carries `win32=<code> (<category>)`, which names the
-exact Windows error instead of hiding it. Arena does not execute PowerShell 5.1 itself and does not
-claim the operator's run passes.
+It has not been executed on that host as a standalone suite; it is executed in CI on
+`windows-latest` (Windows PowerShell 5.1) and `ubuntu-latest` on every push. If anything ever refuses,
+the message carries `win32=<code> (<category>)`, which names the exact Windows error instead of hiding
+it. Arena does not execute PowerShell 5.1 itself and claims nothing beyond the evidence above.
 
 ## 4b. `-NodeExecutable` never took effect: the probe bound was undefined (2026-11-12)
 

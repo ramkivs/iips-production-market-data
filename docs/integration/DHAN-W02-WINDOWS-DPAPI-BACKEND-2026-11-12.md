@@ -195,16 +195,20 @@ paths are proven.
 > `windows-acceptance/Invoke-W02DpapiAcceptance.ps1` (harness:
 > `windows-acceptance/w02_dpapi_acceptance.mjs`). It writes a per-test, timestamped evidence log and
 > never records a value, a ciphertext or raw child-process stderr. See
-> `docs/integration/DHAN-W02-WINDOWS-ACCEPTANCE-EVIDENCE-2026-11-12.md`. This item stays **PENDING**
-> until that log exists from a Windows host.
+> `docs/integration/DHAN-W02-WINDOWS-ACCEPTANCE-EVIDENCE-2026-11-12.md`. **The Windows run has since
+> been executed on the operator's host: 19/19 PASS (2026-11-12), and the item is ACCEPTED** — see
+> section B and the independent review in section F of that record. The paragraph below records what
+> was outstanding at the time this section was written.
 >
 > **Windows-host defect and correction (2026-11-12):** an unconditional directory-DACL rewrite on
 > every carrier write raised `PrivilegeNotHeldException` (HRESULT -2147024891) on the second
 > carrier. The policy and its application are now production modules
 > (`src/providers/dhan/dhan_dpapi_acl.ts`, plus `read-acl` / `apply-acl` in
 > `dhan_dpapi_process.ts`) and rewrite only when the observed descriptor differs. See
-> `docs/integration/DHAN-W02-WINDOWS-ACL-IDEMPOTENCY-2026-11-12.md`; a fresh Windows run is
-> required because that production path did not exist during the earlier 18/18 run.
+> `docs/integration/DHAN-W02-WINDOWS-ACL-IDEMPOTENCY-2026-11-12.md`; a fresh Windows run was
+> therefore required because that production path did not exist during the earlier 18/18 run — it
+> has since been executed (19/19 PASS) and includes `W02-WIN-08B`, which exercises the idempotent
+> path directly.
 
 ## 12. Dependency handed to W-03
 
