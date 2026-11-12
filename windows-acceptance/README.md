@@ -21,7 +21,15 @@ Options: `-InstallRoot` (default `H:\IIPS`), `-EvidenceRoot` (default
 `<InstallRoot>\logs\w02-dpapi-acceptance`), `-NodeExecutable` (full path to `node.exe`; otherwise
 the shared `Resolve-IipsNodeToolchain` resolves one installation), `-NoPause`.
 
-Prerequisites: Windows, PowerShell 5.1+, Node.js ≥ 22.13.0, and `dist/` built (`npm run build:tsc`).
+Prerequisites: Windows, PowerShell 5.1+, Node.js ≥ 22.13.0 (resolved from one installation by
+`Resolve-IipsNodeToolchain`; pass `-NodeExecutable` to pin one), and `dist/` built
+(`npm run build:tsc`).
+
+The shared helper is resolved **inside the clone** (`<$repoRoot>\windows-setup\Iips-Common.ps1`),
+so no personal copy and no machine-specific path is required. The harness runs through
+`Invoke-IipsProcess`: explicit timeout, both streams drained asynchronously, the child killed on
+timeout, and the generated values delivered on **stdin** only. No stderr file is written — stderr is
+reduced to a byte count.
 The acceptance directory is created under `<InstallRoot>\runtime\w02-acceptance-<UTC stamp>` —
 outside every Git working tree — and is deleted again at the end of the run.
 

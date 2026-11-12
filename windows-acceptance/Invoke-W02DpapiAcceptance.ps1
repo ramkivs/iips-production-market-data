@@ -239,11 +239,14 @@ if ([string]::IsNullOrWhiteSpace($EvidenceRoot)) { $EvidenceRoot = Join-Path $In
 $evidenceDir = Join-Path $EvidenceRoot $stamp
 $evidencePath = Join-Path $evidenceDir 'W02-DPAPI-ACCEPTANCE-EVIDENCE.md'
 $acceptanceRoot = Join-Path $InstallRoot ('runtime\w02-acceptance-' + $stamp)
-$stderrPath = Join-Path $acceptanceRoot 'harness.stderr.tmp'
+# The harness stderr is captured in memory by Invoke-IipsProcess and reduced to a byte count.
+# It is never written to a file that could outlive the run, and never read back.
+$script:HarnessTimeoutMilliseconds = 600000
 
 $nodeExe = ''
 $prereqOk = $true
 $harnessExit = 1
+$stderrBytes = 0
 
 Write-Host '=============================================================' -ForegroundColor White
 Write-Host ' IIPS W-02 - Windows DPAPI Acceptance Run ' -ForegroundColor White
@@ -325,7 +328,7 @@ $clientIdValue = New-ThrowawayValue -Label 'CLIENT'
 $accessTokenValue = New-ThrowawayValue -Label 'TOKEN'
 $script:Secrets.Add($clientIdValue)
 $script:Secrets.Add($accessTokenValue)
-Write-IipsInfo 'two throwaway values generated; never printed, never written to a file, never placed on a command line' -ForegroundColor Gray
+Write-IipsInfo 'two throwaway values generated; never printed, never written to a file, never placed on a command line'
 
 # ---- harness -------------------------------------------------------------------------------
 Write-IipsStep '03-harness' 'Running the Node acceptance harness with the values on stdin'
@@ -339,20 +342,35 @@ try {
             carrierRoot      = $acceptanceRoot
         } | ConvertTo-Json -Compress)
 
-    $stdoutLines = @($stdinJson | & $nodeExe $harnessPath 2> $stderrPath)
-    $harnessExit = $LASTEXITCODE
-    $stdoutText = ($stdoutLines -join "`n").Trim()
+    # Bounded execution with the payload on STDIN and both streams drained asynchronously.
+    # `& $nodeExe $harnessPath` cannot bound the run, and piping stderr (`2>`) required a file.
+    # The values reach the child through stdin only - never argv, never a temporary file.
+    $harnessRun = Invoke-IipsProcess `
+        -FilePath $nodeExe `
+        -Arguments ('"' + $harnessPath + '"') `
+        -TimeoutMilliseconds $script:HarnessTimeoutMilliseconds `
+        -StandardInput $stdinJson
+
+    $harnessExit = $harnessRun.ExitCode
+    $stderrBytes = [int] $harnessRun.StdErrByteLength
+    $stdoutText = ([string] $harnessRun.StdOut).Trim()
+    if ($harnessRun.StdinFailed) {
+        Add-AcceptanceResult -Id 'W02-WIN-00' -Description 'Harness stdin delivery' -Step 'Invoke-IipsProcess -StandardInput' -Status 'FAIL' -ExitCode 1 -Output 'the harness closed its stdin before the payload was delivered'
+    }
 }
 catch {
     $harnessExit = 1
     $stdoutText = ''
+    $stderrBytes = 0
     $exceptionName = $_.Exception.GetType().Name
-    Add-AcceptanceResult -Id 'W02-WIN-00' -Description 'Harness invocation' -Step 'node harness' -Status 'FAIL' -ExitCode 1 -Output ('the harness could not be invoked (' + $exceptionName + ')')
+    $exceptionMessage = [string] $_.Exception.Message
+    $timedOut = $exceptionMessage.StartsWith('PROCESS_TIMEOUT')
+    $outputText = ('the harness could not be invoked (' + $exceptionName + ')')
+    if ($timedOut) { $outputText = 'the harness exceeded the bounded timeout and was terminated' }
+    Add-AcceptanceResult -Id 'W02-WIN-00' -Description 'Harness invocation' -Step 'Invoke-IipsProcess node harness' -Status 'FAIL' -ExitCode 1 -Output $outputText
 }
 
-$stderrBytes = 0
-if (Test-Path -LiteralPath $stderrPath) { $stderrBytes = (Get-Item -LiteralPath $stderrPath).Length }
-Write-IipsInfo ("harness exit code {0}; stderr {1} bytes (content is never read, echoed or logged)" -f $harnessExit, $stderrBytes) -ForegroundColor Gray
+Write-IipsInfo ("harness exit code {0}; stderr {1} bytes (content is never read, echoed or logged)" -f $harnessExit, $stderrBytes)
 
 # ---- results -------------------------------------------------------------------------------
 Write-IipsStep '04-results' 'Parsing the harness result object'

@@ -1,0 +1,161 @@
+# DHAN W-02 — Repository-Owned Windows Acceptance Infrastructure
+
+**Status:** IMPLEMENTED AND VERIFIED IN ARENA — **the fresh Windows-host acceptance run is now ready**
+**Work item:** W-02 (roadmap v1.1), decision D-1
+**Repository:** `ramkivs/iips-production-market-data`
+**Branch:** `arena/84d1e063-iips-production-market-data` · **PR:** #156
+**Predecessor:** `4446c1e` (production DACL idempotency — preserved unchanged)
+**Date:** 2026-11-12 (UTC)
+
+> Arena has no PowerShell and no Windows. **(A)** the operator's Windows evidence is user-supplied;
+> **(B)** everything below marked Arena is what this environment actually executed; **(C)** the fresh
+> Windows acceptance run is still outstanding and is not claimed.
+
+---
+
+## 1. The two confirmed Windows-host failures
+
+### 1.1 Toolchain discovery hung at `[01-preconditions]`
+
+The acceptance launcher dot-sourced `windows-setup/Iips-Common.ps1` and called
+`Resolve-IipsNodeToolchain`, which never returned. Root cause, in three parts:
+
+| Cause | Detail |
+| --- | --- |
+| `Start-Process -Wait` in the capture helper | On Windows, `-Wait` waits for the **entire process tree** and there is **no timeout**. A shim that leaves a grandchild behind blocks the caller indefinitely. `Invoke-IipsCapture` used it for every probe, including the version checks. |
+| `npm exec` discovery | The resolver proved "single installation" by running `npm.cmd exec -- node <probe.js>`. That adds cmd → npm → node layers, each with its own tree, on top of an unbounded wait. It is also a discovery mechanism the roadmap forbids. |
+| A hardcoded preferred installation | `$script:IipsPreferredNodePath = 'C:\Node22\node-v22.16.0-win-x64\node.exe'` made the resolver deterministic on one machine and wrong on every other. |
+
+### 1.2 The launcher crashed on `-ForegroundColor`
+
+```powershell
+Write-IipsInfo '...' -ForegroundColor Gray
+```
+
+`Write-IipsInfo` declares exactly one parameter, `-Message`. Passing `-ForegroundColor` is a
+parameter-binding error, and under `$ErrorActionPreference = 'Stop'` it terminates the run. Both call
+sites in the launcher had it.
+
+## 2. Repository-owned helper changes — `windows-setup/Iips-Common.ps1`
+
+| Function | Change |
+| --- | --- |
+| **`Invoke-IipsProcess`** (new) | `System.Diagnostics.Process` with `UseShellExecute = $false`; **both** streams begin `ReadToEndAsync()` **before** the bounded `WaitForExit($TimeoutMilliseconds)`; a timeout kills the child and reports `PROCESS_TIMEOUT`; `StandardInput` delivers a payload that the child then sees closed; `ExitCode`, `StdOut`, `StdErr`, `StdErrByteLength`, `TimedOut`, `StdinFailed`, `DurationMs`. No `npm exec`, no `Wait-Process`, no shell. |
+| **`Get-IipsQuotedArguments`** (new) | Win32 `CommandLineToArgvW` quoting (backslashes before a quote doubled, inner quotes escaped) so paths with spaces survive. |
+| **`Invoke-IipsCmdShim`** (new) | The single place a `.cmd`/`.bat` is started: `cmd.exe /d /s /c "<shim>" <args>`, resolved from `%SystemRoot%` (fallback `%ComSpec%`), through `Invoke-IipsProcess`. |
+| **`Invoke-IipsCapture`** (rewritten) | Now a thin compatibility wrapper over `Invoke-IipsProcess`: same bounded execution and async capture, **no temporary files at all** (previously `Start-Process` with redirected files), automatic `cmd.exe` routing for shims, `-TimeoutMilliseconds` (default 600000). Its four-field result shape is unchanged, so every setup script keeps working. |
+| **`Resolve-IipsNodeToolchain`** (rewritten) | Candidates: `-NodeExecutable`, else every `node.exe` from `Get-Command node.exe -All`. For each, `node.exe` + `npm.cmd` + `npx.cmd` must be in **one** directory; each is verified through the bounded runner (10 s per probe); the 22.13.0 floor is still enforced; the resolved directory is prepended to `PATH`; failure is `NODE_TOOLCHAIN_NOT_RESOLVED` with **reason codes only**. |
+| `$script:IipsPreferredNodePath` | **Removed.** Replaced by documented "no hardcoded installation path" constants and a comment explaining why. |
+
+Design notes:
+
+* The process is disposed on **both** paths. The repository forbids `finally` (the structural
+  validator enforces it), so the body is wrapped in `try/catch`, the failure is stored, the process
+  is disposed once, and only then is the failure rethrown — the same guarantee without `finally`.
+* A failed stdin write is recorded as `StdinFailed`, never silently swallowed and never allowed to
+  mask the exit code.
+* No exception message contains a child's output, its arguments, the stdin payload, or a personal
+  path.
+
+## 3. Acceptance launcher changes — `windows-acceptance/Invoke-W02DpapiAcceptance.ps1`
+
+| Change | Detail |
+| --- | --- |
+| Bounded harness execution | `$stdinJson \| & $nodeExe $harnessPath 2> $stderrPath` → `Invoke-IipsProcess -FilePath $nodeExe -Arguments '"<harness>"' -TimeoutMilliseconds 600000 -StandardInput $stdinJson` |
+| Stdin-only secrets preserved | The two throwaway values still reach the harness **only** on stdin: never argv, never a temporary file. |
+| No stderr file | `harness.stderr.tmp` is gone. stderr is captured in memory and reduced to `StdErrByteLength`, which is all the evidence records. |
+| Fail-closed on timeout | `PROCESS_TIMEOUT` becomes a failed `W02-WIN-00` entry ("the harness exceeded the bounded timeout and was terminated") and exit 1 — never a pass. A `StdinFailed` result is a separate failed entry. |
+| `-ForegroundColor` call sites | Both removed; every `Write-IipsInfo` call now matches the declared parameter set. |
+| Helper resolution | Unchanged and repository-relative: `Join-Path (Join-Path $repoRoot 'windows-setup') 'Iips-Common.ps1'`. **No personal helper path is required anywhere.** |
+
+Preserved: the evidence log format, the per-test entries, the pre/post secret scan, the cleanup of
+the acceptance directory, `-NoPause`, and the exit codes 0/1/2.
+
+## 4. What protects this from regressing
+
+**`windows-setup/.validate-scripts.py`** (the repository's own structural validator) gained a rule
+block that can actually fail — every rule maps to one of the two defects:
+
+* no `npm exec`, no `Wait-Process`, no `Start-Process -Wait`, no hardcoded `C:\Node22`, no `C:\Users\`;
+* `Invoke-IipsProcess` must read **both** streams asynchronously and start those reads **before** the
+  bounded wait, kill on timeout, dispose, bound every timeout, and support stdin;
+* `.cmd` shims must go through `cmd.exe /d /s /c` by absolute path;
+* `Resolve-IipsNodeToolchain` must enumerate `node.exe` from `PATH`, require the shims beside it and
+  report `NODE_TOOLCHAIN_NOT_RESOLVED`;
+* no `Write-IipsInfo` / `Write-IipsOk` / `Write-IipsWarn` call may pass `-ForegroundColor`;
+* the launcher must resolve the helper repository-relatively, use `-StandardInput`, keep no stderr
+  file and read no `$LASTEXITCODE`.
+
+Negative controls were run: re-introducing `Start-Process -Wait` in the helper, and
+`-ForegroundColor` + a missing `-StandardInput` in the launcher, each make the validator **fail**
+with a named rule.
+
+**`tests/w02_acceptance_process.test.ts`** (new, 5 tests):
+
+| Test | Proves |
+| --- | --- |
+| `W-02-INF-01` | the helper carries the bounded runner with async reads before the wait, kill, dispose, and sanitized failures |
+| `W-02-INF-02` | deterministic PATH-based resolution, no `npm exec`, no hardcoded install path, shims via `cmd.exe /d /s /c` |
+| `W-02-INF-03` | the launcher resolves the helper locally, calls it with declared parameters only, and uses stdin + byte count |
+| `W-02-INF-04` | the structural validator enforces those contracts and passes for both directories |
+| `W-02-INF-05` | **the real runner executed** when PowerShell is present: non-zero exit, separate streams, 200 KB on each stream simultaneously, stdin delivery absent from the child's command line, timeout with a **killed child** (pid verified gone), and the resolver's sanitized failure |
+
+`W-02-INF-05` skips where PowerShell is absent — this sandbox. It runs wherever `pwsh` exists (the
+CI image); on Windows it defers to the acceptance run, because the runner deliberately requires an
+absolute executable path.
+
+## 5. A. User-supplied Windows evidence (not executed by Arena)
+
+The operator's earlier acceptance run on `DESKTOP-NO0NHTP` produced **18 entries, 18 PASS**, with a
+locally patched helper and a locally patched launcher. That run proves the *approach*. It does not
+cover the repository-owned helper rewritten here, so it is not a basis for closing W-02.
+
+## 6. B. Arena-executed validation
+
+| Check | Result |
+| --- | --- |
+| Structural validator, `windows-setup` | **PASS — 291 checks, 0 failed** |
+| Structural validator, `windows-acceptance` | **PASS — 36 checks, 0 failed** |
+| Negative controls (injected regressions) | **FAIL as intended**, on the exact named rules |
+| `tests/w02_acceptance_process.test.ts` | **4 passed, 1 skipped** (PowerShell absent) |
+| `tests/w02_acceptance_harness.test.ts` | **5/5** (updated to the stdin/runner contract) |
+| `tests/dhan_w02_dpapi_acl.test.ts` | **16/16** (production ACL correction intact) |
+| `tests/dhan_w02_dpapi_backend.test.ts` | **12/12** |
+| `tsc` ×4, `vite` build | **PASS** |
+| Package consumer (strict typecheck, `forbiddenHits`) | **PASS**, `[]` |
+| Full suite | recorded with the commit |
+
+Not proven in Arena: PowerShell 5.1 execution, the timeout/kill path on Windows, `cmd.exe` shim
+startup, DPAPI, Windows ACLs.
+
+## 7. C. Remaining Windows-host acceptance — ready to run
+
+```powershell
+cd H:\IIPS\iips-production-market-data
+git pull
+npm ci
+npm run build:tsc
+powershell -ExecutionPolicy Bypass -File .\windows-acceptance\Invoke-W02DpapiAcceptance.ps1
+```
+
+Expected evidence log:
+`H:\IIPS\logs\w02-dpapi-acceptance\<yyyyMMddTHHmmssZ>\W02-DPAPI-ACCEPTANCE-EVIDENCE.md`
+
+What the run must show:
+
+* `[01-preconditions]` completes — toolchain resolution returns `node v…`, `npm.cmd`, `npx.cmd` from
+  one directory, with no hang and no `NODE_TOOLCHAIN_NOT_RESOLVED`;
+* **19 entries, all PASS**, including `W02-WIN-08B`;
+* `W02-WIN-03` reports `directory DACL rewritten: yes`; `W02-WIN-04` reports `no` (the exact
+  sequence that failed with `PrivilegeNotHeldException`), and the beside-file DACL is still applied
+  and verified for both writes;
+* no `-ForegroundColor` binding error, no `PROCESS_TIMEOUT`, no `ACL_APPLY_FAILED`, no raw stderr in
+  the log.
+
+Until that log exists, W-02 remains **PENDING** on Windows-host acceptance.
+
+## 8. Scope
+
+W-02 only. The production ACL correction (`dhan_dpapi_acl.ts`, `dhan_dpapi_process.ts`,
+`dhan_dpapi_carrier.ts`, `index.ts`, the acceptance harness) is **unchanged**. W-03, W-04 and W-05 are
+untouched; IRR and the IPO Screening Engine are untouched.

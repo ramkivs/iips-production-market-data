@@ -73,9 +73,11 @@ describe('W-02 / Windows acceptance artefacts', () => {
     }
 
     // Secrets travel on stdin, never on a command line and never into a log.
-    assert.ok(code.includes('| & $nodeExe $harnessPath'), 'the harness call must pipe stdin');
-    assert.ok(code.includes('$stdinJson'), 'the values must be serialised for stdin');
-    assert.ok(code.includes('2> $stderrPath'), 'native stderr must be redirected away from the pipeline');
+    assert.ok(code.includes('-StandardInput $stdinJson'), 'the values must reach the harness on stdin');
+    assert.ok(code.includes('Invoke-IipsProcess'), 'the harness must run through the bounded runner');
+    assert.ok(!code.includes('| & $nodeExe'), 'no pipeline invocation: it cannot be bounded');
+    assert.ok(!code.includes('2> $stderrPath'), 'no stderr file: only the byte count is kept');
+    assert.ok(code.includes('StdErrByteLength'), 'stderr is reduced to a byte count');
     assert.ok(!/Write-(Host|IipsInfo|IipsOk)[^\n]*\$(clientIdValue|accessTokenValue)/.test(code), 'never print a value');
     assert.ok(!/Set-Content[^\n]*\$(clientIdValue|accessTokenValue)/.test(code), 'never write a value');
     assert.ok(!code.includes('$stderrBytes = Get-Content'), 'stderr content must never be read');

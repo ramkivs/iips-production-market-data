@@ -102,6 +102,57 @@ def strip_strings_and_comments(src: str) -> str:
 ok = fail = 0
 
 
+def strip_comments_keep_strings(src: str) -> str:
+    """Blank out comments but KEEP string literals, so textual contracts inside strings are seen."""
+    out = []
+    i = 0
+    n = len(src)
+    while i < n:
+        c = src[i]
+        if src.startswith("<#", i):
+            j = src.find("#>", i)
+            if j == -1:
+                out.append("\n" * src.count("\n", i))
+                return "".join(out)
+            out.append("\n" * src.count("\n", i, j))
+            i = j + 2
+            continue
+        if c == "#":
+            j = src.find("\n", i)
+            if j == -1:
+                return "".join(out)
+            i = j
+            continue
+        if src.startswith("@'", i) or src.startswith('@"', i):
+            quote = src[i + 1]
+            end = "\n'@" if quote == "'" else '\n"@'
+            j = src.find(end, i)
+            if j == -1:
+                return "".join(out)
+            out.append(src[i:j + 3])
+            i = j + 3
+            continue
+        if c in ("'", '"'):
+            quote = c
+            j = i + 1
+            while j < n:
+                if src[j] == "`":
+                    j = j + 2
+                    continue
+                if src[j] == quote:
+                    if j + 1 < n and src[j + 1] == quote:
+                        j = j + 2
+                        continue
+                    break
+                j = j + 1
+            out.append(src[i:j + 1])
+            i = j + 1
+            continue
+        out.append(c)
+        i = i + 1
+    return "".join(out)
+
+
 def check(cond, label, detail=""):
     global ok, fail
     if cond:
@@ -281,6 +332,67 @@ for path in TARGET_SCRIPTS:
     # 11. no destructive verbs against the checkouts
     destructive = re.findall(r"Remove-Item[^|]*\$irrDir|Remove-Item[^|]*\$ipdDir|git\s+push|git\s+reset|git\s+clean|-Force\s+.*clone", code)
     check(not destructive, "no destructive repo operations", str(destructive))
+
+    # 12. W-02 process runner and acceptance launcher contracts --------------------------------
+    #
+    # Every rule below exists because of a CONFIRMED Windows-host failure, not a preference:
+    #   * toolchain discovery HUNG at [01-preconditions] (Start-Process -Wait has no timeout and
+    #     waits for the whole process tree; `npm exec` discovery added another process layer);
+    #   * the acceptance launcher crashed because it passed -ForegroundColor to Write-IipsInfo,
+    #     which has a single -Message parameter.
+    plain = strip_comments_keep_strings(raw)
+    helper_verbs = ("Write-IipsInfo", "Write-IipsOk", "Write-IipsWarn")
+    bad_verbs = []
+    for verb in helper_verbs:
+        for m in re.finditer(verb + r"[^\n]*-ForegroundColor", plain):
+            line = plain.count("\n", 0, m.start()) + 1
+            bad_verbs.append(f"{verb}@L{line}")
+    check(not bad_verbs, "helper call sites match the declared signatures (no -ForegroundColor)",
+          ",".join(bad_verbs[:6]))
+
+    check(not re.search(r"npm\s+exec", plain), "no `npm exec` anywhere (never a discovery mechanism)")
+    check("Wait-Process" not in plain, "no unbounded Wait-Process")
+    check("IipsPreferredNodePath" not in plain and "C:\\Node22" not in plain,
+          "no hardcoded Node.js installation path")
+    check("C:\\Users\\" not in plain, "no personal absolute path")
+
+    if script_name == "Iips-Common.ps1":
+        check("function Invoke-IipsProcess" in plain, "declares the bounded process runner")
+        check(plain.count("ReadToEndAsync") >= 2, "reads BOTH child streams asynchronously")
+        first_read = plain.find("ReadToEndAsync")
+        first_wait = plain.find("WaitForExit($TimeoutMilliseconds)")
+        check(first_read != -1 and first_wait != -1 and first_read < first_wait,
+              "starts both async reads BEFORE the bounded wait (no pipe deadlock)")
+        check("$stdoutTask.Wait(" in plain and "$stderrTask.Wait(" in plain,
+              "bounds the wait for the async reads (an inherited pipe cannot hang the caller)")
+        check("PROCESS_OUTPUT_INCOMPLETE" in plain, "reports an inherited-pipe stall as a failure")
+        check("$process.Kill()" in plain, "kills a timed-out child")
+        check("$process.Dispose()" in plain, "disposes the process on every path")
+        check("[ValidateRange(1, 600000)]" in plain, "every process timeout is explicitly bounded")
+        check("RedirectStandardInput = $wantsStdin" in plain and "StandardInput.Write(" in plain,
+              "supports stdin delivery and closes it")
+        check("PROCESS_TIMEOUT" in plain and "PROCESS_START_FAILED" in plain,
+              "reports sanitized process failures")
+        check("Start-Process" not in plain or "-Wait" not in plain,
+              "never uses Start-Process -Wait (it waits for the whole tree, unbounded)")
+        check("Get-Command node.exe -All" in plain, "discovers node.exe through PATH enumeration")
+        check("'npm.cmd'" in plain and "'npx.cmd'" in plain,
+              "requires npm.cmd and npx.cmd beside node.exe (one installation)")
+        check("NODE_TOOLCHAIN_NOT_RESOLVED" in plain, "reports a sanitized toolchain failure")
+        check("/d /s /c" in plain and "System32\\cmd.exe" in plain,
+              "starts .cmd shims through cmd.exe /d /s /c by absolute path")
+
+    if script_name.startswith("Invoke-W02"):
+        check("Join-Path (Join-Path $repoRoot 'windows-setup') 'Iips-Common.ps1'" in plain,
+              "resolves the shared helper relative to the repository")
+        check("Invoke-IipsProcess" in plain and "-StandardInput $stdinJson" in plain,
+              "runs the harness through the bounded runner with the values on stdin")
+        check("| & $nodeExe" not in plain and "$LASTEXITCODE" not in plain,
+              "does not run the harness through a pipeline or read $LASTEXITCODE")
+        check("harness.stderr.tmp" not in plain and "2> $stderrPath" not in plain,
+              "writes no stderr temporary file (byte count only)")
+        check("StdErrByteLength" in plain, "records only the stderr byte count")
+
 
 print(f"\n=== TALLY: {ok} pass / {fail} fail ===")
 sys.exit(1 if fail else 0)
