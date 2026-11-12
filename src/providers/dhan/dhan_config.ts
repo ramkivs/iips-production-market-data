@@ -279,16 +279,27 @@ export function resolveDhanProviderConfig(
 
 /**
  * Operator-safe configuration summary suitable for logs and evidence artefacts.
- * Emits only vault POINTERS and never any resolved credential material.
+ *
+ * DISCLOSURE (W-03 / D-7 §4.4). This used to publish the access-token and client-id key paths —
+ * the `vault://` references themselves — and IRR copied them into its health report. D-7 makes
+ * `vault://` references and any secret-store location a MUST NOT on every surface, so the summary
+ * now reports only whether each reference is configured, and which vault provider member was
+ * admitted. Both are on the D-7 MAY list; neither locates the store. Nothing here can carry a
+ * credential, a path or a carrier name.
  */
 export function describeDhanConfig(config: DhanProviderConfig): Record<string, string> {
+  const refs = [config.clientIdRef, config.accessTokenRef].filter(
+    (ref): ref is NonNullable<typeof ref> => ref !== undefined
+  );
+  const providers = Array.from(new Set(refs.map((ref) => ref.vaultProvider))).sort();
   return {
     providerId: config.providerId,
     baseUrl: config.baseUrl,
     timeoutMs: String(config.timeoutMs),
     readiness: config.readiness,
-    accessTokenKeyPath: config.accessTokenRef?.keyPath ?? 'UNCONFIGURED',
-    clientIdKeyPath: config.clientIdRef?.keyPath ?? 'UNCONFIGURED',
+    clientIdRefConfigured: config.clientIdRef === undefined ? 'NO' : 'YES',
+    accessTokenRefConfigured: config.accessTokenRef === undefined ? 'NO' : 'YES',
+    vaultProvider: providers.length === 0 ? 'UNCONFIGURED' : providers.join(','),
     missingKeys: config.missingKeys.join(',') || 'NONE',
   };
 }

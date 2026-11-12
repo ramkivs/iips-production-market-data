@@ -19,8 +19,14 @@ import { DhanIdentityApiService } from './dhan_identity_api.js';
  *  - Refuses production mode (`NODE_ENV=production` / `IIPS_DEPLOYMENT_ENV=production`).
  *  - Rejects all command-line arguments fail-closed without echoing argument values,
  *    preventing accidental secret leakage through process argv or diagnostic logs.
+ *  - Selects the host-vault backend from the allow-listed `IIPS_DHAN_VAULT_BACKEND`
+ *    (`disabled` default, `windows-dpapi`); an unrecognised value refuses startup.
+ *  - Awaits the backend readiness probe before reporting readiness or enabling egress.
  *  - Keeps outbound Dhan vendor egress disabled (`PreAccessNoNetworkTransport`)
- *    whenever the host-vault backend reports `liveResolutionSupported === false`.
+ *    whenever the awaited host-vault readiness reports `liveResolutionSupported === false`.
+ *  - Emits D-7-aligned diagnostics that separate LOCAL vault readiness from authenticated
+ *    vendor connectivity, and never disclose `vault://` references, carrier paths,
+ *    credentials or secret values.
  *  - Deterministic graceful startup failure and bounded idempotent shutdown.
  */
 
@@ -46,8 +52,11 @@ import {
   DhanInstrumentMapping,
   DhanInstrumentRegistry,
 } from './dhan_instrument_map.js';
+import { WindowsDpapiHostVaultBackend } from './dhan_dpapi_vault_backend.js';
 import {
+  DisabledWindowsHostVaultBackend,
   LocalHostVaultDhanCredentialResolver,
+  type LocalHostVaultBackendReadiness,
   type LocalHostVaultSecretBackend,
 } from './dhan_local_vault_resolver.js';
 import {
@@ -56,6 +65,11 @@ import {
   MARKET_DATA_TRANSPORT_TOKEN_ENV,
 } from './dhan_market_data_http.js';
 import { DhanMarketDataService } from './dhan_market_data_service.js';
+import {
+  deriveDhanProviderState,
+  type DhanConfigObservation,
+  type DhanProviderState,
+} from './dhan_provider_state.js';
 import { DhanServerHttpsTransport } from './dhan_server_egress.js';
 
 export const MARKET_DATA_DAEMON_HOST_ENV = 'IIPS_MARKET_DATA_DAEMON_HOST';
@@ -63,6 +77,97 @@ export const MARKET_DATA_DAEMON_PORT_ENV = 'IIPS_MARKET_DATA_DAEMON_PORT';
 export const DEFAULT_MARKET_DATA_DAEMON_HOST = '127.0.0.1';
 export const DEFAULT_MARKET_DATA_DAEMON_PORT = 8791;
 export const DEFAULT_DAEMON_SHUTDOWN_TIMEOUT_MS = 5_000;
+
+/**
+ * W-03: the vault backend is now an explicit, operator-selectable decision instead of a
+ * hard-coded composition detail. The allow-list is exhaustive; anything else refuses startup.
+ *
+ *  - `disabled` (default)     → `DisabledWindowsHostVaultBackend`. No host vault is consulted;
+ *                               vendor egress stays off (`DISABLED_PRE_ACCESS`). This is the
+ *                               W-01/W-02 behaviour and remains the default so that an unset
+ *                               environment can never enable credential resolution or egress.
+ *  - `windows-dpapi`          → `WindowsDpapiHostVaultBackend`. Startup awaits its probe; only a
+ *                               supported verdict may enable vendor egress.
+ */
+export const DHAN_VAULT_BACKEND_ENV = 'IIPS_DHAN_VAULT_BACKEND';
+export const DHAN_VAULT_BACKEND_DISABLED = 'disabled';
+export const DHAN_VAULT_BACKEND_WINDOWS_DPAPI = 'windows-dpapi';
+
+export type DhanVaultBackendSelector =
+  | typeof DHAN_VAULT_BACKEND_DISABLED
+  | typeof DHAN_VAULT_BACKEND_WINDOWS_DPAPI;
+
+export const DHAN_VAULT_BACKEND_SELECTORS: readonly DhanVaultBackendSelector[] = [
+  DHAN_VAULT_BACKEND_DISABLED,
+  DHAN_VAULT_BACKEND_WINDOWS_DPAPI,
+];
+
+/**
+ * Credential-readiness outcome reported by diagnostics (distinct from `providerReadiness`,
+ * which is the governed SecretRef readiness, and from the D-7 provider state).
+ */
+export type DhanCredentialReadinessCode =
+  | 'CONFIGURED'
+  | 'CREDENTIALS_UNAVAILABLE'
+  | 'CREDENTIALS_EXPIRED';
+
+/**
+ * Parses the allow-listed selector. Returns `null` for a value that is present but not allowed.
+ *
+ * Absent and empty/whitespace values resolve to the `disabled` default: an unset or blank
+ * environment variable must never select a live backend, and blank is treated as unset rather
+ * than as an error so that `IIPS_DHAN_VAULT_BACKEND=` in a launcher script cannot brick startup.
+ * Matching is exact and case-sensitive (an allow-list, not a fuzzy parse), and the value is
+ * never echoed back in an error message — a mistyped variable could contain credential material.
+ */
+export function parseDhanVaultBackendSelector(
+  raw: string | undefined
+): DhanVaultBackendSelector | null {
+  if (raw === undefined) return DHAN_VAULT_BACKEND_DISABLED;
+  const trimmed = raw.trim();
+  if (trimmed === '') return DHAN_VAULT_BACKEND_DISABLED;
+  return DHAN_VAULT_BACKEND_SELECTORS.find((candidate) => candidate === trimmed) ?? null;
+}
+
+/**
+ * Fixed replacement used when a backend's own readiness summary would disclose a location.
+ *
+ * Every backend shipped by IPD already returns a non-locating summary, and W-02 asserts that. This
+ * guard exists for the seam: an injected or future backend must not be able to turn the readiness
+ * detail into a disclosure channel, and diagnostics are the one place it is republished.
+ */
+const WITHHELD_READINESS_DETAIL =
+  'Host vault readiness was probed; the backend detail is withheld because it would disclose a location.';
+
+function sanitizeReadinessDetail(
+  readiness: LocalHostVaultBackendReadiness,
+  carrierDirectory: string | undefined
+): string {
+  const detail = readiness.prerequisiteSummary;
+  const locatesSomething =
+    detail.includes('vault://') ||
+    /(^|[^A-Za-z])[A-Za-z]:[\\/]/.test(detail) ||
+    detail.includes('/IIPS/') ||
+    (carrierDirectory !== undefined &&
+      carrierDirectory.length > 0 &&
+      detail.includes(carrierDirectory));
+  return locatesSomething ? WITHHELD_READINESS_DETAIL : detail;
+}
+
+/** Builds the backend named by the selector. Injected backends bypass this (test seam only). */
+function createVaultBackendForSelector(
+  selector: DhanVaultBackendSelector,
+  options: StartMarketDataDaemonOptions
+): LocalHostVaultSecretBackend {
+  if (selector === DHAN_VAULT_BACKEND_WINDOWS_DPAPI) {
+    return new WindowsDpapiHostVaultBackend({
+      ...(options.vaultCarrierDirectory !== undefined
+        ? { carrierDirectory: options.vaultCarrierDirectory }
+        : {}),
+    });
+  }
+  return new DisabledWindowsHostVaultBackend();
+}
 
 export type MarketDataDaemonStartupPhase = 'validate' | 'configure' | 'bind';
 
@@ -72,6 +177,7 @@ export type MarketDataDaemonFailureCode =
   | 'NON_LOOPBACK_HOST_REFUSED'
   | 'INVALID_PORT'
   | 'TRANSPORT_TOKEN_MISSING'
+  | 'VAULT_BACKEND_NOT_ALLOWED'
   | 'CONFIGURATION_INCOMPLETE'
   | 'BIND_FAILED';
 
@@ -82,8 +188,17 @@ export interface MarketDataDaemonDiagnostics {
   readonly port: number;
   readonly baseUrl: string;
   readonly providerReadiness: DhanCredentialReadiness;
+  /** Which backend the operator selected (W-03 selector), and the backend's own identifier. */
+  readonly vaultBackendSelector: DhanVaultBackendSelector;
   readonly vaultBackendId: string;
+  /** Readiness of the LOCAL credential store, from the awaited startup probe (not the vendor). */
+  readonly vaultBackendReadiness: 'READY' | 'NOT_READY';
+  /** Fixed, non-locating backend message. Never a path, carrier name or credential. */
+  readonly vaultBackendReadinessDetail: string;
   readonly liveCredentialResolutionSupported: boolean;
+  readonly credentialReadinessCode: DhanCredentialReadinessCode;
+  /** D-7 provider state. Local evidence only, therefore never AUTHENTICATED/OPERATIONAL. */
+  readonly providerState: DhanProviderState;
   readonly vendorEgressMode: 'DISABLED_PRE_ACCESS' | 'IPD_SERVER_HTTPS' | 'SYNTHETIC_INJECTED';
   readonly qualifiedMappingsLoaded: number;
   readonly liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS';
@@ -119,6 +234,8 @@ export interface StartMarketDataDaemonOptions {
   readonly requestTimeoutMs?: number;
   readonly shutdownTimeoutMs?: number;
   readonly vaultBackend?: LocalHostVaultSecretBackend;
+  /** Test/operator seam for the `windows-dpapi` backend's carrier directory. */
+  readonly vaultCarrierDirectory?: string;
   readonly credentialResolver?: LocalHostVaultDhanCredentialResolver;
   /** Controlled test seam only; never used to bypass IPD's egress guard in live operation. */
   readonly providerTransport?: DhanHttpTransport;
@@ -205,7 +322,11 @@ export function formatDaemonStartupLine(diagnostics: MarketDataDaemonDiagnostics
     `[ipd-market-data-daemon] listening on ${diagnostics.baseUrl} ` +
     `(providerReadiness=${diagnostics.providerReadiness}, ` +
     `vaultBackend=${diagnostics.vaultBackendId}, ` +
+    `vaultBackendSelector=${diagnostics.vaultBackendSelector}, ` +
+    `vaultBackendReadiness=${diagnostics.vaultBackendReadiness}, ` +
     `liveCredentialResolution=${diagnostics.liveCredentialResolutionSupported}, ` +
+    `credentialReadiness=${diagnostics.credentialReadinessCode}, ` +
+    `providerState=${diagnostics.providerState}, ` +
     `vendorEgress=${diagnostics.vendorEgressMode}, ` +
     `qualifiedMappings=${diagnostics.qualifiedMappingsLoaded})`
   );
@@ -246,7 +367,21 @@ export async function startMarketDataDaemon(
     };
   }
 
-  // 3. Validate loopback-only listener host & port.
+  // 3. Refuse an unrecognised vault backend selector before any vault or socket work.
+  const vaultBackendSelector = parseDhanVaultBackendSelector(env[DHAN_VAULT_BACKEND_ENV]);
+  if (vaultBackendSelector === null) {
+    return {
+      ok: false,
+      phase: 'validate',
+      code: 'VAULT_BACKEND_NOT_ALLOWED',
+      error:
+        `${DHAN_VAULT_BACKEND_ENV} is not an allowed vault backend selector; ` +
+        `supported values are '${DHAN_VAULT_BACKEND_DISABLED}' and ` +
+        `'${DHAN_VAULT_BACKEND_WINDOWS_DPAPI}'. The supplied value is not echoed.`,
+    };
+  }
+
+  // 4. Validate loopback-only listener host & port.
   const host = (options.host ?? env[MARKET_DATA_DAEMON_HOST_ENV] ?? DEFAULT_MARKET_DATA_DAEMON_HOST).trim();
   if (!isLoopbackTransportHost(host)) {
     return {
@@ -273,7 +408,7 @@ export async function startMarketDataDaemon(
     };
   }
 
-  // 4. Require non-empty server-side transport token.
+  // 5. Require non-empty server-side transport token.
   const transportToken = options.transportToken ?? env[MARKET_DATA_TRANSPORT_TOKEN_ENV];
   if (!transportToken || !transportToken.trim()) {
     return {
@@ -284,7 +419,7 @@ export async function startMarketDataDaemon(
     };
   }
 
-  // 5. Resolve Dhan provider configuration (SecretRef pointers only).
+  // 6. Resolve Dhan provider configuration (SecretRef pointers only).
   const cfgResolution = resolveDhanProviderConfig(env, now());
   if (!cfgResolution.ok) {
     if (cfgResolution.failure.code === 'PRODUCTION_NOT_AUTHORIZED') {
@@ -308,7 +443,7 @@ export async function startMarketDataDaemon(
     // closed per quote/historical call with the typed DhanFailureCode.
   }
 
-  // 6. Compose approved IPD-internal vault resolver, transport, registry & service.
+  // 7. Compose approved IPD-internal vault resolver, transport, registry & service.
   let securityMaster: SecurityMaster;
   let instrumentRegistry: DhanInstrumentRegistry;
   try {
@@ -324,14 +459,34 @@ export async function startMarketDataDaemon(
     };
   }
 
+  // The selector chooses the backend; an explicitly injected backend is a test seam and wins.
   const resolver =
     options.credentialResolver ??
     new LocalHostVaultDhanCredentialResolver({
-      ...(options.vaultBackend !== undefined ? { backend: options.vaultBackend } : {}),
+      backend: options.vaultBackend ?? createVaultBackendForSelector(vaultBackendSelector, options),
       now,
       env,
     });
-  const vaultReadiness = resolver.describeBackendReadiness();
+
+  // W-03: AWAIT the probe. The synchronous `describeBackendReadiness()` cannot be trusted here:
+  // for a backend that needs a probe it reports "not ready" until one has run, so a provisioned
+  // host would silently start with vendor egress disabled and readiness misreported. The egress
+  // decision below reads this awaited verdict only, and the verdict stays fail-closed.
+  const vaultReadiness: LocalHostVaultBackendReadiness = await resolver.probeBackendReadiness();
+
+  const credentialReadinessCode: DhanCredentialReadinessCode = cfgResolution.ok
+    ? 'CONFIGURED'
+    : cfgResolution.failure.code === 'CREDENTIALS_EXPIRED'
+      ? 'CREDENTIALS_EXPIRED'
+      : 'CREDENTIALS_UNAVAILABLE';
+
+  // D-7 state from LOCAL evidence only (E1/E3). No vendor call is made at startup, so this can
+  // reach CREDENTIALS_RESOLVED at most and can never report AUTHENTICATED or OPERATIONAL.
+  const providerState: DhanProviderState = deriveDhanProviderState({
+    config: cfgResolution.config.readiness satisfies DhanConfigObservation,
+    vaultReadiness: vaultReadiness.liveResolutionSupported ? 'SUPPORTED' : 'NOT_SUPPORTED',
+    credentialsExpired: credentialReadinessCode === 'CREDENTIALS_EXPIRED',
+  });
 
   let providerTransport: DhanHttpTransport;
   let vendorEgressMode: MarketDataDaemonDiagnostics['vendorEgressMode'];
@@ -364,7 +519,7 @@ export async function startMarketDataDaemon(
   });
   service.start();
 
-  // 7. Create and bind loopback HTTP server with clean rollback on bind failure.
+  // 8. Create and bind loopback HTTP server with clean rollback on bind failure.
   let server: Server;
   try {
     server = createMarketDataHttpServer({
@@ -443,8 +598,13 @@ export async function startMarketDataDaemon(
     port: addressInfo.port,
     baseUrl: `http://${formattedHost}:${addressInfo.port}`,
     providerReadiness: cfgResolution.config.readiness,
+    vaultBackendSelector,
     vaultBackendId: vaultReadiness.backendId,
+    vaultBackendReadiness: vaultReadiness.liveResolutionSupported ? 'READY' : 'NOT_READY',
+    vaultBackendReadinessDetail: sanitizeReadinessDetail(vaultReadiness, options.vaultCarrierDirectory),
     liveCredentialResolutionSupported: vaultReadiness.liveResolutionSupported,
+    credentialReadinessCode,
+    providerState,
     vendorEgressMode,
     qualifiedMappingsLoaded: instrumentRegistry.list().length,
     liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS',

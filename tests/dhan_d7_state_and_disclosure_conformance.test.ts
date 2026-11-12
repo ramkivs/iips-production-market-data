@@ -11,10 +11,11 @@
  *      does not own;
  *   2. a MUST NOT disclosure item loses its prohibition (the transport case: `vault://` pointers
  *      were published for months without a failing test);
- *   3. the decision is cited as implementation authority and W-03 lands early.
+ *   3. the implementation licensed by the decision (W-03) spreads beyond the single governed
+ *      consumer, creating an unaudited path to credential resolution or vendor egress.
  *
  * This suite pins the record's structure, the vocabulary, the disclosure lists, the IRR mapping and
- * the absence of W-03 implementation. It reads files only; it opens no socket, runs no PowerShell and
+ * the fact that W-03's selector lives only in the daemon launcher. It reads files only; it opens no socket, runs no PowerShell and
  * touches no credential.
  */
 import { describe, it } from 'node:test';
@@ -236,19 +237,32 @@ describe('D-7 — provider state model and diagnostics disclosure policy', () =>
     );
   });
 
-  it('D7-08: the record decides no code, and no W-03 implementation exists', () => {
-    // The superseded key-path output still exists (D-7 changed nothing); W-03 will remove it.
+  it('D7-08: the record stays governance-only, and W-03 consumes it only where licensed', () => {
+    // W-03 has landed, so the superseded key-path output is gone from the configuration summary and
+    // from every generated surface. D-7 required the prohibition; it did not perform the deletion.
     const config = repo('src/providers/dhan/dhan_config.ts');
-    assert.ok(config.includes('accessTokenKeyPath'), 'D-7 must not have "fixed" this by code change');
-    assert.ok(config.includes('clientIdKeyPath'), 'D-7 must not have "fixed" this by code change');
+    // Scope the search to the summary itself: the parser legitimately handles key paths internally,
+    // the disclosure surface must not return them.
+    const summaryAt = config.indexOf('export function describeDhanConfig');
+    assert.ok(summaryAt > 0, 'the configuration summary must still exist');
+    const summary = config.slice(summaryAt);
+    assert.ok(!summary.includes('keyPath'), 'the summary must not publish key paths (D-7 §4.2)');
+    assert.ok(!summary.includes('vault://'), 'nor any secret-store reference');
 
-    // No selector, env key or diagnostics field may have appeared: that is W-03, not D-7.
+    // The selector is licensed to exist now, but only in the governed consumer. Any other
+    // `src/` file naming the environment key would be an unaudited egress path: exactly the
+    // drift this check was originally written for.
+    const SELECTOR_OWNER = resolve(process.cwd(), 'src/providers/dhan/dhan_local_daemon.ts');
     const offenders: string[] = [];
     for (const file of sourceFiles()) {
       const text = readFileSync(file, 'utf8');
-      if (text.includes('IIPS_DHAN_VAULT_BACKEND')) offenders.push(file);
+      if (text.includes('IIPS_DHAN_VAULT_BACKEND') && file !== SELECTOR_OWNER) offenders.push(file);
     }
-    assert.deepEqual(offenders, [], 'W-03 (the backend selector) must not be implemented by D-7');
+    assert.deepEqual(offenders, [], 'only the daemon launcher may own the vault backend selector');
+
+    // The record itself is unchanged by the implementation: it still authorizes nothing.
+    assert.ok(says('**This is a governance decision, not implementation authorization**'));
+    assert.ok(record.includes('**It authorizes no implementation.**'));
 
     // The ACL module is untouched by this decision: it is only referenced here to prove the suite
     // reads real sources rather than inventing paths.

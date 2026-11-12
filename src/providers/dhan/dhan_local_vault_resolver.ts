@@ -182,6 +182,33 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     return this.backend.describeReadiness();
   }
 
+  /**
+   * Awaited, evidence-based readiness (W-03).
+   *
+   * `describeReadiness()` is the synchronous Stage-1 verdict: for a backend that needs a probe
+   * (`WindowsDpapiHostVaultBackend`) it is intentionally `false` until `probeReadiness()` has run.
+   * Startup must therefore await this method before it reports readiness or enables vendor egress,
+   * otherwise a provisioned host would always start with egress disabled.
+   *
+   * Never throws. A probe that fails for any reason yields an unready verdict with a fixed,
+   * non-locating summary, so a broken backend cannot crash startup or accidentally enable egress.
+   */
+  public async probeBackendReadiness(): Promise<LocalHostVaultBackendReadiness> {
+    if (this.backend.probeReadiness === undefined) {
+      return this.backend.describeReadiness();
+    }
+    try {
+      return await this.backend.probeReadiness();
+    } catch {
+      return {
+        backendId: this.backend.backendId,
+        liveResolutionSupported: false,
+        prerequisiteSummary:
+          'Host vault readiness probe failed; live credential resolution is disabled.',
+      };
+    }
+  }
+
   private validateRefPreFlight(ref: SecretRef, nowMs: number): void {
     const check = validateSecretRef(ref);
     if (!check.isValid) {
