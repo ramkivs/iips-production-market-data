@@ -282,10 +282,11 @@ item whose prerequisites are now satisfied, and M1's critical path
 | Exit criteria | Operator can switch backends by environment; the startup line states which egress is active and reveals no location |
 | Enables | W-06, W-36 |
 
-**Prerequisite D-7 is unrecorded in IPD.** The roadmap requires D-7 (provider state model, the
-meaning of "verify connection", and the normative diagnostics disclosure policy) to exist as a
-decision record before W-03. At this head there is **no D-7 artefact in this repository** — the
-roadmap text (IRR §5 D-7) defines it, but the IPD record it requires has not been written. This does
-not affect the W-02 decision (D-7 is not a W-02 prerequisite, and W-02's own prerequisites W-01, D-1
-and D-2 are satisfied and recorded); it is the first step W-03 must take. No D-7 content is invented
-or assumed here.
+**Prerequisite D-7 — now recorded.** The roadmap requires D-7 (provider state model, the meaning of
+"verify connection", and the normative diagnostics disclosure policy) as a decision record before
+W-03. It was **unrecorded at the time of this review**; it is now adopted in IPD:
+`docs/integration/DHAN-D7-PROVIDER-STATE-MODEL-AND-DIAGNOSTICS-POLICY-2026-11-12.md` (governance
+decision, no implementation). W-03's IPD prerequisite set is therefore satisfied, with IRR-side
+acceptance of the same vocabulary recorded there as outstanding and owned by IRR/W-10, not by W-03.
+This does not affect the W-02 decision (D-7 is not a W-02 prerequisite, and W-01, D-1 and D-2 are
+satisfied and recorded).

@@ -212,6 +212,11 @@ paths are proven.
 
 ## 12. Dependency handed to W-03
 
+**Vocabulary and disclosure are fixed by D-7**, recorded as
+`docs/integration/DHAN-D7-PROVIDER-STATE-MODEL-AND-DIAGNOSTICS-POLICY-2026-11-12.md` (provider state
+model, verify-connection semantics, diagnostics disclosure policy). W-03 consumes it and adds no
+vocabulary of its own.
+
 W-02 deliberately does not add runtime selection. W-03 must:
 
 1. add the allow-listed selector (`IIPS_DHAN_VAULT_BACKEND=disabled/windows-dpapi`, default
