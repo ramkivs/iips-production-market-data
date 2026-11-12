@@ -14,7 +14,13 @@
  *    (PRE_ACCESS_CREDENTIALS_UNAVAILABLE), not an error condition to be guessed around.
  */
 
-import { SecretRef, SecretRefStatus, validateSecretRef } from '../../security/secret_ref.js';
+import {
+  SecretRef,
+  SecretRefStatus,
+  validateDhanSecretKeyPaths,
+  validateSecretRef,
+  WINDOWS_DPAPI_VAULT_PROVIDER,
+} from '../../security/secret_ref.js';
 import { DhanFailure } from './dhan_failures.js';
 
 /** Symbolic internal provider identifier used on the provider-neutral SPI. */
@@ -163,6 +169,33 @@ export function resolveDhanProviderConfig(
         message: `Dhan credential references are not configured (missing: ${missingKeys.join(', ')}). Provider remains in pre-access mode.`,
       },
     };
+  }
+
+  // W-01 / D-1: when the Windows DPAPI provider is selected, the two credential
+  // references must follow the governed two-key-path convention — one path per
+  // secret, never one path for both. Other providers are unaffected.
+  if (vaultProvider === WINDOWS_DPAPI_VAULT_PROVIDER) {
+    const keyPathCheck = validateDhanSecretKeyPaths({
+      clientIdKeyPath: clientPath as string,
+      accessTokenKeyPath: tokenPath as string,
+    });
+    if (!keyPathCheck.isValid) {
+      const config: DhanProviderConfig = {
+        providerId: DHAN_PROVIDER_ID,
+        baseUrl,
+        timeoutMs,
+        readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE',
+        missingKeys,
+      };
+      return {
+        ok: false,
+        config,
+        failure: {
+          code: 'CONFIGURATION_INCOMPLETE',
+          message: `Dhan ${WINDOWS_DPAPI_VAULT_PROVIDER} credential references do not satisfy the two-key-path convention: ${keyPathCheck.error}.`,
+        },
+      };
+    }
   }
 
   if (tokenExpiresAt !== undefined && Number.isNaN(Date.parse(tokenExpiresAt))) {
