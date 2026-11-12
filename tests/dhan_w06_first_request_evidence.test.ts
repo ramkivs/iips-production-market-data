@@ -5,10 +5,12 @@
  * Record:  docs/integration/DHAN-W06-FIRST-AUTHENTICATED-REQUEST-EVIDENCE-2026-11-12.md
  *
  * WHY THIS SUITE EXISTS
- * The single authorised vendor request returned HTTP 502 from the local daemon and its response body
- * was lost. The temptation is to read a 502 as "Dhan rejected us" or "Dhan answered". It is neither.
- * This suite pins the structural facts that make the record honest, and it can do so without a
- * vendor call of any kind:
+ * The first authorised vendor request returned HTTP 502 from the local daemon and its body was lost;
+ * a 502 on its own is neither "Dhan rejected us" nor "Dhan answered". The second, captured attempt
+ * (record §12) returned 502 with `AUTHENTICATION_FAILURE`, and that code has a single producer which
+ * runs only on a received 401/403 — so the vendor answered, and it rejected the credential. The suite
+ * pins both halves: what the artefacts say, and what the code can and cannot make them mean. No
+ * vendor call of any kind is made here:
  *
  *   1. the daemon's error body is `{error:{code,message}}` only — a vendor numeric status has no
  *      channel to reach a caller, so it can never be recovered after the fact;
@@ -496,30 +498,46 @@ describe('W-06 — first authenticated request evidence', () => {
     assert.strictEqual(isTransientFailure('HTTP_ERROR', 400), false);
   });
 
-  it('W06-06: the evidence record states the gap, claims nothing, and carries no credential material', () => {
+  it('W06-06: the record states the verdict, claims nothing past it, and carries no credential material', () => {
     const record = repoText(RECORD);
     const flat = record.replace(/\s+/g, ' ');
 
-    // It must not be read as a closure of W-06.
-    assert.ok(flat.includes('W-06 NOT CLOSED'), 'the record must state the status plainly');
-    assert.ok(flat.includes('No second vendor request has been made'));
-    assert.match(record, /\*\*W-06 is NOT closed\.\*\*/);
-    assert.ok(flat.includes('the typed failure code of the one authorised request was never persisted'));
+    // The verdict, stated plainly, and expressly not a closure of the milestone.
+    assert.ok(flat.includes("W-06's evidence clause is satisfied"), 'the evidence verdict must be stated');
+    assert.ok(flat.includes('M1 is NOT satisfied'), 'the milestone must be stated as unmet');
+    assert.ok(flat.includes('W-06 remains open'), 'W-06 must not be reported as closed');
+    assert.ok(!/\bW-06 is (now )?closed\b/i.test(flat));
+    assert.ok(!/\bM1 is satisfied\b/.test(flat));
+    assert.ok(!/\bmilestone M1 (?:is )?(?:met|closed|satisfied)\b/i.test(flat));
 
-    // It must not assert vendor contact, acceptance or rejection. The only permitted mention of the
-    // vendor answering is the open question in the "not established" list ("Whether Dhan accepted…").
-    const assertive = [
-      /(?<!whether )\bDhan (rejected|accepted|answered)\b/i,
-      /\breached Dhan\b/i,
+    // It may assert a rejection only because the captured code forces it; it must not promote that
+    // into a named vendor status, a vendor message, or a success.
+    assert.ok(flat.includes('vendor therefore answered, and it rejected the credentials'));
+    assert.ok(flat.includes('401` or `403'));
+    for (const pattern of [
+      /\bthe vendor (?:returned|answered with|responded with|sent) (?:a )?401\b/i,
+      /\bthe vendor (?:returned|answered with|responded with|sent) (?:a )?403\b/i,
+      /\bDhan (?:accepted|approved) the (?:request )?credentials\b/i,
       /\bauthenticated successfully\b/i,
-      /\bproves the vendor\b/i,
-    ];
-    for (const pattern of assertive) {
+      /\bQuotes is qualified\b/i,
+      /\bquote qualification (?:is|was) (?:established|achieved|proven)\b/i,
+      /\bproduction[- ]readiness (?:is|was) (?:established|achieved|proven)\b/i,
+      /\bhistory (?:is|was) qualified\b/i,
+    ]) {
       const match = flat.match(pattern);
       assert.strictEqual(match, null, `the record must not assert: ${match?.[0] ?? pattern.source}`);
     }
+    // The vendor's own error text is never claimed either.
+    assert.ok(flat.includes('the vendor\'s own error text, are not in the capture'));
+    assert.ok(flat.includes('of those two statuses it was'));
+
+    // Attempt #1's limits survive the update: its code was never persisted and is not filled in.
+    assert.ok(flat.includes('typed failure code was never persisted'));
     assert.ok(flat.includes('**Not established — and not inferable:**'));
     assert.ok(flat.includes('Whether Dhan received the request at all'));
+    assert.ok(flat.includes('entered the provider refresh path and failed inside it'));
+    assert.ok(flat.includes('is a redacted projection, not the code'));
+    assert.ok(flat.includes('W06-07'));
 
     // The recorded observations must be the ones the operator supplied.
     assert.ok(flat.includes('HTTP_STATUS=502'));
@@ -529,8 +547,11 @@ describe('W-06 — first authenticated request evidence', () => {
     assert.ok(flat.includes('vendorEgress=IPD_SERVER_HTTPS'));
     assert.ok(flat.includes('qualifiedMappings=96'));
     assert.ok(flat.includes('UNAUTHENTICATED'));
+    assert.ok(flat.includes('2026-11-12T19:42:05.1740778Z'));
+    assert.ok(flat.includes('5,893 ms'));
+    assert.ok(flat.includes('Dhan rejected the request credentials'));
 
-    // The scoped freshness read, and exactly what it is worth.
+    // The scoped freshness reads, and exactly what they are worth.
     assert.ok(flat.includes('"cacheState": "MISS"'));
     assert.ok(flat.includes('"verdict": "UNKNOWN"'));
     assert.ok(flat.includes('"outcome": "FAILURE"'));
@@ -539,25 +560,26 @@ describe('W-06 — first authenticated request evidence', () => {
     assert.ok(flat.includes('"eligibleForUse": false'));
     assert.ok(flat.includes('"suppressExecution": true'));
     assert.ok(flat.includes('2026-11-12T18:58:23.526Z'));
-    assert.ok(flat.includes('entered the provider refresh path and failed there'));
-    assert.ok(flat.includes('is a redacted projection, not the code'));
-    assert.ok(flat.includes('W06-07'));
-    // It must not be presented as having recovered the typed code.
-    assert.ok(!/typed (failure )?code (was|has been) recovered/i.test(flat));
-    assert.ok(flat.includes('the typed failure code of the one authorised request was never persisted'));
+    assert.ok(flat.includes('2026-11-12T19:42:14.375Z'));
 
-    // §10.5 necessarily spells the search patterns it tells the operator to run. Everything outside
-    // that one fenced block must be free of them.
-    const patternStart = record.indexOf('Select-String -Path $ProbeFiles');
-    assert.ok(patternStart > 0, 'the redaction step must be documented');
-    const patternEnd = record.indexOf('```', patternStart);
-    const scannable = record.slice(0, patternStart) + record.slice(patternEnd);
+    // The redaction pattern lists — §10.5 and §12.4 — necessarily spell the patterns they define.
+    // Every fenced block that does so is replaced; every other byte must be clean.
+    const patternLists = [...record.matchAll(/```[a-z]*\n([\s\S]*?)```/g)].filter((match) =>
+      /-Pattern|Select-String/.test(match[1] ?? '')
+    );
+    assert.ok(patternLists.length >= 2, 'both redaction steps must be documented');
+    const scannable = patternLists.reduce(
+      (text, match) => text.replace(match[0], '<pattern-list>'),
+      record
+    );
 
-    // No credential-shaped content, no location, no digest.
     assert.ok(!scannable.includes('eyJ'), 'no JWT may appear outside the search patterns');
     assert.ok(!scannable.includes('dhan-secrets'), 'no store path may appear outside the search patterns');
     assert.ok(!record.includes('sha256:'), 'no fingerprint may appear');
-    assert.ok(!/[A-Za-z0-9+/]{60,}={0,2}/.test(record.replace(/\b[0-9a-f]{7,40}\b/g, '<hex>')), 'no encoded blob');
+    assert.ok(
+      !/[A-Za-z0-9+/]{60,}={0,2}/.test(record.replace(/\b[0-9a-f]{7,40}\b/g, '<hex>')),
+      'no encoded blob'
+    );
     assert.ok(!/\b1000\d{6}\b/.test(record), 'no Dhan-client-id-shaped number');
     for (const location of ['dhan-client-id.carrier', 'dhan-access-token.carrier', 'H:\\IIPS']) {
       assert.ok(!record.includes(location), `no carrier location may appear: ${location}`);
@@ -568,5 +590,87 @@ describe('W-06 — first authenticated request evidence', () => {
       [],
       'no vault reference may appear'
     );
+  });
+
+  it('W06-10: every artefact in §12.1 is reproduced field for field', () => {
+    const record = repoText(RECORD);
+    const sectionStart = record.indexOf('### 12.1 The artefacts');
+    const sectionEnd = record.indexOf('### 12.2');
+    assert.ok(sectionStart > 0 && sectionEnd > sectionStart, '§12.1 must exist');
+
+    const artefacts = [...record.slice(sectionStart, sectionEnd).matchAll(/```json\n([\s\S]*?)```/g)].map(
+      (match) => JSON.parse(match[1] ?? '') as Record<string, unknown>
+    );
+    assert.strictEqual(artefacts.length, 5, 'all five probes must be reproduced');
+
+    const expected: readonly [string, string, number, number, string, string][] = [
+      ['w06-01-health-before', '2026-11-12T19:41:59.1168539Z', 68, 200, '2xx', 'HEALTH'],
+      ['w06-02-freshness-before', '2026-11-12T19:41:59.2286663Z', 29, 200, '2xx', 'FAILURE'],
+      ['w06-03-quotes-attempt1', '2026-11-12T19:42:05.1740778Z', 5893, 502, '5xx', 'AUTHENTICATION_FAILURE'],
+      ['w06-04-health-after', '2026-11-12T19:42:05.3305256Z', 67, 200, '2xx', 'HEALTH'],
+      ['w06-05-freshness-after', '2026-11-12T19:42:14.4035727Z', 29, 200, '2xx', 'FAILURE'],
+    ];
+    expected.forEach(([probe, atUtc, elapsedMs, httpStatus, statusClass, typedCode], index) => {
+      const artefact = artefacts[index];
+      assert.ok(artefact, `artefact ${index} present`);
+      assert.strictEqual(artefact.probe, probe);
+      assert.strictEqual(artefact.atUtc, atUtc);
+      assert.strictEqual(artefact.elapsedMs, elapsedMs);
+      assert.strictEqual(artefact.httpStatus, httpStatus);
+      assert.strictEqual(artefact.statusClass, statusClass);
+      assert.strictEqual(artefact.typedCode, typedCode);
+    });
+
+    // The decisive probe: the daemon's own body, and the framework's reason phrase.
+    const quotes = artefacts[2] as { body: string; exceptionMessage: string; message: string };
+    assert.deepStrictEqual(JSON.parse(quotes.body), {
+      error: {
+        code: 'AUTHENTICATION_FAILURE',
+        message: 'Dhan rejected the request credentials',
+      },
+    });
+    assert.strictEqual(quotes.message, 'Dhan rejected the request credentials');
+    assert.strictEqual(quotes.exceptionMessage, 'The remote server returned an error: (502) Bad Gateway.');
+
+    // The after-read is the same projection as the before-read, at a later clock.
+    const freshnessAfter = artefacts[4] as { body: string };
+    const freshnessPayload = JSON.parse(freshnessAfter.body) as {
+      evaluatedAt: string;
+      cacheState: string;
+      verdict: string;
+      lastRefresh: { outcome: string; lastFailure: { code: string } };
+    };
+    assert.strictEqual(freshnessPayload.evaluatedAt, '2026-11-12T19:42:14.375Z');
+    assert.strictEqual(freshnessPayload.cacheState, 'MISS');
+    assert.strictEqual(freshnessPayload.verdict, 'UNKNOWN');
+    assert.strictEqual(freshnessPayload.lastRefresh.outcome, 'FAILURE');
+    assert.strictEqual(freshnessPayload.lastRefresh.lastFailure.code, 'REFRESH_FAILED');
+  });
+
+  it('W06-11: only a received 401/403 can produce the captured code', () => {
+    const authFailure = (status: number) => {
+      const mapped = DhanApiClient.mapHttpStatus(status);
+      assert.ok(mapped, `${status} must map to a failure`);
+      assert.strictEqual(mapped.ok, false);
+      return mapped.failure;
+    };
+
+    for (const status of [401, 403]) {
+      const failure = authFailure(status);
+      assert.strictEqual(failure.code, 'AUTHENTICATION_FAILURE');
+      assert.strictEqual(failure.message, 'Dhan rejected the request credentials');
+      assert.strictEqual(failure.httpStatus, status, 'the vendor status is kept internally, not published');
+    }
+
+    // No other status produces that code, and none of them is "no response".
+    for (const status of [400, 404, 418, 500, 502, 503]) {
+      assert.strictEqual(authFailure(status).code, 'HTTP_ERROR', `${status} must be HTTP_ERROR`);
+    }
+    assert.strictEqual(authFailure(408).code, 'TIMEOUT');
+    assert.strictEqual(authFailure(504).code, 'TIMEOUT');
+    assert.strictEqual(authFailure(429).code, 'RATE_LIMITED');
+    for (const status of [200, 201, 204]) {
+      assert.strictEqual(DhanApiClient.mapHttpStatus(status), null, `${status} is not a failure`);
+    }
   });
 });

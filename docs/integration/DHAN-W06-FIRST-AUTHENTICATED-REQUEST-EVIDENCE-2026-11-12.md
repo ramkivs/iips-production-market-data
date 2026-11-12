@@ -1,14 +1,22 @@
 # DHAN W-06 — First Authorised Authenticated Request: Execution Record and Evidence Assessment (2026-11-12)
 
-**Status:** **W-06 NOT CLOSED.** One authorised request was executed and is recorded here; its typed
-outcome was not captured and cannot be recovered from the daemon, the repository or any retained
-artefact. A local `/v1/freshness` read of the same daemon (§2 step 8, §4.1) now shows that the request
-**entered the provider refresh path and failed there** — one bit of narrowing, still no typed code, and
-still no statement about what the vendor did. No second vendor request has been made.
+**Status:** **W-06's evidence clause is satisfied. M1 is NOT satisfied. W-06 remains open.**
+Two controlled `/v1/quotes` requests were executed in total. The first returned `502` and its body was
+lost (§4–§7). The second, at 2026-11-12T19:42:05Z, was captured in full (§12): daemon status `502`,
+typed code **`AUTHENTICATION_FAILURE`**, message "Dhan rejected the request credentials", 5,893 ms.
+That code has exactly one producer in this repository — `DhanApiClient.mapHttpStatus` — and it is
+emitted only for a **received** vendor response with status `401` or `403` (§12.2). The vendor therefore
+answered, and it rejected the credentials. Which of those two statuses it was, and the vendor's own
+error text, are not in the capture and are not invented here. Because authentication did not succeed,
+M1's definition and its exit criteria remain unmet (§13); no quote, history, freshness or
+production-readiness claim is made. The stop rule was applied on the first decisive capture, and no
+further vendor request is authorised or needed.
 
-**Owner authorisation, 2026-11-12:** multiple controlled `/v1/quotes` attempts are authorised on the
-currently provisioned token, until its expiry, to repair the capture defect of the first attempt. §1.1
-states how that sits against the roadmap's one-request scope; §10 is the procedure to run them.
+**Owner authorisation, 2026-11-12 (consumed):** multiple controlled `/v1/quotes` attempts were
+authorised on the token that was provisioned at the time, until its expiry, to repair the capture
+defect of the first attempt. §1.1 states how that sat against the roadmap's one-request scope; §10 is
+the procedure that was run; §12 records what it produced. One attempt was used; the rest of the
+authorisation lapsed unused because the first capture was decisive.
 **Roadmap authority:** `ramkivs/iips-review-recovered` → `docs/integration/DHAN-LIVE-INTEGRATION-IMPLEMENTATION-ROADMAP-2026-11-11.md` (v1.1), §W-06 (read-only; not modified).
 **Repository:** `ramkivs/iips-production-market-data`, branch `arena/84d1e063-iips-production-market-data`, W-06 executed against `2cced8f`/`a70ed15`.
 **Host:** the governed Windows workstation, Windows PowerShell, market-data daemon on `http://127.0.0.1:8791`.
@@ -24,8 +32,9 @@ states how that sits against the roadmap's one-request scope; §10 is the proced
 
 | Item | State |
 | --- | --- |
-| Vendor requests authorised | **one** originally; **extended by the owner on 2026-11-12** to multiple controlled `/v1/quotes` attempts on the same provisioned token, until it expires (§1.1) |
-| Vendor requests executed | **one** so far — `POST /v1/quotes` (§4), outcome uncaptured |
+| Vendor requests authorised | **one** originally; **extended by the owner on 2026-11-12** to multiple controlled `/v1/quotes` attempts on the same provisioned token, until it expired; **the extension is now consumed** (one attempt used, the rest not needed) |
+| Vendor requests executed | **two** — `POST /v1/quotes` (§4, outcome uncaptured) and `POST /v1/quotes` (§12, captured in full) |
+| Capture attempts consumed | **one of the permitted attempts**; the stop rule of §10.4 was applied on the decisive capture (§12.3) |
 | Vendor requests made while preparing this record | **none** (this record is built from local code, local state and the operator's captured output) |
 | `/v1/historical`, or any vendor interaction other than `/v1/quotes` | **not authorised**; not performed |
 
@@ -151,6 +160,10 @@ service that makes zero vendor calls and from a service whose vendor call return
 
 ## 5. What the recorded outcome establishes — and what it does not
 
+> **Scope of this section:** it assesses attempt #1 (§4) as it stood before any further request, and it
+> is left as written. Its ambiguity was resolved by attempt #2's capture (§12), not by re-reading the
+> evidence below; nothing in this section has been retro-fitted to the answer.
+
 The route's status contract (`src/providers/dhan/dhan_market_data_http.ts`) is: `401` Layer-B auth,
 `400` malformed request, `413` body too large, `504` layer-level execution timeout, `429` rate limit,
 and **`502` for any other typed provider failure** — the body being `{ "error": { "code", "message" } }`.
@@ -259,26 +272,27 @@ criterion unmet.
 
 | Roadmap criterion | State | Basis |
 | --- | --- | --- |
-| One controlled authenticated request issued | **met** | §4 — exactly one |
-| Startup diagnostics, selector/backend readiness, credential-resolution outcome recorded | **met** | §3 |
-| Request outcome recorded | **not met** | only the daemon's `502` and a redacted `REFRESH_FAILED` projection survived; the typed code did not (§4.1) |
-| HTTP status class recorded | **partially met** | the daemon's status is known; the vendor's class is not |
-| `CREDENTIALS_UNAVAILABLE` no longer occurs | **not demonstrated** | a 502 is consistent with `CREDENTIALS_UNAVAILABLE`; nothing recorded excludes it |
-| Outcome is a structural success or a typed auth failure | **not met** | neither is evidenced |
-| Zero occurrences of either secret, any `vault://` string and any carrier path in captured output | **met (over what exists)** | the only captured output is §2–§7, and it contains none |
-| One authenticated vendor interaction completes | **not demonstrated** | the attempt entered the provider refresh path and failed there (§4.1); whether the vendor saw it is unknown |
+| One controlled authenticated request issued | **met** | §4 (attempt #1) and §12 (attempt #2), both `POST /v1/quotes` |
+| Startup diagnostics, selector/backend readiness, credential-resolution outcome recorded | **met** | §3, plus §12.2 item 3 for the resolution outcome at request time |
+| Request outcome recorded | **met** | §12 — attempt #2's daemon status, typed code and message were captured |
+| HTTP status class recorded | **met, both layers** | daemon `5xx` (`502`, its own transport status); the vendor answered in the `4xx` auth class — `401` **or** `403`, not distinguishable from the capture (§12.2) |
+| `CREDENTIALS_UNAVAILABLE` no longer occurs | **met** | the captured code cannot arise from a local credential refusal; those return before any send (§12.2 item 2) |
+| Outcome is a structural success or a typed auth failure | **met** | typed auth failure — `AUTHENTICATION_FAILURE` (§12) |
+| Zero occurrences of either secret, any `vault://` string and any carrier path in captured output | **met for the HTTP bodies and this record**; console and IRR log by operator statement only | §12.4 |
+| One authenticated vendor interaction completes | **not met** | the vendor rejected the credentials: the interaction completed as a rejection, not as an authentication (§13) |
 
-**W-06 is NOT closed.** The gap is precise and singular: **the typed failure code of the one
-authorised request was never persisted**, and no retained artefact can distinguish a vendor answer
-from a local refusal. §4.1 rules out the pre-provider explanations and stops there; it does not
-recover the code, and it does not convert a failed attempt into an authenticated interaction.
-Recording W-06 as complete on a bare `502` plus a redacted `REFRESH_FAILED` would be manufacturing
-evidence.
+**W-06 remains open, but no longer for want of evidence.** The evidence clause of the roadmap's W-06
+verification is satisfied: the outcome is a **typed auth failure**, established without inference
+(§12.2). What remains open is the milestone itself — M1 requires that authentication *succeeds*
+(§13), and a captured rejection cannot be converted into a success by any amount of record-keeping.
 
-**Further requests are authorised (owner, 2026-11-12) under §1.1.** Path B has been executed and
-exhausted (§4.1). Closing W-06 now requires either a successful Path A recovery (the PowerShell error
-record) that identifies the typed code, or a captured decisive outcome from the attempts permitted by
-§10 — a structural success, a typed authentication failure, or another vendor-answered rejection.
+**Attempt #1 is still unexplained and is left that way.** Its typed failure code was never persisted,
+and no retained artefact recovers it. That gap is now immaterial to the verdict — attempt #2 produced
+a decisive code for the same route and the same scope — but it is not retroactively filled in, and
+this record does not claim attempt #1 was an authentication failure.
+
+**The authorisation is exhausted for evidence purposes.** The stop rule of §10.4 fired on the first
+decisive capture; no further `/v1/quotes` attempt is authorised or needed, and none was made.
 
 ---
 
@@ -396,6 +410,10 @@ sends (§1.1 item 4); the codes marked **vendor** are the ones that cannot arise
 | `413 REQUEST_TOO_LARGE` | our body exceeded the daemon's configured limit — no vendor send | not expected with this 93-byte body; if captured, stop and report it rather than trimming and retrying |
 | `504 REQUEST_TIMEOUT` (layer) | the call may have been in flight when the 10 s layer bound closed | ambiguous; one more attempt |
 
+**Observed on 2026-11-12T19:42:05Z:** the `/v1/quotes` probe returned `502 AUTHENTICATION_FAILURE`
+(§12). That is the decisive auth-failure row; the stop rule was applied and no further attempt was
+made.
+
 ### 10.5 Redaction evidence — required before any attempt is accepted
 
 ```powershell
@@ -432,9 +450,275 @@ Repeat for the client id if it is available in the same form.
 ## 11. Record integrity
 
 - Captured output quoted here: the startup line, the two health responses, the `502` status, the
-  discovery result, and the scoped `/v1/freshness` response of §4.1 — nothing else.
-- Not quoted or reconstructed: the response body, the request time, latency, the vendor status.
+  discovery result, the scoped `/v1/freshness` response of §4.1, and the five probe artefacts of §12.1
+  reproduced from the files the operator supplied — nothing else.
+- Not quoted or reconstructed: attempt #1's response body, its request time, its latency, its typed
+  code, and in both attempts the vendor's numeric status and the vendor's own error text.
 - No credential value, client-id value, token, ciphertext, `vault://` reference or carrier path appears
   in this file; none was captured during the execution.
 - This document grants no authorisation of its own: it records the owner's 2026-11-12 extension (§1.1)
   and the procedure that operates it (§10).
+
+---
+
+## 12. The captured attempt — five probe artefacts (2026-11-12)
+
+These are the files the operator produced with §10.2–§10.3 and supplied verbatim. Their contents
+were re-parsed and checked field by field before being reproduced here; nothing in them has been
+edited, reordered or rounded.
+
+### 12.1 The artefacts
+
+**`w06-01-health-before.json`**
+
+```json
+{
+  "probe": "w06-01-health-before",
+  "method": "GET",
+  "path": "/v1/health",
+  "atUtc": "2026-11-12T19:41:59.1168539Z",
+  "elapsedMs": 68,
+  "httpStatus": 200,
+  "statusClass": "2xx",
+  "typedCode": "HEALTH",
+  "message": null,
+  "exceptionMessage": null,
+  "body": "{\"service\":\"UP\",\"providerConfiguration\":\"CONFIGURED\",\"liveProviderConnectivity\":\"NOT_CHECKED_PRE_ACCESS\",\"providerQualification\":\"SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED\"}"
+}
+```
+
+**`w06-02-freshness-before.json`**
+
+```json
+{
+  "probe": "w06-02-freshness-before",
+  "method": "GET",
+  "path": "/v1/freshness?domain=D01_QUOTES&companyId=EQ_RELIANCE_IN&exchangeSegment=NSE_EQ&securityId=ISIN:INE002A01018:EQ",
+  "atUtc": "2026-11-12T19:41:59.2286663Z",
+  "elapsedMs": 29,
+  "httpStatus": 200,
+  "statusClass": "2xx",
+  "typedCode": "FAILURE",
+  "message": null,
+  "exceptionMessage": null,
+  "body": "{\"domain\":\"D01_QUOTES\",\"cacheState\":\"MISS\",\"asOf\":null,\"timestampEvidence\":\"NOT_AVAILABLE\",\"receivedAt\":null,\"evaluatedAt\":\"2026-11-12T19:41:59.194Z\",\"observationEvaluatedAt\":null,\"thresholdSeconds\":900,\"ageSeconds\":null,\"verdict\":\"UNKNOWN\",\"staleConcessionActive\":false,\"suppressExecution\":true,\"eligibleForUse\":false,\"lastRefresh\":{\"outcome\":\"FAILURE\",\"lastFailure\":{\"code\":\"REFRESH_FAILED\",\"priorPreserved\":false}}}"
+}
+```
+
+**`w06-03-quotes-attempt1.json`**
+
+```json
+{
+  "probe": "w06-03-quotes-attempt1",
+  "method": "POST",
+  "path": "/v1/quotes",
+  "atUtc": "2026-11-12T19:42:05.1740778Z",
+  "elapsedMs": 5893,
+  "httpStatus": 502,
+  "statusClass": "5xx",
+  "typedCode": "AUTHENTICATION_FAILURE",
+  "message": "Dhan rejected the request credentials",
+  "exceptionMessage": "The remote server returned an error: (502) Bad Gateway.",
+  "body": "{\"error\":{\"code\":\"AUTHENTICATION_FAILURE\",\"message\":\"Dhan rejected the request credentials\"}}"
+}
+```
+
+**`w06-04-health-after.json`**
+
+```json
+{
+  "probe": "w06-04-health-after",
+  "method": "GET",
+  "path": "/v1/health",
+  "atUtc": "2026-11-12T19:42:05.3305256Z",
+  "elapsedMs": 67,
+  "httpStatus": 200,
+  "statusClass": "2xx",
+  "typedCode": "HEALTH",
+  "message": null,
+  "exceptionMessage": null,
+  "body": "{\"service\":\"UP\",\"providerConfiguration\":\"CONFIGURED\",\"liveProviderConnectivity\":\"NOT_CHECKED_PRE_ACCESS\",\"providerQualification\":\"SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED\"}"
+}
+```
+
+**`w06-05-freshness-after.json`**
+
+```json
+{
+  "probe": "w06-05-freshness-after",
+  "method": "GET",
+  "path": "/v1/freshness?domain=D01_QUOTES&companyId=EQ_RELIANCE_IN&exchangeSegment=NSE_EQ&securityId=ISIN:INE002A01018:EQ",
+  "atUtc": "2026-11-12T19:42:14.4035727Z",
+  "elapsedMs": 29,
+  "httpStatus": 200,
+  "statusClass": "2xx",
+  "typedCode": "FAILURE",
+  "message": null,
+  "exceptionMessage": null,
+  "body": "{\"domain\":\"D01_QUOTES\",\"cacheState\":\"MISS\",\"asOf\":null,\"timestampEvidence\":\"NOT_AVAILABLE\",\"receivedAt\":null,\"evaluatedAt\":\"2026-11-12T19:42:14.375Z\",\"observationEvaluatedAt\":null,\"thresholdSeconds\":900,\"ageSeconds\":null,\"verdict\":\"UNKNOWN\",\"staleConcessionActive\":false,\"suppressExecution\":true,\"eligibleForUse\":false,\"lastRefresh\":{\"outcome\":\"FAILURE\",\"lastFailure\":{\"code\":\"REFRESH_FAILED\",\"priorPreserved\":false}}}"
+}
+```
+
+Summary, as captured (not re-derived):
+
+| Probe | `atUtc` | `elapsedMs` | `httpStatus` | `statusClass` | `typedCode` |
+| --- | --- | --- | --- | --- | --- |
+
+| `w06-01-health-before` | 2026-11-12T19:41:59.1168539Z | 68 | 200 | 2xx | `HEALTH` |
+| `w06-02-freshness-before` | 2026-11-12T19:41:59.2286663Z | 29 | 200 | 2xx | `FAILURE` |
+| `w06-03-quotes-attempt1` | 2026-11-12T19:42:05.1740778Z | 5893 | 502 | 5xx | `AUTHENTICATION_FAILURE` |
+| `w06-04-health-after` | 2026-11-12T19:42:05.3305256Z | 67 | 200 | 2xx | `HEALTH` |
+| `w06-05-freshness-after` | 2026-11-12T19:42:14.4035727Z | 29 | 200 | 2xx | `FAILURE` |
+
+Three timing facts follow from the captured pairs, and they are arithmetic on those pairs rather than
+observation: the quotes probe's `atUtc` is its completion, so subtracting its 5,893 ms elapsed puts its
+start at about 19:41:59.281Z — 52 ms after probe 2 returned; health-after then follows 156 ms after
+the quotes probe completed; freshness-after follows 9.07 s after that. The sequence is therefore the
+one §10.3 prescribes, run once, in order, with no repetition.
+
+### 12.2 What the captured code establishes — and the only way it can arise
+
+`AUTHENTICATION_FAILURE` with the exact message `Dhan rejected the request credentials` is produced in
+exactly one place: `DhanApiClient.mapHttpStatus` (`dhan_api_client.ts:304-315`), which is applied to
+the vendor response *after* it has been received (`:285`). Its whole mapping is:
+
+| Vendor response | Code produced | Message |
+| --- | --- | --- |
+| `2xx` | none (`null`), body then parsed | — |
+| `401` / `403` | `AUTHENTICATION_FAILURE` | `Dhan rejected the request credentials` |
+| `408` / `504` | `TIMEOUT` | `Dhan reported a request timeout` |
+| `429` | `RATE_LIMITED` | `Dhan rate limit exceeded` |
+| any other non-`2xx` | `HTTP_ERROR` | `Dhan returned a non-success HTTP status (<n>)` |
+| no response at all (transport exception, timeout, egress refusal) | `TRANSPORT_FAILURE` / `TIMEOUT` / `PRODUCTION_NOT_AUTHORIZED` | — |
+
+1. **A response was received.** Every branch that has no response returns a different code, so the
+   captured code cannot exist without one.
+2. **That response carried `401` or `403`.** No other status maps to this code, and no local branch
+   produces it: the credential resolver's refusals are `CREDENTIALS_UNAVAILABLE`,
+   `CREDENTIALS_EXPIRED` and `CONFIGURATION_INCOMPLETE`, all raised before the request is built
+   (`:196-215`), and the local rate limiter returns `RATE_LIMITED` before any send
+   (`dhan_operational_controls.ts:332`). None of those can yield `AUTHENTICATION_FAILURE`.
+3. **The credential material was resolved and sent.** Reaching `mapHttpStatus` requires a resolved
+   credential pair (the resolver is called per request in this build) and a completed HTTP exchange.
+   The vault read therefore succeeded for this call, which is the credential-resolution outcome W-06
+   asks the record to show.
+4. **It was not a locally-detected expiry.** The client checks the SecretRef's `expiresAt` before the
+   call and returns `CREDENTIALS_EXPIRED` if it has passed. The captured code therefore means either
+   that `expiresAt` had not passed, or that the reference carries no expiry and only the vendor could
+   judge it; the capture does not distinguish these, and neither is assumed.
+5. **The `502` is the daemon's, not a proxy's.** `dhan_market_data_http.ts:320-322` maps every typed
+   provider failure except `RATE_LIMITED` to `502`; the framework's reason phrase for that status is
+   what PowerShell echoes as `(502) Bad Gateway`. The vendor's numeric status never leaves the
+   process — `sendError` emits only `{ code, message }` (§6.2, which applies to this attempt too).
+6. **At least one send reached the vendor; how many sends there were is not captured.**
+   `AUTHENTICATION_FAILURE` is not transient, so `withBoundedRetry` never retries it: the code comes
+   from the *last* send. The 5,893 ms is compatible with a single send, and equally with a first send
+   that hit the code default `IIPS_DHAN_TIMEOUT_MS` of 5,000 ms and a retry that then returned
+   `401`/`403`. The capture does not distinguish these, the configured timeout was not recorded, and
+   the verdict does not depend on which it was.
+
+### 12.3 Why the stop rule was invoked
+
+The captured code is the `AUTHENTICATION_FAILURE` row of §10.4 — a decisive outcome. Per §10.3 the
+sequence stops there; probes 4 and 5 were already part of the fixed sequence and added nothing that
+changes the verdict (`/v1/health` is constant, §6.3; `/v1/freshness` still projects `REFRESH_FAILED`,
+which is D-7 redaction and cannot corroborate or contradict an auth verdict). No repeat attempt was
+made, no identity or body was changed, and no further request is authorised or needed.
+
+### 12.4 Redaction evidence — the checks that were run, and their results
+
+This section applies the roadmap's W-06 grep clause and §9.4 (both secret values, any `vault://`
+string, and any carrier-path fragment) to everything available here. The pattern set is the one §10.5
+gives the operator; it is repeated here as a block so that no pattern literal sits loose in the prose
+above or below:
+
+```powershell
+$Patterns = @('eyJ','vault://','dhan-secrets','dhan-client-id\.carrier','dhan-access-token\.carrier',
+  'H:\\IIPS\\runtime','1000\d{6}','[A-Za-z0-9_-]{32,}','access-token','client-id','Bearer')
+$ProbeFiles = (Get-ChildItem $Evidence -Filter *.json).FullName
+$ProbeFiles | Select-String -Pattern $Patterns -AllMatches
+```
+
+| # | Pattern (category) | Hits in the five artefacts |
+| --- | --- | --- |
+| 1 | JWT prefix | 0 |
+| 2 | vault-reference scheme | 0 |
+| 3 | credential store directory name | 0 |
+| 4 | client-id carrier file name | 0 |
+| 5 | access-token carrier file name | 0 |
+| 6 | carrier root path | 0 |
+| 7 | Dhan client-id numeric shape (7 digits starting `1000`) | 0 |
+| 8 | any run of 32+ token characters | **2** — both are the literal status constant `SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED` in the two health probes; no secret material |
+| 9 | `access-token` header name | 0 |
+| 10 | `client-id` header name | 0 |
+| 11 | `Bearer` | 0 |
+
+Coverage, stated precisely:
+
+| Artefact | Who checked it | Result |
+| --- | --- | --- |
+| The five probe JSON files (3,088 bytes as transcribed here) | this record, independently, with the pattern set above | clean, per the table |
+| The same five files, against the two secret **values** | the operator, with §10.5's hidden-input exact-value grep | reported clean; the values were not available to this record, so this step is verified by statement only |
+| Daemon console text | the operator, same pattern set | reported clean; the text was not supplied to this record, and §6.4 shows it holds no per-request output beyond the startup line already quoted in §3 |
+| IRR log | not applicable — the IRR consumer was not run for this attempt | — |
+| Built bundles | not applicable — nothing was rebuilt for this attempt | — |
+
+### 12.5 What this capture does not contain
+
+- **Which of `401`/`403`** the vendor returned, and its reason phrase.
+- **The vendor's own error body.** Non-`2xx` bodies are never read: `mapHttpStatus` runs before parsing
+  and the client deliberately never echoes an error body (`:302-303`). Any vendor error code that would
+  name the exact cause (token vs client id vs IP binding vs subscription) is therefore absent, and no
+  such cause is inferred.
+- **The configured vendor timeout**, hence the split between the 5,893 ms and the number of sends.
+- **The vendor's verdict for attempt #1**, which remains unknown beyond §4.1.
+
+---
+
+## 13. Gate decision, and what remains blocked
+
+The roadmap contains two statements that must be read together, and they do not say the same thing:
+
+- **G-M1** (`§9.2`) closes on: "`CREDENTIALS_UNAVAILABLE` no longer occurs; the outcome is a
+  structural success **or a typed auth failure**; zero secret occurrences and zero location strings in
+  logs."
+- **M1** (`§10.1`) is defined as "one real authenticated interaction with Dhan **succeeds**", and its
+  exit criteria (`§10.3`) require that "one authenticated vendor interaction **completes**".
+
+| Criterion | Verdict | Basis |
+| --- | --- | --- |
+| W-06 verification — "structural success or a typed auth failure" | **satisfied** | §12.2: `AUTHENTICATION_FAILURE`, from a received `401`/`403` |
+| W-06 verification — secret and location greps | **satisfied** over the bodies and this record; by statement for console and exact values | §12.4 |
+| G-M1 evidence condition | **satisfied** | a typed auth failure, and not `CREDENTIALS_UNAVAILABLE` (§12.2 item 2) |
+| M1 definition — "one real authenticated interaction with Dhan succeeds" | **NOT satisfied** | the interaction returned a rejection; nothing was authenticated |
+| M1 exit criteria — "one authenticated vendor interaction completes" | **NOT satisfied** | the interaction completed as a rejection |
+| M2a, M2, M3a, M3, M4 | untouched | no quote, history or freshness acceptance was attempted or claimed |
+
+**Decision: W-06's evidence requirement is met and its work does not continue; M1 is not achieved.**
+The two are consistent because they ask different questions. W-06 exists to remove a *doubt* — whether
+a live request reaches Dhan and what kind of answer comes back — and that doubt is now settled by
+direct capture. M1 asks whether authentication *works*, and the answer is no. Treating a captured
+rejection as a closed milestone would be exactly the kind of manufactured evidence this record has
+refused throughout; treating the capture as worthless would ignore the first real vendor verdict this
+integration has produced. So: **gate G-M1's evidence condition satisfied, milestone M1 open, W-06 open
+with no further vendor work required from IPD until the credential defect is addressed.**
+
+**Remaining blockers, in order of what must be resolved first:**
+
+1. **Dhan rejects the provisioned credential pair** (`401` or `403`). The cause is not in this capture
+   and is not guessed at. Candidate causes that this evidence neither supports nor excludes: the
+   access token was revoked or superseded after provisioning, the client id and token belong to
+   different sessions, the token was issued for a different Dhan API surface, the request source IP is
+   not the registered static IP, or the account is not entitled to the requested data. Any of these is
+   a hypothesis until vendor-side evidence says otherwise.
+2. **The vendor's numeric status and error body are not captured.** Closing this would need either a
+   deliberate, redaction-safe way to surface the vendor's error code, or visibility on the Dhan side.
+   That is a change of scope and is not authorised here.
+3. **Everything downstream is untouched**: no quote has ever been parsed (M2a), no series
+   (M3a), no in-session freshness (M4), and the `/v1/freshness` read remains `MISS`/`UNKNOWN`/`FAILURE`
+   for a reason an auth rejection is sufficient to explain (§12.3) — though that read can never name
+   the reason itself, and cannot be used as an auth verdict on its own.
+4. **No further vendor request is authorised or needed.** Re-running `/v1/quotes` with the same rejected
+   credential would only re-capture the same verdict; the next step is credential remediation (D-6 /
+   W-04 territory), not more probing.
+
