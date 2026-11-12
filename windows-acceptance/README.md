@@ -45,10 +45,20 @@ Run only on a Windows host, and only if every entry in the evidence log is `PASS
 | `W02-WIN-06/06B` | token carrier read back, expiry metadata preserved |
 | `W02-WIN-07` | carriers are distinct files with distinct ciphertext; a cross-read is refused (`SECRET_ID_MISMATCH`) |
 | `W02-WIN-08` | directory and both carriers are owner-only (inheritance off, owner + SYSTEM); readiness is gated on the probe |
+| `W02-WIN-08B` | the second carrier write does **not** rewrite an already-correct directory DACL, and a repeated application reports `changed=false` |
 | `W02-WIN-09` | tampered ciphertext → `CARRIER_UNREADABLE`; missing carrier → `CARRIER_MISSING` |
 | `W02-WIN-10` | no value in the result object, no plaintext on disk, no data on argv |
 | `W02-WIN-11` | the acceptance directory and both carriers were removed |
 | `W02-WIN-12` | the evidence log contains neither generated value |
+
+## DACL application is production code
+
+The owner-only DACL is applied by `src/providers/dhan/dhan_dpapi_acl.ts`
+(`createWindowsDpapiAclApplier`), not by this directory. The applier reads the observed
+descriptor, evaluates the exact policy and issues `Set-Acl` only when the descriptor really
+differs — an unconditional second rewrite of an already-correct directory DACL raised
+`PrivilegeNotHeldException` (HRESULT -2147024891) on the operator's host. Only the DPAPI
+`protect` step (W-04 enrolment) remains a local static program in the harness.
 
 ## What it does not prove
 

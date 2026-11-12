@@ -24,10 +24,11 @@ prove, and it is recorded separately from the Windows-host acceptance.
 | --- | --- | --- | --- |
 | A-1 | W-02 backend suite (injected runner; every failure path, readiness gate, atomicity, resolver integration) | `npm test` (or `node --test dist/tests/dhan_w02_dpapi_backend.test.js`) | **PASS — 12 tests, 12 passed, 0 failed** |
 | A-2 | Acceptance artefacts: structure, rules compliance, harness drives production modules, off-Windows fail-closed behaviour | `node --test dist/tests/w02_acceptance_harness.test.js` | **PASS — 5 tests, 5 passed, 0 failed** |
+| A-2b | Owner-only DACL policy, idempotent application, carrier regression (production applier; the Windows boundary is emulated) | `node --test dist/tests/dhan_w02_dpapi_acl.test.js` | **PASS — 16 tests, 16 passed, 0 failed** |
 | A-3 | PowerShell structural validation (repo validator: forbidden constructs, brace balance, try/catch pairing, strict mode, stop preference, toolchain rule, final status, `-NoPause`, no bare node/npm/npx, no session exit) | `python3 windows-setup/.validate-scripts.py windows-acceptance` | **PASS — 26 checks passed, 0 failed** |
 | A-4 | Harness JavaScript syntax | `node --check windows-acceptance/w02_dpapi_acceptance.mjs` | **PASS** |
 | A-5 | TypeScript typecheck (all four project configs) + `vite` build + package consumer verification (strict typecheck, `forbiddenHits: []`) | `npm run build` then `npm run test:package-consumer` | **PASS** |
-| A-6 | Full repository regression suite | `npm test` | **PASS — 1513 executed, 1512 passed, 0 failed, 1 pre-existing skip** |
+| A-6 | Full repository regression suite | `npm test` | **PASS — 1529 executed, 1528 passed, 0 failed, 1 pre-existing skip** |
 
 ### What A-1…A-6 do not prove
 
@@ -123,8 +124,10 @@ export surface changed (`forbiddenHits: []`).
 1. **Windows execution** — the only blocker for closing W-02's last verification item. Requires the
    operator's Windows host; nothing else is outstanding.
 2. **W-04** still owns the interactive provisioning/rotation utility that will produce real carriers;
-   the acceptance script's `protect` and ACL-apply steps are deliberately local stand-ins for that
-   utility (documented in the harness header).
+   the acceptance script's `protect` step is a deliberate local stand-in for that utility
+   (documented in the harness header). The DACL step is no longer a stand-in: since the
+   idempotency correction it is production code (`dhan_dpapi_acl.ts`), see
+   `DHAN-W02-WINDOWS-ACL-IDEMPOTENCY-2026-11-12.md`.
 3. **W-03** remains the consumer-side dependency recorded in the W-02 record: the allow-listed
    backend selector, an awaited `probeReadiness()` at daemon startup, and removal of key-path
    material from diagnostics.

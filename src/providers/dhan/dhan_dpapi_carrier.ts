@@ -294,6 +294,19 @@ export class DpapiCarrierWriteError extends Error {
 
 export type DpapiAclTargetKind = 'directory' | 'file';
 
+/**
+ * Outcome of one owner-only DACL application.
+ *
+ * `changed: false` means the observed DACL was already exactly the policy and `Set-Acl` was
+ * deliberately not invoked. Rewriting an already-correct directory DACL is what raised
+ * `PrivilegeNotHeldException` on a real Windows host; the production applier
+ * (`dhan_dpapi_acl.ts`) therefore verifies before writing.
+ */
+export interface DpapiAclApplyResult {
+  readonly changed: boolean;
+  readonly verified: true;
+}
+
 export interface DpapiCarrierWriteRequest {
   /** Absolute carrier directory (outside any Git working tree). */
   readonly carrierDirectory: string;
@@ -301,10 +314,17 @@ export interface DpapiCarrierWriteRequest {
   readonly envelope: DpapiCarrierEnvelope;
   /**
    * Applies the D-1 owner-only DACL (inheritance disabled; owner + SYSTEM only) to the
-   * directory and, before content is written, to the beside-file. W-04 supplies the
-   * real applier; unit tests inject a recorder.
+   * directory and, before content is written, to the beside-file.
+   *
+   * The production implementation is `createWindowsDpapiAclApplier` (`dhan_dpapi_acl.ts`): it
+   * reads the descriptor, verifies the exact policy and rewrites only when it differs. An
+   * applier may return the outcome so a caller can see whether the directory was rewritten;
+   * unit tests inject a recorder that returns nothing.
    */
-  readonly applyOwnerOnlyAcl?: (targetPath: string, kind: DpapiAclTargetKind) => Promise<void>;
+  readonly applyOwnerOnlyAcl?: (
+    targetPath: string,
+    kind: DpapiAclTargetKind
+  ) => Promise<DpapiAclApplyResult | void>;
   /** Read-back verification of the beside-file before the swap. Defaults to a parse check. */
   readonly verify?: (besidePath: string) => Promise<boolean>;
   /** Injected clock for envelope sanity during the pre-write validation. */
@@ -315,6 +335,11 @@ export interface DpapiCarrierWriteResult {
   readonly carrierPath: string;
   /** True when an existing carrier was atomically replaced. */
   readonly replaced: boolean;
+  /**
+   * True only when this write actually rewrote the carrier directory DACL. False when the
+   * directory was already correct (no `Set-Acl` was issued) or when no applier was supplied.
+   */
+  readonly directoryAclRewritten: boolean;
 }
 
 /**
@@ -351,9 +376,11 @@ export async function writeDpapiCarrierAtomically(
     throw new DpapiCarrierWriteError('DIRECTORY', 'carrier directory could not be prepared');
   }
 
+  let directoryAclRewritten = false;
   if (request.applyOwnerOnlyAcl) {
     try {
-      await request.applyOwnerOnlyAcl(carrierDirectory, 'directory');
+      const directoryAcl = await request.applyOwnerOnlyAcl(carrierDirectory, 'directory');
+      directoryAclRewritten = directoryAcl?.changed === true;
     } catch {
       throw new DpapiCarrierWriteError('ACL', 'carrier directory access restriction failed');
     }
@@ -404,7 +431,7 @@ export async function writeDpapiCarrierAtomically(
     } catch {
       throw new DpapiCarrierWriteError('SWAP', 'carrier swap failed');
     }
-    return { carrierPath: target, replaced };
+    return { carrierPath: target, replaced, directoryAclRewritten };
   } finally {
     if (!swapped) {
       try {

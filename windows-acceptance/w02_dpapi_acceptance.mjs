@@ -8,7 +8,10 @@
  * WHAT IT PROVES (real, on the operator's machine)
  *   - real `ProtectedData.Protect` / `Unprotect` at `DataProtectionScope.CurrentUser`;
  *   - both governed carriers written through the production atomic writer into the
- *     acceptance directory, with owner-only DACLs applied by a real Windows ACL call;
+ *     acceptance directory, with owner-only DACLs applied by the PRODUCTION applier
+ *     (`dhan_dpapi_acl.ts` → real `Get-Acl` / `Set-Acl` child programs);
+ *   - a repeated directory-DACL application is a no-op: an already-correct directory DACL is
+ *     verified, never rewritten (the unconditional rewrite raised PrivilegeNotHeldException);
  *   - both carriers read back through the PRODUCTION backend
  *     (`WindowsDpapiHostVaultBackend`), compared to the generated throwaway values;
  *   - carrier separation, readiness gating, and the typed fail-closed negatives;
@@ -37,7 +40,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(HERE, '..', 'dist', 'src', 'providers', 'dhan');
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Static Windows programs used by this harness (acceptance-only helpers)
+// Static Windows program used only for enrolment (W-04 owns the real one).
+// DACL reading and application are NOT here: they are production code
+// (`read-acl` / `apply-acl` in dhan_dpapi_process.ts, driven by dhan_dpapi_acl.ts).
 //
 // The production tree owns `unprotect` and the ACL *check* (dhan_dpapi_process.ts).
 // W-02 deliberately does not own `protect` or the ACL *apply* — that is W-04 — so the
@@ -56,29 +61,6 @@ const PROTECT_SCRIPT = [
   '  @{ ok = $true; ciphertextB64 = [Convert]::ToBase64String($prot) } | ConvertTo-Json -Compress',
   '} catch {',
   "  @{ ok = $false; kind = 'DPAPI_PROTECT_FAILED' } | ConvertTo-Json -Compress",
-  '}',
-].join('\n');
-
-const APPLY_ACL_SCRIPT = [
-  "$ErrorActionPreference = 'Stop'",
-  'try {',
-  '  $raw = [Console]::In.ReadToEnd()',
-  '  $req = $raw | ConvertFrom-Json',
-  '  $p = [string]$req.path',
-  '  $kind = [string]$req.kind',
-  '  $acl = Get-Acl -LiteralPath $p',
-  '  $acl.SetAccessRuleProtection($true, $false)',
-  '  foreach ($rule in @($acl.Access)) { $acl.RemoveAccessRule($rule) | Out-Null }',
-  "  $inherit = 'None'",
-  "  if ($kind -eq 'directory') { $inherit = 'ContainerInherit,ObjectInherit' }",
-  '  $me = [System.Security.Principal.WindowsIdentity]::GetCurrent().User',
-  "  $acl.AddAccessRule((New-Object System.Security.AccessControl.FileSystemAccessRule($me, 'FullControl', $inherit, 'None', 'Allow')))",
-  "  $system = New-Object System.Security.Principal.SecurityIdentifier('S-1-5-18')",
-  "  $acl.AddAccessRule((New-Object System.Security.AccessControl.FileSystemAccessRule($system, 'FullControl', $inherit, 'None', 'Allow')))",
-  '  Set-Acl -LiteralPath $p -AclObject $acl',
-  '  @{ ok = $true } | ConvertTo-Json -Compress',
-  '} catch {',
-  "  @{ ok = $false; kind = 'ACL_APPLY_FAILED' } | ConvertTo-Json -Compress",
   '}',
 ].join('\n');
 
@@ -259,6 +241,7 @@ async function main() {
 
   const carrier = await import('../dist/src/providers/dhan/dhan_dpapi_carrier.js');
   const processModule = await import('../dist/src/providers/dhan/dhan_dpapi_process.js');
+  const aclModule = await import('../dist/src/providers/dhan/dhan_dpapi_acl.js');
   const backendModule = await import('../dist/src/providers/dhan/dhan_dpapi_vault_backend.js');
   const resolverModule = await import('../dist/src/providers/dhan/dhan_local_vault_resolver.js');
   const secretRef = await import('../dist/src/security/secret_ref.js');
@@ -292,13 +275,13 @@ async function main() {
   const tokenRef = config.config.accessTokenRef;
 
   const productionRunner = createPowerShellDpapiProcessRunner();
-  const applyOwnerOnlyAcl = async (targetPath, kind) => {
-    const outcome = await runPowerShell(APPLY_ACL_SCRIPT, { path: targetPath, kind });
-    const parsed = parseChildJson(outcome);
-    if (!parsed || parsed.ok !== true) {
-      throw new Error('owner-only ACL could not be applied');
-    }
-  };
+
+  // The DACL policy and its application are PRODUCTION code: the harness composes
+  // `createWindowsDpapiAclApplier` exactly as the provisioning utility will, so the run below
+  // verifies the shipped implementation rather than a stand-in. The applier reads the descriptor,
+  // verifies the exact owner-only policy and issues `Set-Acl` only when it actually differs —
+  // the unconditional second rewrite is what raised PrivilegeNotHeldException on the host.
+  const applyOwnerOnlyAcl = aclModule.createWindowsDpapiAclApplier({ runner: productionRunner });
 
   const protect = async (value) => {
     const outcome = await runPowerShell(PROTECT_SCRIPT, {
@@ -367,10 +350,12 @@ async function main() {
         description,
         `writeDpapiCarrierAtomically(${role}) → parse → plaintext scan`,
         ok ? 'PASS' : 'FAIL',
-        ok ? 'carrier written, schema version accepted, no plaintext in the carrier file' : 'carrier written but failed parse or contained plaintext',
+        ok
+          ? `carrier written, schema version accepted, no plaintext in the carrier file, directory DACL rewritten: ${written.directoryAclRewritten ? 'yes' : 'no'}`
+          : 'carrier written but failed parse or contained plaintext',
         0
       );
-      return ok;
+      return ok ? written : null;
     } catch (error) {
       record(testId, description, `writeDpapiCarrierAtomically(${role})`, 'FAIL', `write failed (${error && error.name ? error.name : 'error'})`, 1);
       return false;
@@ -523,6 +508,33 @@ async function main() {
     readinessOk
       ? 'unprobed verdict false, probed verdict true, directory and both carriers owner-only'
       : 'readiness or DACL evidence did not meet the gate',
+    0
+  );
+
+  // ── W02-WIN-08B: repeated directory ACL application is a no-op ────────────
+  // The host failure this run guards against: the second carrier write rewrote an
+  // already-correct directory DACL and raised PrivilegeNotHeldException. Both the write
+  // result and an explicit second application must report "no change, verified".
+  let secondApply = null;
+  let secondApplyError = null;
+  try {
+    secondApply = await applyOwnerOnlyAcl(carrierRoot, 'directory');
+  } catch (error) {
+    secondApplyError = error;
+  }
+  const idempotentOk =
+    tokenWritten.directoryAclRewritten === false &&
+    secondApply !== null &&
+    secondApply.changed === false &&
+    secondApply.verified === true;
+  record(
+    'W02-WIN-08B',
+    'Repeated directory DACL application is a no-op (no unnecessary Set-Acl)',
+    'writeDpapiCarrierAtomically(accessToken) then createWindowsDpapiAclApplier(directory) again',
+    idempotentOk ? 'PASS' : 'FAIL',
+    idempotentOk
+      ? 'the second carrier write did not rewrite the directory DACL and a second application reported changed=false, verified=true'
+      : `the access-token write or the second application still rewrote the DACL${secondApplyError ? ' (application failed)' : ''}`,
     0
   );
 

@@ -197,6 +197,14 @@ paths are proven.
 > never records a value, a ciphertext or raw child-process stderr. See
 > `docs/integration/DHAN-W02-WINDOWS-ACCEPTANCE-EVIDENCE-2026-11-12.md`. This item stays **PENDING**
 > until that log exists from a Windows host.
+>
+> **Windows-host defect and correction (2026-11-12):** an unconditional directory-DACL rewrite on
+> every carrier write raised `PrivilegeNotHeldException` (HRESULT -2147024891) on the second
+> carrier. The policy and its application are now production modules
+> (`src/providers/dhan/dhan_dpapi_acl.ts`, plus `read-acl` / `apply-acl` in
+> `dhan_dpapi_process.ts`) and rewrite only when the observed descriptor differs. See
+> `docs/integration/DHAN-W02-WINDOWS-ACL-IDEMPOTENCY-2026-11-12.md`; a fresh Windows run is
+> required because that production path did not exist during the earlier 18/18 run.
 
 ## 12. Dependency handed to W-03
 

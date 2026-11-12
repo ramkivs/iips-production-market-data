@@ -24,7 +24,7 @@
 
 import { spawn } from 'node:child_process';
 
-export type DpapiProcessOperation = 'describe-acl' | 'unprotect';
+export type DpapiProcessOperation = 'describe-acl' | 'read-acl' | 'apply-acl' | 'unprotect';
 
 export interface DpapiProcessRequest {
   readonly operation: DpapiProcessOperation;
@@ -91,6 +91,75 @@ const ACL_SCRIPT = [
 ].join('\n');
 
 /**
+ * Detailed DACL read. Accepts `{ path }` and returns the observed descriptor:
+ * `{ ok, exists, currentUserSid, ownerSid, protected, rules[] }`, where each rule carries the
+ * principal SID, the access-control type, the numeric rights, the inheritance and propagation
+ * flags, and whether the rule is inherited.
+ *
+ * The policy decision is NOT made here: the child reports the descriptor and
+ * `dhan_dpapi_acl.ts` evaluates it, so the exact owner-only requirement has one implementation
+ * that can be tested without Windows. Reports a coarse failure category only.
+ */
+const READ_ACL_SCRIPT = [
+  "$ErrorActionPreference = 'Stop'",
+  'try {',
+  '  $raw = [Console]::In.ReadToEnd()',
+  '  $req = $raw | ConvertFrom-Json',
+  '  $p = [string]$req.path',
+  "  $me = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value",
+  "  if (-not (Test-Path -LiteralPath $p)) { @{ ok = $true; exists = $false; currentUserSid = [string]$me } | ConvertTo-Json -Compress; return }",
+  '  $acl = Get-Acl -LiteralPath $p',
+  "  $ownerSid = ''",
+  '  try { $ownerSid = (New-Object System.Security.Principal.NTAccount($acl.Owner)).Translate([System.Security.Principal.SecurityIdentifier]).Value } catch { $ownerSid = [string]$acl.Owner }',
+  '  $rules = @()',
+  '  foreach ($rule in @($acl.Access)) {',
+  "    $sid = ''",
+  "    try { $sid = $rule.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value } catch { $sid = '' }",
+  '    $rules += @{ sid = [string]$sid; accessControlType = [string]$rule.AccessControlType; rights = [int]$rule.FileSystemRights; inheritanceFlags = [int]$rule.InheritanceFlags; propagationFlags = [int]$rule.PropagationFlags; inherited = [bool]$rule.IsInherited }',
+  '  }',
+  "  @{ ok = $true; exists = $true; currentUserSid = [string]$me; ownerSid = [string]$ownerSid; protected = [bool]$acl.AreAccessRulesProtected; rules = @($rules) } | ConvertTo-Json -Compress -Depth 5",
+  '} catch {',
+  "  @{ ok = $false; kind = 'ACL_READ_FAILED' } | ConvertTo-Json -Compress",
+  '}',
+].join('\n');
+
+/**
+ * Apply-only DACL write: inheritance disabled, every existing rule removed, then exactly two
+ * FullControl rules — the current user and SYSTEM — with the inheritance flags the target kind
+ * requires (`ContainerInherit|ObjectInherit` for a directory, `None` for a file).
+ *
+ * This program is invoked **only** when the evaluated descriptor is not already correct: a
+ * second unconditional rewrite is what raised `PrivilegeNotHeldException` (HRESULT -2147024891)
+ * on a real Windows host when the access-token carrier followed the client-id carrier. The
+ * decision lives in `dhan_dpapi_acl.ts`; this program never reads its own result, and never
+ * suppresses a failure — it reports a coarse category and lets the caller fail closed.
+ */
+const APPLY_ACL_SCRIPT = [
+  "$ErrorActionPreference = 'Stop'",
+  'try {',
+  '  $raw = [Console]::In.ReadToEnd()',
+  '  $req = $raw | ConvertFrom-Json',
+  '  $p = [string]$req.path',
+  '  $kind = [string]$req.kind',
+  '  $acl = Get-Acl -LiteralPath $p',
+  '  $acl.SetAccessRuleProtection($true, $false)',
+  '  foreach ($rule in @($acl.Access)) { [void]$acl.RemoveAccessRule($rule) }',
+  '  $inherit = [System.Security.AccessControl.InheritanceFlags]::None',
+  "  if ($kind -eq 'directory') { $inherit = [System.Security.AccessControl.InheritanceFlags]::ContainerInherit -bor [System.Security.AccessControl.InheritanceFlags]::ObjectInherit }",
+  '  $me = [System.Security.Principal.WindowsIdentity]::GetCurrent().User',
+  "  $system = New-Object System.Security.Principal.SecurityIdentifier('S-1-5-18')",
+  '  $ownerRule = New-Object System.Security.AccessControl.FileSystemAccessRule($me, [System.Security.AccessControl.FileSystemRights]::FullControl, $inherit, [System.Security.AccessControl.PropagationFlags]::None, [System.Security.AccessControl.AccessControlType]::Allow)',
+  '  $acl.AddAccessRule($ownerRule)',
+  '  $systemRule = New-Object System.Security.AccessControl.FileSystemAccessRule($system, [System.Security.AccessControl.FileSystemRights]::FullControl, $inherit, [System.Security.AccessControl.PropagationFlags]::None, [System.Security.AccessControl.AccessControlType]::Allow)',
+  '  $acl.AddAccessRule($systemRule)',
+  '  Set-Acl -LiteralPath $p -AclObject $acl',
+  '  @{ ok = $true; changed = $true } | ConvertTo-Json -Compress',
+  '} catch {',
+  "  @{ ok = $false; kind = 'ACL_APPLY_FAILED' } | ConvertTo-Json -Compress",
+  '}',
+].join('\n');
+
+/**
  * DPAPI unprotect (user scope). Accepts `{ ciphertextB64 }` and returns
  * `{ ok: true, plaintextB64 }` — or `{ ok: false, kind: 'DPAPI_UNPROTECT_FAILED' }`
  * with no exception text, because a failure message can carry local detail.
@@ -111,6 +180,8 @@ const UNPROTECT_SCRIPT = [
 
 const SCRIPT_BY_OPERATION: Readonly<Record<DpapiProcessOperation, string>> = Object.freeze({
   'describe-acl': ACL_SCRIPT,
+  'read-acl': READ_ACL_SCRIPT,
+  'apply-acl': APPLY_ACL_SCRIPT,
   unprotect: UNPROTECT_SCRIPT,
 });
 
