@@ -100,7 +100,8 @@ with a named rule.
 | `W-02-INF-04` | the structural validator enforces those contracts and passes for both directories |
 | `W-02-INF-05` | **the real runner executed** when PowerShell is present: non-zero exit, separate streams, 200 KB on each stream simultaneously, stdin delivery absent from the child's command line, timeout with a **killed child** (pid verified gone), and the resolver's sanitized failure |
 
-`W-02-INF-05` skips where PowerShell is absent — this sandbox. It runs wherever `pwsh` exists (the
+`W-02-INF-05` resolves the interpreter to an **absolute path** before driving it, because the runner
+deliberately rejects a bare command name. It skips where PowerShell is absent — this sandbox. It runs wherever `pwsh` exists (the
 CI image); on Windows it defers to the acceptance run, because the runner deliberately requires an
 absolute executable path.
 
