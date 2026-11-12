@@ -191,6 +191,13 @@ Procedure to close it (Windows host, no Dhan credential):
 Until that runs, the backend's real `CryptUnprotectData` behaviour is unproven; the fail-closed
 paths are proven.
 
+> **Acceptance script (2026-11-12):** the procedure above is now executable —
+> `windows-acceptance/Invoke-W02DpapiAcceptance.ps1` (harness:
+> `windows-acceptance/w02_dpapi_acceptance.mjs`). It writes a per-test, timestamped evidence log and
+> never records a value, a ciphertext or raw child-process stderr. See
+> `docs/integration/DHAN-W02-WINDOWS-ACCEPTANCE-EVIDENCE-2026-11-12.md`. This item stays **PENDING**
+> until that log exists from a Windows host.
+
 ## 12. Dependency handed to W-03
 
 W-02 deliberately does not add runtime selection. W-03 must:

@@ -1,0 +1,74 @@
+# W-02 Windows DPAPI acceptance
+
+This directory holds the **Windows-host acceptance run** for W-02
+(`docs/integration/DHAN-W02-WINDOWS-DPAPI-BACKEND-2026-11-12.md`, section 11). It closes the one
+item the authoring environment could not prove: a real `ProtectedData.Protect` /
+`Unprotect` round trip at `DataProtectionScope.CurrentUser` over both governed carriers.
+
+Nothing here is part of the shipped product. `src/` never imports it, and it is not exported on any
+package subpath.
+
+## Run it
+
+From the repository clone on the Windows machine, with `dist/` built:
+
+```powershell
+cd H:\IIPS\iips-production-market-data
+powershell -ExecutionPolicy Bypass -File .\windows-acceptance\Invoke-W02DpapiAcceptance.ps1
+```
+
+Options: `-InstallRoot` (default `H:\IIPS`), `-EvidenceRoot` (default
+`<InstallRoot>\logs\w02-dpapi-acceptance`), `-NodeExecutable` (full path to `node.exe`; otherwise
+the shared `Resolve-IipsNodeToolchain` resolves one installation), `-NoPause`.
+
+Prerequisites: Windows, PowerShell 5.1+, Node.js ≥ 22.13.0, and `dist/` built (`npm run build:tsc`).
+The acceptance directory is created under `<InstallRoot>\runtime\w02-acceptance-<UTC stamp>` —
+outside every Git working tree — and is deleted again at the end of the run.
+
+**Evidence log:** `<InstallRoot>\logs\w02-dpapi-acceptance\<UTC stamp>\W02-DPAPI-ACCEPTANCE-EVIDENCE.md`
+(default `H:\IIPS\logs\w02-dpapi-acceptance\...`). The script prints the exact path at the end.
+
+Exit codes: `0` every test passed · `1` at least one test failed · `2` prerequisite failure (the
+DPAPI round trip never started).
+
+## What it proves
+
+Run only on a Windows host, and only if every entry in the evidence log is `PASS`:
+
+| Test | Proves |
+| --- | --- |
+| `W02-WIN-01` | Windows, one resolved Node.js installation, built modules, acceptance directory outside Git |
+| `W02-WIN-02` | real `ProtectedData.Protect` → production `Unprotect` child process → recovered value equal |
+| `W02-WIN-03` | client id carrier written through the production atomic writer at `vault://dhan/client-id` |
+| `W02-WIN-04` | access token carrier written through the production atomic writer at `vault://dhan/access-token` |
+| `W02-WIN-05` | client carrier read back through `WindowsDpapiHostVaultBackend` and compared |
+| `W02-WIN-06/06B` | token carrier read back, expiry metadata preserved |
+| `W02-WIN-07` | carriers are distinct files with distinct ciphertext; a cross-read is refused (`SECRET_ID_MISMATCH`) |
+| `W02-WIN-08` | directory and both carriers are owner-only (inheritance off, owner + SYSTEM); readiness is gated on the probe |
+| `W02-WIN-09` | tampered ciphertext → `CARRIER_UNREADABLE`; missing carrier → `CARRIER_MISSING` |
+| `W02-WIN-10` | no value in the result object, no plaintext on disk, no data on argv |
+| `W02-WIN-11` | the acceptance directory and both carriers were removed |
+| `W02-WIN-12` | the evidence log contains neither generated value |
+
+## What it does not prove
+
+That a real Dhan credential resolves (none exists in this run), that the vendor accepts an
+authenticated request, or anything about production readiness. It is a store-level acceptance test.
+
+## Safety properties
+
+* **Throwaway values only.** Two values are generated in memory with a cryptographic RNG. No Dhan
+  credential is read, requested or required.
+* **No value on a command line.** The values reach the harness on **stdin**. Nothing is written to a
+  file for the harness to read and no shell string is built.
+* **No value in the evidence.** The harness emits no value, no ciphertext and no raw child-process
+  stderr; the wrapper scans the whole log for both values before writing it and again after writing
+  it. A hit is redacted and the run is marked `FAIL`.
+* **No repair.** The run writes only inside the acceptance directory and deletes it afterwards.
+
+## Relationship to the automated suite
+
+`tests/w02_dpapi_backend.test.ts` proves the backend's logic and every failure path with an injected
+runner — deterministically, on any platform. `tests/w02_acceptance_harness.test.ts` proves this
+directory's structure and that the harness refuses to run off Windows. Neither of them is a
+substitute for the acceptance run on the Windows host.
