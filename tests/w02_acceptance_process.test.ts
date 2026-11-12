@@ -223,17 +223,26 @@ describe('W-02 / repository-owned process runner and toolchain resolver', () => 
     }
   });
 
-  it('W-02-INF-05: the real runner is bounded, non-deadlocking and stdin-only (needs PowerShell)', (t) => {
-    const shell = whichPowerShell();
-    if (shell === null) {
-      t.skip('no PowerShell on this host; the runner is verified structurally and on the Windows acceptance run');
+  it('W-02-INF-05: the real runner is bounded, non-deadlocking and stdin-only (executed on request)', (t) => {
+    // WHY THIS ONE IS OPT-IN.
+    // It executes the actual PowerShell runner, so it needs PowerShell AND an interpreter that can
+    // be resolved to an absolute path (the runner refuses a bare command name by design). Whether a
+    // given CI image ships `pwsh` is not this repository's contract, and a suite that fails because
+    // an image changed is not evidence of anything. The default run therefore stays deterministic
+    // and this case is executed explicitly, on a host that actually has PowerShell:
+    //
+    //     IIPS_POWERSHELL_RUNTIME_TESTS=1 npm test            (bash / pwsh)
+    //     $env:IIPS_POWERSHELL_RUNTIME_TESTS='1'; npm test    (Windows PowerShell 5.1)
+    //
+    // On the Windows host that second form is the authoritative PowerShell 5.1 evidence for this
+    // runner. Nothing here is ever simulated: if the runner is not executed, this case skips.
+    if (process.env.IIPS_POWERSHELL_RUNTIME_TESTS !== '1') {
+      t.skip('set IIPS_POWERSHELL_RUNTIME_TESTS=1 on a host with PowerShell to execute the real runner');
       return;
     }
-    if (process.platform === 'win32') {
-      // The runner requires an absolute executable path (that is the point). Driving Windows
-      // PowerShell from here would exercise the Windows boundary, which belongs to the acceptance
-      // run, not to this suite.
-      t.skip('the runtime cases run on a POSIX host with PowerShell; Windows behaviour is acceptance-run territory');
+    const shell = whichPowerShell();
+    if (shell === null) {
+      t.skip('IIPS_POWERSHELL_RUNTIME_TESTS=1 was set but no PowerShell executable could be resolved');
       return;
     }
 

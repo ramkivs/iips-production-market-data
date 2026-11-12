@@ -84,6 +84,19 @@ authenticated request, or anything about production readiness. It is a store-lev
   it. A hit is redacted and the run is marked `FAIL`.
 * **No repair.** The run writes only inside the acceptance directory and deletes it afterwards.
 
+## Optional: exercise the process runner itself
+
+The bounded runner (`Invoke-IipsProcess`) and the deterministic resolver can be executed directly,
+without any DPAPI or Windows ACL involvement:
+
+```powershell
+$env:IIPS_POWERSHELL_RUNTIME_TESTS='1'; npm test
+```
+
+That runs `W-02-INF-05` against the real helper (timeout with a killed child, non-zero exit, both
+streams, stdin delivery, sanitized resolver failure). Without the variable the case reports a skip,
+so the default suite stays deterministic on hosts without PowerShell.
+
 ## Relationship to the automated suite
 
 `tests/w02_dpapi_backend.test.ts` proves the backend's logic and every failure path with an injected
