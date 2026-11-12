@@ -38,6 +38,7 @@ import {
 import {
   DHAN_DEFAULT_BASE_URL,
   type DhanCredentialMaterial,
+  type DhanCredentialResolver,
   type DhanProviderConfig,
 } from '../src/providers/dhan/dhan_config.js';
 import {
@@ -104,15 +105,19 @@ function countingTransport(respond: (request: DhanHttpRequest) => DhanHttpRespon
   };
 }
 
-function governedService(transport: DhanHttpTransport): DhanMarketDataService {
+function governedService(
+  transport: DhanHttpTransport,
+  options: { readonly now?: () => Date; readonly resolver?: DhanCredentialResolver } = {}
+): DhanMarketDataService {
   const service = new DhanMarketDataService({
     client: new DhanApiClient({
       config: configuredProviderConfig(),
       transport,
-      credentialResolver: syntheticCredentials,
+      credentialResolver: options.resolver ?? syntheticCredentials,
     }),
     securityMaster: getGovernedBroadSecurityMaster(),
     instrumentRegistry: loadGovernedP7InstrumentRegistry(),
+    ...(options.now ? { now: options.now } : {}),
   });
   service.start();
   return service;
@@ -312,6 +317,75 @@ describe('W-06 — first authenticated request evidence', () => {
     );
   });
 
+  it('W06-07: a credential failure and a vendor rejection produce the identical freshness projection', async () => {
+    // The recorded read (§4.1) reproduced exactly, at the operator's own evaluatedAt instant.
+    const observedAt = new Date('2026-11-12T18:58:23.526Z');
+    const observed = {
+      domain: 'D01_QUOTES',
+      cacheState: 'MISS',
+      verdict: 'UNKNOWN',
+      lastRefresh: { outcome: 'FAILURE', lastFailure: { code: 'REFRESH_FAILED', priorPreserved: false } },
+      eligibleForUse: false,
+      suppressExecution: true,
+      evaluatedAt: '2026-11-12T18:58:23.526Z',
+    };
+
+    // (a) the vendor answers 401 — one vendor call.
+    const rejecting = countingTransport(() => ({ status: 401, bodyText: '{"errorMessage":"denied"}' }));
+    const vendorService = governedService(rejecting, { now: () => observedAt });
+    const vendorQuote = await vendorService.getQuote(operatorQuoteRequest);
+    assert.strictEqual(vendorQuote.ok, false);
+    if (!vendorQuote.ok) assert.strictEqual(vendorQuote.failure.code, 'AUTHENTICATION_FAILURE');
+    assert.strictEqual(rejecting.calls.length, 1);
+
+    // (b) credentials cannot be resolved locally — zero vendor calls.
+    const unseen = countingTransport(() => ({ status: 200, bodyText: '{}' }));
+    const noCredentials: DhanCredentialResolver = { resolve: async () => null };
+    const credentialService = governedService(unseen, { now: () => observedAt, resolver: noCredentials });
+    const credentialQuote = await credentialService.getQuote(operatorQuoteRequest);
+    assert.strictEqual(credentialQuote.ok, false);
+    if (!credentialQuote.ok) assert.strictEqual(credentialQuote.failure.code, 'CREDENTIALS_UNAVAILABLE');
+    assert.deepStrictEqual(unseen.calls, [], 'a credential failure must not reach the vendor');
+
+    const projection = (service: DhanMarketDataService) => {
+      const full = service.getFreshness({
+        domain: 'D01_QUOTES',
+        companyId: OPERATOR_COMPANY,
+        exchangeSegment: 'NSE_EQ',
+        securityIdentity: operatorIdentity,
+      });
+      return {
+        domain: full.domain,
+        cacheState: full.cacheState,
+        verdict: full.verdict,
+        lastRefresh: full.lastRefresh,
+        eligibleForUse: full.eligibleForUse,
+        suppressExecution: full.suppressExecution,
+        evaluatedAt: full.evaluatedAt,
+      };
+    };
+
+    assert.deepStrictEqual(projection(vendorService), observed);
+    assert.deepStrictEqual(projection(credentialService), observed);
+    assert.deepStrictEqual(
+      projection(vendorService),
+      projection(credentialService),
+      'the freshness read must not distinguish a credential failure from a vendor rejection'
+    );
+
+    // The no-observation branch, not the stale-data branch: there is no observation to evaluate.
+    const full = vendorService.getFreshness({
+      domain: 'D01_QUOTES',
+      companyId: OPERATOR_COMPANY,
+      exchangeSegment: 'NSE_EQ',
+      securityIdentity: operatorIdentity,
+    });
+    assert.strictEqual(full.asOf, null);
+    assert.strictEqual(full.ageSeconds, null);
+    assert.strictEqual(full.timestampEvidence, 'NOT_AVAILABLE');
+    assert.strictEqual(full.thresholdSeconds, 900, 'D01 nominal threshold, in seconds');
+  });
+
   it('W06-06: the evidence record states the gap, claims nothing, and carries no credential material', () => {
     const record = repoText(RECORD);
     const flat = record.replace(/\s+/g, ' ');
@@ -345,6 +419,22 @@ describe('W-06 — first authenticated request evidence', () => {
     assert.ok(flat.includes('vendorEgress=IPD_SERVER_HTTPS'));
     assert.ok(flat.includes('qualifiedMappings=96'));
     assert.ok(flat.includes('UNAUTHENTICATED'));
+
+    // The scoped freshness read, and exactly what it is worth.
+    assert.ok(flat.includes('"cacheState": "MISS"'));
+    assert.ok(flat.includes('"verdict": "UNKNOWN"'));
+    assert.ok(flat.includes('"outcome": "FAILURE"'));
+    assert.ok(flat.includes('"code": "REFRESH_FAILED"'));
+    assert.ok(flat.includes('"priorPreserved": false'));
+    assert.ok(flat.includes('"eligibleForUse": false'));
+    assert.ok(flat.includes('"suppressExecution": true'));
+    assert.ok(flat.includes('2026-11-12T18:58:23.526Z'));
+    assert.ok(flat.includes('entered the provider refresh path and failed there'));
+    assert.ok(flat.includes('is a redacted projection, not the code'));
+    assert.ok(flat.includes('W06-07'));
+    // It must not be presented as having recovered the typed code.
+    assert.ok(!/typed (failure )?code (was|has been) recovered/i.test(flat));
+    assert.ok(flat.includes('the typed failure code of the one authorised request was never persisted'));
 
     // No credential-shaped content, no location, no digest.
     assert.ok(!record.includes('eyJ'), 'no JWT may appear');
