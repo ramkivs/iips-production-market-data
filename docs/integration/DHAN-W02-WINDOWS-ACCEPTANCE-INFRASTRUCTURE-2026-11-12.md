@@ -99,6 +99,7 @@ with a named rule.
 | `W-02-INF-03` | the launcher resolves the helper locally, calls it with declared parameters only, and uses stdin + byte count |
 | `W-02-INF-04` | the structural validator enforces those contracts and passes for both directories |
 | `W-02-INF-06` | the generated child command lines are correct and carry no data (pure; runs everywhere) |
+| `W-02-INF-07` | an explicit `-NodeExecutable` is propagated and every script-scope constant is defined (pure; runs everywhere) |
 | `W-02-INF-05` | **the real runner executed** (CI sets `IIPS_POWERSHELL_RUNTIME_TESTS=1` on both platforms): non-zero exit, separate streams, 200 KB on each stream simultaneously, stdin delivery absent from the child's command line, timeout with a **killed child** (pid verified gone), a resolved toolchain that is one installation, and a resolver failure that echoes no path |
 
 `W-02-INF-05` resolves the interpreter to an **absolute path** before driving it, because the runner
@@ -197,6 +198,65 @@ $env:IIPS_POWERSHELL_RUNTIME_TESTS='1'; node --test dist/tests/w02_acceptance_pr
 If anything still refuses, the message now carries `win32=<code> (<category>)`, which names the
 exact Windows error instead of hiding it. Arena does not execute PowerShell 5.1 itself and does not
 claim the operator's run passes.
+
+## 4b. `-NodeExecutable` never took effect: the probe bound was undefined (2026-11-12)
+
+**Symptom.** Two consecutive Windows acceptance runs failed identically at `[01-preconditions]`,
+reporting
+
+```text
+node.exe / npm.cmd / npx.cmd could not be resolved from one installation; pass -NodeExecutable
+```
+
+**even when the script was invoked with `-NodeExecutable C:\Node22\node-v22.16.0-win-x64\node.exe`.**
+The evidence's Node.js field stayed blank and DPAPI never started.
+
+**Root cause.** Parameter binding and propagation were correct: the launcher declares
+`[string] $NodeExecutable` and passes it verbatim as the resolver's first candidate. The failure was
+one line further down the resolver:
+
+```powershell
+$nodeProbe = Invoke-IipsProcess -FilePath $nodePath -Arguments '--version' \
+    -TimeoutMilliseconds $script:IipsVersionProbeTimeoutMilliseconds
+```
+
+`$script:IipsVersionProbeTimeoutMilliseconds` **was never assigned anywhere in `Iips-Common.ps1`.**
+Both scripts run `Set-StrictMode -Version Latest`, under which reading an unset variable throws — and
+that throw happens while the call's **arguments are being evaluated**, i.e. before
+`Invoke-IipsProcess` is entered. The resolver's per-candidate `catch` therefore recorded
+`node-version-probe-failed` for the `node.exe` probe of **every** candidate, every candidate was
+skipped, and `NODE_TOOLCHAIN_NOT_RESOLVED` was thrown no matter what the caller supplied. The
+`-NodeExecutable` path was examined and rejected for a reason that had nothing to do with the path.
+
+The launcher then discarded the exception and printed a canned sentence, which is why both runs
+showed the same text with no cause in it.
+
+**Correction.**
+
+1. `$script:IipsVersionProbeTimeoutMilliseconds = 10000` is defined in the library's pinned-constants
+   block, with a comment stating why the definition is load-bearing.
+2. The launcher records the resolver's **own** sanitized message (`$toolchainError`) in the
+   `W02-WIN-01` failure row instead of a canned line, so the next failure names its reason codes.
+3. The evidence header records the **resolved Node.js version** next to the path
+   (`| Node.js | <node.exe> (node v22.16.0) |`), and `(not resolved)` when nothing resolved.
+4. Deterministic PATH discovery, the co-location rule, the bounded probes and the floor check are
+   unchanged; an explicit executable is still only accepted after all three probes pass.
+
+**Tests.** `W-02-INF-07` (structural, runs everywhere) pins the property that failed: every
+`$script:` variable the library reads is assigned in it, the probe bound is a positive integer used by
+all three probes, `-NodeExecutable` is the first candidate, `npm.cmd`/`npx.cmd` are derived from that
+executable's directory with named failures (`npm-missing-beside-node`, `npx-missing-beside-node`),
+and the launcher propagates, records and reports as described above. `W-02-INF-05` now also executes,
+against the real helper: an absent explicit path (must report `node-not-a-file`, proving the path was
+used), a directory holding only `node.exe` (must report `npm-missing-beside-node`), a directory with
+`node.exe` + `npm.cmd` only (must report `npx-missing-beside-node`), and — where the host has a
+colocated trio — the operator's exact call shape, which must resolve **that** installation and report
+its version. The structural validator gained rule 13 (StrictMode variable safety, allow-listed to
+values the dot-sourced library assigns), proven by a negative control: deleting the definition fails
+`every $script: variable is assigned before it is read (StrictMode safety)` and
+`defines the toolchain version-probe bound` by name.
+
+**Still required.** The acceptance run itself on the operator's host. Nothing here claims 19/19.
 
 ## 5. A. User-supplied Windows evidence (not executed by Arena)
 

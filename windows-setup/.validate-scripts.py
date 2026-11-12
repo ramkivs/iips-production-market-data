@@ -165,6 +165,15 @@ def check(cond, label, detail=""):
 
 LIBRARY = "Iips-Common.ps1"
 
+# Values the shared library assigns with $script: land in the scope of whichever script dot-sources
+# it, so a consumer script may legitimately READ them without assigning them itself. The set is
+# computed once here and used as an allow-list by the StrictMode rule below.
+LIBRARY_WRITES = set()
+_library_path = ROOT / LIBRARY
+if _library_path.is_file():
+    _library_code = strip_strings_and_comments(_library_path.read_text(encoding="utf-8"))
+    LIBRARY_WRITES = set(re.findall(r"\$script:([A-Za-z_][A-Za-z0-9_]*)\s*(?:=|\+=)", _library_code))
+
 for path in TARGET_SCRIPTS:
     is_library = path.name == LIBRARY
     script_name = path.name
@@ -398,6 +407,45 @@ for path in TARGET_SCRIPTS:
         check("harness.stderr.tmp" not in plain and "2> $stderrPath" not in plain,
               "writes no stderr temporary file (byte count only)")
         check("StdErrByteLength" in plain, "records only the stderr byte count")
+
+    # 13. SET-STRICTMODE VARIABLE SAFETY ------------------------------------------------------
+    #
+    # Confirmed Windows-host failure: `$script:IipsVersionProbeTimeoutMilliseconds` was READ by the
+    # resolver but never assigned. Under `Set-StrictMode -Version Latest` that throws while the
+    # call's arguments are evaluated - before Invoke-IipsProcess runs - so every toolchain candidate
+    # was discarded with `node-version-probe-failed` and the acceptance run failed at
+    # [01-preconditions] even with an explicit -NodeExecutable. A `$script:` read that this file
+    # never assigns is therefore a defect, checked here for every script.
+    script_reads = set(re.findall(r"\$script:([A-Za-z_][A-Za-z0-9_]*)", code))
+    script_writes = set(re.findall(r"\$script:([A-Za-z_][A-Za-z0-9_]*)\s*(?:=|\+=)", code))
+    allowed = script_writes if is_library else (script_writes | LIBRARY_WRITES)
+    unset_script = sorted(script_reads - allowed)
+    check(not unset_script, "every $script: variable is assigned before it is read (StrictMode safety)",
+          ",".join(unset_script))
+    if not is_library:
+        from_library = sorted(script_reads - script_writes)
+        if from_library:
+            # The exemption is only sound if this script actually pulls in that scope.
+            check("Iips-Common.ps1" in plain, "dot-sources the shared library that defines " + ",".join(from_library[:3]))
+
+    if script_name == "Iips-Common.ps1":
+        check(re.search(r"\$script:IipsVersionProbeTimeoutMilliseconds\s*=\s*[1-9][0-9]*", code) is not None,
+              "defines the toolchain version-probe bound")
+        probes_bound = re.findall(r"Invoke-Iips(?:Process|CmdShim)[^\n]*\$script:IipsVersionProbeTimeoutMilliseconds", code)
+        check(len(probes_bound) == 3, "all three version probes use that bound")
+
+    if script_name.startswith("Invoke-W02"):
+        check("[string] $NodeExecutable = ''" in plain, "declares the -NodeExecutable parameter")
+        check("Resolve-IipsNodeToolchain -NodeExecutable $NodeExecutable" in plain,
+              "propagates -NodeExecutable verbatim into the resolver")
+        check("$toolchainError = [string]$_.Exception.Message" in plain,
+              "records the resolver's own sanitized reason instead of a canned message")
+        check("$toolchainFailure = $toolchainError" in plain,
+              "reports that reason in the W02-WIN-01 failure row")
+        check("$nodeVersion = Get-FieldValue -Object $toolchain -Name 'NodeVersion'" in plain,
+              "captures the resolved Node.js version")
+        check(plain.count("-NodeVersion $nodeVersion") >= 3,
+              "records the Node.js version in every evidence log written")
 
 
 print(f"\n=== TALLY: {ok} pass / {fail} fail ===")

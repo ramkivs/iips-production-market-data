@@ -95,6 +95,22 @@ function stripComments(source: string): string {
  * The bounded runner deliberately refuses a bare command name — it requires an existing file — so
  * the runtime cases need the resolved path, not the name that PATH happens to understand.
  */
+/**
+ * The host's node.exe, but only when npm.cmd and npx.cmd sit beside it.
+ *
+ * The resolver's contract is a single installation, so an explicit path is only a valid specimen
+ * when the trio exists. On Windows CI that is exactly the operator's situation; on Linux there is
+ * no node.exe at all and the case is generated from a temporary directory instead.
+ */
+export function hostExplicitNodePath(): string | undefined {
+  const candidate = path.join(path.dirname(process.execPath), 'node.exe');
+  const directory = path.dirname(candidate);
+  if (!fs.existsSync(candidate)) return undefined;
+  if (!fs.existsSync(path.join(directory, 'npm.cmd'))) return undefined;
+  if (!fs.existsSync(path.join(directory, 'npx.cmd'))) return undefined;
+  return candidate;
+}
+
 function whichPowerShell(): string | null {
   for (const candidate of ['pwsh', 'powershell']) {
     const probe = spawnSync(
@@ -177,6 +193,12 @@ export interface AcceptanceSuiteInputs {
   readonly payload: string;
   readonly pidFile: string;
   readonly resultFile: string;
+  /**
+   * The host's own node.exe, when one exists beside npm.cmd and npx.cmd. It is supplied to the
+   * resolver EXACTLY as the operator supplies -NodeExecutable, so the propagation path is executed
+   * rather than inspected. Absent on hosts that have no colocated trio.
+   */
+  readonly explicitNodePath?: string;
 }
 
 /**
@@ -259,6 +281,32 @@ export function buildAcceptanceSuite(inputs: AcceptanceSuiteInputs): string {
     '}',
     // (5) sanitization is proven deterministically: a path that cannot exist must fail with reason
     // codes only, never with the path that was asked for.
+    'Invoke-Case "resolverNoShims" {',
+    "    $probeDir = Join-Path ([System.IO.Path]::GetTempPath()) ('iips-noshims-' + [guid]::NewGuid().ToString('N'))",
+    '    $null = New-Item -ItemType Directory -Path $probeDir -Force',
+    "    $null = Set-Content -LiteralPath (Join-Path $probeDir 'node.exe') -Value 'placeholder' -Encoding ASCII",
+    '    try {',
+    '        $null = Resolve-IipsNodeToolchain -NodeExecutable (Join-Path $probeDir "node.exe")',
+    '        @{ threw = $false; message = ""; dir = $probeDir }',
+    '    }',
+    '    catch {',
+    '        @{ threw = $true; message = [string]$_.Exception.Message; dir = $probeDir }',
+    '    }',
+    '}',
+    // the npx half of the co-location rule: node.exe + npm.cmd but no npx.cmd
+    'Invoke-Case "resolverNoNpx" {',
+    "    $probeDir = Join-Path ([System.IO.Path]::GetTempPath()) ('iips-nonpx-' + [guid]::NewGuid().ToString('N'))",
+    '    $null = New-Item -ItemType Directory -Path $probeDir -Force',
+    "    $null = Set-Content -LiteralPath (Join-Path $probeDir 'node.exe') -Value 'placeholder' -Encoding ASCII",
+    "    $null = Set-Content -LiteralPath (Join-Path $probeDir 'npm.cmd') -Value '@echo off' -Encoding ASCII",
+    '    try {',
+    '        $null = Resolve-IipsNodeToolchain -NodeExecutable (Join-Path $probeDir "node.exe")',
+    '        @{ threw = $false; message = ""; dir = $probeDir }',
+    '    }',
+    '    catch {',
+    '        @{ threw = $true; message = [string]$_.Exception.Message; dir = $probeDir }',
+    '    }',
+    '}',
     'Invoke-Case "resolverMissing" {',
     "    $absent = Join-Path ([System.IO.Path]::GetTempPath()) 'iips-absent-toolchain-7d3e'",
     '    try {',
@@ -269,6 +317,12 @@ export function buildAcceptanceSuite(inputs: AcceptanceSuiteInputs): string {
     '        @{ threw = $true; message = [string]$_.Exception.Message; absent = $absent }',
     '    }',
     '}',
+    ...(inputs.explicitNodePath === undefined
+      ? []
+      : [
+          // The operator's exact call shape: -NodeExecutable <full path to node.exe>.
+          `Invoke-Case 'resolverExplicit' { $toolchain = Resolve-IipsNodeToolchain -NodeExecutable ${q(inputs.explicitNodePath)}; @{ node = $toolchain.NodeExe; npm = $toolchain.NpmCmd; npx = $toolchain.NpxCmd; version = $toolchain.NodeVersion } }`,
+        ]),
     `$results | ConvertTo-Json -Compress -Depth 5 | Set-Content -LiteralPath ${q(inputs.resultFile)} -Encoding UTF8`,
     'exit 0',
   ].join('\n');
@@ -494,6 +548,7 @@ describe('W-02 / repository-owned process runner and toolchain resolver', () => 
         payload,
         pidFile,
         resultFile,
+        explicitNodePath: hostExplicitNodePath(),
       }),
       'utf8'
     );
@@ -568,9 +623,128 @@ describe('W-02 / repository-owned process runner and toolchain resolver', () => 
     assert.strictEqual(missing.threw, true, `an absent toolchain must fail:\n${detail}`);
     const missingMessage = String(missing.message);
     assert.ok(missingMessage.startsWith('NODE_TOOLCHAIN_NOT_RESOLVED'), `resolverMissing:\n${detail}`);
+    // The explicit path was USED: the candidate was examined and rejected as a non-file, rather
+    // than the resolver ignoring it and reporting a PATH problem.
+    assert.ok(
+      missingMessage.includes('node-not-a-file'),
+      `the explicit -NodeExecutable must reach the candidate loop:\n${detail}`
+    );
     assert.ok(!missingMessage.includes(String(missing.absent)), 'the failure must not echo the path');
     assert.ok(!missingMessage.includes(os.homedir()), 'the failure must not leak a personal path');
 
+    // (3)(4) co-location is validated beside the SUPPLIED executable, not somewhere else: a
+    // directory holding only node.exe has no shims, and each missing half is named.
+    const noShims = caseOf('resolverNoShims');
+    assert.strictEqual(noShims.threw, true, `node.exe without shims must fail:\n${detail}`);
+    const noShimsMessage = String(noShims.message);
+    assert.ok(noShimsMessage.includes('npm-missing-beside-node'), `resolverNoShims:\n${detail}`);
+    assert.ok(!noShimsMessage.includes(String(noShims.dir)), 'the failure must not echo the directory');
+
+    const noNpx = caseOf('resolverNoNpx');
+    assert.strictEqual(noNpx.threw, true, `node.exe + npm.cmd without npx.cmd must fail:\n${detail}`);
+    const noNpxMessage = String(noNpx.message);
+    assert.ok(noNpxMessage.includes('npx-missing-beside-node'), `resolverNoNpx:\n${detail}`);
+    assert.ok(noNpxMessage.includes('npm-missing-beside-node') === false, 'npm.cmd WAS present beside node.exe');
+    assert.ok(!noNpxMessage.includes(String(noNpx.dir)), 'the failure must not echo the directory');
+
+    // (1)(2)(3) the operator's exact call shape, executed: -NodeExecutable <full path to node.exe>
+    // resolves THAT installation, derives its siblings and reports its version.
+    const explicit = hostExplicitNodePath();
+    if (explicit !== undefined) {
+      const resolved = caseOf('resolverExplicit');
+      assert.strictEqual(path.resolve(String(resolved.node)), path.resolve(explicit), `resolverExplicit:\n${detail}`);
+      assert.strictEqual(path.dirname(String(resolved.npm)), path.dirname(explicit), 'npm.cmd comes from that directory');
+      assert.strictEqual(path.dirname(String(resolved.npx)), path.dirname(explicit), 'npx.cmd comes from that directory');
+      assert.match(String(resolved.version), /^v?\d+\.\d+\.\d+/, 'the resolved Node.js version is recorded');
+    }
+
     fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('W-02-INF-07: an explicitly supplied node.exe is propagated, and every script-scope constant it needs is defined', () => {
+    const helper = readText(COMMON);
+    const helperCode = stripComments(helper);
+    const launcher = readText(LAUNCHER);
+    const launcherCode = stripComments(launcher);
+
+    // (1) THE ROOT CAUSE OF THE TWO FAILED ACCEPTANCE RUNS.
+    // `$script:IipsVersionProbeTimeoutMilliseconds` was read by the resolver but never assigned.
+    // Set-StrictMode -Version Latest throws on that read while the CALL'S ARGUMENTS ARE EVALUATED,
+    // i.e. before Invoke-IipsProcess runs, so every candidate - including one passed with
+    // -NodeExecutable - was discarded and the resolver reported NODE_TOOLCHAIN_NOT_RESOLVED.
+    const probeBound = /^\$script:IipsVersionProbeTimeoutMilliseconds = ([0-9]+)$/m.exec(helperCode);
+    assert.ok(probeBound !== null, 'the version-probe bound must be defined at script scope');
+    assert.ok(Number(probeBound[1]) > 0, 'the probe bound must be a positive number of milliseconds');
+    assert.strictEqual(
+      (helperCode.match(/\$script:IipsVersionProbeTimeoutMilliseconds/g) ?? []).length,
+      4,
+      'one definition and three probe uses (node, npm, npx)'
+    );
+
+    const readVariables = new Set(
+      Array.from(helperCode.matchAll(/\$script:([A-Za-z_][A-Za-z0-9_]*)/g), (match) => match[1])
+    );
+    const writtenVariables = new Set(
+      Array.from(helperCode.matchAll(/\$script:([A-Za-z_][A-Za-z0-9_]*)\s*(?:=|\+=)/g), (match) => match[1])
+    );
+    const unset = [...readVariables].filter((name) => !writtenVariables.has(name)).sort();
+    assert.deepStrictEqual(unset, [], 'a $script: read with no assignment throws under StrictMode');
+
+    // (2) The explicit executable is the FIRST candidate, and its directory is where the shims are
+    // looked for - so the caller's installation is the one that gets verified.
+    assert.match(
+      helperCode,
+      /if \(-not \[string\]::IsNullOrWhiteSpace\(\$NodeExecutable\)\) \{\s*\$nodeCandidates\.Add\(\$NodeExecutable\)/,
+      'an explicit -NodeExecutable must be the first candidate'
+    );
+    assert.ok(
+      helperCode.includes("$installDirectory = Split-Path -Parent $nodePath"),
+      'npm.cmd and npx.cmd are derived from the supplied executable\'s directory'
+    );
+    assert.ok(helperCode.includes("$npmPath = Join-Path $installDirectory 'npm.cmd'"), 'npm.cmd is beside node.exe');
+    assert.ok(helperCode.includes("$npxPath = Join-Path $installDirectory 'npx.cmd'"), 'npx.cmd is beside node.exe');
+    assert.ok(
+      helperCode.includes("if (-not (Test-Path -LiteralPath $npmPath -PathType Leaf))") &&
+        helperCode.includes("$reasons.Add('npm-missing-beside-node')"),
+      'a missing npm.cmd is a named failure, not a silent skip'
+    );
+    assert.ok(
+      helperCode.includes("if (-not (Test-Path -LiteralPath $npxPath -PathType Leaf))") &&
+        helperCode.includes("$reasons.Add('npx-missing-beside-node')"),
+      'a missing npx.cmd is a named failure, not a silent skip'
+    );
+    // Deterministic discovery is untouched when nothing is supplied.
+    assert.ok(
+      helperCode.includes('Get-Command node.exe -All') && helperCode.includes("$reasons.Add('node-not-on-path')"),
+      'PATH discovery remains the fallback when no executable is supplied'
+    );
+
+    // (3) The launcher declares the parameter, propagates it verbatim, keeps the resolver's own
+    // reason when it fails, and records the resolved version.
+    assert.ok(launcherCode.includes("[string] $NodeExecutable = ''"), 'the launcher declares -NodeExecutable');
+    assert.ok(
+      launcherCode.includes('Resolve-IipsNodeToolchain -NodeExecutable $NodeExecutable'),
+      'the launcher propagates -NodeExecutable verbatim'
+    );
+    assert.ok(
+      launcherCode.includes('$toolchainError = [string]$_.Exception.Message'),
+      'the resolver\'s sanitized reason is recorded, not replaced by a canned line'
+    );
+    assert.ok(
+      /Add-AcceptanceResult[^\n]*-Output \$toolchainFailure/.test(launcherCode),
+      'the W02-WIN-01 failure row reports that reason'
+    );
+    assert.ok(
+      launcherCode.includes("$nodeVersion = Get-FieldValue -Object $toolchain -Name 'NodeVersion'"),
+      'the resolved Node.js version is captured'
+    );
+    assert.ok(
+      launcherCode.includes("$nodeField = $NodeExe + ' (node ' + $NodeVersion + ')'"),
+      'the evidence header records the version, not just the path'
+    );
+    assert.ok(
+      (launcherCode.match(/-NodeVersion \$nodeVersion/g) ?? []).length >= 3,
+      'every evidence log written carries the version'
+    );
   });
 });

@@ -36,6 +36,12 @@ $script:IipsExpectedIpdCommit = 'b605a61458a655bb555c6f340332fcf77a85c870'
 $script:IipsMinimumNodeMajor = 22
 $script:IipsMinimumNodeMinor = 13
 $script:IipsMinimumNodePatch = 0
+# Bound for each toolchain version probe (node.exe --version, npm.cmd --version, npx.cmd --version).
+# It MUST be defined here: the resolver reads it while evaluating the probe call, and under
+# Set-StrictMode -Version Latest a reference to an unset variable throws BEFORE the runner is
+# invoked. Undefined, every candidate - including one supplied with -NodeExecutable - is skipped
+# and the resolver reports NODE_TOOLCHAIN_NOT_RESOLVED no matter what the caller passed.
+$script:IipsVersionProbeTimeoutMilliseconds = 10000
 # No preferred installation path is hardcoded: an installation that exists on one host and not on
 # another turns a deterministic resolver into a machine-specific one. Candidates come from
 # -NodeExecutable or from PATH (Get-Command node.exe -All), and each is verified end-to-end.

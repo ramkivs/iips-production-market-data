@@ -145,7 +145,8 @@ function New-EvidenceLogText {
         [DateTime] $StartedUtc,
         [string] $NodeExe,
         [string] $AcceptanceRoot,
-        [string] $Overall
+        [string] $Overall,
+        [string] $NodeVersion = 'unknown'
     )
 
     $log = New-Object System.Text.StringBuilder
@@ -162,7 +163,11 @@ function New-EvidenceLogText {
     [void]$log.AppendLine(('| Host | ' + $env:COMPUTERNAME + ' |'))
     [void]$log.AppendLine(('| Principal | ' + $env:USERNAME + ' |'))
     [void]$log.AppendLine(('| PowerShell | ' + $PSVersionTable.PSVersion.ToString() + ' |'))
-    [void]$log.AppendLine(('| Node.js | ' + $NodeExe + ' |'))
+    $nodeField = '(not resolved)'
+    if (-not [string]::IsNullOrWhiteSpace($NodeExe)) {
+        $nodeField = $NodeExe + ' (node ' + $NodeVersion + ')'
+    }
+    [void]$log.AppendLine(('| Node.js | ' + $nodeField + ' |'))
     [void]$log.AppendLine(('| Acceptance directory | ' + $AcceptanceRoot + ' (removed) |'))
     [void]$log.AppendLine('')
     [void]$log.AppendLine('Generated throwaway values: two, produced in memory by the wrapper with the cryptographic RNG.')
@@ -244,6 +249,8 @@ $acceptanceRoot = Join-Path $InstallRoot ('runtime\w02-acceptance-' + $stamp)
 $script:HarnessTimeoutMilliseconds = 600000
 
 $nodeExe = ''
+$nodeVersion = 'unknown'
+$toolchainError = ''
 $prereqOk = $true
 $harnessExit = 1
 $stderrBytes = 0
@@ -270,21 +277,31 @@ if (-not $isWindows) {
 }
 
 $toolchainOk = $false
+# -NodeExecutable is propagated verbatim: an explicitly supplied node.exe is the FIRST candidate
+# and its directory is where npm.cmd and npx.cmd are looked for, so the caller's installation is
+# the one that gets verified. The resolver's failure text is already sanitized (reason codes only,
+# no paths), and it is recorded verbatim: a canned message hid the cause of two consecutive
+# failed acceptance runs.
 try {
     $toolchain = Resolve-IipsNodeToolchain -NodeExecutable $NodeExecutable
     $nodeExe = $toolchain.NodeExe
+    $nodeVersion = Get-FieldValue -Object $toolchain -Name 'NodeVersion' -Default 'unknown'
     $toolchainOk = $true
 }
 catch {
     $toolchainOk = $false
     $nodeExe = ''
+    $nodeVersion = 'unknown'
+    $toolchainError = [string]$_.Exception.Message
 }
 if ($toolchainOk) {
     Add-AcceptanceResult -Id 'W02-WIN-01' -Description 'Node.js toolchain resolved from one installation' -Step 'Resolve-IipsNodeToolchain' -Status 'PASS' -ExitCode 0 -Output ('node ' + (Get-FieldValue -Object $toolchain -Name 'NodeVersion' -Default 'unknown') + ' at ' + $nodeExe)
 }
 if (-not $toolchainOk) {
     $prereqOk = $false
-    Add-AcceptanceResult -Id 'W02-WIN-01' -Description 'Node.js toolchain resolved from one installation' -Step 'Resolve-IipsNodeToolchain' -Status 'FAIL' -ExitCode 2 -Output 'node.exe / npm.cmd / npx.cmd could not be resolved from one installation; pass -NodeExecutable'
+    $toolchainFailure = 'node.exe / npm.cmd / npx.cmd could not be resolved from one installation; pass -NodeExecutable with the full path to node.exe'
+    if (-not [string]::IsNullOrWhiteSpace($toolchainError)) { $toolchainFailure = $toolchainError }
+    Add-AcceptanceResult -Id 'W02-WIN-01' -Description 'Node.js toolchain resolved from one installation' -Step 'Resolve-IipsNodeToolchain' -Status 'FAIL' -ExitCode 2 -Output $toolchainFailure
 }
 
 if (Test-Path -LiteralPath $harnessPath) {
@@ -315,7 +332,7 @@ if (-not (Test-PathInsideGitTree -Directory $InstallRoot)) {
 if (-not $prereqOk) {
     Write-Host ''
     Write-Host 'FAILED: a prerequisite is not satisfied; the DPAPI round trip did not start.' -ForegroundColor Red
-    $earlyText = New-EvidenceLogText -StartedUtc $startedUtc -NodeExe $nodeExe -AcceptanceRoot $acceptanceRoot -Overall 'FAIL (prerequisite)'
+    $earlyText = New-EvidenceLogText -StartedUtc $startedUtc -NodeExe $nodeExe -NodeVersion $nodeVersion -AcceptanceRoot $acceptanceRoot -Overall 'FAIL (prerequisite)'
     [void](Write-EvidenceFile -Directory $evidenceDir -Path $evidencePath -Text $earlyText)
     Write-Host "Evidence log : $evidencePath" -ForegroundColor Gray
     Write-IipsFinalStatus -Outcome 'FAIL' -Message 'W-02 DPAPI acceptance: stopped with exit 2. The unmet prerequisite is listed above and in the evidence log.' -ExitCode 2 -NoPause:$NoPause | Out-Null
@@ -418,7 +435,7 @@ if (-not $removed) {
 }
 
 # ---- evidence log --------------------------------------------------------------------------
-$logText = New-EvidenceLogText -StartedUtc $startedUtc -NodeExe $nodeExe -AcceptanceRoot $acceptanceRoot -Overall 'PENDING'
+$logText = New-EvidenceLogText -StartedUtc $startedUtc -NodeExe $nodeExe -NodeVersion $nodeVersion -AcceptanceRoot $acceptanceRoot -Overall 'PENDING'
 $preLeak = Test-TextContainsSecret -Text $logText
 if ($preLeak) {
     Add-AcceptanceResult -Id 'W02-WIN-12' -Description 'Evidence log contains no generated value' -Step 'scan before writing' -Status 'FAIL' -ExitCode 1 -Output 'a generated value was found in the log text and has been redacted'
@@ -436,7 +453,7 @@ foreach ($r in $script:Results) {
 $overall = 'FAIL'
 if ($failCount -eq 0) { $overall = 'PASS' }
 
-$finalText = New-EvidenceLogText -StartedUtc $startedUtc -NodeExe $nodeExe -AcceptanceRoot $acceptanceRoot -Overall $overall
+$finalText = New-EvidenceLogText -StartedUtc $startedUtc -NodeExe $nodeExe -NodeVersion $nodeVersion -AcceptanceRoot $acceptanceRoot -Overall $overall
 $finalText = Hide-Secrets -Text $finalText
 [void](Write-EvidenceFile -Directory $evidenceDir -Path $evidencePath -Text $finalText)
 
