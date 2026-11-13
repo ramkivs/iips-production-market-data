@@ -29,7 +29,7 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
 import * as net from 'node:net';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import * as path from 'node:path';
 import type { Server } from 'node:http';
@@ -471,6 +471,41 @@ function repoText(relativePath: string): string {
   return readFileSync(path.resolve(process.cwd(), relativePath), 'utf8');
 }
 
+/**
+ * Runs a PowerShell command WITHOUT blocking the event loop.
+ *
+ * `spawnSync` blocks the event loop, and the HTTP server this suite tests lives in that same
+ * loop: a synchronous child that tries to call the server deadlocks until its own timeout, then
+ * reports a failure that has nothing to do with the code under test. Exactly that happened on
+ * CI, where `pwsh` exists and the case therefore ran instead of skipping. Anything that has to
+ * reach the server must go through this async form.
+ */
+function runPowerShell(
+  shell: string,
+  script: string,
+  env: NodeJS.ProcessEnv = process.env
+): Promise<{ status: number | null; stdout: string; stderr: string }> {
+  return new Promise((resolve) => {
+    const child = spawn(shell, ['-NoProfile', '-NonInteractive', '-Command', script], {
+      env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => child.kill('SIGKILL'), 60_000);
+    child.stdout.on('data', (chunk) => (stdout += String(chunk)));
+    child.stderr.on('data', (chunk) => (stderr += String(chunk)));
+    child.on('error', (err) => {
+      clearTimeout(timer);
+      resolve({ status: null, stdout, stderr: stderr + String(err) });
+    });
+    child.on('close', (status) => {
+      clearTimeout(timer);
+      resolve({ status, stdout, stderr });
+    });
+  });
+}
+
 function whichPowerShell(): string | null {
   for (const candidate of ['pwsh', 'powershell']) {
     const probe = spawnSync(
@@ -560,10 +595,9 @@ describe('DHAN-P7 Windows operator workflow', () => {
         `$r = Invoke-WebRequest -Uri 'http://127.0.0.1:${port}${MARKET_DATA_ROUTES.health}' -Headers $headers -UseBasicParsing`,
         '[Console]::Out.Write($r.StatusCode)',
       ].join('; ');
-      const run = spawnSync(shell, ['-NoProfile', '-NonInteractive', '-Command', script], {
-        encoding: 'utf8',
-        timeout: 30_000,
-        env: { ...process.env, IIPS_MARKET_DATA_TRANSPORT_TOKEN: TOKEN },
+      const run = await runPowerShell(shell, script, {
+        ...process.env,
+        IIPS_MARKET_DATA_TRANSPORT_TOKEN: TOKEN,
       });
       assert.strictEqual(run.status, 0, `PowerShell failed: ${run.stderr}`);
       assert.strictEqual(String(run.stdout).trim(), '200', 'the documented client must authenticate');
@@ -571,7 +605,7 @@ describe('DHAN-P7 Windows operator workflow', () => {
     });
   });
 
-  it('W06-PS-02: a whitespace-contaminated value fails the same way the operator saw (executed where PowerShell exists)', (t) => {
+  it('W06-PS-02: a whitespace-contaminated value fails the same way the operator saw (executed where PowerShell exists)', async (t) => {
     if (process.env.IIPS_POWERSHELL_RUNTIME_TESTS !== '1') {
       t.skip('set IIPS_POWERSHELL_RUNTIME_TESTS=1 on a host with PowerShell to execute the real client');
       return;
@@ -584,15 +618,16 @@ describe('DHAN-P7 Windows operator workflow', () => {
     // Reproduces the W-06 symptom and proves the new startup refusal catches the cause first:
     // the same contaminated value that used to yield an unexplainable 401 is now refused at
     // launch with a typed code. Nothing is sent.
+    // The child only reports the classifier's verdict; it does not reach the server, so it can
+    // run synchronously in principle - but it is written async for consistency and because the
+    // investigation's failure mode was a blocked loop, not a slow child.
     const script = [
       `$env:IIPS_MARKET_DATA_TRANSPORT_TOKEN = '${TOKEN} '`,
-      `node -e "const { validateTransportToken } = require('./dist/src/providers/dhan/dhan_market_data_http.js'); process.stdout.write(String(validateTransportToken(process.env.IIPS_MARKET_DATA_TRANSPORT_TOKEN)))"`,
+      // PS single-quoted string containing JS double quotes: no escaping in either direction.
+      `$r = & node -e 'import("./dist/src/providers/dhan/dhan_market_data_http.js").then(m => process.stdout.write(String(m.validateTransportToken(process.env.IIPS_MARKET_DATA_TRANSPORT_TOKEN))))'`,
+      '[Console]::Out.Write($r)',
     ].join('; ');
-    const run = spawnSync(shell, ['-NoProfile', '-NonInteractive', '-Command', script], {
-      encoding: 'utf8',
-      timeout: 30_000,
-      cwd: process.cwd(),
-    });
+    const run = await runPowerShell(shell, script);
     assert.strictEqual(run.status, 0, `PowerShell failed: ${run.stderr}`);
     assert.strictEqual(String(run.stdout).trim(), 'TRANSPORT_TOKEN_WHITESPACE');
   });
