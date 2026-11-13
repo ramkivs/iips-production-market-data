@@ -1,5 +1,7 @@
 # W11 acceptance dependency 1 — actual owner-bound portfolio evidence (2026-11-13)
 
+> **Superseded in fact (2026-11-13).** After this record was written, the operator ran the merged capture utility on the Windows host. The review and disposition of that capture is in [`IIPS-W11-DEP1-CAPTURE-EVIDENCE-DISPOSITION-2026-11-13.md`](IIPS-W11-DEP1-CAPTURE-EVIDENCE-DISPOSITION-2026-11-13.md). The text below is kept unchanged as the record of the state at the time it was written.
+
 **Result: BLOCKED. No actual persisted, owner-bound portfolio read was obtained. No `G2PortfolioView` is recorded here, because none was returned.**
 
 **Cause: host access (roadmap blocker B02).** The execution environment for this work item holds no IPD service, no IPD endpoint configuration, no portfolio database and no owner binding. It is not an owner-binding refusal, a persistence fault or an API-contract refusal: the read never reached a point where any of those could occur.
