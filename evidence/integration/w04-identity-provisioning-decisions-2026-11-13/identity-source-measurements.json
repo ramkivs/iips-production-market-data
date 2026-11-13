@@ -1,0 +1,260 @@
+{
+  "schema": "IPD_W04_IDENTITY_DECISION_MEASUREMENTS_V1",
+  "note": "Comparisons of tracked files. No measurement here establishes which file is right.",
+  "inputs": {
+    "evidence/operator_drop/d05_security_master_authenticated_universe_2026-11-08.json": "b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+    "evidence/operator_drop/d05_security_master_authenticated_universe_2026-11-08.manifest.json": "7c5b60221102ff4b0646d89e39c9156eca9bcc4db6d7ed5c3b2d341f5e9b0012",
+    "evidence/D05-Wave3/D05_Wave3_EQ_Source_and_Evidence_Bundle_2026-11-07.zip": "6332b050132a160e89e5906d131e12535ac1105d4b781330fa63f0e0af1d41f4",
+    "evidence/D05-Wave3/arena_B05_latestcsvs.zip": "73f1e3a330ab4915ced0b4520e4a3c1a7274d95258808227b3dad7dad806d0d2",
+    "evidence/D05-Wave3/derived/arena_mca_identity_bridged.derived.csv": "9e081614a6f2b0ef131cc611d0cb6db0ee4e09de8aaa558c81f56270fdf8531a",
+    "evidence/D05-Wave3/derived/arena_taxonomy_submission.derived.csv": "f8d4beefa21db201cdecb08cd84c253ca6db2d139b880dc3875e2440dd47020e",
+    "evidence/D05-Wave3/derived/arena_bse_identity_bridged.derived.csv": "39a4fb59aaeb6bd4339d9ef376f31be0efdce2a1ec90b973f2ddde1536a9e46f",
+    "docs/p01/P01_IDENTITY_AND_LINEAGE.md": "7f402b714f57f27ba17a68d5124a071236d7986dad8d42685eb5f73c1c79349d",
+    "members": {
+      "01_source_material/NSE/EQUITY_L(1).csv": "da7eb83cf21156cca3a8bcc5b94ea55f825ff7348e02c89abc51658788361fa5",
+      "01_source_material/BSE/BSE_ACTIVE_EQUITY_CLEANED.csv": "66362fc392c820656ebfb0ab960da8d920a643e980bd3895c93418ae6c9a9947",
+      "01_source_material/Depository/ISIN_DETAILS_05-Nov-2026.csv": "27a85abe0f5e355ae7734f3fec6f8f86559e872df9b2ebc4f0724fbdfbacd6ce",
+      "02_latest_prepared_candidates/arena_mca_identity_bridged.csv": "9b5bde6810bd9d0b5b04975d77ae747e0eb482f6d3dbed8b1df0c96843f4ceb8",
+      "arena_mca_identity_bridged.csv": "930df3ca9d3365b1a55182b841d19c3c27ec468123f163375b7319c0a9974bae",
+      "arena_taxonomy_submission.csv": "4965ad0c9086c7229e2c9a7ba65af32009cb329a10b7856fb4f1ab0c98c1d762"
+    }
+  },
+  "manifest": {
+    "batchId": "BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001",
+    "recordCount": 2390,
+    "operatingMode": "OFFLINE_BOOTSTRAP",
+    "selectedTier": "TIER_2_ACTIVE_NSE_CM",
+    "authorizationRef": "AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001",
+    "fileChecksumSha256": "b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+    "residualLimitationCount": 6,
+    "cinBinding": "arena_mca_identity_bridged.csv (published latest; verbatim, including blanks/exemptions/aliases; classes never misrepresented)",
+    "bundleDeclaresMemberSha256": "da7eb83cf21156cca3a8bcc5b94ea55f825ff7348e02c89abc51658788361fa5"
+  },
+  "mcaCompanyMasterInBundle": false,
+  "nseListingMaster": {
+    "rows": 2630,
+    "distinctIsins": 2630,
+    "seriesCounts": {
+      "BE": 207,
+      "BZ": 33,
+      "EQ": 2390
+    },
+    "depositRecords": 2390,
+    "depositRecordsPresentWithSeriesEqAndSameSymbol": 2390,
+    "eqRowsAbsentFromDeposit": 0,
+    "depositRecordsAbsentFromEqRows": 0,
+    "companyNamesWithMoreThanOneEqRow": 1,
+    "depositIsinsNotPrefixedINE": [
+      "IN9175A01010"
+    ]
+  },
+  "bseActiveEquityExport": {
+    "rows": 5137,
+    "isinsWithMoreThanOneRow": 0,
+    "depositIsinsPresent": 2290,
+    "scripCodeAgrees": 2290,
+    "securityIdAgrees": 2290,
+    "groupCounts": {
+      "A": 700,
+      "B": 1590
+    },
+    "statusCounts": {
+      "Active": 2290
+    },
+    "columns": [
+      "Security Code",
+      "Issuer Name",
+      "Security Id",
+      "Security Name",
+      "Status",
+      "Group",
+      "Face Value",
+      "ISIN No",
+      "Instrument"
+    ],
+    "hasListingDateColumn": false,
+    "depositScripCodeEqualsDerivedJoin": 2290,
+    "depositScripCodeKinds": {
+      "six-digit": 2290,
+      "UNLISTED-BSE": 100
+    }
+  },
+  "cin": {
+    "deposit": {
+      "nonBlank": 2332,
+      "cinFormat": 2298,
+      "distinctCin": 2298,
+      "cinSharedByMoreThanOneIsin": 0,
+      "distinctStateCodes": 6,
+      "stateCodeMH": 2291,
+      "earliestYear": "1894",
+      "latestYear": "2019"
+    },
+    "publishedLatest_2026_11_08": {
+      "nonBlank": 2332,
+      "cinFormat": 2298,
+      "distinctCin": 2298,
+      "cinSharedByMoreThanOneIsin": 0,
+      "distinctStateCodes": 6,
+      "stateCodeMH": 2291,
+      "earliestYear": "1894",
+      "latestYear": "2019"
+    },
+    "bundleBridge_2026_11_07": {
+      "nonBlank": 2296,
+      "cinFormat": 2296,
+      "distinctCin": 2295,
+      "cinSharedByMoreThanOneIsin": 1,
+      "distinctStateCodes": 32,
+      "stateCodeMH": 673,
+      "earliestYear": "1863",
+      "latestYear": "2025"
+    },
+    "derivedBridge_reassessment": {
+      "nonBlank": 2332,
+      "cinFormat": 2305,
+      "distinctCin": 2304,
+      "cinSharedByMoreThanOneIsin": 1,
+      "distinctStateCodes": 32,
+      "stateCodeMH": 675,
+      "earliestYear": "1863",
+      "latestYear": "2025"
+    },
+    "depositEqualsPublishedLatest": 2390,
+    "bundleBridgeEqualsDerivedBridgeWhereBridgeIsCin": 2296,
+    "recordsWithCinInDepositAndInBundleBridge": 2232,
+    "ofThoseEqual": 0,
+    "recordsWithCinInDepositAndInDerivedBridge": 2241,
+    "ofThoseEqualToDerived": 9,
+    "publishedStatusCounts": {
+      "Verified via MCA Registry Master Match": 2289,
+      "Unlinked / Unsupported Registry Claim Rescinded": 58,
+      "Governed Corporate Registry Exemption / Legacy Structure": 27,
+      "Verified via Corporate Registry Alias Match": 7,
+      "Statutory Corporation via Banking Companies Acquisition Act, 1970": 4,
+      "Govt of India Undertaking / Enterprise Master Match": 2,
+      "Statutory Corporation via Life Insurance Corporation Act, 1956": 1,
+      "Statutory Corporation via Banking Companies Acquisition Act, 1980": 1,
+      "Statutory Corporation via SBI Act, 1955 (Exempt Registry Attribution)": 1
+    }
+  },
+  "taxonomy": {
+    "depositSectorEqualsPublishedTaxonomy": 2390,
+    "depositIndustryEqualsPublishedBasicIndustry": 2390,
+    "distinctSectors": 17,
+    "sectorCapitalGoods": 1496,
+    "industryIndustrialProducts": 1495,
+    "recordsWithBankInCompanyName": 44,
+    "ofThoseSectorFinancialServices": 1,
+    "ofThoseSectorCapitalGoods": 30,
+    "depositSectorEqualsDerivedTaxonomySector": 959,
+    "derivedTaxonomySectorCapitalGoods": 1513,
+    "derivedTaxonomyClassificationBasis": {
+      "PA-governed systematic classification (one-time Wave-3 replacement act); not an independently published NSE basic-industry attribution": 2390
+    }
+  },
+  "depository": {
+    "depositIsinsPresent": 2390,
+    "cfiCounts": {
+      "ESVUFN": 2371,
+      "ESVTFN": 12,
+      "ESVUPN": 2,
+      "ESNUFN": 2,
+      "ESRUFN": 2,
+      "ESVUFR": 1
+    },
+    "issuerNamesCarryingMoreThanOneDepositIsin": 1
+  },
+  "jainIrrigation": {
+    "INE175A01038": {
+      "deposit": {
+        "companyId": "EQ_JISLJALEQS_IN",
+        "companyName": "Jain Irrigation Systems Limited",
+        "cin": "L71907MH2002PLC659496",
+        "nseSymbol": "JISLJALEQS",
+        "bseSymbol": "JISLJALEQS",
+        "bseScripCode": "500219",
+        "effectiveFrom": "2001-08-13T00:00:00.000Z",
+        "faceValue": 2
+      },
+      "nseListingMaster": {
+        "SYMBOL": "JISLJALEQS",
+        "NAME OF COMPANY": "Jain Irrigation Systems Limited",
+        "SERIES": "EQ",
+        "DATE OF LISTING": "13-AUG-2001",
+        "FACE VALUE": "2"
+      },
+      "bseActiveEquityExport": {
+        "Security Code": "500219",
+        "Issuer Name": "Jain Irrigation Systems Ltd.",
+        "Security Id": "JISLJALEQS",
+        "Security Name": "Jain Irrigation Systems Ltd",
+        "Status": "Active",
+        "Group": "A"
+      },
+      "depository": {
+        "NAME_OF_ISSUER": "JAIN IRRIGATION SYSTEMS LIMITED",
+        "SECURITY_DESCRIPTION": "JAIN IRRIGATION SYSTEMS LIMITED EQ NEW F.V. RS.2/-",
+        "FISN": "JAIN IRRIG SYS/SH VTG",
+        "CFI": "ESVUFN"
+      },
+      "cinBundleBridge": "L29120MH1986PLC042028",
+      "cinDerivedBridge": "L29120MH1986PLC042028",
+      "cinPublishedLatest": "L71907MH2002PLC659496"
+    },
+    "IN9175A01010": {
+      "deposit": {
+        "companyId": "EQ_JISLDVREQS_IN",
+        "companyName": "Jain Irrigation Systems Limited",
+        "cin": "L77330MH1991PLC949716",
+        "nseSymbol": "JISLDVREQS",
+        "bseSymbol": "JISLDVREQS",
+        "bseScripCode": "570004",
+        "effectiveFrom": "2011-11-30T00:00:00.000Z",
+        "faceValue": 2
+      },
+      "nseListingMaster": {
+        "SYMBOL": "JISLDVREQS",
+        "NAME OF COMPANY": "Jain Irrigation Systems Limited",
+        "SERIES": "EQ",
+        "DATE OF LISTING": "30-NOV-2011",
+        "FACE VALUE": "2"
+      },
+      "bseActiveEquityExport": {
+        "Security Code": "570004",
+        "Issuer Name": "Jain Irrigation Systems Ltd.",
+        "Security Id": "JISLDVREQS",
+        "Security Name": "Jain Irrigation Systems Ltd_DVR",
+        "Status": "Active",
+        "Group": "B"
+      },
+      "depository": {
+        "NAME_OF_ISSUER": "JAIN IRRIGATION SYSTEMS LIMITED",
+        "SECURITY_DESCRIPTION": "JAIN IRRIGATION SYSTEMS LIMITED EQ NEW NPP RS.2/-",
+        "FISN": "JAIN IRRIG SYS/SH VTG PP",
+        "CFI": "ESVUFN"
+      },
+      "cinBundleBridge": "L29120MH1986PLC042028",
+      "cinDerivedBridge": "L29120MH1986PLC042028",
+      "cinPublishedLatest": "L77330MH1991PLC949716"
+    }
+  },
+  "jainIrrigationSummary": {
+    "depositCinsEqualAcrossTheTwoIsins": false,
+    "bundleBridgeCinsEqualAcrossTheTwoIsins": true,
+    "depositCinEqualsBundleBridgeCin": [
+      false,
+      false
+    ]
+  },
+  "irrTrackedRosters": {
+    "distinctSecuritiesWithACin": 5,
+    "presentInDeposit": 5,
+    "depositCinEqualsIrrCin": 0,
+    "bundleBridgeCinEqualsIrrCin": 4,
+    "distinctListingsByExchangeSeriesSymbolKind": {
+      "BSE/EQ/numeric": 4,
+      "NSE/EQ/alphanumeric": 5
+    }
+  }
+}

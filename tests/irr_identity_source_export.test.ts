@@ -579,6 +579,71 @@ describe('W04 IRR identity export — issuer-key supplement', () => {
     assert.equal(withheld.report.result, 'REFUSED');
     assert.ok(withheld.report.refusals.some((refusal) => refusal.code === 'SUPPLEMENT_ISIN_NOT_EXPORTED'));
   });
+
+  /*
+   * DECISION D2 (docs/integration/IIPS-W04-IDENTITY-PROVISIONING-DECISIONS-D1-D4-2026-11-13.md).
+   *
+   * The tracked master holds one issuer with two listed equity securities: ordinary shares and
+   * differential-voting-rights shares. Both are withheld. The CIN below is the one the issuer
+   * itself publishes; it is a test input here, built in memory, and is NOT an approved supplement.
+   *
+   * These tests pin what mapping 1 does today: no supplement can bring either security into the
+   * export. They do not say that this is the desired outcome. Admitting the two securities is a
+   * change of mapping, which needs the approval the decision record describes; that change will
+   * have to replace these tests deliberately.
+   */
+  describe('the issuer with two equity securities in the tracked master (decision D2)', () => {
+    const ORDINARY_ISIN = 'INE175A01038';
+    const DVR_ISIN = 'IN9175A01010';
+    const ISSUER_PUBLISHED_CIN = 'L29120MH1986PLC042028';
+    const tracked = (entries: unknown) =>
+      buildIrrIdentitySources({
+        masterEntities: MASTER,
+        masterRevision: REVISION,
+        acceptedWithheld: WITHHELD_IN_TRACKED_MASTER,
+        issuerKeySupplement: supplement(entries),
+      });
+
+    it('IIX-53 the two withheld records are exactly these two securities, and the master gives them two different CINs', () => {
+      const result = buildIrrIdentitySources({ masterEntities: MASTER, masterRevision: REVISION, acceptedWithheld: WITHHELD_IN_TRACKED_MASTER });
+      assert.deepEqual(result.report.withheld.map((record) => record.isin).sort(), [DVR_ISIN, ORDINARY_ISIN].sort());
+      for (const record of result.report.withheld) assert.deepEqual([...record.reasons], ['ISSUER_SHARED_ACROSS_ISINS']);
+      const ordinary = MASTER.find((entity) => entity.isin === ORDINARY_ISIN)!;
+      const dvr = MASTER.find((entity) => entity.isin === DVR_ISIN)!;
+      assert.equal(ordinary.companyName, dvr.companyName, 'one company name');
+      assert.notEqual(ordinary.cin, dvr.cin, 'the master assigns the one company two different CINs');
+      assert.notEqual(ordinary.cin, ISSUER_PUBLISHED_CIN);
+      assert.notEqual(dvr.cin, ISSUER_PUBLISHED_CIN);
+    });
+
+    it('IIX-54 a supplement that gives both securities the one CIN is refused: one CIN may key one ISIN only', () => {
+      const result = tracked([
+        { isin: ORDINARY_ISIN, cin: ISSUER_PUBLISHED_CIN, sourceRef: 'test input' },
+        { isin: DVR_ISIN, cin: ISSUER_PUBLISHED_CIN, sourceRef: 'test input' },
+      ]);
+      assert.equal(result.report.result, 'REFUSED');
+      assert.ok(result.report.refusals.some((refusal) => refusal.code === 'SUPPLEMENT_CIN_CLAIMED_TWICE'));
+      assert.equal(result.artifacts, null);
+    });
+
+    for (const [label, isin] of [['the ordinary share', ORDINARY_ISIN], ['the differential-voting-rights share', DVR_ISIN]] as const) {
+      it(`IIX-55 a supplement that names only ${label} is refused: a withheld record cannot be supplemented`, () => {
+        const result = tracked([{ isin, cin: ISSUER_PUBLISHED_CIN, sourceRef: 'test input' }]);
+        assert.equal(result.report.result, 'REFUSED');
+        assert.ok(result.report.refusals.some((refusal) => refusal.code === 'SUPPLEMENT_ISIN_NOT_EXPORTED'));
+        assert.equal(result.artifacts, null);
+      });
+    }
+
+    it('IIX-56 the accepted export contains neither security, neither symbol and not the CIN the issuer publishes', () => {
+      const result = buildIrrIdentitySources({ masterEntities: MASTER, masterRevision: REVISION, acceptedWithheld: WITHHELD_IN_TRACKED_MASTER });
+      assert.equal(result.report.result, 'PASS');
+      const text = Object.values(result.artifacts!.files).join('');
+      for (const token of [ORDINARY_ISIN, DVR_ISIN, ISSUER_PUBLISHED_CIN, 'JISLJALEQS', 'JISLDVREQS']) {
+        assert.ok(!text.includes(token), `${token} must not be in the export`);
+      }
+    });
+  });
 });
 
 describe('W04 IRR identity export — check of produced files', () => {

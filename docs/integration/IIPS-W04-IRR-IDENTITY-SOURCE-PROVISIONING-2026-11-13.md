@@ -290,6 +290,8 @@ The IPD tests cannot run IRR's loader. Where they need "the answer IRR gave", th
 | D3 | Whether IRR PR #563 is merged. Without it no holding resolves through the D114 identity. | IRR owner |
 | D4 | Which of the missing datasets of section 8 are to be sourced, and from where | Repository owner |
 
+**Later record (2026-11-13).** The four decisions are investigated in [identity provisioning decisions D1 to D4](IIPS-W04-IDENTITY-PROVISIONING-DECISIONS-D1-D4-2026-11-13.md), which also names the approving authority for each. It contains a proposal for D1 and approves nothing. **Provisioning stays blocked until D1 is approved; the Windows procedure of section 10 is not to be run before that.**
+
 ## 13. Status and next activity
 
 - **W04: PARTIALLY COMPLETE, NOT ACCEPTED.** This change makes the identities endpoint operable. It does not produce host identity evidence, and it does not make holdings resolve.

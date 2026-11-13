@@ -1,0 +1,61 @@
+W04 decision D2 — the exporter refuses both forms of an issuer-key supplement for the two withheld securities
+Run 2026-11-13 in the Arena sandbox at IPD commit b0d7908. The supplement files were written under /tmp and
+were never placed in this repository. They are test inputs. They are NOT an approved supplement.
+The same two refusals are pinned by tests IIX-54 and IIX-55 (tests/irr_identity_source_export.test.ts).
+
+=== supplement A: both ISINs, one CIN ===
+{"schemaVersion":"IPD_IRR_ISSUER_KEY_SUPPLEMENT_V1","sourceLabel":"D2 sandbox test only — not an approved supplement","entries":[
+{"isin":"INE175A01038","cin":"L29120MH1986PLC042028","sourceRef":"issuer letter to BSE and NSE dated 2025-07-26"},
+{"isin":"IN9175A01010","cin":"L29120MH1986PLC042028","sourceRef":"issuer letter to BSE and NSE dated 2025-07-26"}]}
+
+--- node scripts/provision-irr-identity-sources.mjs generate --staging <dir> --accept-withheld 2 --issuer-key-supplement <A>   (exit 2)
+RESULT: REFUSED
+mapping: IPD-IRR-IDENTITY-EXPORT-MAPPING-1
+P04 master: batch BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001
+P04 master: 2390 records, checksum verified: true
+P7 manifest: used for corroboration only
+issuer-key supplement: none
+master records: 2390; exportable: 2388; withheld: 2; exported by this run: 0
+  withheld, ISSUER_SHARED_ACROSS_ISINS: 2
+  withheld: IN9175A01010 JISLDVREQS: ISSUER_SHARED_ACROSS_ISINS
+  withheld: INE175A01038 JISLJALEQS: ISSUER_SHARED_ACROSS_ISINS
+REFUSED, SUPPLEMENT_CIN_CLAIMED_TWICE: supplement entry 1 assigns a CIN that another entry already assigns to a different ISIN
+limitations of this export (each is explained in the report):
+  CIN_NOT_EXPORTED
+  SECTOR_UNCLASSIFIED
+  BSE_LISTINGS_NOT_EXPORTED
+  CORPORATE_ACTIONS_EMPTY
+  NO_SYMBOL_HISTORY
+  ELIGIBLE_MEANS_ACTIVE_NSE_LISTING
+  SERIES_FROM_UNIVERSE_DEFINITION
+  SOURCE_AUTHORITY_CONDITIONAL
+report: <dir>/provisioning-report.json
+identity files: none written
+
+=== supplement B: the ordinary share only ===
+{"schemaVersion":"IPD_IRR_ISSUER_KEY_SUPPLEMENT_V1","sourceLabel":"D2 sandbox test only — not an approved supplement","entries":[
+{"isin":"INE175A01038","cin":"L29120MH1986PLC042028","sourceRef":"issuer letter to BSE and NSE dated 2025-07-26"}]}
+
+--- node scripts/provision-irr-identity-sources.mjs generate --staging <dir> --accept-withheld 2 --issuer-key-supplement <B>   (exit 2)
+RESULT: REFUSED
+mapping: IPD-IRR-IDENTITY-EXPORT-MAPPING-1
+P04 master: batch BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001
+P04 master: 2390 records, checksum verified: true
+P7 manifest: used for corroboration only
+issuer-key supplement: 1 entries
+master records: 2390; exportable: 2388; withheld: 2; exported by this run: 0
+  withheld, ISSUER_SHARED_ACROSS_ISINS: 2
+  withheld: IN9175A01010 JISLDVREQS: ISSUER_SHARED_ACROSS_ISINS
+  withheld: INE175A01038 JISLJALEQS: ISSUER_SHARED_ACROSS_ISINS
+REFUSED, SUPPLEMENT_ISIN_NOT_EXPORTED: 1 supplement entry names an ISIN that is not an exported master record
+limitations of this export (each is explained in the report):
+  CIN_NOT_EXPORTED
+  SECTOR_UNCLASSIFIED
+  BSE_LISTINGS_NOT_EXPORTED
+  CORPORATE_ACTIONS_EMPTY
+  NO_SYMBOL_HISTORY
+  ELIGIBLE_MEANS_ACTIVE_NSE_LISTING
+  SERIES_FROM_UNIVERSE_DEFINITION
+  SOURCE_AUTHORITY_CONDITIONAL
+report: <dir>/provisioning-report.json
+identity files: none written
