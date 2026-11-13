@@ -1,0 +1,6 @@
+== IRR commit 08411bcd6d782a601fe5c82cc9983d076831148d
+{"holding":"securityIdentity populated","state":"UNMATCHED","reason":"NO_IDENTIFIER_PROVIDED","issuerResolved":false,"securityResolved":false,"listingResolved":false,"resolutionBasis":null,"assessable":false}
+{"holding":"securityIdentity null","state":"UNMATCHED","reason":"NO_IDENTIFIER_PROVIDED","issuerResolved":false,"securityResolved":false,"listingResolved":false,"resolutionBasis":null,"assessable":false}
+== IRR commit d10afbb31573d999f4b331484fcb79c510df1304
+{"holding":"securityIdentity populated","state":"RESOLVED","reason":null,"issuerResolved":true,"securityResolved":true,"listingResolved":true,"resolutionBasis":"ISIN","assessable":true}
+{"holding":"securityIdentity null","state":"UNMATCHED","reason":"NO_IDENTIFIER_PROVIDED","issuerResolved":false,"securityResolved":false,"listingResolved":false,"resolutionBasis":null,"assessable":false}

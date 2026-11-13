@@ -7,6 +7,10 @@
 
 ## 1. Outcome
 
+> **Update, 2026-11-13 (later the same day).** The operator has since run the collector on the host. Section 9
+> records the reported result. Sections 1 to 8 are kept as written before that run; where they say the
+> inventory is not collected, section 9 replaces them. W03 is still not accepted.
+
 **W03 is NOT complete. The Reports half is unblocked technically and is waiting for one host run.**
 
 | W03 half | State | Basis |
@@ -132,3 +136,51 @@ recorded; 3 and 4 record why the store could not be read.
 **W04 for revision 1** (identity coverage counts for the captured revision), as specified in the disposition
 record, section 7, item 3. W04 follows W03 in the roadmap and that order is not changed here. Its input is
 the captured revision, which exists; it is host-operator work.
+
+## 9. Host inventory result (added 2026-11-13, operator-reported)
+
+Everything in this section was observed on the Windows host and reported by the operator. It was not re-read
+here, and the sanitized inventory files were not seen by this record's author. It is subject to review.
+
+| Item | Reported value |
+|---|---|
+| Summary schema | `iips.w03.reports-inventory.summary/v1` |
+| Run | `w03-reports-inventory-20261113T110350Z-96f8995a` |
+| Outcome | `INVENTORY_COLLECTED` |
+| Eligibility | `HOST_INVENTORY_SUBJECT_TO_REVIEW` |
+| Store | NP-04 `governed_artifacts` |
+| Read method | `VERIFIED_PRIVATE_COPY`; original not opened by SQLite; WAL not present; SHM not touched; original bytes identical afterwards; private copy removed; report content not read |
+| Rows / persisted / unreadable | 2 / 2 / 0 |
+| Chains / broken | 2 / 0 |
+| Owner partitions | 1; declared Reports owner established; 2 rows belong to it |
+
+| Report type | Producer class | State | Versions | Chains | Broken |
+|---|---|---|---|---|---|
+| Executive | `TRANSIENT_UNLESS_OPERATOR_PERSISTED` | `PERSISTED` | 1 | 1 | 0 |
+| Portfolio Summary | `TRANSIENT_UNLESS_OPERATOR_PERSISTED` | `PERSISTED` | 1 | 1 | 0 |
+| Investment Committee, Allocation Recommendation, Sector Dashboard | `DECLARED_NOT_PRODUCED` | `NOT_PRESENT` | 0 | 0 | 0 |
+| `investment.company-assessment`, `investment.holding-disposition`, `investment.change-report` | `PERSISTED_ONLY` | `NOT_PRESENT` | 0 | 0 | 0 |
+
+Both artifacts: artifact version 1, schema version 1, `PLAIN_PORTFOLIO_ID` scope, intact chain, no portfolio
+revision, no provenance version and no dataset version.
+
+Linkage to the captured revision 1 (capture SHA-256 `c5dd51f5…eda3`):
+
+| Linkage class | Artifacts |
+|---|---|
+| `OTHER_PORTFOLIO_REFERENCE` | 2 |
+| Every other class | 0 |
+| Reconciled to the captured revision | 0 |
+| Carrying the captured provenance digest | 0 |
+
+What this does and does not establish:
+
+- The inventory is a metadata count at one point in time. Report content was not read.
+- No persisted report is linked to revision 1. No link is inferred from a timestamp, a report type, an issuer
+  or the holdings.
+- The producer classes are derived from the repository, not observed on the host.
+- The W03 deliverable now has host evidence for both halves. W03 acceptance is a review decision and has not
+  been given. Eligibility stays `HOST_INVENTORY_SUBJECT_TO_REVIEW`.
+
+The W04 record for revision 1 is
+[`IIPS-W04-IDENTITY-COVERAGE-REVISION-1-EVIDENCE-ASSESSMENT-2026-11-13.md`](IIPS-W04-IDENTITY-COVERAGE-REVISION-1-EVIDENCE-ASSESSMENT-2026-11-13.md).
