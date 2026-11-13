@@ -24,6 +24,8 @@ Two findings were not expected when D1 to D4 were written. Both matter for what 
 1. **A holding identified with a BSE group as its series does not resolve in IRR.** IRR's series list is closed and has no BSE group. An observation that carries the ISIN and the series `A` is answered `AMBIGUOUS_LISTING`, with the export as it stands and also with a BSE listing added (section 5.3).
 2. **Nothing in the tool enforces the block on provisioning.** The `install` step and the Windows wrapper run without an approval. Today the block is a rule in this record, not a check in code (section 2.3, item P-9).
 
+   **Later record (2026-11-13).** Finding 2 described the tool at `b0d7908`. The check has since been built: `install` and the wrapper refuse without an approval record that authorizes exactly the staged files. See [approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md). That change approves nothing; D1 is still not approved.
+
 ## 1. How to read this record
 
 | Label | Meaning |
@@ -163,7 +165,13 @@ Role A1 is not assigned to a person (A-13). Whether the authority of record "Sai
 
 E-3 shows that IRR can read the files. E-1 is the only item that gives them standing.
 
-**Enforcement.** The tool does not check for E-1: `install` and the Windows wrapper run without it (R). This record proposes that `install` should require the approval record and refuse when its digests do not match the staged files. That check is not built, because its form depends on what the approver decides E-1 is.
+**Enforcement.** At `b0d7908` the tool did not check for E-1: `install` and the Windows wrapper ran without it (R). This record proposed that `install` should require the approval record and refuse when its digests do not match the staged files.
+
+**Later record (2026-11-13): the check is built.** On the instruction of the repository owner, `install` and the Windows wrapper now refuse unless an approval record authorizes exactly the three staged files, their generation and the gated IRR commit, for the scope of P-2 and P-4, with the limitations of P-6 and the withheld records accepted, by the required authorities, before its review date. The record is a JSON document; its schema, the fixed policy, the procedure and the tests are in [approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md). Three points of that record bear on this one:
+
+- The check represents U-1, U-2 and U-17 without answering them. It requires both named authorities while U-2 is open, and it requires the approval record to state the answers to U-1 and U-17.
+- It differs from E-1 in one item: the IPD commit of the tool is not bound, because the record must be published on `main` after the tool commit it would name. The digests, the mapping version and the generation inputs are bound instead.
+- Building the check is not an approval of D1, and the instruction to build it is not recorded here as one. **No approval record exists.**
 
 ### 2.4 Unresolved questions
 
@@ -174,19 +182,22 @@ E-3 shows that IRR can read the files. E-1 is the only item that gives them stan
 | U-3 | How many of the operator's 64 holdings does the roster cover, and how many carry a series other than `EQ`? (H: 64 holdings at revision 1, security identity populated on 1.) |
 | U-4 | Which CIN generation is correct. Not needed for the proposal, which exports no CIN. |
 | U-5 | Whether the P04 package on the unmerged branch, which records its gate as accepted, is the specification of record. ID-4 on `main` is sufficient for this proposal either way. |
+| U-17 | (Added 2026-11-13 with the approval enforcement; numbered after U-16 of section 5.6.) Does the item "Q-2, Roster content" of IRR's Investment Intelligence design refinement of 2026-11-05 govern a roster exported from P04? That item describes the roster as an operator-maintained file seeded from holdings and watchlist, capped at 200, ISIN required. The proposed roster has 2,388 issuers and is seeded from the P04 master. IRR's loader enforces no cap (R). No record says whether the item is a rule for every roster or a description of the expected one. |
 
 ### 2.5 Decisions that need approval
 
 | # | Decision | Authority |
 |---|---|---|
 | D1-a | Approve, amend or reject the proposal P-1 to P-9. | Program Authority |
-| D1-b | Answer U-1 and U-2. | Program Authority |
+| D1-b | Answer U-1, U-2 and U-17. | Program Authority |
 | D1-c | Require Q-1, Q-2 and Q-3 before the host run, or accept the gaps explicitly. | Program Authority |
-| D1-d | Whether `install` is to enforce E-1 in code. | Program Authority |
+| D1-d | Whether `install` is to enforce E-1 in code. **Later record (2026-11-13):** built on the instruction of the repository owner (section 2.3, "Enforcement"). What remains for the authority is to confirm or change the six choices listed in section 10 of the approval-enforcement record. | Program Authority |
 
 ### 2.6 Template for the approval record
 
 This is a form, not an approval. It has effect only when the approver completes it and publishes it on `main`.
+
+**Later record (2026-11-13).** The form the tool reads is the JSON document [`w04-identity-approval/IRR-IDENTITY-APPROVAL-RECORD-TEMPLATE.json`](w04-identity-approval/IRR-IDENTITY-APPROVAL-RECORD-TEMPLATE.json), which is blank. The text form below is kept as the list of what the approver decides; the tool does not read it. Two of its lines no longer describe a choice the tool offers: the tool accepts the decision `APPROVED` only (an amended use needs a changed policy), and enforcement in code is no longer optional.
 
 ```
 W04 IDENTITY PROVISIONING — APPROVAL OF BOUNDED USE (D1)
@@ -388,7 +399,7 @@ IPD's qualified identity takes its series from the P7 Dhan master (A-10), where 
 ## 6. Status and exit condition
 
 - **W04: PARTIALLY COMPLETE, NOT ACCEPTED.**
-- **Provisioning is blocked until D1 is approved** by the Program Authority in a record that meets E-1. The Windows wrapper is not to be run before that. The tool does not enforce this.
+- **Provisioning is blocked until D1 is approved** by the Program Authority in a record that meets E-1. The Windows wrapper is not to be run for installation before that. At `b0d7908` the tool did not enforce this; it now does (section 2.3, "Enforcement"). The wrapper's `-ReviewOnly` mode installs nothing; whether it is run on the host before D1 is approved is for the owner to say.
 - Loader acceptance (E-3) is evidence that IRR can read the files. It is not evidence that the data has authority, and it is not an approval.
 - The two Jain Irrigation records stay excluded.
 - IRR PR #563 is open and unmerged. W03, W08 and W11 are not accepted.

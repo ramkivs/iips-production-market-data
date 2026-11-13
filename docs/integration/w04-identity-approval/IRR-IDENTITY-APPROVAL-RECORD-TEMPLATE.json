@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "IPD_IRR_IDENTITY_APPROVAL_V1",
+  "approvalId": null,
+  "status": null,
+  "governance": {
+    "decisionId": "IIPS-W04-D1",
+    "decisionRecord": "docs/integration/IIPS-W04-IDENTITY-PROVISIONING-DECISIONS-D1-D4-2026-11-13.md",
+    "approvalActRef": null
+  },
+  "subject": {
+    "files": {
+      "eligible-roster.json": {
+        "sha256": null,
+        "bytes": null
+      },
+      "listing-map.json": {
+        "sha256": null,
+        "bytes": null
+      },
+      "corporate-actions.json": {
+        "sha256": null,
+        "bytes": null
+      }
+    },
+    "generation": {
+      "reportSchemaVersion": null,
+      "mappingVersion": null,
+      "masterBatchId": null,
+      "masterAuthorizationRef": null,
+      "masterChecksumSha256": null,
+      "masterRecordCount": null,
+      "rosterLabel": null,
+      "p7ManifestSha256": null,
+      "issuerKeySupplementSha256": null,
+      "requiredIsins": null,
+      "issuersExported": null,
+      "securitiesExported": null,
+      "nseListingsExported": null,
+      "corporateActionsExported": null,
+      "recordsWithheld": null
+    },
+    "irrCommit": null
+  },
+  "scope": {
+    "environment": null,
+    "consumer": null,
+    "rosterDataClass": null,
+    "productWideAuthoritativeUse": null,
+    "productionUse": null
+  },
+  "accepted": {
+    "exportLimitationCodes": [],
+    "additionalLimitationCodes": [],
+    "withheldRecords": []
+  },
+  "qualifications": [
+    {
+      "id": "Q-1",
+      "disposition": null,
+      "ref": null
+    },
+    {
+      "id": "Q-2",
+      "disposition": null,
+      "ref": null
+    }
+  ],
+  "determinations": {
+    "cv22OptionC": {
+      "decisionRef": "IIPS-V3-CV22-OPTION-C-PA-DISPOSITION-2026-10-19-01",
+      "applicability": null,
+      "basisRef": null,
+      "prerequisites": [
+        {
+          "id": "CV22-1-IDENTITY-AND-ELIGIBILITY-CONTRACT",
+          "determination": null,
+          "evidenceRef": null
+        },
+        {
+          "id": "CV22-2-APPROVED-ROSTER-AND-CORPUS-REVISION",
+          "determination": null,
+          "evidenceRef": null
+        },
+        {
+          "id": "CV22-3-EXACT-MAPPING-TO-IRR-IDENTITY",
+          "determination": null,
+          "evidenceRef": null
+        },
+        {
+          "id": "CV22-4-CONSUMER-ACCEPTANCE-CRITERIA",
+          "determination": null,
+          "evidenceRef": null
+        },
+        {
+          "id": "CV22-5-IMPLEMENTATION-AUTHORITY",
+          "determination": null,
+          "evidenceRef": null
+        }
+      ]
+    },
+    "irrRosterContentDecision": {
+      "decisionRef": "IRR-IID-DESIGN-REFINEMENT-2026-11-05-R19-Q2",
+      "applicability": null,
+      "basisRef": null
+    }
+  },
+  "approvals": [
+    {
+      "authorityId": null,
+      "name": null,
+      "designation": null,
+      "decision": null,
+      "approvedAtUtc": null,
+      "statement": null
+    }
+  ],
+  "approvedAtUtc": null,
+  "expiresAtUtc": null,
+  "revocation": null
+}

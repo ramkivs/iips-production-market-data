@@ -13,6 +13,14 @@
  *                `<IIPS_DATA_DIR>/investment/identity/`. The directory appears in one rename, so
  *                the IRR server, which reads the files on every request, never sees a partial set.
  *
+ * GOVERNANCE APPROVAL
+ *   Installation is refused unless a governance approval record (`irr_identity_approval.ts`)
+ *   authorizes exactly the staged bytes, the staged generation and the gated IRR commit, under the
+ *   governed approval policy. The record is checked before anything is written, on every call,
+ *   including a call that would change nothing. This module never writes an approval record and
+ *   never derives one. `writeReviewRecord` writes the facts a reviewer needs; that file is of
+ *   another schema and is refused as an approval.
+ *
  * WRITE BOUNDARY
  *   The only location written outside the staging directory is the identity directory of the data
  *   root the operator names. The data root itself must already exist: a mistyped path is refused,
@@ -33,6 +41,16 @@ import {
 import { join, resolve } from 'node:path';
 
 import {
+  IDENTITY_APPROVAL_POLICY,
+  buildReviewRecord,
+  evaluateIdentityApproval,
+  type ApprovalEvaluation,
+  type ApprovalFailure,
+  type IdentityApprovalPolicy,
+  type IdentityApprovalRecord,
+  type IdentityReviewRecord,
+} from './irr_identity_approval.js';
+import {
   IRR_IDENTITY_EXPORT_REPORT_SCHEMA,
   IRR_IDENTITY_FILE_NAMES,
   serialiseExportReport,
@@ -46,8 +64,13 @@ export const STAGED_IDENTITY_SUBDIR = 'identity' as const;
 export const STAGED_REPORT_FILE = 'provisioning-report.json' as const;
 export const STAGED_GATE_FILE = 'irr-loader-gate.json' as const;
 export const STAGED_INSTALL_RECEIPT_FILE = 'install-receipt.json' as const;
+/** Written by review. States what an approval would have to bind. It is not an approval. */
+export const STAGED_REVIEW_FILE = 'review-for-approval.json' as const;
 export const GATE_RECEIPT_SCHEMA = 'IPD_IRR_IDENTITY_GATE_RECEIPT_V1' as const;
-export const INSTALL_RECEIPT_SCHEMA = 'IPD_IRR_IDENTITY_INSTALL_RECEIPT_V1' as const;
+/** V2 adds the approval the installation was made under. */
+export const INSTALL_RECEIPT_SCHEMA = 'IPD_IRR_IDENTITY_INSTALL_RECEIPT_V2' as const;
+/** An approval record is a short document. Anything larger is not read. */
+export const APPROVAL_RECORD_MAX_BYTES = 1024 * 1024;
 export const LOADER_GATE_SCHEMA = 'IPD_IRR_IDENTITY_LOADER_GATE_V1' as const;
 
 const IDENTITY_FILES: ReadonlyArray<IrrIdentityFileName> = Object.freeze([
@@ -63,6 +86,19 @@ export class ProvisioningError extends Error {
   ) {
     super(message);
     this.name = 'ProvisioningError';
+  }
+}
+
+/** The governance approval record is absent, unusable, or does not authorize the staged export. */
+export class ApprovalRefusedError extends ProvisioningError {
+  constructor(readonly failures: ReadonlyArray<ApprovalFailure>) {
+    super(
+      failures[0]?.code ?? 'APPROVAL_MISSING',
+      failures.length <= 1
+        ? (failures[0]?.detail ?? 'no approval record was given')
+        : `${failures[0]!.detail} (and ${failures.length - 1} more: ${[...new Set(failures.slice(1).map((failure) => failure.code))].join(', ')})`,
+    );
+    this.name = 'ApprovalRefusedError';
   }
 }
 
@@ -101,7 +137,7 @@ export interface StageOutcome {
 /**
  * Write an export into the staging directory. A result other than PASS writes the report only and
  * removes identity files staged earlier, so a refused run can never leave installable files behind.
- * Any earlier gate record and install receipt are removed: they describe other bytes.
+ * Any earlier gate record, install receipt and review record are removed: they describe other bytes.
  */
 export function stageExport(stagingDir: string, result: IrrIdentityExportResult): StageOutcome {
   const root = resolve(stagingDir);
@@ -110,6 +146,7 @@ export function stageExport(stagingDir: string, result: IrrIdentityExportResult)
   rmSync(identityDir, { recursive: true, force: true });
   rmSync(join(root, STAGED_GATE_FILE), { force: true });
   rmSync(join(root, STAGED_INSTALL_RECEIPT_FILE), { force: true });
+  rmSync(join(root, STAGED_REVIEW_FILE), { force: true });
 
   const reportPath = join(root, STAGED_REPORT_FILE);
   writeFileSync(reportPath, serialiseExportReport(result.report), 'utf8');
@@ -258,8 +295,9 @@ export function recordGate(
     asOf: context.asOf,
     loaderOutput: output,
   };
-  // An install receipt written before this gate describes an earlier decision.
+  // An install receipt or a review record written before this gate describes an earlier decision.
   rmSync(join(staged.stagingDir, STAGED_INSTALL_RECEIPT_FILE), { force: true });
+  rmSync(join(staged.stagingDir, STAGED_REVIEW_FILE), { force: true });
   writeFileSync(join(staged.stagingDir, STAGED_GATE_FILE), `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
   return receipt;
 }
@@ -276,7 +314,139 @@ export function readGateReceipt(stagingDir: string): GateReceipt | null {
 }
 
 /* ------------------------------------------------------------------------------------------ *
- * 3. Install
+ * 3. Governance approval
+ * ------------------------------------------------------------------------------------------ */
+
+export interface ApprovalDocument {
+  /** The parsed document, of unknown shape. */
+  readonly document: unknown;
+  /** SHA-256 of the file bytes, so that the record used can be compared with the published one. */
+  readonly sha256: string;
+}
+
+/**
+ * Read an approval record from a file. Read-only. A missing argument, a missing file, a directory,
+ * an oversized file and a file that is not JSON are each refused.
+ */
+export function readApprovalDocument(approvalFile: unknown): ApprovalDocument {
+  if (typeof approvalFile !== 'string' || approvalFile.trim().length === 0) {
+    throw new ApprovalRefusedError([
+      { code: 'APPROVAL_MISSING', detail: 'no approval record was given; installation requires the governance approval record for exactly these files' },
+    ]);
+  }
+  const path = resolve(approvalFile);
+  if (!existsSync(path) || !statSync(path).isFile()) {
+    throw new ApprovalRefusedError([{ code: 'APPROVAL_MISSING', detail: 'the approval record file does not exist' }]);
+  }
+  if (statSync(path).size > APPROVAL_RECORD_MAX_BYTES) {
+    throw new ApprovalRefusedError([{ code: 'APPROVAL_UNREADABLE', detail: 'the approval record file is larger than an approval record can be' }]);
+  }
+  const bytes = readFileSync(path);
+  const sha256 = createHash('sha256').update(bytes).digest('hex');
+  try {
+    // Windows editors commonly write a byte-order mark. It is not part of the document.
+    return { document: JSON.parse(bytes.toString('utf8').replace(/^\uFEFF/, '')) as unknown, sha256 };
+  } catch {
+    throw new ApprovalRefusedError([{ code: 'APPROVAL_UNREADABLE', detail: 'the approval record file is not valid JSON' }]);
+  }
+}
+
+/** The approval an installation was made under, as recorded in the install receipt. */
+export interface ApprovalSummary {
+  readonly approvalId: string;
+  readonly recordSha256: string;
+  readonly policyVersion: string;
+  readonly governanceDecisionId: string;
+  readonly approvalActRef: string;
+  readonly approvers: ReadonlyArray<string>;
+  readonly approvedAtUtc: string;
+  readonly expiresAtUtc: string;
+}
+
+function summariseApproval(record: IdentityApprovalRecord, recordSha256: string, policy: IdentityApprovalPolicy): ApprovalSummary {
+  return {
+    approvalId: record.approvalId,
+    recordSha256,
+    policyVersion: policy.policyVersion,
+    governanceDecisionId: record.governance.decisionId,
+    approvalActRef: record.governance.approvalActRef,
+    approvers: record.approvals.map((approver) => approver.authorityId),
+    approvedAtUtc: record.approvedAtUtc,
+    expiresAtUtc: record.expiresAtUtc,
+  };
+}
+
+/** The accepted, current loader gate of a staged export, or null when there is none. */
+function acceptedGateOf(staged: StagedExport): GateReceipt | null {
+  const gate = readGateReceipt(staged.stagingDir);
+  if (gate === null || !gate.accepted || !sameDigests(gate.stagedFiles, staged.digests)) return null;
+  return evaluateLoaderGate(gate.loaderOutput, staged).accepted ? gate : null;
+}
+
+export interface ApprovalCheckOptions {
+  readonly approvalFile: string;
+  /** The staging directory to compare the record with. Omitted: the record is checked by itself. */
+  readonly stagingDir?: string;
+}
+
+export interface ApprovalCheck {
+  readonly evaluation: ApprovalEvaluation;
+  readonly recordSha256: string | null;
+}
+
+/**
+ * Check an approval record without installing anything. Read-only: it writes nowhere.
+ *
+ * With a staging directory the record is compared with the staged files and, when an accepted
+ * loader gate of those files exists, with the gated IRR commit. `evaluation.checked` says what was
+ * compared; only `evaluation.authorizesInstallation` means that installation would not be refused
+ * on account of the approval.
+ */
+export function checkIdentityApproval(options: ApprovalCheckOptions): ApprovalCheck {
+  let document: ApprovalDocument;
+  try {
+    document = readApprovalDocument(options.approvalFile);
+  } catch (error) {
+    if (!(error instanceof ApprovalRefusedError)) throw error;
+    return {
+      evaluation: {
+        failures: error.failures,
+        checked: { record: true, stagedFiles: false, loaderGate: false },
+        authorizesInstallation: false,
+        approval: null,
+      },
+      recordSha256: null,
+    };
+  }
+  const staged = options.stagingDir === undefined ? null : readStagedExport(options.stagingDir);
+  const gate = staged === null ? null : acceptedGateOf(staged);
+  const evaluation = evaluateIdentityApproval({
+    record: document.document,
+    now: new Date(),
+    policy: IDENTITY_APPROVAL_POLICY,
+    staged,
+    gate: gate === null ? null : { irrCommit: gate.irr.commit },
+  });
+  return { evaluation, recordSha256: document.sha256 };
+}
+
+/**
+ * Write the review record of a staged export into the staging directory and return it. The record
+ * states what an approval would have to bind. It is not an approval and installs nothing.
+ */
+export function writeReviewRecord(stagingDir: string): { readonly review: IdentityReviewRecord; readonly path: string } {
+  const staged = readStagedExport(stagingDir);
+  const gate = readGateReceipt(staged.stagingDir);
+  const current = gate !== null && sameDigests(gate.stagedFiles, staged.digests) ? gate : null;
+  const accepted = current !== null && current.accepted && evaluateLoaderGate(current.loaderOutput, staged).accepted;
+  const review = buildReviewRecord(staged, current === null ? null : { accepted, irrCommit: current.irr.commit });
+  const path = join(staged.stagingDir, STAGED_REVIEW_FILE);
+  writeFileSync(path, `${JSON.stringify(review, null, 2)}\n`, 'utf8');
+  return { review, path };
+}
+
+/* ------------------------------------------------------------------------------------------ *
+ * 4. Install
  * ------------------------------------------------------------------------------------------ */
 
 export type InstallAction = 'INSTALLED' | 'ALREADY_INSTALLED' | 'REPLACED';
@@ -287,12 +457,19 @@ export interface InstallOutcome {
   readonly installedFiles: Readonly<Record<IrrIdentityFileName, FileDigest>>;
   /** Where the previous files were copied before a replacement, inside the staging directory. */
   readonly previousFilesBackup: string | null;
+  /** The approval record that authorized this call. */
+  readonly approval: ApprovalSummary;
 }
 
 export interface InstallOptions {
   readonly stagingDir: string;
   /** The IRR data root, the value of `IIPS_DATA_DIR` for the IRR server. It must already exist. */
   readonly dataDir: string;
+  /**
+   * The governance approval record for exactly the staged files. Required. A call without it, or
+   * with a record that does not authorize the staged export, changes nothing and throws.
+   */
+  readonly approvalFile: string;
   /** Allow different existing identity files to be replaced. Default false. */
   readonly replace?: boolean;
   /** Test seam: called between writing the incoming directory and making it live. */
@@ -322,8 +499,39 @@ function renameWithRetry(from: string, to: string): void {
   throw lastError;
 }
 
+/**
+ * Install the staged identity files. The governed approval policy applies; there is no option that
+ * relaxes it. Every refusal on account of the approval happens before anything is written.
+ */
 export function installStagedIdentity(options: InstallOptions): InstallOutcome {
+  return installUnderPolicy(options, IDENTITY_APPROVAL_POLICY);
+}
+
+/**
+ * The same installation under a policy the caller names.
+ *
+ * This exists for the test suite, which must show an accepted installation and may not hold an
+ * approval in the name of a real authority: its tests use a policy whose authorities do not exist.
+ * No script of this repository calls it (a test asserts that), and the command line has no way to
+ * reach it. `installStagedIdentity` is the governed entry point.
+ */
+export function installStagedIdentityUnderPolicy(options: InstallOptions, policy: IdentityApprovalPolicy): InstallOutcome {
+  return installUnderPolicy(options, policy);
+}
+
+function installUnderPolicy(options: InstallOptions, policy: IdentityApprovalPolicy): InstallOutcome {
+  // 1. The approval record by itself. A missing, unreadable, incomplete, lapsed, revoked or
+  //    unauthorized record is refused before the staging directory is even read.
+  const approvalDocument = readApprovalDocument((options as { approvalFile?: unknown }).approvalFile);
+  const now = new Date();
+  const byItself = evaluateIdentityApproval({ record: approvalDocument.document, now, policy, staged: null, gate: null });
+  if (byItself.failures.length > 0) throw new ApprovalRefusedError(byItself.failures);
+
   const staged = readStagedExport(options.stagingDir);
+
+  // 2. The approval against the staged bytes and the staged generation.
+  const againstStaged = evaluateIdentityApproval({ record: approvalDocument.document, now, policy, staged, gate: null });
+  if (againstStaged.failures.length > 0) throw new ApprovalRefusedError(againstStaged.failures);
 
   const gate = readGateReceipt(staged.stagingDir);
   if (gate === null) {
@@ -339,6 +547,16 @@ export function installStagedIdentity(options: InstallOptions): InstallOutcome {
   if (!evaluateLoaderGate(gate.loaderOutput, staged).accepted) {
     throw new ProvisioningError('GATE_REFUSED', 'the recorded IRR loader output does not accept the staged files; nothing is installed');
   }
+
+  // 3. The approval against the IRR commit whose loader accepted the files. This is the complete
+  //    check; nothing below this line runs unless it authorizes the installation.
+  const complete = evaluateIdentityApproval({ record: approvalDocument.document, now, policy, staged, gate: { irrCommit: gate.irr.commit } });
+  if (!complete.authorizesInstallation || complete.approval === null) {
+    throw new ApprovalRefusedError(
+      complete.failures.length > 0 ? complete.failures : [{ code: 'APPROVAL_MALFORMED', detail: 'the approval record could not be evaluated completely' }],
+    );
+  }
+  const approval = summariseApproval(complete.approval, approvalDocument.sha256, policy);
 
   const dataRoot = resolve(options.dataDir);
   if (!existsSync(dataRoot) || !statSync(dataRoot).isDirectory()) {
@@ -357,7 +575,7 @@ export function installStagedIdentity(options: InstallOptions): InstallOutcome {
     const existing = readIdentityDirectoryDigests(targetDir);
     const names = readdirSync(targetDir);
     if (existing !== null && sameDigests(existing, staged.digests) && names.length === IDENTITY_FILES.length) {
-      return { action: 'ALREADY_INSTALLED', identityDir: targetDir, installedFiles: existing, previousFilesBackup: null };
+      return { action: 'ALREADY_INSTALLED', identityDir: targetDir, installedFiles: existing, previousFilesBackup: null, approval };
     }
     if (names.length > 0) {
       if (names.some((name) => !statSync(join(targetDir, name)).isFile())) {
@@ -411,7 +629,7 @@ export function installStagedIdentity(options: InstallOptions): InstallOutcome {
   if (installed === null || !sameDigests(installed, staged.digests)) {
     throw new ProvisioningError('INSTALL_VERIFICATION_FAILED', 'the installed identity files do not match the staged files');
   }
-  return { action, identityDir: targetDir, installedFiles: installed, previousFilesBackup };
+  return { action, identityDir: targetDir, installedFiles: installed, previousFilesBackup, approval };
 }
 
 export interface InstallReceipt {
@@ -420,6 +638,8 @@ export interface InstallReceipt {
   readonly installedAtUtc: string;
   readonly installedFiles: Readonly<Record<IrrIdentityFileName, FileDigest>>;
   readonly previousFilesBackedUp: boolean;
+  /** The governance approval the installation was made under. */
+  readonly approval: ApprovalSummary;
   readonly irrVersions: unknown;
   readonly irrCommit: string | null;
   readonly export: {
@@ -444,6 +664,7 @@ export function writeInstallReceipt(stagingDir: string, outcome: InstallOutcome,
     installedAtUtc,
     installedFiles: outcome.installedFiles,
     previousFilesBackedUp: outcome.previousFilesBackup !== null,
+    approval: outcome.approval,
     irrVersions: gate?.loaderOutput.versions ?? null,
     irrCommit: gate?.irr.commit ?? null,
     export: {
@@ -459,6 +680,17 @@ export function writeInstallReceipt(stagingDir: string, outcome: InstallOutcome,
   };
   writeFileSync(join(staged.stagingDir, STAGED_INSTALL_RECEIPT_FILE), `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
   return receipt;
+}
+
+/**
+ * Record an installation. A repeated run that changed nothing keeps the receipt of the run that
+ * installed the files. Returns whether a receipt was written.
+ */
+export function recordInstallation(stagingDir: string, outcome: InstallOutcome, installedAtUtc: string): boolean {
+  const receiptPath = join(resolve(stagingDir), STAGED_INSTALL_RECEIPT_FILE);
+  if (outcome.action === 'ALREADY_INSTALLED' && existsSync(receiptPath)) return false;
+  writeInstallReceipt(stagingDir, outcome, installedAtUtc);
+  return true;
 }
 
 /* ------------------------------------------------------------------------------------------ *

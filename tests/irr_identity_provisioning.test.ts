@@ -13,6 +13,12 @@
  * staged export (`loaderAnswerFor`). That exercises this repository's decision logic only. Whether
  * IRR really accepts the files is established by `validate` against an IRR checkout, and the
  * recorded runs are in `evidence/integration/w04-identity-source-provisioning-2026-11-13/`.
+ *
+ * GOVERNANCE APPROVAL. Installation requires an approval record. These tests are about staging,
+ * the gate and the file operations, so they install under the test policy of
+ * `tests/support/irr_identity_approval_fixture.ts`, whose authorities do not exist. The approval
+ * requirement itself, and the refusal of the governed entry point, are tested in
+ * `tests/irr_identity_approval.test.ts`.
  */
 import { after, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -44,16 +50,18 @@ import {
   STAGED_REPORT_FILE,
   evaluateLoaderGate,
   identityDirOf,
-  installStagedIdentity,
+  installStagedIdentityUnderPolicy,
   readGateReceipt,
   readIdentityDirectoryDigests,
   readStagedExport,
   recordGate,
+  recordInstallation,
   stageExport,
   summariseIdentitiesAnswer,
   writeInstallReceipt,
   type StagedExport,
 } from '../src/identity/irr_identity_provisioning.js';
+import { TEST_APPROVAL_POLICY, testApprovalFor, writeApprovalFile } from './support/irr_identity_approval_fixture.js';
 
 const ROOT = process.cwd();
 const CLI = join(ROOT, 'scripts', 'provision-irr-identity-sources.mjs');
@@ -113,6 +121,32 @@ function gatedStaging(name: string, from = 0, to = 5): { stagingDir: string; sta
   return { stagingDir, staged };
 }
 
+let spareApproval: string | null = null;
+
+/**
+ * An approval file, under the test policy, for whatever a staging directory holds. Where the
+ * staging directory holds nothing an approval could be for, a complete record for another export
+ * is used, so that the test reaches the refusal it is about.
+ */
+function approvalFileFor(stagingDir: string): string {
+  let staged: StagedExport;
+  try {
+    staged = readStagedExport(stagingDir);
+  } catch {
+    if (spareApproval === null) {
+      const spare = gatedStaging('spare-approval-subject', 20, 25);
+      spareApproval = writeApprovalFile(freshDir('approval'), testApprovalFor(spare.staged, CONTEXT.irrCommit));
+    }
+    return spareApproval;
+  }
+  return writeApprovalFile(freshDir('approval'), testApprovalFor(staged, readGateReceipt(stagingDir)?.irr.commit ?? CONTEXT.irrCommit));
+}
+
+/** Installation under the test policy, with an approval for exactly the staged export. */
+function install(options: { stagingDir: string; dataDir: string; replace?: boolean; beforeSwap?: () => void }) {
+  return installStagedIdentityUnderPolicy({ ...options, approvalFile: approvalFileFor(options.stagingDir) }, TEST_APPROVAL_POLICY);
+}
+
 function codeOf(run: () => unknown): string {
   try {
     run();
@@ -155,7 +189,7 @@ describe('W04 IRR identity provisioning — staging', () => {
     assert.deepEqual(readdirSync(stagingDir), [STAGED_REPORT_FILE]);
     assert.equal(codeOf(() => readStagedExport(stagingDir)), 'STAGED_EXPORT_NOT_PASS');
     const dataDir = freshDir('data');
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir, dataDir })), 'STAGED_EXPORT_NOT_PASS');
+    assert.equal(codeOf(() => install({ stagingDir, dataDir })), 'STAGED_EXPORT_NOT_PASS');
     assert.deepEqual(readdirSync(dataDir), []);
   });
 
@@ -245,7 +279,7 @@ describe('W04 IRR identity provisioning — installation', () => {
   it('IIP-20 installs into an existing data root that has no identity directory', () => {
     const { stagingDir, staged } = gatedStaging('install');
     const dataDir = freshDir('data');
-    const outcome = installStagedIdentity({ stagingDir, dataDir });
+    const outcome = install({ stagingDir, dataDir });
     assert.equal(outcome.action, 'INSTALLED');
     assert.equal(outcome.identityDir, identityDirOf(dataDir));
     assert.equal(outcome.identityDir, join(dataDir, 'investment', 'identity'));
@@ -257,6 +291,8 @@ describe('W04 IRR identity provisioning — installation', () => {
     const receipt = writeInstallReceipt(stagingDir, outcome, '2026-11-13T00:00:00.000Z');
     assert.equal(receipt.schemaVersion, INSTALL_RECEIPT_SCHEMA);
     assert.equal(receipt.irrCommit, CONTEXT.irrCommit);
+    assert.equal(receipt.approval.policyVersion, TEST_APPROVAL_POLICY.policyVersion);
+    assert.deepEqual(receipt.approval, outcome.approval);
     assert.deepEqual(receipt.installedFiles, staged.digests);
     assert.equal(receipt.export.securities, 5);
     assert.ok(!readFileSync(join(stagingDir, STAGED_INSTALL_RECEIPT_FILE), 'utf8').includes(dataDir), 'the receipt holds no path');
@@ -268,7 +304,7 @@ describe('W04 IRR identity provisioning — installation', () => {
     mkdirSync(join(dataDir, 'investment', 'theses'), { recursive: true });
     writeFileSync(join(dataDir, 'investment', 'theses', 'kept.json'), '{"kept":true}\n');
     writeFileSync(join(dataDir, 'other.txt'), 'kept\n');
-    installStagedIdentity({ stagingDir, dataDir });
+    install({ stagingDir, dataDir });
     assert.equal(readFileSync(join(dataDir, 'investment', 'theses', 'kept.json'), 'utf8'), '{"kept":true}\n');
     assert.equal(readFileSync(join(dataDir, 'other.txt'), 'utf8'), 'kept\n');
     assert.deepEqual(readdirSync(join(dataDir, 'investment')).sort(), ['identity', 'theses']);
@@ -277,8 +313,8 @@ describe('W04 IRR identity provisioning — installation', () => {
   it('IIP-22 is idempotent: a second run changes nothing', () => {
     const { stagingDir } = gatedStaging('again');
     const dataDir = freshDir('data');
-    installStagedIdentity({ stagingDir, dataDir });
-    const second = installStagedIdentity({ stagingDir, dataDir });
+    install({ stagingDir, dataDir });
+    const second = install({ stagingDir, dataDir });
     assert.equal(second.action, 'ALREADY_INSTALLED');
     assert.equal(second.previousFilesBackup, null);
     assert.deepEqual(readdirSync(stagingDir).filter((name) => name.startsWith('replaced-')), []);
@@ -287,11 +323,11 @@ describe('W04 IRR identity provisioning — installation', () => {
   it('IIP-23 does not create the data root', () => {
     const { stagingDir } = gatedStaging('no-root');
     const dataDir = join(freshDir('parent'), 'absent');
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir, dataDir })), 'DATA_DIR_ABSENT');
+    assert.equal(codeOf(() => install({ stagingDir, dataDir })), 'DATA_DIR_ABSENT');
     assert.equal(existsSync(dataDir), false);
     const file = join(freshDir('parent'), 'a-file');
     writeFileSync(file, 'x');
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir, dataDir: file })), 'DATA_DIR_ABSENT');
+    assert.equal(codeOf(() => install({ stagingDir, dataDir: file })), 'DATA_DIR_ABSENT');
   });
 
   it('IIP-24 requires an accepted gate taken on the same bytes', () => {
@@ -299,33 +335,33 @@ describe('W04 IRR identity provisioning — installation', () => {
 
     const notRun = freshDir('gate-not-run');
     stageExport(notRun, exportOfSlice(0, 5));
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir: notRun, dataDir })), 'GATE_NOT_RUN');
+    assert.equal(codeOf(() => install({ stagingDir: notRun, dataDir })), 'GATE_NOT_RUN');
 
     const refused = freshDir('gate-refused');
     stageExport(refused, exportOfSlice(0, 5));
     const staged = readStagedExport(refused);
     recordGate(staged, { ...loaderAnswerFor(staged), available: false, issueCount: 1 }, CONTEXT);
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir: refused, dataDir })), 'GATE_REFUSED');
+    assert.equal(codeOf(() => install({ stagingDir: refused, dataDir })), 'GATE_REFUSED');
 
     // A gate record edited to say "accepted" is not believed: the decision is recomputed.
     const edited = JSON.parse(readFileSync(join(refused, STAGED_GATE_FILE), 'utf8')) as Record<string, unknown>;
     edited.accepted = true;
     edited.failures = [];
     writeFileSync(join(refused, STAGED_GATE_FILE), JSON.stringify(edited));
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir: refused, dataDir })), 'GATE_REFUSED');
+    assert.equal(codeOf(() => install({ stagingDir: refused, dataDir })), 'GATE_REFUSED');
 
     // The gate was taken on one export; the staging directory now holds another.
     const stale = gatedStaging('gate-stale').stagingDir;
     const gateOfFirstExport = readFileSync(join(stale, STAGED_GATE_FILE), 'utf8');
     stageExport(stale, exportOfSlice(5, 10));
     writeFileSync(join(stale, STAGED_GATE_FILE), gateOfFirstExport);
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir: stale, dataDir })), 'GATE_STALE');
+    assert.equal(codeOf(() => install({ stagingDir: stale, dataDir })), 'GATE_STALE');
 
     // A staged file edited after the gate.
     const tampered = gatedStaging('tampered').stagingDir;
     const path = join(tampered, 'identity', IRR_IDENTITY_FILE_NAMES.listingMap);
     writeFileSync(path, readFileSync(path, 'utf8').replace('"NSE"', '"BSE"'));
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir: tampered, dataDir })), 'STAGED_FILES_ALTERED');
+    assert.equal(codeOf(() => install({ stagingDir: tampered, dataDir })), 'STAGED_FILES_ALTERED');
 
     assert.deepEqual(readdirSync(dataDir), [], 'no refusal wrote anything');
   });
@@ -334,15 +370,15 @@ describe('W04 IRR identity provisioning — installation', () => {
     const first = gatedStaging('first', 0, 5).stagingDir;
     const second = gatedStaging('second', 5, 10);
     const dataDir = freshDir('data');
-    installStagedIdentity({ stagingDir: first, dataDir });
+    install({ stagingDir: first, dataDir });
     const target = identityDirOf(dataDir);
     const before = Object.fromEntries(FILES.map((name) => [name, sha(join(target, name))]));
 
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir: second.stagingDir, dataDir })), 'TARGET_HAS_OTHER_FILES');
+    assert.equal(codeOf(() => install({ stagingDir: second.stagingDir, dataDir })), 'TARGET_HAS_OTHER_FILES');
     assert.deepEqual(Object.fromEntries(FILES.map((name) => [name, sha(join(target, name))])), before, 'the existing files are untouched');
     assert.deepEqual(readdirSync(join(dataDir, 'investment')), ['identity']);
 
-    const outcome = installStagedIdentity({ stagingDir: second.stagingDir, dataDir, replace: true });
+    const outcome = install({ stagingDir: second.stagingDir, dataDir, replace: true });
     assert.equal(outcome.action, 'REPLACED');
     assert.deepEqual(readIdentityDirectoryDigests(target), second.staged.digests);
     assert.ok(outcome.previousFilesBackup !== null && outcome.previousFilesBackup.startsWith(second.stagingDir));
@@ -357,22 +393,22 @@ describe('W04 IRR identity provisioning — installation', () => {
     const target = identityDirOf(dataDir);
     mkdirSync(target, { recursive: true });
     writeFileSync(join(target, 'notes.txt'), 'operator note\n');
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir, dataDir })), 'TARGET_HAS_OTHER_FILES');
+    assert.equal(codeOf(() => install({ stagingDir, dataDir })), 'TARGET_HAS_OTHER_FILES');
     assert.deepEqual(readdirSync(target), ['notes.txt']);
 
     const withSubdir = freshDir('data');
     mkdirSync(join(identityDirOf(withSubdir), 'nested'), { recursive: true });
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir, dataDir: withSubdir, replace: true })), 'TARGET_HAS_UNEXPECTED_CONTENT');
+    assert.equal(codeOf(() => install({ stagingDir, dataDir: withSubdir, replace: true })), 'TARGET_HAS_UNEXPECTED_CONTENT');
 
     const asFile = freshDir('data');
     mkdirSync(join(asFile, 'investment'));
     writeFileSync(join(asFile, 'investment', 'identity'), 'x');
-    assert.equal(codeOf(() => installStagedIdentity({ stagingDir, dataDir: asFile, replace: true })), 'TARGET_NOT_A_DIRECTORY');
+    assert.equal(codeOf(() => install({ stagingDir, dataDir: asFile, replace: true })), 'TARGET_NOT_A_DIRECTORY');
 
     // An empty identity directory holds nothing to protect.
     const empty = freshDir('data');
     mkdirSync(identityDirOf(empty), { recursive: true });
-    assert.equal(installStagedIdentity({ stagingDir, dataDir: empty }).action, 'INSTALLED');
+    assert.equal(install({ stagingDir, dataDir: empty }).action, 'INSTALLED');
   });
 
   it('IIP-27 an installation interrupted before the swap leaves the previous state exactly as it was', () => {
@@ -382,15 +418,15 @@ describe('W04 IRR identity provisioning — installation', () => {
 
     // No identity directory before: none afterwards, and no working directory.
     const fresh = freshDir('data');
-    assert.throws(() => installStagedIdentity({ stagingDir: first, dataDir: fresh, beforeSwap: interrupt }), /interrupted/);
+    assert.throws(() => install({ stagingDir: first, dataDir: fresh, beforeSwap: interrupt }), /interrupted/);
     assert.deepEqual(readdirSync(join(fresh, 'investment')), []);
 
     // Identity files before: the same files afterwards.
     const dataDir = freshDir('data');
-    installStagedIdentity({ stagingDir: first, dataDir });
+    install({ stagingDir: first, dataDir });
     const target = identityDirOf(dataDir);
     const before = Object.fromEntries(FILES.map((name) => [name, sha(join(target, name))]));
-    assert.throws(() => installStagedIdentity({ stagingDir: second, dataDir, replace: true, beforeSwap: interrupt }), /interrupted/);
+    assert.throws(() => install({ stagingDir: second, dataDir, replace: true, beforeSwap: interrupt }), /interrupted/);
     assert.deepEqual(Object.fromEntries(FILES.map((name) => [name, sha(join(target, name))])), before);
     assert.deepEqual(readdirSync(join(dataDir, 'investment')), ['identity']);
   });
@@ -525,9 +561,11 @@ describe('W04 IRR identity provisioning — command line', () => {
     const dataDir = freshDir('cli-data');
     assert.equal(run('generate', '--staging', stagingDir, '--accept-withheld', '2').status, 0);
 
-    const ungated = run('install', '--staging', stagingDir, '--data-dir', dataDir);
-    assert.equal(ungated.status, 5);
-    assert.match(ungated.stdout, /^RESULT: FAIL \(GATE_NOT_RUN\)/m);
+    // The command line installs under the governed policy only. Without an approval record it
+    // refuses before the gate is considered (exit code 7).
+    const unapproved = run('install', '--staging', stagingDir, '--data-dir', dataDir);
+    assert.equal(unapproved.status, 7);
+    assert.match(unapproved.stdout, /^RESULT: FAIL \(APPROVAL_MISSING\)/m);
 
     const gate = run('validate', '--staging', stagingDir, '--irr-root', join(dataDir, 'no-irr-checkout-here'), '--as-of', '2026-11-13');
     assert.equal(gate.status, 4, gate.stderr);
@@ -535,24 +573,26 @@ describe('W04 IRR identity provisioning — command line', () => {
     assert.match(gate.stdout, /IRR_RUNNER_NOT_FOUND/);
     assert.equal(readGateReceipt(stagingDir)!.accepted, false);
 
-    const refused = run('install', '--staging', stagingDir, '--data-dir', dataDir);
-    assert.equal(refused.status, 5);
-    assert.match(refused.stdout, /^RESULT: FAIL \(GATE_REFUSED\)/m);
+    // With an approval for exactly these files (test policy), the refused gate is what stops it.
+    assert.equal(codeOf(() => install({ stagingDir, dataDir })), 'GATE_REFUSED');
     assert.deepEqual(readdirSync(dataDir), []);
   });
 
-  it('IIP-43 installs a gated export, reports ALREADY_INSTALLED on repetition, and keeps the first receipt', () => {
-    const { stagingDir } = gatedStaging('cli-install');
-    const dataDir = freshDir('cli-data');
-    const first = run('install', '--staging', stagingDir, '--data-dir', dataDir);
-    assert.equal(first.status, 0, first.stderr);
-    assert.match(first.stdout, /^RESULT: PASS \(INSTALLED\)$/m);
+  it('IIP-43 a repeated installation reports ALREADY_INSTALLED and keeps the first receipt', () => {
+    // The command line cannot be shown installing: it accepts only an approval of the governed
+    // authorities, and no test holds one. The receipt rule it applies is `recordInstallation`.
+    const { stagingDir } = gatedStaging('receipt');
+    const dataDir = freshDir('receipt-data');
+    const first = install({ stagingDir, dataDir });
+    assert.equal(first.action, 'INSTALLED');
+    assert.equal(recordInstallation(stagingDir, first, '2026-11-13T00:00:00.000Z'), true);
     const receipt = readFileSync(join(stagingDir, STAGED_INSTALL_RECEIPT_FILE), 'utf8');
     assert.equal((JSON.parse(receipt) as { action: string }).action, 'INSTALLED');
+    assert.equal((JSON.parse(receipt) as { schemaVersion: string }).schemaVersion, INSTALL_RECEIPT_SCHEMA);
 
-    const second = run('install', '--staging', stagingDir, '--data-dir', dataDir);
-    assert.equal(second.status, 0);
-    assert.match(second.stdout, /^RESULT: PASS \(ALREADY_INSTALLED\)$/m);
+    const second = install({ stagingDir, dataDir });
+    assert.equal(second.action, 'ALREADY_INSTALLED');
+    assert.equal(recordInstallation(stagingDir, second, '2026-11-14T00:00:00.000Z'), false);
     assert.equal(readFileSync(join(stagingDir, STAGED_INSTALL_RECEIPT_FILE), 'utf8'), receipt);
   });
 

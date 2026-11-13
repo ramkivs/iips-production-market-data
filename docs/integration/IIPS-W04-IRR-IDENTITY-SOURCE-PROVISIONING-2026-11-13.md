@@ -36,9 +36,10 @@ Evidence files are in [`evidence/integration/w04-identity-source-provisioning-20
 | `src/identity/irr_identity_source_export.ts` | The export. A pure function of its inputs: no clock, no environment, no file access. Returns the three files and a report, or a report only. |
 | `src/identity/irr_identity_provisioning.ts` | Staging, the decision on IRR's loader answer, installation, receipts, and the reduction of an endpoint answer to counts. |
 | `scripts/irr-identity-loader-gate.mts` | Run by the IRR checkout's own TypeScript runner. Imports IRR's `loadIdentitySourcesFromDir` and `resolveIdentity` and prints one JSON document of counts and digests. |
-| `scripts/provision-irr-identity-sources.mjs` | Command line: `generate`, `validate`, `install`, `verify-endpoint`. |
-| `scripts/Invoke-IrrIdentityProvisioning.ps1` | Windows wrapper that runs the four steps with the launcher's directory conventions and sanitized output. |
+| `scripts/provision-irr-identity-sources.mjs` | Command line: `generate`, `validate`, `install`, `verify-endpoint`. Later: also `review` and `check-approval`. |
+| `scripts/Invoke-IrrIdentityProvisioning.ps1` | Windows wrapper that runs the steps with the launcher's directory conventions and sanitized output. |
 | `tests/irr_identity_source_export.test.ts`, `tests/irr_identity_provisioning.test.ts` | 91 tests. |
+| `src/identity/irr_identity_approval.ts`, `tests/irr_identity_approval.test.ts` (later record, 2026-11-13) | The governance approval check that `install` now requires, and its 44 tests. See [approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md). |
 
 The owning repository is IPD, because the source data and its governance are IPD's. IRR remains the owner of the schema, the loader and the resolver, and the tool treats IRR's loader as the acceptance gate rather than re-implementing it.
 
@@ -202,9 +203,13 @@ node scripts/provision-irr-identity-sources.mjs generate --staging <dir>
      [--accept-withheld <n>] [--required-isins <file>] [--accept-uncovered <n>] [--list-uncovered]
      [--p7 <manifest> | --no-p7] [--issuer-key-supplement <json>]
 node scripts/provision-irr-identity-sources.mjs validate --staging <dir> --irr-root <IRR checkout> [--as-of YYYY-MM-DD]
-node scripts/provision-irr-identity-sources.mjs install --staging <dir> --data-dir <IIPS_DATA_DIR> [--replace]
+node scripts/provision-irr-identity-sources.mjs review --staging <dir> [the options of generate] [--irr-root <IRR checkout>] [--as-of YYYY-MM-DD]
+node scripts/provision-irr-identity-sources.mjs check-approval --approval <record.json> [--staging <dir>]
+node scripts/provision-irr-identity-sources.mjs install --staging <dir> --data-dir <IIPS_DATA_DIR> --approval <record.json> [--replace]
 node scripts/provision-irr-identity-sources.mjs verify-endpoint --staging <dir> --portfolio-id <id> [--base-url http://127.0.0.1:8787]
 ```
+
+**Later record (2026-11-13).** `install` requires `--approval`: a governance approval record for exactly the staged files. `review` generates and validates the proposed files and reports their digests without installing. `check-approval` is read-only. No command creates an approval. The contract is in [approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md).
 
 | Exit code | Meaning |
 |---|---|
@@ -212,19 +217,22 @@ node scripts/provision-irr-identity-sources.mjs verify-endpoint --staging <dir> 
 | 2 | `generate` refused an input |
 | 3 | `generate` is incomplete: an acknowledgement is required |
 | 4 | IRR's loader gate did not accept the staged files |
-| 5 | `install` refused |
+| 5 | `install` refused for a reason other than the approval |
 | 6 | The endpoint did not answer from the gated roster |
+| 7 | `install`, `check-approval`: the approval record is missing or does not authorize the staged files. Nothing was installed or changed |
 | 64 | Usage error, or a missing or stale build |
 
 The tool needs the IPD checkout built (`npm ci`, `npm run build:tsc`) and refuses a stale build. `validate` needs an IRR checkout with its frontend packages installed, and records that checkout's commit.
 
-Staging directory: `identity/` (the three files), `provisioning-report.json`, `irr-loader-gate.json`, `install-receipt.json`, `endpoint-check.json`, and `replaced-<tag>/` after a replacement. None of them holds portfolio data. `--required-isins` takes a text file of one ISIN per line; the list is read, counted, and never written anywhere. `--list-uncovered` prints the uncovered ISINs to the console only.
+Staging directory: `identity/` (the three files), `provisioning-report.json`, `irr-loader-gate.json`, `review-for-approval.json` (written by `review`), `install-receipt.json`, `endpoint-check.json`, and `replaced-<tag>/` after a replacement. None of them holds portfolio data. `--required-isins` takes a text file of one ISIN per line; the list is read, counted, and never written anywhere. `--list-uncovered` prints the uncovered ISINs to the console only.
 
 `verify-endpoint` accepts a loopback `http` address only. Its `PASS` means the endpoint answers 200 from the roster the gate accepted. It is not a statement that holdings resolved; the counts say that.
 
 ## 10. Windows procedure
 
 **Status of this procedure:** derived from the launcher conventions in `windows-setup/03-Start-IipsServers.ps1` and from the sandbox runs. Not executed on Windows.
+
+**Step 3 cannot be run today.** Installation requires a governance approval record for exactly the generated files, and none exists: decision D1 is not approved ([decision record](IIPS-W04-IDENTITY-PROVISIONING-DECISIONS-D1-D4-2026-11-13.md)). Without `-ApprovalRecordPath` the wrapper reports `NOT RUN` before any step ([approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md)).
 
 The tool runs from its own checkout, so the checkouts the services run from are not touched.
 
@@ -235,24 +243,30 @@ Set-Location H:\IIPS\tools\ipd-identity-provisioning
 npm.cmd ci
 npm.cmd run build:tsc
 
-# 2. Review run. Writes no identity file. Expected: RESULT: INCOMPLETE, 2 withheld, exit code 3.
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1
+# 2. Review only. Installs nothing and does not touch the identity directory.
+#    First run, expected: RESULT: INCOMPLETE, 2 withheld, exit code 3 (no identity file written).
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1 -ReviewOnly
+$LASTEXITCODE
+#    Second run, stating the withheld count. Expected: the three digests of section 6,
+#    RESULT: PASS (REVIEW ONLY), NOTHING WAS INSTALLED, exit code 0.
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1 -ReviewOnly -AcceptWithheld 2
 $LASTEXITCODE
 
-# 3. Provisioning run, stating the withheld count shown by step 2.
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1 -AcceptWithheld 2
+# 3. Provisioning run. ONLY with the approval record of the required authorities for the digests
+#    step 2 printed. Without -ApprovalRecordPath: RESULT: NOT RUN, exit code 2.
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1 -AcceptWithheld 2 -ApprovalRecordPath <path of the approval record>
 $LASTEXITCODE
 ```
 
 Defaults: install root `H:\IIPS`, IRR checkout `<InstallRoot>\iips-review-recovered`, data directory `<InstallRoot>\runtime\iips-data`, staging `<InstallRoot>\runtime\identity-provisioning`, transport `127.0.0.1:8787`. Each has a parameter.
 
-Step 3 ends with `RESULT: PASS` only if IRR's loader accepted the staged files, the files were installed, and the running transport no longer reports its identity sources unavailable. Compare the three digests it prints with section 6: equal digests mean the host used the same master and mapping as the sandbox. The services stay running throughout.
+Step 3 ends with `RESULT: PASS` only if the approval record authorizes exactly the generated files, IRR's loader accepted the staged files, the files were installed, and the running transport no longer reports its identity sources unavailable. Compare the three digests it prints with section 6: equal digests mean the host used the same master and mapping as the sandbox. The services stay running throughout.
 
 | Wrapper exit code | Meaning |
 |---|---|
-| 0 | Installed, and the running transport loads the files |
-| 1 | A step refused. The reason is printed. |
-| 2 | A precondition is not met. Nothing was changed. |
+| 0 | Installed, and the running transport loads the files. With `-ReviewOnly`: generated and accepted by IRR's loader, nothing installed |
+| 1 | A step refused. The reason is printed. A refused approval record is this code. |
+| 2 | A precondition is not met, or no approval record was given. Nothing was changed. |
 | 3 | An acknowledgement is required, or the files are installed but the transport did not answer |
 
 Then, as the independent check, run the read-only diagnostic of the root-cause record, `Test-IrrIdentitySources.ps1`. Expected: `RESULT: PASS`.
@@ -263,9 +277,9 @@ To see how the holdings fare, repeat step 3 with `-PortfolioId <id>`. The output
 
 **To undo:** remove `H:\IIPS\runtime\iips-data\investment\identity`. The endpoint returns to the 503 it gave before. No other state is changed by the tool.
 
-**Without the wrapper.** The three commands of section 9 do the same work, with `node.exe`, `--staging H:\IIPS\runtime\identity-provisioning`, `--irr-root H:\IIPS\iips-review-recovered` and `--data-dir H:\IIPS\runtime\iips-data`. Their output includes paths.
+**Without the wrapper.** The commands of section 9 do the same work, with `node.exe`, `--staging H:\IIPS\runtime\identity-provisioning`, `--irr-root H:\IIPS\iips-review-recovered` and `--data-dir H:\IIPS\runtime\iips-data`. Their output includes paths. `install` is refused without `--approval` there too: the check is in the library, not in the wrapper.
 
-**Wrapper checks.** Tree-sitter PowerShell grammar: 0 error nodes. The `windows-setup` structural validator (from PR #156): 29 rules pass, 3 fail. The three are the rules that require the shared library `Iips-Common.ps1` (`-NoPause`, `Write-IipsFinalStatus`, the shared Node toolchain). The wrapper is standalone on purpose, as `Test-IrrIdentitySources.ps1` is: the library differs between `main` and PR #156.
+**Wrapper checks.** Tree-sitter PowerShell grammar: 0 error nodes. The `windows-setup` structural validator (from PR #156): 29 rules pass, 3 fail. (Re-run after the approval change of 2026-11-13: the same result with the validator of PR #156 at `c260a82`, and 23 pass, 3 fail with the older validator on this branch.) The three are the rules that require the shared library `Iips-Common.ps1` (`-NoPause`, `Write-IipsFinalStatus`, the shared Node toolchain). The wrapper is standalone on purpose, as `Test-IrrIdentitySources.ps1` is: the library differs between `main` and PR #156.
 
 ## 11. Tests
 
@@ -274,6 +288,7 @@ To see how the holdings fare, repeat step 3 with `-PortfolioId <id>`. The output
 | `tests/irr_identity_source_export.test.ts` | 53 tests, 53 passed: generation from the tracked master, determinism and pinned digests, input integrity, 11 kinds of missing data, 5 kinds of conflicting mapping, the issuer-key supplement, incomplete coverage and exact acknowledgement, the check of produced files |
 | `tests/irr_identity_provisioning.test.ts` | 38 tests, 38 passed: staging, 16 ways the gate refuses, installation paths (first install, idempotence, absent data root, stale or refused gate, altered files, replacement with backup, interruption), endpoint summary, the command line |
 | IPD `npm test` on this branch | 1,578 executed, 1,577 passed, 1 skipped (as before this change), 0 failed |
+| Later record (2026-11-13), approval enforcement | `tests/irr_identity_approval.test.ts`: 44 tests, 44 passed. The 38 provisioning tests still pass; they now install under a test approval policy, and `IIP-42` and `IIP-43` changed ([approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md), section 9). IPD `npm test`: 1,634 executed, 1,633 passed, 1 skipped, 0 failed |
 | IPD `npx tsc --noEmit` | Clean |
 | IRR loader, resolver, readiness CLI and server on the produced files | Section 7 |
 

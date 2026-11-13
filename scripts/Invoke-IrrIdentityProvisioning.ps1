@@ -5,51 +5,77 @@
     security master, and checks that the running IRR transport loads them.
 
 .DESCRIPTION
-    Runs the tracked tool scripts\provision-irr-identity-sources.mjs of THIS checkout in four steps
+    Runs the tracked tool scripts\provision-irr-identity-sources.mjs of THIS checkout in five steps
     and stops at the first step that does not pass.
 
-      1. generate   Export the P04 master into eligible-roster.json, listing-map.json and
+      1. approval   Check the governance approval record given with -ApprovalRecordPath by itself:
+                    complete, current, not revoked, made by the required authorities, for the one
+                    permitted scope. Nothing is generated when it is refused.
+      2. generate   Export the P04 master into eligible-roster.json, listing-map.json and
                     corporate-actions.json in a staging directory. Master records that cannot be
                     exported faithfully are withheld and counted. Nothing is written until the
                     withheld count is acknowledged exactly with -AcceptWithheld.
-      2. validate   Run the IRR checkout's own loader and resolver on the staged files.
-      3. install    Copy the staged files into <RuntimeRoot>\iips-data\investment\identity. The
-                    data directory must already exist. Different existing identity files are
-                    refused unless -Replace is given, and are then copied into the staging
-                    directory first.
-      4. endpoint   Ask the running IRR transport whether it loads the identity sources. With
+      3. validate   Run the IRR checkout's own loader and resolver on the staged files.
+      4. install    Copy the staged files into <RuntimeRoot>\iips-data\investment\identity. The
+                    tool first compares the approval record with the SHA-256 digest of each of
+                    the three staged files, with the generation that produced them and with the
+                    IRR commit whose loader accepted them, and installs nothing on any
+                    difference. The data directory must already exist. Different existing
+                    identity files are refused unless -Replace is given, and are then copied
+                    into the staging directory first.
+      5. endpoint   Ask the running IRR transport whether it loads the identity sources. With
                     -PortfolioId it also reports how many holdings resolved, as counts.
 
     The run is idempotent. A second run with the same inputs produces the same bytes, reports
-    ALREADY_INSTALLED and repeats the endpoint check.
+    ALREADY_INSTALLED and repeats the endpoint check. A second run needs the approval record too.
+
+    GOVERNANCE APPROVAL. Installation requires an approval record of the required authorities for
+    exactly the files to be installed (decision D1; see
+    docs\integration\IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md). Without
+    -ApprovalRecordPath this script runs no step and reports NOT RUN. The script and the tool
+    create no approval record, complete none and infer none; a person authorized to approve writes
+    it. The check is made by the tool; this script has no switch that skips it.
+
+    REVIEW ONLY. With -ReviewOnly the script generates the proposed files in the staging
+    directory, runs the IRR loader on them and prints their SHA-256 digests and everything else an
+    approval record has to state. It installs nothing, does not touch the identity directory, does
+    not ask the running transport, and takes no approval record.
 
     WHAT IT CHANGES. It writes the staging directory (default <RuntimeRoot>\identity-provisioning)
-    and the identity directory. It changes no repository, no configuration, no environment
-    variable, and starts, stops or restarts no service. IRR reads the identity files on every
-    request, so no restart is needed.
+    and, unless -ReviewOnly is given, the identity directory. It changes no repository, no
+    configuration, no environment variable, and starts, stops or restarts no service. IRR reads
+    the identity files on every request, so no restart is needed.
 
-    WHAT IT DOES NOT DO. It installs nothing that the IRR loader has not accepted. It does not
-    make holdings resolve: a holding resolves only when it carries an ISIN or an exchange and
+    WHAT IT DOES NOT DO. It installs nothing that the IRR loader has not accepted and nothing
+    that the approval record does not authorize. It does not make holdings resolve: a holding resolves only when it carries an ISIN or an exchange and
     symbol, and IRR passes that identifier to its resolver.
 
     SANITIZED OUTPUT. Result words, counts, the three fixed file names, SHA-256 digests, commit
-    identifiers and withheld master records (public reference data). No path, no portfolio
+    identifiers, withheld master records (public reference data), and the identifier, dates and
+    authority identifiers of the approval record. No path, no portfolio
     identifier, no holding. The one exception is -ListUncovered, which prints on the console the
     ISINs of the list given with -RequiredIsinsPath that the roster does not cover; they are
     written to no file.
 
     EXIT CODES
-      0  PASS        installed (or already installed) and the running transport loads the files
-      1  FAIL        a step refused; the reason is printed
-      2  NOT RUN     a precondition is not met; nothing was changed
+      0  PASS        installed (or already installed) and the running transport loads the files.
+                     With -ReviewOnly: the proposed files were generated and the IRR loader
+                     accepted them; nothing was installed
+      1  FAIL        a step refused; the reason is printed. A refused approval record is a FAIL
+      2  NOT RUN     a precondition is not met, or no approval record was given; nothing was
+                     changed
       3  INCOMPLETE  an acknowledgement is required, or the files are installed but the running
                      transport could not be asked
 
 .EXAMPLE
-    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1 -ReviewOnly -AcceptWithheld 2
+
+    Review only. Generates the proposed files and prints their digests. Installs nothing.
 
 .EXAMPLE
-    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1 -AcceptWithheld 2
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1 -AcceptWithheld 2 -ApprovalRecordPath <path of the approval record>
+
+    Installs, provided that the approval record authorizes exactly the generated files.
 #>
 [CmdletBinding()]
 param(
@@ -64,6 +90,10 @@ param(
     [ValidateRange(-1, 100000)][int] $AcceptUncovered = -1,
     [switch] $ListUncovered,
     [switch] $Replace,
+    # The governance approval record for exactly the files to be installed. Required to install.
+    [string] $ApprovalRecordPath = '',
+    # Generate, validate and report digests only. Installs nothing.
+    [switch] $ReviewOnly,
     [ValidateRange(1, 65535)][int] $TransportPort = 8787,
     [ValidateNotNullOrEmpty()][string] $BindAddress = '127.0.0.1',
     [ValidatePattern('^$|^[A-Za-z0-9._-]{1,128}$')][string] $PortfolioId = ''
@@ -81,7 +111,7 @@ trap {
 $AbsentPortfolioProbeId = 'PROBE-ABSENT-PORTFOLIO-DO-NOT-CREATE'
 $PathLabels = @(
     'report', 'identity files', 'gate record', 'identity directory', 'receipt',
-    'previous files copied to', 'record (counts only)'
+    'previous files copied to', 'record (counts only)', 'review record'
 )
 
 function Write-Step {
@@ -208,6 +238,12 @@ Write-Host 'IRR identity-source provisioning (sanitized output)'
 if ($PSVersionTable.PSVersion.Major -eq 6) { Stop-NotRun 'run this in Windows PowerShell 5.1 or in PowerShell 7' }
 if (@('127.0.0.1', 'localhost') -notcontains $BindAddress) { Stop-NotRun 'the transport address must be a loopback address' }
 
+# GOVERNANCE APPROVAL. Decided before any step runs and before the tool is called at all.
+if ((-not $ReviewOnly) -and ($ApprovalRecordPath.Length -eq 0)) { Stop-NotRun 'no governance approval record was given. Installation requires -ApprovalRecordPath with the approval record of the required authorities for exactly these files. To generate the proposed files and see their digests without installing, use -ReviewOnly' }
+if ($ReviewOnly -and ($ApprovalRecordPath.Length -gt 0)) { Stop-NotRun '-ReviewOnly installs nothing and takes no approval record; give one or the other' }
+if ($ReviewOnly -and $Replace) { Stop-NotRun '-ReviewOnly installs nothing, so -Replace has no meaning with it' }
+if ($ReviewOnly -and ($PortfolioId.Length -gt 0)) { Stop-NotRun '-ReviewOnly does not ask the running transport, so -PortfolioId has no meaning with it' }
+
 if ($RuntimeRoot.Length -eq 0) { $RuntimeRoot = Join-Path $InstallRoot 'runtime' }
 if ($IrrRoot.Length -eq 0) { $IrrRoot = Join-Path $InstallRoot 'iips-review-recovered' }
 if ($StagingRoot.Length -eq 0) { $StagingRoot = Join-Path $RuntimeRoot 'identity-provisioning' }
@@ -222,17 +258,58 @@ $builtModule = Join-Path $script:IpdRoot 'dist\src\identity\irr_identity_provisi
 if (-not (Test-Path -LiteralPath $builtModule -PathType Leaf)) { Stop-NotRun 'this IPD checkout is not built (run npm.cmd ci, then npm.cmd run build:tsc, in it)' }
 $irrRunner = Join-Path $IrrRoot 'frontend\node_modules\tsx\dist\cli.mjs'
 if (-not (Test-Path -LiteralPath $irrRunner -PathType Leaf)) { Stop-NotRun 'the IRR checkout or its installed frontend packages were not found' }
-if (-not (Test-Path -LiteralPath $dataDir -PathType Container)) { Stop-NotRun 'the runtime data directory does not exist (the launcher creates it; start the services once)' }
+if (-not $ReviewOnly) {
+    if (-not (Test-Path -LiteralPath $dataDir -PathType Container)) { Stop-NotRun 'the runtime data directory does not exist (the launcher creates it; start the services once)' }
+    if (-not (Test-Path -LiteralPath $ApprovalRecordPath -PathType Leaf)) { Stop-NotRun 'the governance approval record file was not found' }
+}
 if ($script:NodePath.Length -eq 0) {
     $onPath = @(Get-Command 'node.exe' -CommandType Application -ErrorAction SilentlyContinue)
     if ($onPath.Count -gt 0) { $script:NodePath = [string] $onPath[0].Path }
 }
 if (($script:NodePath.Length -eq 0) -or (-not (Test-Path -LiteralPath $script:NodePath -PathType Leaf))) { Stop-NotRun 'node.exe was not found (pass -NodeExecutable)' }
 if (($RequiredIsinsPath.Length -gt 0) -and (-not (Test-Path -LiteralPath $RequiredIsinsPath -PathType Leaf))) { Stop-NotRun 'the required-ISIN list was not found' }
-Write-Host '   tool, IPD build, IRR checkout, runtime data directory and node.exe: found'
+if ($ReviewOnly) { Write-Host '   tool, IPD build, IRR checkout and node.exe: found' }
+if (-not $ReviewOnly) { Write-Host '   tool, IPD build, IRR checkout, runtime data directory, approval record file and node.exe: found' }
 
-# ---------- 1. generate ------------------------------------------------------------------------
-Write-Step 'Step 1 of 4: generate from the P04 security master'
+# ---------- review only ------------------------------------------------------------------------
+# Every path through this block ends the script. It passes the tool no data directory and no
+# approval record, and the tool's review command calls no installing function.
+if ($ReviewOnly) {
+    Write-Step 'Review only: generate the proposed files, validate them and report their digests'
+    $reviewArguments = @('review', '--staging', $StagingRoot, '--irr-root', $IrrRoot)
+    if ($AcceptWithheld -ge 0) { $reviewArguments += @('--accept-withheld', [string] $AcceptWithheld) }
+    if ($RequiredIsinsPath.Length -gt 0) { $reviewArguments += @('--required-isins', $RequiredIsinsPath) }
+    if ($AcceptUncovered -ge 0) { $reviewArguments += @('--accept-uncovered', [string] $AcceptUncovered) }
+    if ($ListUncovered) { $reviewArguments += '--list-uncovered' }
+    $reviewExit = Invoke-Tool -ToolArguments $reviewArguments -TimeoutMilliseconds 780000
+    Write-Host ''
+    if ($reviewExit -eq 3) {
+        Write-Host 'RESULT: INCOMPLETE - no identity file was written and nothing was installed. Review the counts above; to proceed with them, run again and state each number exactly (-AcceptWithheld <n>, -AcceptUncovered <n>).' -ForegroundColor Yellow
+        exit 3
+    }
+    if ($reviewExit -eq 64) { Stop-NotRun 'the tool refused to start (a missing or stale IPD build is the usual reason: run npm.cmd run build:tsc in this checkout)' }
+    if ($reviewExit -ne 0) {
+        Write-Host ('RESULT: FAIL - the review did not complete (tool exit code {0}); the reason is printed above. Nothing was installed.' -f $reviewExit) -ForegroundColor Red
+        exit 1
+    }
+    Write-Host 'RESULT: PASS (REVIEW ONLY) - the proposed files were generated and the IRR loader accepted them. NOTHING WAS INSTALLED.' -ForegroundColor Green
+    Write-Host 'This is not an approval. No approval record exists until the required authorities write one for the digests printed above.'
+    exit 0
+}
+
+# ---------- 1. approval record -----------------------------------------------------------------
+Write-Step 'Step 1 of 5: the governance approval record, by itself'
+$approvalExit = Invoke-Tool -ToolArguments @('check-approval', '--approval', $ApprovalRecordPath) -TimeoutMilliseconds 180000
+if ($approvalExit -eq 64) { Stop-NotRun 'the tool refused to start (a missing or stale IPD build is the usual reason: run npm.cmd run build:tsc in this checkout)' }
+if ($approvalExit -ne 0) {
+    Write-Host ''
+    Write-Host ('RESULT: FAIL - the governance approval record does not authorize an installation (tool exit code {0}). The reasons are printed above. Nothing was generated, installed or changed.' -f $approvalExit) -ForegroundColor Red
+    exit 1
+}
+Write-Host '   the record is still to be compared with the generated files and the IRR commit; step 4 does that before it installs'
+
+# ---------- 2. generate ------------------------------------------------------------------------
+Write-Step 'Step 2 of 5: generate from the P04 security master'
 $generateArguments = @('generate', '--staging', $StagingRoot)
 if ($AcceptWithheld -ge 0) { $generateArguments += @('--accept-withheld', [string] $AcceptWithheld) }
 if ($RequiredIsinsPath.Length -gt 0) { $generateArguments += @('--required-isins', $RequiredIsinsPath) }
@@ -251,8 +328,8 @@ if ($generateExit -ne 0) {
     exit 1
 }
 
-# ---------- 2. validate ------------------------------------------------------------------------
-Write-Step 'Step 2 of 4: validate with the loader and resolver of the IRR checkout'
+# ---------- 3. validate ------------------------------------------------------------------------
+Write-Step 'Step 3 of 5: validate with the loader and resolver of the IRR checkout'
 $validateExit = Invoke-Tool -ToolArguments @('validate', '--staging', $StagingRoot, '--irr-root', $IrrRoot) -TimeoutMilliseconds 600000
 if ($validateExit -ne 0) {
     Write-Host ''
@@ -260,19 +337,26 @@ if ($validateExit -ne 0) {
     exit 1
 }
 
-# ---------- 3. install -------------------------------------------------------------------------
-Write-Step 'Step 3 of 4: install into the runtime data directory'
-$installArguments = @('install', '--staging', $StagingRoot, '--data-dir', $dataDir)
+# ---------- 4. install -------------------------------------------------------------------------
+# The tool refuses unless the approval record authorizes exactly the staged files, their generation
+# and the IRR commit of the accepted gate. There is no form of this call without the record.
+Write-Step 'Step 4 of 5: install into the runtime data directory, under the approval record'
+$installArguments = @('install', '--staging', $StagingRoot, '--data-dir', $dataDir, '--approval', $ApprovalRecordPath)
 if ($Replace) { $installArguments += '--replace' }
 $installExit = Invoke-Tool -ToolArguments $installArguments -TimeoutMilliseconds 180000
+if ($installExit -eq 7) {
+    Write-Host ''
+    Write-Host 'RESULT: FAIL - the governance approval record does not authorize exactly these files (tool exit code 7). The reasons are printed above. Nothing was installed or changed.' -ForegroundColor Red
+    exit 1
+}
 if ($installExit -ne 0) {
     Write-Host ''
     Write-Host ('RESULT: FAIL - installation was refused (tool exit code {0}). The reason is on the RESULT line above.' -f $installExit) -ForegroundColor Red
     exit 1
 }
 
-# ---------- 4. endpoint ------------------------------------------------------------------------
-Write-Step 'Step 4 of 4: the running IRR transport'
+# ---------- 5. endpoint ------------------------------------------------------------------------
+Write-Step 'Step 5 of 5: the running IRR transport'
 $base = 'http://{0}:{1}' -f $BindAddress, $TransportPort
 $health = Invoke-LoopbackGet ($base + '/api/health')
 if ($health.Status -ne 200) {

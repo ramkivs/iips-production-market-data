@@ -4,6 +4,8 @@ Record: [`docs/integration/IIPS-W04-IRR-IDENTITY-SOURCE-PROVISIONING-2026-11-13.
 
 Everything here was produced in the sandbox on 2026-11-13, on Linux, with Node v22. Nothing was run on the Windows host. IRR code was run unmodified.
 
+**Later record (2026-11-13).** The transcripts `tool-run-*.txt` show `install` succeeding without an approval record. They were recorded with the tool at `b0d7908`, into sandbox directories, before the governance approval check existed. They are kept as recorded. The `install` line of "Reproduce" below no longer runs as written: the tool now refuses without `--approval`, and no approval record exists. See [`../w04-identity-approval-enforcement-2026-11-13/`](../w04-identity-approval-enforcement-2026-11-13/README.md).
+
 | File | What it is |
 |---|---|
 | `provisioning-report.json` | The export report written by `generate --accept-withheld 2` on the tracked P04 master. Identical in both runs below. |
