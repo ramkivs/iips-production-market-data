@@ -191,7 +191,10 @@ describe('Stage 1 — Dhan Credential and Authenticated Transport Admission', ()
     assert.strictEqual(validCfg.ok, true);
     if (validCfg.ok) {
       const redacted = describeDhanConfig(validCfg.config);
-      assert.strictEqual(redacted['accessTokenKeyPath'], 'vault://dhan/nonprod/access_token');
+      // W-03 / D-7 §4.4: never publish the `vault://` reference or any store location.
+      assert.strictEqual(redacted['accessTokenKeyPath'], undefined);
+      assert.strictEqual(redacted['accessTokenRefConfigured'], 'YES');
+      assert.ok(!JSON.stringify(redacted).includes('vault://'));
       assert.ok(!('accessToken' in redacted));
       assert.ok(!JSON.stringify(redacted).includes('SENSITIVE_TOKEN_NEVER_ECHO'));
     }
