@@ -63,6 +63,7 @@ import {
   createMarketDataHttpServer,
   isLoopbackTransportHost,
   MARKET_DATA_TRANSPORT_TOKEN_ENV,
+  validateTransportToken,
 } from './dhan_market_data_http.js';
 import { DhanMarketDataService } from './dhan_market_data_service.js';
 import {
@@ -177,6 +178,8 @@ export type MarketDataDaemonFailureCode =
   | 'NON_LOOPBACK_HOST_REFUSED'
   | 'INVALID_PORT'
   | 'TRANSPORT_TOKEN_MISSING'
+  | 'TRANSPORT_TOKEN_NOT_ASCII'
+  | 'TRANSPORT_TOKEN_WHITESPACE'
   | 'VAULT_BACKEND_NOT_ALLOWED'
   | 'CONFIGURATION_INCOMPLETE'
   | 'BIND_FAILED';
@@ -408,14 +411,34 @@ export async function startMarketDataDaemon(
     };
   }
 
-  // 5. Require non-empty server-side transport token.
+  // 5. Require a present, transmittable server-side transport token.
+  //
+  // The value is read exactly once, here, and captured for the lifetime of the process: it is
+  // never re-read per request, so a token changed after launch is not observed and cannot
+  // rescue a running daemon. That is deliberate — a secret that can change under a listener is
+  // a secret with two states — and it is why the value is validated for *transmittability*
+  // before the socket exists rather than letting every request fail with a uniform 401.
   const transportToken = options.transportToken ?? env[MARKET_DATA_TRANSPORT_TOKEN_ENV];
-  if (!transportToken || !transportToken.trim()) {
+  const transportTokenProblem = validateTransportToken(transportToken);
+  if (transportTokenProblem === 'TRANSPORT_TOKEN_MISSING') {
     return {
       ok: false,
       phase: 'validate',
       code: 'TRANSPORT_TOKEN_MISSING',
       error: `${MARKET_DATA_TRANSPORT_TOKEN_ENV} is not set; refusing to start an unauthenticated market-data daemon.`,
+    };
+  }
+  if (transportTokenProblem !== null) {
+    // Same diagnosis the HTTP layer would raise, but at startup and with a typed code, so the
+    // operator gets an actionable refusal instead of a listener that rejects everything.
+    return {
+      ok: false,
+      phase: 'validate',
+      code: transportTokenProblem,
+      error:
+        transportTokenProblem === 'TRANSPORT_TOKEN_NOT_ASCII'
+          ? `${MARKET_DATA_TRANSPORT_TOKEN_ENV} contains non-ASCII or control characters; an HTTP Authorization header cannot carry them, so no request could ever authenticate. Re-enter the value as plain ASCII. The supplied value is not echoed.`
+          : `${MARKET_DATA_TRANSPORT_TOKEN_ENV} contains whitespace (leading, trailing or interior); whitespace is not part of the credential and is not trimmed at request time, so no request could match it. Re-enter the value without it. The supplied value is not echoed.`,
     };
   }
 
