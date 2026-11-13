@@ -232,6 +232,7 @@ All items are read-only. Publish counts, digests and yes/no answers only. Publis
 
 Notes:
 
+- **E1 is refined by a later record.** The [identities endpoint revision binding assessment](IIPS-W04-IRR-IDENTITIES-ENDPOINT-REVISION-BINDING-ASSESSMENT-2026-11-13.md) establishes that this route reads the current portfolio state and that its response names no revision and no provenance digest. Its section 8 gives the exact requests, the acceptance checks and the publish list for E1, and its section 11 lists the corrections to the E1 row above. Where the two differ, that record governs how E1 is collected. The evidence required and the W04 acceptance criteria are unchanged.
 - E1 on the reported build is expected to return `UNMATCHED` for all 64, or 503 if the identity files are absent. Either result is evidence. Neither is a defect of the capture.
 - E4 is possible only if that import was retained. If no record matches, the split stays unavailable and no other source is to be substituted. A count from E4 describes the import inputs. It does not change revision 1 and does not give any holding a security identity.
 - Recovering the typed reason per row is not requested. It would be a new measurement against current sources (section 6.3).
