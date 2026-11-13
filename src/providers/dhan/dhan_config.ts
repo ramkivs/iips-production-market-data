@@ -22,6 +22,7 @@ import {
   WINDOWS_DPAPI_VAULT_PROVIDER,
 } from '../../security/secret_ref.js';
 import { DhanFailure } from './dhan_failures.js';
+import { describeUtcTimestampRejection, parseStrictUtcTimestamp } from './dhan_utc_timestamp.js';
 
 /** Symbolic internal provider identifier used on the provider-neutral SPI. */
 export const DHAN_PROVIDER_ID = 'DHAN_PROVIDER';
@@ -198,7 +199,11 @@ export function resolveDhanProviderConfig(
     }
   }
 
-  if (tokenExpiresAt !== undefined && Number.isNaN(Date.parse(tokenExpiresAt))) {
+  // Strict UTC (W-06): the value must carry an explicit timezone. A zone-less timestamp used to be
+  // accepted and read as host-local time, which made the expiry mean different instants on
+  // different hosts. Never silently append `Z`: rejecting is the only honest answer.
+  const tokenExpiry = tokenExpiresAt === undefined ? null : parseStrictUtcTimestamp(tokenExpiresAt);
+  if (tokenExpiry !== null && !tokenExpiry.ok) {
     const config: DhanProviderConfig = {
       providerId: DHAN_PROVIDER_ID,
       baseUrl,
@@ -211,7 +216,9 @@ export function resolveDhanProviderConfig(
       config,
       failure: {
         code: 'CONFIGURATION_INCOMPLETE',
-        message: 'IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT must be a valid ISO-8601 UTC timestamp when provided.',
+        message:
+          `${DHAN_ENV_KEYS.accessTokenExpiresAt} ${describeUtcTimestampRejection(tokenExpiry.reason)}; ` +
+          'an explicit timezone is required so the expiry means the same instant on every host.',
       },
     };
   }
@@ -242,7 +249,7 @@ export function resolveDhanProviderConfig(
     accessTokenRef.status === 'REVOKED' ||
     clientIdRef.status === 'EXPIRED' ||
     clientIdRef.status === 'REVOKED' ||
-    (accessTokenRef.expiresAt !== undefined && Date.parse(accessTokenRef.expiresAt) <= now.getTime())
+    (tokenExpiry !== null && tokenExpiry.ok && tokenExpiry.epochMs <= now.getTime())
   ) {
     const config: DhanProviderConfig = {
       providerId: DHAN_PROVIDER_ID,

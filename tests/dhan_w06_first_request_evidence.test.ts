@@ -141,7 +141,7 @@ const operatorQuoteRequest: QuoteRequest = {
 };
 
 describe('W-06 — first authenticated request evidence', () => {
-  it('W06-01: a provider failure reaches the caller as a code and a message only — never a vendor status', async () => {
+  it('W06-01: a provider failure carries the vendor status as a separate field, never merged into code or message', async () => {
     // The service layer carries the provider's numeric status on the failure object… (the stub says 503)
     const stubService = {
       getQuote: async () => ({
@@ -187,14 +187,20 @@ describe('W-06 — first authenticated request evidence', () => {
 
       const body = (await response.json()) as { error?: Record<string, unknown> };
       assert.deepStrictEqual(Object.keys(body), ['error']);
+      // W-06 (2026-11-13): `TRANSPORT_FAILURE` means the exchange never produced a vendor response,
+      // so this failure legitimately carries NO vendor status — the stub's 503 is not evidence of a
+      // response that never arrived. The set is asserted exactly, so nothing can be added unnoticed.
       assert.deepStrictEqual(
         Object.keys(body.error ?? {}).sort(),
         ['code', 'message'],
-        'the error body must carry only a code and a message'
+        'a failure with no vendor response must carry only a code and a message'
       );
       assert.strictEqual(body.error?.code, 'TRANSPORT_FAILURE');
-      // The vendor's numeric status has no channel to the caller: it is not in the body at all.
-      assert.ok(!JSON.stringify(body).includes('503'), 'the vendor status must not leak into the body');
+      assert.strictEqual(body.error?.vendorHttpStatus, undefined);
+      assert.ok(
+        !JSON.stringify(body).includes('503'),
+        'a status from a response that never arrived must not surface as a diagnostic'
+      );
     } finally {
       await new Promise<void>((resolve) => server.close(() => resolve()));
     }

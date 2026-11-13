@@ -72,7 +72,23 @@ export type MarketDataTransportFailureCode =
 export interface MarketDataTransportFailure {
   readonly code: MarketDataTransportFailureCode;
   readonly message: string;
+  /**
+   * HTTP status of the *daemon's* response. Present whenever the daemon answered at all, so it
+   * reports the transport outcome rather than the provider's.
+   */
   readonly httpStatus?: number;
+  /**
+   * Numeric HTTP status the *vendor* returned, when the daemon could attribute one.
+   *
+   * Separate from {@link httpStatus} by design. `httpStatus` is what the local daemon answered
+   * (502 for any non-rate-limited provider failure); this is what Dhan answered. Diagnostic only:
+   * it is an integer and never carries vendor response content.
+   *
+   * The caller must not treat this as an authentication verdict — a credential the vendor accepted
+   * and one it refused can both produce a vendor status, and `PROVIDER_STATUS_FAILURE` /
+   * `CREDENTIALS_*` failures carry none at all.
+   */
+  readonly vendorHttpStatus?: number;
 }
 
 export type MarketDataTransportQuoteOutcome =
@@ -109,8 +125,48 @@ export interface MarketDataHttpOptions {
 }
 
 interface ErrorBody {
-  error: { code: string; message: string };
+  error: {
+    code: string;
+    message: string;
+    /**
+     * Numeric HTTP status the *vendor* returned, when the failure came from a vendor response.
+     *
+     * Why this is separate from the daemon's own status: the daemon reports 502 for every typed
+     * provider failure, so without this field a vendor 401 and a vendor 403 are indistinguishable
+     * in the operator's evidence (`MarketDataTransportFailure.httpStatus`, by contrast, carries the
+     * *daemon's* status — the two must never be conflated).
+     *
+     * Only the integer is exposed. The vendor's response body, its error code and its message are
+     * never propagated: they are uncontrolled third-party content, and an auth error body is
+     * exactly the kind of payload that must not be reflected.
+     *
+     * Deliberately absent when the failure had no vendor HTTP response (credential, configuration,
+     * transport, rate-budget and timeout-before-send failures), rather than present-and-null.
+     */
+    vendorHttpStatus?: number;
+  };
 }
+
+/**
+ * Codes that can only be produced by interpreting a vendor HTTP response, and for which the vendor's
+ * numeric status is therefore a meaningful diagnostic.
+ *
+ * Scoped deliberately narrowly: a vendor status is attached only where a vendor response produced
+ * the failure, so a credential-resolution or production-guard failure can never be dressed up with
+ * an HTTP status it never received.
+ */
+const VENDOR_STATUS_BEARING_CODES: ReadonlySet<string> = new Set([
+  'AUTHENTICATION_FAILURE',
+  'RATE_LIMITED',
+  'TIMEOUT',
+  'HTTP_ERROR',
+  'MALFORMED_RESPONSE',
+  'PROVIDER_STATUS_FAILURE',
+  'MISSING_REQUIRED_FIELD',
+  'INSTRUMENT_NOT_IN_RESPONSE',
+  'CANONICAL_VALIDATION_FAILURE',
+  'STALE_DATA_SUPPRESSED',
+]);
 
 const LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['127.0.0.1', '::1', '[::1]', 'localhost']);
 
@@ -124,8 +180,24 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(text);
 }
 
-function sendError(res: ServerResponse, status: number, code: string, message: string): void {
-  sendJson(res, status, { error: { code, message } } satisfies ErrorBody);
+function sendError(
+  res: ServerResponse,
+  status: number,
+  code: string,
+  message: string,
+  vendorHttpStatus?: number
+): void {
+  sendJson(res, status, {
+    error: {
+      code,
+      message,
+      // Only a finite integer is ever emitted; anything else is dropped rather than coerced, so a
+      // malformed provider value cannot become a diagnostic the operator would trust.
+      ...(vendorHttpStatus !== undefined && Number.isInteger(vendorHttpStatus) && vendorHttpStatus > 0
+        ? { vendorHttpStatus }
+        : {}),
+    },
+  } satisfies ErrorBody);
 }
 
 /**
@@ -399,7 +471,12 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
         return;
       }
       const status = result.failure.code === 'RATE_LIMITED' ? 429 : 502;
-      sendError(res, status, result.failure.code, result.failure.message);
+      // The daemon's status stays exactly as it was; the vendor's numeric status rides alongside it
+      // as a separate, clearly named diagnostic, and only for vendor-response failures.
+      const vendorHttpStatus = VENDOR_STATUS_BEARING_CODES.has(result.failure.code)
+        ? result.failure.httpStatus
+        : undefined;
+      sendError(res, status, result.failure.code, result.failure.message, vendorHttpStatus);
     })().catch(() => {
       if (!res.headersSent) sendError(res, 500, 'INTERNAL_ERROR', 'unhandled transport error');
     });
@@ -456,10 +533,16 @@ function parseErrorPayload(raw: unknown, status: number): MarketDataTransportFai
       const code = (errObj as { code?: unknown }).code;
       const message = (errObj as { message?: unknown }).message;
       if (typeof code === 'string' && code.trim()) {
+        // A vendor status is accepted only as a positive integer; a string, a float or a body-shaped
+        // object is discarded rather than trusted or coerced.
+        const vendorHttpStatus = (errObj as { vendorHttpStatus?: unknown }).vendorHttpStatus;
         return {
           code: code as MarketDataTransportFailureCode,
           message: typeof message === 'string' && message.trim() ? message : 'transport request failed closed',
           httpStatus: status,
+          ...(typeof vendorHttpStatus === 'number' && Number.isInteger(vendorHttpStatus) && vendorHttpStatus > 0
+            ? { vendorHttpStatus }
+            : {}),
         };
       }
     }

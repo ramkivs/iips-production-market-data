@@ -211,10 +211,17 @@ discarded from the script's view. Nothing in IPD's contract caused this: the dae
 
 ### 6.2 The daemon deliberately sends only a code and a message
 
-`sendError(res, status, code, message)` writes exactly `{"error":{"code","message"}}`
-(`dhan_market_data_http.ts:127-129`). The provider failure's `httpStatus` — the only place a vendor
-numeric status would appear — is **not** echoed. So even a perfectly captured body would carry the
-typed code, not the numeric vendor status.
+> **Superseded 2026-11-13 by W-06 correction A.** The daemon now also emits the vendor's **numeric**
+> status as `error.vendorHttpStatus` when the failure came from a vendor response; the code and
+> message are unchanged, and the vendor's response body is still never reflected. See
+> `DHAN-W06-AUTHENTICATION-DIAGNOSTICS-AND-EXPIRY-CORRECTIONS-2026-11-13.md` §4. The paragraph below
+> records the behaviour **as it was at the time of this attempt**, and is retained because it explains
+> why the original capture could not distinguish a vendor 401 from a 403.
+
+`sendError(res, status, code, message)` wrote exactly `{"error":{"code","message"}}`
+(`dhan_market_data_http.ts:127-129` as it then stood). The provider failure's `httpStatus` — the only
+place a vendor numeric status would have appeared — was **not** echoed. So even a perfectly captured
+body carried the typed code, not the numeric vendor status.
 
 ### 6.3 The health endpoint cannot testify
 

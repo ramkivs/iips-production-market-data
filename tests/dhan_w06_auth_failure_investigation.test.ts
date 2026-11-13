@@ -152,36 +152,52 @@ describe('W-06 Dhan authentication-failure investigation (documentation)', () =>
     assert.ok(flat(record).includes('M1 remains NOT ACHIEVED'), 'and that M1 stays unmet');
   });
 
-  it('W06-I07: the two defects the report relies on still exist in the source', () => {
+  it('W06-I07: both defects the report identified are now corrected in the source', () => {
     const client = readFileSync(
       path.resolve(process.cwd(), 'src/providers/dhan/dhan_api_client.ts'),
       'utf8'
     );
 
-    // Defect 1 (observability): the status is populated…
+    // The classification the report reasoned from is still exactly as recorded…
     const mapping = /public static mapHttpStatus[\s\S]*?\n  }/.exec(client);
     assert.ok(mapping, 'mapHttpStatus must exist');
     assert.ok(
       /status === 401 \|\| status === 403/.test(mapping[0]),
       'AUTHENTICATION_FAILURE must still be produced only for 401/403'
     );
-    assert.ok(/httpStatus: status/.test(mapping[0]), 'the vendor status is carried on the failure');
-    // …and the daemon drops it.
+    assert.ok(/httpStatus: status/.test(mapping[0]), 'the vendor status is still carried on the failure');
+
+    // …and defect 1 has since been corrected: the boundary now emits the vendor status.
     const http = readFileSync(
       path.resolve(process.cwd(), 'src/providers/dhan/dhan_market_data_http.ts'),
       'utf8'
     );
     assert.ok(
-      /sendError\(res, status, result\.failure\.code, result\.failure\.message\)/.test(http),
-      'the daemon must still emit only code+message (the report records this as the blocker)'
+      /vendorHttpStatus/.test(http),
+      'the daemon must now surface the vendor status (W-06 correction A)'
+    );
+    assert.ok(
+      !/sendError\(res, status, result\.failure\.code, result\.failure\.message\);/.test(http),
+      'the corrected call site must pass the diagnostic, not drop it'
     );
 
-    // Defect 2 (expiry zone): zone-less strings are still accepted by Date.parse.
-    assert.strictEqual(
-      new Date(Date.parse('2026-11-12T19:00:00')).toISOString(),
-      new Date(Date.parse('2026-11-12T19:00:00Z')).toISOString(),
-      'a zone-less timestamp is still silently accepted (the report records this as defect 2)'
+    // Defect 2 has also been corrected: the expiry call sites no longer hand a possibly zone-less
+    // string to `Date.parse`, which reads it as host-local time.
+    const resolver = readFileSync(
+      path.resolve(process.cwd(), 'src/providers/dhan/dhan_local_vault_resolver.ts'),
+      'utf8'
     );
+    for (const [name, source] of [['api client', client], ['resolver', resolver]] as const) {
+      assert.ok(
+        /parseStrictUtcTimestamp/.test(source),
+        `the ${name} must parse expiry with the strict UTC parser`
+      );
+      assert.strictEqual(
+        /Date\.parse\(\s*(?:ref|record|credentials)\.expiresAt\s*\)/.test(source),
+        false,
+        `the ${name} must not parse an expiry with Date.parse any more`
+      );
+    }
 
     // AUTHENTICATION_FAILURE must still be non-transient, or the report's retry argument breaks.
     const controls = readFileSync(

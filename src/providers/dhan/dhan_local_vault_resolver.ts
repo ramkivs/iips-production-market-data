@@ -36,6 +36,7 @@ import {
   isDhanProductionEnvironment,
 } from './dhan_config.js';
 import { DhanProductionNotAuthorizedError } from './dhan_api_client.js';
+import { describeUtcTimestampRejection, parseStrictUtcTimestamp } from './dhan_utc_timestamp.js';
 import type { DpapiCarrierFailureReason } from './dhan_dpapi_carrier.js';
 
 /**
@@ -236,15 +237,16 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     }
 
     if (ref.expiresAt !== undefined) {
-      const expMs = Date.parse(ref.expiresAt);
-      if (Number.isNaN(expMs)) {
+      // Strict: an explicit timezone is required, so expiry means the same thing on every host.
+      const expiry = parseStrictUtcTimestamp(ref.expiresAt);
+      if (!expiry.ok) {
         throw new DhanVaultResolutionError(
           'INVALID_SECRET_REF',
           'CONFIGURATION_INCOMPLETE',
-          'Dhan SecretRef expiresAt is not a valid ISO-8601 UTC timestamp'
+          `Dhan SecretRef expiresAt ${describeUtcTimestampRejection(expiry.reason)}`
         );
       }
-      if (expMs <= nowMs) {
+      if (expiry.epochMs <= nowMs) {
         throw new DhanVaultResolutionError(
           'EXPIRED',
           'CREDENTIALS_EXPIRED',
@@ -278,15 +280,15 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     }
 
     if (record.expiresAt !== undefined) {
-      const expMs = Date.parse(record.expiresAt);
-      if (Number.isNaN(expMs)) {
+      const expiry = parseStrictUtcTimestamp(record.expiresAt);
+      if (!expiry.ok) {
         throw new DhanVaultResolutionError(
           'INVALID_SECRET_REF',
           'CONFIGURATION_INCOMPLETE',
-          'Host vault secret entry expiresAt is not a valid ISO-8601 UTC timestamp'
+          `Host vault secret entry expiresAt ${describeUtcTimestampRejection(expiry.reason)}`
         );
       }
-      if (expMs <= nowMs) {
+      if (expiry.epochMs <= nowMs) {
         throw new DhanVaultResolutionError(
           'EXPIRED',
           'CREDENTIALS_EXPIRED',
