@@ -17,8 +17,12 @@ not modified by this record).
 > **This file contains no credential.** The two `sha256`-prefixed strings in §6 are the **first 8 bytes
 > of a SHA-256 digest of a transport token**, supplied by the operator as value-free fingerprints. They
 > are one-way, truncated, and cannot be used to reconstruct, confirm or reuse the secret. No transport
-> token value appears in this file, and no credential-bearing environment dump was taken. No Dhan Client
-> ID or Access Token was read, rotated, replaced or verified during this work.
+> token value appears in this file, and no credential-bearing environment dump was taken.
+>
+> **No Dhan Client ID or Access Token was rotated, replaced, verified or transmitted during this work,
+> and neither appears in this file.** The daemon *did* decrypt both carriers at startup, as it does on
+> every start — that is what `vaultBackendReadiness=READY` entails, and §3.1 traces it to source. The
+> distinction matters: reading is not verifying, and neither is authentication.
 
 > **Scope warning, read before citing this record.** A local `HTTP 200` from `/v1/health` proves that the
 > **operator-to-daemon transport credential matched**. It proves nothing about Dhan: no vendor request
@@ -77,8 +81,80 @@ substitute for each other.
 | Daemon endpoint | `http://127.0.0.1:8791` (loopback only) |
 | Vault backend in use | `windows-dpapi` (`WINDOWS_DPAPI_USER_SCOPE`) — **unchanged** by this work |
 
-No credential was created, rotated, replaced or deleted. The DPAPI store, its ACLs and the two Dhan
-carriers were not read for evidence and were not modified.
+No credential was created, rotated, replaced or deleted, and the DPAPI store, its ACLs and both
+carriers were **not modified**.
+
+The carriers **were read**, however — and an earlier revision of this paragraph said they were not.
+That was inaccurate, and §3.1 corrects it with the source path that establishes it: the daemon's
+startup readiness probe **decrypts both Dhan secrets** before it reports `READY`.
+
+### 3.1 What daemon startup actually does with the Dhan credentials
+
+This was traced in source, not inferred from the diagnostic labels. The chain is short and, for this
+question, conclusive.
+
+| Step | Location | What it does |
+| --- | --- | --- |
+| 1 | `dhan_local_daemon.ts:446` | `resolveDhanProviderConfig(env, now())` — builds **`vault://` SecretRef pointers only**; `DhanProviderConfig` carries `accessTokenRef` / `clientIdRef` and no value field (`dhan_config.ts:61-65`) |
+| 2 | `dhan_local_daemon.ts:161-166`, `:487-492` | the selector constructs the real `WindowsDpapiHostVaultBackend`, wrapped by `LocalHostVaultDhanCredentialResolver` |
+| 3 | `dhan_local_daemon.ts:498` | `await resolver.probeBackendReadiness()` — called with **no ref**, so all roles are probed |
+| 4 | `dhan_local_vault_resolver.ts:196-212` | delegates to the backend's `probeReadiness()` |
+| 5 | `dhan_dpapi_vault_backend.ts:216-219` | `probeReadiness()` → `evaluateReadiness(undefined)` |
+| 6 | `dhan_dpapi_vault_backend.ts:272-283` | `probeRoles` stays `['clientId', 'accessToken']` because no ref was supplied |
+| 7 | **`dhan_dpapi_vault_backend.ts:284-292`** | **`await this.unprotect(envelope.ciphertext)` for each role; a failed or empty decrypt returns `unready`** |
+| 8 | `dhan_dpapi_vault_backend.ts:475-515` | `unprotect()` runs the DPAPI child with operation `unprotect` and returns **`plaintext`** (`:511`, base64 → UTF-8) |
+| 9 | `dhan_dpapi_vault_backend.ts:295-299` | only past step 7: `liveResolutionSupported: true` |
+| 10 | `dhan_local_daemon.ts:626` | `vaultBackendReadiness` is `READY` **iff** that boolean is true |
+
+**So startup does not merely validate references.** With the selector at `windows-dpapi`, startup
+decrypts both the Client ID and the Access Token under the current Windows user, checks that each
+yields non-empty plaintext, and discards it. It does **not** compare the secrets to anything, does not
+send them anywhere, and does not retain them.
+
+The inference is closed at the joins rather than assumed:
+
+- `liveResolutionSupported: true` is set in **exactly one place** in the whole provider module
+  (`dhan_dpapi_vault_backend.ts:297`), and the only path to it passes through the decrypt loop at
+  `:284-292`.
+- `vaultBackendReadiness` is derived from that single boolean at `dhan_local_daemon.ts:626`, so the
+  observed `vaultBackendReadiness=READY` **entails** a successful decrypt of both carriers.
+- `providerState=CREDENTIALS_RESOLVED` is likewise entailed: `deriveDhanProviderState` returns it only
+  when configuration is `CREDENTIAL_REFERENCES_CONFIGURED` **and** `vaultReadiness === 'SUPPORTED'`
+  (`dhan_provider_state.ts:163`), which is the same boolean. It is also **capped** there — the function
+  cannot return `AUTHENTICATED` or `OPERATIONAL` without a vendor outcome, which is why this state is a
+  statement about the local store and not about Dhan.
+
+**No plaintext is retained.** `unprotect()`'s caller uses the decrypted value only for
+`probe.plaintext.length === 0` (`:288`); the backend declares no field that can hold a secret — only
+`lastProbe`, the verdict (`:153`) — and the module documents the invariant as "zero plaintext at rest in
+this process" (`:18-20`). The plaintext transits the DPAPI child on **stdout**, with the request on
+**stdin** (`dhan_dpapi_process.ts:13-16, 333`), never argv, never a file, never the environment.
+
+**What this record cannot distinguish.** Everything above is established from source, and from the
+operator's diagnostics. This record did **not** observe the host's decrypt operations directly — no
+DPAPI audit log, no per-call trace from that host was captured — so the claim "both carriers were
+decrypted on that specific run" rests on the `READY`/`CREDENTIALS_RESOLVED` entailment above, not on a
+direct observation of the decrypt. That is a strong entailment, not a measurement, and it is stated as
+such rather than upgraded.
+
+### 3.2 Resolution is not authentication, and not rotation
+
+Three things that are easy to conflate, kept apart:
+
+| | What it means | Evidenced here? |
+| --- | --- | --- |
+| **Resolution** | the store was opened and the secrets were decrypted and returned to the caller — a *local* operation, no network | **yes**, at every startup with `READY` (§3.1) |
+| **Authentication** | Dhan accepted those credentials as valid — a *vendor* operation | **no**; no vendor request was made (Layer B, §2) |
+| **Rotation / replacement** | a new secret was written to the store, superseding the old | **no**; nothing was written, and §13 records that |
+
+Two consequences worth stating plainly, because both were live confusions:
+
+1. Startup reads the credentials **on every start**, so a `READY` daemon has demonstrably decryptable
+   secrets — that is a genuine, useful fact, and it is *not* evidence that Dhan will accept them. The
+   recorded vendor verdict remains `502 AUTHENTICATION_FAILURE`.
+2. Because startup reads but never writes, restarting the daemon does **not** rotate, replace or
+   invalidate either carrier. This is what the procedure means by "restart re-reads the DPAPI carriers";
+   the read is real, the risk to the stored secrets is nil.
 
 ---
 
@@ -132,6 +208,10 @@ Two things follow, and both are required for the rest of this record to mean any
    called the vendor**, and `vendorEgress=IPD_SERVER_HTTPS` means egress is *permitted*, not *proven*.
    Neither value claims authentication. This is the same startup shape the earlier W-06 capture recorded,
    so the recovery changed nothing about provider readiness.
+3. `vaultBackendReadiness=READY` is not a label for "references look configured": reaching it required a
+   successful **decryption of both Dhan carriers** in this same startup (§3.1). The daemon therefore
+   read the Client ID and Access Token at this point — a local read, not a vendor authentication, and
+   not a rotation.
 
 The daemon captured this session's token value **once, at startup**, and never re-reads it (P7 `P7-11`).
 
@@ -328,6 +408,10 @@ and it is one-way.
    evidenced.
 6. **Layer B is untouched** (§2). The recorded vendor verdict stands and is neither confirmed nor
    contradicted.
+7. **The startup decryption is established by entailment, not direct observation** (§3.1). No DPAPI
+   audit trace or per-call log from the host was captured. `READY` entails a successful decrypt, because
+   the only path to `liveResolutionSupported: true` runs through the decrypt loop — but this record did
+   not watch the host perform it.
 
 ---
 
@@ -338,6 +422,10 @@ and it is one-way.
   as value-free evidence; they are one-way and cannot be reversed.
 - No credential-bearing environment dump was taken, and none is reproduced.
 - No new credential, fingerprint or measurement beyond those supplied has been added.
-- The DPAPI store, its ACLs and both Dhan carriers were not modified, and no credential was rotated.
+- The DPAPI store, its ACLs and both Dhan carriers were **not modified**, and no credential was rotated.
+- The Dhan credentials **were decrypted by the daemon at startup** (§3.1), because the `windows-dpapi`
+  readiness probe decrypts both carriers before reporting `READY`. No plaintext was retained by the
+  backend, transmitted, logged or reproduced here — but "the carriers were not read" would be false, and
+  an earlier revision of this record said exactly that.
 - **No Dhan vendor request was made** in the course of the host work recorded here or in this Arena
   verification.

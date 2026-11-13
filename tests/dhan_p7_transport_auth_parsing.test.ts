@@ -558,7 +558,12 @@ describe('DHAN-P7 Windows operator workflow', () => {
       /rotation is not remediation/.test(doc),
       'the procedure must state that rotating the transport token is not the remedy'
     );
-    assert.ok(/does not rotate, replace or disturb/.test(doc), 'restarting must be stated as harmless to DPAPI');
+    // Markdown wraps lines, so the phrase can straddle one. Normalise whitespace before matching;
+    // this is a robustness fix, not a relaxation: the phrase is still required.
+    assert.ok(
+      /does not rotate, replace or disturb/.test(doc.replace(/\s+/g, ' ')),
+      'restarting must be stated as harmless to DPAPI'
+    );
     assert.ok(/DPAPI[^\n]*unchanged|unchanged[^\n]*DPAPI/i.test(doc));
   });
 

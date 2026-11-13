@@ -62,7 +62,10 @@ launched **from that session** so it inherits the exact value, and the health ch
 variable. Nothing is retyped, copied, written to disk or passed on a command line.
 
 The transport token is **process environment only** — it is not in DPAPI. Restarting the daemon
-re-reads the DPAPI carriers; it does not rotate, replace or disturb them.
+re-reads the DPAPI carriers — with `IIPS_DHAN_VAULT_BACKEND=windows-dpapi` the startup readiness probe
+actually **decrypts** both of them before it can report `READY` — and it does not rotate, replace or
+disturb them. (Source: `dhan_dpapi_vault_backend.ts` `evaluateReadiness`; the recovery record §3.1
+traces it end to end.)
 
 ### 4.1 Enter the value and record a value-free fingerprint
 

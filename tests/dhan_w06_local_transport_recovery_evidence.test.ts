@@ -418,6 +418,110 @@ describe('W-06 local transport recovery evidence (synthetic)', () => {
     assert.ok(record.includes('Non-ASCII byte count') || record.includes('nonAscii'));
   });
 
+  it('W06-R13: the record states that startup READS the carriers, and never claims otherwise', () => {
+    const record = repoText(RECORD);
+    const text = flat(record).replace(/[*`]/g, '');
+
+    // The correction itself: the record must state the read, and must own the earlier error.
+    assert.ok(text.includes('carriers were read'), 'the record must state that the carriers were read');
+    assert.ok(text.includes('decrypts both Dhan secrets'), 'the decrypt must be named');
+    assert.ok(
+      /an earlier revision of this (?:paragraph|record) said (?:they were not|exactly that)/.test(text),
+      'the earlier inaccuracy must be acknowledged explicitly, not vaguely'
+    );
+    assert.ok(text.includes('That was inaccurate'), 'the record must own the error outright');
+    // And the removed claim must not survive anywhere.
+    assert.ok(
+      !record.includes('carriers were not read for evidence'),
+      'the retracted "not read" assertion must be gone'
+    );
+    assert.ok(
+      !text.includes('No Dhan Client ID or Access Token was read'),
+      'the retracted "was read" phrasing must be gone'
+    );
+
+    // The distinction the record exists to keep: read != authenticating, read != rotating.
+    assert.ok(text.includes('Resolution is not authentication, and not rotation'));
+    assert.ok(text.includes('a local operation, no network'));
+    assert.ok(text.includes('no vendor request was made'));
+
+    // The comparison table must answer "no" for authentication and for rotation. Pinning the ROWS,
+    // not just the surrounding prose, is what stops a later edit from quietly flipping a verdict
+    // while every other sentence still reads correctly.
+    const rowFor = (label: string): string | undefined =>
+      record.split('\n').find((line) => line.startsWith(`| **${label}**`));
+    const resolutionRow = rowFor('Resolution');
+    const authenticationRow = rowFor('Authentication');
+    const rotationRow = rowFor('Rotation / replacement');
+    assert.ok(resolutionRow, 'the Resolution row must exist');
+    assert.ok(authenticationRow, 'the Authentication row must exist');
+    assert.ok(rotationRow, 'the Rotation row must exist');
+    assert.ok(/\*\*yes\*\*/i.test(resolutionRow), 'resolution must be marked as evidenced');
+    assert.ok(/\*\*no\*\*/i.test(authenticationRow), 'authentication must be marked as NOT evidenced');
+    assert.ok(!/\*\*yes\*\*/i.test(authenticationRow), 'authentication must never be marked evidenced');
+    assert.ok(/\*\*no\*\*/i.test(rotationRow), 'rotation must be marked as NOT performed');
+
+    // The trace must cite the load-bearing source line, not just assert.
+    assert.ok(record.includes('dhan_dpapi_vault_backend.ts:284-292'), 'the decrypt loop must be cited');
+    assert.ok(record.includes('dhan_dpapi_vault_backend.ts:297'), 'the sole true-setter must be cited');
+    assert.ok(record.includes('dhan_local_daemon.ts:626'), 'the READY derivation must be cited');
+    assert.ok(record.includes('dhan_provider_state.ts:163'), 'the state derivation must be cited');
+
+    // No plaintext retention must be stated as the mitigation that makes the read acceptable.
+    assert.ok(text.includes('No plaintext is retained'));
+    // And the limitation must be stated rather than glossed.
+    assert.ok(text.includes('entailment, not direct observation'));
+  });
+
+  it('W06-R14: startup decrypts both carriers — the claim the record now makes is the code\'s', () => {
+    // A source-level pin, because the behaviour lives behind DPAPI (Windows-only) and a behavioural
+    // test cannot run here. If the readiness probe ever stops decrypting, the record's central new
+    // claim becomes false and this fails.
+    const source = readFileSync(
+      path.resolve(process.cwd(), 'src/providers/dhan/dhan_dpapi_vault_backend.ts'),
+      'utf8'
+    );
+
+    // The probe loops over the roles and decrypts each one.
+    const loop = /for \(const role of probeRoles\)[\s\S]*?const probe = await this\.unprotect\(envelope\.ciphertext\)[\s\S]*?probe\.plaintext\.length === 0[\s\S]*?\n      }/.exec(
+      source
+    );
+    assert.ok(loop, 'the readiness probe must decrypt each probed carrier');
+
+    // With no ref, every role is probed; the daemon passes no ref.
+    assert.ok(
+      /let probeRoles: DpapiCarrierRole\[\] = roles;/.test(source),
+      'an unref\'d probe must cover all roles'
+    );
+    const daemon = readFileSync(
+      path.resolve(process.cwd(), 'src/providers/dhan/dhan_local_daemon.ts'),
+      'utf8'
+    );
+    assert.ok(
+      /resolver\.probeBackendReadiness\(\)/.test(daemon),
+      'startup must call the probe with no ref, so both carriers are probed'
+    );
+
+    // `liveResolutionSupported: true` has exactly one producer, and it sits after the decrypt loop.
+    const trueSetters = source.match(/liveResolutionSupported: true/g) ?? [];
+    assert.strictEqual(trueSetters.length, 1, 'exactly one place may mark live resolution supported');
+    const trueIndex = source.indexOf('liveResolutionSupported: true');
+    const loopIndex = source.indexOf('const probe = await this.unprotect(envelope.ciphertext)');
+    assert.ok(loopIndex > 0 && loopIndex < trueIndex, 'the decrypt must precede the supported verdict');
+
+    // And `READY` is derived solely from that boolean.
+    assert.ok(
+      /vaultBackendReadiness: vaultReadiness\.liveResolutionSupported \? 'READY' : 'NOT_READY'/.test(daemon),
+      'READY must be entailed by a successful decrypt'
+    );
+
+    // The value is used only for the emptiness check: no retention field exists.
+    assert.ok(
+      !/private\s+(?:readonly\s+)?\w*[Pp]laintext/.test(source),
+      'the backend must not declare a field that retains plaintext'
+    );
+  });
+
   it('W06-R12: the vendor evidence record is untouched by this recovery', () => {
     const vendor = repoText(VENDOR_RECORD);
     // W-06's status, as recorded there, is still: evidence clause satisfied, M1 not satisfied, open.
