@@ -459,7 +459,7 @@ numbers or wrong behaviour) · `MEDIUM` (forces an assumption) · `LOW` (cosmeti
 | D-25 | Request/response code namespace overlap | MEDIUM | Structurally |
 | D-26 | `InstrumentCount` divergence | LOW | Yes |
 
-**Counts: 26 discrepancies.** Blocking: 1. High: 6. Medium: 11. Low: 8.
+**Counts: 26 discrepancies.** Blocking: 1. High: 7. Medium: 12. Low: 6.
 **Resolvable from the published set alone: 10.** The remaining **16** require either a vendor
 clarification or entitled live observation — which is why the Dependency Register (§10) lists
 **16 clarification/observation items**, and why §12 treats "ask the vendor" as a first-class work

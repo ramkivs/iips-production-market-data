@@ -48,7 +48,7 @@ Register, and no gap below assumes entitlement.
 | G-19 | Batching (1,000 instruments/request) not exploited | **Low** | No | No |
 | G-20 | Option Chain surface absent | **Low** | **Yes** | **Yes** |
 
-**Counts:** Critical 4 · High 8 · Medium 5 · Low 3 — **20 gaps**.
+**Counts:** Critical 4 · High 7 · Medium 6 · Low 3 — **20 gaps**.
 
 ---
 
