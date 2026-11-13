@@ -19,6 +19,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
+import * as path from 'node:path';
 import {
   DhanApiClient,
   DHAN_MARKET_QUOTE_PATH,
@@ -359,5 +360,144 @@ describe('W-06 — vendor taxonomy: what the documentation does and does not est
     // the Data API plan, and reading it as one would be a category error.
     const exampleActiveSegment = 'Equity, Derivative, Currency, Commodity';
     assert.strictEqual(/data/i.test(exampleActiveSegment), false);
+  });
+});
+
+describe('W-06 — vendor failure body: what 806 establishes', () => {
+  it('W06C-12: error 806 arrives with HTTP 401, disproving any code->status mapping', () => {
+    // Captured by the operator independently, using the same credential pair the daemon uses:
+    //   HTTP STATUS: 401
+    //   { "data": { "806": "Data APIs not Subscribed" }, "status": "failed" }
+    //
+    // Two things follow, and both matter:
+    //   1. 806 (entitlement) and 807-810 (credential) can arrive with the SAME status. So a 401
+    //      cannot distinguish them — which is exactly why the earlier "806 -> 403" claim was
+    //      retracted. This test now pins the real observation against that dead inference.
+    //   2. The vendor does put the error code in a `data` object keyed by code, with status:"failed".
+    const observed = { data: { '806': 'Data APIs not Subscribed' }, status: 'failed' } as const;
+    const observedHttpStatus = 401;
+
+    assert.strictEqual(observedHttpStatus, 401);
+    assert.strictEqual(observed.status, 'failed');
+    assert.strictEqual(observed.data['806'], 'Data APIs not Subscribed');
+
+    // The refuted mapping, recorded as refuted: entitlement did NOT arrive as 403.
+    assert.notStrictEqual(
+      observedHttpStatus,
+      403,
+      'entitlement refusal arrived as 401, not 403 — no documented code->status mapping exists'
+    );
+
+    // IPD would classify this same response as AUTHENTICATION_FAILURE, because it sees only the
+    // status. That is the information loss the diagnostic work documented; it is NOT a defect,
+    // since the vendor's body is deliberately never parsed for content.
+    assert.deepStrictEqual(['401', '403'], ['401', '403']);
+  });
+
+  it('W06C-13: IPD fails closed on the captured vendor failure body', () => {
+    // The captured body, fed to the real parser. The vendor signalling must never be mistaken for a
+    // successful quote, and the entitlements code must not be laundered into market data.
+    const captured = { data: { '806': 'Data APIs not Subscribed' }, status: 'failed' };
+    const parsed = parseDhanMarketQuoteResponse(captured);
+
+    assert.strictEqual(parsed.ok, false, 'a "failed" vendor status must never parse as success');
+    if (!parsed.ok) {
+      assert.strictEqual(parsed.failure.code, 'PROVIDER_STATUS_FAILURE');
+      // The message names the vendor's status word and nothing else — no vendor text is reflected.
+      assert.match(parsed.failure.message, /non-success/i);
+      assert.strictEqual(
+        parsed.failure.message.includes('Data APIs not Subscribed'),
+        false,
+        'the vendor message must not be echoed by the parser'
+      );
+    }
+  });
+});
+
+describe('W-06 — corpus consistency after the 806 root cause', () => {
+  const ROOT_CAUSE = 'docs/integration/DHAN-W06-ROOT-CAUSE-806-DATA-API-SUBSCRIPTION-2026-11-13.md';
+  const CONFORMANCE = 'docs/integration/DHAN-W06-REQUEST-CONFORMANCE-AND-401-CLASSIFICATION-2026-11-13.md';
+  const REASSESSMENT = 'docs/integration/DHAN-W06-PROFILE-AUTHENTICATION-AND-ENTITLEMENT-REASSESSMENT-2026-11-13.md';
+
+  const text = (p: string) => readFileSync(path.resolve(process.cwd(), p), 'utf8');
+  const flat = (s: string) => s.replace(/\s+/g, ' ').replace(/[*`]/g, '');
+
+  it('W06C-14: the root cause record states 806 and does not recommend credential rotation', () => {
+    const record = flat(text(ROOT_CAUSE));
+
+    assert.ok(record.includes('806'), 'the vendor error code must be recorded');
+    assert.ok(record.includes('Data APIs not Subscribed'), 'the vendor message must be recorded verbatim');
+    assert.ok(record.includes('EXTERNAL_BLOCKER — DHAN_DATA_API_SUBSCRIPTION_INACTIVE'));
+    assert.ok(record.includes('401'), 'the observed HTTP status must be recorded');
+
+    // The distinction this whole episode turned on, stated in the record itself.
+    assert.ok(
+      record.includes('Credential authentication') && record.includes('Data API entitlement'),
+      'the two layers must be named separately'
+    );
+    assert.ok(/AUTHENTICATION_FAILURE`? means "Dhan refused"/i.test(record) ||
+      record.includes('means "Dhan refused"'), 'the typed code must not be read as a credential verdict');
+
+    // Anti-recommendations must be explicit, not merely absent.
+    for (const prohibition of ['Do not rotate the access token', 'Do not reprovision the DPAPI carriers']) {
+      assert.ok(record.includes(prohibition), `the record must state: ${prohibition}`);
+    }
+
+    // …and no positive instruction to rotate may creep in.
+    for (const forbidden of [/you should rotate/i, /regenerate the token to fix/i, /reprovision the carriers to/i]) {
+      assert.strictEqual(record.match(forbidden), null, `must not recommend: ${forbidden.source}`);
+    }
+  });
+
+  it('W06C-15: no W-06 record re-asserts the refuted 806 -> 403 mapping', () => {
+    for (const record of [ROOT_CAUSE, CONFORMANCE, REASSESSMENT]) {
+      const body = flat(text(record));
+      // A live (non-retracted) assertion that entitlement maps to 403 would be a regression.
+      const asserted = /806`? (?:maps to|→|->) (?:HTTP )?403/i.test(body);
+      if (asserted) {
+        // Only acceptable inside an explicit retraction context.
+        const idx = body.search(/806`? (?:maps to|→|->) (?:HTTP )?403/i);
+        const context = body.slice(Math.max(0, idx - 400), idx + 200);
+        assert.ok(
+          /retract|wrong|inference|not documentation|no such mapping|confirmed by observation/i.test(context),
+          `${record}: an 806->403 claim must be inside a retraction`
+        );
+      }
+    }
+    // The positive, evidence-based statement must exist in the root-cause record.
+    assert.ok(flat(text(ROOT_CAUSE)).includes('806'));
+  });
+
+  it('W06C-16: the subscription proposal is recorded as operator action, never as performed', () => {
+    const record = flat(text(ROOT_CAUSE));
+
+    assert.ok(record.includes('499'), 'the price must be recorded');
+    assert.ok(/GST/i.test(record));
+    assert.ok(/Subscribe to Dhan Data APIs/i.test(record));
+
+    // It must be framed as something the operator does, and explicitly not something this work did.
+    assert.ok(
+      /does not subscribe on the operator.s behalf/i.test(record),
+      'the record must state that no subscription was initiated'
+    );
+    for (const forbidden of [/we subscribed/i, /subscription (?:has been|was) activated/i]) {
+      assert.strictEqual(record.match(forbidden), null, `must not claim: ${forbidden.source}`);
+    }
+  });
+
+  it('W06C-17: no milestone is claimed by identifying a blocker', () => {
+    const record = flat(text(ROOT_CAUSE));
+    assert.ok(record.includes('M1') && record.includes('NOT ACHIEVED'));
+    assert.ok(record.includes('M2a') && record.includes('NOT STARTED'));
+    assert.ok(
+      record.includes('Identifying a blocker is not progress'),
+      'the record must refuse to treat diagnosis as milestone progress'
+    );
+    for (const forbidden of [/M1 (?:achieved|is achieved)/i, /M2a (?:complete|achieved)/i]) {
+      assert.strictEqual(record.match(forbidden), null, `must not claim: ${forbidden.source}`);
+    }
+
+    // The remaining authorized request must be recorded as preserved.
+    assert.ok(/REST? PRESERVED|PRESERVED — unconsumed|unconsumed/i.test(record));
   });
 });

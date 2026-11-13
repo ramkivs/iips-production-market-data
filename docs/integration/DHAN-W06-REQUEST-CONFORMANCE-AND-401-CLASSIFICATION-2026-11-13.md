@@ -3,7 +3,9 @@
 > **PARTIALLY SUPERSEDED 2026-11-13 by `DHAN-W06-PROFILE-AUTHENTICATION-AND-ENTITLEMENT-REASSESSMENT-2026-11-13.md`.**
 > Three claims below were wrong and are corrected there: (1) that vendor error codes can be mapped to
 > HTTP statuses from the annexure — the annexure publishes **no HTTP status column**, so §6's
-> exclusions and §7's "806 → 403" were **inference, not documentation**; (2) that the Data API
+> exclusions and §7's "806 → 403" were **inference, not documentation**. This was later **confirmed by
+> observation**: Dhan returned `806` with HTTP **401**, not 403
+> (`DHAN-W06-ROOT-CAUSE-806-DATA-API-SUBSCRIPTION-2026-11-13.md` §2.1); (2) that the Data API
 > subscription being inactive was the most likely cause — it is now known the profile evidence does not
 > speak to `dataPlan` at all; (3) the implication that the credential pair was unverified — it is now
 > verified by an independent `GET /v2/profile` returning 200 with the same pair. What survives is the

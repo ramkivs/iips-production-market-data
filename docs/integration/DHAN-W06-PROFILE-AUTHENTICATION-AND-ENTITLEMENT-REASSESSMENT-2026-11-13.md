@@ -247,6 +247,14 @@ exactly; (b) a successful quote. Both are deferred to the remaining authorized r
 
 ## 8. The strongest evidence-supported next step
 
+> **SUPERSEDED 2026-11-13** by `DHAN-W06-ROOT-CAUSE-806-DATA-API-SUBSCRIPTION-2026-11-13.md`. The operator
+> obtained the vendor's error code directly: **`806` — Data APIs not Subscribed**, returned with HTTP 401.
+> That answers the entitlement question more authoritatively than reading `dataPlan` would have, so the
+> recommendation below is **closed, not pending**. The retraction in §2.1 is also now **validated by
+> evidence**: `806` arrived as 401, not the 403 that the original record had invented. §3–§7 remain
+> accurate and are unaffected.
+
+
 **Step 1 — no vendor request, no credential handling, no operator re-authentication:**
 Read `dataPlan` and `dataValidity` from the profile response body the operator already retrieved.
 
