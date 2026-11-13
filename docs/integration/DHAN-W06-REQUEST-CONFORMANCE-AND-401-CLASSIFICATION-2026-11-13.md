@@ -1,5 +1,14 @@
 # DHAN W-06 — Request Conformance and 401 Classification (2026-11-13)
 
+> **PARTIALLY SUPERSEDED 2026-11-13 by `DHAN-W06-PROFILE-AUTHENTICATION-AND-ENTITLEMENT-REASSESSMENT-2026-11-13.md`.**
+> Three claims below were wrong and are corrected there: (1) that vendor error codes can be mapped to
+> HTTP statuses from the annexure — the annexure publishes **no HTTP status column**, so §6's
+> exclusions and §7's "806 → 403" were **inference, not documentation**; (2) that the Data API
+> subscription being inactive was the most likely cause — it is now known the profile evidence does not
+> speak to `dataPlan` at all; (3) the implication that the credential pair was unverified — it is now
+> verified by an independent `GET /v2/profile` returning 200 with the same pair. What survives is the
+> **request-conformance** finding (§4, §5) and the conformance tests, which are unchanged.
+
 **Status:** INVESTIGATION RECORD + CONFORMANCE TESTS. **No vendor request was made in this work item.**
 **Starting HEAD:** `a624d06` (re-provisioned checkout; reconciled to `8bbc299` by content identity, §2).
 **Repository:** `ramkivs/iips-production-market-data`, branch `arena/84d1e063-iips-production-market-data`.
@@ -27,9 +36,11 @@ The evidence that closes the implementation question:
    per class.** Dhan's annexure (authoritative) defines Trading API errors `DH-901`/`DH-902` and a
    *separate* Data API error table. `DH-902` — "User has not subscribed to Data APIs or does not have
    access to Trading APIs…" — exists precisely because a valid token can be refused a data endpoint.
-4. **A 401 can only mean a credential-class refusal** (codes 807/808/809/810), *not* an input error
-   (813/DH-905 → 400) and *not* the canonical not-subscribed code (806 → 403). So the payload, the
-   security ID and the header shapes are all excluded **by the status itself** (§6).
+4. ~~**A 401 can only mean a credential-class refusal** (codes 807/808/809/810), *not* an input error
+   (813/DH-905 → 400) and *not* the canonical not-subscribed code (806 → 403).~~
+   **RETRACTED.** The annexure publishes no HTTP status for any error code, so those arrows were
+   invented. IPD's own `mapHttpStatus` collapses 401 **and** 403 into `AUTHENTICATION_FAILURE`, so the
+   typed code carries no information beyond "the vendor refused". See the reassessment record §5.
 
 **Verdict: external, operator-controlled.** No production code change is justified; a "fix" here would
 be invention. What IPD *can* do is stop guessing — §8 specifies the precise next action.
@@ -120,9 +131,14 @@ authoritatively know. `W06C-05` asserts its continued absence, so a future "help
 
 ---
 
-## 6. Why the status alone classifies the failure
+## 6. ~~Why the status alone classifies the failure~~ — RETRACTED, see reassessment §5
 
-The status is credential-class. Working backwards from Dhan's authoritative annexure:
+**This section overreached.** It presented a vendor-code → HTTP-status table as if the annexure
+published one. It does not: the Trading API error table has columns *Type, Code, Message* and the Data
+API error table has *Code, Description* — no status anywhere. The table below is therefore **inference**,
+and the "excluded" column proves only that the code is *consistent with* a credential-class refusal, not
+that other classes are ruled out. Retained for audit; do not rely on it.
+
 
 | Possible cause | Vendor signal it would produce | Observed? |
 | --- | --- | --- |
@@ -151,7 +167,7 @@ exactly the payload most likely to echo token fragments. §8 resolves the ambigu
 
 Four candidate explanations, ranked, with the evidence for each:
 
-### H1 — The Data API subscription is not active — **MEDIUM-HIGH**
+### H1 — The Data API subscription is not active — ~~MEDIUM-HIGH~~ **DOWNGRADED: UNSUPPORTED BY THE PROFILE EVIDENCE**
 
 - **For:** Dhan sells Trading APIs free and Data APIs as a paid subscription (₹499 + GST/month). The
   annexure defines a dedicated not-subscribed code (`806`) and Dhan's Trading-API `DH-902` says "User
@@ -159,10 +175,15 @@ Four candidate explanations, ranked, with the evidence for each:
   Trading-class endpoint: it needs *authentication only*, no data entitlement. `/marketfeed/quote` is a
   Data-class endpoint: it needs *authentication **and** entitlement*. A valid pair therefore behaves
   exactly as observed — 200 on profile, refusal on quote.
-- **Complication:** the canonical not-subscribed code is `806`, which Dhan maps to **403**. IPD observed
-  **401**. So either the account's refusal is being surfaced under a credential-class code (which Dhan's
-  forums show happening), or the cause is genuinely credential-class and H2/H3 apply.
-- **Unverifiable locally:** entitlement is an account fact.
+- ~~**Complication:** the canonical not-subscribed code is `806`, which Dhan maps to **403**.~~
+  **RETRACTED — no such mapping is documented.** IPD cannot tell from a 401 whether the refusal was
+  `806`, `807`, `808`, `809`, `810` or `DH-901`/`DH-902`.
+- **Critically, the evidence that supersedes this section does not test H1 at all:** the operator's
+  `GET /v2/profile` reported `tokenValidity` and `activeSegment`. Dhan's documented profile response has
+  a dedicated **`dataPlan`** (Active/Deactive) field, which was not reported. So H1 is neither supported
+  nor excluded by the available evidence — it is simply **untested**.
+- **Testable without a vendor request?** See the reassessment record §7: reading `dataPlan` from the
+  profile body the operator already has requires no new vendor call.
 
 ### H2 — The token was generated as a "Trading API" token — **MEDIUM**
 
@@ -180,8 +201,10 @@ Four candidate explanations, ranked, with the evidence for each:
 
 ### H4 — An implementation defect in the quote request — **LOW (effectively excluded)**
 
-- **Against:** §4 shows conformance field for field; §6 shows input-class defects would return 400, and
-  a missing entitlement returns 403, neither of which is 401.
+- **Against:** §4 shows conformance field for field. (The "would return 400 / returns 403" reasoning in
+  §6 is retracted; the strongest remaining argument is conformance itself, plus the fact that a
+  construction defect would more plausibly surface as a parse failure than as a vendor credential
+  refusal.)
 
 ### 7.a The 14.9 seconds
 
