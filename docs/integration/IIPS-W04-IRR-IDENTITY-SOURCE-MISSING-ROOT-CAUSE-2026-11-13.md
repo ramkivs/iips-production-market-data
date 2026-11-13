@@ -236,7 +236,7 @@ For the second row, which is the expected one:
 
 - IRR's rule is that the files come "from the authoritative issuer source" and that test fixtures are not copied into an operational data domain (section 4). Installing the synthetic fixture would clear the 503 and produce `SYNTHETIC_FIXTURE` answers that resolve none of the real holdings. It would not be W04 evidence.
 - The seven tracked single-issuer sets are evidence for other work items. Together they hold 5 distinct real ISINs (W04 evidence assessment §7.2). They are not a roster for this portfolio.
-- IPD holds governed identity data (the P04 master and the P7 registry), but no tracked contract or tool converts it into IRR's three files. Building one would be new work across both repositories and needs its own authority. It was not attempted.
+- IPD holds governed identity data (the P04 master and the P7 registry), but no tracked contract or tool converts it into IRR's three files. Building one would be new work across both repositories and needs its own authority. It was not attempted. *(Later addition: such a tool was since built in IPD at the owner's direction, without an IRR change; see the [provisioning record](IIPS-W04-IRR-IDENTITY-SOURCE-PROVISIONING-2026-11-13.md).)*
 - Placing files clears the 503. It does not by itself give coverage: a holding resolves only if its listing is in the listing map and its issuer in the roster. Measuring that is W04 host item E1.
 
 No recovery was performed here, and none can be performed from the repositories.
