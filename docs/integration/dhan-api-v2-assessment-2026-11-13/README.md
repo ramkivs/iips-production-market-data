@@ -1,7 +1,7 @@
 # Dhan API v2 — Comprehensive Capability Assessment (IPD)
 
 **Status:** ASSESSMENT ONLY — no implementation authority conferred.
-**Assessment date:** 2026-11-12
+**Assessment date:** 2026-11-13
 **Subject repository:** `ramkivs/iips-production-market-data`
 **Subject commit (baseline):** `c260a8222661519c317183dc62c501d1b7a4cdae`
 **Reference document set:** branch `docs/dhan-api-v2-reference-library`, commit
