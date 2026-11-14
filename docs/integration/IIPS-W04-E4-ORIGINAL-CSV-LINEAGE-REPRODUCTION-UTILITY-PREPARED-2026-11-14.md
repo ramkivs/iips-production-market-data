@@ -8,7 +8,7 @@
 
 **Host result (later record, 2026-11-14).** The Principal ran the published utility on the Windows host and reports **`RESULT: REPRODUCED_ALL`, exit code 0: 64 of 64 stored lineage digests reproduced from the original CSV, 0 ambiguous, 0 not reproduced**, with the utility, CSV and capture digests equal to the recorded ones. The 63 holdings without a stored security identity all had an ISIN and an exchange in the committed input: **class C, 63 of 63** (NSE 62, BSE 1). This replaces "UNDETERMINED". The cause of the missing identities is not proven. `identityStatus` `RESOLVED` beside a `null` security identity is a valid state by design. Sections 12 to 15.
 
-**The utility was run by the Principal on Windows, not in this environment.** The CSV and the capture exist only on the Principal's machine, and this environment cannot reach it. Neither file was requested, uploaded or read. The figures recorded here are those the Principal reported. **The complete sanitized output has not reached this environment and is not yet committed** (section 12.1).
+**The utility was run by the Principal on Windows, not in this environment.** The CSV and the capture exist only on the Principal's machine, and this environment cannot reach it. Neither file was requested, uploaded or read. The figures recorded here are those the Principal reported. When sections 12 to 15 were first published the complete sanitized output had not reached this environment. **It was supplied afterwards, is committed verbatim and agrees with every recorded figure** (section 12.10).
 
 **W04 status is unchanged: PARTIALLY COMPLETE. Not accepted.**
 
@@ -25,7 +25,7 @@ Sections 1 to 11 are kept as written when the utility was prepared, before any r
 | Run on the original CSV and the actual capture | When prepared: not done. **Later record: done by the Principal on the host; `REPRODUCED_ALL`, 64 of 64 (section 12)** |
 | Classification of the 63 | When prepared: not done. **Later record: read by the rules of section 9; class C, 63 of 63 (section 13).** Not done by the utility, and not a cause |
 | `identityStatus` against `securityIdentity` (asked after the result) | Investigated in source and reproduced in the sandbox: a valid state by design (section 14) |
-| Complete sanitized host output, with the result JSON, in the repository | **Not done.** It did not reach this environment (section 12.1) |
+| Complete sanitized host output, with the result JSON, in the repository | When sections 12 to 15 were first published: not done. **Later record: done.** [Committed](../../evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/host-run-2026-11-14/w04-e4-csv-lineage-output.txt) and reconciled; no figure differs (section 12.10) |
 
 ## 1. Inputs, as reported
 
@@ -416,6 +416,8 @@ W04, E4: record the result of the host run. If the holdings are reproduced, the 
 - **What did not reach this environment.** The brief states that the complete sanitized output, including `E4_CSV_LINEAGE_RESULT_JSON`, was attached. **No attachment was delivered to this environment.** The Principal was asked and chose to attach it again in a later message. Until then the following are **not in the repository and were not seen here**: the 64 `[ROW]` lines, the result JSON and its SHA-256, the totals of the `checks:` line, any `[WARN]` line, and the `unresolved:` line.
 - **Where the complete output will go.** `evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/host-run-2026-11-14/w04-e4-csv-lineage-output.txt`, verbatim. The [folder note](../../evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/host-run-2026-11-14/README.md) lists the figures it must agree with. If it differs from this section in any figure, this section is corrected and the difference is recorded.
 
+**Later record (2026-11-14).** The complete output has since been supplied and committed. Section 12.10 replaces the two preceding points.
+
 Labels used from here on: **H** reported by the Principal from the host run; **S** read in source here, at the commit named; **R** reproduced here with synthetic input; **D** derived, with its conditions stated; **U** unavailable.
 
 ### 12.2 Utility and inputs (H)
@@ -511,6 +513,8 @@ The CSV path given to the utility was `C:\Users\USER\Desktop\dhan_holdings_withi
 
 The reported figures are internally consistent: 63 + 1 = 64 rows; 62 + 1 + 1 = 64 holdings; 64 reproduced + 0 + 0 = 64 targets.
 
+Later record: the `checks:` and `unresolved:` lines are now read from the complete output: 19 pass, 0 fail, 0 warn; unresolved none (section 12.10).
+
 ### 12.9 What the result establishes, and what it does not
 
 1. The original committed CSV input is identified and verified: its content digest is the one recorded for the single committed import of revision 1 (H).
@@ -522,6 +526,53 @@ The reported figures are internally consistent: 63 + 1 = 64 rows; 62 + 1 + 1 = 6
 7. No identity repair, import, portfolio change or journal reconstruction was performed.
 
 The result is the Principal's run of a prepared tool. It is operator-reported, as the E4 probe output is. The lineage reproduction does not recreate the IRR evidence journal, which remains unrecovered ([journal-not-found record](IIPS-W04-E4-EVIDENCE-JOURNAL-NOT-FOUND-INVESTIGATION-2026-11-14.md)).
+
+### 12.10 Complete output received and reconciled (later record, 2026-11-14)
+
+Sections 12.1 to 12.9 were written and published before the complete output arrived. They are kept as written. This section records the output and replaces the statements of 12.1 and 12.8 that it was missing.
+
+**Receipt.** The Principal supplied the complete sanitized output as text in the conversation, after sections 12.1 to 12.9 were published. It is the Principal's output of the host run. It was not produced, re-run or independently observed in this environment (H).
+
+**Committed as** [`host-run-2026-11-14/w04-e4-csv-lineage-output.txt`](../../evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/host-run-2026-11-14/w04-e4-csv-lineage-output.txt): 139 lines, 27,123 bytes, ASCII only, LF line endings, SHA-256 `518d76c31fef9351175d179839322165432977dd04f9c69b6accd217597860de`. The text is that of the Principal's message. It was written to the file from that message and checked as below. The encoding and line endings of the file on the host are not known, so that SHA-256 identifies the committed file, not the host file.
+
+**Integrity of the committed text**
+
+| Check | Result |
+|---|---|
+| SHA-256 of the text after `E4_CSV_LINEAGE_RESULT_JSON: `, recomputed here | `022154468fa27552cf7ac33fa2760000c6ccc94cc812a49da7064c7796f1358c`, **equal** to the `E4_CSV_LINEAGE_RESULT_JSON_SHA256` line. The result JSON (14,024 bytes) is therefore byte-for-byte the text that digest was computed over |
+| The 64 `[ROW]` lines against the 64 `holdings` entries of the JSON | Equal, 64 of 64 |
+| Lines tagged `[PASS]`, `[FAIL]`, `[WARN]` against the `checks` member and the `checks:` line | 19, 0, 0 in all three |
+| Wording of the other 66 lines against what the published utility prints (its committed synthetic sample, numbers and digests masked) | 64 identical. The other 2 differ only in a reported value: the evidence eligibility, and the counts by input class |
+| Content | Counts, ordinals, CSV line numbers, closed-vocabulary values, the two whole-file digests and the result digest. No ISIN-shaped token, no path, no file name, no symbol, quantity or price |
+
+These checks show that the text is internally consistent and has the form the published utility prints. They do not turn it into an independent observation of the host.
+
+**Reconciliation with the figures of 12.2 to 12.7.** Every figure transcribed from the brief was compared with the output and with the result JSON.
+
+| Figures | In the output | Agreement |
+|---|---|---|
+| CSV digests, encoding, size (12.2) | `csv.sha256.*`, `csv.encoding`, `csv.size`; `inputs.csv` | Equal |
+| Capture digest (12.2) | `capture.sha256`; `inputs.capture` | Equal |
+| Capture facts (12.3) | `capture.*` lines; `capture` member | Equal: schema v1, `CONSISTENT_CAPTURE`, `DHAN_PORTFOLIO`, revision 1, 64 holdings, 64 distinct digests, 1 import, `INITIAL`, identity object 1, `null` 63, other 0, `{"RESOLVED":64}`, `{"CANONICAL_P04":64}` |
+| Link (12.4) | `link.*` lines; `link` member | Equal: 1 import with this content digest, ISO-8601 UTC instant, file name equal, `DHAN`, `SAVED_NEW_BATCH`, whole-import digest equal to the revision's |
+| CSV as parsed (12.5) | `csv.*` lines; `csv` member | Equal: `DHAN_DETAILED_HOLDINGS_V1`, 64 rows, 64 native rows, 0 skipped, 0 aggregated, 0 excluded, 64 holdings, 64 distinct ISINs; NSE 63, BSE 1, every other class 0 |
+| Reproduction (12.6) | `reproduction.*`, `import.provenance.*`; `reproduction`, `importProvenance` | Equal: 64 targets, 64 derived, 64 reproduced with `MAPPER_BI03`, 0 ambiguous, 0 not reproduced, 0 identifiers-only, 0 CSV holdings unmatched, 0 with differing stored members; both whole-import checks PASS |
+| Input by stored identity (12.7) | `input.reproduced.*`; `inputClassOfReproduced`; the 64 rows counted here | Equal: `null` with `ISIN+EXCHANGE_NSE` 62 and `ISIN+EXCHANGE_BSE` 1; object with `ISIN+EXCHANGE_NSE` 1 |
+| Final line (12.6) | `RESULT: REPRODUCED_ALL`; `"result":"REPRODUCED_ALL"` | Equal |
+
+**No figure differs. Nothing in sections 12.2 to 12.7 or in section 13 is corrected.**
+
+**What the output adds to the brief**
+
+- `checks: 19 pass, 0 fail, 0 warn` and `unresolved: none`. The two rows of 12.8 that were inferred from the final line are now read directly.
+- No `[WARN]` line, and `recordedInputs` is `{"csv":true,"capture":true}`: neither expected digest was overridden. The result describes the recorded inputs.
+- `capture.evidenceEligibility: HOST_CAPTURE_SUBJECT_TO_REVIEW`. The capture is host evidence subject to review, as recorded for W11.
+- One capture file was examined and one had the expected digest. Of the four reads, two are `portfolio.get` with a result and one is `portfolio.revisions` with a result.
+- The CSV header has 11 columns; the seven the import uses are all located.
+- Every one of the 64 stored holdings is paired with exactly one CSV-derived holding built from exactly one CSV line. The CSV lines used are 2 to 65, each once.
+- The holding that carries the identity object is `H01`, from CSV line 61. The one BSE row is `H06`, from CSV line 62. These are ordinals. They name no security.
+
+**Reported in the brief only, not printed by the utility:** the utility SHA-256 observed on the host (printed by step 3 of the command), the exit code, the CSV path and the PowerShell version. Exit code 0 is the code the utility sets with `REPRODUCED_ALL` (utility source, line 1257).
 
 ## 13. Reading of the result: the 63 holdings
 
@@ -655,16 +706,16 @@ Each item is a read-only host check that only the Principal can run. None is pre
 
 **Remaining**
 
-- The complete sanitized host output, with the `[ROW]` lines and `E4_CSV_LINEAGE_RESULT_JSON`, is to be committed verbatim and reconciled with section 12 (12.1). **Until then this record rests on reported figures, and W04 E4 is not closed.**
+- ~~The complete sanitized host output is to be committed verbatim and reconciled with section 12.~~ **Done (later record, section 12.10).** The output, with its 64 `[ROW]` lines and `E4_CSV_LINEAGE_RESULT_JSON`, is committed and agrees with every recorded figure. **The E4 lineage reproduction is complete: the records reflect the 64 of 64 host result and hold the complete output.**
 - The cause of the 63 `null` identities is not proven. The evidence that would settle it is in 14.6.
 - The W04 acceptance conditions of the [roadmap](IIPS-CURRENT-PORTFOLIO-EXECUTION-ROADMAP.md) are open: the IRR resolver outcome for the holdings is not observed, the exact security to listing to issuer mapping does not exist for 63 holdings, and the source versions served on the host are not established.
 
 **Blockers**
 
-- The complete host output did not reach this environment.
+- ~~The complete host output did not reach this environment.~~ Cleared (section 12.10).
 - Checks E-a and E-b need the host and the Principal.
 - An identity for the 63 needs series evidence the tracked registry does not hold. Supplying it is a registry decision of the C4/C5 assessment, section 9. It is not authorized here.
 
 **Next roadmap step**
 
-W04, E4: commit the complete host output and reconcile it. Then the Principal decides whether to run check E-a, which would confirm or refute `MISSING_P7_MAPPING` as the cause. The decisions of the C4/C5 assessment, section 9, and of the journal-not-found record, section 6, are unaffected and still open. **W04 remains PARTIALLY COMPLETE and is not accepted.** No Broker Import change and no identity repair is authorized by this record.
+The complete host output is committed and reconciled (section 12.10), so the E4 lineage reproduction needs no further step. The Principal decides whether to run check E-a, which would confirm or refute `MISSING_P7_MAPPING` as the cause. The decisions of the C4/C5 assessment, section 9, and of the journal-not-found record, section 6, are unaffected and still open. **W04 remains PARTIALLY COMPLETE and is not accepted.** No Broker Import change and no identity repair is authorized by this record.

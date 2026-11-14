@@ -188,7 +188,7 @@ The complete probe output, including `E4_RESULT_JSON`, has already been supplied
 
 This section adds evidence that arrived after the report. It changes no finding of sections 1 to 7 about the journal. The full record is the [original-CSV lineage reproduction record](IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md), sections 12 to 15.
 
-Label **H**: reported by the Principal from a run on the Windows host. Not run, re-read or independently verified in this environment. The complete output of the run has not reached this environment; the figures are those of the Principal's brief.
+Label **H**: reported by the Principal from a run on the Windows host. Not run, re-read or independently verified in this environment. The complete output of the run has not reached this environment; the figures are those of the Principal's brief. *(Later record, 2026-11-14: the Principal has since supplied the complete output. It is committed with the lineage record and agrees with every figure below; that record, section 12.10. Nothing in this section changes.)*
 
 | # | Statement | Standing |
 |---|---|---|
