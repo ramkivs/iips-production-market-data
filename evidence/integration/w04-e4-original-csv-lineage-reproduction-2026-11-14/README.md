@@ -5,9 +5,13 @@ Supporting files for
 
 **Later record (2026-11-14).** The Principal ran the utility on the Windows host and reports
 `RESULT: REPRODUCED_ALL`, exit code 0: 64 of 64 stored lineage digests reproduced. The figures are in
-the record, section 12. **The complete host output is not in this folder yet**
-([`host-run-2026-11-14/README.md`](host-run-2026-11-14/README.md)). The run was not made in the
-environment that maintains this repository.
+the record, section 12. The run was not made in the environment that maintains this repository.
+
+**The complete host output is in this folder:**
+[`host-run-2026-11-14/w04-e4-csv-lineage-output.txt`](host-run-2026-11-14/w04-e4-csv-lineage-output.txt),
+with its 64 `[ROW]` lines and `E4_CSV_LINEAGE_RESULT_JSON`. It agrees with every recorded figure
+([`host-run-2026-11-14/README.md`](host-run-2026-11-14/README.md); the record, section 12.10). When this
+note was first added the output had not yet been received.
 
 The CSV and the capture exist only on the Principal's Windows machine. This folder holds the utility
 the Principal runs there, the test of that utility, the note on the host run, and a sandbox probe. It
@@ -18,7 +22,8 @@ holds no CSV content and no capture content.
 | `w04-e4-csv-lineage-reproduction.mjs` | The host utility. One file, no dependency beyond Node. 66,737 bytes. SHA-256 `901a365c4dad816532fd244e9b17a7c7bb5cffbebff2a57bd4ad0f9f40c20a9c`. |
 | `csv-lineage-selftest.mjs` | A test of the utility on synthetic data. **A tool test, not evidence.** |
 | `sample-output-synthetic.txt` | One complete output of the utility on an invented 64-holding statement. **Format illustration only.** |
-| `host-run-2026-11-14/README.md` | State of the host evidence: the figures the Principal reported, and what the complete output must agree with when it is committed. **The output itself is not here yet.** |
+| `host-run-2026-11-14/w04-e4-csv-lineage-output.txt` | **The complete sanitized output of the Principal's host run.** 139 lines, 27,123 bytes. SHA-256 `518d76c31fef9351175d179839322165432977dd04f9c69b6accd217597860de`. Result JSON SHA-256 `022154468fa27552cf7ac33fa2760000c6ccc94cc812a49da7064c7796f1358c`. Operator-reported host evidence. |
+| `host-run-2026-11-14/README.md` | Standing of that output, the integrity checks made on it and its reconciliation with the figures first reported. |
 | `identity-status-probe/identity-status-source-probe.mjs` | Sandbox probe for the record, section 14: company-level status against security-level identity, with the unmodified compiled IPD code and the tracked sources. **Synthetic statement. Not host evidence.** SHA-256 `3164c88d132fc379fd82366baca8acb37367aacca699ad851fc0ad28c1811c22`. |
 | `identity-status-probe/identity-status-source-probe.output.txt` | Its output: counts and closed-vocabulary values only. 10 checks pass. SHA-256 `bc405782b3b42d8b215c38624da129f717d73e705244ddb1f3d3037f3aa52498`. |
 
