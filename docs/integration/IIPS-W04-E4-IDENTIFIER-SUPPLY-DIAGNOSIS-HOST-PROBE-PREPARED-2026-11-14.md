@@ -1,4 +1,4 @@
-# Snapshot-to-Live W04 — E4: read-only identifier-supply diagnosis. Host probe prepared; not executed
+# Snapshot-to-Live W04 — E4: read-only identifier-supply diagnosis. Host probe prepared here; executed on the host by the Principal
 
 **Date:** 2026-11-14
 **Roadmap item:** W04, "Actual security and issuer coverage" ([roadmap](IIPS-CURRENT-PORTFOLIO-EXECUTION-ROADMAP.md))
@@ -6,22 +6,22 @@
 **Repositories read:** IPD `ramkivs/iips-production-market-data` at this branch (`57c7f35`); IRR `ramkivs/iips-review-recovered` at `main` `08411bc`, read-only
 **Type:** documentation and one read-only diagnostic. No runtime code, integration contract, registry, manifest or portfolio data was changed in either repository.
 
-**E4 is NOT complete. It has not been executed.** The Principal approved it. It can run only on the Windows host, and this environment cannot reach the host. This record states the blocker, gives the exact command, and fixes in advance how the result will be read.
+**E4 is NOT complete.** The Principal approved it. It can run only on the Windows host, and this environment cannot reach the host. This record states the blocker, gives the exact command, and fixes in advance how the result will be read. **Execution status at preparation time: not executed here.** The Principal has since run the probe on the host and supplied its complete output; see the later record below and section 9. E4 remains incomplete because the 63 holdings are still UNDETERMINED, not because a result is missing.
 
 **W04 status is unchanged: PARTIALLY COMPLETE. Not accepted.** The cause distribution of the 63 holdings is still unknown.
 
-**Later record (2026-11-14).** The Principal reports that the probe ran on the host and did not find the evidence journal. The probe output is not on record, so section 9 below is unchanged. The follow-up is the [journal-not-found investigation](IIPS-W04-E4-EVIDENCE-JOURNAL-NOT-FOUND-INVESTIGATION-2026-11-14.md): right location searched, journal probably never written, no evidence recovered, the 63 classified UNDETERMINED.
+**Later record (2026-11-14).** The Principal reports that the probe ran on the host and did not find the evidence journal. The complete probe output, including `E4_RESULT_JSON`, was supplied in the conversation; section 9 below now records it. It reports `journalExists: false`, `recordFound: false` and `resetRecoveryEntries: 0`, and **1 of 64 lineage digests reproduced from the capture alone** — probe findings, not independent host confirmation. No matched original import evidence was available to reproduce the remaining 63. The follow-up is the [journal-not-found investigation](IIPS-W04-E4-EVIDENCE-JOURNAL-NOT-FOUND-INVESTIGATION-2026-11-14.md): authoritative location targeted, journal probably never written, no evidence recovered, the 63 classified UNDETERMINED.
 
 | Requested | State |
 |---|---|
 | Inspect the E4 specification | Done (section 2) |
 | Verify that the probe is strictly read-only | Done (section 5) |
 | Establish the exact revision and the evidence inputs | Done (section 3) |
-| Execute the host check | **Not done. Blocked** (section 1) |
+| Execute the host check | **Not done here.** Run on the host by the Principal; complete output supplied (later record, section 9) |
 | Prepare the bounded command for the Principal | Done (section 7) |
-| Aggregate counts and digests | **Not obtained** |
-| Cause distribution of the 63 | **Not obtained.** Rules fixed in section 6 |
-| Independent verification against the revision | **Not obtained.** Method fixed in section 4.2 and built into the probe |
+| Aggregate counts and digests | **Supplied by the Principal**, not re-read here (section 9) |
+| Cause distribution of the 63 | **Still UNDETERMINED: 63 of 63.** Rules fixed in section 6 |
+| Independent verification against the revision | **Not achieved.** 1 of 64 lineage digests reproduced from the capture alone; the whole-revision check needs all 64 |
 
 ## 1. The blocker
 
@@ -197,14 +197,20 @@ Reading the E4 line itself:
 
 ## 9. Result
 
+**Supplied by the Principal (2026-11-14).** The probe ran on the Windows host and its complete output, including `E4_RESULT_JSON`, was supplied in the conversation. The values below are **probe-reported**; they are not independent host confirmation, and they were not re-read from the host in this environment.
+
 | Item | Value |
 |---|---|
-| Record found | Not obtained |
-| Rows; with an ISIN; explicit absence; with an exchange; equal to 64 | Not obtained |
-| Record `broker` and `variant`; holdings per source broker | Not obtained |
-| Digest equality with a tracked candidate file | Not obtained |
-| Class A, B, C, D of the 63 | Not obtained |
-| Verification against the stored revision | Not obtained |
+| Record found | `recordFound: false` — no evidence record matching the committed import's content digest |
+| Evidence journal at the searched location | `journalExists: false` |
+| Owner-reset recovery entries beside the journal | `resetRecoveryEntries: 0` (not opened by the probe) |
+| Rows; with an ISIN; explicit absence; with an exchange; equal to 64 | Not applicable: no matched record, so no rows were described |
+| Record `broker` and `variant` | Not applicable: no matched record |
+| Lineage digests reproduced from the capture alone | **1 of 64** |
+| Class A, B, C, D of the 63 | **UNDETERMINED: 63 of 63.** No matched original import evidence was available to reproduce their lineage digests |
+| Verification against the stored revision | **Not achieved.** The whole-import provenance digest is computed only when all 64 holding digests are reproduced |
+
+These are the probe's findings at the location it was given. They do not establish that no journal or original import evidence exists elsewhere on the host, that evidence was never retained at import time, or that no reset or manual deletion occurred. The follow-up investigation is the [journal-not-found record](IIPS-W04-E4-EVIDENCE-JOURNAL-NOT-FOUND-INVESTIGATION-2026-11-14.md).
 
 ## 10. Boundaries kept
 
@@ -219,6 +225,6 @@ Reading the E4 line itself:
 
 ## 11. Next
 
-1. The Principal runs section 7 and returns the output.
-2. The result is checked against section 8 and recorded in a short result record beside this one. Only then is E4 complete.
+1. Done: the Principal ran section 7 on the host and supplied the complete output. It is recorded in section 9; it need not be requested again.
+2. The result is checked against section 8 and recorded in a short result record beside this one. Only then is E4 complete. **E4 is not complete:** 63 of the 63 remain UNDETERMINED because no matched original import evidence was available. The remaining step is the read-only host check in section 6 of the [journal-not-found investigation](IIPS-W04-E4-EVIDENCE-JOURNAL-NOT-FOUND-INVESTIGATION-2026-11-14.md), which is the Principal's to run.
 3. The decisions of the C4/C5 assessment, section 9, steps 2 to 7, remain with their authorities. This record changes none of them.
