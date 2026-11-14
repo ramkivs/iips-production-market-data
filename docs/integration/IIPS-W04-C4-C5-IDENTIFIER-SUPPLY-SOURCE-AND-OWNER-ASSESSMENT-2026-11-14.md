@@ -287,6 +287,8 @@ This record changes none of it and judges none of it. Removing a file from histo
 
 Nothing below was executed. Each step names its authority.
 
+**Later record (2026-11-14, step 1).** The Principal approved step 1. The read-only host probe for it is prepared and tested; it has not been run, because the inputs exist only on the host. The preparation also found that B5 is too strong: the inputs of an unqualified holding are not stored, but two stored digests commit to them, so the capture alone can show which holdings were committed without an ISIN. See [E4 host probe prepared](IIPS-W04-E4-IDENTIFIER-SUPPLY-DIAGNOSIS-HOST-PROBE-PREPARED-2026-11-14.md). The table below is unchanged.
+
 | # | Step | Authority | Why |
 |---|---|---|---|
 | 1 | **Host, read-only.** Complete item E4 of the coverage assessment, with two additions. (i) From the retained IRR import record, also publish its `broker` and `variant`, and from the capture the number of holdings per source broker. (ii) Compare the `contentDigest` of the contribution in the local capture with the SHA-256 of each tracked candidate file: IRR `evidence/broker-import/operator-supplied/*.csv` and IPD `evidence/operator_drop/wave2-2026-11-06/source.csv`. A digest that differs proves nothing, because the digest may be computed over decoded text rather than the file's bytes (section 15); report equality only. Publish yes or no per file, and counts. Publish no symbol, ISIN or value. | Operator | Gives the split of the 63 between B2 and B3, and the layout. Without it every later step is chosen blind. |
