@@ -1,0 +1,50 @@
+W04 E4 - identity status versus security identity: sandbox source probe.
+SANDBOX ONLY. SYNTHETIC STATEMENT. NOT HOST EVIDENCE. Counts and closed-vocabulary values only.
+
+== 1. Sources, as tracked in this repository
+[INFO] p04.master: batch BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001; 2390 records; 2390 entities
+[INFO] p7.manifest.sha256: 13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc
+[INFO] p7.registry: 96 mappings loaded by composeBrokerImportIdentityDependencies(); by segment {"BSE_EQ":48,"NSE_EQ":48}; distinct ISINs 48
+
+== 2. The two decisions, over every ACTIVE NSE and BSE listing of the tracked master
+[INFO] pairs: 4680 (ISIN, exchange, listing symbol); by exchange {"BSE":2290,"NSE":2390}
+[INFO] companyGate (resolver.resolve; decides identityStatus and resolutionDisposition): {"RESOLVED":4680}
+[INFO] securityQualification (qualifyHoldingSecurityIdentity; decides securityIdentity): {"QUALIFIED":90,"UNRESOLVED:MISSING_P7_MAPPING":4590}
+[INFO] securityQualification by exchange: NSE {"QUALIFIED":45,"UNRESOLVED:MISSING_P7_MAPPING":2345}; BSE {"QUALIFIED":45,"UNRESOLVED:MISSING_P7_MAPPING":2245}
+[INFO] joint: {"RESOLVED+QUALIFIED":90,"RESOLVED+UNRESOLVED:MISSING_P7_MAPPING":4590}
+[PASS] every pair passes the company gate
+[PASS] a pair that passes the company gate can fail security qualification
+
+== 3. Synthetic import of the reported shape, through the production composition
+[INFO] statement: 64 rows; by exchange {"BSE":1,"NSE":63}; every row has an ISIN and an exchange
+[INFO] ingress (browser side): success true; holdings 64; identityStatus {"RESOLVED":64}; resolutionDisposition {"CANONICAL_P04":64}
+[INFO] persistBrokerImport: ok true; disposition SAVED_NEW_BATCH; revision 1; holdingsPersisted 64
+[INFO] stored columns (identity_status | resolution_disposition | security_identity): RESOLVED | CANONICAL_P04 | NULL = 63; RESOLVED | CANONICAL_P04 | TEXT = 1
+[INFO] portfolio.get wire result: holdings 64; identityStatus {"RESOLVED":64}; resolutionDisposition {"CANONICAL_P04":64}
+[INFO] portfolio.get wire result: securityIdentity object 1; null 63; absent 0
+[INFO] the stored identity object: series/isinAuthority {"EQ/NON_AUTHORITATIVE":1}
+[PASS] 64 holdings are RESOLVED and CANONICAL_P04 while 63 carry securityIdentity null and 1 carries an object
+[PASS] the company identifier the server stored equals the one the browser side put inside the lineage digest, on 64 of 64
+[UTILITY] [INFO] reproduction.reproduced: 64 of 64 stored lineage digests reproduced from the CSV, one-to-one {"MAPPER_BI03":64}
+[UTILITY] [INFO] reproduction.ambiguous: 0 ambiguous
+[UTILITY] [INFO] reproduction.unmatched: 0 not reproduced from the CSV: 0 reproduced from stored measures with an identifier pair only, 0 reproduced by nothing
+[UTILITY] [INFO] input.reproduced.storedIdentityNull: {"ISIN+EXCHANGE_BSE":1,"ISIN+EXCHANGE_NSE":62}
+[UTILITY] [INFO] input.reproduced.storedIdentityObject: {"ISIN+EXCHANGE_NSE":1}
+[UTILITY] RESULT: REPRODUCED_ALL
+[INFO] utility: sha256 901a365c4dad816532fd244e9b17a7c7bb5cffbebff2a57bd4ad0f9f40c20a9c; exit 0
+[PASS] the published utility reproduces 64 of 64 on the synthetic statement and reports the null identities as ISIN+EXCHANGE inputs
+
+== 4. Controls on the same synthetic statement
+[INFO] callerSuppliedStatus: ok false; code INVALID_REQUEST; storeEffect NONE
+[PASS] a request that carries identityStatus is refused with no store effect
+[INFO] oneRowFailsCompanyGate: ok false; code REFUSED_UNRESOLVED_IDENTITY; storeEffect NONE; refused 1; portfolios stored 0
+[PASS] one row without a single company identity refuses the whole import, so no committed holding can be other than RESOLVED
+[INFO] emptyRegistry: identityStatus {"RESOLVED":64}; securityIdentity {"object":0,"null":64,"absent":0}
+[PASS] with an empty registry all 64 are still RESOLVED and none has a security identity
+[INFO] fallbackWithoutDependencies: identityStatus {"RESOLVED":64}; securityIdentity {"object":0,"null":64,"absent":0}
+[PASS] without the identity dependencies all 64 are still RESOLVED and none has a security identity
+[INFO] damagedStoredIdentity: read error ContractEnvelopeViolationError
+[PASS] a stored identity that does not conform makes the read fail; it is not projected as null
+
+checks: 10 pass, 0 fail
+RESULT: PROBE_CONSISTENT

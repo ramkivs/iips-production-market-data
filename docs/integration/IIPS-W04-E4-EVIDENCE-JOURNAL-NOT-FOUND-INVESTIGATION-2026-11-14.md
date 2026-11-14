@@ -10,6 +10,8 @@
 
 **Factual correction (2026-11-14), to the report at `bc9a4ab57f69cdde7243252184e55a1c12d17f48`.** The complete Windows probe output, including `E4_RESULT_JSON`, was already supplied by the Principal in this conversation. This correction records the explicit probe findings and the capture-only lineage reproduction count. Probe-reported findings are not independent host confirmation. No new host execution is claimed; the other findings and investigation boundaries are unchanged.
 
+**Later record (2026-11-14): the original CSV and the lineage reproduction.** The Principal reports that the original statement file was recovered on the host by exact content digest, and that the published lineage reproduction utility, run by the Principal on the host, reproduced **64 of 64** stored lineage digests from it. The 63 holdings classified UNDETERMINED below are now **class C: an ISIN and an exchange in the committed input, no security identity stored**. The journal findings of this report are unchanged: the IRR evidence journal remains unrecovered. Section 8. Sections 1 to 7 are kept as written.
+
 ## 1. Result
 
 1. **The supplied probe command targeted the right place.** The authoritative journal is `journal.ndjson` at the root of the IRR data directory. The launcher sets that directory to `H:\IIPS\runtime\iips-data`, which is the directory the probe was given. The supplied output explicitly reported:
@@ -86,7 +88,7 @@ Fifteen blobs larger than 4 MiB were not compared. Pull-request-only refs were n
 
 ## 4. Classification of the 63 holdings
 
-**UNDETERMINED: 63 of 63.**
+**UNDETERMINED: 63 of 63.** *(As found by this investigation. Superseded on 2026-11-14 by section 8: class C, 63 of 63.)*
 
 - The supplied probe output reports **1 of 64 lineage digests reproduced from the capture alone** (P). This is distinct from recovery of the original import evidence: no original evidence was recovered and its digest could not be verified.
 - Classes A to D of the E4 record are not assigned. Whether any of the 63 lacked an ISIN, lacked an exchange, or carried both, is not known.
@@ -166,7 +168,7 @@ How to read it:
 
 The complete probe output, including `E4_RESULT_JSON`, has already been supplied in this conversation; it need not be requested again. The remaining next action is the independent, read-only host check above. This correction neither performs that check nor treats the supplied probe findings as independent host confirmation.
 
-**Later record (2026-11-14).** The Principal reports that the original statement file was found on the host, identified by the import content digest, and asked for a read-only utility that tests the lineage digests of the capture against it. The utility is prepared in the [original-CSV lineage reproduction record](IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md). It has not been run on the host. The file is the import's input; it does not restore the journal, and no journal entry is reconstructed from it. The 63 stay UNDETERMINED until the output is returned and reviewed.
+**Later record (2026-11-14).** The Principal reports that the original statement file was found on the host, identified by the import content digest, and asked for a read-only utility that tests the lineage digests of the capture against it. The utility is prepared in the [original-CSV lineage reproduction record](IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md). It has not been run on the host. The file is the import's input; it does not restore the journal, and no journal entry is reconstructed from it. The 63 stay UNDETERMINED until the output is returned and reviewed. *(Since then the Principal ran it on the host: section 8.)*
 
 **Decisions this report raises, none taken here:**
 
@@ -181,3 +183,22 @@ The complete probe output, including `E4_RESULT_JSON`, has already been supplied
 - No evidence was reconstructed or substituted. No holdings data was read into or printed from this investigation.
 - No IRR commit or push. No pull request was merged, closed or retargeted.
 - W04 is not declared accepted.
+
+## 8. Later record (2026-11-14): the original CSV and the lineage reproduction
+
+This section adds evidence that arrived after the report. It changes no finding of sections 1 to 7 about the journal. The full record is the [original-CSV lineage reproduction record](IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md), sections 12 to 15.
+
+Label **H**: reported by the Principal from a run on the Windows host. Not run, re-read or independently verified in this environment. The complete output of the run has not reached this environment; the figures are those of the Principal's brief.
+
+| # | Statement | Standing |
+|---|---|---|
+| 1 | The original statement file was recovered on the host by exact content digest. Its import-content SHA-256 is `a3c3ee7635e24e56d1d2d6b9411a6de561f554addd382ab163344706e7b63107`, the content digest of the one committed import of revision 1. This is the situation section 6 describes for "Step 4 prints `MATCH`"; whether that block was the means of finding the file is not reported | H |
+| 2 | All 64 stored lineage digests were reproduced from that file, one-to-one, with 0 ambiguous and 0 not reproduced. The whole-import provenance digest was reproduced. `RESULT: REPRODUCED_ALL`, exit code 0 | H |
+| 3 | The 63 holdings of section 4 are now **class C** of the E4 record: an ISIN and an exchange were supplied (NSE 62, BSE 1) and no security identity was stored. Classes A, B and D are empty. "Whether any of the 63 lacked an ISIN, lacked an exchange, or carried both, is not known" (section 4) no longer holds: all 63 carried both | H, read by the rules fixed in advance |
+| 4 | **The original IRR evidence journal remains unrecovered.** Nothing in the run found, read or restored a journal. Findings 1 to 4 of section 1 stand as written | Unchanged |
+| 5 | **Lineage reproduction does not recreate the journal.** The file is the import's input, not the retained IRR record. No journal entry was reconstructed from it, and none may be: IRR's runbook, section 10.4, excludes rebuilding a record from a digest or from a re-import (section 5, item 2) | Unchanged |
+| 6 | **The missing evidence-owner carrier remains a separate causal investigation.** It is the probable reason the journal was never written (section 1, item 2). It is shown in source and reproduced in the sandbox. It is still **not confirmed on the host**: the read-only check of section 6, steps 1 to 3, has not been reported | Unchanged |
+| 7 | **The host run does not show why the journal was absent at import time.** The utility reads the CSV and the capture only. It does not read the IRR data directory, the launcher or the environment | Limit of the new evidence |
+| 8 | Class C is not a cause. Why no security identity was stored for the 63 is not proven. On the conditions stated in the lineage record, section 13, the reason is a missing P7 registry mapping; neither condition is established on the host | Derived, conditional |
+
+The decisions listed at the end of section 6 are unaffected and still open. No Broker Import change, portfolio change, import, journal reconstruction or carrier provisioning was made.

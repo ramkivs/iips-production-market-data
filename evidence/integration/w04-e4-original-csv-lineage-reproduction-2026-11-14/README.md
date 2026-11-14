@@ -3,15 +3,24 @@
 Supporting files for
 [`docs/integration/IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md`](../../../docs/integration/IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md).
 
-**The utility has not been run on the original CSV or on the actual capture.** Both exist only on the
-Principal's Windows machine. This folder holds the utility the Principal runs there, and the test of
-that utility. It holds no host data, no CSV content, no capture content and no E4 result.
+**Later record (2026-11-14).** The Principal ran the utility on the Windows host and reports
+`RESULT: REPRODUCED_ALL`, exit code 0: 64 of 64 stored lineage digests reproduced. The figures are in
+the record, section 12. **The complete host output is not in this folder yet**
+([`host-run-2026-11-14/README.md`](host-run-2026-11-14/README.md)). The run was not made in the
+environment that maintains this repository.
+
+The CSV and the capture exist only on the Principal's Windows machine. This folder holds the utility
+the Principal runs there, the test of that utility, the note on the host run, and a sandbox probe. It
+holds no CSV content and no capture content.
 
 | File | What it is |
 |---|---|
 | `w04-e4-csv-lineage-reproduction.mjs` | The host utility. One file, no dependency beyond Node. 66,737 bytes. SHA-256 `901a365c4dad816532fd244e9b17a7c7bb5cffbebff2a57bd4ad0f9f40c20a9c`. |
 | `csv-lineage-selftest.mjs` | A test of the utility on synthetic data. **A tool test, not evidence.** |
 | `sample-output-synthetic.txt` | One complete output of the utility on an invented 64-holding statement. **Format illustration only.** |
+| `host-run-2026-11-14/README.md` | State of the host evidence: the figures the Principal reported, and what the complete output must agree with when it is committed. **The output itself is not here yet.** |
+| `identity-status-probe/identity-status-source-probe.mjs` | Sandbox probe for the record, section 14: company-level status against security-level identity, with the unmodified compiled IPD code and the tracked sources. **Synthetic statement. Not host evidence.** SHA-256 `3164c88d132fc379fd82366baca8acb37367aacca699ad851fc0ad28c1811c22`. |
+| `identity-status-probe/identity-status-source-probe.output.txt` | Its output: counts and closed-vocabulary values only. 10 checks pass. SHA-256 `bc405782b3b42d8b215c38624da129f717d73e705244ddb1f3d3037f3aa52498`. |
 
 ## The utility
 
@@ -147,3 +156,22 @@ node evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/cs
 Add `--print-sample` to print the output that `sample-output-synthetic.txt` was taken from; its
 digests differ from run to run, because the synthetic capture records the time of its own commit.
 The self-test is not part of `npm test`.
+
+## The identity-status probe
+
+Added with the host result. It answers one question of the record, section 14: is `identityStatus`
+`RESOLVED` on 64 holdings beside a `securityIdentity` object on 1 a state the reviewed code produces?
+
+Run from the repository root, after `npm ci --ignore-scripts` and `npx tsc`:
+
+```
+node evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/identity-status-probe/identity-status-source-probe.mjs
+```
+
+It uses the governed P04 master and the retained P7 manifest tracked in this repository, an in-memory
+database and a temporary folder. The statement is invented: securities taken from the tracked master by
+a fixed rule, with made-up quantities and prices. It prints no ISIN, symbol, company identifier,
+quantity or price. Two runs give the same output.
+
+It shows that the state is reachable and by design. It does not show which sources the host loaded or
+which build wrote revision 1.
