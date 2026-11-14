@@ -87,6 +87,7 @@ capture, as is the import instant.
 | Input tree unchanged after every run (names, sizes, modification times, SHA-256 of every file) | Pass, 101 runs |
 | Output free of every synthetic symbol, ISIN, company identifier, file name, path, instant, per-holding digest and measure | Pass, 101 runs |
 | `csv-lineage-selftest.mjs` | 46 scenarios, all pass |
+| Cross-check with the governed master and the production identity gate | Pass (below) |
 
 **The self-test** builds its inputs with unmodified compiled IPD code: the import pipeline
 (`BrokerImportIngressOrchestrator.executeIngress`, with the options IRR's preview passes) on a
@@ -118,6 +119,16 @@ Three limits of the self-test, stated so that nothing is over-read:
 - Ambiguity cannot come out of the pipeline itself: two different CSV-derived holdings cannot have
   the same digest, short of a SHA-256 collision. The ambiguous scenario is built by repeating a
   stored holding in the capture.
+
+**The governed-master cross-check** was run once in the sandbox and is not committed. It removes the
+first limit above for the ordinary case. The compiled pipeline ran with the options of IRR's preview
+and the governed D05 master (`getGovernedBroadSecurityMaster()`), and `persistBrokerImport` ran with
+its default resolver, which is the production identity gate. The statement was invented: 64
+securities taken from the master at a fixed stride, with invented quantities and prices, 7 of them
+without an ISIN. The utility, as fetched from GitHub at commit `8467dfb`, reproduced 64 of 64 digests
+one-to-one and both copies of the whole-import digest. The company identifier IPD stored equalled the
+one inside the pipeline's digest on 64 of 64. The master is reference data committed in IPD; no
+holding of any portfolio was involved.
 
 The identifiers in the self-test are invented (`INE0SYNT0000` and the like, `QZSYMA`,
 `COMP-SYNTH-A`). They follow the ISIN shape so that the pipeline accepts them. They belong to no

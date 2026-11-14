@@ -226,6 +226,8 @@ The digest is over `JSON.stringify` of numbers produced by JavaScript arithmetic
 
 Every run also asserts an unchanged input tree, an empty stderr, and an output free of every synthetic identifier, measure, file name, path, instant and per-holding digest. The five CSV parsing functions in the utility are token-identical to the compiled production functions. Details, and three stated limits of the test, are in the [folder README](../../evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/README.md).
 
+One further check was run once in the sandbox and is not committed: the compiled pipeline with the governed D05 master and IRR's preview options, committed through `persistBrokerImport` with its default resolver (the production identity gate), on an invented 64-row statement of securities taken from the master. The utility, as fetched from GitHub at `8467dfb`, reproduced 64 of 64 digests and the whole-import digest, and the stored company identifier equalled the one inside the digest on 64 of 64. This supports the statement in section 4 about the three identity members; it is still not a run on the actual inputs.
+
 **Not tested:** Windows, PowerShell, the original CSV, the actual capture.
 
 ## 7. The command for the Principal
