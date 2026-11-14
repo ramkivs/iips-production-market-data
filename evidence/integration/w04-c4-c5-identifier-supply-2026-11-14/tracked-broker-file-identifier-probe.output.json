@@ -1,0 +1,140 @@
+{
+  "note": "Tracked IRR evidence files. No link to the captured portfolio revision 1 is established or inferred.",
+  "irrCommit": "08411bcd6d782a601fe5c82cc9983d076831148d",
+  "p04Master": {
+    "batchId": "BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001",
+    "fileChecksumSha256": "b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+    "recordCount": 2390,
+    "authorizationRef": "AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001",
+    "operatingMode": "OFFLINE_BOOTSTRAP"
+  },
+  "registries": {
+    "loadedByTheApplication": 96,
+    "inMemoryRequalified": 4680
+  },
+  "files": [
+    {
+      "file": "evidence/broker-import/operator-supplied/dhan-holdings-withisin.csv",
+      "sha256": "4f035cdf623d9223afdf935cda39faf2d8bc0aa1264daa2954ff691a63fbe237",
+      "dataRows": 68,
+      "header": {
+        "columns": 11,
+        "hasIsinColumn": true,
+        "hasExchangeColumn": true,
+        "hasSeriesColumn": false
+      },
+      "exchangeAssignedBy": "FILE_COLUMN",
+      "rowsWithIsin": 68,
+      "rowsByExchange": {
+        "NSE": 68
+      },
+      "rowsWithWireValidSymbol": 68,
+      "ipcCompanyGate": {
+        "AMBIGUOUS": 2,
+        "RESOLVED": 47,
+        "UNMAPPED": 19
+      },
+      "ipcCompanyGateRefusalByReason": {
+        "AMBIGUOUS_COLLISION": 2,
+        "UNMAPPED_IDENTIFIER|ISIN": 3,
+        "UNMAPPED_IDENTIFIER|NSE_SYMBOL": 16
+      },
+      "securityQualificationOfRowsWithIsinAndExchange": {
+        "rows": 68,
+        "withRegistryLoadedByTheApplication": {
+          "MISSING_P04_CORRESPONDENCE": 3,
+          "MISSING_P7_MAPPING": 64,
+          "QUALIFIED:EQ:NON_AUTHORITATIVE": 1
+        },
+        "withInMemoryRequalifiedRegistry": {
+          "MISSING_P04_CORRESPONDENCE": 3,
+          "QUALIFIED:EQ:NON_AUTHORITATIVE": 65
+        }
+      },
+      "ofRowsPassingTheCompanyGate": {
+        "rows": 47,
+        "withRegistryLoadedByTheApplication": {
+          "MISSING_P7_MAPPING": 46,
+          "QUALIFIED:EQ:NON_AUTHORITATIVE": 1
+        },
+        "withInMemoryRequalifiedRegistry": {
+          "QUALIFIED:EQ:NON_AUTHORITATIVE": 47
+        }
+      },
+      "wholeImportWouldBeRefusedByTheIpcGate": true
+    },
+    {
+      "file": "evidence/broker-import/operator-supplied/dhan-holdings.csv",
+      "sha256": "c756eb26a9a633fef65708368cd8ff72ce3cddadf78b4dc17ca5e9c3d9307180",
+      "dataRows": 68,
+      "header": {
+        "columns": 8,
+        "hasIsinColumn": false,
+        "hasExchangeColumn": false,
+        "hasSeriesColumn": false
+      },
+      "exchangeAssignedBy": "NONE",
+      "rowsWithIsin": 0,
+      "rowsByExchange": {
+        "NONE": 68
+      },
+      "rowsWithWireValidSymbol": 7,
+      "ipcCompanyGate": {
+        "AMBIGUOUS": 68
+      },
+      "ipcCompanyGateRefusalByReason": {
+        "MISSING_EXCHANGE": 68
+      },
+      "securityQualificationOfRowsWithIsinAndExchange": {
+        "rows": 0,
+        "withRegistryLoadedByTheApplication": {},
+        "withInMemoryRequalifiedRegistry": {}
+      },
+      "ofRowsPassingTheCompanyGate": {
+        "rows": 0,
+        "withRegistryLoadedByTheApplication": {},
+        "withInMemoryRequalifiedRegistry": {}
+      },
+      "wholeImportWouldBeRefusedByTheIpcGate": true
+    },
+    {
+      "file": "evidence/broker-import/operator-supplied/zerodha-holdings.csv",
+      "sha256": "6c74a84ab325817637dad4a5605b614c6da6129860f39bfee897ede5233f82f6",
+      "dataRows": 82,
+      "header": {
+        "columns": 9,
+        "hasIsinColumn": false,
+        "hasExchangeColumn": false,
+        "hasSeriesColumn": false
+      },
+      "exchangeAssignedBy": "ADAPTER_DEFAULT",
+      "rowsWithIsin": 0,
+      "rowsByExchange": {
+        "NSE": 82
+      },
+      "rowsWithWireValidSymbol": 82,
+      "ipcCompanyGate": {
+        "RESOLVED": 76,
+        "UNMAPPED": 6
+      },
+      "ipcCompanyGateRefusalByReason": {
+        "UNMAPPED_IDENTIFIER|NSE_SYMBOL": 6
+      },
+      "securityQualificationOfRowsWithIsinAndExchange": {
+        "rows": 0,
+        "withRegistryLoadedByTheApplication": {},
+        "withInMemoryRequalifiedRegistry": {}
+      },
+      "ofRowsPassingTheCompanyGate": {
+        "rows": 76,
+        "withRegistryLoadedByTheApplication": {
+          "NO_ISIN_ON_ROW": 76
+        },
+        "withInMemoryRequalifiedRegistry": {
+          "NO_ISIN_ON_ROW": 76
+        }
+      },
+      "wholeImportWouldBeRefusedByTheIpcGate": true
+    }
+  ]
+}
