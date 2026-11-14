@@ -13,19 +13,21 @@
  *                `<IIPS_DATA_DIR>/investment/identity/`. The directory appears in one rename, so
  *                the IRR server, which reads the files on every request, never sees a partial set.
  *
- * GOVERNANCE APPROVAL
- *   Installation is refused unless a governance approval record (`irr_identity_approval.ts`)
- *   authorizes exactly the staged bytes, the staged generation and the gated IRR commit, under the
- *   governed approval policy. The record is checked before anything is written, on every call,
- *   including a call that would change nothing. This module never writes an approval record and
- *   never derives one. `writeReviewRecord` writes the facts a reviewer needs; that file is of
- *   another schema and is refused as an approval.
+ * APPROVAL
+ *   Installation is refused unless an approval record (`irr_identity_approval.ts`) authorizes
+ *   exactly the staged bytes, their P04 source and generation, the gated IRR commit and the IPD
+ *   commit this tool runs from, under the governed approval policy (one approver). The record is
+ *   checked before anything is written, on every call, including a call that would change
+ *   nothing. This module never writes an approval record and never derives one.
+ *   `writeReviewRecord` writes the facts the approver needs; that file is of another schema and is
+ *   refused as an approval.
  *
  * WRITE BOUNDARY
  *   The only location written outside the staging directory is the identity directory of the data
  *   root the operator names. The data root itself must already exist: a mistyped path is refused,
  *   not created. No portfolio, revision, broker-import or other IRR or IPD data is read or written.
  */
+import { spawnSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import {
   cpSync,
@@ -38,7 +40,8 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   IDENTITY_APPROVAL_POLICY,
@@ -49,6 +52,7 @@ import {
   type IdentityApprovalPolicy,
   type IdentityApprovalRecord,
   type IdentityReviewRecord,
+  type ToolIdentity,
 } from './irr_identity_approval.js';
 import {
   IRR_IDENTITY_EXPORT_REPORT_SCHEMA,
@@ -67,8 +71,8 @@ export const STAGED_INSTALL_RECEIPT_FILE = 'install-receipt.json' as const;
 /** Written by review. States what an approval would have to bind. It is not an approval. */
 export const STAGED_REVIEW_FILE = 'review-for-approval.json' as const;
 export const GATE_RECEIPT_SCHEMA = 'IPD_IRR_IDENTITY_GATE_RECEIPT_V1' as const;
-/** V2 adds the approval the installation was made under. */
-export const INSTALL_RECEIPT_SCHEMA = 'IPD_IRR_IDENTITY_INSTALL_RECEIPT_V2' as const;
+/** V3 records the single approver, the review date and the IPD tool commit of the approval. */
+export const INSTALL_RECEIPT_SCHEMA = 'IPD_IRR_IDENTITY_INSTALL_RECEIPT_V3' as const;
 /** An approval record is a short document. Anything larger is not read. */
 export const APPROVAL_RECORD_MAX_BYTES = 1024 * 1024;
 export const LOADER_GATE_SCHEMA = 'IPD_IRR_IDENTITY_LOADER_GATE_V1' as const;
@@ -89,7 +93,7 @@ export class ProvisioningError extends Error {
   }
 }
 
-/** The governance approval record is absent, unusable, or does not authorize the staged export. */
+/** The approval record is absent, unusable, or does not authorize the staged export. */
 export class ApprovalRefusedError extends ProvisioningError {
   constructor(readonly failures: ReadonlyArray<ApprovalFailure>) {
     super(
@@ -314,13 +318,87 @@ export function readGateReceipt(stagingDir: string): GateReceipt | null {
 }
 
 /* ------------------------------------------------------------------------------------------ *
- * 3. Governance approval
+ * 3. Approval
  * ------------------------------------------------------------------------------------------ */
+
+/** The tracked paths whose content is the provisioning tool. */
+export const IPD_TOOL_SOURCE_PATHS: ReadonlyArray<string> = Object.freeze(['src', 'scripts', 'package.json', 'tsconfig.json']);
+
+function gitOutput(root: string, args: ReadonlyArray<string>): string | null {
+  try {
+    const result = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8', windowsHide: true });
+    return result.status === 0 && typeof result.stdout === 'string' ? result.stdout : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The IPD checkout this module runs from: the nearest directory above it that holds `.git` and `package.json`. */
+function ipdCheckoutRoot(): string | null {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  for (let depth = 0; depth < 8; depth += 1) {
+    if (existsSync(join(dir, '.git')) && existsSync(join(dir, 'package.json'))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+  return null;
+}
+
+/**
+ * Whether every compiled identity module of a checkout is at least as new as its source. A module
+ * with no compiled counterpart, or an older one, means the code that runs is not the code of the
+ * checkout.
+ */
+function identityBuildIsCurrent(root: string): boolean {
+  const sourceDir = join(root, 'src', 'identity');
+  const builtDir = join(root, 'dist', 'src', 'identity');
+  if (!existsSync(sourceDir)) return false;
+  for (const name of readdirSync(sourceDir)) {
+    if (!name.startsWith('irr_identity_') || !name.endsWith('.ts')) continue;
+    const built = join(builtDir, name.replace(/\.ts$/, '.js'));
+    if (!existsSync(built) || statSync(built).mtimeMs < statSync(join(sourceDir, name)).mtimeMs) return false;
+  }
+  return true;
+}
+
+/**
+ * What a tool running from the checkout at `root` is. Read-only: two `git` queries and file times.
+ *
+ * `commit` is HEAD of that checkout. `unmodified` is true only when no tracked file of the tool
+ * (`IPD_TOOL_SOURCE_PATHS`) differs from that commit and, where the tool runs from its build
+ * (`runsFromBuild`), the compiled identity modules are not older than their sources. Anything that
+ * cannot be established is reported as not established; nothing is assumed.
+ */
+export function readToolIdentityAt(root: string | null, runsFromBuild: boolean): ToolIdentity {
+  if (root === null || !existsSync(join(root, '.git'))) {
+    return { commit: null, unmodified: false, detail: 'the tool does not run from a git checkout of IPD' };
+  }
+  const head = gitOutput(root, ['rev-parse', 'HEAD']);
+  const commit = head === null ? null : head.trim();
+  if (commit === null || !/^[0-9a-f]{40}$/.test(commit)) {
+    return { commit: null, unmodified: false, detail: 'git could not report the commit of the IPD checkout' };
+  }
+  const status = gitOutput(root, ['status', '--porcelain', '--untracked-files=no', '--', ...IPD_TOOL_SOURCE_PATHS]);
+  if (status === null) return { commit, unmodified: false, detail: 'git could not report whether the tool source is modified' };
+  if (status.trim().length > 0) {
+    return { commit, unmodified: false, detail: 'tracked files of the tool differ from the commit; commit or discard the changes' };
+  }
+  if (runsFromBuild && !identityBuildIsCurrent(root)) {
+    return { commit, unmodified: false, detail: 'the compiled tool is older than its source; build it again' };
+  }
+  return { commit, unmodified: true, detail: '' };
+}
+
+/** What the running tool is: `readToolIdentityAt` for the checkout this module runs from. */
+export function readIpdToolIdentity(): ToolIdentity {
+  return readToolIdentityAt(ipdCheckoutRoot(), fileURLToPath(import.meta.url).includes(`${sep}dist${sep}`));
+}
 
 export interface ApprovalDocument {
   /** The parsed document, of unknown shape. */
   readonly document: unknown;
-  /** SHA-256 of the file bytes, so that the record used can be compared with the published one. */
+  /** SHA-256 of the file bytes, so that the record used can be identified afterwards. */
   readonly sha256: string;
 }
 
@@ -331,7 +409,7 @@ export interface ApprovalDocument {
 export function readApprovalDocument(approvalFile: unknown): ApprovalDocument {
   if (typeof approvalFile !== 'string' || approvalFile.trim().length === 0) {
     throw new ApprovalRefusedError([
-      { code: 'APPROVAL_MISSING', detail: 'no approval record was given; installation requires the governance approval record for exactly these files' },
+      { code: 'APPROVAL_MISSING', detail: 'no approval record was given; installation requires the approval record for exactly these files' },
     ]);
   }
   const path = resolve(approvalFile);
@@ -356,11 +434,12 @@ export interface ApprovalSummary {
   readonly approvalId: string;
   readonly recordSha256: string;
   readonly policyVersion: string;
-  readonly governanceDecisionId: string;
-  readonly approvalActRef: string;
-  readonly approvers: ReadonlyArray<string>;
+  readonly decisionId: string;
+  readonly approver: string;
   readonly approvedAtUtc: string;
-  readonly expiresAtUtc: string;
+  readonly reviewDateUtc: string;
+  /** The IPD commit of the tool that the approval names and that performed the installation. */
+  readonly ipdToolCommit: string;
 }
 
 function summariseApproval(record: IdentityApprovalRecord, recordSha256: string, policy: IdentityApprovalPolicy): ApprovalSummary {
@@ -368,11 +447,11 @@ function summariseApproval(record: IdentityApprovalRecord, recordSha256: string,
     approvalId: record.approvalId,
     recordSha256,
     policyVersion: policy.policyVersion,
-    governanceDecisionId: record.governance.decisionId,
-    approvalActRef: record.governance.approvalActRef,
-    approvers: record.approvals.map((approver) => approver.authorityId),
+    decisionId: record.decision.decisionId,
+    approver: record.approver.authorityId,
     approvedAtUtc: record.approvedAtUtc,
-    expiresAtUtc: record.expiresAtUtc,
+    reviewDateUtc: record.reviewDateUtc,
+    ipdToolCommit: record.subject.ipdToolCommit,
   };
 }
 
@@ -397,10 +476,11 @@ export interface ApprovalCheck {
 /**
  * Check an approval record without installing anything. Read-only: it writes nowhere.
  *
- * With a staging directory the record is compared with the staged files and, when an accepted
- * loader gate of those files exists, with the gated IRR commit. `evaluation.checked` says what was
- * compared; only `evaluation.authorizesInstallation` means that installation would not be refused
- * on account of the approval.
+ * The record is always compared with the running tool. With a staging directory it is also
+ * compared with the staged files and, when an accepted loader gate of those files exists, with the
+ * gated IRR commit. `evaluation.checked` says what was compared; only
+ * `evaluation.authorizesInstallation` means that installation would not be refused on account of
+ * the approval.
  */
 export function checkIdentityApproval(options: ApprovalCheckOptions): ApprovalCheck {
   let document: ApprovalDocument;
@@ -411,7 +491,7 @@ export function checkIdentityApproval(options: ApprovalCheckOptions): ApprovalCh
     return {
       evaluation: {
         failures: error.failures,
-        checked: { record: true, stagedFiles: false, loaderGate: false },
+        checked: { record: true, stagedFiles: false, loaderGate: false, tool: false },
         authorizesInstallation: false,
         approval: null,
       },
@@ -426,6 +506,7 @@ export function checkIdentityApproval(options: ApprovalCheckOptions): ApprovalCh
     policy: IDENTITY_APPROVAL_POLICY,
     staged,
     gate: gate === null ? null : { irrCommit: gate.irr.commit },
+    tool: readIpdToolIdentity(),
   });
   return { evaluation, recordSha256: document.sha256 };
 }
@@ -439,7 +520,7 @@ export function writeReviewRecord(stagingDir: string): { readonly review: Identi
   const gate = readGateReceipt(staged.stagingDir);
   const current = gate !== null && sameDigests(gate.stagedFiles, staged.digests) ? gate : null;
   const accepted = current !== null && current.accepted && evaluateLoaderGate(current.loaderOutput, staged).accepted;
-  const review = buildReviewRecord(staged, current === null ? null : { accepted, irrCommit: current.irr.commit });
+  const review = buildReviewRecord(staged, current === null ? null : { accepted, irrCommit: current.irr.commit }, readIpdToolIdentity());
   const path = join(staged.stagingDir, STAGED_REVIEW_FILE);
   writeFileSync(path, `${JSON.stringify(review, null, 2)}\n`, 'utf8');
   return { review, path };
@@ -466,7 +547,7 @@ export interface InstallOptions {
   /** The IRR data root, the value of `IIPS_DATA_DIR` for the IRR server. It must already exist. */
   readonly dataDir: string;
   /**
-   * The governance approval record for exactly the staged files. Required. A call without it, or
+   * The approval record for exactly the staged files. Required. A call without it, or
    * with a record that does not authorize the staged export, changes nothing and throws.
    */
   readonly approvalFile: string;
@@ -504,33 +585,40 @@ function renameWithRetry(from: string, to: string): void {
  * relaxes it. Every refusal on account of the approval happens before anything is written.
  */
 export function installStagedIdentity(options: InstallOptions): InstallOutcome {
-  return installUnderPolicy(options, IDENTITY_APPROVAL_POLICY);
+  return installUnderPolicy(options, IDENTITY_APPROVAL_POLICY, readIpdToolIdentity);
 }
 
 /**
  * The same installation under a policy the caller names.
  *
  * This exists for the test suite, which must show an accepted installation and may not hold an
- * approval in the name of a real authority: its tests use a policy whose authorities do not exist.
- * No script of this repository calls it (a test asserts that), and the command line has no way to
- * reach it. `installStagedIdentity` is the governed entry point.
+ * approval in the approver's name: its tests use a policy whose approver does not exist, and state
+ * the tool identity themselves so that a test does not depend on the state of the checkout it runs
+ * in. No script of this repository calls it (a test asserts that), and the command line has no way
+ * to reach it. `installStagedIdentity` is the governed entry point.
  */
-export function installStagedIdentityUnderPolicy(options: InstallOptions, policy: IdentityApprovalPolicy): InstallOutcome {
-  return installUnderPolicy(options, policy);
+export function installStagedIdentityUnderPolicy(options: InstallOptions, policy: IdentityApprovalPolicy, tool: ToolIdentity): InstallOutcome {
+  return installUnderPolicy(options, policy, () => tool);
 }
 
-function installUnderPolicy(options: InstallOptions, policy: IdentityApprovalPolicy): InstallOutcome {
+function installUnderPolicy(options: InstallOptions, policy: IdentityApprovalPolicy, readTool: () => ToolIdentity): InstallOutcome {
   // 1. The approval record by itself. A missing, unreadable, incomplete, lapsed, revoked or
   //    unauthorized record is refused before the staging directory is even read.
   const approvalDocument = readApprovalDocument((options as { approvalFile?: unknown }).approvalFile);
   const now = new Date();
-  const byItself = evaluateIdentityApproval({ record: approvalDocument.document, now, policy, staged: null, gate: null });
+  const record = approvalDocument.document;
+  const byItself = evaluateIdentityApproval({ record, now, policy, staged: null, gate: null, tool: null });
   if (byItself.failures.length > 0) throw new ApprovalRefusedError(byItself.failures);
+
+  // 2. The approval against the running tool: the record names the IPD commit that may install.
+  const tool = readTool();
+  const againstTool = evaluateIdentityApproval({ record, now, policy, staged: null, gate: null, tool });
+  if (againstTool.failures.length > 0) throw new ApprovalRefusedError(againstTool.failures);
 
   const staged = readStagedExport(options.stagingDir);
 
-  // 2. The approval against the staged bytes and the staged generation.
-  const againstStaged = evaluateIdentityApproval({ record: approvalDocument.document, now, policy, staged, gate: null });
+  // 3. The approval against the staged bytes, their source and the staged generation.
+  const againstStaged = evaluateIdentityApproval({ record, now, policy, staged, gate: null, tool });
   if (againstStaged.failures.length > 0) throw new ApprovalRefusedError(againstStaged.failures);
 
   const gate = readGateReceipt(staged.stagingDir);
@@ -548,9 +636,9 @@ function installUnderPolicy(options: InstallOptions, policy: IdentityApprovalPol
     throw new ProvisioningError('GATE_REFUSED', 'the recorded IRR loader output does not accept the staged files; nothing is installed');
   }
 
-  // 3. The approval against the IRR commit whose loader accepted the files. This is the complete
+  // 4. The approval against the IRR commit whose loader accepted the files. This is the complete
   //    check; nothing below this line runs unless it authorizes the installation.
-  const complete = evaluateIdentityApproval({ record: approvalDocument.document, now, policy, staged, gate: { irrCommit: gate.irr.commit } });
+  const complete = evaluateIdentityApproval({ record, now, policy, staged, gate: { irrCommit: gate.irr.commit }, tool });
   if (!complete.authorizesInstallation || complete.approval === null) {
     throw new ApprovalRefusedError(
       complete.failures.length > 0 ? complete.failures : [{ code: 'APPROVAL_MALFORMED', detail: 'the approval record could not be evaluated completely' }],
@@ -638,7 +726,7 @@ export interface InstallReceipt {
   readonly installedAtUtc: string;
   readonly installedFiles: Readonly<Record<IrrIdentityFileName, FileDigest>>;
   readonly previousFilesBackedUp: boolean;
-  /** The governance approval the installation was made under. */
+  /** The approval the installation was made under. */
   readonly approval: ApprovalSummary;
   readonly irrVersions: unknown;
   readonly irrCommit: string | null;

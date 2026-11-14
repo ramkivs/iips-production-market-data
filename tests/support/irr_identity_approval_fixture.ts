@@ -4,14 +4,15 @@
  *
  * READ THIS BEFORE USING IT.
  *
- * The governed approval policy (`IDENTITY_APPROVAL_POLICY`) recognises real authorities. No test
- * may hold an approval made in their names, because such a document would be a forged approval.
- * The tests therefore run acceptance under `TEST_APPROVAL_POLICY`, whose two authorities do not
- * exist and whose governance decision is not a decision. A record built here:
+ * The governed approval policy (`IDENTITY_APPROVAL_POLICY`) names one real approver. No test may
+ * hold an approval made in that name, because such a document would be a forged approval. The
+ * tests therefore run acceptance under `TEST_APPROVAL_POLICY`, whose approver does not exist and
+ * whose decision is not a decision. A record built here:
  *
  *   - is refused by `installStagedIdentity` and by the command line, which use the governed policy
  *     (the tests IAP-103 and IAP-122 assert exactly that);
  *   - is accepted only by `installStagedIdentityUnderPolicy` when a test passes this test policy;
+ *   - names a tool commit that is not a commit of any repository;
  *   - lives in a temporary directory that the test removes.
  *
  * Nothing in `src/` or `scripts/` imports this file.
@@ -22,38 +23,39 @@ import { join } from 'node:path';
 import {
   IDENTITY_APPROVAL_POLICY,
   IDENTITY_APPROVAL_SCHEMA,
+  additionalLimitationCodesFor,
   approvalGenerationOf,
+  approvalSourceOf,
   approvalWithheldOf,
   type IdentityApprovalPolicy,
+  type ToolIdentity,
 } from '../../src/identity/irr_identity_approval.js';
 import type { StagedExport } from '../../src/identity/irr_identity_provisioning.js';
 
-export const TEST_AUTHORITY_ONE = Object.freeze({
-  authorityId: 'TEST_AUTHORITY_ONE',
-  name: 'Fictitious Test Authority One',
-  designation: 'Test Authority (does not exist)',
-});
-export const TEST_AUTHORITY_TWO = Object.freeze({
-  authorityId: 'TEST_AUTHORITY_TWO',
-  name: 'Fictitious Test Authority Two',
-  designation: 'Test Authority (does not exist)',
+export const TEST_AUTHORITY = Object.freeze({
+  authorityId: 'TEST_AUTHORITY_NOT_A_PERSON',
+  name: 'Fictitious Test Authority',
+  role: 'Test authority (does not exist)',
 });
 
 /**
- * The governed policy with its authorities and its governance decision replaced by fictitious ones.
- * Everything else (scope, limitations, qualifications, prerequisites, the unresolved-authority
- * rule) is the governed policy's, so the tests exercise the governed rules.
+ * The governed policy with its approver and its decision replaced by fictitious ones. Everything
+ * else (scope, limitations, the roster-content default, the determinations) is the governed
+ * policy's, so the tests exercise the governed rules.
  */
 export const TEST_APPROVAL_POLICY: IdentityApprovalPolicy = Object.freeze({
   ...IDENTITY_APPROVAL_POLICY,
   policyVersion: 'TEST-POLICY-NOT-GOVERNED',
-  governance: Object.freeze({
-    decisionId: 'TEST-DECISION-NOT-A-GOVERNANCE-DECISION',
+  decision: Object.freeze({
+    decisionId: 'TEST-DECISION-NOT-A-DECISION',
     decisionRecord: 'tests/support/not-a-decision-record.md',
   }),
-  recognisedAuthorities: Object.freeze([TEST_AUTHORITY_ONE, TEST_AUTHORITY_TWO]),
-  requiredAuthorities: Object.freeze({ status: 'UNRESOLVED' as const, questionRef: 'TEST-QUESTION' }),
+  approver: TEST_AUTHORITY,
 });
+
+/** A tool identity for the tests. The commit is not a commit of any repository. */
+export const TEST_TOOL_COMMIT = 'e'.repeat(40);
+export const TEST_TOOL: ToolIdentity = Object.freeze({ commit: TEST_TOOL_COMMIT, unmodified: true, detail: '' });
 
 /** A UTC time `offsetSeconds` from now, in the form an approval record states it. */
 export function utc(offsetSeconds: number, from: Date = new Date()): string {
@@ -67,56 +69,43 @@ export type LooseApproval = Record<string, any>;
 let serial = 0;
 
 /**
- * A record that `TEST_APPROVAL_POLICY` accepts for the given staged export and gated IRR commit.
- * Approved one hour ago, lapsing in thirty days.
+ * A record that `TEST_APPROVAL_POLICY` accepts for the given staged export, gated IRR commit and
+ * test tool. Approved one hour ago, with a review date thirty days ahead.
  */
-export function testApprovalFor(staged: StagedExport, irrCommit: string, policy: IdentityApprovalPolicy = TEST_APPROVAL_POLICY): LooseApproval {
+export function testApprovalFor(
+  staged: StagedExport,
+  irrCommit: string,
+  policy: IdentityApprovalPolicy = TEST_APPROVAL_POLICY,
+  ipdToolCommit: string = TEST_TOOL_COMMIT,
+): LooseApproval {
   serial += 1;
-  const approvedAtUtc = utc(-3600);
   return {
     schemaVersion: IDENTITY_APPROVAL_SCHEMA,
     approvalId: `TEST-FIXTURE-NOT-AN-APPROVAL-${String(serial).padStart(4, '0')}`,
     status: 'APPROVED',
-    governance: {
-      decisionId: policy.governance.decisionId,
-      decisionRecord: policy.governance.decisionRecord,
-      approvalActRef: 'test fixture; no act of approval exists',
-    },
+    policyVersion: policy.policyVersion,
+    decision: { decisionId: policy.decision.decisionId, decisionRecord: policy.decision.decisionRecord },
     subject: {
       files: JSON.parse(JSON.stringify(staged.digests)),
+      p04Source: approvalSourceOf(staged.report),
       generation: approvalGenerationOf(staged.report),
       irrCommit,
+      ipdToolCommit,
     },
     scope: { ...policy.scope },
     accepted: {
       exportLimitationCodes: staged.report.limitations.map((limitation) => limitation.code),
-      additionalLimitationCodes: [...policy.additionalLimitationCodes],
+      additionalLimitationCodes: additionalLimitationCodesFor(policy, staged.report),
       withheldRecords: approvalWithheldOf(staged.report),
     },
-    qualifications: policy.qualificationIds.map((id) => ({ id, disposition: 'WAIVED', ref: 'test fixture' })),
-    determinations: {
-      cv22OptionC: {
-        decisionRef: policy.cv22OptionC.decisionRef,
-        applicability: 'DOES_NOT_APPLY',
-        basisRef: 'test fixture; no determination exists',
-        prerequisites: policy.cv22OptionC.prerequisiteIds.map((id) => ({ id, determination: 'NOT_APPLICABLE', evidenceRef: '' })),
-      },
-      irrRosterContentDecision: {
-        decisionRef: policy.irrRosterContentDecision.decisionRef,
-        applicability: 'DOES_NOT_APPLY',
-        basisRef: 'test fixture; no determination exists',
-      },
-    },
-    approvals: policy.recognisedAuthorities.map((authority) => ({
-      authorityId: authority.authorityId,
-      name: authority.name,
-      designation: authority.designation,
+    approver: {
+      authorityId: policy.approver.authorityId,
+      name: policy.approver.name,
       decision: 'APPROVED',
-      approvedAtUtc,
       statement: 'test fixture; nobody approved anything',
-    })),
-    approvedAtUtc,
-    expiresAtUtc: utc(30 * 24 * 3600),
+    },
+    approvedAtUtc: utc(-3600),
+    reviewDateUtc: utc(30 * 24 * 3600),
     revocation: null,
   };
 }

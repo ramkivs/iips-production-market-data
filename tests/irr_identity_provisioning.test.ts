@@ -14,9 +14,9 @@
  * IRR really accepts the files is established by `validate` against an IRR checkout, and the
  * recorded runs are in `evidence/integration/w04-identity-source-provisioning-2026-11-13/`.
  *
- * GOVERNANCE APPROVAL. Installation requires an approval record. These tests are about staging,
- * the gate and the file operations, so they install under the test policy of
- * `tests/support/irr_identity_approval_fixture.ts`, whose authorities do not exist. The approval
+ * APPROVAL. Installation requires an approval record. These tests are about staging, the gate and
+ * the file operations, so they install under the test policy of
+ * `tests/support/irr_identity_approval_fixture.ts`, whose approver does not exist. The approval
  * requirement itself, and the refusal of the governed entry point, are tested in
  * `tests/irr_identity_approval.test.ts`.
  */
@@ -61,7 +61,7 @@ import {
   writeInstallReceipt,
   type StagedExport,
 } from '../src/identity/irr_identity_provisioning.js';
-import { TEST_APPROVAL_POLICY, testApprovalFor, writeApprovalFile } from './support/irr_identity_approval_fixture.js';
+import { TEST_APPROVAL_POLICY, TEST_TOOL, testApprovalFor, writeApprovalFile } from './support/irr_identity_approval_fixture.js';
 
 const ROOT = process.cwd();
 const CLI = join(ROOT, 'scripts', 'provision-irr-identity-sources.mjs');
@@ -144,7 +144,7 @@ function approvalFileFor(stagingDir: string): string {
 
 /** Installation under the test policy, with an approval for exactly the staged export. */
 function install(options: { stagingDir: string; dataDir: string; replace?: boolean; beforeSwap?: () => void }) {
-  return installStagedIdentityUnderPolicy({ ...options, approvalFile: approvalFileFor(options.stagingDir) }, TEST_APPROVAL_POLICY);
+  return installStagedIdentityUnderPolicy({ ...options, approvalFile: approvalFileFor(options.stagingDir) }, TEST_APPROVAL_POLICY, TEST_TOOL);
 }
 
 function codeOf(run: () => unknown): string {
@@ -580,7 +580,7 @@ describe('W04 IRR identity provisioning — command line', () => {
 
   it('IIP-43 a repeated installation reports ALREADY_INSTALLED and keeps the first receipt', () => {
     // The command line cannot be shown installing: it accepts only an approval of the governed
-    // authorities, and no test holds one. The receipt rule it applies is `recordInstallation`.
+    // approver, and no test holds one. The receipt rule it applies is `recordInstallation`.
     const { stagingDir } = gatedStaging('receipt');
     const dataDir = freshDir('receipt-data');
     const first = install({ stagingDir, dataDir });

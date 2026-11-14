@@ -26,18 +26,20 @@
  *                  have to bind, and writes that as <staging>/review-for-approval.json. Installs
  *                  nothing. Creates no approval: the review record is of another schema and is
  *                  refused as one.
- * check-approval   Read-only. Says whether an approval record is complete, current and made by
- *                  the required authorities and, with --staging, whether it is for exactly the
- *                  staged files. Writes nothing.
+ * check-approval   Read-only. Says whether an approval record is complete, current, made by the
+ *                  approver and written for the IPD commit this tool runs from and, with
+ *                  --staging, whether it is for exactly the staged files. Writes nothing.
  * install          Places the staged files in <data-dir>/investment/identity, only if (a) the
- *                  governance approval record given with --approval authorizes exactly those
- *                  bytes, that generation and the gated IRR commit, and (b) the gate accepted
- *                  exactly those bytes. The approval is checked before anything is written.
- *                  Never creates <data-dir>.
+ *                  approval record given with --approval authorizes exactly those bytes, their
+ *                  P04 source and generation, the gated IRR commit and the IPD commit this tool
+ *                  runs from, and (b) the gate accepted exactly those bytes. The approval is
+ *                  checked before anything is written. Never creates <data-dir>.
  * verify-endpoint  One GET of the identities route of the running IRR server. Prints counts only.
  *
- * NO COMMAND CREATES, COMPLETES OR INFERS AN APPROVAL. An approval record is written by the
- * approving authorities. See docs/integration/IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md.
+ * NO COMMAND CREATES, COMPLETES OR INFERS AN APPROVAL. An approval record is written by the one
+ * approver (Ramki). It is a local file; keep it outside the repository, because the record names
+ * the commit the tool runs from. See
+ * docs/integration/IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md.
  *
  * EXIT CODES
  *   0  the step succeeded
@@ -46,8 +48,8 @@
  *   4  validate, review: the IRR loader gate did not accept the staged files, or could not be run
  *   5  install, check-approval: refused or failed for a reason other than the approval
  *   6  verify-endpoint: the endpoint is not operational or does not serve the gated roster
- *   7  install, check-approval: the governance approval record is missing or does not authorize
- *      the staged files; nothing was installed or changed
+ *   7  install, check-approval: the approval record is missing or does not authorize the staged
+ *      files; nothing was installed or changed
  *   64 the invocation was invalid
  *
  * The compiled modules under dist/ are used, as by the other scripts in this directory. Run
@@ -354,15 +356,17 @@ async function review(argv) {
   const provisioning = await importBuilt('src/identity/irr_identity_provisioning.ts');
   const { review: record, path } = provisioning.writeReviewRecord(stagingDir);
   const generation = record.subject.generation;
+  const source = record.subject.p04Source;
   say('');
   say('-- what an approval record for these files has to bind (subject) --');
   for (const [name, digest] of Object.entries(record.subject.files)) say(`${name}: sha256 ${digest.sha256}, ${digest.bytes} bytes`);
+  say(`P04 source batch: ${source.batchId}`);
+  say(`P04 source authorization: ${source.authorizationRef}`);
+  say(`P04 source operating mode: ${source.operatingMode}`);
+  say(`P04 source checksum sha256: ${source.checksumSha256}`);
+  say(`P04 source records: ${source.recordCount}`);
   say(`report schema: ${generation.reportSchemaVersion}`);
   say(`mapping version: ${generation.mappingVersion}`);
-  say(`master batch: ${generation.masterBatchId}`);
-  say(`master authorization: ${generation.masterAuthorizationRef}`);
-  say(`master checksum sha256: ${generation.masterChecksumSha256}`);
-  say(`master records: ${generation.masterRecordCount}`);
   say(`roster label: ${generation.rosterLabel}`);
   say(`P7 manifest sha256: ${generation.p7ManifestSha256 ?? 'not used'}`);
   say(`issuer-key supplement sha256: ${generation.issuerKeySupplementSha256 ?? 'none'}`);
@@ -373,6 +377,10 @@ async function review(argv) {
   );
   say(`exported: issuers ${generation.issuersExported}, securities ${generation.securitiesExported}, NSE listings ${generation.nseListingsExported}, corporate actions ${generation.corporateActionsExported}; withheld ${generation.recordsWithheld}`);
   say(`IRR commit of the accepted loader gate: ${record.subject.irrCommit ?? 'not available (no accepted loader gate of these files)'}`);
+  say(`IPD commit of this provisioning tool: ${record.subject.ipdToolCommit ?? `not available (${record.tool.detail})`}`);
+  say('');
+  say('-- permitted scope (fixed; an approval cannot widen it) --');
+  for (const [field, value] of Object.entries(record.scope)) say(`${field}: ${value}`);
   say('');
   say('-- what the approval has to accept explicitly --');
   for (const code of record.toBeAcceptedExplicitly.exportLimitationCodes) say(`export limitation: ${code}`);
@@ -381,19 +389,25 @@ async function review(argv) {
   if (record.toBeAcceptedExplicitly.withheldRecords.length === 0) say('withheld record: none');
   say('');
   say('-- approval policy of this tool --');
-  say(`policy: ${record.approvalPolicy.policyVersion}; governance decision: ${record.approvalPolicy.governanceDecisionId}`);
-  say(
-    record.approvalPolicy.requiredAuthorities === null
-      ? 'approval required from: the policy names no usable set of authorities; nothing can be authorized under it'
-      : `approval required from: ${record.approvalPolicy.requiredAuthorities.join(', ')}${record.approvalPolicy.requiredAuthoritiesRule === 'UNRESOLVED' ? ' (which authorities must approve is an unresolved governance question, so every recognised authority is required)' : ''}`,
-  );
+  say(`policy: ${record.approvalPolicy.policyVersion}; decision: ${record.approvalPolicy.decisionId}`);
+  say(`approver: ${record.approvalPolicy.approver.name} (${record.approvalPolicy.approver.authorityId}); one approval, no second approver`);
+  say(`validity: ${record.approvalPolicy.validity}`);
+  for (const item of Object.values(record.approvalPolicy.determinations)) {
+    say(`determination: ${item.rule}`);
+    say(`  result: ${item.determination}`);
+    say(`  consequence: ${item.consequence}`);
+  }
   say(`review record: ${path}`);
   say('');
   if (gateCode !== null && gateCode !== EXIT.OK) {
     say('REVIEW RESULT: NOT COMPLETE - the proposed files are staged, but the IRR loader gate did not accept them. Nothing was installed.');
     return gateCode;
   }
-  say('REVIEW RESULT: COMPLETE - the proposed files are staged and were NOT installed. This is not an approval; none exists until the required authorities write one.');
+  if (!record.readyForApproval) {
+    say('REVIEW RESULT: COMPLETE, NOT YET READY FOR APPROVAL - the proposed files are staged and were NOT installed. An approval record cannot be written until both commits above are available.');
+    return EXIT.OK;
+  }
+  say('REVIEW RESULT: COMPLETE - the proposed files are staged and were NOT installed. This is not an approval; none exists until the approver writes one.');
   return EXIT.OK;
 }
 
@@ -417,17 +431,17 @@ async function checkApproval(argv) {
   const { evaluation } = check;
   if (check.recordSha256 !== null) say(`approval record: sha256 ${check.recordSha256}`);
   if (evaluation.approval !== null) {
-    say(`approval: ${evaluation.approval.approvalId}; status ${evaluation.approval.status}; approved ${evaluation.approval.approvedAtUtc}; lapses ${evaluation.approval.expiresAtUtc}`);
-    say(`approvers named in the record: ${evaluation.approval.approvals.map((approver) => approver.authorityId).join(', ')}`);
+    say(`approval: ${evaluation.approval.approvalId}; status ${evaluation.approval.status}; approved ${evaluation.approval.approvedAtUtc}; review date ${evaluation.approval.reviewDateUtc}`);
+    say(`approver named in the record: ${evaluation.approval.approver.authorityId}`);
   }
-  say(`compared with the staged files: ${evaluation.checked.stagedFiles ? 'yes' : 'no'}; compared with the IRR commit of an accepted loader gate: ${evaluation.checked.loaderGate ? 'yes' : 'no'}`);
+  say(`compared with the running tool: ${evaluation.checked.tool ? 'yes' : 'no'}; compared with the staged files: ${evaluation.checked.stagedFiles ? 'yes' : 'no'}; compared with the IRR commit of an accepted loader gate: ${evaluation.checked.loaderGate ? 'yes' : 'no'}`);
   if (evaluation.failures.length > 0) {
     sayApprovalFailures(evaluation.failures);
     say(`RESULT: FAIL (${evaluation.failures[0].code}) the approval record does not authorize an installation. Nothing was changed.`);
     return EXIT.APPROVAL;
   }
   if (evaluation.authorizesInstallation) {
-    say('RESULT: PASS - the approval record authorizes exactly the staged files, their generation and the gated IRR commit. Nothing was changed.');
+    say('RESULT: PASS - the approval record authorizes exactly the staged files, their source and generation, the gated IRR commit and this tool. Nothing was changed.');
     return EXIT.OK;
   }
   say('RESULT: NO FAILURE FOUND IN WHAT WAS COMPARED - this is not a statement that the record authorizes an installation; see the line above for what was not compared. Nothing was changed.');
@@ -448,7 +462,7 @@ async function install(argv) {
     const receiptPath = join(resolve(stagingDir), provisioning.STAGED_INSTALL_RECEIPT_FILE);
     provisioning.recordInstallation(stagingDir, outcome, new Date().toISOString());
     say(`RESULT: PASS (${outcome.action})`);
-    say(`approval: ${outcome.approval.approvalId}; record sha256 ${outcome.approval.recordSha256}; approvers ${outcome.approval.approvers.join(', ')}; lapses ${outcome.approval.expiresAtUtc}`);
+    say(`approval: ${outcome.approval.approvalId}; record sha256 ${outcome.approval.recordSha256}; approver ${outcome.approval.approver}; review date ${outcome.approval.reviewDateUtc}; IPD tool commit ${outcome.approval.ipdToolCommit}`);
     say(`identity directory: ${outcome.identityDir}`);
     for (const [name, digest] of Object.entries(outcome.installedFiles)) say(`${name}: sha256 ${digest.sha256}, ${digest.bytes} bytes`);
     if (outcome.previousFilesBackup !== null) say(`previous files copied to: ${outcome.previousFilesBackup}`);
@@ -458,7 +472,7 @@ async function install(argv) {
   } catch (error) {
     if (error instanceof provisioning.ApprovalRefusedError) {
       sayApprovalFailures(error.failures);
-      say(`RESULT: FAIL (${error.code}) the governance approval record does not authorize this installation. Nothing was installed or changed.`);
+      say(`RESULT: FAIL (${error.code}) the approval record does not authorize this installation. Nothing was installed or changed.`);
       return EXIT.APPROVAL;
     }
     say(`RESULT: FAIL (${error.code ?? 'ERROR'}) ${error.message}`);
