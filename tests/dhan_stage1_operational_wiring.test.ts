@@ -486,6 +486,14 @@ describe('Stage 1 — Local Operational Wiring (Synthetic Verification)', () => 
     assert.match(childErr, /vaultBackend=UNPROVISIONED_WINDOWS_HOST_VAULT/);
     assert.match(childErr, /liveCredentialResolution=false/);
     assert.match(childErr, /vendorEgress=DISABLED_PRE_ACCESS/);
+    // W-03: the startup line also reports the selection, awaited backend readiness, the
+    // credential-readiness code and the D-7 provider state — with no location disclosure.
+    assert.match(childErr, /vaultBackendSelector=disabled/);
+    assert.match(childErr, /vaultBackendReadiness=NOT_READY/);
+    assert.match(childErr, /credentialReadiness=(CONFIGURED|CREDENTIALS_UNAVAILABLE|CREDENTIALS_EXPIRED)/);
+    assert.match(childErr, /providerState=(UNCONFIGURED|CONFIGURED)/);
+    assert.ok(!childErr.includes('vault://'));
+    assert.ok(!childErr.includes('H:\\IIPS'));
   });
 
   it('S1-OW-04: synthetic end-to-end daemon + resolver + DhanServerHttpsTransport + MarketDataTransportClient verifies auth, timeouts, TLS/origin guards, and graceful shutdown', async () => {

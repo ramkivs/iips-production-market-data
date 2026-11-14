@@ -14,6 +14,12 @@ import {
   createMockSecretRef,
   scanTextForSecrets,
   scanDirectoryForSecrets,
+  VAULT_PROVIDERS,
+  WINDOWS_DPAPI_VAULT_PROVIDER,
+  DHAN_CLIENT_ID_KEY_PATH,
+  DHAN_ACCESS_TOKEN_KEY_PATH,
+  DHAN_SECRET_KEY_PATHS,
+  SecretRef,
 } from '../src/index.js';
 
 describe('WS-A / P03 SecretRef Architecture & Security Scanner', () => {
@@ -39,6 +45,68 @@ describe('WS-A / P03 SecretRef Architecture & Security Scanner', () => {
       status: 'ACTIVE',
     };
     assert.strictEqual(validateSecretRef(invalidRef2).isValid, false);
+  });
+
+  it('P03-04: accepted-provider set admits Windows DPAPI (D-1 / W-01) and validates its refs', () => {
+    // The accepted-provider set is the single source of truth used by validateSecretRef.
+    assert.deepStrictEqual(
+      [...VAULT_PROVIDERS],
+      [
+        'LOCAL_MOCK_VAULT',
+        'AWS_SECRETS_MANAGER',
+        'HASHICORP_VAULT',
+        'AZURE_KEY_VAULT',
+        'TEST_ENCLAVE',
+        'WINDOWS_DPAPI',
+      ]
+    );
+    assert.strictEqual(WINDOWS_DPAPI_VAULT_PROVIDER, 'WINDOWS_DPAPI');
+
+    // Every admitted provider must be accepted by validation.
+    for (const provider of VAULT_PROVIDERS) {
+      const ref: SecretRef = {
+        secretId: `sec-${provider}`,
+        vaultProvider: provider,
+        keyPath:
+          provider === WINDOWS_DPAPI_VAULT_PROVIDER
+            ? DHAN_CLIENT_ID_KEY_PATH
+            : 'vault://market-data/mock/key',
+        version: 'v1',
+        status: 'ACTIVE',
+      };
+      assert.strictEqual(
+        validateSecretRef(ref).isValid,
+        true,
+        `admitted provider ${provider} must validate`
+      );
+    }
+
+    // Both governed Dhan key paths are distinct and validate under the Windows provider.
+    assert.notStrictEqual(DHAN_CLIENT_ID_KEY_PATH, DHAN_ACCESS_TOKEN_KEY_PATH);
+    assert.deepStrictEqual(DHAN_SECRET_KEY_PATHS, {
+      clientId: 'vault://dhan/client-id',
+      accessToken: 'vault://dhan/access-token',
+    });
+    for (const keyPath of [DHAN_CLIENT_ID_KEY_PATH, DHAN_ACCESS_TOKEN_KEY_PATH]) {
+      const ref: SecretRef = {
+        secretId: 'dhan-credential',
+        vaultProvider: WINDOWS_DPAPI_VAULT_PROVIDER,
+        keyPath,
+        version: 'v1',
+        status: 'ACTIVE',
+      };
+      assert.strictEqual(validateSecretRef(ref).isValid, true, `${keyPath} must validate`);
+    }
+
+    // An unadmitted provider is still rejected.
+    const unknownProvider: SecretRef = {
+      secretId: 'sec-unknown',
+      vaultProvider: 'WINDOWS_REGISTRY_PLAINTEXT' as unknown as SecretRef['vaultProvider'],
+      keyPath: DHAN_CLIENT_ID_KEY_PATH,
+      version: 'v1',
+      status: 'ACTIVE',
+    };
+    assert.strictEqual(validateSecretRef(unknownProvider).isValid, false);
   });
 
   it('P03-02: static scanner should detect hardcoded AWS keys, private keys, and passwords', () => {

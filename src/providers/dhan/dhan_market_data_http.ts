@@ -72,7 +72,23 @@ export type MarketDataTransportFailureCode =
 export interface MarketDataTransportFailure {
   readonly code: MarketDataTransportFailureCode;
   readonly message: string;
+  /**
+   * HTTP status of the *daemon's* response. Present whenever the daemon answered at all, so it
+   * reports the transport outcome rather than the provider's.
+   */
   readonly httpStatus?: number;
+  /**
+   * Numeric HTTP status the *vendor* returned, when the daemon could attribute one.
+   *
+   * Separate from {@link httpStatus} by design. `httpStatus` is what the local daemon answered
+   * (502 for any non-rate-limited provider failure); this is what Dhan answered. Diagnostic only:
+   * it is an integer and never carries vendor response content.
+   *
+   * The caller must not treat this as an authentication verdict — a credential the vendor accepted
+   * and one it refused can both produce a vendor status, and `PROVIDER_STATUS_FAILURE` /
+   * `CREDENTIALS_*` failures carry none at all.
+   */
+  readonly vendorHttpStatus?: number;
 }
 
 export type MarketDataTransportQuoteOutcome =
@@ -109,8 +125,48 @@ export interface MarketDataHttpOptions {
 }
 
 interface ErrorBody {
-  error: { code: string; message: string };
+  error: {
+    code: string;
+    message: string;
+    /**
+     * Numeric HTTP status the *vendor* returned, when the failure came from a vendor response.
+     *
+     * Why this is separate from the daemon's own status: the daemon reports 502 for every typed
+     * provider failure, so without this field a vendor 401 and a vendor 403 are indistinguishable
+     * in the operator's evidence (`MarketDataTransportFailure.httpStatus`, by contrast, carries the
+     * *daemon's* status — the two must never be conflated).
+     *
+     * Only the integer is exposed. The vendor's response body, its error code and its message are
+     * never propagated: they are uncontrolled third-party content, and an auth error body is
+     * exactly the kind of payload that must not be reflected.
+     *
+     * Deliberately absent when the failure had no vendor HTTP response (credential, configuration,
+     * transport, rate-budget and timeout-before-send failures), rather than present-and-null.
+     */
+    vendorHttpStatus?: number;
+  };
 }
+
+/**
+ * Codes that can only be produced by interpreting a vendor HTTP response, and for which the vendor's
+ * numeric status is therefore a meaningful diagnostic.
+ *
+ * Scoped deliberately narrowly: a vendor status is attached only where a vendor response produced
+ * the failure, so a credential-resolution or production-guard failure can never be dressed up with
+ * an HTTP status it never received.
+ */
+const VENDOR_STATUS_BEARING_CODES: ReadonlySet<string> = new Set([
+  'AUTHENTICATION_FAILURE',
+  'RATE_LIMITED',
+  'TIMEOUT',
+  'HTTP_ERROR',
+  'MALFORMED_RESPONSE',
+  'PROVIDER_STATUS_FAILURE',
+  'MISSING_REQUIRED_FIELD',
+  'INSTRUMENT_NOT_IN_RESPONSE',
+  'CANONICAL_VALIDATION_FAILURE',
+  'STALE_DATA_SUPPRESSED',
+]);
 
 const LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['127.0.0.1', '::1', '[::1]', 'localhost']);
 
@@ -124,14 +180,92 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(text);
 }
 
-function sendError(res: ServerResponse, status: number, code: string, message: string): void {
-  sendJson(res, status, { error: { code, message } } satisfies ErrorBody);
+function sendError(
+  res: ServerResponse,
+  status: number,
+  code: string,
+  message: string,
+  vendorHttpStatus?: number
+): void {
+  sendJson(res, status, {
+    error: {
+      code,
+      message,
+      // Only a finite integer is ever emitted; anything else is dropped rather than coerced, so a
+      // malformed provider value cannot become a diagnostic the operator would trust.
+      ...(vendorHttpStatus !== undefined && Number.isInteger(vendorHttpStatus) && vendorHttpStatus > 0
+        ? { vendorHttpStatus }
+        : {}),
+    },
+  } satisfies ErrorBody);
+}
+
+/**
+ * Why a configured transport credential cannot be used.
+ *
+ * All three describe the value the *operator configured*, never one a client presented, and all
+ * three are operator-facing startup refusals: the daemon will not bind, so none of them can ever
+ * be produced by a request. A malformed `Authorization` header never reaches this taxonomy — it
+ * gets the same uniform 401 as a wrong token.
+ */
+export type TransportTokenProblem =
+  | 'TRANSPORT_TOKEN_MISSING'
+  | 'TRANSPORT_TOKEN_NOT_ASCII'
+  | 'TRANSPORT_TOKEN_WHITESPACE';
+
+/**
+ * Validates the configured transport credential at startup.
+ *
+ * The comparison is on the exact bytes of the configured value, so anything invisible — a
+ * trailing CR from a file read, a NBSP pasted from a document, a zero-width space — makes the
+ * token unmatchable while looking identical to the operator. That failure mode is
+ * indistinguishable from a wrong token at request time (the 401 body is deliberately uniform),
+ * so it is rejected here instead, where the diagnostic can still name the problem.
+ *
+ * Returns `null` when the value is usable. Never includes the value, its length or a
+ * fingerprint in the returned code.
+ */
+export function validateTransportToken(token: string | undefined): TransportTokenProblem | null {
+  if (!token || !token.trim()) return 'TRANSPORT_TOKEN_MISSING';
+  // `Authorization` is an ASCII header field: Node decodes it as latin1 and re-encodes one byte
+  // per character, so a code point above U+007F can never match a value a client sends. DEL and
+  // the remaining C0 controls are excluded for the same reason — a client cannot transmit them
+  // in a header value at all. TAB/CR/LF are set aside from this test so that a stray line ending
+  // is reported as the whitespace problem it is rather than as an encoding problem.
+  if (/[^\x09\x0a\x0d\x20-\x7e]/.test(token)) return 'TRANSPORT_TOKEN_NOT_ASCII';
+  // Whitespace is never part of the credential: it is not trimmed at request time, so any
+  // leading, trailing or interior occurrence makes the value unmatchable. Reported separately
+  // because the remedy is different (re-enter, do not re-encode).
+  if (/[\x09\x0a\x0d ]/.test(token)) return 'TRANSPORT_TOKEN_WHITESPACE';
+  return null;
+}
+
+/**
+ * Splits an `Authorization` header value into the credential it carries.
+ *
+ * RFC 7235 §2.1 makes the auth-scheme case-insensitive and allows one or more SP/HTAB between
+ * the scheme and the credentials. Clients and proxies vary in what they send, so the parser
+ * accepts `Bearer`, `bearer`, `BEARER` and any SP/HTAB run. It returns `undefined` — never a
+ * partial value — for anything else, so a malformed header can only be rejected, never coerced
+ * into something that happens to compare equal.
+ */
+export function parseBearerAuthorization(header: string | string[] | undefined): string | undefined {
+  // A repeated header arrives joined as `a, b`; that is not one credential, and splitting on the
+  // comma would accept a header no client means to send.
+  if (typeof header !== 'string') return undefined;
+  const match = /^[ \t]*([A-Za-z]+)[ \t]+([^ \t]+)[ \t]*$/.exec(header);
+  if (!match) return undefined;
+  if ((match[1] as string).toLowerCase() !== 'bearer') return undefined;
+  const credential = match[2];
+  return credential === undefined || credential.length === 0 ? undefined : credential;
 }
 
 function tokenMatches(provided: string | undefined, expected: string): boolean {
   if (!provided || !expected) return false;
   const a = Buffer.from(provided);
   const b = Buffer.from(expected);
+  // Length is full-width by construction (UTF-8 byte counts), so this leaks nothing beyond
+  // `timingSafeEqual`'s own requirement that inputs be equal-length.
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
 }
@@ -166,12 +300,31 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
   const timeoutMs = options.requestTimeoutMs ?? MARKET_DATA_REQUEST_TIMEOUT_MS;
   const defaultHost = options.host ?? '127.0.0.1';
 
-  if (!token || !token.trim()) {
+  // Fail closed on an unusable credential, and say which kind of unusable it is. The message
+  // names the problem only: no value, no length, no fingerprint, no offset.
+  const tokenProblem = validateTransportToken(token);
+  if (tokenProblem === 'TRANSPORT_TOKEN_MISSING') {
     // Fail closed: without a transport credential there is no authenticated endpoint.
     throw new Error(
       `${MARKET_DATA_TRANSPORT_TOKEN_ENV} is not set; refusing to start an unauthenticated market-data transport`
     );
   }
+  if (tokenProblem === 'TRANSPORT_TOKEN_NOT_ASCII') {
+    throw new Error(
+      `${MARKET_DATA_TRANSPORT_TOKEN_ENV} contains non-ASCII or control characters; ` +
+        'the value cannot survive an HTTP Authorization header, so it could never authenticate. ' +
+        'Re-enter it as plain ASCII (a pasted non-breaking space or zero-width space is the usual ' +
+        'cause). The supplied value is not echoed.'
+    );
+  }
+  if (tokenProblem === 'TRANSPORT_TOKEN_WHITESPACE') {
+    throw new Error(
+      `${MARKET_DATA_TRANSPORT_TOKEN_ENV} contains whitespace (leading, trailing or interior); ` +
+        'whitespace is not part of the credential and cannot be transmitted or compared. ' +
+        'Re-enter the value without it. The supplied value is not echoed.'
+    );
+  }
+  const expectedToken = token as string;
 
   if (!isLoopbackTransportHost(defaultHost)) {
     throw new Error(
@@ -186,10 +339,10 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
       const url = new URL(req.url ?? '/', 'http://localhost');
       const path = url.pathname;
 
-      // Auth on every route, before any handling.
-      const auth = req.headers.authorization;
-      const provided = typeof auth === 'string' && auth.startsWith('Bearer ') ? auth.slice(7) : undefined;
-      if (!tokenMatches(provided, token)) {
+      // Auth on every route, before any handling. Same gate for /v1/health as for every other
+      // local endpoint: there is no unauthenticated path to the service, not even a liveness one.
+      const provided = parseBearerAuthorization(req.headers.authorization);
+      if (!tokenMatches(provided, expectedToken)) {
         sendError(res, 401, 'UNAUTHENTICATED', 'missing or invalid transport credential');
         return;
       }
@@ -318,7 +471,12 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
         return;
       }
       const status = result.failure.code === 'RATE_LIMITED' ? 429 : 502;
-      sendError(res, status, result.failure.code, result.failure.message);
+      // The daemon's status stays exactly as it was; the vendor's numeric status rides alongside it
+      // as a separate, clearly named diagnostic, and only for vendor-response failures.
+      const vendorHttpStatus = VENDOR_STATUS_BEARING_CODES.has(result.failure.code)
+        ? result.failure.httpStatus
+        : undefined;
+      sendError(res, status, result.failure.code, result.failure.message, vendorHttpStatus);
     })().catch(() => {
       if (!res.headersSent) sendError(res, 500, 'INTERNAL_ERROR', 'unhandled transport error');
     });
@@ -375,10 +533,16 @@ function parseErrorPayload(raw: unknown, status: number): MarketDataTransportFai
       const code = (errObj as { code?: unknown }).code;
       const message = (errObj as { message?: unknown }).message;
       if (typeof code === 'string' && code.trim()) {
+        // A vendor status is accepted only as a positive integer; a string, a float or a body-shaped
+        // object is discarded rather than trusted or coerced.
+        const vendorHttpStatus = (errObj as { vendorHttpStatus?: unknown }).vendorHttpStatus;
         return {
           code: code as MarketDataTransportFailureCode,
           message: typeof message === 'string' && message.trim() ? message : 'transport request failed closed',
           httpStatus: status,
+          ...(typeof vendorHttpStatus === 'number' && Number.isInteger(vendorHttpStatus) && vendorHttpStatus > 0
+            ? { vendorHttpStatus }
+            : {}),
         };
       }
     }
@@ -454,6 +618,19 @@ export class MarketDataTransportClient {
       return {
         code: 'UNAUTHENTICATED',
         message: 'missing or empty transport credential',
+      };
+    }
+
+    // A value the server would reject at startup can never authenticate, so refuse it here
+    // rather than spending a request on a guaranteed 401. Same rules, same words as the server.
+    const tokenProblem = validateTransportToken(this.token);
+    if (tokenProblem !== null) {
+      return {
+        code: 'UNAUTHENTICATED',
+        message:
+          tokenProblem === 'TRANSPORT_TOKEN_NOT_ASCII'
+            ? 'transport credential contains non-ASCII or control characters and cannot be sent'
+            : 'transport credential contains whitespace and cannot match the daemon value',
       };
     }
 
