@@ -1,0 +1,6 @@
+IRR commit: 08411bcd6d782a601fe5c82cc9983d076831148d
+node: v22.22.3; platform: linux
+CASE 1 launcher environment, no evidence-owner carrier variable: HTTP 503 {"error":"owner-context-unavailable"} | data directory entries: []
+CASE 2 control, same environment plus the evidence-owner carrier: HTTP 201 {"outcome":"EVIDENCE_RETAINED","duplicate":false} | data directory entries: ["journal.ndjson"]
+exit=0
+IRR worktree changes after run: 0

@@ -10,6 +10,8 @@
 
 **W04 status is unchanged: PARTIALLY COMPLETE. Not accepted.** The cause distribution of the 63 holdings is still unknown.
 
+**Later record (2026-11-14).** The Principal reports that the probe ran on the host and did not find the evidence journal. The probe output is not on record, so section 9 below is unchanged. The follow-up is the [journal-not-found investigation](IIPS-W04-E4-EVIDENCE-JOURNAL-NOT-FOUND-INVESTIGATION-2026-11-14.md): right location searched, journal probably never written, no evidence recovered, the 63 classified UNDETERMINED.
+
 | Requested | State |
 |---|---|
 | Inspect the E4 specification | Done (section 2) |
