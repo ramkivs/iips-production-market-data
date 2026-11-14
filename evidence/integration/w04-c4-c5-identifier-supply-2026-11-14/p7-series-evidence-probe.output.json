@@ -1,0 +1,159 @@
+{
+  "inputs": {
+    "dhanDetailedSnapshot": {
+      "path": "evidence/dhan-p7/source/api-scrip-master-detailed.csv",
+      "sha256": "6f19feb4abd513843eaf2f139a27f17ccb660233f95ad385d11aa92c322a010d",
+      "sha256EqualsRetrievalManifest": true,
+      "retrievedAtUtc": "2026-11-06T05:27:53.7922492Z",
+      "rows": 217104
+    },
+    "retainedManifest": {
+      "path": "evidence/dhan-p7/qualification-manifest.json",
+      "sha256": "13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc",
+      "generatedAtUtc": "2026-11-06T05:45:58.252Z",
+      "pipelineCommit": "a8019f12cb41f69b911f425d2f557edfa18cb1d6",
+      "registryEntries": 96,
+      "distinctIsins": 48
+    },
+    "legacyMaster": {
+      "batchId": "BATCH-D05-TIER2-BROAD-UNIVERSE-2026-09-22-001",
+      "fileChecksumSha256": "7f53540b6532e7718e3a03a729766c12c73cc2549e450e3c2f356aa64a2b74b5",
+      "recordCount": 2250,
+      "authorizationRef": "AUTH-D05-BROAD-UNIVERSE-MASTER-EXPANSION-ACT-2026-09-22-001",
+      "operatingMode": "OFFLINE_BOOTSTRAP"
+    },
+    "currentMaster": {
+      "batchId": "BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001",
+      "fileChecksumSha256": "b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+      "recordCount": 2390,
+      "authorizationRef": "AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001",
+      "operatingMode": "OFFLINE_BOOTSTRAP"
+    },
+    "wave3Bundle": {
+      "path": "evidence/D05-Wave3/D05_Wave3_EQ_Source_and_Evidence_Bundle_2026-11-07.zip",
+      "sha256": "6332b050132a160e89e5906d131e12535ac1105d4b781330fa63f0e0af1d41f4",
+      "nseMember": {
+        "name": "01_source_material/NSE/EQUITY_L(1).csv",
+        "sha256": "da7eb83cf21156cca3a8bcc5b94ea55f825ff7348e02c89abc51658788361fa5",
+        "rows": 2630,
+        "rowsBySeries": {
+          "BE": 207,
+          "BZ": 33,
+          "EQ": 2390
+        }
+      },
+      "bseMember": {
+        "name": "01_source_material/BSE/BSE_ACTIVE_EQUITY_original.csv",
+        "sha256": "e767a067935dd32f540ecc2855bc20bbdc90b2d911d70c4a1c54e489f6591136",
+        "rows": 5139,
+        "rowsByGroup": {
+          "A": 703,
+          "B": 1939,
+          "IP": 3,
+          "M": 429,
+          "MS": 7,
+          "MT": 133,
+          "P": 56,
+          "R": 5,
+          "T": 189,
+          "TS": 4,
+          "X": 1196,
+          "XT": 387,
+          "Y": 2,
+          "Z": 81,
+          "ZP": 5
+        }
+      }
+    }
+  },
+  "requalifiedAgainstLegacyMaster": {
+    "detailedRows": 217104,
+    "equityCandidates": 23764,
+    "qualifiedMappings": 96,
+    "countsByDisposition": {
+      "CONFLICTING_PROVIDER_ID": 0,
+      "DUPLICATE_IDENTITY": 0,
+      "QUALIFIED": 96,
+      "REJECTED_AMBIGUOUS_IDENTITY": 0,
+      "REJECTED_INVALID_FIELD": 24,
+      "REJECTED_NOT_EQUITY": 193340,
+      "REJECTED_NO_P04_CORRESPONDENCE": 23644,
+      "REJECTED_SCHEMA": 0
+    },
+    "coverageByExchangeSeries": {
+      "BSE:A": 47,
+      "BSE:B": 1,
+      "NSE:EQ": 48
+    },
+    "distinctQualifiedIsins": 48,
+    "isinsOnBothExchanges": 48,
+    "isinsNseOnly": 0,
+    "isinsBseOnly": 0,
+    "isinExchangePairs": 96,
+    "isinExchangePairsWithMoreThanOneSeries": 0
+  },
+  "requalifiedAgainstCurrentMaster": {
+    "detailedRows": 217104,
+    "equityCandidates": 23764,
+    "qualifiedMappings": 4680,
+    "countsByDisposition": {
+      "CONFLICTING_PROVIDER_ID": 0,
+      "DUPLICATE_IDENTITY": 0,
+      "QUALIFIED": 4680,
+      "REJECTED_AMBIGUOUS_IDENTITY": 0,
+      "REJECTED_INVALID_FIELD": 24,
+      "REJECTED_NOT_EQUITY": 193340,
+      "REJECTED_NO_P04_CORRESPONDENCE": 19060,
+      "REJECTED_SCHEMA": 0
+    },
+    "coverageByExchangeSeries": {
+      "BSE:A": 700,
+      "BSE:B": 1590,
+      "NSE:EQ": 2390
+    },
+    "distinctQualifiedIsins": 2390,
+    "isinsOnBothExchanges": 2290,
+    "isinsNseOnly": 100,
+    "isinsBseOnly": 0,
+    "isinExchangePairs": 4680,
+    "isinExchangePairsWithMoreThanOneSeries": 0
+  },
+  "retainedManifestComparedWithRequalification": {
+    "retainedEntriesEqualLegacyRequalification": true,
+    "retainedEntriesPresentUnchangedInCurrentRequalification": 90,
+    "retainedEntriesAbsentFromCurrentRequalification": 6,
+    "retainedIsinsPresentInCurrentRequalification": 48
+  },
+  "holdingLevelQualificationOverEveryP04Listing": {
+    "p04Entities": 2390,
+    "p04Listings": 4680,
+    "withRegistryLoadedByTheApplication": {
+      "mappings": 96,
+      "byExchangeAndOutcome": {
+        "BSE:MISSING_P7_MAPPING": 2245,
+        "BSE:QUALIFIED:A:NON_AUTHORITATIVE": 44,
+        "BSE:QUALIFIED:B:NON_AUTHORITATIVE": 1,
+        "NSE:MISSING_P7_MAPPING": 2345,
+        "NSE:QUALIFIED:EQ:NON_AUTHORITATIVE": 45
+      },
+      "distinctQualifiedIsins": 45
+    },
+    "withInMemoryRequalifiedRegistry": {
+      "mappings": 4680,
+      "byExchangeAndOutcome": {
+        "BSE:QUALIFIED:A:NON_AUTHORITATIVE": 700,
+        "BSE:QUALIFIED:B:NON_AUTHORITATIVE": 1590,
+        "NSE:QUALIFIED:EQ:NON_AUTHORITATIVE": 2390
+      },
+      "distinctQualifiedIsins": 2390
+    }
+  },
+  "vendorSeriesComparedWithExchangeFiles": {
+    "NSE_EQ": {
+      "SAME_VALUE": 2390
+    },
+    "BSE_EQ": {
+      "SAME_VALUE": 2290
+    }
+  }
+}

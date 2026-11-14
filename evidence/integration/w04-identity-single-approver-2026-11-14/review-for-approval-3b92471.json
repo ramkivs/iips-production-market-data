@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "IPD_IRR_IDENTITY_REVIEW_V2",
+  "notice": "Review record. It states what an approval record for these files would have to bind. It is not an approval, it was written by the tool, and it authorizes nothing.",
+  "installed": false,
+  "subject": {
+    "files": {
+      "eligible-roster.json": {
+        "sha256": "078e89cc1896d0f59e09e2ad05a12378e248cd81b97775ee7667b5f1e750e937",
+        "bytes": 1350516
+      },
+      "listing-map.json": {
+        "sha256": "6a330123a2fea31e9e1dd54f01e5adbe13f9721f077a5a82a34ee7cd60bcf458",
+        "bytes": 1285774
+      },
+      "corporate-actions.json": {
+        "sha256": "d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd",
+        "bytes": 70
+      }
+    },
+    "p04Source": {
+      "batchId": "BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001",
+      "authorizationRef": "AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001",
+      "operatingMode": "OFFLINE_BOOTSTRAP",
+      "checksumSha256": "b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+      "recordCount": 2390
+    },
+    "generation": {
+      "reportSchemaVersion": "IPD_IRR_IDENTITY_SOURCE_EXPORT_V1",
+      "mappingVersion": "IPD-IRR-IDENTITY-EXPORT-MAPPING-1",
+      "rosterLabel": "IPD P04 security master export, NSE CM series EQ; batch BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001; master sha256 b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4; mapping IPD-IRR-IDENTITY-EXPORT-MAPPING-1; issuer-key supplement none",
+      "p7ManifestSha256": "13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc",
+      "issuerKeySupplementSha256": null,
+      "requiredIsins": null,
+      "issuersExported": 2388,
+      "securitiesExported": 2388,
+      "nseListingsExported": 2388,
+      "corporateActionsExported": 0,
+      "recordsWithheld": 2
+    },
+    "irrCommit": "08411bcd6d782a601fe5c82cc9983d076831148d",
+    "ipdToolCommit": "3b924711b53fd49f67adc97bbb6e26c03f614971"
+  },
+  "loaderGate": {
+    "recorded": true,
+    "accepted": true
+  },
+  "tool": {
+    "commit": "3b924711b53fd49f67adc97bbb6e26c03f614971",
+    "unmodified": true,
+    "detail": ""
+  },
+  "scope": {
+    "environment": "LOCAL_SINGLE_USER_IIPS",
+    "consumer": "IRR_INVESTMENT_IDENTITY_SOURCES",
+    "rosterDataClass": "OPERATOR_SUPPLIED",
+    "productWideAuthoritativeUse": false,
+    "productionUse": false,
+    "hostedUse": false,
+    "multiUserUse": false,
+    "commercialUse": false
+  },
+  "toBeAcceptedExplicitly": {
+    "exportLimitationCodes": [
+      "CIN_NOT_EXPORTED",
+      "SECTOR_UNCLASSIFIED",
+      "BSE_LISTINGS_NOT_EXPORTED",
+      "CORPORATE_ACTIONS_EMPTY",
+      "NO_SYMBOL_HISTORY",
+      "ELIGIBLE_MEANS_ACTIVE_NSE_LISTING",
+      "SERIES_FROM_UNIVERSE_DEFINITION",
+      "SOURCE_AUTHORITY_CONDITIONAL"
+    ],
+    "additionalLimitationCodes": [
+      "NON_EQ_SERIES_HOLDINGS_UNRESOLVED",
+      "NSE_SOURCE_FILE_WITHOUT_RETRIEVAL_RECEIPT",
+      "ROSTER_LARGER_THAN_IID_DESIGN_DEFAULT",
+      "HOLDINGS_COVERAGE_NOT_MEASURED"
+    ],
+    "withheldRecords": [
+      {
+        "isin": "IN9175A01010",
+        "reasons": [
+          "ISSUER_SHARED_ACROSS_ISINS"
+        ]
+      },
+      {
+        "isin": "INE175A01038",
+        "reasons": [
+          "ISSUER_SHARED_ACROSS_ISINS"
+        ]
+      }
+    ]
+  },
+  "approvalPolicy": {
+    "policyVersion": "IPD-IRR-IDENTITY-APPROVAL-POLICY-2",
+    "decisionId": "IIPS-W04-D1",
+    "decisionRecord": "docs/integration/IIPS-W04-IDENTITY-PROVISIONING-DECISIONS-D1-D4-2026-11-13.md",
+    "approver": {
+      "authorityId": "PROGRAM_AUTHORITY_RAMKI",
+      "name": "Ramki"
+    },
+    "validity": "Valid from approvedAtUtc until reviewDateUtc. From the review date on, installation is refused; renewal is a new record by the approver.",
+    "determinations": {
+      "cv22OptionC": {
+        "rule": "CV-22 Option C: five prerequisites before any expansion of the governed sector-reference universe",
+        "source": "IRR docs/integration/IIPS_v3.0_CV22_OPTION_C_PA_DECISION_2026-10-19.md, section 3",
+        "determination": "DOES_NOT_APPLY",
+        "basis": [
+          "The rule governs proposals to expand the 13-row sector-reference universe that IRR serves to its Executive and Watchlists surfaces, with D05 as the possible source.",
+          "This installation writes three files to <data root>/investment/identity and nothing else. The sector-reference universe is another data set, read by other code, and is not changed by it.",
+          "Section 3.3 of the rule itself separates the sector-reference canonicalSecurityId from other identities.",
+          "The files are an operator-supplied roster for one local user. They are not a product-wide universe, and the scope of this policy forbids that use.",
+          "The rule also says that D05 is not an admitted IRR owner-data universe. It describes the earlier D05 payload of 2,250 records. These files are generated from the P04 master of a later replacement batch, which the rule did not assess, and they are installed as an operator-supplied roster, not admitted as an owner-data universe."
+        ],
+        "consequence": "No CV-22 prerequisite is checked. The installation target is fixed to the identity directory, so the tool cannot change the sector-reference universe."
+      },
+      "iidRosterContentDefault": {
+        "rule": "IID roster content, item Q-2: operator-curated file, seeded from holdings and watchlist, capped at 200, every row requiring an ISIN",
+        "source": "IRR docs/integration/IIPS_V3_IID_INVESTMENT_INTELLIGENCE_DESIGN_REFINEMENT_2026-11-05.md, section 7.2 and R-19",
+        "determination": "APPLIES_AS_DESIGN_DEFAULT_NOT_AS_LIMIT",
+        "basis": [
+          "The item is about this file, the eligible roster, so it is in scope.",
+          "It is recorded as a default, and R-19 calls it a data decision, not a technical blocker. The document states that it is not an authority act and creates no implementation obligation.",
+          "Its stated reason is the effort of entering data for each company, not correctness. The same document says missing data degrades to partial adequacy and withheld valuation.",
+          "IRR enforces no roster size: its loader accepted 2,388 issuers at the gated commit.",
+          "R-17 makes the roster an operator-maintained data file; the operator is the approver."
+        ],
+        "consequence": "A roster above 200 issuers is not refused. It carries the limitation ROSTER_LARGER_THAN_IID_DESIGN_DEFAULT, which the approval record must accept by name. A roster of 200 issuers or fewer does not carry it."
+      }
+    }
+  },
+  "readyForApproval": true
+}

@@ -1,0 +1,147 @@
+{
+  "probe": "iips.w04.ipd-identity-source-probe/v1",
+  "scope": "tracked IPD sources only; no portfolio, capture, database or host state",
+  "p04SecurityMaster": {
+    "sourceRevision": {
+      "batchId": "BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001",
+      "fileChecksumSha256": "b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+      "recordCount": 2390,
+      "authorizationRef": "AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001",
+      "operatingMode": "OFFLINE_BOOTSTRAP"
+    },
+    "entities": 2390,
+    "distinctIsins": 2390,
+    "listingsByExchangeStatus": {
+      "BSE:ACTIVE": 2290,
+      "NSE:ACTIVE": 2390
+    },
+    "entitiesWithEffectiveTo": 0,
+    "latestEffectiveFrom": "2026-11-06T00:00:00.000Z"
+  },
+  "p7QualificationManifest": {
+    "path": "evidence/dhan-p7/qualification-manifest.json",
+    "sha256": "13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc",
+    "bytes": 210821,
+    "task": "DHAN-P7",
+    "generatedAtUtc": "2026-11-06T05:45:58.252Z",
+    "pipelineCommit": "a8019f12cb41f69b911f425d2f557edfa18cb1d6",
+    "sources": [
+      {
+        "filename": "api-scrip-master-detailed.csv",
+        "retrievedAtUtc": "2026-11-06T05:27:53.7922492Z",
+        "sha256": "6F19FEB4ABD513843EAF2F139A27F17CCB660233F95AD385D11AA92C322A010D",
+        "sha256Verified": true,
+        "dataRows": 217104
+      },
+      {
+        "filename": "api-scrip-master.csv",
+        "retrievedAtUtc": "2026-11-06T05:29:23.9190078Z",
+        "sha256": "4366E41B115B00B7A84225D3506A3DBB6EF483CB3BA4D32AD5F23D72E9EDCDDD",
+        "sha256Verified": true,
+        "dataRows": 217104
+      }
+    ],
+    "declaredTotals": {
+      "detailedRows": 217104,
+      "compactRows": 217104,
+      "equityCandidates": 23764,
+      "qualified": 96,
+      "registrySize": 96
+    },
+    "declaredCountsByDisposition": {
+      "QUALIFIED": 96,
+      "REJECTED_SCHEMA": 0,
+      "REJECTED_NOT_EQUITY": 193340,
+      "REJECTED_INVALID_FIELD": 24,
+      "REJECTED_NO_P04_CORRESPONDENCE": 23644,
+      "REJECTED_AMBIGUOUS_IDENTITY": 0,
+      "DUPLICATE_IDENTITY": 0,
+      "CONFLICTING_PROVIDER_ID": 0
+    },
+    "declaredCoverageByExchangeSeries": {
+      "BSE:A": 47,
+      "BSE:B": 1,
+      "NSE:EQ": 48
+    }
+  },
+  "p7RegistryAsLoaded": {
+    "mappings": 96,
+    "distinctIsins": 48,
+    "distinctCompanies": 48,
+    "bySegmentSeries": {
+      "BSE_EQ:A": 47,
+      "BSE_EQ:B": 1,
+      "NSE_EQ:EQ": 48
+    },
+    "byProvenance": {
+      "DHAN_INSTRUMENT_MASTER": 96
+    },
+    "byActive": {
+      "true": 96
+    },
+    "distinctLastVerifiedAt": [
+      "2026-11-06T05:27:53.7922492Z"
+    ]
+  },
+  "securityQualification": {
+    "registryIsinsByExchange": {
+      "BSE:MISSING_P7_MAPPING": 3,
+      "BSE:QUALIFIED:A:NON_AUTHORITATIVE": 44,
+      "BSE:QUALIFIED:B:NON_AUTHORITATIVE": 1,
+      "NSE:MISSING_P7_MAPPING": 3,
+      "NSE:QUALIFIED:EQ:NON_AUTHORITATIVE": 45
+    },
+    "distinctIsinsThatQualify": 45,
+    "registryIsinsThatDoNotQualify": 3,
+    "ofThoseRegistryCompanyDiffersFromP04Company": 3,
+    "everyP04IsinOnEveryP04ListedExchange": {
+      "BSE:MISSING_P7_MAPPING": 2245,
+      "BSE:QUALIFIED": 45,
+      "NSE:MISSING_P7_MAPPING": 2345,
+      "NSE:QUALIFIED": 45
+    }
+  },
+  "companyLevelGate": {
+    "note": "the gate that stamps identityStatus=RESOLVED / resolutionDisposition=CANONICAL_P04",
+    "everyP04Listing": {
+      "BSE|isinSupplied=false|RESOLVED": 2290,
+      "BSE|isinSupplied=true|RESOLVED": 2290,
+      "NSE|isinSupplied=false|RESOLVED": 2390,
+      "NSE|isinSupplied=true|RESOLVED": 2390
+    },
+    "symbolWithoutExchange": "AMBIGUOUS:MISSING_EXCHANGE"
+  },
+  "persistedSecurityIdentityByInputShape": {
+    "note": "every P04 entity with an NSE listing, passed to mapBrokerImportHoldings as an already company-resolved row",
+    "governedDeps_isinSupplied": {
+      "rows": 2390,
+      "securityIdentityPopulated": 45,
+      "securityIdentityNull": 2345
+    },
+    "governedDeps_isinNotSupplied": {
+      "rows": 2390,
+      "securityIdentityPopulated": 0,
+      "securityIdentityNull": 2390
+    },
+    "governedDeps_isinNotSupplied_seriesSupplied": {
+      "rows": 2390,
+      "securityIdentityPopulated": 0,
+      "securityIdentityNull": 2390
+    },
+    "emptyRegistry_isinSupplied": {
+      "rows": 2390,
+      "securityIdentityPopulated": 0,
+      "securityIdentityNull": 2390
+    },
+    "noDeps_isinSupplied_noSeries": {
+      "rows": 2390,
+      "securityIdentityPopulated": 0,
+      "securityIdentityNull": 2390
+    },
+    "noDeps_isinSupplied_seriesSupplied": {
+      "rows": 2390,
+      "securityIdentityPopulated": 2390,
+      "securityIdentityNull": 0
+    }
+  }
+}

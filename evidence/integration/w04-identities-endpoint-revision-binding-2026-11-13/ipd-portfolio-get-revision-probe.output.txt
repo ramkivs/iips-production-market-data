@@ -1,0 +1,31 @@
+== IPD commit f5ca4b84a72253dbe81ab4adeddf4075cb81b40e (src/ipc, src/persistence, src/contracts identical to main a624d06 and to 1fded9d)
+== 1. Operation set and store signatures
+IPC read operations: ["portfolio.list","portfolio.get","portfolio.revisions"]
+IPC write operations: ["portfolio.create","portfolio.save","portfolio.reset","portfolio.restore","portfolio.delete","portfolio.importBroker"]
+any operation naming a revision or a history read of holdings: []
+declared parameters of store.get: 2
+declared parameters of store.revisions: 2
+== 2. Store: what `get` returns as the portfolio moves on
+after create: get.revision, holdings: [1,2]
+after one save: get.revision, holdings: [2,3]
+get.provenanceDigest changed with the revision: true
+get still returns the revision-1 symbols: false
+revisions: revision numbers: [1,2]
+revisions: keys of one entry: ["revision","operation","committedAt","contentDigest","totalMarketValue","provenanceDigest","holdingsCount"]
+revisions: entry 1 provenanceDigest equals the digest get returned at revision 1: true
+stored holding rows of revision 1 unchanged by the later write: true
+stored revision row 1 unchanged by the later write: true
+== 3. Wire (protocol v1): a request that names revision 1 while the portfolio is at revision 2
+personal-use path on | v1 get {portfolioId}: {"ok":true,"revision":2,"holdings":3,"provenanceIsRevision1":false,"provenanceIsRevision2":true}
+personal-use path on | v1 get {portfolioId, revision: 1}: {"ok":true,"revision":2,"holdings":3,"provenanceIsRevision1":false,"provenanceIsRevision2":true}
+personal-use path on | v1 get with an envelope key revision: 1: "zero bytes, connection closed (refused)"
+personal-use path off | v1 get {portfolioId}: {"ok":true,"revision":2,"holdings":3,"provenanceIsRevision1":false,"provenanceIsRevision2":true}
+personal-use path off | v1 get {portfolioId, revision: 1}: {"ok":true,"revision":2,"holdings":3,"provenanceIsRevision1":false,"provenanceIsRevision2":true}
+personal-use path off | v1 get with an envelope key revision: 1: "zero bytes, connection closed (refused)"
+== 4. Revision numbers only move forward; a restore repeats a provenance digest under a new number
+after delete: get refuses: true
+after restore: get.revision: 4
+after restore: get.provenanceDigest equals the revision-2 digest: true
+revision numbers in history: ["1:INITIAL","2:REPLACE","3:DELETE","4:RESTORE"]
+restore receipt revision: 4
+stored holding rows of revision 1 still unchanged: true

@@ -1,0 +1,209 @@
+{
+  "schemaVersion": "IPD_IRR_IDENTITY_SOURCE_EXPORT_V1",
+  "mappingVersion": "IPD-IRR-IDENTITY-EXPORT-MAPPING-1",
+  "result": "PASS",
+  "identityFilesProduced": true,
+  "refusals": [],
+  "incomplete": [],
+  "inputs": {
+    "p04SecurityMaster": {
+      "batchId": "BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001",
+      "authorizationRef": "AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001",
+      "operatingMode": "OFFLINE_BOOTSTRAP",
+      "declaredRecordCount": 2390,
+      "observedRecordCount": 2390,
+      "declaredChecksumSha256": "b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+      "observedChecksumSha256": "b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+      "checksumVerified": true
+    },
+    "p7QualificationManifest": {
+      "supplied": true,
+      "role": "CORROBORATION_ONLY",
+      "sha256": "13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc",
+      "generatedAtUtc": "2026-11-06T05:45:58.252Z",
+      "qualifiedRecords": 96
+    },
+    "issuerKeySupplement": {
+      "supplied": false
+    },
+    "corporateActions": {
+      "supplied": false,
+      "reason": "NO_APPROVED_SOURCE"
+    },
+    "requiredIsins": {
+      "supplied": false
+    }
+  },
+  "acknowledgements": {
+    "acceptedWithheld": 2,
+    "acceptedUncovered": 0
+  },
+  "coverage": {
+    "master": {
+      "records": 2390,
+      "exported": 2388,
+      "withheld": 2,
+      "withheldByReason": {
+        "ISSUER_SHARED_ACROSS_ISINS": 2
+      }
+    },
+    "issuers": {
+      "exported": 2388,
+      "keyedByCin": 0,
+      "keyedByEquityIsin": 2388
+    },
+    "securities": {
+      "exported": 2388
+    },
+    "listings": {
+      "nse": {
+        "inMaster": 2390,
+        "exported": 2388
+      },
+      "bse": {
+        "inMaster": 2290,
+        "exported": 0
+      }
+    },
+    "corporateActions": {
+      "exported": 0
+    },
+    "masterFieldsNotExported": {
+      "cinPresent": 2332,
+      "cinStructurallyValid": 2298,
+      "cinDistinct": 2332,
+      "sectorPresent": 2390
+    },
+    "requiredIsins": null
+  },
+  "p7Corroboration": {
+    "qualifiedRecords": 96,
+    "distinctIsins": 48,
+    "isinsInMaster": 48,
+    "isinsNotInMaster": 0,
+    "nseSeriesEq": 48,
+    "nseSeriesOther": 0,
+    "bseScripCodeAgrees": 48,
+    "bseScripCodeDiffers": 0,
+    "companyIdDiffers": 3
+  },
+  "withheld": [
+    {
+      "isin": "IN9175A01010",
+      "nseSymbol": "JISLDVREQS",
+      "reasons": [
+        "ISSUER_SHARED_ACROSS_ISINS"
+      ]
+    },
+    {
+      "isin": "INE175A01038",
+      "nseSymbol": "JISLJALEQS",
+      "reasons": [
+        "ISSUER_SHARED_ACROSS_ISINS"
+      ]
+    }
+  ],
+  "limitations": [
+    {
+      "code": "CIN_NOT_EXPORTED",
+      "detail": "The P04 deposition records its CIN field as carried from a published bridge file and not independently verified. A CIN has no check digit, and IRR treats the roster as the confirmation of a CIN, so an unverified CIN is not exported. Issuers are keyed IN:EQISIN:<isin> with cin null, unless an issuer-key supplement supplies the CIN.",
+      "missingDataset": "Registry-verified CIN per equity ISIN (MCA company master joined to the exchange listing master).",
+      "requiredFields": [
+        "isin",
+        "cin",
+        "sourceRef"
+      ]
+    },
+    {
+      "code": "SECTOR_UNCLASSIFIED",
+      "detail": "The P04 sector and industry come from a taxonomy file with a disclosed systematic-classification limitation and use a vocabulary IRR does not use. Every issuer is exported with sector UNCLASSIFIED, the value the IRR loader itself assigns when no sector is supplied, and subSegment null.",
+      "missingDataset": "Governed sector classification per issuer in the sector vocabulary of the IRR assessment engines.",
+      "requiredFields": [
+        "isin",
+        "sector",
+        "subSegment",
+        "sourceRef"
+      ]
+    },
+    {
+      "code": "BSE_LISTINGS_NOT_EXPORTED",
+      "detail": "P04 carries a BSE scrip code for dual-listed securities but no BSE listing date, and the BSE group is not a series the IRR listing identifier can represent. No BSE listing is exported. An observation that names BSE is therefore not resolved to a listing.",
+      "missingDataset": "BSE listing master for the exported ISINs, and an IRR decision on how a BSE group maps to a listing series.",
+      "requiredFields": [
+        "isin",
+        "scripCode",
+        "group",
+        "listingDate",
+        "status"
+      ]
+    },
+    {
+      "code": "CORPORATE_ACTIONS_EMPTY",
+      "detail": "Neither repository holds an approved corporate-action dataset. corporate-actions.json is exported with an empty actions array. Empty means that no action is recorded. It does not mean that none occurred.",
+      "missingDataset": "Exchange corporate-action register for the exported ISINs.",
+      "requiredFields": [
+        "actionId",
+        "type",
+        "effectiveDate",
+        "isin",
+        "adjustmentFactor",
+        "factorBasis",
+        "successors",
+        "sourceRef"
+      ]
+    },
+    {
+      "code": "NO_SYMBOL_HISTORY",
+      "detail": "Each listing carries the symbol and series current in the master, with the NSE date of listing of the security as effectiveFrom. P04 has no symbol history. For a date before the master was deposited, a listing can therefore carry a symbol that was not yet in use, and a former symbol is not in the map.",
+      "missingDataset": "NSE symbol-change history for the exported ISINs.",
+      "requiredFields": [
+        "isin",
+        "symbol",
+        "series",
+        "effectiveFrom",
+        "effectiveTo",
+        "sourceRef"
+      ]
+    },
+    {
+      "code": "ELIGIBLE_MEANS_ACTIVE_NSE_LISTING",
+      "detail": "Issuer status ELIGIBLE and security status ASSESSABLE are derived from one fact: the security is an ACTIVE NSE capital-market listing in series EQ in the P04 master. They are not an IPD eligibility or data-quality assertion.",
+      "missingDataset": null,
+      "requiredFields": []
+    },
+    {
+      "code": "SERIES_FROM_UNIVERSE_DEFINITION",
+      "detail": "P04 has no series field. Every listing is exported in series EQ because the deposited universe is, by its manifest, the NSE capital-market list filtered to series EQ as of the deposition date. The series is a property of that selection, not a per-record observation, and it is as old as the deposition: a security moved to another series since then is still exported as EQ. The P7 vendor master is used to detect a contradiction, for the ISINs it covers only.",
+      "missingDataset": "Current NSE listing master with the series of each ISIN, re-deposited under a governed act.",
+      "requiredFields": [
+        "isin",
+        "symbol",
+        "series",
+        "asOf"
+      ]
+    },
+    {
+      "code": "SOURCE_AUTHORITY_CONDITIONAL",
+      "detail": "The source is a one-time OFFLINE_BOOTSTRAP deposition of the P04 security master. P01 rule ID-4 states that P04 is not authorized as product-wide authoritative identity and that making it so requires a new ADR. This export does not change that. Using it as the IRR eligible roster is an operator decision, and IRR records the roster as OPERATOR_SUPPLIED.",
+      "missingDataset": null,
+      "requiredFields": []
+    }
+  ],
+  "outputs": {
+    "rosterLabel": "IPD P04 security master export, NSE CM series EQ; batch BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001; master sha256 b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4; mapping IPD-IRR-IDENTITY-EXPORT-MAPPING-1; issuer-key supplement none",
+    "files": {
+      "eligible-roster.json": {
+        "sha256": "078e89cc1896d0f59e09e2ad05a12378e248cd81b97775ee7667b5f1e750e937",
+        "bytes": 1350516
+      },
+      "listing-map.json": {
+        "sha256": "6a330123a2fea31e9e1dd54f01e5adbe13f9721f077a5a82a34ee7cd60bcf458",
+        "bytes": 1285774
+      },
+      "corporate-actions.json": {
+        "sha256": "d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd",
+        "bytes": 70
+      }
+    }
+  }
+}

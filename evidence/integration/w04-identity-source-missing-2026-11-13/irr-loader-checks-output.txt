@@ -1,0 +1,36 @@
+== main-08411bc (08411bcd6d782a601fe5c82cc9983d076831148d)
+-- tracked identity directories
+evidence/real-issuer/REL-1-INFOSYS-2026-11-06/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI3-BORROWINGS-NIL-2026-11-06/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI5-PREFERENCE-CAPITAL-2026-11-07/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI6A-S2-CONSOLIDATED-PAGE-RECOVERY-2026-11-07/ingest-input/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI7-CONSUMER-MARICO-2026-11-07/ingest-input/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI7-L038-DEBT-COMPLETENESS-2026-11-07/ingest-input/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI8-INDUSTRIALS-KEC-2026-11-07/ingest-input/identity | VALID | issuers 1 securities 1 listings 1 actions 0 | class OPERATOR_SUPPLIED | label present true
+iips-platform/tests/investment/fixtures/identity | VALID | issuers 8 securities 11 listings 15 actions 9 | class SYNTHETIC_FIXTURE | label present true
+-- loader edge cases (synthetic fixture, one mutation each)
+roster: issuers key absent | INVALID ["UNKNOWN_ISSUER"]
+roster: issuers empty | INVALID ["UNKNOWN_ISSUER"]
+listing-map: entries key absent | VALID
+listing-map: entries empty | VALID
+corporate-actions: actions key absent | VALID
+corporate-actions: actions empty | VALID
+roster: top level is an array | INVALID ["SCHEMA_MISMATCH"]
+== pr563-d10afbb (d10afbb31573d999f4b331484fcb79c510df1304)
+-- tracked identity directories
+evidence/real-issuer/REL-1-INFOSYS-2026-11-06/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI3-BORROWINGS-NIL-2026-11-06/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI5-PREFERENCE-CAPITAL-2026-11-07/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI6A-S2-CONSOLIDATED-PAGE-RECOVERY-2026-11-07/ingest-input/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI7-CONSUMER-MARICO-2026-11-07/ingest-input/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI7-L038-DEBT-COMPLETENESS-2026-11-07/ingest-input/identity | VALID | issuers 1 securities 1 listings 2 actions 0 | class OPERATOR_SUPPLIED | label present true
+evidence/real-issuer/WI8-INDUSTRIALS-KEC-2026-11-07/ingest-input/identity | INVALID | corporate-actions.json:MISSING_REQUIRED_ARRAY
+iips-platform/tests/investment/fixtures/identity | VALID | issuers 8 securities 11 listings 15 actions 9 | class SYNTHETIC_FIXTURE | label present true
+-- loader edge cases (synthetic fixture, one mutation each)
+roster: issuers key absent | INVALID ["MISSING_REQUIRED_ARRAY"]
+roster: issuers empty | INVALID ["EMPTY_ROSTER_ISSUERS","UNKNOWN_ISSUER"]
+listing-map: entries key absent | INVALID ["MISSING_REQUIRED_ARRAY"]
+listing-map: entries empty | INVALID ["EMPTY_LISTING_MAP"]
+corporate-actions: actions key absent | INVALID ["MISSING_REQUIRED_ARRAY"]
+corporate-actions: actions empty | VALID
+roster: top level is an array | INVALID ["INVALID_ROOT_TYPE"]

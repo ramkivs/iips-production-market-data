@@ -1,0 +1,150 @@
+# Recorded after the review run of review-run-3b92471.txt, on the same <staging> (generated, gate accepted at IRR 08411bc).
+# <data root>/investment/identity holds three files placed by hand, to stand for an earlier installation.
+
+## state before
+# <data root>
+8a3992e18935376f1ba63c19d9baef76299f9ab1a2159ab074390ba8ef5c1a62  ./investment/identity/corporate-actions.json  mtime 1794625421
+20b8eec940fad1aee1ec7a4b49009377af11a33023b7b11fe55d9b345dd1aa92  ./investment/identity/eligible-roster.json  mtime 1794625421
+12231e72ed36d60ab3374e53d7af4e0bc0311d09ecd062c7cbcb81eb4376cca0  ./investment/identity/listing-map.json  mtime 1794625421
+# <staging>
+d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd  ./identity/corporate-actions.json  mtime 1794625416
+078e89cc1896d0f59e09e2ad05a12378e248cd81b97775ee7667b5f1e750e937  ./identity/eligible-roster.json  mtime 1794625416
+6a330123a2fea31e9e1dd54f01e5adbe13f9721f077a5a82a34ee7cd60bcf458  ./identity/listing-map.json  mtime 1794625416
+ddbbdd04b7403aab44b71c17cf004c370dccab5691eca1572f9273eb58370df8  ./irr-loader-gate.json  mtime 1794625421
+7b7cf322176f38717f7dfb7b968d5dc20a341046011eb0dc55176537b0ef3a36  ./provisioning-report.json  mtime 1794625416
+fa2168fa582f0db20f802ccce56bf5c6cd66802f6b78e388df106d17a32017d9  ./review-for-approval.json  mtime 1794625421
+
+## 1. install without an approval record
+$ node scripts/provision-irr-identity-sources.mjs install --staging <staging> --data-dir <data root>
+APPROVAL REFUSED, APPROVAL_MISSING: no approval record was given; installation requires the approval record for exactly these files
+RESULT: FAIL (APPROVAL_MISSING) the approval record does not authorize this installation. Nothing was installed or changed.
+exit code: 7
+
+## 2. install --replace without an approval record
+$ node scripts/provision-irr-identity-sources.mjs install --staging <staging> --data-dir <data root> --replace
+APPROVAL REFUSED, APPROVAL_MISSING: no approval record was given; installation requires the approval record for exactly these files
+RESULT: FAIL (APPROVAL_MISSING) the approval record does not authorize this installation. Nothing was installed or changed.
+exit code: 7
+
+## 3. install with an approval path that does not exist
+$ node scripts/provision-irr-identity-sources.mjs install --staging <staging> --data-dir <data root> --replace --approval <scratch>/records/absent.json
+APPROVAL REFUSED, APPROVAL_MISSING: the approval record file does not exist
+RESULT: FAIL (APPROVAL_MISSING) the approval record does not authorize this installation. Nothing was installed or changed.
+exit code: 7
+
+## 4. install with the blank template
+$ node scripts/provision-irr-identity-sources.mjs install --staging <staging> --data-dir <data root> --replace --approval docs/integration/w04-identity-approval/IRR-IDENTITY-APPROVAL-RECORD-TEMPLATE.json
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.approvalId must be 8 to 128 characters of A-Z, 0-9, dot, underscore and hyphen
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.status must be APPROVED or REVOKED
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.eligible-roster.json.sha256 must be a lower-case SHA-256 value
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.eligible-roster.json.bytes must be a positive whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.listing-map.json.sha256 must be a lower-case SHA-256 value
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.listing-map.json.bytes must be a positive whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.corporate-actions.json.sha256 must be a lower-case SHA-256 value
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.corporate-actions.json.bytes must be a positive whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.p04Source.batchId must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.p04Source.authorizationRef must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.p04Source.operatingMode must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.p04Source.checksumSha256 must be a lower-case SHA-256 value
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.p04Source.recordCount must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.reportSchemaVersion must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.mappingVersion must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.rosterLabel must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.issuersExported must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.securitiesExported must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.nseListingsExported must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.corporateActionsExported must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.recordsWithheld must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.irrCommit must be a 40-character lower-case commit identifier
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.ipdToolCommit must be a 40-character lower-case commit identifier
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.approver.authorityId must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.approver.name must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVER_DID_NOT_APPROVE: record.approver.decision is not APPROVED
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.approver.statement must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.approvedAtUtc must be a UTC time written YYYY-MM-DDTHH:MM:SSZ
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.reviewDateUtc must be a UTC time written YYYY-MM-DDTHH:MM:SSZ
+RESULT: FAIL (APPROVAL_MALFORMED) the approval record does not authorize this installation. Nothing was installed or changed.
+exit code: 7
+
+## 5. install with the review record of these very files
+$ node scripts/provision-irr-identity-sources.mjs install --staging <staging> --data-dir <data root> --replace --approval <staging>/review-for-approval.json
+APPROVAL REFUSED, APPROVAL_SCHEMA_UNKNOWN: the document is not an approval record of schema IPD_IRR_IDENTITY_APPROVAL_V2
+RESULT: FAIL (APPROVAL_SCHEMA_UNKNOWN) the approval record does not authorize this installation. Nothing was installed or changed.
+exit code: 7
+
+## 6. install with a complete record for exactly these files and this tool commit, by an approver who is not the approver
+$ node scripts/provision-irr-identity-sources.mjs install --staging <staging> --data-dir <data root> --replace --approval <scratch>/records/another-approver.json
+APPROVAL REFUSED, POLICY_VERSION_MISMATCH: the approval was written under policy TEST-POLICY-NOT-GOVERNED; this tool applies IPD-IRR-IDENTITY-APPROVAL-POLICY-2
+APPROVAL REFUSED, DECISION_REFERENCE_MISMATCH: the approval is made under decision TEST-DECISION-NOT-A-DECISION; installation requires an approval of IIPS-W04-D1
+APPROVAL REFUSED, DECISION_REFERENCE_MISMATCH: the approval does not cite the decision record that defines what it approves
+APPROVAL REFUSED, APPROVER_NOT_AUTHORIZED: the record is not made by the approver of this policy (PROGRAM_AUTHORITY_RAMKI)
+RESULT: FAIL (POLICY_VERSION_MISMATCH) the approval record does not authorize this installation. Nothing was installed or changed.
+exit code: 7
+
+## 7. check-approval of the blank template
+$ node scripts/provision-irr-identity-sources.mjs check-approval --approval docs/integration/w04-identity-approval/IRR-IDENTITY-APPROVAL-RECORD-TEMPLATE.json
+approval record: sha256 35d8047953caa2043aa4a11f225fcddebba49f5509a06417774761d3e09be789
+compared with the running tool: yes; compared with the staged files: no; compared with the IRR commit of an accepted loader gate: no
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.approvalId must be 8 to 128 characters of A-Z, 0-9, dot, underscore and hyphen
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.status must be APPROVED or REVOKED
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.eligible-roster.json.sha256 must be a lower-case SHA-256 value
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.eligible-roster.json.bytes must be a positive whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.listing-map.json.sha256 must be a lower-case SHA-256 value
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.listing-map.json.bytes must be a positive whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.corporate-actions.json.sha256 must be a lower-case SHA-256 value
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.files.corporate-actions.json.bytes must be a positive whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.p04Source.batchId must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.p04Source.authorizationRef must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.p04Source.operatingMode must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.p04Source.checksumSha256 must be a lower-case SHA-256 value
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.p04Source.recordCount must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.reportSchemaVersion must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.mappingVersion must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.rosterLabel must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.issuersExported must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.securitiesExported must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.nseListingsExported must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.corporateActionsExported must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.generation.recordsWithheld must be a non-negative whole number
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.irrCommit must be a 40-character lower-case commit identifier
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.subject.ipdToolCommit must be a 40-character lower-case commit identifier
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.approver.authorityId must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.approver.name must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVER_DID_NOT_APPROVE: record.approver.decision is not APPROVED
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.approver.statement must be stated (it is empty, padded or a placeholder)
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.approvedAtUtc must be a UTC time written YYYY-MM-DDTHH:MM:SSZ
+APPROVAL REFUSED, APPROVAL_MALFORMED: record.reviewDateUtc must be a UTC time written YYYY-MM-DDTHH:MM:SSZ
+RESULT: FAIL (APPROVAL_MALFORMED) the approval record does not authorize an installation. Nothing was changed.
+exit code: 7
+
+## 8. check-approval of the record of attempt 6 against the staged files
+$ node scripts/provision-irr-identity-sources.mjs check-approval --approval <scratch>/records/another-approver.json --staging <staging>
+approval record: sha256 f7d47a89dd72d062894a28043c1d4a89548fcc72513a31130421b4b8842b227f
+approval: TEST-FIXTURE-NOT-AN-APPROVAL-0001; status APPROVED; approved 2026-11-14T02:03:41Z; review date 2026-12-14T03:03:41Z
+approver named in the record: TEST_AUTHORITY_NOT_A_PERSON
+compared with the running tool: yes; compared with the staged files: yes; compared with the IRR commit of an accepted loader gate: yes
+APPROVAL REFUSED, POLICY_VERSION_MISMATCH: the approval was written under policy TEST-POLICY-NOT-GOVERNED; this tool applies IPD-IRR-IDENTITY-APPROVAL-POLICY-2
+APPROVAL REFUSED, DECISION_REFERENCE_MISMATCH: the approval is made under decision TEST-DECISION-NOT-A-DECISION; installation requires an approval of IIPS-W04-D1
+APPROVAL REFUSED, DECISION_REFERENCE_MISMATCH: the approval does not cite the decision record that defines what it approves
+APPROVAL REFUSED, APPROVER_NOT_AUTHORIZED: the record is not made by the approver of this policy (PROGRAM_AUTHORITY_RAMKI)
+RESULT: FAIL (POLICY_VERSION_MISMATCH) the approval record does not authorize an installation. Nothing was changed.
+exit code: 7
+
+## 9. install --skip-approval
+$ node scripts/provision-irr-identity-sources.mjs install --staging <staging> --data-dir <data root> --replace --skip-approval
+unknown option --skip-approval
+usage: provision-irr-identity-sources.mjs <generate|validate|review|check-approval|install|verify-endpoint> [options]
+exit code: 64
+
+## state after
+# <data root>
+8a3992e18935376f1ba63c19d9baef76299f9ab1a2159ab074390ba8ef5c1a62  ./investment/identity/corporate-actions.json  mtime 1794625421
+20b8eec940fad1aee1ec7a4b49009377af11a33023b7b11fe55d9b345dd1aa92  ./investment/identity/eligible-roster.json  mtime 1794625421
+12231e72ed36d60ab3374e53d7af4e0bc0311d09ecd062c7cbcb81eb4376cca0  ./investment/identity/listing-map.json  mtime 1794625421
+# <staging>
+d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd  ./identity/corporate-actions.json  mtime 1794625416
+078e89cc1896d0f59e09e2ad05a12378e248cd81b97775ee7667b5f1e750e937  ./identity/eligible-roster.json  mtime 1794625416
+6a330123a2fea31e9e1dd54f01e5adbe13f9721f077a5a82a34ee7cd60bcf458  ./identity/listing-map.json  mtime 1794625416
+ddbbdd04b7403aab44b71c17cf004c370dccab5691eca1572f9273eb58370df8  ./irr-loader-gate.json  mtime 1794625421
+7b7cf322176f38717f7dfb7b968d5dc20a341046011eb0dc55176537b0ef3a36  ./provisioning-report.json  mtime 1794625416
+fa2168fa582f0db20f802ccce56bf5c6cd66802f6b78e388df106d17a32017d9  ./review-for-approval.json  mtime 1794625421
