@@ -212,6 +212,8 @@ Reading the E4 line itself:
 
 These are the probe's findings at the location it was given. They do not establish that no journal or original import evidence exists elsewhere on the host, that evidence was never retained at import time, or that no reset or manual deletion occurred. The follow-up investigation is the [journal-not-found record](IIPS-W04-E4-EVIDENCE-JOURNAL-NOT-FOUND-INVESTIGATION-2026-11-14.md).
 
+**Later record (2026-11-14).** The classes of section 6 are now assigned, from other evidence than this probe's. The Principal reports that the original statement file was found on the host and that the [lineage reproduction utility](IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md), run by the Principal, reproduced 64 of 64 stored lineage digests from it. Read by section 6: **class A 0, class B 0, class C 63 (NSE 62, BSE 1), class D 0.** The table above is kept as this probe reported it. Class C confirms the input; the cause is not proven. The retained record this probe looked for was not found and remains unrecovered. Details: that record, sections 12 to 14.
+
 ## 10. Boundaries kept
 
 - No portfolio write and no revision change. The portfolio store was not opened in any environment.
@@ -228,3 +230,4 @@ These are the probe's findings at the location it was given. They do not establi
 1. Done: the Principal ran section 7 on the host and supplied the complete output. It is recorded in section 9; it need not be requested again.
 2. The result is checked against section 8 and recorded in a short result record beside this one. Only then is E4 complete. **E4 is not complete:** 63 of the 63 remain UNDETERMINED because no matched original import evidence was available. The remaining step is the read-only host check in section 6 of the [journal-not-found investigation](IIPS-W04-E4-EVIDENCE-JOURNAL-NOT-FOUND-INVESTIGATION-2026-11-14.md), which is the Principal's to run.
 3. The decisions of the C4/C5 assessment, section 9, steps 2 to 7, remain with their authorities. This record changes none of them.
+4. Later record (2026-11-14): the split of the 63 was obtained by lineage reproduction from the original statement file, not from a retained record (section 9, later record). What remains for E4 is listed in the [lineage reproduction record](IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md), section 15.

@@ -149,6 +149,8 @@ Limits of this narrowing:
 - It classifies no holding. Which of the two cases applies to any holding, and how the 63 divide between them, is unknown.
 - It does not make the 48-ISIN registry the explanation for the 63. Case 1 does not involve the registry at all, and the number of holdings in each case is unknown. The registry stays a possible contributing factor.
 
+**Later record (2026-11-14).** The number in each case is now reported. The Principal ran the [lineage reproduction utility](IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md) on the host with the original statement file: 64 of 64 stored lineage digests reproduced, and all 63 holdings with a `null` identity were committed with an ISIN and an exchange (operator-reported). **Case 1 applies to none of the 63.** Under conditions C1 and C2, case 2 then applies to all 63. C1 and C2 are still not established, so `MISSING_P7_MAPPING` remains a conditional derivation and is not a confirmed cause. That record, section 14, also re-establishes R4, R5 and R7 at the head of PR #157 and reproduces the reported state with synthetic input.
+
 ### 6.3 Why the original reasons cannot be recovered
 
 - **R15.** `mapBrokerImportHoldings` calls the qualification, keeps the identity when the result is `QUALIFIED`, and otherwise keeps `null`. The typed reason and its detail are not returned, stored or logged.

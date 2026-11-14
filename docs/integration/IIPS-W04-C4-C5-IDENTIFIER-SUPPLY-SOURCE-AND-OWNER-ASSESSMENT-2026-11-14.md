@@ -13,6 +13,8 @@
 | **C4** — authoritative source and owner | **Partially established.** The supply chain and its sources are identified. The internal owner and the approving authority are confirmed. The external publishers are identified by file label and URL only. No source in the chain is authoritative in the strict sense, by the repository's own designation, and no source-rights evidence exists for any external file. |
 | **C5** — identifier-supply resolution | **Mixed; the split of the 63 remains unknown.** (a) partly confirmed; (b) confirmed; (c) confirmed for series, unconfirmed for ISIN and exchange in a genuine detailed export; (d) required for the holding-level input, not shown to be required for the series master; (e) confirmed in the strict sense, not a blocker for the bounded local use already approved. Section 7. |
 
+**Later record (2026-11-14).** The split of the 63 by committed input is now reported: the Principal ran the [lineage reproduction utility](IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md) on the host, 64 of 64 stored lineage digests were reproduced, and all 63 were committed with an ISIN and an exchange (NSE 62, BSE 1). Break B2 of section 2.3 therefore applies to none of them. Break B3 applies to all 63 on the two coverage conditions, which are still not established. The dispositions of C4 and C5 and the recommended path of section 9 are unchanged.
+
 Nothing was sent to anyone. Nothing on the Windows host was read. No identifier was assigned to any holding, and none was derived from a company name, a symbol, a `companyId` or an unrelated record.
 
 ## 1. How to read this record

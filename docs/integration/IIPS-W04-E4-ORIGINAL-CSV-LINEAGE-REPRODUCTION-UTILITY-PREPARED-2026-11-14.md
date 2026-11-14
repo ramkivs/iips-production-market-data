@@ -1,14 +1,18 @@
-# Snapshot-to-Live W04 — E4: read-only lineage reproduction from the original CSV. Utility prepared here; to be run on the host by the Principal
+# Snapshot-to-Live W04 — E4: read-only lineage reproduction from the original CSV. Utility prepared here; run on the host by the Principal: 64 of 64 reproduced
 
 **Date:** 2026-11-14
 **Roadmap item:** W04, "Actual security and issuer coverage" ([roadmap](IIPS-CURRENT-PORTFOLIO-EXECUTION-ROADMAP.md))
 **Follows:** the [E4 record](IIPS-W04-E4-IDENTIFIER-SUPPLY-DIAGNOSIS-HOST-PROBE-PREPARED-2026-11-14.md) (1 of 64 lineage digests reproduced from the capture alone) and the [journal-not-found investigation](IIPS-W04-E4-EVIDENCE-JOURNAL-NOT-FOUND-INVESTIGATION-2026-11-14.md) (section 6, step 4: look for the original statement file by digest)
-**Repositories read:** IPD `ramkivs/iips-production-market-data` at `81b5178` (head of PR #157); IRR `ramkivs/iips-review-recovered` at `main` `08411bc`, read-only
+**Repositories read:** IPD `ramkivs/iips-production-market-data` at `81b5178` (head of PR #157); IRR `ramkivs/iips-review-recovered` at `main` `08411bc`, read-only. For sections 12 to 15: IPD at `68ab3dc` (head of PR #157), IRR at `08411bc`
 **Type:** documentation and one read-only diagnostic utility. No runtime code, integration contract, registry, manifest, journal or portfolio data was changed in either repository.
 
-**The utility has NOT been run on the original CSV or on the actual capture.** Both exist only on the Principal's Windows machine, and this environment cannot reach it. The CSV was not requested, uploaded or read. What was tested here is the utility, on synthetic data.
+**Host result (later record, 2026-11-14).** The Principal ran the published utility on the Windows host and reports **`RESULT: REPRODUCED_ALL`, exit code 0: 64 of 64 stored lineage digests reproduced from the original CSV, 0 ambiguous, 0 not reproduced**, with the utility, CSV and capture digests equal to the recorded ones. The 63 holdings without a stored security identity all had an ISIN and an exchange in the committed input: **class C, 63 of 63** (NSE 62, BSE 1). This replaces "UNDETERMINED". The cause of the missing identities is not proven. `identityStatus` `RESOLVED` beside a `null` security identity is a valid state by design. Sections 12 to 15.
 
-**W04 status is unchanged: PARTIALLY COMPLETE. Not accepted.** The 63 holdings without a stored security identity remain UNDETERMINED until the Principal runs the utility and the result is reviewed.
+**The utility was run by the Principal on Windows, not in this environment.** The CSV and the capture exist only on the Principal's machine, and this environment cannot reach it. Neither file was requested, uploaded or read. The figures recorded here are those the Principal reported. **The complete sanitized output has not reached this environment and is not yet committed** (section 12.1).
+
+**W04 status is unchanged: PARTIALLY COMPLETE. Not accepted.**
+
+Sections 1 to 11 are kept as written when the utility was prepared, before any result existed. Where a later fact supersedes a statement, the table below and sections 12 to 15 say so.
 
 | Requested | State |
 |---|---|
@@ -18,8 +22,10 @@
 | Standalone read-only utility for Windows | Done (section 5). Published with this record |
 | Synthetic tests of the nine listed cases | Done (section 6): 46 scenarios, all pass. A tool test, not evidence |
 | Exact command for the Principal | Done (section 7). **Not executed here**: this environment has no PowerShell and no Windows host |
-| Run on the original CSV and the actual capture | **Not done.** Only the Principal can do it |
-| Classification of the 63 | **Not done, and not done by the utility.** Rules for reading the result are in section 9 |
+| Run on the original CSV and the actual capture | When prepared: not done. **Later record: done by the Principal on the host; `REPRODUCED_ALL`, 64 of 64 (section 12)** |
+| Classification of the 63 | When prepared: not done. **Later record: read by the rules of section 9; class C, 63 of 63 (section 13).** Not done by the utility, and not a cause |
+| `identityStatus` against `securityIdentity` (asked after the result) | Investigated in source and reproduced in the sandbox: a valid state by design (section 14) |
+| Complete sanitized host output, with the result JSON, in the repository | **Not done.** It did not reach this environment (section 12.1) |
 
 ## 1. Inputs, as reported
 
@@ -228,11 +234,11 @@ Every run also asserts an unchanged input tree, an empty stderr, and an output f
 
 One further check was run once in the sandbox and is not committed: the compiled pipeline with the governed D05 master and IRR's preview options, committed through `persistBrokerImport` with its default resolver (the production identity gate), on an invented 64-row statement of securities taken from the master. The utility, as fetched from GitHub at `8467dfb`, reproduced 64 of 64 digests and the whole-import digest, and the stored company identifier equalled the one inside the digest on 64 of 64. This supports the statement in section 4 about the three identity members; it is still not a run on the actual inputs.
 
-**Not tested:** Windows, PowerShell, the original CSV, the actual capture.
+**Not tested:** Windows, PowerShell, the original CSV, the actual capture. (Later record: the Principal ran the utility on the host on those inputs; section 12. It is still not tested in this environment.)
 
 ## 7. The command for the Principal
 
-Windows PowerShell 5.1. **It has not been executed: this environment has no PowerShell.** Read it before running it.
+Windows PowerShell 5.1. **It has not been executed: this environment has no PowerShell.** Read it before running it. (Later record: the Principal executed it on the host; section 12.)
 
 ```powershell
 # 1. A folder outside every repository and outside the IIPS data directories
@@ -378,7 +384,9 @@ Rules:
 - No IRR commit or push. PR #157 remains open and unmerged.
 - W04 is not declared accepted.
 
-## 11. State
+## 11. State when the utility was prepared
+
+Superseded by section 15.
 
 **Completed**
 
@@ -398,3 +406,265 @@ Rules:
 **Next roadmap step**
 
 W04, E4: record the result of the host run. If the holdings are reproduced, the split of the 63 by committed input replaces "UNDETERMINED" for the classes it confirms, and the open question narrows to why holdings with an ISIN and an exchange received no identity. The decisions listed in section 6 of the journal-not-found investigation (the evidence-owner carrier, refusing a commit without verified retention, the runbook corrections) are unaffected and still open.
+
+## 12. Host result (later record, 2026-11-14)
+
+### 12.1 Standing of this evidence
+
+- **Who ran it.** The Principal ran the published utility on the Windows host, in Windows PowerShell 5.1, with the command of section 7. **It was not run in this environment.** This environment has no access to the host, to the CSV or to the capture, and requested neither file.
+- **What reached this environment.** The figures in sections 12.2 to 12.7 are transcribed from the Principal's task brief of 2026-11-14 (its section 4). They are **reported by the Principal (H)**. Nothing in them was re-read from the host or verified independently here.
+- **What did not reach this environment.** The brief states that the complete sanitized output, including `E4_CSV_LINEAGE_RESULT_JSON`, was attached. **No attachment was delivered to this environment.** The Principal was asked and chose to attach it again in a later message. Until then the following are **not in the repository and were not seen here**: the 64 `[ROW]` lines, the result JSON and its SHA-256, the totals of the `checks:` line, any `[WARN]` line, and the `unresolved:` line.
+- **Where the complete output will go.** `evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/host-run-2026-11-14/w04-e4-csv-lineage-output.txt`, verbatim. The [folder note](../../evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/host-run-2026-11-14/README.md) lists the figures it must agree with. If it differs from this section in any figure, this section is corrected and the difference is recorded.
+
+Labels used from here on: **H** reported by the Principal from the host run; **S** read in source here, at the commit named; **R** reproduced here with synthetic input; **D** derived, with its conditions stated; **U** unavailable.
+
+### 12.2 Utility and inputs (H)
+
+| Item | Expected | Reported | Result |
+|---|---|---|---|
+| Utility SHA-256 (section 7, step 3) | `901a365c4dad816532fd244e9b17a7c7bb5cffbebff2a57bd4ad0f9f40c20a9c` | `901a365c4dad816532fd244e9b17a7c7bb5cffbebff2a57bd4ad0f9f40c20a9c` | Equal |
+| CSV, import-content SHA-256 | `a3c3ee7635e24e56d1d2d6b9411a6de561f554addd382ab163344706e7b63107` | `a3c3ee7635e24e56d1d2d6b9411a6de561f554addd382ab163344706e7b63107` | `csv.sha256` PASS |
+| CSV, raw-byte SHA-256 | not fixed in advance | `a3c3ee7635e24e56d1d2d6b9411a6de561f554addd382ab163344706e7b63107` | Equal to the import-content digest, as it is for UTF-8 text without a byte-order mark |
+| CSV encoding | | Valid UTF-8, no byte-order mark, CRLF line endings | |
+| CSV size | within 1 MiB | within the limit | `csv.size` PASS |
+| Capture SHA-256 | `c5dd51f51025e3e17e3b798164c6b8078fa5487392d8f0dfd96be9bb7c79eda3` | `c5dd51f51025e3e17e3b798164c6b8078fa5487392d8f0dfd96be9bb7c79eda3` | `capture.sha256` PASS |
+
+The CSV path given to the utility was `C:\Users\USER\Desktop\dhan_holdings_withisinv1.1 - Copy.csv`.
+
+### 12.3 The capture (H)
+
+| Item | Reported |
+|---|---|
+| Schema; outcome | exact-capture schema v1; `CONSISTENT_CAPTURE` |
+| Reads | Four examined; the two portfolio reads agree |
+| Portfolio; revision | `DHAN_PORTFOLIO`; 1 |
+| Holdings; distinct lineage digests | 64; 64 |
+| Committed imports; revision operation; source broker | 1; `INITIAL`; `DHAN` |
+| `securityIdentity` | object 1; `null` 63; other 0 |
+| `identityStatus` | `{"RESOLVED":64}` |
+| `resolutionDisposition` | `{"CANONICAL_P04":64}` |
+
+### 12.4 Link between the CSV and the committed import (H)
+
+| Check | Reported |
+|---|---|
+| Committed imports in the capture that carry the content digest of this CSV | Exactly 1 |
+| Recorded import instant | An ISO-8601 UTC instant |
+| Recorded file name | Equals the name of the supplied CSV |
+| Source broker; import semantics | `DHAN`; `SAVED_NEW_BATCH` |
+| Whole-import digest recorded for the import, against the provenance digest of the revision | Equal |
+
+### 12.5 The CSV as parsed (H)
+
+| Item | Reported |
+|---|---|
+| Recognized layout | `DHAN_DETAILED_HOLDINGS_V1` |
+| Data rows; native rows passed to the mapper | 64; 64 |
+| Rows skipped for an empty symbol; aggregated; excluded | 0; 0; 0 |
+| Holdings derived; distinct ISINs | 64; 64 |
+
+| Identifiers on the row | Rows |
+|---|---:|
+| ISIN and NSE | 63 |
+| ISIN and BSE | 1 |
+| ISIN without an exchange | 0 |
+| Exchange without an ISIN | 0 |
+| Neither | 0 |
+| **Total** | **64** |
+
+### 12.6 Lineage reproduction (H)
+
+| Measure | Reported |
+|---|---:|
+| Target holdings | 64 |
+| Holdings derived from the CSV | 64 |
+| Stored lineage digests reproduced, one-to-one, algorithm `MAPPER_BI03` | **64** |
+| Ambiguous | 0 |
+| Not reproduced | 0 |
+| Reproduced with an identifier pair only | 0 |
+| CSV-derived holdings that match no stored digest | 0 |
+| Stored-member discrepancies (symbol, measures, source broker) | 0 |
+
+| Whole-import digest recomputed from the CSV | Reported |
+|---|---|
+| Equals the digest recorded for the import (`import.provenance.evidence`) | PASS |
+| Equals the provenance digest of the stored revision (`import.provenance.revision`) | PASS |
+
+**Final line: `RESULT: REPRODUCED_ALL`. Exit code: 0.**
+
+### 12.7 Committed input by stored identity (H)
+
+| Stored `securityIdentity` | ISIN and NSE | ISIN and BSE | Total |
+|---|---:|---:|---:|
+| `null` | 62 | 1 | 63 |
+| object | 1 | 0 | 1 |
+| **Total** | **63** | **1** | **64** |
+
+### 12.8 Check against section 8
+
+| Section 8 says, for exit code 0 | Reported |
+|---|---|
+| All 64 stored digests reproduced one-to-one from the CSV | 64 of 64, 0 ambiguous, 0 not reproduced |
+| The whole-import digest equals both stored copies | Both PASS |
+| No check failed, nothing unresolved | Follows from the final line: the utility prints `REPRODUCED_ALL` only with zero failed checks and an empty unresolved list (utility source, lines 1251-1253). The `checks:` totals and the `unresolved:` line themselves are in the complete output only |
+| The digests are the recorded ones, not overridden | The three digests of 12.2 equal the recorded values |
+
+The reported figures are internally consistent: 63 + 1 = 64 rows; 62 + 1 + 1 = 64 holdings; 64 reproduced + 0 + 0 = 64 targets.
+
+### 12.9 What the result establishes, and what it does not
+
+1. The original committed CSV input is identified and verified: its content digest is the one recorded for the single committed import of revision 1 (H).
+2. All 64 stored lineage digests are reproduced from that file with the production algorithm (H), and the whole-import digest that IPD computed itself is reproduced (H). By section 4 that confirms the ISIN, exchange, measures and digest of all 64 holdings together.
+3. All 63 holdings whose stored security identity is `null` had **both an ISIN and an exchange** in the committed input (H).
+4. The evidence establishes **what the import contained**.
+5. It does **not** establish **why** no security identity was stored for the 63. Section 13 gives what can be derived and on which conditions.
+6. No missing identity was reconstructed or assigned, here or by the utility. `identityClassification` is `NOT_PERFORMED` by design.
+7. No identity repair, import, portfolio change or journal reconstruction was performed.
+
+The result is the Principal's run of a prepared tool. It is operator-reported, as the E4 probe output is. The lineage reproduction does not recreate the IRR evidence journal, which remains unrecovered ([journal-not-found record](IIPS-W04-E4-EVIDENCE-JOURNAL-NOT-FOUND-INVESTIGATION-2026-11-14.md)).
+
+## 13. Reading of the result: the 63 holdings
+
+Read by the rules of section 9, which were fixed before the result existed. `RESULT: REPRODUCED_ALL` on the recorded digests is the condition for a statement about all 64, and it is met (H).
+
+| E4 class | Holdings | Standing |
+|---|---:|---|
+| A, no ISIN in the committed input | 0 | Excluded for all 63 |
+| B, ISIN without an exchange | 0 | Excluded for all 63 |
+| **C, ISIN and exchange supplied, no identity stored** | **63** (NSE 62, BSE 1) | **Input confirmed. Cause not proven** |
+| D, undetermined | 0 | |
+| **Total** | **63** | Equals the number of `null` identities in the capture |
+
+**The earlier status "UNDETERMINED: 63 of 63" is replaced by "class C: 63 of 63".** The input identifiers of the 63 are no longer unknown. Class C is a statement about the input. It is not a root cause.
+
+**What the result adds to class C (D).** The E4 record, section 6, named two candidates for class C: a typed reason of `qualifyHoldingSecurityIdentity`, or a process that held no master or registry at that moment. It also fixed one narrowing fact in advance: if a holding of the same single-import revision received an identity from an ISIN and an exchange, the qualification path was active in that import.
+
+- Revision 1 is one import (H: one committed import, operation `INITIAL`). One of its holdings carries an identity object and was committed with an ISIN and an exchange (H).
+- IRR's commit sends no series (S: IRR `frontend/src/api/brokerImportStage4.ts:16-41` at `08411bc`). Without a series the fallback branch builds nothing (S: `src/persistence/brokerImportPersistence.ts:148-150`; R: section 14.4, control 4d). An identity object can then come only from the qualification branch, which needs both the master and the registry (S: lines 137-145).
+- `mapBrokerImportHoldings` is called once per import with one options object (S: line 242). The branch condition is therefore the same for every holding that has an ISIN and an exchange, and all 64 have both.
+
+So, **on the condition that revision 1 was written by a build that behaves as the reviewed source** (coverage condition C1), all 63 went through `qualifyHoldingSecurityIdentity` and each returned a result other than `QUALIFIED`. "A process that held no master or registry" is excluded on that condition.
+
+**On the further condition that the tracked sources were the ones loaded** (coverage condition C2), the reason is `MISSING_P7_MAPPING` for all 63: the registry holds no mapping for that company, exchange segment and ISIN. Over every ACTIVE listing of the tracked master, a row that passes the company gate either qualifies or returns `MISSING_P7_MAPPING`, and no other reason occurs (R: section 14.4; coverage assessment, section 6.2). The tracked registry qualifies 45 ISINs on each exchange out of 2,390 and 2,290 listings. One qualifying holding among 64 is consistent with that. It does not prove it.
+
+**Neither condition is established on the host.** The build that wrote revision 1 and the files it loaded were not observed (U). The typed reason was not returned, stored or logged at import (S: lines 143-147; coverage R15, R17) and cannot be recovered. The ISINs are not in this environment, so membership in the tracked registry was not checked (U). Section 14.6 names the evidence that would settle the cause.
+
+## 14. `identityStatus` and `securityIdentity`: source investigation
+
+**The observation (H).** The capture reports `identityStatus` `RESOLVED` and `resolutionDisposition` `CANONICAL_P04` on 64 of 64 holdings, and a `securityIdentity` object on 1 of 64.
+
+### 14.1 Answer
+
+**It is a valid state, produced by design.** The two status fields and the identity object answer different questions.
+
+- `identityStatus` and `resolutionDisposition` record the **company-level gate**: the row's identifiers resolve to exactly one company of the P04 master. The gate decides whether the import may be saved at all.
+- `securityIdentity` records the **security-level qualification**: an exact D114 identity `ISIN:<isin>:<series>`, which needs series evidence from the P7 registry. It is additive. A holding without it is still saved.
+
+`RESOLVED` on 64 holdings therefore does not mean that 64 securities were identified, and a `null` identity beside it is not a serializer defect. The earlier [coverage assessment](IIPS-W04-IDENTITY-COVERAGE-REVISION-1-EVIDENCE-ASSESSMENT-2026-11-13.md) recorded the same reading (its section 4, R4, R5 and R7). This section re-establishes it independently from the source at the head of PR #157 and adds a sandbox reproduction of the exact reported shape.
+
+Sources read: IPD at `68ab3dc` (head of PR #157). IRR at `main` `08411bc`, read-only. Every IPD function cited below is textually identical at `1aee57f`, the IPD commit IRR pins; three of the files changed elsewhere, so their line numbers differ there. Which build the host's IPD server ran is not observed (U).
+
+### 14.2 Data flow (S)
+
+```
+IRR browser bundle (IPD pipeline)                 IPD IPC server: one call of persistBrokerImport
+CSV row: symbol, ISIN, exchange                   request holding: symbol, isin?, exchange?, measures, lineageDigest
+  | mapper, with the P04 master                     | companyId, identityStatus and resolutionDisposition
+  |   companyId, identityStatus,                    | are refused on the wire
+  |   resolutionDisposition                         |
+  |   -> used inside the lineage digest only        +- 1. company gate: resolveHoldings -> resolver.resolve
+  v                                                 |      one row that fails refuses the whole import
+prepareBrokerImport                                 |      -> companyId, 'RESOLVED', 'CANONICAL_P04'
+  sends no identity member and no series            +- 2. security qualification: mapBrokerImportHoldings
+                                                    |      qualifyHoldingSecurityIdentity(isin, exchange; P04, P7)
+                                                    |      QUALIFIED -> D114 object; otherwise null, reason discarded
+                                                    v
+                                                  one INSERT per holding, three separate columns:
+                                                  identity_status, resolution_disposition, security_identity
+                                                    v
+                                                  portfolio.get -> wire result -> IRR capture, verbatim
+```
+
+### 14.3 The ten questions
+
+| # | Question | Finding | Source |
+|---|---|---|---|
+| 1 | Where is `identityStatus` produced? | In `resolveHoldings`. For each holding it calls the governed resolver; on `RESOLVED` it pushes the holding with the literal `identityStatus: 'RESOLVED'`. The type allows no other value. It is carried unchanged into the stored row. | IPD `src/persistence/brokerImportPersistence.ts:41-45`, `62-89` (literal at 77), `162`; resolver `src/identity/broker_observation_resolver.ts:31-81` |
+| 2 | Where is `resolutionDisposition` produced? | In the same statement, as the literal `'CANONICAL_P04'`. | Same, line 77; carried at 163 |
+| 3 | Where is `securityIdentity` populated? | In `mapBrokerImportHoldings`. It starts as `null`. With an ISIN, an exchange, a master and a registry it becomes the D114 object only if `qualifyHoldingSecurityIdentity` returns `QUALIFIED`. Without a master or registry it is built from a broker-supplied ISIN and series, or stays `null`. The server composes the master and the registry at start and refuses to start if it cannot. | `brokerImportPersistence.ts:128-167` (136, 137-145, 148-150); `src/providers/dhan/dhan_security_identity_service.ts:117-345`; `src/ipc/brokerImportComposition.ts:60-67`; `src/ipc/entrypoint.ts:175-200`; `src/providers/dhan/dhan_local_daemon.ts:154-198` |
+| 4 | Different lifecycle stages, or different concepts? | Different concepts, evaluated one after the other inside one commit call: the gate at line 237, the qualification at line 242. The first is the company; the second is the security with its series. | `brokerImportPersistence.ts:227-243`; comment at 114-127 ("identity is additive metadata, not a blocker for portfolio data") |
+| 5 | Can `RESOLVED` coexist with `securityIdentity: null`? | Yes, by design. `null` is defined as "explicitly unresolved" for the security. The gate needs a company; the qualification also needs a P7 mapping. Over the tracked master 4,590 of 4,680 listing pairs pass the gate and fail the qualification. | `src/persistence/portfolio_store.ts:92-98`; `src/persistence/migrations/005_holding_security_identity.ts:5-14`; R: section 14.4 |
+| 6 | What does `CANONICAL_P04` indicate? | A disposition class: the company identity came from the governed P04 master. It is a completed company resolution, not an attempt. It is written only together with `RESOLVED`. Other paths write other values: the mapper's `NON_PRODUCTION_OPERATOR_BYPASS`, and `MANUAL_PERSONAL_ENTRY` with `UNRESOLVED` for manual holdings. It says nothing about series or security. | `brokerImportPersistence.ts:77`; `frontend/src/features/portfolio/import/broker-holdings-mapper.ts:230-253`; `src/persistence/manualPersonalPortfolio.ts:93-104` |
+| 7 | Can the status be stale, or copied from an earlier stage? | Not for revision 1. The browser computes its own status, which enters the lineage digest only. A request that carries `companyId`, `identityStatus` or `resolutionDisposition` is refused three times: by IRR, by the IPC payload check and by `validateRequest`. The stored value is the server's own result of the same call. It is a fact as of the import and is not re-evaluated on a read; a restore copies rows, but revision 1 is `INITIAL` (H). | IRR `frontend/server/broker-import/brokerImportStage4.ts:35-37`; IPD `src/ipc/dispatch.ts:294-314`; `brokerImportPersistence.ts:191-206`; `portfolio_store.ts:1097-1113`; R: control 4a |
+| 8 | Could the serializer omit or transform an identity object? | No path was found that turns an object into `null`. The read returns `null` only for SQL `NULL`; a stored value that is not valid makes the read fail. `personalGet` passes holdings through. IRR parses the response frame and the capture stores `frame.result` verbatim. The capture counts object, `null`, absent and malformed separately; an omitted member would be counted absent, and absent and malformed are 0 (H). | `portfolio_store.ts:1097-1113`, `1120-1135`; `dispatch.ts:174-191`, `536`; IRR `frontend/server/user-portfolio/ipcClient.ts:674`; IRR `frontend/server/user-portfolio/capture/ownerBoundPortfolioCapture.ts:382-424`, `1317`; R: control 4e |
+| 9 | Does persistence keep the fields independently? | Yes. Three nullable text columns, written by one `INSERT` per holding, with no constraint between them. The write requires a non-blank status and disposition, and a valid D114 object if one is present. | `src/persistence/migrations/001_initial_schema.ts:64-65`; migration 005, line 14; `portfolio_store.ts:1153-1160`, `1283-1309`, `1409-1414` |
+| 10 | Valid state, semantic inconsistency, or defect? | **Valid state.** Not a defect of storage or of serialization. One residual point is recorded in 14.5: the unqualified name `identityStatus` does not say which identity it covers. | Sections 14.4 and 14.5 |
+
+### 14.4 Sandbox reproduction (R)
+
+[`identity-status-source-probe.mjs`](../../evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/identity-status-probe/identity-status-source-probe.mjs) runs the unmodified compiled IPD code with the two tracked sources: the governed P04 master and the retained P7 manifest (SHA-256 `13bd2ef1…78bc`, 96 mappings, 48 ISINs). The statement is invented: securities taken from the tracked master by a fixed rule, with made-up quantities and prices. **It is not host evidence.** Its [output](../../evidence/integration/w04-e4-original-csv-lineage-reproduction-2026-11-14/identity-status-probe/identity-status-source-probe.output.txt) holds counts and closed-vocabulary values only.
+
+| Step | Result |
+|---|---|
+| Company gate over every ACTIVE NSE and BSE listing of the tracked master (4,680 pairs) | `RESOLVED` 4,680 |
+| Security qualification over the same pairs | `QUALIFIED` 90 (45 on each exchange); `MISSING_P7_MAPPING` 4,590; no other reason |
+| Synthetic import of the reported shape, through the production composition: 63 NSE rows and 1 BSE row, every row with an ISIN and an exchange, one row with a P7 mapping | Committed as revision 1, `SAVED_NEW_BATCH`, 64 holdings |
+| Stored columns | `RESOLVED`, `CANONICAL_P04`, identity `NULL`: 63. `RESOLVED`, `CANONICAL_P04`, identity present: 1 |
+| `portfolio.get` wire result | `identityStatus` `{"RESOLVED":64}`; `resolutionDisposition` `{"CANONICAL_P04":64}`; identity object 1, `null` 63, absent 0 |
+| The published utility on that statement and a capture-shaped file | `REPRODUCED_ALL`; `null`: `ISIN+EXCHANGE_NSE` 62, `ISIN+EXCHANGE_BSE` 1; object: `ISIN+EXCHANGE_NSE` 1 |
+| Control 4a: a request that carries `identityStatus` | Refused, `INVALID_REQUEST`, no store effect |
+| Control 4b: one row whose identifiers name two companies | Whole import refused, `REFUSED_UNRESOLVED_IDENTITY`, nothing stored |
+| Control 4c: an empty registry | `RESOLVED` 64; identity object 0 |
+| Control 4d: no master and no registry (the fallback) | `RESOLVED` 64; identity object 0 |
+| Control 4e: a stored identity damaged in the database | The read fails; the value is not returned as `null` |
+
+10 checks pass, 0 fail. Two runs give the same output.
+
+**The reviewed code, given 64 rows with an ISIN and an exchange of which one has a P7 mapping, produces exactly the reported state.** That shows the state is reachable and by design. It does not show that the host import had those inputs or those sources.
+
+### 14.5 Hypotheses, residual point and missing evidence
+
+| Statement | Standing |
+|---|---|
+| The two status fields are company-level; the identity object is security-level; the fields are stored and read independently | **Established (S, R)** |
+| A committed broker-import holding always has `RESOLVED` and `CANONICAL_P04`, whatever its security identity | **Established (S, R)** for the reviewed source |
+| The browser-side and server-side company results agreed on all 64 holdings | **Supported (H, S).** The stored `companyId`, status and disposition, used as digest members, reproduce 64 of 64 digests the browser computed |
+| The host capture shows the state the reviewed code produces | **Consistent (H with S, R).** Not proof that the host ran that code |
+| Each of the 63 `null` identities is a `MISSING_P7_MAPPING` | **Hypothesis (D)**, on conditions C1 and C2 of section 13. Not confirmed on the host |
+| A defect dropped 63 identities between store and capture | **Not supported.** No such path exists in the reviewed source (question 8). Not excluded for an unreviewed build (U) |
+
+**Residual point, recorded and not acted on.** The name `identityStatus` carries no qualifier. A reader, or a consumer, can take `RESOLVED` to cover the security. IRR's capture utility already avoids this: it reports holding identity "only from the actual `securityIdentity` object" (IRR `ownerBoundPortfolioCapture.ts:52-53`). Whether the contract should name the level is a decision for the IPD identity owner. No change is proposed or made here.
+
+### 14.6 Evidence that would settle the cause of the 63
+
+Each item is a read-only host check that only the Principal can run. None is prepared or authorized by this record.
+
+| # | Evidence | What it would show | Limit |
+|---|---|---|---|
+| E-a | Counts only: the result of `qualifyHoldingSecurityIdentity`, with the tracked P04 master and the tracked P7 manifest, for the 64 ISIN and exchange pairs of the verified CSV; and whether the one `QUALIFIED` row is the holding that carries the stored identity, with the same series | Expected on condition C2: `QUALIFIED` 1, `MISSING_P7_MAPPING` 63, the same holding, the same series. An exact match on 1 of 64 would be strong support for C2. Any other split refutes the hypothesis | A measurement against today's tracked sources, not the reason computed at import (coverage R19) |
+| E-b | The SHA-256 of `evidence/dhan-p7/qualification-manifest.json` in the IPD checkout the host's IPC server runs from, the working directory of that process, and the commit of that checkout | Whether the file the loader would find is the tracked one (`13bd2ef1…78bc`), and which source the server ran (conditions C2 and C1) | Shows the files as they are now. The server neither prints nor serves what it loaded |
+| E-c | The typed reason at import | | **Not obtainable.** It was not returned, stored or logged |
+
+## 15. State after the host result
+
+**Completed**
+
+- The host run of the utility is recorded (section 12) from the figures the Principal reported: 64 of 64 lineage digests reproduced, 0 ambiguous, 0 not reproduced, both whole-import checks passed, `RESULT: REPRODUCED_ALL`, exit code 0.
+- The 63 holdings are reclassified from UNDETERMINED to class C (section 13): ISIN and NSE 62, ISIN and BSE 1.
+- The relation between `identityStatus` and `securityIdentity` is investigated (section 14): a valid state by design, reproduced in the sandbox.
+
+**Remaining**
+
+- The complete sanitized host output, with the `[ROW]` lines and `E4_CSV_LINEAGE_RESULT_JSON`, is to be committed verbatim and reconciled with section 12 (12.1). **Until then this record rests on reported figures, and W04 E4 is not closed.**
+- The cause of the 63 `null` identities is not proven. The evidence that would settle it is in 14.6.
+- The W04 acceptance conditions of the [roadmap](IIPS-CURRENT-PORTFOLIO-EXECUTION-ROADMAP.md) are open: the IRR resolver outcome for the holdings is not observed, the exact security to listing to issuer mapping does not exist for 63 holdings, and the source versions served on the host are not established.
+
+**Blockers**
+
+- The complete host output did not reach this environment.
+- Checks E-a and E-b need the host and the Principal.
+- An identity for the 63 needs series evidence the tracked registry does not hold. Supplying it is a registry decision of the C4/C5 assessment, section 9. It is not authorized here.
+
+**Next roadmap step**
+
+W04, E4: commit the complete host output and reconcile it. Then the Principal decides whether to run check E-a, which would confirm or refute `MISSING_P7_MAPPING` as the cause. The decisions of the C4/C5 assessment, section 9, and of the journal-not-found record, section 6, are unaffected and still open. **W04 remains PARTIALLY COMPLETE and is not accepted.** No Broker Import change and no identity repair is authorized by this record.
