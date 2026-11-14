@@ -548,6 +548,15 @@ W08's prerequisite is exactly what is missing: an ISIN (and, separately, a serie
 
 **No code defect was found.** W04-08 is a merge of already-completed, already-tested IRR work — not an implementation this investigation requires.
 
+> **Superseding update — 15 November 2026.** The five open items above were addressed by the follow-up assessment `docs/integration/IIPS-CURRENT-PORTFOLIO-W04-IDENTITY-PROVENANCE-AND-GOVERNANCE-COMPLETION-2026-11-15.md`, which records:
+> - **W04-03** — the listing-map and corporate-action-table versions were **not unavailable**; the IRR coverage report already publishes all three source-version digests (`coverage.ts:228-234`). Closure is a **re-read of the same endpoint**, not a new extract or a new source holder.
+> - **W04-04** — the corporate-action zero is established as an **extract-content fact** whose cause remains unknown, and whose effect on the census is **nil** (corporate actions are consulted only for MERGER/DEMERGER successor reconciliation, not primary resolution).
+> - **W04-01** — a **draft** eligible-scope rule is written but **not approved**; `|E|` remains undefined. The prior statement that this "requires no external access" is **corrected**: the rule's approval is a Principal decision, and computing `|E|` additionally requires the `active` distribution over the captured rows, which was **deliberately not read** before the rule is approved.
+> - **W04-02** — the **execution owner** is established as **user host** (IRR `IID-P6A-RUNTIME-DEPENDENCY-ASSESSMENT-2026-11-09.md:52`), and the root cause is localized to the **upstream holding-record projection**, not the resolver.
+> - **Source versions** — the D05 security-master version, the embedded issuer-level version, and the P07 Dhan instrument-master version are now **fully established** with digests, counts, acts and timestamps.
+>
+> **W04 remains PARTIALLY COMPLETE** and **`THETA_I` remains NOT YET ESTABLISHED**. The semantic findings of this document (§2–§7) are carried forward **unchanged**. Closure conditions C1–C6 are stated in the follow-up assessment §7.5.
+
 ---
 
 ## 9. W04 status recommendation
