@@ -28,6 +28,8 @@ Two findings were not expected when D1 to D4 were written. Both matter for what 
 
    **Later record (2026-11-14, revision 2 of the check).** The repository owner instructed that the approval is made by one person, Ramki, as sole decision authority of the local single-user IIPS, and that the record binds the exact IPD tool commit. The check was changed accordingly (tool commit `3b92471`). The questions U-1, U-2 and U-17 below are closed as recorded in section 2.4. The instruction settles who approves and how; it is not the approval. **D1 is still not approved and no approval record exists.**
 
+   **Later record (2026-11-14, host completion).** D1 is approved. The operator reports approval record `W04-D1-20261114-01` by Ramki, valid until `2026-11-14T18:29:59Z`, and the installation of the three files on the host under it. Evidence items E-1 to E-4 are reported; E-5 is open. See [host completion and reconciliation](IIPS-W04-IDENTITY-PROVISIONING-HOST-COMPLETION-RECONCILIATION-2026-11-14.md). W04 is still not accepted.
+
 ## 1. How to read this record
 
 | Label | Meaning |
@@ -419,7 +421,7 @@ IPD's qualified identity takes its series from the P7 Dhan master (A-10), where 
 - Loader acceptance (E-3) is evidence that IRR can read the files. It is not evidence that the data has authority, and it is not an approval.
 - The two Jain Irrigation records stay excluded.
 - IRR PR #563 is open and unmerged. W03, W08 and W11 are not accepted.
-- Order of what comes next: D1-a to D1-d; then D3; then the host run and E-2 to E-5. D2 and D4 do not block the host run. (2026-11-14: D1-b and D1-d are closed. What remains of D1 is the approval itself.)
+- Order of what comes next: D1-a to D1-d; then D3; then the host run and E-2 to E-5. D2 and D4 do not block the host run. (2026-11-14: D1-b and D1-d are closed. What remains of D1 is the approval itself.) (2026-11-14, later: the approval was given and the host run was made, as reported by the operator. Provisioning is no longer blocked. D3 and E-5 remain; see [host completion and reconciliation](IIPS-W04-IDENTITY-PROVISIONING-HOST-COMPLETION-RECONCILIATION-2026-11-14.md).)
 
 ## 7. Tests and evidence
 

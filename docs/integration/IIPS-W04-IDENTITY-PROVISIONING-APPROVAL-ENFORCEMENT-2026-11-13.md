@@ -24,6 +24,8 @@ What did not change: without an approval record nothing is installed, by any rou
 
 **The practical state today:** the tool can install only after Ramki writes a record for the exact files, the exact IRR commit and the exact IPD commit that the review on the host prints. No such record exists.
 
+**Later record (2026-11-14, host completion).** The sentences of this record that say no approval exists and nothing was installed describe the state at `fff4829`. The operator reports that an approval record was then written on the host for that commit, that a first attempt against another IRR checkout was refused with nothing installed, and that the installation under the record passed. This is the first run of the command-line success path and of the wrapper, and it is reported by the operator, not shown by a test. See [host completion and reconciliation](IIPS-W04-IDENTITY-PROVISIONING-HOST-COMPLETION-RECONCILIATION-2026-11-14.md).
+
 ## 1. How to read this record
 
 - **(R)** was run in the sandbox on Linux with Node v22, and the output is in the [evidence directory](../../evidence/integration/w04-identity-single-approver-2026-11-14/README.md).

@@ -13,6 +13,8 @@
 
 Nothing on the Windows host was read or requested. No identity data was created or downloaded. No configuration, portfolio data, source, test, contract or acceptance criterion was changed, and no service was restarted.
 
+**Later record (2026-11-14, host completion).** The condition this record explains no longer holds on the host. The operator reports that the identity directory was provisioned on 2026-11-14 and that the running transport loads the files; the identities route no longer answers `identity-sources-unavailable`. The analysis below is kept as the record of the state before that. See [host completion and reconciliation](IIPS-W04-IDENTITY-PROVISIONING-HOST-COMPLETION-RECONCILIATION-2026-11-14.md).
+
 ## 1. How to read this record
 
 | Label | Meaning |

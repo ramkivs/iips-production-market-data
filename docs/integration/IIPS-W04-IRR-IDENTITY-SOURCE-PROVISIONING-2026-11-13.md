@@ -234,6 +234,8 @@ Staging directory: `identity/` (the three files), `provisioning-report.json`, `i
 
 **Step 3 cannot be run today.** Installation requires a governance approval record for exactly the generated files, and none exists: decision D1 is not approved ([decision record](IIPS-W04-IDENTITY-PROVISIONING-DECISIONS-D1-D4-2026-11-13.md)). Without `-ApprovalRecordPath` the wrapper reports `NOT RUN` before any step ([approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md)).
 
+**Later record (2026-11-14, host completion).** Step 3 was run. The operator reports approval record `W04-D1-20261114-01`, the installation of the three files with the digests of section 6, and `RESULT: PASS` with the running transport loading them. The run with `-PortfolioId` was not made. See [host completion and reconciliation](IIPS-W04-IDENTITY-PROVISIONING-HOST-COMPLETION-RECONCILIATION-2026-11-14.md).
+
 The tool runs from its own checkout, so the checkouts the services run from are not touched.
 
 ```powershell

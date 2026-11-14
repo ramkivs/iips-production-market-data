@@ -9,6 +9,8 @@
 
 This assessment was made from the two repositories only. Nothing on the Windows host was read, the capture file was not seen, and no identity was inferred from a symbol, a company name or an approximate match.
 
+**Later record (2026-11-14, host completion).** IRR's identity files now exist on the host (R13 described them as absent by default), installed from the P04 export under an approval of the principal. The counts of section 4, the findings R8 to R12 and the host evidence items E1 to E4 of section 10 are unchanged and still open. See [host completion and reconciliation](IIPS-W04-IDENTITY-PROVISIONING-HOST-COMPLETION-RECONCILIATION-2026-11-14.md).
+
 ## 1. How to read this record
 
 Every statement below carries one of four labels.
