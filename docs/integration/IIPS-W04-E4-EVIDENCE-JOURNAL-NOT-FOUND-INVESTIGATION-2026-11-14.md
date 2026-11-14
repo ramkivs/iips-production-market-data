@@ -166,6 +166,8 @@ How to read it:
 
 The complete probe output, including `E4_RESULT_JSON`, has already been supplied in this conversation; it need not be requested again. The remaining next action is the independent, read-only host check above. This correction neither performs that check nor treats the supplied probe findings as independent host confirmation.
 
+**Later record (2026-11-14).** The Principal reports that the original statement file was found on the host, identified by the import content digest, and asked for a read-only utility that tests the lineage digests of the capture against it. The utility is prepared in the [original-CSV lineage reproduction record](IIPS-W04-E4-ORIGINAL-CSV-LINEAGE-REPRODUCTION-UTILITY-PREPARED-2026-11-14.md). It has not been run on the host. The file is the import's input; it does not restore the journal, and no journal entry is reconstructed from it. The 63 stay UNDETERMINED until the output is returned and reviewed.
+
 **Decisions this report raises, none taken here:**
 
 - Provisioning the evidence-owner carrier in the Windows launcher (IPD PR #156, `windows-setup/`), with IRR runbook section 3.3 as the procedure. Without it, step 4 of the C4/C5 assessment (a new governed import) would again retain nothing.
