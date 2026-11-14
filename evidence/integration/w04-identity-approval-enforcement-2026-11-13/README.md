@@ -6,6 +6,8 @@ Everything here was produced in the sandbox on 2026-11-13, on Linux, with Node v
 
 **No approval record exists, and none is stored here.** No run below installed anything.
 
+**Later record (2026-11-14).** These runs show revision 1 of the check: two authorities, record schema `IPD_IRR_IDENTITY_APPROVAL_V1`. The check is now revision 2 (one approver, the record bound to the IPD tool commit), and its runs are in [`../w04-identity-single-approver-2026-11-14/`](../w04-identity-single-approver-2026-11-14/README.md). The files here are kept as recorded. The messages and codes they show are not those of the current tool.
+
 | File | What it is |
 |---|---|
 | `review-run-08411bc.txt` | `review --accept-withheld 2 --irr-root <IRR checkout> --as-of 2026-11-13` on the tracked P04 master: generation, IRR's own loader gate, the three digests and everything else an approval record would have to state, then the content of the staging directory and of the (empty) data root. Exit code 0. |

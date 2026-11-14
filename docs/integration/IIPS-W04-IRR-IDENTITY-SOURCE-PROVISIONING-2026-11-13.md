@@ -39,7 +39,7 @@ Evidence files are in [`evidence/integration/w04-identity-source-provisioning-20
 | `scripts/provision-irr-identity-sources.mjs` | Command line: `generate`, `validate`, `install`, `verify-endpoint`. Later: also `review` and `check-approval`. |
 | `scripts/Invoke-IrrIdentityProvisioning.ps1` | Windows wrapper that runs the steps with the launcher's directory conventions and sanitized output. |
 | `tests/irr_identity_source_export.test.ts`, `tests/irr_identity_provisioning.test.ts` | 91 tests. |
-| `src/identity/irr_identity_approval.ts`, `tests/irr_identity_approval.test.ts` (later record, 2026-11-13) | The governance approval check that `install` now requires, and its 44 tests. See [approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md). |
+| `src/identity/irr_identity_approval.ts`, `tests/irr_identity_approval.test.ts` (later record, 2026-11-13) | The approval check that `install` now requires, and its tests (48 since revision 2 of 2026-11-14: one approver, Ramki, and the record bound to the exact IPD tool commit). See [approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md). |
 
 The owning repository is IPD, because the source data and its governance are IPD's. IRR remains the owner of the schema, the loader and the resolver, and the tool treats IRR's loader as the acceptance gate rather than re-implementing it.
 
@@ -209,7 +209,7 @@ node scripts/provision-irr-identity-sources.mjs install --staging <dir> --data-d
 node scripts/provision-irr-identity-sources.mjs verify-endpoint --staging <dir> --portfolio-id <id> [--base-url http://127.0.0.1:8787]
 ```
 
-**Later record (2026-11-13).** `install` requires `--approval`: a governance approval record for exactly the staged files. `review` generates and validates the proposed files and reports their digests without installing. `check-approval` is read-only. No command creates an approval. The contract is in [approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md).
+**Later record (2026-11-13).** `install` requires `--approval`: a governance approval record for exactly the staged files. `review` generates and validates the proposed files and reports their digests without installing. `check-approval` is read-only. No command creates an approval. The contract is in [approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md). Since revision 2 (2026-11-14) the record is one approval by Ramki, kept on the host outside the checkout, for the exact files, the exact IRR commit and the exact IPD commit of the tool.
 
 | Exit code | Meaning |
 |---|---|
@@ -252,8 +252,8 @@ $LASTEXITCODE
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1 -ReviewOnly -AcceptWithheld 2
 $LASTEXITCODE
 
-# 3. Provisioning run. ONLY with the approval record of the required authorities for the digests
-#    step 2 printed. Without -ApprovalRecordPath: RESULT: NOT RUN, exit code 2.
+# 3. Provisioning run. ONLY with the approval record, written by the approver, for the digests and
+#    the two commits step 2 printed. Without -ApprovalRecordPath: RESULT: NOT RUN, exit code 2.
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-IrrIdentityProvisioning.ps1 -AcceptWithheld 2 -ApprovalRecordPath <path of the approval record>
 $LASTEXITCODE
 ```
@@ -288,7 +288,8 @@ To see how the holdings fare, repeat step 3 with `-PortfolioId <id>`. The output
 | `tests/irr_identity_source_export.test.ts` | 53 tests, 53 passed: generation from the tracked master, determinism and pinned digests, input integrity, 11 kinds of missing data, 5 kinds of conflicting mapping, the issuer-key supplement, incomplete coverage and exact acknowledgement, the check of produced files |
 | `tests/irr_identity_provisioning.test.ts` | 38 tests, 38 passed: staging, 16 ways the gate refuses, installation paths (first install, idempotence, absent data root, stale or refused gate, altered files, replacement with backup, interruption), endpoint summary, the command line |
 | IPD `npm test` on this branch | 1,578 executed, 1,577 passed, 1 skipped (as before this change), 0 failed |
-| Later record (2026-11-13), approval enforcement | `tests/irr_identity_approval.test.ts`: 44 tests, 44 passed. The 38 provisioning tests still pass; they now install under a test approval policy, and `IIP-42` and `IIP-43` changed ([approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md), section 9). IPD `npm test`: 1,634 executed, 1,633 passed, 1 skipped, 0 failed |
+| Later record (2026-11-13), approval enforcement, revision 1 | `tests/irr_identity_approval.test.ts`: 44 tests, 44 passed. The 38 provisioning tests still pass; they now install under a test approval policy, and `IIP-42` and `IIP-43` changed ([approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md), section 9). IPD `npm test`: 1,634 executed, 1,633 passed, 1 skipped, 0 failed |
+| Later record (2026-11-14), approval enforcement, revision 2 | `tests/irr_identity_approval.test.ts`: 48 tests, 48 passed. The 38 provisioning tests pass. IPD `npm test`: 1,638 executed, 1,637 passed, 1 skipped, 0 failed |
 | IPD `npx tsc --noEmit` | Clean |
 | IRR loader, resolver, readiness CLI and server on the produced files | Section 7 |
 

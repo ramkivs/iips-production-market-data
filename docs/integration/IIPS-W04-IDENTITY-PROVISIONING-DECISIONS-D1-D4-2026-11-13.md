@@ -26,6 +26,8 @@ Two findings were not expected when D1 to D4 were written. Both matter for what 
 
    **Later record (2026-11-13).** Finding 2 described the tool at `b0d7908`. The check has since been built: `install` and the wrapper refuse without an approval record that authorizes exactly the staged files. See [approval enforcement](IIPS-W04-IDENTITY-PROVISIONING-APPROVAL-ENFORCEMENT-2026-11-13.md). That change approves nothing; D1 is still not approved.
 
+   **Later record (2026-11-14, revision 2 of the check).** The repository owner instructed that the approval is made by one person, Ramki, as sole decision authority of the local single-user IIPS, and that the record binds the exact IPD tool commit. The check was changed accordingly (tool commit `3b92471`). The questions U-1, U-2 and U-17 below are closed as recorded in section 2.4. The instruction settles who approves and how; it is not the approval. **D1 is still not approved and no approval record exists.**
+
 ## 1. How to read this record
 
 | Label | Meaning |
@@ -146,6 +148,8 @@ An approval covers these bytes only. A different master batch, mapping version o
 | Q-2 | A dated copy of the official NSE list, obtained by the operator from the publisher, compared with the 2,388 exported records for ISIN, symbol and series. | Supplies the missing retrieval receipt and measures how far the roster has aged. | No comparison step exists. The sandbox cannot reach NSE. The alternative is to accept the gap explicitly under P-6. |
 | Q-3 | A review date after which the approval lapses unless renewed. | The roster ages. A delisted or suspended security stays `ELIGIBLE` in it until the roster is replaced. A holding that is missing from it fails visibly; a holding that is stale in it does not. | The approver sets the date. |
 
+**Later record (2026-11-14).** In revision 2 of the check the three qualifications are no longer separate dispositions of the record. Q-1: a generation that counted no holdings coverage carries the limitation `HOLDINGS_COVERAGE_NOT_MEASURED`, which the record must accept by name; a generation run with `--required-isins` binds the counted figures instead. Q-2: no comparison step exists, and the gap is the limitation `NSE_SOURCE_FILE_WITHOUT_RETRIEVAL_RECEIPT`, accepted by name. Q-3: the review date is a mandatory field.
+
 **P-8. Approval authority.** The Program Authority, who is recorded as Ramki in the decision of 2026-10-19 (A-3) and who is also the operator and the repository owner. The approval has two sides, and one record can carry both:
 
 - as IPD Program Authority: permitting this bounded export of the P04 master (producer side, C5);
@@ -153,11 +157,13 @@ An approval covers these bytes only. A different master batch, mapping version o
 
 Role A1 is not assigned to a person (A-13). Whether the authority of record "Sai/Ramki" requires both names is not settled by any record read (U-2).
 
+**Later record (2026-11-14).** Settled by instruction of the repository owner: Ramki alone approves, as sole decision authority of the local, single-user, non-production IIPS. The roadmap names Ramki "PERSONAL APPLICATION PRINCIPAL" and single decision authority for that scope. The check recognises no other approver. This holds for the scope of P-2 only; nothing here says who decides a product-wide, hosted, multi-user or commercial use, and the check refuses a record for any of them.
+
 **P-9. Acceptance evidence.** D1 is approved when item E-1 exists. W04 provisioning is complete when E-1 to E-5 exist and agree.
 
 | # | Evidence | Content |
 |---|---|---|
-| E-1 | Approval record | A dated record on IPD `main`, in the approver's own words, that names: the batch and master checksum; the mapping version; the three digests of P-1; the IPD commit of the tool; the IRR commit it is to run against; the permitted use (P-2); the limitations accepted (P-6); the withheld count; the review date (Q-3); the answer to U-1; and the disposition of Q-1 and Q-2. A template is in section 2.6. |
+| E-1 | Approval record | A dated record on IPD `main`, in the approver's own words, that names: the batch and master checksum; the mapping version; the three digests of P-1; the IPD commit of the tool; the IRR commit it is to run against; the permitted use (P-2); the limitations accepted (P-6); the withheld count; the review date (Q-3); the answer to U-1; and the disposition of Q-1 and Q-2. A template is in section 2.6. **Later record (2026-11-14):** the record is the JSON document of the enforcement record, section 3, kept on the host and not on `main`; it does not carry an answer to U-1 (section 2.4). |
 | E-2 | Generation report | `provisioning-report.json` with result `PASS` and the same three digests. |
 | E-3 | Loader gate | The gate record of `validate` against the IRR commit that runs on the host: accepted, roster class `OPERATOR_SUPPLIED`, 2,388 of 2,388 resolved both ways. |
 | E-4 | Host installation | Output of the Windows wrapper: three files installed with the same digests, the location of the copy of any previous files, and the result of `Test-IrrIdentitySources.ps1`. |
@@ -173,31 +179,41 @@ E-3 shows that IRR can read the files. E-1 is the only item that gives them stan
 - It differs from E-1 in one item: the IPD commit of the tool is not bound, because the record must be published on `main` after the tool commit it would name. The digests, the mapping version and the generation inputs are bound instead.
 - Building the check is not an approval of D1, and the instruction to build it is not recorded here as one. **No approval record exists.**
 
+**Later record (2026-11-14): revision 2 of the check.** The first two points above describe revision 1 and no longer hold. On the instruction of the repository owner:
+
+- One approver, Ramki. No second approver (U-2).
+- The record does not answer U-1 or U-17. Both were settled by reading the two IRR rules, and the result is part of the tool's policy and of every review record: CV-22 Option C does not apply to the identity directory; the roster default of 200 is a design default and not a limit, and a larger roster carries the limitation `ROSTER_LARGER_THAN_IID_DESIGN_DEFAULT`, accepted by name. The basis and its one weak point are in section 5 of the enforcement record.
+- The IPD commit of the tool is bound, as E-1 lists it. For that reason the record cannot be a tracked file of the same checkout, and E-1's "on IPD `main`" is withdrawn: the record is a file kept on the host, and the install receipt carries its SHA-256.
+- The P04 source (batch, authorization, operating mode, checksum, record count) is bound as its own block. The scope also excludes hosted, multi-user and commercial use.
+- The third point stands. **No approval record exists.**
+
 ### 2.4 Unresolved questions
 
 | # | Question |
 |---|---|
-| U-1 | Do the five prerequisites of IRR's CV-22 Option C decision (A-7) apply to an operator-supplied roster under the Investment Intelligence design (A-8), or does that design's substitution of "the operator" for "Program Authority" replace them? No record states it. If they apply, their state is: (1) a contract exists as IRR's file schema and IPD mapping 1, but not as an "authoritative" contract; (2) batch, checksums and provenance exist, an effective period does not; (3) the mapping is documented and tested; (4) acceptance criteria are proposed here in P-9; (5) implementation authority would be E-1. |
-| U-2 | Is one approver sufficient, given "Sai/Ramki" as the authority of record? |
+| U-1 | Do the five prerequisites of IRR's CV-22 Option C decision (A-7) apply to an operator-supplied roster under the Investment Intelligence design (A-8), or does that design's substitution of "the operator" for "Program Authority" replace them? No record states it. If they apply, their state is: (1) a contract exists as IRR's file schema and IPD mapping 1, but not as an "authoritative" contract; (2) batch, checksums and provenance exist, an effective period does not; (3) the mapping is documented and tested; (4) acceptance criteria are proposed here in P-9; (5) implementation authority would be E-1. **Closed (2026-11-14):** determined not to apply. The rule governs expansion of the 13-row sector-reference universe; the installation writes the identity directory only. The determination is a reading made with the check, on the owner's instruction to settle it from the rules (enforcement record, section 5). |
+| U-2 | Is one approver sufficient, given "Sai/Ramki" as the authority of record? **Closed (2026-11-14):** yes, Ramki alone, by instruction of the repository owner, for the scope of P-2. |
 | U-3 | How many of the operator's 64 holdings does the roster cover, and how many carry a series other than `EQ`? (H: 64 holdings at revision 1, security identity populated on 1.) |
 | U-4 | Which CIN generation is correct. Not needed for the proposal, which exports no CIN. |
 | U-5 | Whether the P04 package on the unmerged branch, which records its gate as accepted, is the specification of record. ID-4 on `main` is sufficient for this proposal either way. |
-| U-17 | (Added 2026-11-13 with the approval enforcement; numbered after U-16 of section 5.6.) Does the item "Q-2, Roster content" of IRR's Investment Intelligence design refinement of 2026-11-05 govern a roster exported from P04? That item describes the roster as an operator-maintained file seeded from holdings and watchlist, capped at 200, ISIN required. The proposed roster has 2,388 issuers and is seeded from the P04 master. IRR's loader enforces no cap (R). No record says whether the item is a rule for every roster or a description of the expected one. |
+| U-17 | (Added 2026-11-13 with the approval enforcement; numbered after U-16 of section 5.6.) Does the item "Q-2, Roster content" of IRR's Investment Intelligence design refinement of 2026-11-05 govern a roster exported from P04? That item describes the roster as an operator-maintained file seeded from holdings and watchlist, capped at 200, ISIN required. The proposed roster has 2,388 issuers and is seeded from the P04 master. IRR's loader enforces no cap (R). No record says whether the item is a rule for every roster or a description of the expected one. **Closed (2026-11-14):** it is a design default, not a limit. The document that contains it says it is not an authority act and creates no implementation obligation. A roster above 200 issuers carries a limitation the approval must accept by name (enforcement record, section 5). |
 
 ### 2.5 Decisions that need approval
 
 | # | Decision | Authority |
 |---|---|---|
 | D1-a | Approve, amend or reject the proposal P-1 to P-9. | Program Authority |
-| D1-b | Answer U-1, U-2 and U-17. | Program Authority |
+| D1-b | Answer U-1, U-2 and U-17. **Later record (2026-11-14):** closed, section 2.4. | Program Authority |
 | D1-c | Require Q-1, Q-2 and Q-3 before the host run, or accept the gaps explicitly. | Program Authority |
-| D1-d | Whether `install` is to enforce E-1 in code. **Later record (2026-11-13):** built on the instruction of the repository owner (section 2.3, "Enforcement"). What remains for the authority is to confirm or change the six choices listed in section 10 of the approval-enforcement record. | Program Authority |
+| D1-d | Whether `install` is to enforce E-1 in code. **Later record (2026-11-13):** built on the instruction of the repository owner (section 2.3, "Enforcement"). What remains for the authority is to confirm or change the six choices listed in section 10 of the approval-enforcement record. **Later record (2026-11-14):** the six choices were answered by instruction and built as revision 2; the list is no longer part of the enforcement record. | Program Authority |
 
 ### 2.6 Template for the approval record
 
 This is a form, not an approval. It has effect only when the approver completes it and publishes it on `main`.
 
 **Later record (2026-11-13).** The form the tool reads is the JSON document [`w04-identity-approval/IRR-IDENTITY-APPROVAL-RECORD-TEMPLATE.json`](w04-identity-approval/IRR-IDENTITY-APPROVAL-RECORD-TEMPLATE.json), which is blank. The text form below is kept as the list of what the approver decides; the tool does not read it. Two of its lines no longer describe a choice the tool offers: the tool accepts the decision `APPROVED` only (an amended use needs a changed policy), and enforcement in code is no longer optional.
+
+**Later record (2026-11-14).** With revision 2 three more lines are not choices: "CV-22 Option C prerequisites (U-1)" and "Second approver (U-2)" are closed (section 2.4), and "Qualification" is replaced by the limitations and the mandatory review date (P-7). The record is not published on `main`; it is kept on the host.
 
 ```
 W04 IDENTITY PROVISIONING — APPROVAL OF BOUNDED USE (D1)
@@ -399,11 +415,11 @@ IPD's qualified identity takes its series from the P7 Dhan master (A-10), where 
 ## 6. Status and exit condition
 
 - **W04: PARTIALLY COMPLETE, NOT ACCEPTED.**
-- **Provisioning is blocked until D1 is approved** by the Program Authority in a record that meets E-1. The Windows wrapper is not to be run for installation before that. At `b0d7908` the tool did not enforce this; it now does (section 2.3, "Enforcement"). The wrapper's `-ReviewOnly` mode installs nothing; whether it is run on the host before D1 is approved is for the owner to say.
+- **Provisioning is blocked until D1 is approved** by the Program Authority in a record that meets E-1. The Windows wrapper is not to be run for installation before that. At `b0d7908` the tool did not enforce this; it now does (section 2.3, "Enforcement"). Since revision 2 of the check the approver is Ramki alone, and the record is a file on the host for the exact files and the exact IRR and IPD commits that the review on the host prints. The wrapper's `-ReviewOnly` mode installs nothing; whether it is run on the host before D1 is approved is for the owner to say.
 - Loader acceptance (E-3) is evidence that IRR can read the files. It is not evidence that the data has authority, and it is not an approval.
 - The two Jain Irrigation records stay excluded.
 - IRR PR #563 is open and unmerged. W03, W08 and W11 are not accepted.
-- Order of what comes next: D1-a to D1-d; then D3; then the host run and E-2 to E-5. D2 and D4 do not block the host run.
+- Order of what comes next: D1-a to D1-d; then D3; then the host run and E-2 to E-5. D2 and D4 do not block the host run. (2026-11-14: D1-b and D1-d are closed. What remains of D1 is the approval itself.)
 
 ## 7. Tests and evidence
 
