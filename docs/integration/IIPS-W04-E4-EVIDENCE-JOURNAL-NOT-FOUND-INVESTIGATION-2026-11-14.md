@@ -8,13 +8,20 @@
 
 **W04 status is unchanged: PARTIALLY COMPLETE. Not accepted.**
 
+**Factual correction (2026-11-14), to the report at `bc9a4ab57f69cdde7243252184e55a1c12d17f48`.** The complete Windows probe output, including `E4_RESULT_JSON`, was already supplied by the Principal in this conversation. This correction records the explicit probe findings and the capture-only lineage reproduction count. Probe-reported findings are not independent host confirmation. No new host execution is claimed; the other findings and investigation boundaries are unchanged.
+
 ## 1. Result
 
-1. **The probe searched the right place.** The authoritative journal is `journal.ndjson` at the root of the IRR data directory. The launcher sets that directory to `H:\IIPS\runtime\iips-data`, which is the directory the probe was given.
+1. **The supplied probe command targeted the right place.** The authoritative journal is `journal.ndjson` at the root of the IRR data directory. The launcher sets that directory to `H:\IIPS\runtime\iips-data`, which is the directory the probe was given. The supplied output explicitly reported:
+   - `journalExists: false` — the probe did not find the journal at the searched location.
+   - `recordFound: false` — the probe did not find an evidence record matching the committed import's content digest.
+   - `resetRecoveryEntries: 0` — the probe counted no reset-recovery entries beside the searched journal location.
+
+   These are **probe findings (P)**, not independent confirmation of the host filesystem, the import-time configuration, or the cause of absence.
 2. **The most probable reason the journal is absent is that it was never written.** As the Windows launcher starts it, the IRR transport refuses every evidence submission before any write, because the launcher never supplies the evidence-owner carrier. IRR's import screen still allows the commit. This is shown by the source and reproduced in the sandbox with synthetic input. **It is not confirmed on the host.**
 3. **No original evidence was recovered.** The import content digest equals no file in any history of either repository. Neither repository holds the per-row inputs of the import.
 4. **No record shows that an owner reset occurred**, and the governed reset tool cannot run on Windows. A manual deletion on the host cannot be excluded from here.
-5. **The 63 holdings are classified UNDETERMINED.** No lineage digest was reproduced, because there was no original evidence to reproduce it from. Nothing was reconstructed or substituted.
+5. **The 63 holdings are classified UNDETERMINED.** The probe reproduced **1 of 64 lineage digests from the capture alone**. No matched original import evidence was available to reproduce the remaining 63. No holding data or import evidence was reconstructed or substituted.
 
 ## 2. What was supplied
 
@@ -22,10 +29,10 @@
 |---|---|
 | Import content digest | `a3c3ee7635e24e56d1d2d6b9411a6de561f554addd382ab163344706e7b63107`, supplied by the Principal |
 | Statement that the E4 probe did not find the journal | Supplied by the Principal |
-| The probe's output (`RESULT` line, `E4_RESULT_JSON`, exit code) | **Not supplied.** This report cannot tell apart "data directory absent", "journal absent" and "journal present with no matching record"; the output states which |
+| The complete Windows probe output, including `E4_RESULT_JSON` | **Already supplied by the Principal in this conversation.** The explicit findings used here are recorded in sections 1, 3 and 4. Their availability does not constitute independent host confirmation |
 | Access to the Windows host, its backups and its logs | None from this environment |
 
-Evidence labels below: **S** read in source at the commits above; **R** reproduced in the sandbox; **O** operator-reported in an earlier record; **U** not confirmed on the host.
+Evidence labels below: **S** read in source at the commits above; **R** reproduced in the sandbox; **O** operator-reported in an earlier record; **P** reported by the probe in the supplied Windows output, not independently confirmed on the host; **U** not confirmed on the host.
 
 ## 3. Findings
 
@@ -33,6 +40,8 @@ Evidence labels below: **S** read in source at the commits above; **R** reproduc
 `BrokerImportEvidenceStore` writes through `PersistenceService` to `<data directory>\journal.ndjson`. The data directory is `IIPS_DATA_DIR`, or `<working directory>\.iips-data` when the variable is unset (`frontend/server/persistence/persistence-service.ts` lines 42 and 108–110). The launcher sets `IIPS_DATA_DIR` to `<RuntimeRoot>\iips-data` for the transport and for Vite, and `RuntimeRoot` defaults to `H:\IIPS\runtime` (`windows-setup/03-Start-IipsServers.ps1` lines 59, 119, 224, 248, 334). The probe opens `journal.ndjson` in each `--data-dir`, and the E4 command passed `H:\IIPS\runtime\iips-data`. The host completion record reports identity files installed and loaded under `H:\IIPS\runtime\iips-data\investment\identity`, which is the same data directory.
 
 The search location would be wrong only if the servers were started another way: with different launcher roots, or by hand without `IIPS_DATA_DIR`, in which case the directory is `H:\IIPS\iips-review-recovered\frontend\.iips-data`. Section 6 checks both.
+
+The supplied Windows output reports `journalExists: false`, `recordFound: false` and `resetRecoveryEntries: 0` (P). These observations distinguish a journal not found by the probe from a journal present with no matching record. They do not independently establish that no journal or original import evidence exists elsewhere on the host, that evidence was never retained at import time, or that no reset or manual deletion occurred. The cause in F2 to F5 remains a source-backed hypothesis with a synthetic reproduction, not a host-confirmed conclusion.
 
 **F2. Evidence submission is refused before any write when the carrier is not configured (S, R).**
 `handleEvidenceSubmission` calls `resolveBrokerEvidenceOwnerContext(env)` and answers `503 owner-context-unavailable` when it returns nothing (`brokerImportEvidenceSubmission.ts` lines 47–48). It returns nothing with reason `path-not-configured` when `IIPS_BROKER_EVIDENCE_OWNER_PATH` is unset (`brokerImportEvidenceOwnerResolver.ts` line 183). The store is created only after that point.
@@ -56,10 +65,10 @@ Script and output: [`evidence/integration/w04-e4-journal-not-found-2026-11-14/`]
 
 The same holds at the IRR merge of 2026-11-11 (`08cdf49`) and at `08411bc`, so the finding does not depend on which of those commits the host ran at import time.
 
-**F6. Owner reset (S, U).**
+**F6. Owner reset (S, P, U).**
 The reset tool (`ownerEvidenceReset.ts`) refuses unless `process.platform` is `linux` (line 116, `UNQUALIFIED_OS`) and it needs the same carrier variable. It cannot have run on the Windows host as built. When it does run, it removes only `journal.ndjson`, after writing a verified copy and an audit file under `<data directory>\broker-evidence-reset\`. The IRR runbook states the procedure was "not executed on operational evidence", and the only reset evidence in either repository is the synthetic qualification of 2026-11-06. No record in either repository reports a reset on the host.
 
-The probe counts the entries of `broker-evidence-reset` without opening them; that count is in the output that was not supplied. A deletion made by hand leaves no record and cannot be excluded from here.
+The probe counts the entries of `broker-evidence-reset` without opening them. The supplied output reports `resetRecoveryEntries: 0` (P). This is a probe finding, not independent host confirmation that no reset occurred. A deletion made by hand leaves no record and cannot be excluded from here.
 
 **F7. Search for the original evidence (R).**
 
@@ -79,17 +88,16 @@ Fifteen blobs larger than 4 MiB were not compared. Pull-request-only refs were n
 
 **UNDETERMINED: 63 of 63.**
 
-- No original evidence was recovered, so its digest could not be verified and none of the 64 lineage digests was reproduced.
+- The supplied probe output reports **1 of 64 lineage digests reproduced from the capture alone** (P). This is distinct from recovery of the original import evidence: no original evidence was recovered and its digest could not be verified.
 - Classes A to D of the E4 record are not assigned. Whether any of the 63 lacked an ISIN, lacked an exchange, or carried both, is not known.
 - F2 to F5 explain why the evidence is probably absent. They say nothing about what the import contained.
-- If the probe's output shows that it reproduced lineage digests from the capture alone, that is a separate result and must be read from the output itself. It was not available for this report.
+- Capture-only reproduction does not classify the remaining 63. **No matched original import evidence was available to reproduce their lineage digests.** The probe reported `recordFound: false`; their input classes remain UNDETERMINED.
 
 ## 5. Blockers
 
 1. **Host confirmation of the cause.** Whether the transport ran without the carrier at import time is not confirmed. The refusal is not logged (F5), so the logs cannot settle it; the configuration can.
-2. **The probe output was not supplied.**
-3. **Recovery depends on host-only material.** If the journal was never written there is no retained record to recover, and it cannot be recreated: IRR's runbook (section 10.4) states that rebuilding a record from a digest, or re-importing the file in place of the retained original, is not a recovery path.
-4. **A new import would retain nothing either** until the carrier is provisioned for the transport. That is a change to host setup and needs its own approval. It was not made.
+2. **Recovery depends on host-only material.** If the journal was never written there is no retained record to recover, and it cannot be recreated: IRR's runbook (section 10.4) states that rebuilding a record from a digest, or re-importing the file in place of the retained original, is not a recovery path.
+3. **A new import would retain nothing either** until the carrier is provisioned for the transport. That is a change to host setup and needs its own approval. It was not made.
 
 ## 6. Justified next action
 
@@ -156,7 +164,7 @@ How to read it:
 | Step 4 prints `MATCH` | The original statement file exists and is identified by digest. It is the import's input, **not** the retained IRR record, and it does not restore the journal. Whether it may be used to test the lineage digests of the capture is the Principal's decision; until then the 63 stay UNDETERMINED |
 | Step 4 prints 0 matches | The file is not in those three folders in a form whose UTF-8 text gives the digest. Not proof that it no longer exists |
 
-Please also send the `RESULT` line and the `E4_RESULT_JSON` block of the probe run. They contain no holdings data by design.
+The complete probe output, including `E4_RESULT_JSON`, has already been supplied in this conversation; it need not be requested again. The remaining next action is the independent, read-only host check above. This correction neither performs that check nor treats the supplied probe findings as independent host confirmation.
 
 **Decisions this report raises, none taken here:**
 
