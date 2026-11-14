@@ -218,3 +218,171 @@ The action should also identify which remaining facts can be established from ex
 - **Human-owner decisions:** product scope, formal roadmap reconciliation, acceptable coverage and residual risk, contract direction, disclosure policy and any future protected/live action. None has been made by this report.
 
 No roadmap, status, dependency, acceptance criterion, repository, branch, commit or pull request was changed during the original assessment. No Dhan API call was made, no authorized request was consumed, and no credential or subscription action was performed. Publication of this corrected report is a separate documentation-only action; it does not authorize implementation or alter the IRR roadmap.
+
+---
+
+## 8. Dhan Live Integration: Evidence-Based Remaining Work Plan (14 November 2026)
+
+### 8.1 Authority, decision and evidence boundaries
+
+This section records a planning reconciliation, not an amendment to the controlling IRR roadmap, an acceptance decision, or authorization to implement or make a live request. It preserves the personal, single-user, long-term investment purpose of IIPS; it is not a trading-terminal plan. Sections 1–7 and decisions A–E remain unchanged. The subscription decision below is a later operator decision and supersedes any suggestion that the subscription choice itself needs to be reopened.
+
+The operator has decided to proceed with the proposed **Dhan Data APIs subscription at ₹499 + GST per month**. Payment and activation remain under the operator's control; activation and current entitlement have not been verified in this review. Establish the actual terms and rights separately; the decision is not evidence of payment, activation, authentication or successful data access.
+
+Sources and pins:
+
+- **R:** [IRR roadmap v1.1, commit `08411bcd`](https://github.com/ramkivs/iips-review-recovered/blob/08411bcd6d782a601fe5c82cc9983d076831148d/docs/integration/DHAN-LIVE-INTEGRATION-IMPLEMENTATION-ROADMAP-2026-11-11.md), especially §§5–10 and Appendix A. Its phase sequence, dependencies and milestone criteria remain controlling.
+- **Assessment:** Sections 1–7 above and the [IPD assessment package at `551f5e8`](https://github.com/ramkivs/iips-production-market-data/tree/551f5e898e3475f35b95295a0e2874a7fa17228f/docs/integration/dhan-api-v2-assessment-2026-11-13). Its scope classifications and choices A–E are recommendations, not accepted roadmap changes.
+- **Implementation evidence:** [IPD PR #156](https://github.com/ramkivs/iips-production-market-data/pull/156), observed OPEN and unmerged at head `a93278fb32fbfe31f01e0572950734cc836fb86f`. Despite its W-01/W-02 title, its history also contains W-03, W-04, D-6 and W-06 records. The assessment branch at `551f5e8` contains the cited Dhan records; it is not the same head as PR #156. Neither branch's content is proof that it is merged into IPD main or installed on the operator's Windows host.
+- [W-02 Windows acceptance](https://github.com/ramkivs/iips-production-market-data/blob/551f5e898e3475f35b95295a0e2874a7fa17228f/docs/integration/DHAN-W02-WINDOWS-ACCEPTANCE-EVIDENCE-2026-11-12.md), [D-6 Windows rehearsal](https://github.com/ramkivs/iips-production-market-data/blob/551f5e898e3475f35b95295a0e2874a7fa17228f/docs/integration/DHAN-D6-WINDOWS-HOST-REHEARSAL-EVIDENCE-2026-11-12.md), [profile authentication reassessment](https://github.com/ramkivs/iips-production-market-data/blob/551f5e898e3475f35b95295a0e2874a7fa17228f/docs/integration/DHAN-W06-PROFILE-AUTHENTICATION-AND-ENTITLEMENT-REASSESSMENT-2026-11-13.md), and [W-06 `806` root-cause record](https://github.com/ramkivs/iips-production-market-data/blob/551f5e898e3475f35b95295a0e2874a7fa17228f/docs/integration/DHAN-W06-ROOT-CAUSE-806-DATA-API-SUBSCRIPTION-2026-11-13.md).
+
+**Classification:** implemented means code is recorded on a specified branch; tested means the stated tests were reported; accepted means a recorded decision against specified criteria exists; merged means integrated into the relevant repository's mainline; operationally qualified means the appropriate target-host or real-vendor evidence has been demonstrated. These are not interchangeable. “Not evidenced complete” means not established by the inspected evidence, not a finding that no work exists on any other branch. E1/E2 synthetic or integrated evidence, E3 Windows evidence and E4 real-vendor evidence must not be conflated.
+
+### 8.2 Completed activities excluded from rework
+
+| Completed activity | Evidence and boundary |
+|---|---|
+| **D-6 procedure and rehearsal** | The procedure is documented and the Windows-host record says the exit criterion was satisfied with throwaway values. Real credential operation for W-06 remains separate. |
+| **W-02 implementation and recorded acceptance** | The W-02 record reports **19/19 PASS** on the operator's Windows host and an explicit **ACCEPTED** decision, with synthetic secrets and E3/E1 evidence. It is not live Dhan qualification and remains unmerged in PR #156. Review whether later changes invalidate any acceptance evidence; do not repeat a valid test by default. |
+| **W-01, W-03 and W-04 implementation and reported tests** | Their records report completed implementation and targeted tests on the PR lineage; W-04 reports 30/30 targeted tests and the later D-6 rehearsal exercised the utility with synthetic values on Windows. Integration and, where not evidenced, formal acceptance remain; do not reimplement completed functionality. |
+| **W-06 investigation so far** | An independent operator-run profile interaction returned HTTP 200 and “Authentication Successful” for the credentials at that time. A separate quote interaction returned HTTP 401 with vendor code `806 Data APIs not subscribed`. Both are dated observations. The failure established an entitlement blocker at that time, not a successful quote. |
+
+D-1's DPAPI user-scope and two-carrier convention is recorded and used by the implementation. D-2's read posture is recorded as the governing design; the W-04 record explicitly says W-05's session holder and bounded re-read are not implemented there. Confirm decision records and required signatures rather than inferring all Phase 0 acceptance from code.
+
+### 8.3 Remaining inventory by phase
+
+The roadmap has **38 allocated items: W-01–W-15 and W-17–W-39; W-16 was never allocated**. All are accounted for below, including implementation-complete items with integration or acceptance remaining. W-02's accepted implementation is not reopened; only integration and any evidence invalidated by later changes remain. In each row “pending” means completion was not established in the inspected evidence. The exact detailed criteria remain those in R. Repository owners implement and review their own boundaries; operator, external and governance needs are identified where material.
+
+#### Phase 0 — decisions
+
+| Decision | Completed evidence and remaining action |
+|---|---|
+| **D-1 · Select the Windows secret-store mechanism, admit its `SecretRef` provider, and fix the carrier specification** | DPAPI user scope, separate carriers and provider convention are recorded and implemented. Confirm the complete decision and required owner acceptance; retain owner-only access, atomicity and the at-rest-only limitation. No redesign is indicated. |
+| **D-2 · Decide credential-read posture and the bounded re-read policy** | Read posture is specified. Confirm the governing record and acceptance of triggers, expiry/rejection distinction and latch; W-05 remains separate implementation. |
+| **D-3 · Decide freshness semantics for market-closed periods** | Acceptance not evidenced. IPD/owner decide calendar and ageing, including worked holiday/reopening examples; required by W-22. |
+| **D-4 · Decide D02 (Dhan) vs D114/PIT historical precedence** | Acceptance not evidenced. IPD and IRR decide source authority by use case and forbid silent blending or fallback; enables W-20 and historical consumption. |
+| **D-5 · Decide the canonical representation of unavailable bid/ask** | Acceptance not evidenced. Contract owners select and record representation, validation and rendering; W-13 depends on it. |
+| **D-6 · Record the Dhan token issuance and replacement procedure** | Documented and rehearsed with a throwaway value; no repetition required. Future real credential operation remains an operator action under W-06. |
+| **D-7 · Define the provider state model, the meaning of "verify connection", and the diagnostics disclosure policy** | Adopted for IPD; IRR-side acceptance is explicitly outstanding. Obtain shared acceptance and resolve the W-04 disclosure interaction. Status reads observed state; it must not initiate a vendor request. |
+
+#### Phase 1 — credential resolution and first authentication
+
+| Item and exact roadmap title | Status; completed work | Remaining activity, dependencies and acceptance evidence |
+|---|---|---|
+| **W-01 · Admit a Windows `VaultProvider` and define the secret-path convention** | Implemented and tested on PR lineage; unmerged. | Review and integrate/publish existing change as appropriate, confirm acceptance of provider validation and unchanged existing behaviour. Depends on D-1. No reimplementation. |
+| **W-02 · Implement the Windows DPAPI secret-store backend** | Implemented and explicitly accepted on recorded version; unmerged. | Integrate/publish accepted change as appropriate; assess later changes for effect on the Windows/test evidence and repeat only invalidated checks. Depends on W-01, D-1, D-2. |
+| **W-03 · Add daemon backend selection and honest egress diagnostics** | Implemented and synthetically tested; unmerged. | Review/integrate and confirm acceptance of selectable backend, unknown-value refusal, honest readiness/egress and no secret or location disclosure. Depends on W-02 and D-7. |
+| **W-04 · Credential provisioning and rotation utility** | Implemented and tested, with later synthetic Windows rehearsal; unmerged, formal programme acceptance not established. | Review/integrate and confirm independent rotation, verification and interruption-safe replacement. Resolve D-7/output-policy decision E without weakening internal controls. Depends on W-01, W-02, D-1. |
+| **W-05 · Implement the credential read posture and bounded re-read from D-2** | Pending; ordinary credential resolution exists, but W-04 says it does not implement this item. | After D-2 and W-02, implement/test permitted re-read triggers, one retry and latch, expiry preflight, no loops and safe diagnostics. Not an M1 prerequisite. Assessment marks it conditional; roadmap remains unchanged. |
+| **W-06 · Provision real credentials and prove first live authentication** | Open; historical independent profile authentication succeeded, while the data quote returned `806`; no parsed quote recorded. | Operator confirms subscription activation, then W-03/W-04/D-6 and current authorization govern a controlled interaction and sanitized evidence. See §8.4. W-05 is not required for M1. |
+
+#### Phase 2 — Status truth
+
+| Item and exact roadmap title | Status; completed work | Remaining activity, dependencies and acceptance evidence |
+|---|---|---|
+| **W-07 · Make `ServiceHealth` live-capable (additive, versioned)** | Pending; baseline health has literal connectivity and qualification values. | After D-7, IPD and IRR boundaries accept versioned D-7 values additively; contract-drift and unknown-value rejection tests pass. Joint contract governance. |
+| **W-08 · Record observed provider state (last success/failure, latency, auth outcome)** | Pending; baseline lacks full observed-state reporting. | After W-07, add bounded state recorder and explicit limited verify action; test Status is observation-only and does not call the vendor. Assessment proposes proportionate scope, not a roadmap change. |
+| **W-09 · Add `/v1/diagnostics`** | Pending; partial diagnostics exist. | After W-08 and D-7, deliver authenticated, sanitized category/readiness diagnostics and disclosure/failure tests. |
+| **W-10 · IRR Status consumes IPD authority only** | Pending; existing IRR readiness inference is a second source. | After W-07, W-08 and D-7, consume IPD-observed state only, remove IRR Dhan configuration/pointers, and test truthful, non-disclosing output. IRR owner. |
+| **W-11 · Reconcile configuration names, ports and environment documentation; add an IRR leak gate** | Pending; baseline names and ports conflict. | Reconcile cross-repository configuration and docs, add bundle leak gate and demonstrate documented setup for all four capabilities. No item prerequisite; live verification needs entitlement and authorization. |
+
+#### Phase 3 — live quotes
+
+| Item and exact roadmap title | Status; completed work | Remaining activity, dependencies and acceptance evidence |
+|---|---|---|
+| **W-12 · Qualify the Dhan quote request/response against the live vendor** | Blocked by W-06; parser/normalizer have synthetic evidence, not a recorded parsed live quote. | With entitlement and separately authorized requests, capture safe live evidence, normalize and cross-check payload, identity, timestamps and values. M2a requires a real quote normalized to D01; M2 requires qualification. |
+| **W-13 · Represent unavailable bid/ask honestly** | Pending; baseline can normalize absence to zero. | After D-5, implement and test contract, normalization and rendering so absence cannot be mistaken for zero. W-12 is an edit-sequencing constraint, not a live-evidence prerequisite. Contract governance required. |
+| **W-14 · Live qualification of instrument mappings** | Live acceptance blocked by W-06; exact-identity registry exists, but existing rows are not thereby live-qualified. | Cross-check an authorized sample and document mismatch signatures; qualify or withhold new rows. W-12 recommended first; W-27 required for added rows. Operator/request authority and decision D evidence policy apply. |
+| **W-15 · Quotes screen: identity picker and honest field rendering** | Pending; identity search exists but entry is manual. | After W-11 and W-13, implement IRR picker and truthful fields; demonstrate selection and unresolved handling. Assessment recommends deferral, not a roadmap amendment. |
+
+#### Phase 4 — historical qualification
+
+The assessment treats Dhan history as conditional for the present product need; these items and M3/M4 remain in the roadmap until formally reconciled.
+
+| Item and exact roadmap title | Status; completed work | Remaining activity, dependencies and acceptance evidence |
+|---|---|---|
+| **W-17 · Qualify the Dhan historical request/response** | Blocked by W-06; adapter and normalization have synthetic evidence, vendor wire semantics remain provisional. | With entitlement, rights and request authorization, verify live payload and D02 candle boundaries for each supported interval. |
+| **W-18 · Reconcile the 1,825-day cap and define chunking/limits** | Blocked by W-17; request guard exists. | Establish observed limits; document and test chunking or explained prevalidated refusal for full-range requests. Vendor evidence required. |
+| **W-19 · Wire D02 cache and D02 freshness evidence** | Blocked by W-17; cache exists but composed freshness is not wired. | Wire cache/orchestrator and expose real D02 freshness to IRR; test observation and failure paths. Assessment marks conditional. |
+| **W-20 · Implement the D02 / D114-PIT precedence boundary** | Pending D-4; source components exist, accepted precedence is not established. | Enforce and label the chosen source with no silent substitution; test unavailable and non-authoritative cases. Joint governance; assessment marks conditional. |
+| **W-21 · History screen: range affordance and truthful gaps** | Blocked by W-11 and W-18; screen exists. | IRR renders range, empty/partial results and gaps honestly; demonstrate partial coverage cannot be mistaken for full coverage. Assessment marks conditional. |
+
+#### Phase 5 — freshness and diagnostics completion
+
+| Item and exact roadmap title | Status; completed work | Remaining activity, dependencies and acceptance evidence |
+|---|---|---|
+| **W-22 · Session-aware freshness** | Pending D-3; D01 freshness exists without session awareness. | Implement accepted calendar/ageing rule and test after-hours, holidays and reopening against worked examples. |
+| **W-23 · Persist cache and freshness state across restarts** | Blocked by W-08 and W-19; in-memory state exists. | Separately evidence restart, cold-cache restart and persistence; test corrupt/absent store degradation. Assessment recommends deferral; persistence is not an M4 prerequisite. |
+| **W-24 · Traceable diagnostics across IRR → IPD → Dhan** | Blocked by W-08/W-09; end-to-end correlation is not established. | Implement correlation and bounded local log ring; demonstrate safe end-to-end failure tracing. Assessment recommends out of present core scope, but W-34's dependency and M4's trace criterion remain until formally changed. |
+| **W-25 · Configurable freshness thresholds** | Pending; defaults exist. | Add visible validated configuration and tests preserving defaults. No prerequisite; assessment recommends deferral. |
+| **W-26 · Close the transport-contract gap: `getFreshness` on the client** | Blocked by W-19; transport surfaces exist. | Deliver one freshness-client boundary and contract/consumer tests. Assessment marks conditional. |
+
+#### Phase 6 — consumer adoption foundation
+
+| Item and exact roadmap title | Status; completed work | Remaining activity, dependencies and acceptance evidence |
+|---|---|---|
+| **W-27 · Build the repeatable mapping expansion pipeline (construction; no live evidence)** | Pending; P04, scrip-master evidence and exact-identity registry are the baseline. | Build repeatable sourced construction, rejection/conflict reports and synthetic validation with no guessed/name-only identity. No live call or credential required. |
+| **W-28 · Measure mapping coverage against the owner's real holdings** | Blocked by W-27; baseline mapping coverage is not an actual-holdings census. | With operator-approved holdings access, measure matches, gaps and reasons; produce reproducible coverage report. No live evidence required. |
+| **W-29 · Shared IRR quote-consumption boundary** | Build blocked by W-11, W-13 and healthy identity path; transport components exist. | Build one shared quote boundary and mixed-state tests. Live acceptance needs M2. It does not depend on W-17, W-19 or Phase 4. |
+| **W-39 · Historical-data consumption extension** | Blocked by W-29, W-19 and D-4/W-20; accepted shared extension not evidenced. | Deliver one labelled authoritative series or explicit unavailability; live acceptance additionally needs M3. Assessment marks conditional. |
+
+#### Phase 7 — consumer integrations
+
+R §6 Phase 7 names these items by consumer rather than standalone work-item headings. They are independently deliverable and do not gate a Dhan menu capability.
+
+| ID and roadmap consumer title | Status; completed work | Remaining activity, dependencies and acceptance evidence |
+|---|---|---|
+| **W-30 · Personal Portfolio** | Pending; baseline prices are operator-entered. | After W-29/W-27/W-28, show sourced prices or explicit per-holding unavailable/unmapped state, as-of and worst freshness, plus labelled manual fallback. Owner holdings/coverage policy and live evidence required for live acceptance. |
+| **W-31 · Watchlists** | Pending; names and membership exist. | After W-29, show price/change/freshness and mixed unresolved states; test bounded rate-aware batch fetch. Assessment marks conditional. |
+| **W-32 · Company Intelligence / stock-level analysis** | Pending; identity/coverage observations exist. | After W-29 and W-39 under the current roadmap, show price and any history with provenance and coverage; represent absence honestly. Narrowing history dependency requires governance. |
+| **W-33 · Valuation (IID)** | Pending; fixture prices exist. | After W-29/W-39/W-28, record canonical price provenance/as-of and block or degrade stale/unresolved verdicts; prove fixtures cannot be mistaken for live. Dependency change requires governance. |
+| **W-34 · Reports / decision support** | Pending; accepted price reference not established. | After W-29 and W-24, refuse or label stale/suppressed figures and trace each price to an IPD observation. Simpler lineage is a proposal until formally accepted. |
+| **W-35 · Broker Holdings** | Pending; preview intentionally has no market value. | After W-30, show sourced prices/freshness for committed holdings while preserving preview disclaimers. Assessment marks conditional. |
+
+#### Phase 8 — Windows operational readiness
+
+| Item and exact roadmap title | Status; completed work | Remaining activity, dependencies and acceptance evidence |
+|---|---|---|
+| **W-36 · Extend the existing IIPS launcher for the market-data daemon** | Pending; existing launcher and PR-branch W-03 selector are the baseline. | After W-03, W-11 and D-7, extend the existing start/validate/stop scripts, not a competing launcher. Demonstrate Windows start, health, stop, restart, duplicate refusal, unchanged existing services and sanitized logs (E3). Operator host access required. |
+| **W-37 · Operator runbook: live Dhan operation and recovery** | Pending; D-6 procedure exists. | After W-09, W-11 and W-36, supply operation/recovery guidance; owner dry-run from the document includes a successful quote and simulated expiry recovery. Appropriate live authority and entitlement required. |
+| **W-38 · Startup readiness preflight** | Blocked by W-09/W-11; individual baseline checks exist. | Deliver a safe local readiness command and demonstrate configured success and distinguishing broken configurations. Assessment recommends deferral. |
+
+### 8.4 Immediate continuation: W-06 and protected request
+
+**Single next activity:** continue Phase 1 **W-06**, beginning with operator-controlled subscription activation and confirmation. The operator's exact action is to complete payment/activation outside this task and confirm, through the account's subscription interface or other approved non-API evidence, that the intended account's Data APIs plan and relevant quote capability are active, including effective validity. Record only a sanitized confirmation; do not publish payment details, credentials or sensitive account details. Confirm relevant usage limits and storage/display/reuse rights separately. An account display supports an entitlement-status claim, not a claim that IPD obtained a quote.
+
+Before any controlled interaction, confirm the intended implementation version and Windows user context; W-03/W-04 availability, D-6 procedure and secure backend readiness; current credential validity and expiry; loopback daemon and honest egress; safe evidence capture; permitted endpoint and instrument; and explicit operator authorization, request count and purpose. The previously observed token and subscription status are historical; do not assume present validity. Prevent unapproved retries or secondary probes from spending the request. No credential or sensitive location should be included in records.
+
+**M1 and W-06: governing sources and interpretation.** R §10.1 defines M1 as one real authenticated interaction with Dhan that **succeeds** (E4). R §5 W-06 separately specifies the controlled daemon-based execution and evidence, including startup/selector/readiness, credential-resolution and request outcomes, HTTP status class, and checking captured output for secrets and locations. R §9.2 G-M1 and W-06 verification mention a structural success **or typed authentication failure**; a correctly classified failure is useful negative-path evidence but, under the proposed interpretation in §3 Decision B above, is not itself successful authentication under §10.1. The independent profile HTTP 200 is evidence of accepted credentials for that interaction at that time; whether it satisfies M1 and/or W-06's distinct execution/evidence requirements is for the responsible owner to assess. It must not be silently dismissed, nor automatically treated as formal milestone acceptance.
+
+The W-06 `806` root-cause record asserts that a successful quote is necessary for M1. That assertion conflicts with R §10.1's authentication definition: **do not add a quote requirement to M1** without a governing change. No extra mandatory M1 criterion is imposed by this plan. Section 3's proposed wording, including separate authorization and safe recording, remains a proposal for governance review, not a change to M1. Authentication alone proves neither data entitlement nor a quote.
+
+| Outcome | Evidence and limits |
+|---|---|
+| **Authentication** | Real evidence that Dhan accepted the credentials for the observed interaction; credential decryption, an HTTP response alone or typed `806` failure does not establish this. Apply the separate R W-06 evidence and disclosure requirements to W-06 execution. |
+| **Data API entitlement** | Operator-confirmed active account plan for the relevant capability, with an authorized data-endpoint outcome where appropriate. A further `806` means that attempt remains refused; do not infer its precise cause or activation timing without evidence. |
+| **Quote acquisition / M2a** | Real quote received and normalized to a canonical D01 envelope. HTTP success alone or an empty response is insufficient. |
+| **Quote qualification / M2** | W-12 evidence cross-checking live payload, exact identity, timestamps, values and normalization. One qualified sample does not qualify every holding. |
+
+**Remaining quote request:** the recorded remaining authorized quote request remains **unused**. Before it is used, subscription activation must be confirmed and the operator must provide explicit authorization for the actual endpoint, instrument, purpose and request count. The historical record does not establish that any particular future purpose has already been approved. Protect the request from accidental retries and additional probes; stop and seek renewed direction if prerequisites or authority are unclear. This plan does not authorize or consume it.
+
+### 8.5 Blockers, decisions and execution sequence through M6
+
+**Operator actions:** activate and confirm the chosen subscription; privately obtain/renew and provision credentials when authorized; approve Windows-host operation and appropriate actual-holdings access; explicitly authorize any live request. No purchase, activation, credential operation or vendor call is performed by this plan.
+
+**External dependencies:** vendor activation and entitlement propagation; permitted endpoint behaviour and rate limits; storage, display and reuse rights; live quote/history semantics and independently checkable mapping/value evidence. Subscription alone does not settle all rights or prove a usable quote.
+
+**Programme/repository-owner decisions:** confirm D-1/D-2 acceptance records, decide D-3/D-4/D-5 and obtain shared D-7 acceptance; determine M1/W-06 interpretation and the disposition/review of PR #156. Decide A–E in §3, including W-04 disclosure, W-13 contract, actual-holdings evidence and partial totals, report lineage, and whether to separately accept a narrower core capability. Preserve W-34 → W-24, W-29 → W-13, W-32/W-33 → W-39 and M4's trace criterion unless formally changed by the controlling owner. IRR remains responsible for its roadmap and consumers; IPD remains responsible for provider work. Local Git synchronization remains under the user's control.
+
+**Roadmap order, subject to its permitted parallelism:**
+
+1. **Phase 0 and 1:** close outstanding decision/acceptance gaps, review and integrate existing PR work as appropriate, operator activates the chosen subscription, and continue W-06 toward **M1**. W-05 is operational, not an M1 gate.
+2. **Phase 2:** D-7 → W-07 → W-08 → W-09/W-10; W-11 has no item prerequisite. This work can proceed in parallel with Phase 1 where its own prerequisites permit.
+3. **Phase 3:** W-06 → W-12 → **M2a**, then evidence-based **M2**; D-5 → W-13, with W-12 edit sequencing; W-14 qualifies mappings and W-15 remains allocated.
+4. **Phase 4:** after W-06, W-17 → **M3a/M3** and W-18/W-19; D-4 → W-20; W-21 follows W-11/W-18. History is independent of Phase 3 but its present product use needs the owner's decision.
+5. **Phase 5:** D-3 → W-22; W-08/W-19 → W-23; W-08/W-09 → W-24; W-25 and W-26 follow their own dependencies. **M4 remains full Status, Quotes, History and Freshness**, including existing trace and Windows evidence; persistence is not an M4 gate.
+6. **Phase 6:** W-27 → W-28 can begin without live access; W-11/W-13 → W-29, with M2 for live acceptance. Measured coverage and the shared boundary support **M5**. W-39 additionally requires its history dependencies and M3 for live acceptance.
+7. **Phase 7:** W-30–W-35 follow their individual dependencies and agreed exclusions toward **M6**; W-34 retains W-24. Consumers must represent stale, unresolved and partial data honestly.
+8. **Phase 8:** W-36–W-38 proceed as their own dependencies permit, including E3 Windows operation/recovery evidence. Phase numbering does not prevent the parallel work explicitly permitted by R §4.
+
+This section records historical evidence and a plan only. It does not change milestone status, certify current deployment or entitlement, authorize synchronization, or initiate implementation.
