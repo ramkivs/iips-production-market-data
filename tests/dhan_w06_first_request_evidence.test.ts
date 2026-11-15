@@ -461,7 +461,9 @@ describe('W-06 — first authenticated request evidence', () => {
     const serverErrorQuote = await serverErrorService.getQuote(operatorQuoteRequest);
     assert.strictEqual(serverErrorQuote.ok, false);
     if (!serverErrorQuote.ok) assert.strictEqual(serverErrorQuote.failure.code, 'HTTP_ERROR');
-    assert.strictEqual(failing.calls.length, 3, 'a transient failure is retried to the bound of three');
+    // The historical record describes the then-current retry policy; W-12 now
+    // makes each quote refresh a single provider attempt, even for a 5xx.
+    assert.strictEqual(failing.calls.length, 1, 'quote refresh must not retry a transient vendor failure');
 
     // 200 with an unparseable body: the vendor answered, so the code is decisive without retrying.
     const unparseable = countingTransport(() => ({ status: 200, bodyText: 'not-json' }));

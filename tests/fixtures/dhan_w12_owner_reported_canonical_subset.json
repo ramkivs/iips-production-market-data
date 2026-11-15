@@ -1,0 +1,17 @@
+{
+  "notice": "OWNER-REPORTED CANONICAL RESPONSE SUBSET ONLY. This is a transcription of the owner-supplied historical snapshot, not a captured vendor DTO, not a complete canonical envelope and not independently verified live qualification. Unreported fields are deliberately omitted.",
+  "outcome": { "httpStatus": 200, "domain": "D01_QUOTES", "freshness": "UNAVAILABLE", "qualityState": "UNAVAILABLE" },
+  "identity": { "companyId": "EQ_RELIANCE_IN", "securityId": "ISIN:INE002A01018:EQ", "exchangeSegment": "NSE_EQ", "dhanSecurityId": "2885" },
+  "observedCanonicalFields": {
+    "ltp": 1339.70,
+    "open": 1336.60,
+    "high": 1350.70,
+    "low": 1324.00,
+    "close": 1339.70,
+    "previousClose": 1339.70,
+    "volume": 13756247,
+    "vwap": 1338.09
+  },
+  "asOf": "2026-11-13T10:29:51.000Z",
+  "receivedAt": "2026-11-15T13:35:10.151Z"
+}

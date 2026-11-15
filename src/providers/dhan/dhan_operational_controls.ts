@@ -291,8 +291,9 @@ export interface DhanRefreshOrchestratorOptions {
 /**
  * Explicit, caller-driven refresh (no background timers). Per instrument:
  * fresh cache → SKIPPED_FRESH unless forceProvider is requested; otherwise a
- * coalesced, rate-limited, concurrency-bounded fetch. Success → cache updated; failure →
- * explicit FAILURE outcome and any prior valid observation is PRESERVED.
+ * coalesced, rate-limited, concurrency-bounded single provider attempt. Success →
+ * cache updated; failure → explicit FAILURE and any prior observation is PRESERVED.
+ * No automatic quote retry: a timeout can follow a request received by the vendor.
  * One instrument's failure never affects another's outcome.
  */
 export class DhanRefreshOrchestrator {
@@ -337,7 +338,9 @@ export class DhanRefreshOrchestrator {
             return { status: 'FAILURE', scope, code: 'TRANSPORT_FAILURE' as DhanFailureCode, priorPreserved: cached.state !== 'MISS' } as RefreshOutcome;
           }
           try {
-            const result = await withBoundedRetry(() => this.fetchQuote(scope));
+            // Quote egress consumes an owner-authorized request budget. Never retry
+            // here: even a timeout may have reached the vendor.
+            const result = await this.fetchQuote(scope);
             if (result.ok) {
               this.cache.set(key, result.value);
               const freshness = evaluateFreshness(result.value.provenance.asOf, 'D01_QUOTES', nowIso);

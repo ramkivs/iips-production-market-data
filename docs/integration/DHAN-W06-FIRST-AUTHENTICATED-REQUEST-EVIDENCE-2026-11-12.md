@@ -1,5 +1,7 @@
 # DHAN W-06 — First Authorised Authenticated Request: Execution Record and Evidence Assessment (2026-11-12)
 
+**Later disposition and current procedure:** This is a historical record, not current W-06 status or an authorization to retry. The owner subsequently attested success and closed W-06 in [the final attestation](DHAN-W06-FINAL-OWNER-ATTESTATION.md). The former three-attempt quote retry described below was removed in the later [W-12 preparation](DHAN-W12-QUOTE-QUALIFICATION-PREPARATION.md); use that record for current candidate limitations and request-budget safeguards. No historical observation is changed.
+
 **Status:** **W-06's evidence clause is satisfied. M1 is NOT satisfied. W-06 remains open.**
 Two controlled `/v1/quotes` requests were executed in total. The first returned `502` and its body was
 lost (§4–§7). The second, at 2026-11-12T19:42:05Z, was captured in full (§12): daemon status `502`,
