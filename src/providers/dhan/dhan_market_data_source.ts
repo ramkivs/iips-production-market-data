@@ -72,7 +72,7 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
    * Throws DhanProviderError (deterministic code) on every failure path:
    * partial or unvalidated market data is never emitted.
    */
-  public async fetchSnapshot(query: SnapshotQuery): Promise<CanonicalEnvelope<MarketQuotePayload>> {
+  public async fetchSnapshot(query: SnapshotQuery, signal?: AbortSignal): Promise<CanonicalEnvelope<MarketQuotePayload>> {
     if (query.domain !== 'D01_QUOTES') {
       throw this.fail({
         code: 'UNSUPPORTED_DOMAIN',
@@ -115,7 +115,7 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
     const mapping = resolution.mapping;
     const callResult = await this.client.fetchMarketQuotes([
       { exchangeSegment: mapping.exchangeSegment, dhanSecurityId: mapping.dhanSecurityId },
-    ]);
+    ], signal);
 
     if (!callResult.ok) {
       throw this.fail(callResult.failure);

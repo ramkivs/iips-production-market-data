@@ -16,10 +16,13 @@ import { CanonicalEnvelope } from '../../contracts/envelope.js';
 import { isD114SecurityIdentity, type D114SecurityIdentity } from '../../contracts/types.js';
 import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
 import { SecurityMaster } from '../../identity/security_master.js';
-import { DhanApiClient } from './dhan_api_client.js';
+import { DhanApiClient, DHAN_MARKET_QUOTE_PATH } from './dhan_api_client.js';
 import { DhanHistoricalAdapter, DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
 import { DhanHistoricalRequest } from './dhan_historical_dto.js';
-import { DhanExchangeSegment } from './dhan_dto.js';
+import { DhanExchangeSegment, parseDhanQuoteBlock } from './dhan_dto.js';
+import { normalizeDhanQuoteToCanonical } from './dhan_normalizer.js';
+import type { DhanInstrumentMapping } from './dhan_instrument_map.js';
+import { evaluateFreshness } from '../../quality/freshness_evaluator.js';
 import { DhanResult, DhanFailure, dhanFailure } from './dhan_failures.js';
 import { DhanInstrumentResolutionService } from './dhan_instrument_mapping_integration.js';
 import { DhanInstrumentRegistry } from './dhan_instrument_map.js';
@@ -53,6 +56,11 @@ export interface QuoteRequest {
 export type QuoteResponse =
   | { ok: true; envelope: CanonicalEnvelope<MarketQuotePayload>; freshness: 'CURRENT' | 'STALE' | 'UNAVAILABLE' }
   | { ok: false; failure: DhanFailure };
+
+/** Dhan Market Quote supports up to 1000 instruments in one request. */
+export const DHAN_QUOTE_BATCH_LIMIT = 1000;
+export const MAX_PORTFOLIO_QUOTE_ITEMS = 2000;
+export type PortfolioQuoteResponse = { ok: true; results: QuoteResponse[] };
 
 export interface HistoricalServiceRequest extends DhanHistoricalRequest {}
 
@@ -113,7 +121,7 @@ export class DhanMarketDataService {
       instrumentRegistry: options.instrumentRegistry,
     });
     this.resolution = new DhanInstrumentResolutionService(options.securityMaster, options.instrumentRegistry);
-    this.cache = options.cache ?? new DhanBoundedCache<CanonicalEnvelope<MarketQuotePayload>>(256);
+    this.cache = options.cache ?? new DhanBoundedCache<CanonicalEnvelope<MarketQuotePayload>>(512);
     this.limiter = options.limiter ?? new DhanRateLimiter({ maxRequests: 60, windowMs: 60_000, now: () => this.now().getTime() });
     const concurrency = options.concurrency ?? new DhanConcurrencyLimiter(8);
     const coalescer = options.coalescer ?? new DhanRequestCoalescer();
@@ -124,13 +132,13 @@ export class DhanMarketDataService {
       coalescer,
       retry: options.retry,
       now: this.now,
-      fetchQuote: async (scope: DhanSecurityScope) => {
+      fetchQuote: async (scope: DhanSecurityScope, signal?: AbortSignal) => {
         try {
           const envelope = await this.source.fetchSnapshot({
             companyId: scope.companyId,
             domain: 'D01_QUOTES',
             parameters: { exchangeSegment: scope.exchangeSegment, isin: scope.isin, series: scope.series },
-          });
+          }, signal);
           return { ok: true as const, value: envelope };
         } catch (err) {
           const failure = (err as { failure?: DhanFailure }).failure;
@@ -165,7 +173,7 @@ export class DhanMarketDataService {
    * Goes through the Prompt 4 orchestrator (cache, rate limit, coalescing,
    * concurrency), never directly to the provider.
    */
-  public async getQuote(request: QuoteRequest): Promise<QuoteResponse> {
+  public async getQuote(request: QuoteRequest, signal?: AbortSignal): Promise<QuoteResponse> {
     if (!this.running) return { ok: false, failure: dhanFailure('PROVIDER_STATUS_FAILURE', 'service not started').failure };
     if (!request || typeof request.companyId !== 'string' || !request.companyId.trim()) {
       return { ok: false, failure: dhanFailure('MISSING_REQUIRED_FIELD', 'companyId is required', { field: 'companyId' }).failure };
@@ -199,7 +207,13 @@ export class DhanMarketDataService {
     };
 
     // An explicit quote request is a provider fetch, not a silent cache hit.
-    const outcomes = await this.orchestrator.refresh([scope], { forceProvider: true });
+    let outcomes;
+    try {
+      outcomes = await this.orchestrator.refresh([scope], { forceProvider: true, signal });
+    } catch (error) {
+      if ((error as Error)?.name === 'AbortError') return { ok: false, failure: dhanFailure('TIMEOUT', 'quote request cancelled; provider receipt may be unknown').failure };
+      throw error;
+    }
     const outcome = outcomes[0]!;
     const key = dhanQuoteCacheKey(scope);
     const previous = this.refreshStatus.get(key);
@@ -210,7 +224,7 @@ export class DhanMarketDataService {
         ? { code: 'REFRESH_FAILED', priorPreserved: outcome.priorPreserved }
         : previous?.lastFailure ?? null,
     });
-    if (this.refreshStatus.size > 256) this.refreshStatus.delete(this.refreshStatus.keys().next().value!);
+    if (this.refreshStatus.size > 512) this.refreshStatus.delete(this.refreshStatus.keys().next().value!);
     if (outcome.status === 'SKIPPED_FRESH' || outcome.status === 'SUCCESS') {
       const entry = this.cache.get(dhanQuoteCacheKey(scope), this.now().toISOString());
       if (entry.entry) {
@@ -228,6 +242,81 @@ export class DhanMarketDataService {
       };
     }
     return { ok: false, failure: dhanFailure('PROVIDER_STATUS_FAILURE', 'no quote produced').failure };
+  }
+
+  /** Each item is resolved and normalized independently; result order matches input. */
+  public async getPortfolioQuotes(requests: readonly QuoteRequest[], signal?: AbortSignal): Promise<PortfolioQuoteResponse> {
+    if (!Array.isArray(requests) || requests.length === 0 || requests.length > MAX_PORTFOLIO_QUOTE_ITEMS) throw new RangeError('invalid portfolio size');
+    const results: QuoteResponse[] = new Array(requests.length);
+    const valid: Array<{ index: number; mapping: DhanInstrumentMapping; scope: DhanSecurityScope }> = [];
+    for (const [index, request] of requests.entries()) {
+      if (!this.running) { results[index] = { ok: false, failure: dhanFailure('PROVIDER_STATUS_FAILURE', 'service not started').failure }; continue; }
+      if (!request || typeof request.companyId !== 'string' || !request.companyId.trim() || !request.securityIdentity || !isD114SecurityIdentity(request.securityIdentity)) {
+        results[index] = { ok: false, failure: dhanFailure('MISSING_REQUIRED_FIELD', 'companyId and valid canonical securityIdentity are required').failure }; continue;
+      }
+      if (request.exchangeSegment !== undefined && request.exchangeSegment !== 'NSE_EQ' && request.exchangeSegment !== 'BSE_EQ') {
+        results[index] = { ok: false, failure: dhanFailure('MALFORMED_RESPONSE', 'unsupported exchangeSegment').failure }; continue;
+      }
+      const segment = request.exchangeSegment ?? 'NSE_EQ';
+      const mapped = this.resolution.resolveExactIdentity(request.companyId, segment, request.securityIdentity);
+      if (!mapped.ok) { results[index] = { ok: false, failure: mapped.failure }; continue; }
+      try { DhanApiClient.buildQuoteRequestBody([{ exchangeSegment: segment, dhanSecurityId: mapped.value.dhanSecurityId }]); }
+      catch { results[index] = { ok: false, failure: dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'invalid provider instrument mapping').failure }; continue; }
+      valid.push({ index, mapping: mapped.value, scope: { companyId: request.companyId, exchangeSegment: segment, isin: request.securityIdentity.isin.toUpperCase(), series: request.securityIdentity.series.toUpperCase() } });
+    }
+    for (let offset = 0; offset < valid.length; offset += DHAN_QUOTE_BATCH_LIMIT) {
+      const batch = valid.slice(offset, offset + DHAN_QUOTE_BATCH_LIMIT);
+      const body = DhanApiClient.buildQuoteRequestBody(batch.map(({ mapping }) => ({ exchangeSegment: mapping.exchangeSegment, dhanSecurityId: mapping.dhanSecurityId })));
+      // Include canonical identities in the coalescing key, not just provider IDs.
+      const key = JSON.stringify(batch.map(({ scope }) => dhanQuoteCacheKey(scope)));
+      let call: Awaited<ReturnType<DhanApiClient['executeJsonPost']>>;
+      try { call = await this.orchestrator.executeBatch(key, shared => this.client.executeJsonPost(DHAN_MARKET_QUOTE_PATH, body, shared), signal); }
+      catch (error) {
+        if ((error as Error)?.name !== 'AbortError') throw error;
+        for (const item of valid.slice(offset)) results[item.index] = { ok: false, failure: dhanFailure('TIMEOUT', 'quote request cancelled; provider receipt may be unknown').failure };
+        break;
+      }
+      if (!call.ok) { for (const item of batch) results[item.index] = { ok: false, failure: call.failure }; continue; }
+      const raw = call.value.json;
+      const root = typeof raw === 'object' && raw !== null && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+      const data = root?.data;
+      const dataObject = typeof data === 'object' && data !== null && !Array.isArray(data) ? data as Record<string, unknown> : null;
+      if (typeof root?.status !== 'string' || root.status.toLowerCase() !== 'success' || !dataObject) {
+        const code = typeof root?.status === 'string' && root.status.toLowerCase() !== 'success' ? 'PROVIDER_STATUS_FAILURE' : 'MALFORMED_RESPONSE';
+        for (const item of batch) results[item.index] = { ok: false, failure: dhanFailure(code, 'invalid or unsuccessful provider response').failure };
+        continue;
+      }
+      const receivedAt = this.now().toISOString();
+      for (const item of batch) {
+        const segment = dataObject[item.mapping.exchangeSegment];
+        if (segment !== undefined && (typeof segment !== 'object' || segment === null || Array.isArray(segment))) {
+          results[item.index] = { ok: false, failure: dhanFailure('MALFORMED_RESPONSE', 'provider segment block is malformed').failure }; continue;
+        }
+        const block = segment === undefined ? undefined : (segment as Record<string, unknown>)[item.mapping.dhanSecurityId];
+        if (block === undefined) { results[item.index] = { ok: false, failure: dhanFailure('INSTRUMENT_NOT_IN_RESPONSE', 'provider response omitted requested instrument').failure }; continue; }
+        const parsed = parseDhanQuoteBlock(block, 'quote');
+        if (!parsed.ok) { results[item.index] = { ok: false, failure: parsed.failure }; continue; }
+        const normalized = normalizeDhanQuoteToCanonical({ quote: parsed.value, mapping: item.mapping, receivedAt, evaluatedAt: receivedAt, mode: 'SNAPSHOT' });
+        if (!normalized.ok) { results[item.index] = { ok: false, failure: normalized.failure }; continue; }
+        const envelope = normalized.value.envelope;
+        this.cache.set(dhanQuoteCacheKey(item.scope), envelope);
+        const quality = evaluateFreshness(envelope.provenance.asOf, 'D01_QUOTES', receivedAt).quality;
+        results[item.index] = { ok: true, envelope, freshness: quality === 'GOOD' ? 'CURRENT' : quality === 'STALE' ? 'STALE' : 'UNAVAILABLE' };
+      }
+    }
+    if (!signal?.aborted) {
+      for (const item of valid) {
+        const key = dhanQuoteCacheKey(item.scope);
+        const result = results[item.index]!;
+        const prior = this.refreshStatus.get(key);
+        this.refreshStatus.delete(key);
+        this.refreshStatus.set(key, result.ok
+          ? { outcome: 'SUCCESS', lastFailure: prior?.lastFailure ?? null }
+          : { outcome: 'FAILURE', lastFailure: { code: 'REFRESH_FAILED', priorPreserved: this.cache.peek(key, this.now().toISOString()).state !== 'MISS' } });
+        if (this.refreshStatus.size > 512) this.refreshStatus.delete(this.refreshStatus.keys().next().value!);
+      }
+    }
+    return { ok: true, results };
   }
 
   /** Read-only status: never touches LRU order, refreshes or invokes the provider. */

@@ -49,6 +49,7 @@ import {
 export const MARKET_DATA_TRANSPORT_TOKEN_ENV = 'IIPS_MARKET_DATA_TRANSPORT_TOKEN';
 export const MARKET_DATA_ROUTES = {
   quotes: '/v1/quotes',
+  portfolioQuotes: '/v1/quotes/batch',
   historical: '/v1/historical',
   health: '/v1/health',
   freshness: '/v1/freshness',
@@ -375,12 +376,12 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
       }
 
       const identityRoute = path === MARKET_DATA_ROUTES.instrumentSearch || path === MARKET_DATA_ROUTES.identityResolve || path === MARKET_DATA_ROUTES.identityQualify;
-      if (req.method !== 'POST' || (path !== MARKET_DATA_ROUTES.quotes && path !== MARKET_DATA_ROUTES.historical && !(identityRoute && options.identityService))) {
+      if (req.method !== 'POST' || (path !== MARKET_DATA_ROUTES.quotes && path !== MARKET_DATA_ROUTES.portfolioQuotes && path !== MARKET_DATA_ROUTES.historical && !(identityRoute && options.identityService))) {
         sendError(res, 404, 'NOT_FOUND', 'unknown route');
         return;
       }
 
-      const rawBody = await readBody(req, MARKET_DATA_MAX_REQUEST_BYTES);
+      const rawBody = await readBody(req, path === MARKET_DATA_ROUTES.portfolioQuotes ? 256 * 1024 : MARKET_DATA_MAX_REQUEST_BYTES);
       if (typeof rawBody !== 'string') {
         sendError(res, 413, 'REQUEST_TOO_LARGE', 'request body exceeds the configured limit');
         return;
@@ -428,6 +429,19 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
       // malformed identity is rejected here, before the service (and thus
       // before any provider invocation).
       let quoteRequest: QuoteRequest | undefined;
+      let portfolioRequests: QuoteRequest[] | undefined;
+      if (path === MARKET_DATA_ROUTES.portfolioQuotes) {
+        const body = parsed as Record<string, unknown> | null;
+        if (!body || !Array.isArray(body.instruments) || body.instruments.length < 1 || body.instruments.length > 2000) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'instruments must contain between 1 and 2000 items'); return;
+        }
+        portfolioRequests = body.instruments.map((item: unknown) => {
+          const entry = typeof item === 'object' && item !== null && !Array.isArray(item) ? item as Record<string, unknown> : {};
+          const parts = typeof entry.securityId === 'string' ? entry.securityId.split(':') : [];
+          const identity = parts.length === 3 && parts[0] === 'ISIN' ? buildD114SecurityIdentity(parts[1] ?? '', parts[2] ?? '') : null;
+          return { companyId: entry.companyId, securityIdentity: identity, exchangeSegment: entry.exchangeSegment } as QuoteRequest;
+        });
+      }
       if (path === MARKET_DATA_ROUTES.quotes) {
         const body = parsed as Record<string, unknown>;
         const securityId = body?.securityId;
@@ -454,16 +468,29 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
         };
       }
 
-      // Bounded execution: a hung handler must not hold the connection forever.
-      const result = await Promise.race([
-        path === MARKET_DATA_ROUTES.quotes
-          ? service.getQuote(quoteRequest as QuoteRequest)
-          : service.getHistorical(parsed as HistoricalServiceRequest),
-        new Promise<'TIMEOUT'>((resolvePromise) => setTimeout(() => resolvePromise('TIMEOUT'), timeoutMs)),
-      ]);
-
+      // The timeout and a disconnected caller cancel quote work, including pending retries.
+      // An already-sent provider request may nevertheless have been processed.
+      const controller = new AbortController();
+      const disconnected = () => { if (!res.writableEnded) controller.abort(); };
+      res.once('close', disconnected);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let result;
+      try {
+        result = await Promise.race([
+          path === MARKET_DATA_ROUTES.quotes
+            ? service.getQuote(quoteRequest as QuoteRequest, controller.signal)
+            : path === MARKET_DATA_ROUTES.portfolioQuotes
+              ? service.getPortfolioQuotes(portfolioRequests!, controller.signal)
+              : service.getHistorical(parsed as HistoricalServiceRequest),
+          new Promise<'TIMEOUT'>((resolvePromise) => { timer = setTimeout(() => { resolvePromise('TIMEOUT'); controller.abort(); }, timeoutMs); }),
+        ]);
+      } finally {
+        if (timer) clearTimeout(timer);
+        res.removeListener('close', disconnected);
+      }
+      if (res.destroyed) return;
       if (result === 'TIMEOUT') {
-        sendError(res, 504, 'REQUEST_TIMEOUT', 'request exceeded the bounded execution time');
+        sendError(res, 504, 'REQUEST_TIMEOUT', 'request timed out; provider receipt may be unknown');
         return;
       }
       if (result.ok) {
@@ -756,6 +783,22 @@ export class MarketDataTransportClient {
         httpStatus: call.status,
       },
     };
+  }
+
+  /** Batch quote transport; responses retain input order and per-item failures. */
+  public async getPortfolioQuotes(requests: readonly QuoteRequest[]): Promise<{ ok: true; results: MarketDataTransportQuoteOutcome[] } | { ok: false; failure: MarketDataTransportFailure }> {
+    if (!Array.isArray(requests) || requests.length === 0 || requests.length > 2000) {
+      return { ok: false, failure: { code: 'MALFORMED_REQUEST', message: 'portfolio requires 1 to 2000 instruments' } };
+    }
+    const call = await this.requestJson('POST', MARKET_DATA_ROUTES.portfolioQuotes, {
+      instruments: requests.map(r => ({ companyId: r?.companyId, securityId: r && isD114SecurityIdentity(r.securityIdentity) ? r.securityIdentity.securityId : null, ...(r?.exchangeSegment !== undefined ? { exchangeSegment: r.exchangeSegment } : {}) })),
+    });
+    if (!call.ok) return call;
+    const payload = call.json as { ok?: unknown; results?: unknown } | null;
+    if (!payload || payload.ok !== true || !Array.isArray(payload.results) || payload.results.length !== requests.length || payload.results.some((r: any) => !r || (r.ok === true ? !r.envelope || !['CURRENT', 'STALE', 'UNAVAILABLE'].includes(r.freshness) : r.ok !== false || !r.failure || typeof r.failure.code !== 'string' || typeof r.failure.message !== 'string'))) {
+      return { ok: false, failure: { code: 'MALFORMED_RESPONSE', message: 'market-data transport returned malformed portfolio quotes', httpStatus: call.status } };
+    }
+    return { ok: true, results: payload.results as MarketDataTransportQuoteOutcome[] };
   }
 
   public async getHistorical(

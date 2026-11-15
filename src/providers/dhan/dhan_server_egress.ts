@@ -109,7 +109,7 @@ export class DhanServerHttpsTransport implements DhanHttpTransport {
         headers: request.headers,
         ...(request.body !== undefined ? { body: request.body } : {}),
         redirect: 'error',
-        signal: AbortSignal.timeout(request.timeoutMs),
+        signal: request.signal ? AbortSignal.any([request.signal, AbortSignal.timeout(request.timeoutMs)]) : AbortSignal.timeout(request.timeoutMs),
       });
       const bodyText = await response.text();
       const retryAfter = response.headers?.get('retry-after');

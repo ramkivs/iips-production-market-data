@@ -165,6 +165,29 @@ export class DhanRateLimiter {
   }
 }
 
+// Cancellation is local control flow, never a provider response.
+function cancelled(): Error { return Object.assign(new Error('quote request cancelled; provider receipt may be unknown'), { name: 'AbortError' }); }
+function checkCancelled(signal?: AbortSignal): void { if (signal?.aborted) throw cancelled(); }
+function abortable<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return promise;
+  if (signal.aborted) return Promise.reject(cancelled());
+  return new Promise<T>((resolve, reject) => {
+    const abort = () => { cleanup(); reject(cancelled()); };
+    const cleanup = () => signal.removeEventListener('abort', abort);
+    signal.addEventListener('abort', abort, { once: true });
+    promise.then(value => { cleanup(); resolve(value); }, error => { cleanup(); reject(error); });
+  });
+}
+function wait(ms: number, signal?: AbortSignal): Promise<void> {
+  if (!signal) return new Promise(resolve => setTimeout(resolve, ms));
+  if (signal.aborted) return Promise.reject(cancelled());
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { signal.removeEventListener('abort', abort); resolve(); }, ms);
+    const abort = () => { clearTimeout(timer); signal.removeEventListener('abort', abort); reject(cancelled()); };
+    signal.addEventListener('abort', abort, { once: true });
+  });
+}
+
 // ── Concurrency limiter (bounded queue; failed/timeout paths always release) ──
 
 export class DhanConcurrencyLimiter {
@@ -174,17 +197,26 @@ export class DhanConcurrencyLimiter {
     if (!Number.isInteger(maxInFlight) || maxInFlight <= 0) throw new Error('maxInFlight must be a positive integer');
   }
 
-  public async acquire(): Promise<boolean> {
+  public async acquire(signal?: AbortSignal): Promise<boolean> {
+    checkCancelled(signal);
     if (this.inFlight < this.maxInFlight) {
       this.inFlight++;
       return true;
     }
     if (this.waiters.length >= this.maxQueue) return false; // controlled rejection, no unbounded queue
     return new Promise<boolean>((resolvePromise) => {
-      this.waiters.push(() => {
+      const abort = () => {
+        const index = this.waiters.indexOf(wake);
+        if (index >= 0) this.waiters.splice(index, 1);
+        resolvePromise(false);
+      };
+      const wake = () => {
+        signal?.removeEventListener('abort', abort);
         this.inFlight++;
         resolvePromise(true);
-      });
+      };
+      this.waiters.push(wake);
+      signal?.addEventListener('abort', abort, { once: true });
     });
   }
 
@@ -203,25 +235,36 @@ export class DhanConcurrencyLimiter {
 
 /**
  * Coalesces concurrent identical requests into one shared execution.
- * Different keys never share. A caller cannot cancel the shared request
- * for others: the shared promise always runs to completion.
+ * Different keys never share. A caller cannot cancel work still needed by
+ * others; the shared operation is aborted when its last caller leaves.
  */
 export class DhanRequestCoalescer {
-  private readonly inFlight = new Map<string, Promise<unknown>>();
+  private readonly inFlight = new Map<string, { promise: Promise<unknown>; controller: AbortController; users: number }>();
 
-  public run<T>(key: string, fn: () => Promise<T>): Promise<T> {
-    const existing = this.inFlight.get(key);
-    if (existing) return existing as Promise<T>;
-    const promise = fn().finally(() => {
-      this.inFlight.delete(key);
+  public run<T>(key: string, fn: (signal: AbortSignal) => Promise<T>, signal?: AbortSignal): Promise<T> {
+    if (signal?.aborted) return Promise.reject(cancelled());
+    let entry = this.inFlight.get(key);
+    if (!entry) {
+      const controller = new AbortController();
+      const created = { controller, users: 0, promise: undefined as unknown as Promise<T> };
+      created.promise = Promise.resolve().then(() => fn(controller.signal)).finally(() => {
+        if (this.inFlight.get(key) === created) this.inFlight.delete(key);
+      });
+      entry = created;
+      this.inFlight.set(key, entry);
+    }
+    entry.users++;
+    const current = entry;
+    return abortable(current.promise as Promise<T>, signal).finally(() => {
+      current.users--;
+      if (current.users === 0 && this.inFlight.get(key) === current) {
+        this.inFlight.delete(key);
+        current.controller.abort();
+      }
     });
-    this.inFlight.set(key, promise);
-    return promise;
   }
 
-  public get pendingCount(): number {
-    return this.inFlight.size;
-  }
+  public get pendingCount(): number { return this.inFlight.size; }
 }
 
 // ── Retry policy (bounded; permanent failures never retried) ─────────────────
@@ -244,13 +287,14 @@ export interface RetryOptions {
   beforeAttempt?: () => Promise<void>;
   onAttempt?: (event: RetryAttemptEvent) => void;
   maxRetryDelayMs?: number;
+  signal?: AbortSignal;
 }
 
 /** Safe categories only; no provider body, headers, identity or credentials. */
 export interface RetryAttemptEvent {
   attempt: number;
   durationMs: number;
-  outcome: 'SUCCESS' | 'FAILURE';
+  outcome: 'SUCCESS' | 'FAILURE' | 'CANCELLED';
   code?: DhanFailureCode;
   httpStatus?: number;
   retryDelayMs?: number;
@@ -267,10 +311,21 @@ export async function withBoundedRetry<T>(
   const sleep = options.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
   const rng = options.rng ?? Math.random;
   for (let attempt = 1; ; attempt++) {
+    checkCancelled(options.signal);
     await options.beforeAttempt?.();
+    checkCancelled(options.signal);
     const start = Date.now();
-    const result = await fn();
+    let result: DhanResult<T>;
+    try { result = await fn(); }
+    catch (error) {
+      if (options.signal?.aborted) options.onAttempt?.({ attempt, durationMs: Math.max(0, Date.now() - start), outcome: 'CANCELLED', code: 'TIMEOUT', final: true });
+      throw error;
+    }
     const durationMs = Math.max(0, Date.now() - start);
+    if (options.signal?.aborted) {
+      options.onAttempt?.({ attempt, durationMs, outcome: 'CANCELLED', code: 'TIMEOUT', final: true });
+      throw cancelled();
+    }
     let delay: number | undefined;
     if (!result.ok && attempt < maxAttempts && isTransientFailure(result.failure.code, result.failure.httpStatus)) {
       const backoff = baseDelayMs * 2 ** (attempt - 1);
@@ -287,7 +342,13 @@ export async function withBoundedRetry<T>(
       }
       return result;
     }
-    await sleep(delay);
+    try {
+      if (options.sleep) await abortable(sleep(delay), options.signal);
+      else await wait(delay, options.signal);
+    } catch (error) {
+      if (options.signal?.aborted) options.onAttempt?.({ attempt, durationMs, outcome: 'CANCELLED', code: 'TIMEOUT', final: true });
+      throw error;
+    }
   }
 }
 
@@ -311,7 +372,7 @@ export interface DhanRefreshOrchestratorOptions {
   concurrency: DhanConcurrencyLimiter;
   coalescer: DhanRequestCoalescer;
   /** Provider fetch, already instrument-resolved; returns canonical envelope or deterministic failure. */
-  fetchQuote: (scope: DhanSecurityScope) => Promise<DhanResult<CanonicalEnvelope<MarketQuotePayload>>>;
+  fetchQuote: (scope: DhanSecurityScope, signal?: AbortSignal) => Promise<DhanResult<CanonicalEnvelope<MarketQuotePayload>>>;
   now?: () => Date;
   /** Quote attempt limits and optional test seams. */
   retry?: RetryOptions;
@@ -352,20 +413,21 @@ export class DhanRefreshOrchestrator {
   /** Sanitized bounded diagnostics, oldest first. */
   public getAttemptDiagnostics(): readonly RetryAttemptEvent[] { return this.attempts.map(event => ({ ...event })); }
 
-  private async pacedFetch(scope: DhanSecurityScope): Promise<DhanResult<CanonicalEnvelope<MarketQuotePayload>>> {
+  private async pacedFetch<T>(fetch: () => Promise<DhanResult<T>>, signal?: AbortSignal): Promise<DhanResult<T>> {
     const previous = this.pacing;
     let release!: () => void;
     this.pacing = new Promise<void>(resolve => { release = resolve; });
-    await previous;
+    // Keep the queue chained even if a waiting request is cancelled.
+    try { await abortable(previous, signal); } catch (err) { void previous.finally(release); throw err; }
     try {
+      checkCancelled(signal);
       const delay = Math.max(0, this.nextAttemptAt - Date.now());
       if (delay > 30000) return { ok: false, failure: { code: 'RATE_LIMITED', message: 'provider retry delay exceeds the local wait budget' } };
-      if (delay) await new Promise<void>(resolve => setTimeout(resolve, delay));
+      if (delay) await wait(delay, signal);
       if (!this.limiter.tryAcquire()) return { ok: false, failure: { code: 'RATE_LIMITED', message: 'provider request budget exhausted' } };
-      const result = await this.fetchQuote(scope);
-      // Wait a full second after completion: even delayed credential resolution
-      // cannot bunch provider sends. Conservative for this single-user daemon.
-      this.nextAttemptAt = Date.now() + 1000;
+      let result: DhanResult<T>;
+      try { result = await fetch(); }
+      finally { this.nextAttemptAt = Date.now() + 1000; }
       if (!result.ok && result.failure.retryAfterMs !== undefined) {
         this.nextAttemptAt = Math.max(this.nextAttemptAt, Date.now() + result.failure.retryAfterMs);
       }
@@ -373,7 +435,29 @@ export class DhanRefreshOrchestrator {
     } finally { release(); }
   }
 
-  public async refresh(scopes: readonly DhanSecurityScope[], options: { forceProvider?: boolean } = {}): Promise<RefreshOutcome[]> {
+  /** Batch and single quotes share the same pacing, budget and retry policy. */
+  public async executeBatch<T>(key: string, fetch: (signal: AbortSignal) => Promise<DhanResult<T>>, signal?: AbortSignal): Promise<DhanResult<T>> {
+    if (this.stopped) throw new Error('DhanRefreshOrchestrator: stopped');
+    return this.coalescer.run(`batch:${key}`, async sharedSignal => {
+      const acquired = await this.concurrency.acquire(sharedSignal);
+      if (!acquired) {
+        checkCancelled(sharedSignal);
+        return { ok: false, failure: { code: 'TRANSPORT_FAILURE', message: 'provider queue is full' } };
+      }
+      try {
+        return await withBoundedRetry(() => this.pacedFetch(() => fetch(sharedSignal), sharedSignal), {
+          ...this.retry, signal: sharedSignal,
+          onAttempt: event => {
+            this.attempts.push(event);
+            if (this.attempts.length > 256) this.attempts.shift();
+            this.retry.onAttempt?.(event);
+          },
+        });
+      } finally { this.concurrency.release(); }
+    }, signal);
+  }
+
+  public async refresh(scopes: readonly DhanSecurityScope[], options: { forceProvider?: boolean; signal?: AbortSignal } = {}): Promise<RefreshOutcome[]> {
     if (this.stopped) throw new Error('DhanRefreshOrchestrator: stopped');
     const nowIso = this.now().toISOString();
     const outcomes: RefreshOutcome[] = [];
@@ -388,14 +472,17 @@ export class DhanRefreshOrchestrator {
           outcomes.push({ status: 'SKIPPED_FRESH', scope, cacheState: 'CURRENT' });
           return;
         }
-        const outcome = await this.coalescer.run(key, async () => {
-          const acquired = await this.concurrency.acquire();
+        const outcome = await this.coalescer.run(key, async sharedSignal => {
+          const acquired = await this.concurrency.acquire(sharedSignal);
           if (!acquired) {
+            checkCancelled(sharedSignal);
             return { status: 'FAILURE', scope, code: 'TRANSPORT_FAILURE' as DhanFailureCode, priorPreserved: cached.state !== 'MISS' } as RefreshOutcome;
           }
           try {
-            const result = await withBoundedRetry(() => this.pacedFetch(scope), {
+            checkCancelled(sharedSignal);
+            const result = await withBoundedRetry(() => this.pacedFetch(() => this.fetchQuote(scope, sharedSignal), sharedSignal), {
               ...this.retry,
+              signal: sharedSignal,
               onAttempt: event => {
                 this.attempts.push(event);
                 if (this.attempts.length > 256) this.attempts.shift();
@@ -422,7 +509,7 @@ export class DhanRefreshOrchestrator {
           } finally {
             this.concurrency.release(); // timeout/cancellation/failure all release the slot
           }
-        });
+        }, options.signal);
         outcomes.push(outcome);
       })
     );

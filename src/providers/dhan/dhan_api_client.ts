@@ -37,6 +37,7 @@ export interface DhanHttpRequest {
   headers: Record<string, string>;
   body?: string;
   timeoutMs: number;
+  signal?: AbortSignal;
 }
 
 export interface DhanHttpResponse {
@@ -176,7 +177,8 @@ export class DhanApiClient {
    * Returns a deterministic result; never throws for expected failure modes.
    */
   public async fetchMarketQuotes(
-    instruments: readonly DhanQuoteRequestInstrument[]
+    instruments: readonly DhanQuoteRequestInstrument[],
+    signal?: AbortSignal
   ): Promise<DhanResult<DhanQuoteCallOutcome>> {
     if (instruments.length === 0) {
       return dhanFailure('MISSING_REQUIRED_FIELD', 'At least one instrument is required for a Dhan quote request', {
@@ -190,7 +192,7 @@ export class DhanApiClient {
     } catch {
       return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'Dhan quote security ID is not a valid safe positive integer');
     }
-    const call = await this.executeJsonPost(DHAN_MARKET_QUOTE_PATH, body);
+    const call = await this.executeJsonPost(DHAN_MARKET_QUOTE_PATH, body, signal);
     if (!call.ok) return call;
 
     const parsed = parseDhanMarketQuoteResponse(call.value.json);
@@ -211,8 +213,10 @@ export class DhanApiClient {
    */
   public async executeJsonPost(
     pathSuffix: string,
-    body: string
+    body: string,
+    signal?: AbortSignal
   ): Promise<DhanResult<{ json: unknown; metrics: DhanApiCallMetrics }>> {
+    if (signal?.aborted) return dhanFailure('TIMEOUT', 'quote request cancelled; provider receipt may be unknown');
     const runtimeEnv = typeof process !== 'undefined' && process.env ? process.env : {};
     if (isDhanProductionEnvironment(runtimeEnv)) {
       return dhanFailure(
@@ -283,6 +287,7 @@ export class DhanApiClient {
       }
     }
 
+    if (signal?.aborted) return dhanFailure('TIMEOUT', 'quote request cancelled; provider receipt may be unknown');
     const request: DhanHttpRequest = {
       method: 'POST',
       url: `${this.config.baseUrl}${pathSuffix}`,
@@ -295,6 +300,7 @@ export class DhanApiClient {
       },
       body,
       timeoutMs: this.config.timeoutMs,
+      signal,
     };
 
     const startedAt = this.now();
