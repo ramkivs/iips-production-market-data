@@ -18,6 +18,9 @@ import {
   WriteNotAuthorizedError,
   findCallerSuppliedIdentityKeys,
   type BrokerImportProvenance,
+  type BrokerImportQualificationCounts,
+  type BrokerImportQualificationHoldingRecord,
+  type BrokerImportQualificationRecord,
   type HoldingInput,
   type OwnerRef,
   type PortfolioContribution,
@@ -36,6 +39,25 @@ import type { BrokerObservationResolver } from '../identity/broker_observation_r
 import type { IdentityQuarantineRecord } from '../identity/quarantine.js';
 
 import type { BrokerImportHolding, BrokerImportRequest, BrokerImportRefusalCode, BrokerImportRefusedHolding, BrokerImportSuccess, BrokerImportRefusal, BrokerImportOutcome } from '../contracts/broker_import_ipc.js';
+import type {
+  BrokerImportQualificationSources,
+  BrokerImportSecurityIdentityQualificationSummary,
+  BrokerImportSecurityIdentityReason,
+  BrokerImportSecurityIdentityStatus,
+  BrokerImportUnqualifiedHolding,
+} from '../contracts/broker_import_ipc.js';
+export type {
+  BrokerImportQualificationSources,
+  BrokerImportSecurityIdentityQualificationSummary,
+  BrokerImportSecurityIdentityReason,
+  BrokerImportSecurityIdentityStatus,
+  BrokerImportUnqualifiedHolding,
+} from '../contracts/broker_import_ipc.js';
+export type {
+  BrokerImportQualificationCounts,
+  BrokerImportQualificationHoldingRecord,
+  BrokerImportQualificationRecord,
+} from './portfolio_store.js';
 export type { BrokerImportHolding, BrokerImportRequest, BrokerImportRefusalCode, BrokerImportRefusedHolding, BrokerImportDisposition, BrokerImportStoreEffect, BrokerImportSuccess, BrokerImportRefusal, BrokerImportOutcomeUnknown, BrokerImportOutcome } from '../contracts/broker_import_ipc.js';
 
 export interface ResolvedBrokerImportHolding extends BrokerImportHolding {
@@ -124,46 +146,216 @@ export interface MapBrokerImportHoldingsOptions {
  * When either input is absent, falls back to building the D114 identity
  * directly from broker-supplied ISIN + series (never inferred), preserving
  * the pre-Stage-4 behavior.
+ *
+ * The holdings returned are exactly those of
+ * `mapBrokerImportHoldingsWithQualification`; this function returns them
+ * without the per-holding qualification outcome. A caller that persists the
+ * holdings must use the other function so the outcome is not lost.
  */
 export function mapBrokerImportHoldings(
   holdings: readonly ResolvedBrokerImportHolding[],
   options: MapBrokerImportHoldingsOptions = {},
 ): HoldingInput[] {
+  return mapBrokerImportHoldingsWithQualification(holdings, options).holdings;
+}
+
+/** The mapped holdings together with the qualification outcome of each one, in the same order. */
+export interface BrokerImportHoldingsMapping {
+  readonly holdings: HoldingInput[];
+  readonly qualification: BrokerImportQualificationHoldingRecord[];
+}
+
+/**
+ * Maps resolved broker-import holdings and keeps, for every holding, what the
+ * security-identity step decided and why.
+ *
+ * The identity decision itself is unchanged: the same branch, the same call
+ * to `qualifyHoldingSecurityIdentity`, the same fallback. What is added is
+ * that the typed reason and detail of an unresolved qualification, and the
+ * identifiers the row carried, are returned instead of being dropped.
+ *
+ * Reasons when qualification is not attempted, in this order:
+ *   `MISSING_ISIN`                    the row carried no ISIN;
+ *   `MISSING_EXCHANGE`                the row carried no exchange;
+ *   `IDENTITY_SOURCES_NOT_COMPOSED`   no P04 master or no P7 registry was supplied.
+ */
+export function mapBrokerImportHoldingsWithQualification(
+  holdings: readonly ResolvedBrokerImportHolding[],
+  options: MapBrokerImportHoldingsOptions = {},
+): BrokerImportHoldingsMapping {
   const { securityMaster, registry } = options;
-  return [...holdings]
-    .sort((a, b) => (a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0))
-    .map((h) => {
-      let securityIdentity: D114SecurityIdentity | null = null;
-      if (h.isin && h.exchange && securityMaster && registry) {
-        const result = qualifyHoldingSecurityIdentity(
-          { isin: h.isin, exchange: h.exchange, symbol: h.symbol },
-          securityMaster,
-          registry,
-        );
-        if (isQualifiedSecurityIdentity(result)) {
-          securityIdentity = result.securityIdentity;
-        }
+  const mapped: HoldingInput[] = [];
+  const qualification: BrokerImportQualificationHoldingRecord[] = [];
+  const ordered = [...holdings].sort((a, b) => (a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0));
+  for (const h of ordered) {
+    let securityIdentity: D114SecurityIdentity | null = null;
+    let securityIdentityStatus: BrokerImportSecurityIdentityStatus;
+    let qualificationAttempted: boolean;
+    let reason: BrokerImportSecurityIdentityReason | null = null;
+    let details: string | null = null;
+    if (h.isin && h.exchange && securityMaster && registry) {
+      qualificationAttempted = true;
+      const result = qualifyHoldingSecurityIdentity(
+        { isin: h.isin, exchange: h.exchange, symbol: h.symbol },
+        securityMaster,
+        registry,
+      );
+      if (isQualifiedSecurityIdentity(result)) {
+        securityIdentity = result.securityIdentity;
+        securityIdentityStatus = 'QUALIFIED';
+      } else {
         // Unresolved → securityIdentity stays null; holding is still mapped
         // and persisted (identity is additive, never blocks portfolio data).
-      } else {
-        securityIdentity = buildD114SecurityIdentity(h.isin, h.series) ?? null;
+        // The typed reason and detail are kept for the caller.
+        securityIdentityStatus = 'UNRESOLVED';
+        reason = result.reason;
+        details = result.details;
       }
-      return {
-        symbol: h.symbol,
-        companyId: h.companyId,
-        quantity: h.quantity,
-        averageBuyPrice: h.averageBuyPrice,
-        currentPrice: h.currentPrice,
-        marketValue: h.marketValue,
-        weightPercentage: h.weightPercentage,
-        active: h.active,
-        sourceBroker: h.sourceBroker,
-        lineageDigest: h.lineageDigest,
-        identityStatus: h.identityStatus,
-        resolutionDisposition: h.resolutionDisposition,
-        securityIdentity,
-      };
+    } else {
+      qualificationAttempted = false;
+      securityIdentity = buildD114SecurityIdentity(h.isin, h.series) ?? null;
+      if (securityIdentity) {
+        securityIdentityStatus = 'BROKER_SUPPLIED_UNQUALIFIED';
+      } else {
+        securityIdentityStatus = 'UNRESOLVED';
+        reason = !h.isin ? 'MISSING_ISIN' : !h.exchange ? 'MISSING_EXCHANGE' : 'IDENTITY_SOURCES_NOT_COMPOSED';
+      }
+    }
+    mapped.push({
+      symbol: h.symbol,
+      companyId: h.companyId,
+      quantity: h.quantity,
+      averageBuyPrice: h.averageBuyPrice,
+      currentPrice: h.currentPrice,
+      marketValue: h.marketValue,
+      weightPercentage: h.weightPercentage,
+      active: h.active,
+      sourceBroker: h.sourceBroker,
+      lineageDigest: h.lineageDigest,
+      identityStatus: h.identityStatus,
+      resolutionDisposition: h.resolutionDisposition,
+      securityIdentity,
     });
+    qualification.push({
+      symbol: h.symbol,
+      lineageDigest: h.lineageDigest,
+      companyId: h.companyId,
+      securityIdentityStatus,
+      qualificationAttempted,
+      reason,
+      details,
+      securityId: securityIdentity ? securityIdentity.securityId : null,
+      observedIsin: typeof h.isin === 'string' ? h.isin : null,
+      observedExchange: typeof h.exchange === 'string' ? h.exchange : null,
+      observedSeries: typeof h.series === 'string' ? h.series : null,
+    });
+  }
+  return { holdings: mapped, qualification };
+}
+
+/** Upper bound on `unqualifiedHoldings` in one outcome, so a result always fits the response frame. */
+export const BROKER_IMPORT_UNQUALIFIED_HOLDINGS_WIRE_LIMIT = 512;
+
+/**
+ * The identity sources a qualification ran against. Pure and read-only: it
+ * reads the master's own source revision and hashes the loaded P7 mappings in
+ * a canonical order, so two processes that loaded the same registry report
+ * the same digest whatever file the mappings came from.
+ */
+export function describeBrokerImportQualificationSources(
+  options: MapBrokerImportHoldingsOptions = {},
+): BrokerImportQualificationSources {
+  const revision = options.securityMaster?.sourceRevision;
+  let registryMappingCount: number | null = null;
+  let registryDigest: string | null = null;
+  if (options.registry) {
+    const lines = options.registry
+      .list()
+      .map((m) =>
+        [
+          m.companyId,
+          m.exchangeSegment,
+          m.exchange,
+          m.symbol,
+          m.isin ?? '',
+          m.securityId ?? '',
+          m.dhanSecurityId,
+          m.mappingProvenance,
+          m.active === undefined ? '' : String(m.active),
+          m.lastVerifiedAt ?? '',
+        ].join('|'),
+      )
+      .sort();
+    registryMappingCount = lines.length;
+    registryDigest = createHash('sha256').update(lines.join('\n'), 'utf8').digest('hex');
+  }
+  return {
+    securityMasterBatchId: revision?.batchId ?? null,
+    securityMasterChecksumSha256: revision?.fileChecksumSha256 ?? null,
+    registryMappingCount,
+    registryDigest,
+  };
+}
+
+/** Counts by security-identity state and by typed reason. Reason keys are sorted. */
+export function countBrokerImportQualification(
+  qualification: readonly BrokerImportQualificationHoldingRecord[],
+): BrokerImportQualificationCounts {
+  const byReason = new Map<string, number>();
+  let qualified = 0;
+  let brokerSupplied = 0;
+  let unresolved = 0;
+  for (const q of qualification) {
+    if (q.securityIdentityStatus === 'QUALIFIED') qualified += 1;
+    else if (q.securityIdentityStatus === 'BROKER_SUPPLIED_UNQUALIFIED') brokerSupplied += 1;
+    else {
+      unresolved += 1;
+      const key = q.reason ?? 'UNSPECIFIED';
+      byReason.set(key, (byReason.get(key) ?? 0) + 1);
+    }
+  }
+  const unresolvedByReason: Record<string, number> = {};
+  for (const key of [...byReason.keys()].sort()) unresolvedByReason[key] = byReason.get(key) as number;
+  return {
+    holdings: qualification.length,
+    // Every holding that reaches the mapping passed the company-level gate.
+    companyIdentityResolved: qualification.length,
+    securityIdentityQualified: qualified,
+    securityIdentityBrokerSuppliedUnqualified: brokerSupplied,
+    securityIdentityUnresolved: unresolved,
+    unresolvedByReason,
+  };
+}
+
+function summarizeBrokerImportQualification(
+  qualification: readonly BrokerImportQualificationHoldingRecord[],
+  counts: BrokerImportQualificationCounts,
+  sources: BrokerImportQualificationSources,
+  appliesTo: BrokerImportSecurityIdentityQualificationSummary['appliesTo'],
+  durableRecord: BrokerImportSecurityIdentityQualificationSummary['durableRecord'],
+): BrokerImportSecurityIdentityQualificationSummary {
+  const unqualified: BrokerImportUnqualifiedHolding[] = [];
+  let total = 0;
+  for (const q of qualification) {
+    if (q.securityIdentityStatus === 'QUALIFIED') continue;
+    total += 1;
+    if (unqualified.length < BROKER_IMPORT_UNQUALIFIED_HOLDINGS_WIRE_LIMIT) {
+      unqualified.push({ symbol: q.symbol, securityIdentityStatus: q.securityIdentityStatus, reason: q.reason });
+    }
+  }
+  return {
+    appliesTo,
+    holdings: counts.holdings,
+    companyIdentityResolved: counts.companyIdentityResolved,
+    securityIdentityQualified: counts.securityIdentityQualified,
+    securityIdentityBrokerSuppliedUnqualified: counts.securityIdentityBrokerSuppliedUnqualified,
+    securityIdentityUnresolved: counts.securityIdentityUnresolved,
+    unresolvedByReason: counts.unresolvedByReason,
+    unqualifiedHoldings: unqualified,
+    unqualifiedHoldingsTruncated: total > unqualified.length,
+    sources,
+    durableRecord,
+  };
 }
 
 export function computeBrokerImportProvenance(request: BrokerImportRequest): string {
@@ -186,6 +378,19 @@ export interface BrokerImportWriter {
   save(owner: OwnerRef, portfolioId: string, request: PortfolioSaveRequest, expectedRevision: number): number;
   withBrokerImportTransaction<T>(owner: OwnerRef, work: (writer: BrokerImportWriter) => T): T;
   contributions(owner: OwnerRef, portfolioId: string): PortfolioContribution[];
+  /**
+   * Retains the qualification outcome of the revision this transaction wrote.
+   * Optional: a writer without a durable record surface omits it, and the
+   * import outcome then says `durableRecord: 'NOT_SUPPORTED_BY_WRITER'`.
+   * When present it is called inside the import transaction, and a failure
+   * rolls the import back.
+   */
+  recordBrokerImportQualification?(
+    owner: OwnerRef,
+    portfolioId: string,
+    revision: number,
+    record: BrokerImportQualificationRecord,
+  ): void;
 }
 
 function findRefusedBrokerKeys(value: unknown, depth = 0): string[] {
@@ -239,8 +444,31 @@ export function persistBrokerImport(
     return refusal('REFUSED_UNRESOLVED_IDENTITY', gate.disabledReason ?? 'The import has no single canonical identity.', gate.refusedHoldings);
   }
 
-  const holdings = mapBrokerImportHoldings(resolved, options);
+  const { holdings, qualification } = mapBrokerImportHoldingsWithQualification(resolved, options);
   const provenanceDigest = computeBrokerImportProvenance(request);
+  const qualificationSources = describeBrokerImportQualificationSources(options);
+  const qualificationCounts = countBrokerImportQualification(qualification);
+  // Called only for a revision this transaction wrote. The record and the
+  // revision share one transaction; a failure here rolls the import back, so
+  // a revision is never committed with its qualification outcome lost.
+  const retainQualification = (
+    transactionWriter: BrokerImportWriter,
+    revision: number,
+  ): BrokerImportSecurityIdentityQualificationSummary => {
+    let durableRecord: BrokerImportSecurityIdentityQualificationSummary['durableRecord'] = 'NOT_SUPPORTED_BY_WRITER';
+    if (typeof transactionWriter.recordBrokerImportQualification === 'function') {
+      transactionWriter.recordBrokerImportQualification(owner, request.portfolioId, revision, {
+        contentDigest: request.contentDigest,
+        provenanceDigest,
+        importedAt: request.importedAt,
+        sources: qualificationSources,
+        counts: qualificationCounts,
+        holdings: qualification,
+      });
+      durableRecord = 'RECORDED';
+    }
+    return summarizeBrokerImportQualification(qualification, qualificationCounts, qualificationSources, 'COMMITTED_REVISION', durableRecord);
+  };
   const run = (transactionWriter: BrokerImportWriter): BrokerImportSuccess => {
     const existing = transactionWriter.list(owner).find((p) => p.portfolioId === request.portfolioId);
     if (!existing && request.expectedRevision !== 0) {
@@ -277,6 +505,7 @@ export function persistBrokerImport(
         totalMarketValue: holdings.reduce((sum, h) => sum + h.marketValue, 0),
         contributions: 1,
         message: 'The import was committed as a new batch.',
+        securityIdentityQualification: retainQualification(transactionWriter, revision),
       };
     }
     const revision = transactionWriter.save(owner, request.portfolioId, storeRequest, request.expectedRevision);
@@ -291,6 +520,13 @@ export function persistBrokerImport(
         totalMarketValue: existing.totalMarketValue,
         contributions: 0,
         message: 'This broker file was already imported; state was preserved without duplication.',
+        securityIdentityQualification: summarizeBrokerImportQualification(
+          qualification,
+          qualificationCounts,
+          qualificationSources,
+          'SUBMITTED_ROWS_NO_REVISION_WRITTEN',
+          'NOT_RECORDED_NO_REVISION',
+        ),
       };
     }
     return {
@@ -303,6 +539,7 @@ export function persistBrokerImport(
       totalMarketValue: holdings.reduce((sum, h) => sum + h.marketValue, 0),
       contributions: 1,
       message: 'The import was merged into the existing portfolio.',
+      securityIdentityQualification: retainQualification(transactionWriter, revision),
     };
   };
 

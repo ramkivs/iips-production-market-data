@@ -1,0 +1,27 @@
+[PASS] 1 counts only: result
+[PASS] 1 counts only: outcome
+[PASS] 1 counts only: gate
+[PASS] 1 counts only: per exchange
+[PASS] 1 sources equal the reviewed versions
+[PASS] 1 manifest is the tracked one
+[PASS] 1 compiled modules are self-contained
+[PASS] 1 override is reported
+[PASS] 1 no identity is assigned
+[PASS] 2 matching capture: REPRODUCES_STORED_STATE
+[PASS] 2 matching capture: table
+[PASS] 2 matching capture: same security identifier
+[PASS] 3 differing capture: DIFFERS_FROM_STORED_STATE
+[PASS] 3 differing capture: table
+[PASS] 4 a CSV that is not the recorded one stops before anything is examined
+[PASS] 5 a directory without compiled code stops
+[PASS] 6 a capture that is not the expected one stops
+[PASS] 7 server working directory with the same manifest
+[PASS] 7 server working directory without a manifest
+[PASS] 8 sanitized output: no symbol, ISIN, name, company id, security id, path or file name
+[PASS] 9 the diagnostic uses no write, process, network or database API
+[PASS] 9 the diagnostic imports only crypto, fs, path and url
+[PASS] 9 every open is read-only
+[PASS] 10 the manifest, the compiled code and the inputs are byte-identical and untouched after eight runs
+
+scenarios: 24 passed, 0 failed (synthetic inputs only)
+SELF-TEST PASSED

@@ -159,3 +159,5 @@ export type { IdentityQuarantineRecord } from '../../src/identity/quarantine.js'
 
 // Browser-safe type-only contract; the IPC transport and implementation remain server-side.
 export type { BrokerImportIpcOperation, BrokerImportIpcRequest, BrokerImportIpcResponse, BrokerImportHolding, BrokerImportRequest, BrokerImportOutcome, BrokerImportSuccess, BrokerImportRefusal, BrokerImportOutcomeUnknown, BrokerImportRefusalCode, BrokerImportRefusedHolding } from '../contracts/broker_import_ipc.js';
+// Additive, type-only: what the security-identity step decided for an import (optional member of BrokerImportSuccess).
+export type { BrokerImportSecurityIdentityStatus, BrokerImportSecurityIdentityReason, BrokerImportQualificationSources, BrokerImportUnqualifiedHolding, BrokerImportSecurityIdentityQualificationSummary } from '../contracts/broker_import_ipc.js';

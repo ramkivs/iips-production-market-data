@@ -39,6 +39,7 @@ import {
   findCallerSuppliedIdentityKeys,
   computeLineageHash,
   WriteNotAuthorizedError,
+  type BrokerImportQualificationRecord,
   type HoldingInput,
   type OwnerRef,
   type PortfolioSaveRequest,
@@ -129,6 +130,29 @@ export class DurablePortfolioStorePort implements PortfolioStorePort {
   withBrokerImportTransaction<T>(owner: OwnerRef, work: (writer: this) => T): T {
     this.assertWritable(owner);
     return this.store.withBrokerImportTransaction(owner, () => work(this));
+  }
+
+  /**
+   * Retains a committed broker import's security-identity qualification
+   * outcome. Subject to the same Gate E W-1 evaluation as every other mutating
+   * call of this port; the store additionally requires the import transaction.
+   */
+  recordBrokerImportQualification(
+    owner: OwnerRef,
+    portfolioId: string,
+    revision: number,
+    record: BrokerImportQualificationRecord,
+  ): void {
+    this.assertWritable(owner);
+    this.store.recordBrokerImportQualification(owner, portfolioId, revision, record);
+  }
+
+  /** Read-only: the retained qualification records of one portfolio of this owner. */
+  brokerImportQualificationRecords(
+    owner: OwnerRef,
+    portfolioId: string,
+  ): ReturnType<DurablePortfolioStore['brokerImportQualificationRecords']> {
+    return this.store.brokerImportQualificationRecords(owner, portfolioId);
   }
 
   create(owner: OwnerRef, portfolioId: string, request: PortfolioSaveRequest): number {

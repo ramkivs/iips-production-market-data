@@ -1,0 +1,51 @@
+SYNTHETIC SAMPLE. Four invented rows (issuer facts from the tracked master; one is in the P7 manifest) and a hand-built capture.
+It shows the form of the output. It says nothing about any real import. Both expected digests were overridden, which the output reports.
+
+W04 - broker import qualification diagnostic (w04-broker-import-qualification-diagnostic/1). Read-only. Sanitized output.
+
+== 1. Original CSV: digest verification and identifiers
+[INFO] csv.sha256.expected: 31e4416f9c0a580f85adef21099d959400e7752153257a3cb3e9a547cffcd912
+[INFO] csv.sha256.importContent: 31e4416f9c0a580f85adef21099d959400e7752153257a3cb3e9a547cffcd912
+[PASS] csv.sha256: import-content SHA-256 of the CSV equals the expected digest: yes
+[WARN] csv.override: the expected CSV digest was overridden; this is not a run on the recorded original CSV
+[PASS] csv.columns: the header has a symbol, an ISIN and an exchange column: yes
+[INFO] csv.rows: data rows 4; rows with a symbol 4; holdings after the mapper's grouping 4
+[INFO] csv.identifiers: holdings with an ISIN 4; with ISIN and exchange 4; per exchange: BSE 1, NSE 3
+[PASS] csv.symbols.distinct: every holding has its own symbol (needed to pair with the capture): yes
+
+== 2. IPD checkout: commit, sources, compiled code and P7 manifest
+[INFO] checkout.commit: b0388a2da59cbc768eab0ab8913cb93181329bd6
+[PASS] checkout.sources: the 14 identity-deciding source files equal the reviewed versions (14 equal, 0 different, 0 missing): yes
+[INFO] checkout.compiled: 11 compiled module(s) reachable from the four entry modules
+[PASS] checkout.compiled.selfContained: the compiled modules import no Node built-in, no package and nothing outside dist: yes
+[INFO] checkout.compiled.fresh: every compiled module is at least as new as the newest of the source files: yes (file times; a hint, not proof)
+[PASS] checkout.manifest.present: the P7 qualification manifest exists in the checkout: yes
+[INFO] checkout.manifest.sha256: 13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc
+[PASS] checkout.manifest.recorded: manifest SHA-256 equals the tracked one (13bd2ef18b3d...): yes
+[INFO] checkout.manifest.content: parses as the server reads it yes; records 596; QUALIFIED mappings 96; distinct ISINs 48
+[INFO] serverCwd.manifest: a manifest exists under the server working directory (the server reads this one first): SHA-256 13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc; equals the checkout manifest yes; QUALIFIED mappings 96
+
+== 3. Qualification of the CSV holdings with the compiled code of the checkout
+[INFO] master: P04 master compiled into the code: batch BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001; records 2390; source checksum b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4
+[INFO] registry: P7 registry filled from the checkout manifest: 96 mapping(s)
+[INFO] gate: company-level gate today (asked as of 2026-11-13T00:00:00.000Z): RESOLVED 4
+[INFO] qualification: security-identity qualification today: QUALIFIED 1, UNRESOLVED:MISSING_P7_MAPPING 3
+[INFO] qualification.perExchange: BSE UNRESOLVED:MISSING_P7_MAPPING 1, NSE QUALIFIED 1, NSE UNRESOLVED:MISSING_P7_MAPPING 2
+
+== 4. Comparison with the stored state of the capture
+[PASS] capture.sha256: an exact capture with the expected SHA-256 was found: yes
+[WARN] capture.override: the expected capture digest was overridden; this is not a run on the recorded capture
+[INFO] capture.holdings: holdings 4; identity object 1; identity null 3
+[PASS] capture.paired: every stored holding is paired with one CSV holding and the reverse (4 of 4; CSV holdings 4): yes
+[INFO] table: STORED_NULL -> UNRESOLVED:MISSING_P7_MAPPING: 3
+[INFO] table: STORED_OBJECT -> QUALIFIED: 1
+[INFO] capture.objects: stored identity objects that qualify today to the same security identifier: 1 of 1
+[PASS] reproduction: the sources of this checkout reproduce the stored identity state of every holding (4 of 4): yes
+
+== Result
+W04_QUALIFICATION_DIAGNOSTIC_RESULT_JSON: {"tool":"w04-broker-import-qualification-diagnostic/1","recordedInputs":{"csv":false,"capture":false},"csv":{"expected":"31e4416f9c0a580f85adef21099d959400e7752153257a3cb3e9a547cffcd912","expectedIsRecorded":false,"sha256ImportContent":"31e4416f9c0a580f85adef21099d959400e7752153257a3cb3e9a547cffcd912","columns":{"symbol":true,"isin":true,"exchange":true},"dataRows":4,"rowsWithSymbol":4,"holdingsAfterGrouping":4,"groupsWithIsin":4,"groupsPerExchange":{"BSE":1,"NSE":3},"groupsWithIsinAndExchange":4,"distinctSymbols":4},"checkout":{"headCommit":"b0388a2da59cbc768eab0ab8913cb93181329bd6","sources":{"examined":14,"equalReviewed":14,"different":0,"missing":0,"crlfConverted":0},"compiled":{"modules":11,"importsOutsideTheSet":[],"notOlderThanSources":true},"manifest":{"present":true,"sha256":"13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc","equalsRecorded":true,"parsesAsTheServerReadsIt":true,"records":596,"qualifiedMappings":96,"distinctIsins":48},"serverCwdManifest":{"present":true,"equalsCheckoutManifest":true,"sha256":"13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc","qualifiedMappings":96}},"qualification":{"securityMaster":{"batchId":"BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001","fileChecksumSha256":"b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4","recordCount":2390},"registryMappings":96,"gateAsOf":"DEFAULT_2026-11-13","holdings":4,"companyGate":{"RESOLVED":4},"outcome":{"QUALIFIED":1,"UNRESOLVED:MISSING_P7_MAPPING":3},"outcomePerExchange":{"BSE UNRESOLVED:MISSING_P7_MAPPING":1,"NSE QUALIFIED":1,"NSE UNRESOLVED:MISSING_P7_MAPPING":2}},"storedStateComparison":{"expectedIsRecorded":false,"holdings":4,"storedObjects":1,"storedNulls":3,"paired":4,"unpaired":0,"table":{"STORED_NULL -> UNRESOLVED:MISSING_P7_MAPPING":3,"STORED_OBJECT -> QUALIFIED":1},"storedObjectsWithTheSameSecurityIdToday":1,"holdingsWhoseStoredStateIsReproducedToday":4,"reproducesStoredState":true},"identityAssigned":"NONE","unresolved":[],"checks":{"pass":10,"fail":0,"warn":2},"result":"REPRODUCES_STORED_STATE"}
+W04_QUALIFICATION_DIAGNOSTIC_RESULT_JSON_SHA256: dc8a9a3a550cd01009afbd60c1fd7af9cbb3f2ec2b9a40152222360aad23d084
+checks: 10 pass, 0 fail, 2 warn
+unresolved: none
+This is a measurement against the sources of the checkout as they are now. It is not a record of the reason computed at the import, and it assigns no identity.
+RESULT: REPRODUCES_STORED_STATE
