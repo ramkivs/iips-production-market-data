@@ -9,6 +9,8 @@
 
 ## 1. Purpose & Governance Transition
 
+> **Current operating model:** [`IPD-OPERATING-MODEL.md`](IPD-OPERATING-MODEL.md) governs routine work. The owner directs local provisioning and verification without repeated approvals or enterprise-style review. This does not weaken the safeguards below: existing stores are preserved, backups/recovery and integrity checks are used proportionately, and ownership/security boundaries remain intact.
+
 Under Program Authority order `IIPS-V3-CAP03-PA-BLANKET-WAIVER-ONE-PASS-AUTHORIZATION-2026-11-01-01`, the ceremonial **P1-F governance, certification, single-attempt claim/marker, retry-reconciliation, S2 historical commit/tree pin, and standalone preflight workflows** are **discontinued as prerequisites** for initializing the local single-user portfolio database on the personal Windows installation.
 
 Historical records, prior Program Authority acts, and legacy modules (`src/persistence/provisioning.ts`, `src/persistence/gateAPrimeProvisioning.ts`, `src/persistence/gateAPrimeValidation.ts`, and `evidence/cross-repository/*`) are **preserved verbatim** as historical audit artifacts and are neither rewritten nor falsified.
@@ -100,7 +102,6 @@ Script parameters:
 - `-NodeExecutable` *(Optional)*: Auto-discovers `C:\Node22\node-v22.16.0-win-x64\node.exe` when present, falling back to `node.exe` on `PATH` (`>= 22.13.0`).
 - `-DiagnosticRoot` *(Optional)*: Defaults to `%TEMP%\iips-direct-p1-provisioning`; writes `provisioning.log`, child stdout/stderr captures, and `diagnostic-summary.json` (BOM-free UTF-8).
 - `-RequireFreshDatabase` *(Optional switch)*: Refuses if `-DatabasePath` already exists even when validly provisioned.
-
 
 ---
 

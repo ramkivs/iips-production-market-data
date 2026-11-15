@@ -335,3 +335,9 @@ G-01 through G-05 must be resolved before G-06 can be considered. None are resol
 | Outstanding governance decisions | G-01 through G-06 (Program Authority) |
 
 **Final classification:** STAGE 4 — NON-PRODUCTION IDENTITY PERSISTENCE CAPABILITY IMPLEMENTED AND TESTED; NORMAL APPLICATION WRITE INTEGRATION BLOCKED BY EXISTING GOVERNANCE.
+
+---
+
+## Current operating-model clarification (2026-11-15)
+
+This dated Stage 4C record is preserved as evidence of its 2026-11-09 assessment; its historical classification above is not rewritten. Its phrase “normal application write integration blocked by existing governance” describes that assessment at that time and is **not** a current requirement for repeated approvals or a committee. The personal local write path described in [`docs/LOCAL-PERSONAL-USE-PERSISTENCE.md`](../LOCAL-PERSONAL-USE-PERSISTENCE.md) was subsequently implemented and qualified under its explicit local switch, active owner binding, transaction and identity checks. Current routine operations follow [`docs/IPD-OPERATING-MODEL.md`](../IPD-OPERATING-MODEL.md): owner-directed, with no repeated approval chain, while preserving all technical write guards, identity qualification, audit/revision integrity, and non-production scope. This clarification changes no historical test result, gate disposition, or production status.
