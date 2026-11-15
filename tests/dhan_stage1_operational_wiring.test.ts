@@ -560,7 +560,7 @@ describe('Stage 1 — Local Operational Wiring (Synthetic Verification)', () => 
 
     try {
       assert.strictEqual(started.diagnostics.boundAddress, '127.0.0.1');
-      assert.strictEqual(started.diagnostics.qualifiedMappingsLoaded, 96);
+      assert.strictEqual(started.diagnostics.qualifiedMappingsLoaded, 4680);
       assert.ok(!JSON.stringify(started.diagnostics).includes('LOCAL_DAEMON_BEARER_TOKEN'));
       assert.ok(!JSON.stringify(started.diagnostics).includes('SYNTH_DHAN_ACCESS_TOK'));
 

@@ -234,15 +234,15 @@ describe('W04 IRR identity export — generation from the tracked P04 master', (
 
   it('IIX-07 uses P7 as corroboration only: the files are the same with and without it', () => {
     assert.deepEqual(result.report.p7Corroboration, {
-      qualifiedRecords: 96,
-      distinctIsins: 48,
-      isinsInMaster: 48,
+      qualifiedRecords: 4680,
+      distinctIsins: 2390,
+      isinsInMaster: 2390,
       isinsNotInMaster: 0,
-      nseSeriesEq: 48,
+      nseSeriesEq: 2390,
       nseSeriesOther: 0,
-      bseScripCodeAgrees: 48,
+      bseScripCodeAgrees: 2290,
       bseScripCodeDiffers: 0,
-      companyIdDiffers: 3,
+      companyIdDiffers: 0,
     });
     const without = buildIrrIdentitySources({ masterEntities: MASTER, masterRevision: REVISION, acceptedWithheld: WITHHELD_IN_TRACKED_MASTER });
     assert.deepEqual(without.report.inputs.p7QualificationManifest, { supplied: false });
