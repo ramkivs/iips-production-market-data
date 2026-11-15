@@ -2,6 +2,8 @@
 
 **Status: preparation complete; W-12 live payload qualification and M2 remain open.** No Dhan request was made in this preparation. W-06 remains COMPLETE — OWNER ATTESTED under [its final attestation](DHAN-W06-FINAL-OWNER-ATTESTATION.md); this work does not reopen it or ask for a repeat to close W-06. The governing IRR [roadmap W-12 and M2 criteria](https://github.com/ramkivs/iips-review-recovered/blob/eea3a93e9a3ce3a8ab2a1b2909cfcec3292d9e3f/docs/integration/DHAN-LIVE-INTEGRATION-IMPLEMENTATION-ROADMAP-2026-11-11.md) remain unchanged.
 
+**Subsequent owner direction:** The single-attempt rule below is not an authorized permanent product requirement. Restoration of bounded configurable retries is requested but not yet implemented; see [retry policy work in progress](DHAN-QUOTE-RETRY-POLICY-WORK-IN-PROGRESS.md). Until that replacement is implemented and verified, the description below remains the current candidate behavior, not the intended final retry policy.
+
 ## Owner-reported Friday closing snapshot
 
 The owner supplies a successful HTTP 200 canonical D01 snapshot for `EQ_RELIANCE_IN`, `ISIN:INE002A01018:EQ`, `NSE_EQ` and Dhan ID `2885`. Observed canonical fields: LTP 1339.70, open 1336.60, high 1350.70, low 1324.00, close 1339.70, previous close 1339.70, volume 13756247 and VWAP 1338.09 (INR). `asOf` is `2026-11-13T10:29:51.000Z` and `receivedAt` is `2026-11-15T13:35:10.151Z`. The owner reports a Friday closing-period observation retrieved on Sunday when the market was closed. It is valid owner-attested successful closing-snapshot evidence, not a failed retrieval because of the `UNAVAILABLE` freshness classification.

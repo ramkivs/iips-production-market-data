@@ -49,6 +49,8 @@ export interface DhanFailure {
   field?: string;
   /** Optional HTTP status for transport-layer failures. */
   httpStatus?: number;
+  /** Sanitized Retry-After delay in milliseconds; never contains the raw header. */
+  retryAfterMs?: number;
 }
 
 export type DhanResult<T> =

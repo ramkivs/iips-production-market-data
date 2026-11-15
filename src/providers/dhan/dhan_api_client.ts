@@ -43,6 +43,8 @@ export interface DhanHttpResponse {
   status: number;
   /** Raw response body text; parsed by the client, never by the transport. */
   bodyText: string;
+  /** Raw header is kept inside the transport/client boundary, never logged. */
+  retryAfter?: string | null;
 }
 
 /**
@@ -94,6 +96,21 @@ export interface DhanQuoteRequestInstrument {
 }
 
 export const DHAN_MARKET_QUOTE_PATH = '/marketfeed/quote';
+
+/** Convert HTTP Retry-After seconds or an HTTP-date to a numeric delay, never echoing it. */
+export function parseDhanRetryAfterMs(value: unknown, nowMs: number): number | undefined {
+  if (typeof value !== 'string' || !Number.isFinite(nowMs)) return undefined;
+  const raw = value.trim();
+  if (/^\d+$/.test(raw)) {
+    const ms = Number(raw) * 1000;
+    return Number.isSafeInteger(ms) ? ms : undefined;
+  }
+  // Accept the standard IMF-fixdate form only; avoid permissive Date.parse guesses.
+  if (!/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} GMT$/.test(raw)) return undefined;
+  const date = Date.parse(raw);
+  if (!Number.isFinite(date) || new Date(date).toUTCString() !== raw) return undefined;
+  return Math.max(0, date - nowMs);
+}
 
 export interface DhanApiClientOptions {
   config: DhanProviderConfig;
@@ -301,7 +318,14 @@ export class DhanApiClient {
 
     const latencyMs = Math.max(0, this.now() - startedAt);
     const statusFailure = DhanApiClient.mapHttpStatus(response.status);
-    if (statusFailure) return statusFailure;
+    if (statusFailure) {
+      const retryAfterMs = response.status === 429 || response.status === 503
+        ? parseDhanRetryAfterMs(response.retryAfter, this.now())
+        : undefined;
+      return retryAfterMs === undefined ? statusFailure : {
+        ok: false, failure: { ...statusFailure.failure, retryAfterMs },
+      };
+    }
 
     let parsedJson: unknown;
     try {
