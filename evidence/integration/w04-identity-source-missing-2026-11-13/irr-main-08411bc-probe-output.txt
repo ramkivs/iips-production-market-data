@@ -1,0 +1,84 @@
+== S0. Data root exists; no investment/identity directory under it
+status, error: [503,"identity-sources-unavailable"]
+body keys: ["error","detail","issues"]
+issues: count: 1
+issues: keys of one item: ["file","code","subject"]
+issues: [file, code]: [["eligible-roster.json","IDENTITY_SOURCE_MISSING"]]
+issues: subject is an absolute path: [true]
+issues: subject equals the expected identity directory: [true]
+body names which of the three files are absent: false
+IPC operations caused: []
+data root still has no investment directory after the request: true
+readiness CLI, identity-files: reason, ownership, actionOwner: ["IDENTITY_SOURCE_MISSING (3 of 3 files absent)","user-host-provisioning-required","USER_HOST"]
+readiness CLI output contains the data directory path: false
+GET /api/investment/companies?q=ab: status, error, issue codes: [503,"identity-sources-unavailable",["IDENTITY_SOURCE_MISSING"]]
+== S1. IIPS_DATA_DIR not set in the process
+status, error: [503,"identity-sources-unavailable"]
+body keys: ["error","detail","issues"]
+issues: count: 1
+issues: keys of one item: ["file","code","subject"]
+issues: [file, code]: [["eligible-roster.json","IDENTITY_SOURCE_MISSING"]]
+issues: subject is an absolute path: [true]
+issues: subject equals the expected identity directory: [true]
+body names which of the three files are absent: false
+IPC operations caused: []
+expected directory is <working directory>/.iips-data/investment/identity: true
+== S2. Identity directory exists; roster and listing map present; corporate-actions.json absent
+status, error: [503,"identity-sources-unavailable"]
+body keys: ["error","detail","issues"]
+issues: count: 1
+issues: keys of one item: ["file","code","subject"]
+issues: [file, code]: [["eligible-roster.json","IDENTITY_SOURCE_MISSING"]]
+issues: subject is an absolute path: [true]
+issues: subject equals the expected identity directory: [true]
+body names which of the three files are absent: false
+IPC operations caused: []
+readiness CLI, identity-files: reason, ownership, actionOwner: ["IDENTITY_SOURCE_MISSING (1 of 3 files absent)","user-host-provisioning-required","USER_HOST"]
+readiness CLI output contains the data directory path: false
+== S3. All three files present and valid (synthetic fixture)
+status, count: [200,2]
+rosterDataClass: "SYNTHETIC_FIXTURE"
+rosterDigest has the form sha256:<64 hex>: true
+IPC operations caused: ["portfolio.get"]
+readiness CLI, identity-files: reason, ownership, actionOwner: ["IDENTITY_SOURCES_VALID","irr-owned-operational","NONE"]
+readiness CLI output contains the data directory path: false
+== S4. eligible-roster.json present but not JSON
+status, error: [503,"identity-sources-unavailable"]
+body keys: ["error","detail","issues"]
+issues: count: 1
+issues: keys of one item: ["file","code","subject"]
+issues: [file, code]: [["eligible-roster.json","INVALID_JSON"]]
+issues: subject is an absolute path: [false]
+body names which of the three files are absent: false
+IPC operations caused: []
+readiness CLI, identity-files: reason, ownership, actionOwner: ["IDENTITY_SOURCE_INVALID (INVALID_JSON)","user-host-provisioning-required","USER_HOST"]
+readiness CLI output contains the data directory path: false
+== S5. eligible-roster.json present with another schemaVersion
+status, error: [503,"identity-sources-unavailable"]
+body keys: ["error","detail","issues"]
+issues: count: 1
+issues: keys of one item: ["file","code","subject"]
+issues: [file, code]: [["eligible-roster.json","SCHEMA_MISMATCH"]]
+issues: subject is an absolute path: [false]
+body names which of the three files are absent: false
+IPC operations caused: []
+== S6. eligible-roster.json exists but is a directory, not a file
+status, error: [503,"holdings-unavailable"]
+body keys: ["error"]
+issues: count: 0
+issues: keys of one item: null
+issues: [file, code]: []
+issues: subject is an absolute path: []
+body names which of the three files are absent: false
+IPC operations caused: []
+== S7. All three files valid, but eligible-roster.json is saved with a UTF-8 byte-order mark
+status, error: [503,"identity-sources-unavailable"]
+body keys: ["error","detail","issues"]
+issues: count: 1
+issues: keys of one item: ["file","code","subject"]
+issues: [file, code]: [["eligible-roster.json","INVALID_JSON"]]
+issues: subject is an absolute path: [false]
+body names which of the three files are absent: false
+IPC operations caused: []
+readiness CLI, identity-files: reason, ownership, actionOwner: ["IDENTITY_SOURCE_INVALID (INVALID_JSON)","user-host-provisioning-required","USER_HOST"]
+readiness CLI output contains the data directory path: false

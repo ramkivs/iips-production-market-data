@@ -1,0 +1,26 @@
+{
+  "probe": "IPD_W04_IRR_TWO_SECURITY_ISSUER_PROBE_V1",
+  "note": "IRR has no instrument type for differential-voting-rights shares. The two variants type the DVR share as EQUITY and as OTHER.",
+  "oneCinKeyedIssuer_bothSecuritiesTypedEQUITY": {
+    "loaderAccepted": true,
+    "issueCodes": [],
+    "ordinaryShare": {
+      "state": "RESOLVED",
+      "reason": null,
+      "resolvedToTheOneIssuer": true,
+      "resolvedToItsOwnSecurity": true
+    },
+    "dvrShare": {
+      "state": "RESOLVED",
+      "reason": null,
+      "resolvedToTheOneIssuer": true,
+      "resolvedToItsOwnSecurity": true
+    }
+  },
+  "oneCinKeyedIssuer_dvrTypedOTHER": {
+    "loaderAccepted": false,
+    "issueCodes": [
+      "eligible-roster.json:ASSESSABLE_NON_EQUITY"
+    ]
+  }
+}

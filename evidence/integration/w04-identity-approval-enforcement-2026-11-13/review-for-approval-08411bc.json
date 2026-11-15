@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "IPD_IRR_IDENTITY_REVIEW_V1",
+  "notice": "Review record. It states what an approval record for these files would have to bind. It is not an approval, it was written by the tool, and it authorizes nothing.",
+  "installed": false,
+  "subject": {
+    "files": {
+      "eligible-roster.json": {
+        "sha256": "078e89cc1896d0f59e09e2ad05a12378e248cd81b97775ee7667b5f1e750e937",
+        "bytes": 1350516
+      },
+      "listing-map.json": {
+        "sha256": "6a330123a2fea31e9e1dd54f01e5adbe13f9721f077a5a82a34ee7cd60bcf458",
+        "bytes": 1285774
+      },
+      "corporate-actions.json": {
+        "sha256": "d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd",
+        "bytes": 70
+      }
+    },
+    "generation": {
+      "reportSchemaVersion": "IPD_IRR_IDENTITY_SOURCE_EXPORT_V1",
+      "mappingVersion": "IPD-IRR-IDENTITY-EXPORT-MAPPING-1",
+      "masterBatchId": "BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001",
+      "masterAuthorizationRef": "AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001",
+      "masterChecksumSha256": "b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4",
+      "masterRecordCount": 2390,
+      "rosterLabel": "IPD P04 security master export, NSE CM series EQ; batch BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001; master sha256 b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4; mapping IPD-IRR-IDENTITY-EXPORT-MAPPING-1; issuer-key supplement none",
+      "p7ManifestSha256": "13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc",
+      "issuerKeySupplementSha256": null,
+      "requiredIsins": null,
+      "issuersExported": 2388,
+      "securitiesExported": 2388,
+      "nseListingsExported": 2388,
+      "corporateActionsExported": 0,
+      "recordsWithheld": 2
+    },
+    "irrCommit": "08411bcd6d782a601fe5c82cc9983d076831148d"
+  },
+  "loaderGate": {
+    "recorded": true,
+    "accepted": true
+  },
+  "toBeAcceptedExplicitly": {
+    "exportLimitationCodes": [
+      "CIN_NOT_EXPORTED",
+      "SECTOR_UNCLASSIFIED",
+      "BSE_LISTINGS_NOT_EXPORTED",
+      "CORPORATE_ACTIONS_EMPTY",
+      "NO_SYMBOL_HISTORY",
+      "ELIGIBLE_MEANS_ACTIVE_NSE_LISTING",
+      "SERIES_FROM_UNIVERSE_DEFINITION",
+      "SOURCE_AUTHORITY_CONDITIONAL"
+    ],
+    "additionalLimitationCodes": [
+      "NON_EQ_SERIES_HOLDINGS_UNRESOLVED",
+      "NSE_SOURCE_FILE_WITHOUT_RETRIEVAL_RECEIPT"
+    ],
+    "withheldRecords": [
+      {
+        "isin": "IN9175A01010",
+        "reasons": [
+          "ISSUER_SHARED_ACROSS_ISINS"
+        ]
+      },
+      {
+        "isin": "INE175A01038",
+        "reasons": [
+          "ISSUER_SHARED_ACROSS_ISINS"
+        ]
+      }
+    ]
+  },
+  "approvalPolicy": {
+    "policyVersion": "IPD-IRR-IDENTITY-APPROVAL-POLICY-1",
+    "governanceDecisionId": "IIPS-W04-D1",
+    "requiredAuthorities": [
+      "PROGRAM_AUTHORITY_RAMKI",
+      "PROGRAM_AUTHORITY_SAI"
+    ],
+    "requiredAuthoritiesRule": "UNRESOLVED"
+  }
+}

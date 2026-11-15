@@ -1,0 +1,74 @@
+W04 decision D3 — checks of IRR pull request #563 and of its merge with IRR main
+Run 2026-11-13 in the Arena sandbox (Linux, Node 22). Nothing was pushed to IRR. No pull request
+was merged, closed or retargeted. The merge below exists only in a local worktree.
+
+IRR repository        ramkivs/iips-review-recovered
+IRR main              08411bcd6d782a601fe5c82cc9983d076831148d  (merge of PR #564, 2026-11-13T07:07:13Z)
+PR #563 head          d10afbb31573d999f4b331484fcb79c510df1304  (6 commits, 49 files, +11,444 / -97)
+PR #563 CI check      "Typecheck · Test · Build" SUCCESS, completed 2026-11-13T04:16:34Z,
+                      which is before IRR main moved to 08411bc. The workflow is triggered by
+                      frontend/** and .ci/** only and runs in frontend/ only.
+
+1. Merge
+   git merge-tree --write-tree origin/main pr/563      -> 7e55431893274daacdacfc06fd7efa9fb70eae5d, no conflict
+   git merge --no-ff pr/563 (local worktree)           -> commit 07fd18fccceebab0dfd1655815977e9406d9e9ba
+                                                          tree   7e55431893274daacdacfc06fd7efa9fb70eae5d
+   The commit id 07fd18f is local and cannot be fetched. The tree id is reproducible with the
+   merge-tree command above.
+   git merge-tree --write-tree origin/main 7f3f7db     -> 8b8f869d0ae92f779e48698a50b5a48bcec93e42, no conflict
+     (7f3f7db is the identity commit of the pull request, taken alone)
+   git merge-tree --write-tree 07fd18f pr/562          -> 24e832ac9e652eaa5b34ff91be587dfc5dc061fb, no conflict
+     (PR #562 head b0d153350c68f107c8d3a6b1376b0b27daee5f5c: the other open pull request)
+
+2. Checks on the merged tree 7e554318 (after `npm ci` in iips-platform/ and frontend/)
+
+   iips-platform   npm run typecheck (tsc --noEmit)                       exit 0
+   iips-platform   npm test          (tsx --test src/**, tests/regression) exit 0   tests 678  pass 678  fail 0  skipped 0
+   iips-platform   npm run test:iid  (tsx --test tests/investment)         exit 0   tests 913  pass 913  fail 0  skipped 0
+   frontend        npm run build:broker-import                            exit 0
+   frontend        npm run typecheck                                      exit 0
+   frontend        npm run typecheck:replay-server                        exit 0
+   frontend        npm run typecheck:investment-server                    exit 0
+   frontend        vitest run (full)                                      exit 0   files 202 passed, 1 skipped
+                                                                                    tests 2,929 passed, 1 skipped, 0 failed
+   frontend        tsc -b                                                 exit 0
+   frontend        vite build                                             exit 0   196 modules
+
+   Of these, the IRR CI workflow runs only: frontend typecheck, typecheck:replay-server, vitest and
+   build. The three iips-platform checks and typecheck:investment-server are not run by any IRR
+   workflow; they were run here by hand.
+
+3. Checks on the pull-request head d10afbb
+
+   iips-platform   npm run typecheck                                      exit 0
+   iips-platform   npm test                                               exit 0   tests 678  pass 678  fail 0
+   iips-platform   npm run test:iid                                       exit 0   tests 913  pass 913  fail 0
+   The frontend checks were not repeated on the head; the head's own CI run covers them.
+
+4. A first pass that must not be read as a code failure
+   The first run on the merged tree reported iips-platform typecheck exit 2 (TS2688) and test:iid
+   912 of 913 (ERR_MODULE_NOT_FOUND 'tsx'). Both were caused by a missing iips-platform/node_modules
+   in the fresh worktree. After `npm ci` both pass, as listed in section 2.
+
+5. IPD loader gate against each IRR tree (the staged export of IPD commit b0d7908)
+   node scripts/provision-irr-identity-sources.mjs validate --staging <staging> --irr-root <tree> --as-of 2026-11-13
+
+   IRR tree                     result   roster class        resolved by ISIN   resolved by exchange and symbol
+   08411bc (main)               PASS     OPERATOR_SUPPLIED   2,388 of 2,388     2,388 of 2,388
+   d10afbb (PR #563 head)       PASS     OPERATOR_SUPPLIED   2,388 of 2,388     2,388 of 2,388
+   merged tree 7e554318         PASS     OPERATOR_SUPPLIED   2,388 of 2,388     2,388 of 2,388
+
+   Gate records: irr-loader-gate-merged-tree.json in this directory; the records for 08411bc and
+   d10afbb are in ../w04-identity-source-provisioning-2026-11-13/. The gate record of the merged
+   tree and of the head report "worktreeClean: false" because of an untracked frontend/node_modules
+   link in the worktree; no tracked file differs.
+
+   The gate shows that IRR's loader parses the files and that its resolver finds each record. It
+   does not show that the data is right, and it is not an approval of the data.
+
+6. What was not checked
+   - The merged tree was not run on Windows and not against the operator's holdings.
+   - No browser check was made.
+   - The composed IRR server was not started against the merged tree.
+   - Branch-protection rules of IRR main could not be read (API 403), so whether a review or a
+     current CI run is required by rule is not known.

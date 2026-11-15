@@ -1,0 +1,44 @@
+== Part 1. IRR composed server
+-- 1a. Before installation: the data root exists, the identity directory does not
+status, error: [503,"identity-sources-unavailable"]
+issues [file, code]: [["eligible-roster.json","IDENTITY_SOURCE_MISSING"],["listing-map.json","IDENTITY_SOURCE_MISSING"],["corporate-actions.json","IDENTITY_SOURCE_MISSING"]]
+-- 1b. Provisioning tool: install into the data root (server still running)
+install exit code: 0
+   RESULT: PASS (INSTALLED)
+   identity directory: <path>
+   eligible-roster.json: sha256 078e89cc1896d0f59e09e2ad05a12378e248cd81b97775ee7667b5f1e750e937, 1350516 bytes
+   listing-map.json: sha256 6a330123a2fea31e9e1dd54f01e5adbe13f9721f077a5a82a34ee7cd60bcf458, 1285774 bytes
+   corporate-actions.json: sha256 d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd, 70 bytes
+   receipt: <path>
+   The IRR server reads these files on every request. No restart is needed.
+-- 1c. After installation, same server process, no restart
+status, body status: [503,null]
+holdings returned (synthetic peer): null
+rosterDataClass: null
+rosterVersion equals the version the IRR loader gate computed for the staged files: false
+rosterVersion: null
+synthetic holdings by state/reason: {}
+IPC peer present in this checkout: false
+   (without the tracked synthetic peer no holdings can be read, so 1c and 1d cannot return 200 here)
+-- 1d. Provisioning tool: verify-endpoint against the same server
+verify-endpoint exit code: 6
+   RESULT: FAIL
+   PASS means: the endpoint answers 200 from the roster the IRR loader gate accepted. It is not a statement that holdings resolved; see the counts.
+   HTTP status: 503
+   error: holdings-unavailable
+   roster class: not reported
+   roster version: not reported
+   serves the roster the IRR loader gate accepted: not determined
+   record (counts only): <path>
+== Part 2. IRR route handler with probe holdings (identifiers of the first exported master record)
+status, count: [200,9]
+rosterVersion equals the gated version: true
+A. as IPD stores an unqualified holding: no ISIN, no exchange, securityIdentity null: {"state":"UNMATCHED","reason":"NO_IDENTIFIER_PROVIDED","resolutionBasis":null,"issuerIdIsTheExportedIssuer":null,"securityIdIsTheExportedSecurity":null,"assessable":false}
+B. as IPD stores a qualified NSE holding: securityIdentity ISIN:<exported isin>:EQ, no flat ISIN: {"state":"RESOLVED","reason":null,"resolutionBasis":"ISIN","issuerIdIsTheExportedIssuer":true,"securityIdIsTheExportedSecurity":true,"assessable":true}
+C. as IPD stores a qualified BSE holding: securityIdentity ISIN:<exported isin>:A, no flat ISIN: {"state":"AMBIGUOUS_LISTING","reason":"MULTIPLE_SECURITIES_SHARE_LISTING","resolutionBasis":null,"issuerIdIsTheExportedIssuer":null,"securityIdIsTheExportedSecurity":null,"assessable":false}
+D. flat ISIN of an exported record: {"state":"RESOLVED","reason":null,"resolutionBasis":"ISIN","issuerIdIsTheExportedIssuer":true,"securityIdIsTheExportedSecurity":true,"assessable":true}
+E. flat ISIN and exported NSE symbol, observed on NSE: {"state":"RESOLVED","reason":null,"resolutionBasis":"ISIN","issuerIdIsTheExportedIssuer":true,"securityIdIsTheExportedSecurity":true,"assessable":true}
+F. flat ISIN and the same symbol, observed on BSE: {"state":"AMBIGUOUS_LISTING","reason":"MULTIPLE_SECURITIES_SHARE_LISTING","resolutionBasis":null,"issuerIdIsTheExportedIssuer":null,"securityIdIsTheExportedSecurity":null,"assessable":false}
+G. flat ISIN observed on NSE under a symbol that is not the exported symbol: {"state":"AMBIGUOUS_LISTING","reason":"MULTIPLE_SECURITIES_SHARE_LISTING","resolutionBasis":null,"issuerIdIsTheExportedIssuer":null,"securityIdIsTheExportedSecurity":null,"assessable":false}
+H. exported NSE symbol observed on NSE, no ISIN: {"state":"RESOLVED","reason":null,"resolutionBasis":"EXCHANGE_SYMBOL","issuerIdIsTheExportedIssuer":true,"securityIdIsTheExportedSecurity":true,"assessable":true}
+I. flat ISIN of a withheld master record: {"state":"UNMATCHED","reason":"ISIN_NOT_IN_ROSTER","resolutionBasis":null,"issuerIdIsTheExportedIssuer":null,"securityIdIsTheExportedSecurity":null,"assessable":false}

@@ -1,0 +1,148 @@
+SYNTHETIC SAMPLE. NOT EVIDENCE. NOT A RESULT.
+Output of w04-e4-csv-lineage-reproduction.mjs on an invented 64-holding statement and a capture
+built from it by the self-test (csv-lineage-selftest.mjs --print-sample). It shows the output format
+only. The mix of rows with and without an ISIN is arbitrary. The original CSV and the actual
+capture were not used: both digests were overridden, as the two [WARN] override lines state.
+
+W04 E4 - lineage reproduction from the original CSV (w04-e4-csv-lineage/1). Read-only. Sanitized output.
+
+== 1. Original CSV (input 1): digest verification
+[INFO] csv.sha256.expected: 851e72db4c4e7cab1a218adf814864f701f16489babe2952e33f670155de047e
+[INFO] csv.sha256.rawBytes: 851e72db4c4e7cab1a218adf814864f701f16489babe2952e33f670155de047e
+[INFO] csv.sha256.importContent: 851e72db4c4e7cab1a218adf814864f701f16489babe2952e33f670155de047e (SHA-256 of the decoded text, as the import pipeline computes it)
+[INFO] csv.encoding: byte-order mark no; valid UTF-8 yes; line endings CRLF
+[PASS] csv.sha256: import-content SHA-256 of the CSV equals the expected digest: yes
+[INFO] csv.sha256.rawBytesEqual: SHA-256 of the raw file bytes also equals the expected digest: yes
+[WARN] csv.override: the expected CSV digest was overridden; this is not a run on the recorded original CSV
+[PASS] csv.size: the text is within the 1 MiB limit of the import preview: yes
+
+== 2. Exact capture (input 2): digest verification and target holdings
+[INFO] capture.sha256.expected: 8f771954715f9313eb26e9f450abd8dc02c910bbd7333881b6d664efff77aab6
+[INFO] capture.search: 1 exact capture file(s) examined; 1 with the expected SHA-256
+[INFO] capture.sha256: 8f771954715f9313eb26e9f450abd8dc02c910bbd7333881b6d664efff77aab6
+[PASS] capture.sha256: capture SHA-256 equals the expected digest: yes
+[WARN] capture.override: the expected capture digest was overridden; the facts recorded for the 2026-11-13 capture are reported for information only
+[PASS] capture.schema: schema is the exact-capture schema v1: yes
+[PASS] capture.outcome: outcome is CONSISTENT_CAPTURE: yes
+[INFO] capture.evidenceEligibility: NOT_EVIDENCE_SYNTHETIC_TEST_PEER
+[INFO] capture.reads: 4 read(s); portfolio.get with a result: 2; portfolio.revisions with a result: 1
+[PASS] capture.reads.agree: every portfolio.get result in the capture is identical: yes
+[PASS] capture.portfolio: portfolio selected and returned is DHAN_PORTFOLIO: yes
+[PASS] capture.revision: revision is 1 (observed 1): yes
+[PASS] capture.holdings: holdings array and holdingsCount are 64 (observed 64 and 64): yes
+[PASS] capture.identity.null: securityIdentity null on 63 (observed 63): yes
+[PASS] capture.identity.object: securityIdentity object on 1 (observed 1): yes
+[PASS] capture.holdings.wellformed: every holding carries the stored members and a SHA-256 lineage digest (64 of 64): yes
+[INFO] capture.identityStatus: {"RESOLVED":64}
+[INFO] capture.resolutionDisposition: {"CANONICAL_P04":64}
+[INFO] capture.holdingsPerSourceBroker: {"DHAN":64}
+[INFO] capture.lineageDigests: 64 distinct stored lineage digest(s) on 64 holding(s)
+[INFO] capture.revisions: 1 history entr(ies); operation of the examined revision: INITIAL
+[INFO] capture.imports: 1 committed import(s) on the wire
+
+== 3. Link: the committed import whose content digest is the digest of this CSV
+[PASS] link.contentDigest: exactly one committed import in the capture carries the content digest of this CSV (observed 1): yes
+[PASS] link.importedAt: the import instant is recorded as an ISO-8601 UTC instant: yes
+[INFO] link.sourceBroker: DHAN
+[INFO] link.semantics: SAVED_NEW_BATCH
+[INFO] link.fileName: file name recorded yes; equal to the name of the file given with --csv yes (a renamed copy has the same content digest)
+[INFO] link.importProvenance: whole-import digest recorded yes; equal to the provenance digest of the revision yes
+
+== 4. CSV parsed with the import format and transformation rules
+[INFO] csv.detection: broker DHAN; format CSV
+[PASS] csv.detection.dhan: the header is detected as a Dhan holdings export: yes
+[INFO] csv.variant: DHAN_DETAILED_HOLDINGS_V1
+[INFO] csv.columns: 11 header column(s); located: {"symbol":true,"isin":true,"exchange":true,"quantity":true,"averageBuyPrice":true,"lastTradedPrice":true,"currentValue":true}
+[PASS] csv.schema: the Dhan adapter accepts the file and returns at least one row: yes
+[INFO] csv.rows: 64 data row(s); 0 skipped for an empty symbol; 64 native row(s) passed to the mapper
+[INFO] csv.rows.identifiers: {"withIsin":60,"withoutIsin":4,"exchange":{"NSE":55,"BSE":9,"none":0},"isinAndExchange":60,"isinWithoutExchange":0,"exchangeWithoutIsin":4,"neither":0}
+[INFO] csv.mapper: 64 holding(s) derived; 0 row(s) aggregated into an earlier row of the same security; 0 row(s) excluded {}
+
+== 5. Lineage digests recomputed from the CSV and compared with the stored digests
+[ROW] H01 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G01 csvLines=2 input=ISIN+EXCHANGE_NSE storedIdentity=object
+[ROW] H02 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G02 csvLines=3 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H03 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G03 csvLines=4 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H04 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G04 csvLines=5 input=ISIN+EXCHANGE_BSE storedIdentity=null
+[ROW] H05 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G05 csvLines=6 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H06 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G06 csvLines=7 input=NO_ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H07 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G07 csvLines=8 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H08 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G08 csvLines=9 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H09 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G09 csvLines=10 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H10 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G10 csvLines=11 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H11 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G11 csvLines=12 input=ISIN+EXCHANGE_BSE storedIdentity=null
+[ROW] H12 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G12 csvLines=13 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H13 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G13 csvLines=14 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H14 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G14 csvLines=15 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H15 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G25 csvLines=26 input=ISIN+EXCHANGE_BSE storedIdentity=null
+[ROW] H16 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G26 csvLines=27 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H17 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G27 csvLines=28 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H18 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G28 csvLines=29 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H19 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G29 csvLines=30 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H20 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G30 csvLines=31 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H21 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G31 csvLines=32 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H22 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G32 csvLines=33 input=ISIN+EXCHANGE_BSE storedIdentity=null
+[ROW] H23 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G33 csvLines=34 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H24 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G34 csvLines=35 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H25 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G35 csvLines=36 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H26 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G36 csvLines=37 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H27 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G37 csvLines=38 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H28 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G38 csvLines=39 input=NO_ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H29 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G39 csvLines=40 input=ISIN+EXCHANGE_BSE storedIdentity=null
+[ROW] H30 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G40 csvLines=41 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H31 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G41 csvLines=42 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H32 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G42 csvLines=43 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H33 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G43 csvLines=44 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H34 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G44 csvLines=45 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H35 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G45 csvLines=46 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H36 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G46 csvLines=47 input=ISIN+EXCHANGE_BSE storedIdentity=null
+[ROW] H37 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G47 csvLines=48 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H38 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G48 csvLines=49 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H39 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G49 csvLines=50 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H40 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G50 csvLines=51 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H41 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G51 csvLines=52 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H42 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G52 csvLines=53 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H43 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G53 csvLines=54 input=ISIN+EXCHANGE_BSE storedIdentity=null
+[ROW] H44 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G54 csvLines=55 input=NO_ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H45 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G55 csvLines=56 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H46 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G56 csvLines=57 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H47 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G57 csvLines=58 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H48 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G58 csvLines=59 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H49 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G59 csvLines=60 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H50 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G60 csvLines=61 input=ISIN+EXCHANGE_BSE storedIdentity=null
+[ROW] H51 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G61 csvLines=62 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H52 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G62 csvLines=63 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H53 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G63 csvLines=64 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H54 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G64 csvLines=65 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H55 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G15 csvLines=16 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H56 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G16 csvLines=17 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H57 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G17 csvLines=18 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H58 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G18 csvLines=19 input=ISIN+EXCHANGE_BSE storedIdentity=null
+[ROW] H59 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G19 csvLines=20 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H60 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G20 csvLines=21 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H61 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G21 csvLines=22 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H62 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G22 csvLines=23 input=NO_ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H63 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G23 csvLines=24 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[ROW] H64 REPRODUCED algorithm=MAPPER_BI03 csvHolding=G24 csvLines=25 input=ISIN+EXCHANGE_NSE storedIdentity=null
+[INFO] reproduction.target: 64 target holding(s); 64 holding(s) derived from the CSV
+[INFO] reproduction.reproduced: 64 of 64 stored lineage digests reproduced from the CSV, one-to-one {"MAPPER_BI03":64}
+[INFO] reproduction.ambiguous: 0 ambiguous
+[INFO] reproduction.unmatched: 0 not reproduced from the CSV: 0 reproduced from stored measures with an identifier pair only, 0 reproduced by nothing
+[INFO] reproduction.csvUnmatched: 0 CSV-derived holding(s) match no stored digest
+[PASS] reproduction.storedMembers: the symbol, measures and source broker stored beside every reproduced digest equal the values derived from the CSV (64 of 64): yes
+[PASS] import.provenance.evidence: whole-import digest recomputed from the CSV equals the digest recorded for the import: yes
+[PASS] import.provenance.revision: whole-import digest recomputed from the CSV equals the provenance digest of the stored revision: yes
+
+== 6. Committed input of the reproduced holdings (not an identity classification)
+[INFO] input.reproduced.storedIdentityNull: {"ISIN+EXCHANGE_BSE":9,"ISIN+EXCHANGE_NSE":50,"NO_ISIN+EXCHANGE_NSE":4}
+[INFO] input.reproduced.storedIdentityObject: {"ISIN+EXCHANGE_NSE":1}
+[INFO] input.identifiersOnly.storedIdentityNull: {}
+[INFO] input.identifiersOnly.storedIdentityObject: {}
+[INFO] identity.classification: NOT_PERFORMED. A reproduced digest states what the committed input carried. It assigns no security identity and no cause, and it is not an acceptance.
+[WARN] result.override: an expected digest was overridden; this result does not describe the recorded inputs
+
+== Result
+E4_CSV_LINEAGE_RESULT_JSON: {"tool":"w04-e4-csv-lineage/1","recordedInputs":{"csv":false,"capture":false},"inputs":{"csv":{"sha256RawBytes":"851e72db4c4e7cab1a218adf814864f701f16489babe2952e33f670155de047e","expected":"851e72db4c4e7cab1a218adf814864f701f16489babe2952e33f670155de047e","expectedIsRecorded":false,"byteOrderMark":false,"validUtf8":true,"rawBytesEqualExpected":true,"sha256DecodedText":"851e72db4c4e7cab1a218adf814864f701f16489babe2952e33f670155de047e","decodedTextEqualsExpected":true,"byteOrderMarkInImportedText":false,"lineEndings":"CRLF","withinPreviewLimit":true},"capture":{"filesExamined":1,"filesWithExpectedSha256":1,"expected":"8f771954715f9313eb26e9f450abd8dc02c910bbd7333881b6d664efff77aab6","expectedIsRecorded":false,"sha256":"8f771954715f9313eb26e9f450abd8dc02c910bbd7333881b6d664efff77aab6"}},"capture":{"evidenceEligibility":"NOT_EVIDENCE_SYNTHETIC_TEST_PEER","portfolioIdIsRecorded":true,"revision":1,"holdingsCountField":64,"holdings":64,"identity":{"object":1,"null":63,"other":0},"identityStatus":{"RESOLVED":64},"resolutionDisposition":{"CANONICAL_P04":64},"holdingsPerSourceBroker":{"DHAN":64},"holdingsWellFormed":64,"distinctLineageDigests":64,"revisionEntries":1,"revisionEntryOperation":"INITIAL","revisionProvenanceDigestPresent":true,"importsOnWire":1},"link":{"importsWithThisContentDigest":1,"importedAtIsIsoUtc":true,"fileNameRecorded":true,"fileNameEqualsCsvBaseName":true,"sourceBroker":"DHAN","semantics":"SAVED_NEW_BATCH","importProvenanceDigestPresent":true,"importProvenanceEqualsRevisionProvenance":true},"csv":{"broker":"DHAN","format":"CSV","variant":"DHAN_DETAILED_HOLDINGS_V1","headerColumns":11,"columns":{"symbol":true,"isin":true,"exchange":true,"quantity":true,"averageBuyPrice":true,"lastTradedPrice":true,"currentValue":true},"dataRows":64,"rowsSkippedEmptySymbol":0,"rows":{"total":64,"withIsin":60,"withoutIsin":4,"exchange":{"NSE":55,"BSE":9,"none":0},"isinAndExchange":60,"isinWithoutExchange":0,"exchangeWithoutIsin":4,"neither":0},"excludedRows":0,"excludedByReason":{},"excludedLines":[],"aggregatedRows":0,"derivedHoldings":64,"derivedHoldingsFromSeveralRows":0,"distinctIsins":60},"reproduction":{"targetHoldings":64,"csvDerivedHoldings":64,"reproduced":64,"ambiguous":0,"notReproducedFromCsv":0,"reproducedIdentifiersOnly":0,"reproducedByNothing":0,"csvHoldingsMatchingNoStoredDigest":0,"reproducedWithStoredMembersDiffering":0,"byAlgorithm":{"MAPPER_BI03":64}},"importProvenance":{"computed":true,"equalsImportEvidence":true,"equalsRevisionProvenance":true},"inputClassOfReproduced":{"REPRODUCED":{"storedIdentityNull":{"ISIN+EXCHANGE_BSE":9,"ISIN+EXCHANGE_NSE":50,"NO_ISIN+EXCHANGE_NSE":4},"storedIdentityObject":{"ISIN+EXCHANGE_NSE":1}},"REPRODUCED_IDENTIFIERS_ONLY":{"storedIdentityNull":{},"storedIdentityObject":{}}},"identityClassification":"NOT_PERFORMED","holdings":[{"h":1,"status":"REPRODUCED","storedIdentity":"object","algorithm":"MAPPER_BI03","csvHolding":1,"csvLines":[2],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":2,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":2,"csvLines":[3],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":3,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":3,"csvLines":[4],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":4,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":4,"csvLines":[5],"inputClass":"ISIN+EXCHANGE_BSE","storedMembersDiffering":[]},{"h":5,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":5,"csvLines":[6],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":6,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":6,"csvLines":[7],"inputClass":"NO_ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":7,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":7,"csvLines":[8],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":8,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":8,"csvLines":[9],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":9,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":9,"csvLines":[10],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":10,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":10,"csvLines":[11],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":11,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":11,"csvLines":[12],"inputClass":"ISIN+EXCHANGE_BSE","storedMembersDiffering":[]},{"h":12,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":12,"csvLines":[13],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":13,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":13,"csvLines":[14],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":14,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":14,"csvLines":[15],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":15,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":25,"csvLines":[26],"inputClass":"ISIN+EXCHANGE_BSE","storedMembersDiffering":[]},{"h":16,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":26,"csvLines":[27],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":17,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":27,"csvLines":[28],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":18,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":28,"csvLines":[29],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":19,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":29,"csvLines":[30],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":20,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":30,"csvLines":[31],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":21,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":31,"csvLines":[32],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":22,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":32,"csvLines":[33],"inputClass":"ISIN+EXCHANGE_BSE","storedMembersDiffering":[]},{"h":23,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":33,"csvLines":[34],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":24,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":34,"csvLines":[35],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":25,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":35,"csvLines":[36],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":26,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":36,"csvLines":[37],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":27,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":37,"csvLines":[38],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":28,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":38,"csvLines":[39],"inputClass":"NO_ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":29,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":39,"csvLines":[40],"inputClass":"ISIN+EXCHANGE_BSE","storedMembersDiffering":[]},{"h":30,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":40,"csvLines":[41],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":31,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":41,"csvLines":[42],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":32,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":42,"csvLines":[43],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":33,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":43,"csvLines":[44],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":34,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":44,"csvLines":[45],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":35,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":45,"csvLines":[46],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":36,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":46,"csvLines":[47],"inputClass":"ISIN+EXCHANGE_BSE","storedMembersDiffering":[]},{"h":37,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":47,"csvLines":[48],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":38,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":48,"csvLines":[49],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":39,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":49,"csvLines":[50],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":40,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":50,"csvLines":[51],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":41,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":51,"csvLines":[52],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":42,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":52,"csvLines":[53],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":43,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":53,"csvLines":[54],"inputClass":"ISIN+EXCHANGE_BSE","storedMembersDiffering":[]},{"h":44,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":54,"csvLines":[55],"inputClass":"NO_ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":45,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":55,"csvLines":[56],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":46,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":56,"csvLines":[57],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":47,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":57,"csvLines":[58],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":48,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":58,"csvLines":[59],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":49,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":59,"csvLines":[60],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":50,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":60,"csvLines":[61],"inputClass":"ISIN+EXCHANGE_BSE","storedMembersDiffering":[]},{"h":51,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":61,"csvLines":[62],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":52,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":62,"csvLines":[63],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":53,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":63,"csvLines":[64],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":54,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":64,"csvLines":[65],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":55,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":15,"csvLines":[16],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":56,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":16,"csvLines":[17],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":57,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":17,"csvLines":[18],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":58,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":18,"csvLines":[19],"inputClass":"ISIN+EXCHANGE_BSE","storedMembersDiffering":[]},{"h":59,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":19,"csvLines":[20],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":60,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":20,"csvLines":[21],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":61,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":21,"csvLines":[22],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":62,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":22,"csvLines":[23],"inputClass":"NO_ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":63,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":23,"csvLines":[24],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]},{"h":64,"status":"REPRODUCED","storedIdentity":"null","algorithm":"MAPPER_BI03","csvHolding":24,"csvLines":[25],"inputClass":"ISIN+EXCHANGE_NSE","storedMembersDiffering":[]}],"csvHoldingsMatchingNoStoredDigest":[],"unresolved":[],"checks":{"pass":19,"fail":0,"warn":3},"result":"REPRODUCED_ALL"}
+E4_CSV_LINEAGE_RESULT_JSON_SHA256: c4344db82ea9dcca5e4921764481b1a8e54e975bcced96e416b4e709efaf1c37
+checks: 19 pass, 0 fail, 3 warn
+unresolved: none
+RESULT: REPRODUCED_ALL

@@ -1,0 +1,40 @@
+== IRR commit 08411bcd6d782a601fe5c82cc9983d076831148d
+bind host constant: "127.0.0.1"
+== A. GET /api/user-portfolios/<id> (existing revision-bearing read)
+status: 200
+IPC operations: ["portfolio.get"]
+revision: 1
+provenanceDigest present, length: [true,64]
+holdings: 2
+holdings with a securityIdentity object: 1
+holdings with securityIdentity null: 1
+== B. GET /api/investment/portfolio/<id>/identities
+status: 200
+IPC operations: ["portfolio.get"]
+top-level keys: ["status","portfolioId","count","identities","directory","disclosures"]
+count: 2
+tally by state / reason (computed by the probe): {"UNMATCHED / NO_IDENTIFIER_PROVIDED":2}
+directory keys: ["rosterVersion","rosterDigest","rosterDataClass"]
+rosterDataClass: "SYNTHETIC_FIXTURE"
+body mentions revision or provenance: false
+body contains the provenance digest value served upstream: false
+Access-Control-Allow-Origin header: null
+Cache-Control header: "no-store"
+== C. The same route with a revision named in the query
+status: 200
+IPC operations: ["portfolio.get"]
+body byte-identical to B: true
+== D. GET /api/user-portfolios/<id>/revisions
+status: 200
+IPC operations: ["portfolio.revisions"]
+entries: 1
+entry keys: ["revision","operation","totalMarketValue","provenanceDigest","holdingsCount","createdAt"]
+entry for the detail revision carries the same provenanceDigest: true
+== E. Methods
+HEAD identities: status, allow, IPC operations: [200,null,["portfolio.get"]]
+POST identities: status, allow, IPC operations: [405,"GET, HEAD",[]]
+PUT identities: status, allow, IPC operations: [405,"GET, HEAD",[]]
+DELETE identities: status, allow, IPC operations: [405,"GET, HEAD",[]]
+== F. Every IPC operation the peer received during this probe
+operations: ["portfolio.get","portfolio.get","portfolio.get","portfolio.revisions","portfolio.get"]
+any operation other than portfolio.list / portfolio.get / portfolio.revisions: false

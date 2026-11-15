@@ -1,0 +1,105 @@
+== IRR commit 08411bcd6d782a601fe5c82cc9983d076831148d
+== 1. Request shape
+route table: [{"id":"portfolio-holding-identities","pattern":"/api/investment/portfolio/:portfolioId/identities","methods":["GET","HEAD"],"mutating":false,"description":"Governed issuer/security identity per holding, independent of any disposition record."}]
+path claimed without query: true
+path claimed with ?revision=1&provenanceDigest=x: true
+portfolioId parsed from the URL with that query: "synthetic-portfolio"
+path claimed for /identities/1 (a revision path segment): false
+== 2. Call path and what crosses the IPC boundary
+HTTP status: 200
+IPC requests sent for one GET: [{"op":"portfolio.get","payloadKeys":["portfolioId"]}]
+== 3. Response shape (upstream current revision 1)
+top-level keys: ["status","portfolioId","count","identities","directory","disclosures"]
+keys of one identities[] item: ["holdingIndex","symbol","isin","state","issuerId","securityId","resolutionBasis","reason","reasonText","assessable"]
+directory keys: ["rosterVersion","rosterDigest","rosterDataClass"]
+rosterVersion equals rosterDigest: true
+rosterDataClass (synthetic fixture): "SYNTHETIC_FIXTURE"
+disclosures: {"decisionSupportOnly":true,"nonProduction":true,"independentOfDispositions":true}
+any key named revision / provenanceDigest / contentDigest / lastUpdated: []
+any key carrying aggregate counts by state or reason: []
+keys naming a listing-map or corporate-action version or digest: []
+body contains the upstream provenance digest value: false
+count: 2
+tally by state / reason, computed by the probe from identities[]: {"UNMATCHED / NO_IDENTIFIER_PROVIDED":2}
+== 4. Same holdings, upstream current revision changed from 1 to 7
+HTTP status: 200
+response byte-identical to the revision-1 response: true
+body contains the revision-7 provenance digest value: false
+== 5. Request names revision 1 in the query; upstream is at revision 7 with different holdings
+HTTP status: 200
+IPC requests sent: [{"op":"portfolio.get","payloadKeys":["portfolioId"]}]
+count returned (revision-1 holdings: 2; current holdings: 3): 3
+symbols returned are the CURRENT holdings: true
+== 6. Failure responses
+identity files missing: status, error: [503,"identity-sources-unavailable"]
+identity files missing: keys of one issues[] item: ["file","code","subject"]
+identity files missing: issue code: "IDENTITY_SOURCE_MISSING"
+identity files missing: issue subject is an absolute local directory path: true
+owner precondition not set: status, error: [503,"holdings-unavailable"]
+holdings read fails: status, error: [503,"holdings-unavailable"]
+PUT: status: 405
+HEAD: status, body length: [200,0]
+== 7. Existing revision-bearing reads on the same adapter (GET only)
+GET /api/user-portfolios/<id>: status: 200
+GET /api/user-portfolios/<id>: keys of portfolio: ["portfolioId","portfolioName","revision","holdings","totalMarketValue","totalHoldingsCount","weightSumPercentage","lastUpdated","provenanceDigest","isSaved","contributions"]
+  revision: 1
+  provenanceDigest equals the upstream value: true
+  holdings[0] carries securityIdentity (object): true
+  holdings[1] carries securityIdentity === null: true
+  holdings order equals identities[].holdingIndex order: true
+GET /api/user-portfolios/<id>/revisions: status: 200
+GET /api/user-portfolios/<id>/revisions: keys of one entry: ["revision","operation","totalMarketValue","provenanceDigest","holdingsCount","createdAt"]
+IPC requests sent by these reads: [{"op":"portfolio.get","payloadKeys":["portfolioId"]},{"op":"portfolio.get","payloadKeys":["portfolioId"]},{"op":"portfolio.revisions","payloadKeys":["portfolioId"]}]
+
+== IRR commit d10afbb31573d999f4b331484fcb79c510df1304 (head of open PR #563)
+== 1. Request shape
+route table: [{"id":"portfolio-holding-identities","pattern":"/api/investment/portfolio/:portfolioId/identities","methods":["GET","HEAD"],"mutating":false,"description":"Governed issuer/security identity per holding, independent of any disposition record."}]
+path claimed without query: true
+path claimed with ?revision=1&provenanceDigest=x: true
+portfolioId parsed from the URL with that query: "synthetic-portfolio"
+path claimed for /identities/1 (a revision path segment): false
+== 2. Call path and what crosses the IPC boundary
+HTTP status: 200
+IPC requests sent for one GET: [{"op":"portfolio.get","payloadKeys":["portfolioId"]}]
+== 3. Response shape (upstream current revision 1)
+top-level keys: ["status","portfolioId","count","identities","directory","disclosures"]
+keys of one identities[] item: ["holdingIndex","symbol","isin","series","d114SecurityIdentity","state","outcomeClass","issuerId","securityId","listingId","resolutionBasis","reason","reasonText","assessable"]
+directory keys: ["rosterVersion","rosterDigest","rosterDataClass","issuerCount","securityCount","listingCount","corporateActionCount","corporateActionsEmpty"]
+rosterVersion equals rosterDigest: true
+rosterDataClass (synthetic fixture): "SYNTHETIC_FIXTURE"
+disclosures: {"decisionSupportOnly":true,"nonProduction":true,"independentOfDispositions":true}
+any key named revision / provenanceDigest / contentDigest / lastUpdated: []
+any key carrying aggregate counts by state or reason: []
+keys naming a listing-map or corporate-action version or digest: []
+body contains the upstream provenance digest value: false
+count: 2
+tally by state / reason, computed by the probe from identities[]: {"RESOLVED / null":1,"UNMATCHED / NO_IDENTIFIER_PROVIDED":1}
+== 4. Same holdings, upstream current revision changed from 1 to 7
+HTTP status: 200
+response byte-identical to the revision-1 response: true
+body contains the revision-7 provenance digest value: false
+== 5. Request names revision 1 in the query; upstream is at revision 7 with different holdings
+HTTP status: 200
+IPC requests sent: [{"op":"portfolio.get","payloadKeys":["portfolioId"]}]
+count returned (revision-1 holdings: 2; current holdings: 3): 3
+symbols returned are the CURRENT holdings: true
+== 6. Failure responses
+identity files missing: status, error: [503,"identity-sources-unavailable"]
+identity files missing: keys of one issues[] item: ["file","code","subject"]
+identity files missing: issue code: "IDENTITY_SOURCE_MISSING"
+identity files missing: issue subject is an absolute local directory path: false
+owner precondition not set: status, error: [503,"holdings-unavailable"]
+holdings read fails: status, error: [503,"holdings-unavailable"]
+PUT: status: 405
+HEAD: status, body length: [200,0]
+== 7. Existing revision-bearing reads on the same adapter (GET only)
+GET /api/user-portfolios/<id>: status: 200
+GET /api/user-portfolios/<id>: keys of portfolio: ["portfolioId","portfolioName","revision","holdings","totalMarketValue","totalHoldingsCount","weightSumPercentage","lastUpdated","provenanceDigest","isSaved","contributions"]
+  revision: 1
+  provenanceDigest equals the upstream value: true
+  holdings[0] carries securityIdentity (object): true
+  holdings[1] carries securityIdentity === null: true
+  holdings order equals identities[].holdingIndex order: true
+GET /api/user-portfolios/<id>/revisions: status: 200
+GET /api/user-portfolios/<id>/revisions: keys of one entry: ["revision","operation","totalMarketValue","provenanceDigest","holdingsCount","createdAt"]
+IPC requests sent by these reads: [{"op":"portfolio.get","payloadKeys":["portfolioId"]},{"op":"portfolio.get","payloadKeys":["portfolioId"]},{"op":"portfolio.revisions","payloadKeys":["portfolioId"]}]

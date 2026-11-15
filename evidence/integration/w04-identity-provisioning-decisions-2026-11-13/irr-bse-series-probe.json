@@ -1,0 +1,74 @@
+{
+  "probe": "IPD_W04_IRR_BSE_SERIES_PROBE_V1",
+  "irrClosedSeriesList": [
+    "EQ",
+    "BE",
+    "BZ",
+    "N1",
+    "W1",
+    "SM",
+    "IT",
+    "MT"
+  ],
+  "q1_bseListingWithSeriesA": {
+    "loaderAccepted": false,
+    "issueCodes": [
+      "listing-map.json:INVALID_LISTING_SERIES"
+    ]
+  },
+  "q2_bseListingWithSeriesEQ": {
+    "loaderAccepted": true,
+    "issueCodes": []
+  },
+  "q3_exportAsItStands_nseEqListingOnly": {
+    "loaderAccepted": true,
+    "isinAndSeriesA": {
+      "state": "AMBIGUOUS_LISTING",
+      "reason": "MULTIPLE_SECURITIES_SHARE_LISTING",
+      "chosenListing": null
+    },
+    "isinAndSeriesEQ": {
+      "state": "RESOLVED",
+      "reason": null,
+      "chosenListing": "NSE/EQ"
+    },
+    "isinOnly": {
+      "state": "RESOLVED",
+      "reason": null,
+      "chosenListing": "NSE/EQ"
+    }
+  },
+  "q4_nseEqAndBseEqListings": {
+    "isinAndSeriesA": {
+      "state": "AMBIGUOUS_LISTING",
+      "reason": "MULTIPLE_SECURITIES_SHARE_LISTING",
+      "chosenListing": null
+    },
+    "isinSeriesAAndBseSymbol": {
+      "state": "AMBIGUOUS_LISTING",
+      "reason": "MULTIPLE_SECURITIES_SHARE_LISTING",
+      "chosenListing": null
+    },
+    "isinSeriesEQAndBseSymbol": {
+      "state": "RESOLVED",
+      "reason": null,
+      "chosenListing": "BSE/EQ"
+    },
+    "isinSeriesEQAndNseSymbol": {
+      "state": "RESOLVED",
+      "reason": null,
+      "chosenListing": "NSE/EQ"
+    },
+    "isinAndSeriesEQ_noSymbol": {
+      "state": "RESOLVED",
+      "reason": null,
+      "chosenListing": "BSE/EQ"
+    },
+    "isinOnly": {
+      "state": "RESOLVED",
+      "reason": null,
+      "chosenListing": "BSE/EQ"
+    },
+    "note": "Without an exchange and symbol the resolver breaks the tie by series EQ, then earliest effectiveFrom, then listing id. The probe gives both listings the same effectiveFrom, so the listing id decided; with real dates the earlier listing wins."
+  }
+}

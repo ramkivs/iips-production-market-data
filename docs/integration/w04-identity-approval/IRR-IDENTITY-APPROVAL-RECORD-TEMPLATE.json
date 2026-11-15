@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "IPD_IRR_IDENTITY_APPROVAL_V2",
+  "approvalId": null,
+  "status": null,
+  "policyVersion": "IPD-IRR-IDENTITY-APPROVAL-POLICY-2",
+  "decision": {
+    "decisionId": "IIPS-W04-D1",
+    "decisionRecord": "docs/integration/IIPS-W04-IDENTITY-PROVISIONING-DECISIONS-D1-D4-2026-11-13.md"
+  },
+  "subject": {
+    "files": {
+      "eligible-roster.json": {
+        "sha256": null,
+        "bytes": null
+      },
+      "listing-map.json": {
+        "sha256": null,
+        "bytes": null
+      },
+      "corporate-actions.json": {
+        "sha256": null,
+        "bytes": null
+      }
+    },
+    "p04Source": {
+      "batchId": null,
+      "authorizationRef": null,
+      "operatingMode": null,
+      "checksumSha256": null,
+      "recordCount": null
+    },
+    "generation": {
+      "reportSchemaVersion": null,
+      "mappingVersion": null,
+      "rosterLabel": null,
+      "p7ManifestSha256": null,
+      "issuerKeySupplementSha256": null,
+      "requiredIsins": null,
+      "issuersExported": null,
+      "securitiesExported": null,
+      "nseListingsExported": null,
+      "corporateActionsExported": null,
+      "recordsWithheld": null
+    },
+    "irrCommit": null,
+    "ipdToolCommit": null
+  },
+  "scope": {
+    "environment": "LOCAL_SINGLE_USER_IIPS",
+    "consumer": "IRR_INVESTMENT_IDENTITY_SOURCES",
+    "rosterDataClass": "OPERATOR_SUPPLIED",
+    "productWideAuthoritativeUse": false,
+    "productionUse": false,
+    "hostedUse": false,
+    "multiUserUse": false,
+    "commercialUse": false
+  },
+  "accepted": {
+    "exportLimitationCodes": [],
+    "additionalLimitationCodes": [],
+    "withheldRecords": []
+  },
+  "approver": {
+    "authorityId": null,
+    "name": null,
+    "decision": null,
+    "statement": null
+  },
+  "approvedAtUtc": null,
+  "reviewDateUtc": null,
+  "revocation": null
+}

@@ -1,0 +1,43 @@
+IPD tool run in the sandbox against IRR checkout 08411bcd6d782a601fe5c82cc9983d076831148d.
+The data root already holds three other identity files before the run: a copy of IRR's tracked set evidence/real-issuer/REL-1-INFOSYS-2026-11-06/identity.
+
+identity directory before:
+d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd  corporate-actions.json
+f38334a45fcee8bc81bd9902afae9deda659ec9373778d4e113c20151b876065  eligible-roster.json
+5bc4780b67cb79164909e05177fc8d80981cd947cc71d956fcf58b9442c2e507  listing-map.json
+
+$ install --staging <staging> --data-dir <data root>
+RESULT: FAIL (TARGET_HAS_OTHER_FILES) the identity directory already holds different files; they are not replaced unless replacement is requested explicitly
+exit code: 5
+
+identity directory after the refusal:
+d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd  corporate-actions.json
+f38334a45fcee8bc81bd9902afae9deda659ec9373778d4e113c20151b876065  eligible-roster.json
+5bc4780b67cb79164909e05177fc8d80981cd947cc71d956fcf58b9442c2e507  listing-map.json
+
+$ install --staging <staging> --data-dir <data root> --replace
+RESULT: PASS (REPLACED)
+identity directory: <data root>/investment/identity
+eligible-roster.json: sha256 078e89cc1896d0f59e09e2ad05a12378e248cd81b97775ee7667b5f1e750e937, 1350516 bytes
+listing-map.json: sha256 6a330123a2fea31e9e1dd54f01e5adbe13f9721f077a5a82a34ee7cd60bcf458, 1285774 bytes
+corporate-actions.json: sha256 d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd, 70 bytes
+previous files copied to: <staging>/replaced-<tag>
+receipt: <staging>/install-receipt.json
+The IRR server reads these files on every request. No restart is needed.
+exit code: 0
+
+identity directory after the replacement:
+d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd  corporate-actions.json
+078e89cc1896d0f59e09e2ad05a12378e248cd81b97775ee7667b5f1e750e937  eligible-roster.json
+6a330123a2fea31e9e1dd54f01e5adbe13f9721f077a5a82a34ee7cd60bcf458  listing-map.json
+
+copy of the previous files kept in the staging directory:
+d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd  corporate-actions.json
+f38334a45fcee8bc81bd9902afae9deda659ec9373778d4e113c20151b876065  eligible-roster.json
+5bc4780b67cb79164909e05177fc8d80981cd947cc71d956fcf58b9442c2e507  listing-map.json
+
+content of <data root>/investment after the run:
+identity
+
+install receipt, action and backup flag:
+REPLACED true

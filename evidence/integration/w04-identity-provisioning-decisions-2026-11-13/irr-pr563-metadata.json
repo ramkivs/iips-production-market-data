@@ -1,0 +1,54 @@
+{
+    "additions": 11444,
+    "author": "ramkivs",
+    "baseRefName": "main",
+    "changedFiles": 49,
+    "checks": [
+        {
+            "completedAt": "2026-11-13T04:16:34Z",
+            "conclusion": "SUCCESS",
+            "name": "Typecheck \u00b7 Test \u00b7 Build",
+            "status": "COMPLETED",
+            "workflowName": "CI"
+        }
+    ],
+    "commitCount": 6,
+    "commits": [
+        {
+            "headline": "feat(identity): harden Phase 1 source validation and project IPD D114\u2026",
+            "oid": "7f3f7db14eb6"
+        },
+        {
+            "headline": "fix(investment): enforce W05 sourceRights dataset classification on c\u2026",
+            "oid": "6ae09ac087cd"
+        },
+        {
+            "headline": "feat(w07): resolve XBRL ingestion defects and publish L-038/L-039 lim\u2026",
+            "oid": "7755db944857"
+        },
+        {
+            "headline": "docs(w10): preserve preliminary mapping inventory and handoff",
+            "oid": "db098e27167e"
+        },
+        {
+            "headline": "feat(w10): map every declared engine input and qualify issuers to the\u2026",
+            "oid": "b367589b5b03"
+        },
+        {
+            "headline": "feat(w11): execute qualified issuers on their compatible certified en\u2026",
+            "oid": "d10afbb31573"
+        }
+    ],
+    "createdAt": "2026-11-12T18:16:17Z",
+    "deletions": 97,
+    "headRefOid": "d10afbb31573d999f4b331484fcb79c510df1304",
+    "isDraft": false,
+    "mergeStateStatus": "CLEAN",
+    "mergeable": "MERGEABLE",
+    "number": 563,
+    "reviewCount": 0,
+    "reviewDecision": "",
+    "state": "OPEN",
+    "title": "Snapshot-to-Live W07: Financial limitation resolution (L-038, L-039, L-040 preservation) & XBRL ingestion fixes",
+    "updatedAt": "2026-11-13T04:16:47Z"
+}

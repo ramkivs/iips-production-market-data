@@ -1,0 +1,115 @@
+# Same <staging>. One tracked file of the tool, scripts/provision-irr-identity-sources.mjs, has a line appended and not committed.
+# IPD checkout: commit 3b924711b53fd49f67adc97bbb6e26c03f614971; tracked tool files changed: 1
+
+## review with a changed tool file
+$ node scripts/provision-irr-identity-sources.mjs review --staging <staging> --accept-withheld 2 --irr-root <IRR checkout> --as-of 2026-11-14
+REVIEW ONLY: this command installs nothing and creates no approval.
+
+-- generate --
+RESULT: PASS
+mapping: IPD-IRR-IDENTITY-EXPORT-MAPPING-1
+P04 master: batch BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001
+P04 master: 2390 records, checksum verified: true
+P7 manifest: used for corroboration only
+issuer-key supplement: none
+master records: 2390; exported: 2388; withheld: 2
+  withheld, ISSUER_SHARED_ACROSS_ISINS: 2
+issuers: 2388 (keyed by CIN 0, by equity ISIN 2388)
+listings: NSE 2388 of 2390; BSE 0 of 2290
+corporate actions: 0
+  withheld: IN9175A01010 JISLDVREQS: ISSUER_SHARED_ACROSS_ISINS
+  withheld: INE175A01038 JISLJALEQS: ISSUER_SHARED_ACROSS_ISINS
+eligible-roster.json: sha256 078e89cc1896d0f59e09e2ad05a12378e248cd81b97775ee7667b5f1e750e937, 1350516 bytes
+listing-map.json: sha256 6a330123a2fea31e9e1dd54f01e5adbe13f9721f077a5a82a34ee7cd60bcf458, 1285774 bytes
+corporate-actions.json: sha256 d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd, 70 bytes
+limitations of this export (each is explained in the report):
+  CIN_NOT_EXPORTED
+  SECTOR_UNCLASSIFIED
+  BSE_LISTINGS_NOT_EXPORTED
+  CORPORATE_ACTIONS_EMPTY
+  NO_SYMBOL_HISTORY
+  ELIGIBLE_MEANS_ACTIVE_NSE_LISTING
+  SERIES_FROM_UNIVERSE_DEFINITION
+  SOURCE_AUTHORITY_CONDITIONAL
+report: <staging>/provisioning-report.json
+identity files: <staging>/identity
+
+-- validate --
+RESULT: PASS
+IRR commit: 08411bcd6d782a601fe5c82cc9983d076831148d; worktree clean: true
+as of: 2026-11-14
+IRR loader: accepted the three files; roster class OPERATOR_SUPPLIED
+IRR counts: issuers 2388, securities 2388, listings 2388, corporate actions 0
+IRR resolver, by ISIN: 2388 of 2388 resolved to the same record
+IRR resolver, by exchange and symbol: 2388 of 2388 resolved to the same record
+IRR roster version: sha256:4baa4e596f84741018e03c08248faf89ff19a37b3d1877220d56dc27aafe7199
+IRR listing-map version: sha256:b04416b290d1b6fe682717505f9ecd940e025ee6e0d6d1dc0f68f105604a0dca
+IRR corporate-action table version: sha256:0b1d3cbfe52c62afbfabffe2a8ed66dd4a0812ca712f05e1ed9a58caa4b75819
+gate record: <staging>/irr-loader-gate.json
+
+-- what an approval record for these files has to bind (subject) --
+eligible-roster.json: sha256 078e89cc1896d0f59e09e2ad05a12378e248cd81b97775ee7667b5f1e750e937, 1350516 bytes
+listing-map.json: sha256 6a330123a2fea31e9e1dd54f01e5adbe13f9721f077a5a82a34ee7cd60bcf458, 1285774 bytes
+corporate-actions.json: sha256 d6bc14d1b676260bb0f1c2280e62956d3f6a7e07b9b9265a73b49f821185ffcd, 70 bytes
+P04 source batch: BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001
+P04 source authorization: AUTH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-ACT-2026-11-08-001
+P04 source operating mode: OFFLINE_BOOTSTRAP
+P04 source checksum sha256: b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4
+P04 source records: 2390
+report schema: IPD_IRR_IDENTITY_SOURCE_EXPORT_V1
+mapping version: IPD-IRR-IDENTITY-EXPORT-MAPPING-1
+roster label: IPD P04 security master export, NSE CM series EQ; batch BATCH-D05-REPLACEMENT-AUTHENTICATED-UNIVERSE-2026-11-08-001; master sha256 b555fd28589a03ea5cbb11c92f880468bcc4b63f449b853a18542aca5817d4c4; mapping IPD-IRR-IDENTITY-EXPORT-MAPPING-1; issuer-key supplement none
+P7 manifest sha256: 13bd2ef18b3dc79ed3d78e78126c4c4ee431e83665847bcb948f6184e14078bc
+issuer-key supplement sha256: none
+required-ISIN coverage: not counted in this generation
+exported: issuers 2388, securities 2388, NSE listings 2388, corporate actions 0; withheld 2
+IRR commit of the accepted loader gate: 08411bcd6d782a601fe5c82cc9983d076831148d
+IPD commit of this provisioning tool: not available (tracked files of the tool differ from the commit; commit or discard the changes)
+
+-- permitted scope (fixed; an approval cannot widen it) --
+environment: LOCAL_SINGLE_USER_IIPS
+consumer: IRR_INVESTMENT_IDENTITY_SOURCES
+rosterDataClass: OPERATOR_SUPPLIED
+productWideAuthoritativeUse: false
+productionUse: false
+hostedUse: false
+multiUserUse: false
+commercialUse: false
+
+-- what the approval has to accept explicitly --
+export limitation: CIN_NOT_EXPORTED
+export limitation: SECTOR_UNCLASSIFIED
+export limitation: BSE_LISTINGS_NOT_EXPORTED
+export limitation: CORPORATE_ACTIONS_EMPTY
+export limitation: NO_SYMBOL_HISTORY
+export limitation: ELIGIBLE_MEANS_ACTIVE_NSE_LISTING
+export limitation: SERIES_FROM_UNIVERSE_DEFINITION
+export limitation: SOURCE_AUTHORITY_CONDITIONAL
+additional limitation: NON_EQ_SERIES_HOLDINGS_UNRESOLVED
+additional limitation: NSE_SOURCE_FILE_WITHOUT_RETRIEVAL_RECEIPT
+additional limitation: ROSTER_LARGER_THAN_IID_DESIGN_DEFAULT
+additional limitation: HOLDINGS_COVERAGE_NOT_MEASURED
+withheld record: IN9175A01010: ISSUER_SHARED_ACROSS_ISINS
+withheld record: INE175A01038: ISSUER_SHARED_ACROSS_ISINS
+
+-- approval policy of this tool --
+policy: IPD-IRR-IDENTITY-APPROVAL-POLICY-2; decision: IIPS-W04-D1
+approver: Ramki (PROGRAM_AUTHORITY_RAMKI); one approval, no second approver
+validity: Valid from approvedAtUtc until reviewDateUtc. From the review date on, installation is refused; renewal is a new record by the approver.
+determination: CV-22 Option C: five prerequisites before any expansion of the governed sector-reference universe
+  result: DOES_NOT_APPLY
+  consequence: No CV-22 prerequisite is checked. The installation target is fixed to the identity directory, so the tool cannot change the sector-reference universe.
+determination: IID roster content, item Q-2: operator-curated file, seeded from holdings and watchlist, capped at 200, every row requiring an ISIN
+  result: APPLIES_AS_DESIGN_DEFAULT_NOT_AS_LIMIT
+  consequence: A roster above 200 issuers is not refused. It carries the limitation ROSTER_LARGER_THAN_IID_DESIGN_DEFAULT, which the approval record must accept by name. A roster of 200 issuers or fewer does not carry it.
+review record: <staging>/review-for-approval.json
+
+REVIEW RESULT: COMPLETE, NOT YET READY FOR APPROVAL - the proposed files are staged and were NOT installed. An approval record cannot be written until both commits above are available.
+exit code: 0
+
+## subject of the review record it wrote
+{
+  "readyForApproval": false,
+  "ipdToolCommit": null,
+  "irrCommit": "08411bcd6d782a601fe5c82cc9983d076831148d"
+}
