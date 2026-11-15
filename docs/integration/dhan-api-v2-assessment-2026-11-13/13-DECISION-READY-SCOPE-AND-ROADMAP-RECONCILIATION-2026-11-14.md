@@ -2,6 +2,8 @@
 
 **For human review.** This report proposes decisions; it does not amend the roadmap or authorize implementation.
 
+**Subsequent W-06 disposition:** The accountable owner has accepted the successful execution as final. See [IPD W-06 final owner attestation](../DHAN-W06-FINAL-OWNER-ATTESTATION.md): **COMPLETE — OWNER ATTESTED**, with no further owner evidence or repeat execution required. This later disposition supersedes this historical report's W-06-open and immediate-continuation statements, including its then-current request-budget description; it does not rewrite the earlier assessment or automatically complete M2. The attestation links the prior IRR roadmap assessment and preserves its pre-attestation provenance.
+
 This report preserves the complete decision-ready assessment returned in the preceding task, with two focused corrections: the unrelated current-portfolio standing-authority reference has been removed, and the M1 authentication interpretation and proposed acceptance wording have been clarified. The assessment package is on IPD branch `docs/dhan-api-v2-comprehensive-assessment`; this report is published in the corresponding package path on the current IPD session branch. The package documents are referenced at their pinned branch commit below and are not copied or changed here.
 
 ## 1. Executive summary
