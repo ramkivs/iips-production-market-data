@@ -1,9 +1,17 @@
 # W04-P7: the 64 original holdings against the published P7 manifest (2026-11-15)
 
 **W04 status is unchanged: PARTIALLY COMPLETE. Not accepted.** This folder holds a read-only
-verification utility and its command for the host. **The utility has not been run on the
-original CSV.** Everything executed so far is synthetic and ran in the sandbox (section 6).
-W04-P7 is not accepted until the Principal returns a successful host result.
+verification utility and its command for the host.
+
+**Host result, added 2026-11-15.** The Principal ran the utility on the Windows host on the
+original CSV and reports `ALL_64_MATCH_PUBLISHED_MANIFEST`, exit code 0: 15 checks passed,
+0 failed, 0 warnings. **W04-P7 technical evidence: COMPLETE / PASS.** The result, what was and
+was not supplied, and the outstanding approval dependency are in the
+[host verification record](../../../docs/integration/IIPS-W04-P7-PUBLISHED-MANIFEST-HOST-VERIFICATION-2026-11-15.md). That run was the
+Principal's. It was not made in the sandbox, and its complete output is not in the repository.
+
+Everything executed in the sandbox is synthetic (section 6). The rest of this document is the
+record of the utility as prepared and is otherwise unchanged.
 
 ## 1. Question
 
@@ -170,14 +178,15 @@ Run once in the sandbox and not committed as tests:
   absent on 18. Node 25 denies the network under the model unless `--allow-net` is given;
   earlier versions have no network flag.
 
-**Not run:** Windows, PowerShell, the original CSV, the address on `raw.githubusercontent.com`
+**Not run in the sandbox:** Windows, PowerShell, the original CSV, the address on `raw.githubusercontent.com`
 (outside the sandbox's reach; the same bytes were served from the tracked file, whose SHA-256
 is the recorded one).
 
 ## 7. The command for the Principal
 
-Windows PowerShell. **It has not been executed: the sandbox has no PowerShell.** Paste it as
-one block; it is a single command. It ends without closing the window. The utility is pinned
+Windows PowerShell. **It was not executed in the sandbox, which has no PowerShell.** The
+Principal's host run is recorded in the [host verification record](../../../docs/integration/IIPS-W04-P7-PUBLISHED-MANIFEST-HOST-VERIFICATION-2026-11-15.md).
+Paste it as one block; it is a single command. It ends without closing the window. The utility is pinned
 to commit `59bf98b93130a140f915cd8a3cedb8a1321e2f9a` (the commit before this record) and to its
 SHA-256.
 
@@ -285,4 +294,5 @@ Limits:
 | `w04-p7-published-manifest-qualification.mjs` | The utility. SHA-256 `07a27e7287e921f46a40c1643437bd7d7853e08f765e78820e460abe7e0fffbc`. |
 | `sample-output-synthetic.txt` | Output of a run on 64 invented holdings. Format example only. |
 | `README.md` | This record. |
+| [`docs/integration/IIPS-W04-P7-PUBLISHED-MANIFEST-HOST-VERIFICATION-2026-11-15.md`](../../../docs/integration/IIPS-W04-P7-PUBLISHED-MANIFEST-HOST-VERIFICATION-2026-11-15.md) | The Principal's host result of 2026-11-15 and the W04-P7 status. |
 | `tests/w04_p7_published_manifest_qualification.test.ts` | The 14 tests. |
