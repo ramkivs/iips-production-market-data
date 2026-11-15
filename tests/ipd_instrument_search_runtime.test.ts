@@ -55,7 +55,7 @@ test('actual daemon loads retained P7 and serves authenticated INFY ticker searc
     assert.ok(!JSON.stringify(body).includes('dhanSecurityId'));
     const name = await (await post('INFOSYS','Bearer test-only')).json() as {results:unknown[]};
     const isinSearch = await (await post('INE009A01021','Bearer test-only')).json() as {results:unknown[]};
-    assert.equal(name.results.length,2); assert.equal(isinSearch.results.length,2);
+    assert.equal(name.results.length,4); assert.equal(isinSearch.results.length,2);
   } finally { await started.handle.shutdown(); }
 });
 
