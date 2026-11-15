@@ -232,7 +232,7 @@ const TRANSIENT_CODES: ReadonlySet<DhanFailureCode> = new Set([
 
 export function isTransientFailure(code: DhanFailureCode, httpStatus?: number): boolean {
   if (!TRANSIENT_CODES.has(code)) return false;
-  if (code === 'HTTP_ERROR') return httpStatus !== undefined && httpStatus >= 500;
+  if (code === 'HTTP_ERROR') return httpStatus !== undefined && [500, 502, 503, 504].includes(httpStatus);
   return true;
 }
 
@@ -241,6 +241,20 @@ export interface RetryOptions {
   baseDelayMs?: number; // default 100
   sleep?: (ms: number) => Promise<void>;
   rng?: () => number; // jitter source, default Math.random
+  beforeAttempt?: () => Promise<void>;
+  onAttempt?: (event: RetryAttemptEvent) => void;
+  maxRetryDelayMs?: number;
+}
+
+/** Safe categories only; no provider body, headers, identity or credentials. */
+export interface RetryAttemptEvent {
+  attempt: number;
+  durationMs: number;
+  outcome: 'SUCCESS' | 'FAILURE';
+  code?: DhanFailureCode;
+  httpStatus?: number;
+  retryDelayMs?: number;
+  final: boolean;
 }
 
 export async function withBoundedRetry<T>(
@@ -248,20 +262,33 @@ export async function withBoundedRetry<T>(
   options: RetryOptions = {}
 ): Promise<DhanResult<T>> {
   const maxAttempts = options.maxAttempts ?? 3;
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1 || maxAttempts > 10) throw new RangeError('maxAttempts must be between 1 and 10');
   const baseDelayMs = options.baseDelayMs ?? 100;
   const sleep = options.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
   const rng = options.rng ?? Math.random;
-
-  let attempt = 0;
-  let result = await fn();
-  while (!result.ok && attempt < maxAttempts - 1 && isTransientFailure(result.failure.code, result.failure.httpStatus)) {
-    attempt++;
-    const backoff = baseDelayMs * 2 ** (attempt - 1);
-    const jitter = rng() * backoff * 0.5;
-    await sleep(backoff + jitter);
-    result = await fn();
+  for (let attempt = 1; ; attempt++) {
+    await options.beforeAttempt?.();
+    const start = Date.now();
+    const result = await fn();
+    const durationMs = Math.max(0, Date.now() - start);
+    let delay: number | undefined;
+    if (!result.ok && attempt < maxAttempts && isTransientFailure(result.failure.code, result.failure.httpStatus)) {
+      const backoff = baseDelayMs * 2 ** (attempt - 1);
+      const jitter = Math.max(0, Math.min(1, rng())) * backoff * 0.5;
+      delay = Math.max(backoff + jitter, result.failure.retryAfterMs ?? 0);
+      // Never shorten a server-requested delay. Return the original failure if
+      // it exceeds the bounded operation budget.
+      if (!Number.isFinite(delay) || delay > (options.maxRetryDelayMs ?? 30000)) delay = undefined;
+    }
+    options.onAttempt?.({ attempt, durationMs, outcome: result.ok ? 'SUCCESS' : 'FAILURE', ...(!result.ok ? { code: result.failure.code, ...(result.failure.httpStatus !== undefined ? { httpStatus: result.failure.httpStatus } : {}) } : {}), ...(delay !== undefined ? { retryDelayMs: delay } : {}), final: delay === undefined });
+    if (delay === undefined) {
+      if (!result.ok && attempt >= maxAttempts && isTransientFailure(result.failure.code, result.failure.httpStatus) && maxAttempts > 1) {
+        return { ok: false, failure: { ...result.failure, message: `quote retry attempts exhausted after ${attempt} attempts` } };
+      }
+      return result;
+    }
+    await sleep(delay);
   }
-  return result;
 }
 
 // ── Refresh orchestration ────────────────────────────────────────────────────
@@ -286,14 +313,15 @@ export interface DhanRefreshOrchestratorOptions {
   /** Provider fetch, already instrument-resolved; returns canonical envelope or deterministic failure. */
   fetchQuote: (scope: DhanSecurityScope) => Promise<DhanResult<CanonicalEnvelope<MarketQuotePayload>>>;
   now?: () => Date;
+  /** Quote attempt limits and optional test seams. */
+  retry?: RetryOptions;
 }
 
 /**
  * Explicit, caller-driven refresh (no background timers). Per instrument:
  * fresh cache → SKIPPED_FRESH unless forceProvider is requested; otherwise a
- * coalesced, rate-limited, concurrency-bounded single provider attempt. Success →
- * cache updated; failure → explicit FAILURE and any prior observation is PRESERVED.
- * No automatic quote retry: a timeout can follow a request received by the vendor.
+ * coalesced, rate-limited, concurrency-bounded fetch with bounded retries.
+ * Success updates cache; failure preserves the prior observation.
  * One instrument's failure never affects another's outcome.
  */
 export class DhanRefreshOrchestrator {
@@ -303,6 +331,10 @@ export class DhanRefreshOrchestrator {
   private readonly coalescer: DhanRequestCoalescer;
   private readonly fetchQuote: DhanRefreshOrchestratorOptions['fetchQuote'];
   private readonly now: () => Date;
+  private readonly retry: RetryOptions;
+  private pacing: Promise<void> = Promise.resolve();
+  private nextAttemptAt = 0;
+  private readonly attempts: RetryAttemptEvent[] = [];
   private stopped = false;
 
   constructor(options: DhanRefreshOrchestratorOptions) {
@@ -312,6 +344,33 @@ export class DhanRefreshOrchestrator {
     this.coalescer = options.coalescer;
     this.fetchQuote = options.fetchQuote;
     this.now = options.now ?? (() => new Date());
+    this.retry = options.retry ?? {};
+    const max = this.retry.maxAttempts ?? 3;
+    if (!Number.isInteger(max) || max < 1 || max > 10) throw new RangeError('maxAttempts must be between 1 and 10');
+  }
+
+  /** Sanitized bounded diagnostics, oldest first. */
+  public getAttemptDiagnostics(): readonly RetryAttemptEvent[] { return this.attempts.map(event => ({ ...event })); }
+
+  private async pacedFetch(scope: DhanSecurityScope): Promise<DhanResult<CanonicalEnvelope<MarketQuotePayload>>> {
+    const previous = this.pacing;
+    let release!: () => void;
+    this.pacing = new Promise<void>(resolve => { release = resolve; });
+    await previous;
+    try {
+      const delay = Math.max(0, this.nextAttemptAt - Date.now());
+      if (delay > 30000) return { ok: false, failure: { code: 'RATE_LIMITED', message: 'provider retry delay exceeds the local wait budget' } };
+      if (delay) await new Promise<void>(resolve => setTimeout(resolve, delay));
+      if (!this.limiter.tryAcquire()) return { ok: false, failure: { code: 'RATE_LIMITED', message: 'provider request budget exhausted' } };
+      const result = await this.fetchQuote(scope);
+      // Wait a full second after completion: even delayed credential resolution
+      // cannot bunch provider sends. Conservative for this single-user daemon.
+      this.nextAttemptAt = Date.now() + 1000;
+      if (!result.ok && result.failure.retryAfterMs !== undefined) {
+        this.nextAttemptAt = Math.max(this.nextAttemptAt, Date.now() + result.failure.retryAfterMs);
+      }
+      return result;
+    } finally { release(); }
   }
 
   public async refresh(scopes: readonly DhanSecurityScope[], options: { forceProvider?: boolean } = {}): Promise<RefreshOutcome[]> {
@@ -330,17 +389,19 @@ export class DhanRefreshOrchestrator {
           return;
         }
         const outcome = await this.coalescer.run(key, async () => {
-          if (!this.limiter.tryAcquire()) {
-            return { status: 'FAILURE', scope, code: 'RATE_LIMITED' as DhanFailureCode, priorPreserved: cached.state !== 'MISS' } as RefreshOutcome;
-          }
           const acquired = await this.concurrency.acquire();
           if (!acquired) {
             return { status: 'FAILURE', scope, code: 'TRANSPORT_FAILURE' as DhanFailureCode, priorPreserved: cached.state !== 'MISS' } as RefreshOutcome;
           }
           try {
-            // Quote egress consumes an owner-authorized request budget. Never retry
-            // here: even a timeout may have reached the vendor.
-            const result = await this.fetchQuote(scope);
+            const result = await withBoundedRetry(() => this.pacedFetch(scope), {
+              ...this.retry,
+              onAttempt: event => {
+                this.attempts.push(event);
+                if (this.attempts.length > 256) this.attempts.shift();
+                this.retry.onAttempt?.(event);
+              },
+            });
             if (result.ok) {
               this.cache.set(key, result.value);
               const freshness = evaluateFreshness(result.value.provenance.asOf, 'D01_QUOTES', nowIso);

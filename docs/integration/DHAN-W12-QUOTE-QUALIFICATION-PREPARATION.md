@@ -2,7 +2,7 @@
 
 **Status: preparation complete; W-12 live payload qualification and M2 remain open.** No Dhan request was made in this preparation. W-06 remains COMPLETE — OWNER ATTESTED under [its final attestation](DHAN-W06-FINAL-OWNER-ATTESTATION.md); this work does not reopen it or ask for a repeat to close W-06. The governing IRR [roadmap W-12 and M2 criteria](https://github.com/ramkivs/iips-review-recovered/blob/eea3a93e9a3ce3a8ab2a1b2909cfcec3292d9e3f/docs/integration/DHAN-LIVE-INTEGRATION-IMPLEMENTATION-ROADMAP-2026-11-11.md) remain unchanged.
 
-**Subsequent owner direction:** The single-attempt rule below is not an authorized permanent product requirement. Restoration of bounded configurable retries is requested but not yet implemented; see [retry policy work in progress](DHAN-QUOTE-RETRY-POLICY-WORK-IN-PROGRESS.md). Until that replacement is implemented and verified, the description below remains the current candidate behavior, not the intended final retry policy.
+**Subsequent owner direction:** The single-attempt rule and procedure below are historical, not the current candidate policy. Bounded configurable retries have been restored; see [retry policy and remaining limitations](DHAN-QUOTE-RETRY-POLICY-WORK-IN-PROGRESS.md). This historical one-request procedure must not be used to assume the current candidate sends at most once. W-12 qualification remains open.
 
 ## Owner-reported Friday closing snapshot
 

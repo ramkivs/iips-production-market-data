@@ -534,10 +534,15 @@ export async function startMarketDataDaemon(
     now: () => now().getTime(),
   });
 
+  const retrySetting = env['IIPS_DHAN_QUOTE_MAX_ATTEMPTS'];
+  if (retrySetting !== undefined && (!/^(?:[1-9]|10)$/.test(retrySetting))) {
+    return { ok: false, phase: 'configure', code: 'CONFIGURATION_INCOMPLETE', error: 'IIPS_DHAN_QUOTE_MAX_ATTEMPTS must be an integer from 1 to 10.' };
+  }
   const service = new DhanMarketDataService({
     client: apiClient,
     securityMaster,
     instrumentRegistry,
+    retry: { maxAttempts: retrySetting === undefined ? 3 : Number(retrySetting) },
     now,
   });
   service.start();

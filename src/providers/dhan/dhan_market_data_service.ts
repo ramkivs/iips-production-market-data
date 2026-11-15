@@ -31,6 +31,8 @@ import {
   DhanRefreshOrchestrator,
   DhanRequestCoalescer,
   DhanSecurityScope,
+  type RetryOptions,
+  type RetryAttemptEvent,
   dhanQuoteCacheKey,
 } from './dhan_operational_controls.js';
 
@@ -77,6 +79,7 @@ export interface DhanMarketDataServiceOptions {
   limiter?: DhanRateLimiter;
   concurrency?: DhanConcurrencyLimiter;
   coalescer?: DhanRequestCoalescer;
+  retry?: RetryOptions;
   now?: () => Date;
 }
 
@@ -119,6 +122,7 @@ export class DhanMarketDataService {
       limiter: this.limiter,
       concurrency,
       coalescer,
+      retry: options.retry,
       now: this.now,
       fetchQuote: async (scope: DhanSecurityScope) => {
         try {
@@ -148,6 +152,11 @@ export class DhanMarketDataService {
 
   public get isRunning(): boolean {
     return this.running;
+  }
+
+  /** Recent bounded diagnostics; contains no identity, response body or credential. */
+  public getQuoteAttemptDiagnostics(): readonly RetryAttemptEvent[] {
+    return this.orchestrator.getAttemptDiagnostics();
   }
 
   /**

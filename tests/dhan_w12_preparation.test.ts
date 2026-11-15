@@ -68,7 +68,7 @@ describe('W-12 offline preparation', () => {
         credentialResolver: { resolve: async () => { credentials++; return { accessToken: 'synthetic-token', clientId: 'synthetic-client' }; } },
         transport: new DhanServerHttpsTransport({ allowedBaseUrl: 'https://synthetic.invalid/v2', env: {}, fetchImpl: fakeFetch }),
       });
-      const service = new DhanMarketDataService({ client, instrumentRegistry: loadGovernedP7InstrumentRegistry(resolve('evidence/dhan-p7/qualification-manifest.json')), securityMaster: getGovernedBroadSecurityMaster(), now: () => new Date('2026-11-15T13:35:10.151Z') });
+      const service = new DhanMarketDataService({ client, instrumentRegistry: loadGovernedP7InstrumentRegistry(resolve('evidence/dhan-p7/qualification-manifest.json')), securityMaster: getGovernedBroadSecurityMaster(), retry: { maxAttempts: 1 }, now: () => new Date('2026-11-15T13:35:10.151Z') });
       service.start();
       const server = createMarketDataHttpServer({ service, token: 'synthetic-transport', env: {}, requestTimeoutMs: 1500 });
       await new Promise<void>(done => server.listen(0, '127.0.0.1', done));
