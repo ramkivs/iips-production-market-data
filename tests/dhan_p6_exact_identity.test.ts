@@ -35,7 +35,7 @@ function mapping(over: Partial<Record<string, unknown>> = {}) {
     exchange: 'NSE' as const,
     symbol: 'SYNTHA',
     exchangeSegment: 'NSE_EQ' as const,
-    dhanSecurityId: 'SYNTH-NSE-EQ-1001',
+    dhanSecurityId: '900001001',
     mappingProvenance: 'SYNTHETIC_PRE_ACCESS_FIXTURE' as const,
     instrumentType: 'EQUITY' as const,
     active: true,
@@ -56,16 +56,16 @@ interface Rig {
 function makeService(extraMappings: Array<Record<string, unknown>> = [], bodyFor: (id: string) => unknown = (id) => quoteBody(id, 1520.35)): Rig {
   const registry = new DhanInstrumentRegistry();
   registry.register(mapping());
-  registry.register(mapping({ securityId: 'ISIN:INE000SYNTH1:BE', symbol: 'SYNTHA-BE', dhanSecurityId: 'SYNTH-NSE-EQ-1009' }));
-  registry.register(mapping({ isin: 'INE000SYNTH2', securityId: 'ISIN:INE000SYNTH2:EQ', symbol: 'SYNTHB', dhanSecurityId: 'SYNTH-NSE-EQ-1002' }));
+  registry.register(mapping({ securityId: 'ISIN:INE000SYNTH1:BE', symbol: 'SYNTHA-BE', dhanSecurityId: '900001009' }));
+  registry.register(mapping({ isin: 'INE000SYNTH2', securityId: 'ISIN:INE000SYNTH2:EQ', symbol: 'SYNTHB', dhanSecurityId: '900001002' }));
   for (const m of extraMappings) registry.register(m as never);
   const sm = new SecurityMaster();
   const calls: DhanHttpRequest[] = [];
   const transport: DhanHttpTransport = {
     async send(req: DhanHttpRequest): Promise<DhanHttpResponse> {
       calls.push(req);
-      const grouped = JSON.parse(req.body as string) as Record<string, string[]>;
-      const id = grouped['NSE_EQ']?.[0] ?? 'SYNTH-NSE-EQ-1001';
+      const grouped = JSON.parse(req.body as string) as Record<string, number[]>;
+      const id = String(grouped['NSE_EQ']?.[0] ?? 900001001);
       return { status: 200, bodyText: JSON.stringify(bodyFor(id)) };
     },
   };
@@ -86,12 +86,12 @@ describe('DHAN-P6 exact D114 identity enforcement (synthetic)', () => {
     assert.strictEqual(res.ok, true);
     assert.strictEqual(calls.length, 1);
     // The provider request used the EQ instrument, not the BE series of the same ISIN.
-    const body = JSON.parse(calls[0]!.body as string) as Record<string, string[]>;
-    assert.strictEqual(body['NSE_EQ']![0], 'SYNTH-NSE-EQ-1001');
+    const body = JSON.parse(calls[0]!.body as string) as Record<string, number[]>;
+    assert.strictEqual(body['NSE_EQ']![0], 900001001);
     if (res.ok) {
       assert.strictEqual(res.envelope.domain, 'D01_QUOTES');
       const text = JSON.stringify(res);
-      assert.ok(!text.includes('SYNTH-NSE-EQ'), 'no Dhan instrument id leaks outward');
+      assert.ok(!text.includes('900001001'), 'no Dhan instrument id leaks outward');
       assert.ok(!text.includes('synthetic-dhan-token'));
     }
   });
@@ -100,8 +100,8 @@ describe('DHAN-P6 exact D114 identity enforcement (synthetic)', () => {
     const { service, calls } = makeService([], (id) => quoteBody(id, id.endsWith('1009') ? 77 : 1520.35));
     const res = await service.getQuote({ companyId: 'COMP-SYNTH-A', securityIdentity: ID_BE, exchangeSegment: 'NSE_EQ' });
     assert.strictEqual(res.ok, true);
-    const body = JSON.parse(calls[0]!.body as string) as Record<string, string[]>;
-    assert.strictEqual(body['NSE_EQ']![0], 'SYNTH-NSE-EQ-1009');
+    const body = JSON.parse(calls[0]!.body as string) as Record<string, number[]>;
+    assert.strictEqual(body['NSE_EQ']![0], 900001009);
   });
 
   it('missing, malformed or inconsistent identity fails closed with zero provider calls', async () => {
@@ -170,7 +170,7 @@ describe('DHAN-P6 exact D114 identity enforcement (synthetic)', () => {
     if (ambiguous.status === 'UNRESOLVED') assert.match(ambiguous.reason, /AMBIGUOUS_MAPPING/);
     const exact = registry.resolveExactIdentity('COMP-SYNTH-A', 'NSE_EQ', ID_BE);
     assert.strictEqual(exact.status, 'RESOLVED');
-    if (exact.status === 'RESOLVED') assert.strictEqual(exact.mapping.dhanSecurityId, 'SYNTH-NSE-EQ-1009');
+    if (exact.status === 'RESOLVED') assert.strictEqual(exact.mapping.dhanSecurityId, '900001009');
     // BSE listing of the same company stays distinguishable
     assert.strictEqual(registry.resolveExactIdentity('COMP-SYNTH-A', 'BSE_EQ', ID_EQ).status, 'UNRESOLVED');
   });

@@ -744,7 +744,7 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
 
     const fixtureText = fs.readFileSync(path.resolve('tests/fixtures/dhan_d2_fixtures.json'), 'utf-8');
     assert.deepStrictEqual(scanTextForSecrets(fixtureText, 'dhan_d2_fixtures.json'), []);
-    assert.ok(fixtureText.includes('SYNTH-NSE-EQ-'), 'synthetic identifiers must remain visibly synthetic');
+    assert.ok(fixtureText.includes('SYNTHETIC_PRE_ACCESS_FIXTURE'), 'numeric placeholder mappings must retain explicit synthetic provenance');
     assert.ok(!/"access[-_]?token"\s*:/i.test(fixtureText));
 
     const captured: string[] = [];
