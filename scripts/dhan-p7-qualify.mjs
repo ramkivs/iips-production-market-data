@@ -54,6 +54,21 @@ if (parsedCompact.schemaError) throw new Error(`compact schema: ${parsedCompact.
 
 const compactIndex = indexCompactMaster(parsedCompact);
 const securityMaster = getGovernedBroadSecurityMaster();
+
+// The manifest must name the governed P04 revision it was qualified against;
+// a master without a revision cannot be evidenced, so refuse to write one.
+const p04SourceRevision = securityMaster.sourceRevision;
+if (
+  !p04SourceRevision ||
+  typeof p04SourceRevision.batchId !== 'string' ||
+  typeof p04SourceRevision.fileChecksumSha256 !== 'string' ||
+  typeof p04SourceRevision.recordCount !== 'number'
+) {
+  throw new Error(
+    'the P04 security master carries no governed source revision (batchId, fileChecksumSha256, recordCount); refusing to write a qualification manifest that cannot name its master'
+  );
+}
+
 const sourceEvidence = {
   url: retrievalManifest.files[0].sourceUrl,
   retrievedAtUtc: retrievalManifest.files[0].retrievedAtUtc,
@@ -88,6 +103,11 @@ const full = {
   task: 'DHAN-P7',
   generatedAtUtc: new Date().toISOString(),
   pipelineCommit: commit,
+  p04SourceRevision: {
+    batchId: p04SourceRevision.batchId,
+    fileChecksumSha256: p04SourceRevision.fileChecksumSha256,
+    recordCount: p04SourceRevision.recordCount,
+  },
   sources: retrievalManifest.files.map((f) => ({
     filename: f.filename,
     sourceUrl: f.sourceUrl,
@@ -132,6 +152,7 @@ const lines = [
   '# DHAN-P7 Qualification Report',
   '',
   `- Pipeline commit: ${commit}`,
+  `- P04 source revision: ${p04SourceRevision.batchId} sha256=${p04SourceRevision.fileChecksumSha256} records=${p04SourceRevision.recordCount}`,
   `- Detailed: ${detailed.expected.sourceUrl} sha256=${detailed.actual} rows=${manifest.totalRows}`,
   `- Compact: ${compact.expected.sourceUrl} sha256=${compact.actual} rows=${parsedCompact.records.length}`,
   `- Snapshots verified against source-retrieval-manifest.json: yes (immutable, not redownloaded)`,
