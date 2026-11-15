@@ -14,7 +14,7 @@
 import { CanonicalEnvelope, createCanonicalEnvelope } from '../../contracts/envelope.js';
 import { computeLineageHash, DataProvenanceDTO } from '../../contracts/provenance.js';
 import { MarketQuotePayload, validateMarketQuotePayload } from '../../contracts/d01_quotes.js';
-import { OperatingMode, QualityState } from '../../contracts/types.js';
+import { isD114SecurityId, OperatingMode, QualityState } from '../../contracts/types.js';
 import { evaluateFreshness } from '../../quality/freshness_evaluator.js';
 import { DhanQuoteDto, parseDhanTradeTimeToUtcIso } from './dhan_dto.js';
 import { DhanInstrumentMapping } from './dhan_instrument_map.js';
@@ -67,6 +67,15 @@ export function normalizeDhanQuoteToCanonical(
     return dhanFailure('UNRESOLVED_INSTRUMENT', 'Canonical instrument identity is incomplete for normalization', {
       field: 'mapping.companyId',
     });
+  }
+
+  // The normalizer can also be called directly, bypassing registry validation.
+  // Preserve only a well-formed mapping identity consistent with its explicit ISIN.
+  if (mapping.securityId !== undefined && (
+    !isD114SecurityId(mapping.securityId) ||
+    (mapping.isin !== undefined && mapping.securityId.split(':')[1]!.toUpperCase() !== mapping.isin.trim().toUpperCase())
+  )) {
+    return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'Canonical mapping securityId is invalid or disagrees with isin', { field: 'securityId' });
   }
 
   const asOfResult = parseDhanTradeTimeToUtcIso(quote.last_trade_time);
@@ -188,6 +197,8 @@ export function normalizeDhanQuoteToCanonical(
     domain: 'D01_QUOTES',
     mode: input.mode || 'SNAPSHOT',
     companyId: mapping.companyId,
+    // The registry supplies this canonical identity; never derive it from Dhan's DTO.
+    ...(mapping.securityId !== undefined ? { securityId: mapping.securityId } : {}),
     payload,
     provenance,
     timestamp: receivedAt,

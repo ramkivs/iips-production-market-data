@@ -38,6 +38,9 @@ describe('Dhan owner-requested quote freshness (synthetic transport only)', () =
       assert.equal(first.ok, true);
       assert.equal(first.freshness, 'UNAVAILABLE');
       assert.equal(first.envelope.companyId, 'EQ_RELIANCE_IN');
+      assert.equal(first.envelope.securityId, 'ISIN:INE002A01018:EQ');
+      assert.equal(first.envelope.payload.exchange, 'NSE');
+      assert.equal(first.envelope.payload.ltp, 1520);
       assert.equal(first.envelope.provenance.asOf, asOf);
       assert.equal(first.envelope.provenance.receivedAt, now.toISOString());
       assert.equal(first.envelope.provenance.evaluatedAt, now.toISOString());
@@ -47,6 +50,7 @@ describe('Dhan owner-requested quote freshness (synthetic transport only)', () =
       assert.equal(status.thresholdSeconds, 900);
       assert.equal(status.verdict, 'UNAVAILABLE');
       assert.equal(status.suppressExecution, true); // downstream use policy, not quote-fetch gate
+      assert.equal(status.eligibleForUse, false);
       assert.equal(status.cacheState, 'UNAVAILABLE');
       assert.equal(status.lastRefresh.outcome, 'SUCCESS');
       // Even an unavailable cached observation cannot prevent a later explicit fetch.
@@ -66,9 +70,45 @@ describe('Dhan owner-requested quote freshness (synthetic transport only)', () =
       const result = await client.getQuote(request);
       assert.equal(result.ok, true);
       assert.equal(result.freshness, 'UNAVAILABLE');
+      assert.equal(result.envelope.companyId, 'EQ_RELIANCE_IN');
+      assert.equal(result.envelope.securityId, 'ISIN:INE002A01018:EQ');
       assert.equal(result.envelope.provenance.qualityState, 'UNAVAILABLE');
       assert.equal(result.envelope.provenance.asOf, asOf);
+      assert.equal(result.envelope.provenance.receivedAt, now.toISOString());
+      assert.equal(result.envelope.provenance.evaluatedAt, now.toISOString());
       assert.equal(r.requests.length, 1);
+      assert.equal(r.requests[0]!.body, '{"NSE_EQ":[2885]}');
+    } finally { server.closeAllConnections(); await new Promise<void>(done => server.close(() => done())); r.service.stop(); }
+  });
+
+  it('preserves identity in the raw authenticated quote response and rejects invalid identities before egress', async () => {
+    const r = rig(async () => ({ status: 200, bodyText: wire() }));
+    const server = createMarketDataHttpServer({ service: r.service, token: 'synthetic-transport-token', env: {} });
+    await new Promise<void>(done => server.listen(0, '127.0.0.1', done));
+    const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}/v1/quotes`;
+    const headers = { authorization: 'Bearer synthetic-transport-token', 'content-type': 'application/json' };
+    try {
+      for (const body of [
+        { companyId: 'EQ_RELIANCE_IN', exchangeSegment: 'NSE_EQ' },
+        { companyId: 'EQ_RELIANCE_IN', securityId: 'ISIN:SHORT:EQ', exchangeSegment: 'NSE_EQ' },
+        { companyId: 'EQ_RELIANCE_IN', securityId: 'ISIN:INE002A01018:BE', exchangeSegment: 'NSE_EQ' },
+        { companyId: 'EQ_NONEXISTENT', securityId: identity.securityId, exchangeSegment: 'NSE_EQ' },
+      ]) {
+        const invalid = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+        assert.notEqual(invalid.status, 200);
+        assert.equal(r.requests.length, 0);
+      }
+      const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ companyId: request.companyId, securityId: identity.securityId, exchangeSegment: request.exchangeSegment }) });
+      assert.equal(response.status, 200);
+      const body = await response.json() as { ok: boolean; freshness: string; envelope: { companyId: string; securityId: string; provenance: { asOf: string; qualityState: string } } };
+      assert.equal(body.ok, true);
+      assert.equal(body.envelope.companyId, 'EQ_RELIANCE_IN');
+      assert.equal(body.envelope.securityId, 'ISIN:INE002A01018:EQ');
+      assert.equal(body.freshness, 'UNAVAILABLE');
+      assert.equal(body.envelope.provenance.qualityState, 'UNAVAILABLE');
+      assert.equal(body.envelope.provenance.asOf, asOf);
+      assert.equal(r.requests.length, 1);
+      assert.equal(r.requests[0]!.body, '{"NSE_EQ":[2885]}');
     } finally { server.closeAllConnections(); await new Promise<void>(done => server.close(() => done())); r.service.stop(); }
   });
 

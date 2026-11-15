@@ -90,6 +90,7 @@ describe('DHAN-P6 exact D114 identity enforcement (synthetic)', () => {
     assert.strictEqual(body['NSE_EQ']![0], 900001001);
     if (res.ok) {
       assert.strictEqual(res.envelope.domain, 'D01_QUOTES');
+      assert.strictEqual(res.envelope.securityId, ID_EQ.securityId);
       const text = JSON.stringify(res);
       assert.ok(!text.includes('900001001'), 'no Dhan instrument id leaks outward');
       assert.ok(!text.includes('synthetic-dhan-token'));
@@ -100,6 +101,7 @@ describe('DHAN-P6 exact D114 identity enforcement (synthetic)', () => {
     const { service, calls } = makeService([], (id) => quoteBody(id, id.endsWith('1009') ? 77 : 1520.35));
     const res = await service.getQuote({ companyId: 'COMP-SYNTH-A', securityIdentity: ID_BE, exchangeSegment: 'NSE_EQ' });
     assert.strictEqual(res.ok, true);
+    if (res.ok) assert.strictEqual(res.envelope.securityId, ID_BE.securityId);
     const body = JSON.parse(calls[0]!.body as string) as Record<string, number[]>;
     assert.strictEqual(body['NSE_EQ']![0], 900001009);
   });
@@ -110,6 +112,10 @@ describe('DHAN-P6 exact D114 identity enforcement (synthetic)', () => {
     assert.strictEqual(missing.ok, false);
     const malformed = await service.getQuote({ companyId: 'COMP-SYNTH-A', securityIdentity: { securityId: 'ISIN:SHORT:EQ' } as never, exchangeSegment: 'NSE_EQ' });
     assert.strictEqual(malformed.ok, false);
+    const inconsistent = await service.getQuote({ companyId: 'COMP-SYNTH-A', securityIdentity: { ...ID_EQ, series: 'BE' }, exchangeSegment: 'NSE_EQ' });
+    assert.strictEqual(inconsistent.ok, false);
+    const wrongSegment = await service.getQuote({ companyId: 'COMP-SYNTH-A', securityIdentity: ID_EQ, exchangeSegment: 'BSE_EQ' });
+    assert.strictEqual(wrongSegment.ok, false);
     // inconsistent company binding: identity of COMP-SYNTH-A requested under another company
     const wrongCompany = await service.getQuote({ companyId: 'COMP-OTHER', securityIdentity: ID_EQ, exchangeSegment: 'NSE_EQ' });
     assert.strictEqual(wrongCompany.ok, false);

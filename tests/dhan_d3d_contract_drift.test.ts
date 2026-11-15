@@ -52,7 +52,9 @@ const D02_CANDLE_KEYS = [
   'low', 'open', 'securityIdentity', 'symbol', 'tradeCount', 'volume', 'vwap',
 ].sort();
 
-const VENDOR_TOKENS = ['dhan', 'last_price', 'net_change', 'last_trade_time', 'securityId"', 'ohlc'];
+// securityId is an allowed canonical envelope key; the vendor ID and vendor-specific
+// fields must still never escape the provider boundary.
+const VENDOR_TOKENS = ['dhan', 'last_price', 'net_change', 'last_trade_time', 'synth-nse-eq-1001', 'ohlc'];
 
 // ── IRR-consumed public symbols (read-only observation of IRR main) ──────────
 
@@ -119,6 +121,8 @@ describe('DHAN-D3D contract-drift prevention', () => {
       assert.ok(!serialized.includes(token.toLowerCase()), `vendor token leaked into canonical envelope: ${token}`);
     }
     assert.strictEqual(env.domain, 'D01_QUOTES');
+    assert.strictEqual(env.securityId, MAPPING.securityId);
+    assert.notStrictEqual(env.securityId, MAPPING.dhanSecurityId);
     assert.strictEqual(env.provenance.sourceClassification, 'CANONICAL_MARKET_DATA');
   });
 

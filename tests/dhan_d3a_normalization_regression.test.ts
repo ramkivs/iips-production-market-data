@@ -93,6 +93,22 @@ describe('DHAN-D3A normalization regression (synthetic)', () => {
     assert.ok(validateMarketQuotePayload(p).isValid);
   });
 
+  it('preserves explicit mapping identity and rejects malformed or inconsistent direct inputs', () => {
+    const identityMapping = { ...MAPPING, isin: 'INE002A01018', securityId: 'ISIN:INE002A01018:EQ' };
+    const valid = normalize(validQuote(), identityMapping);
+    assert.ok(valid.ok);
+    assert.strictEqual(valid.value.envelope.securityId, identityMapping.securityId);
+    for (const securityId of ['INVALID', 'ISIN:INE467B01029:EQ']) {
+      const invalid = normalize(validQuote(), { ...identityMapping, securityId });
+      assert.ok(!invalid.ok);
+      assert.strictEqual(invalid.failure.code, 'MALFORMED_INSTRUMENT_MAPPING');
+    }
+    // Older identity-less source consumers remain identity-less: never invent a series.
+    const legacy = normalize(validQuote());
+    assert.ok(legacy.ok);
+    assert.strictEqual(legacy.value.envelope.securityId, undefined);
+  });
+
   it('D3A-02: missing net_change fails closed instead of substituting ohlc.close', () => {
     const quote = validQuote();
     delete (quote as unknown as Record<string, unknown>).net_change;
