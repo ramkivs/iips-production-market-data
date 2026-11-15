@@ -14,8 +14,15 @@
  *    (PRE_ACCESS_CREDENTIALS_UNAVAILABLE), not an error condition to be guessed around.
  */
 
-import { SecretRef, SecretRefStatus, validateSecretRef } from '../../security/secret_ref.js';
+import {
+  SecretRef,
+  SecretRefStatus,
+  validateDhanSecretKeyPaths,
+  validateSecretRef,
+  WINDOWS_DPAPI_VAULT_PROVIDER,
+} from '../../security/secret_ref.js';
 import { DhanFailure } from './dhan_failures.js';
+import { describeUtcTimestampRejection, parseStrictUtcTimestamp } from './dhan_utc_timestamp.js';
 
 /** Symbolic internal provider identifier used on the provider-neutral SPI. */
 export const DHAN_PROVIDER_ID = 'DHAN_PROVIDER';
@@ -165,7 +172,38 @@ export function resolveDhanProviderConfig(
     };
   }
 
-  if (tokenExpiresAt !== undefined && Number.isNaN(Date.parse(tokenExpiresAt))) {
+  // W-01 / D-1: when the Windows DPAPI provider is selected, the two credential
+  // references must follow the governed two-key-path convention — one path per
+  // secret, never one path for both. Other providers are unaffected.
+  if (vaultProvider === WINDOWS_DPAPI_VAULT_PROVIDER) {
+    const keyPathCheck = validateDhanSecretKeyPaths({
+      clientIdKeyPath: clientPath as string,
+      accessTokenKeyPath: tokenPath as string,
+    });
+    if (!keyPathCheck.isValid) {
+      const config: DhanProviderConfig = {
+        providerId: DHAN_PROVIDER_ID,
+        baseUrl,
+        timeoutMs,
+        readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE',
+        missingKeys,
+      };
+      return {
+        ok: false,
+        config,
+        failure: {
+          code: 'CONFIGURATION_INCOMPLETE',
+          message: `Dhan ${WINDOWS_DPAPI_VAULT_PROVIDER} credential references do not satisfy the two-key-path convention: ${keyPathCheck.error}.`,
+        },
+      };
+    }
+  }
+
+  // Strict UTC (W-06): the value must carry an explicit timezone. A zone-less timestamp used to be
+  // accepted and read as host-local time, which made the expiry mean different instants on
+  // different hosts. Never silently append `Z`: rejecting is the only honest answer.
+  const tokenExpiry = tokenExpiresAt === undefined ? null : parseStrictUtcTimestamp(tokenExpiresAt);
+  if (tokenExpiry !== null && !tokenExpiry.ok) {
     const config: DhanProviderConfig = {
       providerId: DHAN_PROVIDER_ID,
       baseUrl,
@@ -178,7 +216,9 @@ export function resolveDhanProviderConfig(
       config,
       failure: {
         code: 'CONFIGURATION_INCOMPLETE',
-        message: 'IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT must be a valid ISO-8601 UTC timestamp when provided.',
+        message:
+          `${DHAN_ENV_KEYS.accessTokenExpiresAt} ${describeUtcTimestampRejection(tokenExpiry.reason)}; ` +
+          'an explicit timezone is required so the expiry means the same instant on every host.',
       },
     };
   }
@@ -209,7 +249,7 @@ export function resolveDhanProviderConfig(
     accessTokenRef.status === 'REVOKED' ||
     clientIdRef.status === 'EXPIRED' ||
     clientIdRef.status === 'REVOKED' ||
-    (accessTokenRef.expiresAt !== undefined && Date.parse(accessTokenRef.expiresAt) <= now.getTime())
+    (tokenExpiry !== null && tokenExpiry.ok && tokenExpiry.epochMs <= now.getTime())
   ) {
     const config: DhanProviderConfig = {
       providerId: DHAN_PROVIDER_ID,
@@ -246,16 +286,27 @@ export function resolveDhanProviderConfig(
 
 /**
  * Operator-safe configuration summary suitable for logs and evidence artefacts.
- * Emits only vault POINTERS and never any resolved credential material.
+ *
+ * DISCLOSURE (W-03 / D-7 §4.4). This used to publish the access-token and client-id key paths —
+ * the `vault://` references themselves — and IRR copied them into its health report. D-7 makes
+ * `vault://` references and any secret-store location a MUST NOT on every surface, so the summary
+ * now reports only whether each reference is configured, and which vault provider member was
+ * admitted. Both are on the D-7 MAY list; neither locates the store. Nothing here can carry a
+ * credential, a path or a carrier name.
  */
 export function describeDhanConfig(config: DhanProviderConfig): Record<string, string> {
+  const refs = [config.clientIdRef, config.accessTokenRef].filter(
+    (ref): ref is NonNullable<typeof ref> => ref !== undefined
+  );
+  const providers = Array.from(new Set(refs.map((ref) => ref.vaultProvider))).sort();
   return {
     providerId: config.providerId,
     baseUrl: config.baseUrl,
     timeoutMs: String(config.timeoutMs),
     readiness: config.readiness,
-    accessTokenKeyPath: config.accessTokenRef?.keyPath ?? 'UNCONFIGURED',
-    clientIdKeyPath: config.clientIdRef?.keyPath ?? 'UNCONFIGURED',
+    clientIdRefConfigured: config.clientIdRef === undefined ? 'NO' : 'YES',
+    accessTokenRefConfigured: config.accessTokenRef === undefined ? 'NO' : 'YES',
+    vaultProvider: providers.length === 0 ? 'UNCONFIGURED' : providers.join(','),
     missingKeys: config.missingKeys.join(',') || 'NONE',
   };
 }

@@ -38,6 +38,21 @@ describe('Dhan quote numeric wire IDs (offline)', () => {
     } finally { service.stop(); }
   });
 
+  it('serializes every qualified mapping in the retained Windows-baseline P7 registry without changing its string ID', () => {
+    const registry = loadGovernedP7InstrumentRegistry(resolve('evidence/dhan-p7/qualification-manifest.json'));
+    const mappings = registry.list();
+    assert.equal(mappings.length, 96);
+    for (const mapping of mappings) {
+      const id = mapping.dhanSecurityId;
+      assert.equal(typeof id, 'string');
+      assert.match(id, /^[1-9][0-9]*$/);
+      assert.ok(Number.isSafeInteger(Number(id)));
+      const body = JSON.parse(DhanApiClient.buildQuoteRequestBody([mapping]));
+      assert.deepEqual(body[mapping.exchangeSegment], [Number(id)]);
+      assert.equal(mapping.dhanSecurityId, id);
+    }
+  });
+
   it('groups and deduplicates numeric IDs by supported exchange segment', () => {
     const body = DhanApiClient.buildQuoteRequestBody([
       { exchangeSegment: 'NSE_EQ', dhanSecurityId: '2885' },

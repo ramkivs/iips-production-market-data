@@ -39,7 +39,13 @@ repositories at those commits, or executed against them.
 | Write access to `H:\` | install root |
 | **No Python** | neither repo has a `requirements.txt`, `pyproject.toml`, `setup.py` or `environment.yml` |
 
-Scripts prefer `C:\Node22\node-v22.16.0-win-x64\node.exe` when present and fall back to `PATH`.
+The toolchain is resolved deterministically, with **no machine-specific path baked in**:
+`-NodeExecutable` if supplied, otherwise every `node.exe` that `PATH` resolves. `node.exe`,
+`npm.cmd` and `npx.cmd` must sit in the **same directory**, and each is verified through the bounded
+process runner (`Invoke-IipsProcess`: explicit timeout, asynchronous drain of both streams, child
+killed on timeout). Shims are started as `cmd.exe /d /s /c "<shim>" ...` by absolute path. `npm exec`
+is never used to discover anything. On failure the resolver reports `NODE_TOOLCHAIN_NOT_RESOLVED`
+with reason codes only — no personal paths.
 
 ### Port plan
 

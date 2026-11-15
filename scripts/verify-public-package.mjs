@@ -367,7 +367,10 @@ try {
     'DhanApiClient', 'PreAccessNoNetworkTransport', 'DhanServerHttpsTransport',
     'LocalHostVaultDhanCredentialResolver', 'DisabledWindowsHostVaultBackend',
     'startMarketDataDaemon', 'MarketDataTransportClient',
+    'WindowsDpapiHostVaultBackend', 'createPowerShellDpapiProcessRunner',
+    'provisionDhanCredential', 'verifyDhanCredentialStore', 'runDhanCredentialStoreCli',
     'IIPS_MARKET_DATA_TRANSPORT_TOKEN', 'IIPS_DHAN_ACCESS_TOKEN_SECRET_PATH',
+    'IIPS_DHAN_VAULT_BACKEND',
     'api.dhan.co', 'dhan-server',
   ];
   const hits = forbidden.filter((needle) => browserText.includes(needle));

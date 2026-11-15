@@ -36,13 +36,23 @@ import {
   isDhanProductionEnvironment,
 } from './dhan_config.js';
 import { DhanProductionNotAuthorizedError } from './dhan_api_client.js';
+import { describeUtcTimestampRejection, parseStrictUtcTimestamp } from './dhan_utc_timestamp.js';
+import type { DpapiCarrierFailureReason } from './dhan_dpapi_carrier.js';
 
+/**
+ * Distinct, scrubbed resolution outcomes.
+ *
+ * The original Stage-1 reasons remain; W-02 adds the carrier and child-process reasons so
+ * a DPAPI failure can be diagnosed without ever exposing a path, a value or child output.
+ */
 export type DhanVaultFailureReason =
   | 'EXPIRED'
   | 'REVOKED'
   | 'INVALID_SECRET_REF'
   | 'VERSION_MISMATCH'
-  | 'BACKEND_FAILURE';
+  | 'BACKEND_FAILURE'
+  | 'CHILD_PROCESS_FAILURE'
+  | DpapiCarrierFailureReason;
 
 export type DhanVaultMappedCode =
   | 'CREDENTIALS_EXPIRED'
@@ -98,6 +108,16 @@ export interface LocalHostVaultBackendReadiness {
 export interface LocalHostVaultSecretBackend {
   readonly backendId: string;
   describeReadiness(): LocalHostVaultBackendReadiness;
+  /**
+   * Optional asynchronous readiness probe (W-02).
+   *
+   * A backend whose readiness requires I/O — a DPAPI probe read, an owner-only DACL
+   * check — cannot answer synchronously. When this is present the resolver awaits it
+   * instead of trusting the synchronous verdict, so live resolution is gated on real
+   * evidence. Backends that omit it (including `DisabledWindowsHostVaultBackend`) keep
+   * the Stage-1 behaviour exactly.
+   */
+  probeReadiness?(ref?: SecretRef): Promise<LocalHostVaultBackendReadiness>;
   readSecret(ref: SecretRef, asOfUtc: string): Promise<LocalHostVaultSecretRecord | null>;
 }
 
@@ -163,6 +183,33 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     return this.backend.describeReadiness();
   }
 
+  /**
+   * Awaited, evidence-based readiness (W-03).
+   *
+   * `describeReadiness()` is the synchronous Stage-1 verdict: for a backend that needs a probe
+   * (`WindowsDpapiHostVaultBackend`) it is intentionally `false` until `probeReadiness()` has run.
+   * Startup must therefore await this method before it reports readiness or enables vendor egress,
+   * otherwise a provisioned host would always start with egress disabled.
+   *
+   * Never throws. A probe that fails for any reason yields an unready verdict with a fixed,
+   * non-locating summary, so a broken backend cannot crash startup or accidentally enable egress.
+   */
+  public async probeBackendReadiness(): Promise<LocalHostVaultBackendReadiness> {
+    if (this.backend.probeReadiness === undefined) {
+      return this.backend.describeReadiness();
+    }
+    try {
+      return await this.backend.probeReadiness();
+    } catch {
+      return {
+        backendId: this.backend.backendId,
+        liveResolutionSupported: false,
+        prerequisiteSummary:
+          'Host vault readiness probe failed; live credential resolution is disabled.',
+      };
+    }
+  }
+
   private validateRefPreFlight(ref: SecretRef, nowMs: number): void {
     const check = validateSecretRef(ref);
     if (!check.isValid) {
@@ -190,15 +237,16 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     }
 
     if (ref.expiresAt !== undefined) {
-      const expMs = Date.parse(ref.expiresAt);
-      if (Number.isNaN(expMs)) {
+      // Strict: an explicit timezone is required, so expiry means the same thing on every host.
+      const expiry = parseStrictUtcTimestamp(ref.expiresAt);
+      if (!expiry.ok) {
         throw new DhanVaultResolutionError(
           'INVALID_SECRET_REF',
           'CONFIGURATION_INCOMPLETE',
-          'Dhan SecretRef expiresAt is not a valid ISO-8601 UTC timestamp'
+          `Dhan SecretRef expiresAt ${describeUtcTimestampRejection(expiry.reason)}`
         );
       }
-      if (expMs <= nowMs) {
+      if (expiry.epochMs <= nowMs) {
         throw new DhanVaultResolutionError(
           'EXPIRED',
           'CREDENTIALS_EXPIRED',
@@ -232,15 +280,15 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     }
 
     if (record.expiresAt !== undefined) {
-      const expMs = Date.parse(record.expiresAt);
-      if (Number.isNaN(expMs)) {
+      const expiry = parseStrictUtcTimestamp(record.expiresAt);
+      if (!expiry.ok) {
         throw new DhanVaultResolutionError(
           'INVALID_SECRET_REF',
           'CONFIGURATION_INCOMPLETE',
-          'Host vault secret entry expiresAt is not a valid ISO-8601 UTC timestamp'
+          `Host vault secret entry expiresAt ${describeUtcTimestampRejection(expiry.reason)}`
         );
       }
-      if (expMs <= nowMs) {
+      if (expiry.epochMs <= nowMs) {
         throw new DhanVaultResolutionError(
           'EXPIRED',
           'CREDENTIALS_EXPIRED',
@@ -285,7 +333,12 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     this.validateRefPreFlight(config.clientIdRef, nowMs);
     this.validateRefPreFlight(config.accessTokenRef, nowMs);
 
-    if (!this.backend.describeReadiness().liveResolutionSupported) {
+    // Prefer the asynchronous, evidence-based probe when the backend offers one (W-02);
+    // otherwise the Stage-1 synchronous verdict is authoritative.
+    const readiness = this.backend.probeReadiness
+      ? await this.backend.probeReadiness()
+      : this.backend.describeReadiness();
+    if (!readiness.liveResolutionSupported) {
       // Live credential resolution remains disabled until an approved host-vault backend is provisioned.
       return null;
     }

@@ -196,7 +196,13 @@ describe('DHAN-D1: Pre-Access Provider Foundation (synthetic fixtures only)', ()
     const described = JSON.stringify(describeDhanConfig(resolution.config));
     assert.ok(!described.includes(SYNTHETIC_ACCESS_VALUE));
     assert.ok(!described.includes(SYNTHETIC_CLIENT_VALUE));
-    assert.ok(described.includes('vault://'));
+    // W-03 / D-7 §4.4: the summary reports that references are configured, never the
+    // `vault://` references or any store location themselves.
+    assert.ok(!described.includes('vault://'));
+    assert.ok(!described.includes('accessTokenKeyPath'));
+    assert.ok(!described.includes('clientIdKeyPath'));
+    assert.strictEqual(describeDhanConfig(resolution.config)['accessTokenRefConfigured'], 'YES');
+    assert.strictEqual(describeDhanConfig(resolution.config)['clientIdRefConfigured'], 'YES');
     assert.strictEqual(JSON.stringify(resolution.config).includes(SYNTHETIC_ACCESS_VALUE), false);
   });
 
