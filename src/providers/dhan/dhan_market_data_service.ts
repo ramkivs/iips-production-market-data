@@ -49,7 +49,7 @@ export interface QuoteRequest {
 }
 
 export type QuoteResponse =
-  | { ok: true; envelope: CanonicalEnvelope<MarketQuotePayload>; freshness: 'CURRENT' | 'STALE' }
+  | { ok: true; envelope: CanonicalEnvelope<MarketQuotePayload>; freshness: 'CURRENT' | 'STALE' | 'UNAVAILABLE' }
   | { ok: false; failure: DhanFailure };
 
 export interface HistoricalServiceRequest extends DhanHistoricalRequest {}
@@ -189,7 +189,8 @@ export class DhanMarketDataService {
       series: identity.series.toUpperCase(),
     };
 
-    const outcomes = await this.orchestrator.refresh([scope]);
+    // An explicit quote request is a provider fetch, not a silent cache hit.
+    const outcomes = await this.orchestrator.refresh([scope], { forceProvider: true });
     const outcome = outcomes[0]!;
     const key = dhanQuoteCacheKey(scope);
     const previous = this.refreshStatus.get(key);
@@ -204,7 +205,7 @@ export class DhanMarketDataService {
     if (outcome.status === 'SKIPPED_FRESH' || outcome.status === 'SUCCESS') {
       const entry = this.cache.get(dhanQuoteCacheKey(scope), this.now().toISOString());
       if (entry.entry) {
-        return { ok: true, envelope: entry.entry, freshness: entry.state === 'CURRENT' ? 'CURRENT' : 'STALE' };
+        return { ok: true, envelope: entry.entry, freshness: entry.state === 'CURRENT' ? 'CURRENT' : entry.state === 'STALE' ? 'STALE' : 'UNAVAILABLE' };
       }
     }
     if (outcome.status === 'FAILURE') {

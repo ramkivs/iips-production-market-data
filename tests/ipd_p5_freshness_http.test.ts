@@ -55,7 +55,7 @@ test('actual quote refresh outcomes, failure preservation and non-mutating inspe
  assert.equal(view().cacheState, 'MISS'); assert.equal(view().verdict, 'UNKNOWN'); assert.equal(view().suppressExecution, true);
  assert.equal(view().lastRefresh.outcome, 'UNKNOWN');
  assert.equal((await r.service.getQuote(request)).ok, true); assert.equal(view().lastRefresh.outcome, 'SUCCESS'); assert.equal(view().cacheState, 'CURRENT');
- assert.equal((await r.service.getQuote(request)).ok, true); assert.equal(view().lastRefresh.outcome, 'SKIPPED_FRESH'); assert.equal(r.calls(),1);
+ assert.equal((await r.service.getQuote(request)).ok, true); assert.equal(view().lastRefresh.outcome, 'SUCCESS'); assert.equal(r.calls(),2);
  const before = view().asOf; r.advance(16*60*1000); r.fail();
  assert.equal((await r.service.getQuote(request)).ok, false);
  const stale = view(); assert.equal(stale.lastRefresh.outcome, 'FAILURE'); assert.deepEqual(stale.lastRefresh.lastFailure, {code:'REFRESH_FAILED', priorPreserved:true});
@@ -65,7 +65,7 @@ test('actual quote refresh outcomes, failure preservation and non-mutating inspe
  // peek must not make A MRU: B was added after A; adding C must evict A.
  r.cache.set('B', envelope(iso(time))); view(); r.cache.set('C', envelope(iso(time)));
  assert.equal(view().cacheState, 'MISS'); assert.equal(view().lastRefresh.outcome, 'FAILURE');
- assert.equal(r.calls(), 2);
+ assert.equal(r.calls(), 3);
  const historical = r.service.getFreshness({domain:'D02_OHLCV'});
  assert.equal(historical.cacheState, 'NOT_AVAILABLE'); assert.equal(historical.verdict, 'UNKNOWN'); assert.equal(historical.thresholdSeconds,86400);
 });

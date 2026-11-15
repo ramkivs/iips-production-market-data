@@ -95,7 +95,7 @@ export type MarketDataTransportQuoteOutcome =
   | {
       readonly ok: true;
       readonly envelope: CanonicalEnvelope<MarketQuotePayload>;
-      readonly freshness: 'CURRENT' | 'STALE';
+      readonly freshness: 'CURRENT' | 'STALE' | 'UNAVAILABLE';
     }
   | { readonly ok: false; readonly failure: MarketDataTransportFailure };
 
@@ -743,7 +743,7 @@ export class MarketDataTransportClient {
       payload &&
       payload.ok === true &&
       payload.envelope !== undefined &&
-      (payload.freshness === 'CURRENT' || payload.freshness === 'STALE')
+      (payload.freshness === 'CURRENT' || payload.freshness === 'STALE' || payload.freshness === 'UNAVAILABLE')
     ) {
       return { ok: true, envelope: payload.envelope, freshness: payload.freshness };
     }

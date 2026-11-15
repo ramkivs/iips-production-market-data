@@ -109,7 +109,7 @@ export interface DhanMarketDataQuoteSuccess {
   readonly state: 'CURRENT' | 'STALE';
   readonly quality: QualityState;
   readonly envelope: CanonicalEnvelope<MarketQuotePayload>;
-  readonly freshness: 'CURRENT' | 'STALE';
+  readonly freshness: 'CURRENT' | 'STALE' | 'UNAVAILABLE';
   readonly readiness: DhanMarketDataReadiness;
 }
 

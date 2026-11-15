@@ -55,8 +55,8 @@ function topOfBook(levels: Array<{ price: number }> | undefined): number {
 
 /**
  * Transforms one Dhan quote into the existing canonical D01 envelope.
- * Fails closed: structural, identity, canonical-validation and freshness
- * failures all return an explicit failure and never a partial envelope.
+ * Fails closed on structural, identity and canonical-validation failures.
+ * Freshness is recorded truthfully, but does not reject a provider observation.
  */
 export function normalizeDhanQuoteToCanonical(
   input: DhanNormalizationInput
@@ -158,13 +158,9 @@ export function normalizeDhanQuoteToCanonical(
   }
 
   const freshness = evaluateFreshness(asOf, 'D01_QUOTES', evaluatedAt);
-  if (freshness.suppressExecution) {
-    return dhanFailure(
-      'STALE_DATA_SUPPRESSED',
-      `Dhan quote age ${Math.round(freshness.ageSeconds)}s exceeds twice the D01 freshness threshold; execution suppressed`,
-      { field: 'last_trade_time' }
-    );
-  }
+  // This is a provider response, not a decision to use the observation in an
+  // engine. Keep the shared evaluator's UNAVAILABLE quality and actual asOf;
+  // downstream use policies remain free to reject it.
 
   const lineageHash = computeLineageHash(payload, {
     sourceClassification: 'CANONICAL_MARKET_DATA',

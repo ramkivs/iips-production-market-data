@@ -267,7 +267,7 @@ export async function withBoundedRetry<T>(
 // ── Refresh orchestration ────────────────────────────────────────────────────
 
 export type RefreshOutcome =
-  | { status: 'SUCCESS'; scope: DhanSecurityScope; cacheState: 'CURRENT' | 'STALE' }
+  | { status: 'SUCCESS'; scope: DhanSecurityScope; cacheState: 'CURRENT' | 'STALE' | 'UNAVAILABLE' }
   | { status: 'SKIPPED_FRESH'; scope: DhanSecurityScope; cacheState: 'CURRENT' }
   | {
       status: 'FAILURE';
@@ -290,8 +290,8 @@ export interface DhanRefreshOrchestratorOptions {
 
 /**
  * Explicit, caller-driven refresh (no background timers). Per instrument:
- * fresh cache → SKIPPED_FRESH (no provider call); otherwise a coalesced,
- * rate-limited, concurrency-bounded fetch. Success → cache updated; failure →
+ * fresh cache → SKIPPED_FRESH unless forceProvider is requested; otherwise a
+ * coalesced, rate-limited, concurrency-bounded fetch. Success → cache updated; failure →
  * explicit FAILURE outcome and any prior valid observation is PRESERVED.
  * One instrument's failure never affects another's outcome.
  */
@@ -313,7 +313,7 @@ export class DhanRefreshOrchestrator {
     this.now = options.now ?? (() => new Date());
   }
 
-  public async refresh(scopes: readonly DhanSecurityScope[]): Promise<RefreshOutcome[]> {
+  public async refresh(scopes: readonly DhanSecurityScope[], options: { forceProvider?: boolean } = {}): Promise<RefreshOutcome[]> {
     if (this.stopped) throw new Error('DhanRefreshOrchestrator: stopped');
     const nowIso = this.now().toISOString();
     const outcomes: RefreshOutcome[] = [];
@@ -324,7 +324,7 @@ export class DhanRefreshOrchestrator {
       scopes.map(async (scope) => {
         const key = dhanQuoteCacheKey(scope);
         const cached = this.cache.get(key, nowIso);
-        if (cached.state === 'CURRENT') {
+        if (cached.state === 'CURRENT' && !options.forceProvider) {
           outcomes.push({ status: 'SKIPPED_FRESH', scope, cacheState: 'CURRENT' });
           return;
         }
@@ -344,7 +344,7 @@ export class DhanRefreshOrchestrator {
               return {
                 status: 'SUCCESS',
                 scope,
-                cacheState: freshness.quality === 'GOOD' ? 'CURRENT' : 'STALE',
+                cacheState: freshness.quality === 'GOOD' ? 'CURRENT' : freshness.quality === 'STALE' ? 'STALE' : 'UNAVAILABLE',
               } as RefreshOutcome;
             }
             return {

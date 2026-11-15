@@ -346,10 +346,10 @@ describe('DHAN-D1: Pre-Access Provider Foundation (synthetic fixtures only)', ()
     assert.strictEqual(validateEnvelopeStructure(envelope).isValid, true);
   });
 
-  it('DHAN-D1-11: quotes beyond the suppression threshold fail closed and never produce market data', async () => {
+  it('DHAN-D1-11: old provider quotes retain UNAVAILABLE quality without rejecting the observation', async () => {
     const { source } = buildSource('staleQuoteSuppressed');
-    const err = await expectProviderError(() => source.fetchSnapshot({ companyId: 'INFY', domain: 'D01_QUOTES' }));
-    assert.strictEqual(err.code, 'STALE_DATA_SUPPRESSED');
+    const envelope = await source.fetchSnapshot({ companyId: 'INFY', domain: 'D01_QUOTES' });
+    assert.strictEqual(envelope.provenance.qualityState, 'UNAVAILABLE');
   });
 
   it('DHAN-D1-12: malformed provider responses are rejected deterministically', async () => {

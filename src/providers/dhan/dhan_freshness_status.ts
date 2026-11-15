@@ -21,6 +21,7 @@ export interface FreshnessStatus {
   readonly ageSeconds: number | null;
   readonly verdict: 'GOOD' | 'STALE' | 'UNAVAILABLE' | 'UNKNOWN';
   readonly staleConcessionActive: boolean;
+  /** Shared evaluator's downstream-use verdict, not a gate on requesting a Dhan quote. */
   readonly suppressExecution: boolean;
   readonly eligibleForUse: boolean;
   readonly lastRefresh: RefreshStatus;

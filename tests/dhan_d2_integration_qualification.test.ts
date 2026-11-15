@@ -302,10 +302,10 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
     assert.strictEqual(view.qualityIndicator.state, 'STALE');
   });
 
-  it('DHAN-D2-08: suppressed and absent data resolve to UNAVAILABLE with no market data attached', async () => {
+  it('DHAN-D2-08: old and absent data retain the shared route presentation floor', async () => {
     const suppressed = await buildRoute('staleQuoteSuppressed').getQuote('INFY');
     assert.strictEqual(suppressed.state, 'UNAVAILABLE');
-    assert.strictEqual(suppressed.failureCode, 'STALE_DATA_SUPPRESSED');
+    assert.strictEqual(suppressed.failureCode, 'QUALITY_FLOOR_NOT_MET');
     assert.strictEqual(suppressed.marketData, undefined);
     assert.strictEqual(suppressed.envelope, undefined);
 
@@ -633,7 +633,7 @@ describe('DHAN-D2: Integration & Qualification Harness (PRE_ACCESS / SYNTHETIC /
       { label: 'provider status failure', scenario: 'providerStatusFailure', expected: 'PROVIDER_STATUS_FAILURE' },
       { label: 'missing required field', scenario: 'missingRequiredField', expected: 'MISSING_REQUIRED_FIELD' },
       { label: 'unresolved instrument', scenario: 'validQuote', emptyRegistry: true, expected: 'UNRESOLVED_INSTRUMENT' },
-      { label: 'stale data suppressed', scenario: 'staleQuoteSuppressed', expected: 'STALE_DATA_SUPPRESSED' },
+      { label: 'old data below shared presentation floor', scenario: 'staleQuoteSuppressed', expected: 'QUALITY_FLOOR_NOT_MET' },
       { label: 'instrument absent (unavailable)', scenario: 'instrumentAbsentFromResponse', expected: 'INSTRUMENT_NOT_IN_RESPONSE' },
       { label: 'invalid timestamp', scenario: 'invalidTimestampQuote', expected: 'MALFORMED_RESPONSE' },
       { label: 'invalid price', scenario: 'invalidPriceQuote', expected: 'CANONICAL_VALIDATION_FAILURE' },

@@ -174,11 +174,13 @@ describe('DHAN-D3A normalization regression (synthetic)', () => {
     assert.strictEqual(result.value.envelope.provenance.qualityState, 'STALE');
   });
 
-  it('D3A-09: beyond twice the threshold the quote is UNAVAILABLE and suppressed (fail closed)', () => {
-    // 40 min old -> age 2400s > 1800s -> suppressed.
+  it('D3A-09: beyond twice the threshold the observation is returned as UNAVAILABLE', () => {
     const result = normalize(validQuote({ last_trade_time: '25/09/2026 14:50:00' }));
-    assert.ok(!result.ok);
-    assert.strictEqual(result.failure.code, 'STALE_DATA_SUPPRESSED');
+    assert.ok(result.ok);
+    assert.strictEqual(result.value.ageSeconds, 2400);
+    assert.strictEqual(result.value.quality, 'UNAVAILABLE');
+    assert.strictEqual(result.value.envelope.provenance.qualityState, 'UNAVAILABLE');
+    assert.strictEqual(result.value.staleConcessionActive, false);
   });
 
   it('D3A-10: provenance and envelope metadata are preserved end-to-end', () => {
