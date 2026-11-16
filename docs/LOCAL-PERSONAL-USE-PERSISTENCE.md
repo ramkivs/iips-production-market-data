@@ -1,5 +1,7 @@
 # Local personal-use persistence — explicitly authorized local single-user path
 
+> **Current operating rule:** read this technical record together with [`IPD-OPERATING-MODEL.md`](IPD-OPERATING-MODEL.md). The application owner is the sole operational authority for routine local work. No repeated approval, committee, or change-control ceremony is required for routine implementation, configuration, testing, data operations, or verification. The safeguards and identity/security boundaries below remain mandatory. This path remains personal, local, single-user, and non-production only.
+
 **Status:** implemented (this repository, 2026-11-08), **extended to
 broker-observed holdings 2026-11-09**. Authority: the Program Authority's
 authorization of 2026-11-08 to complete IIPS personal portfolio persistence, and
@@ -112,9 +114,10 @@ depends on identity qualification, not on the origin of the row: a broker file
 whose every row resolves to exactly one governed P04 identity is saveable under
 the local path, and a file with ANY unresolved or ambiguous row is still
 refused in full (`REFUSED_UNRESOLVED_IDENTITY` / Gate E W-6 / DP-2 2F). Nothing
-is auto-approved and no identity is invented. Rows 44 / 51 / 63 of the WS-A
+is assigned an identity by assumption or inference; unresolved identity remains
+unresolved. Rows 44 / 51 / 63 of the WS-A
 Dhan 68-row evidence set remain unresolved and out of scope until authoritative
-evidence and the governance process permit otherwise.
+identity evidence satisfies the existing qualification rules.
 
 ## 5. What this path does not do
 
@@ -228,8 +231,9 @@ qualification or persistence logic of its own:
 Set `IIPS_LOCAL_PERSONAL_USE=1` in the IPD service process environment and ensure
 exactly one ACTIVE local principal binding with one ACTIVE membership exists.
 Upload the broker CSV; the preview shows the per-row identity resolution
-summary. A file with any unresolved row cannot be saved — supply authoritative
-evidence and follow the governance process. `docs/DIRECT_P1_PROVISIONING.md`
+summary. A file with any unresolved row cannot be saved. Resolve it only with
+authoritative identity evidence; do not infer, fabricate, or bypass qualification. This is a
+technical integrity requirement, not an approval-chain requirement. `docs/DIRECT_P1_PROVISIONING.md`
 §6.5 records the corresponding provider-side posture.
 
 ### 7.6 Non-claims
