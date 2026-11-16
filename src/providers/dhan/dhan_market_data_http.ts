@@ -41,6 +41,7 @@ import { DhanFailureCode } from './dhan_failures.js';
 import { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
 import {
   DhanMarketDataService,
+  validateDhanServiceHealth,
   QuoteRequest,
   HistoricalServiceRequest,
   ServiceHealth,
@@ -838,23 +839,8 @@ export class MarketDataTransportClient {
       return { ok: false, service: 'DOWN', failure: call.failure };
     }
 
-    const payload = call.json as Partial<ServiceHealth> | null;
-    if (
-      payload &&
-      (payload.service === 'UP' || payload.service === 'DOWN') &&
-      (payload.providerConfiguration === 'CONFIGURED' ||
-        payload.providerConfiguration === 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE') &&
-      payload.liveProviderConnectivity === 'NOT_CHECKED_PRE_ACCESS' &&
-      payload.providerQualification === 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED'
-    ) {
-      return {
-        ok: true,
-        service: payload.service,
-        providerConfiguration: payload.providerConfiguration,
-        liveProviderConnectivity: payload.liveProviderConnectivity,
-        providerQualification: payload.providerQualification,
-      };
-    }
+    const payload = validateDhanServiceHealth(call.json);
+    if (payload) return { ok: true, ...payload };
 
     return {
       ok: false,

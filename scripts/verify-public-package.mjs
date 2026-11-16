@@ -300,6 +300,26 @@ try {
   const esmResolved = run(process.execPath, ['--input-type=module', '-e',
     "import('iips-production-market-data/dhan-server').then((m) => { for (const k of ['DhanServerHttpsTransport', 'LocalHostVaultDhanCredentialResolver', 'DisabledWindowsHostVaultBackend', 'startMarketDataDaemon']) { if (k in m) throw new Error(k + ' leaked onto ./dhan-server'); } if (typeof m.MarketDataTransportClient !== 'function') throw new Error('MarketDataTransportClient missing from ./dhan-server'); console.log(Object.keys(m).length); })"], consumer);
   check(Number(esmResolved) > 0, './dhan-server ESM import resolved no exports from the installed package');
+  console.log('[package-consumer] W-07 installed health-client contract');
+  const healthContract = run(process.execPath, ['--input-type=module', '-e', `
+    import { MarketDataTransportClient, DHAN_HEALTH_CONTRACT_VERSION } from 'iips-production-market-data/dhan-server';
+    import assert from 'node:assert/strict';
+    const base = { service: 'UP', providerConfiguration: 'CONFIGURED', liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS', providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED' };
+    async function check(payload) {
+      const client = new MarketDataTransportClient('http://127.0.0.1:8791', 'synthetic-local', { env: {}, fetchImpl: async () => new Response(JSON.stringify(payload), { status: 200 }) });
+      return client.health();
+    }
+    assert.equal(DHAN_HEALTH_CONTRACT_VERSION, 2);
+    for (const connectivity of ['NOT_CHECKED_PRE_ACCESS','CONNECTED_LIVE']) for (const qualification of ['SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED','LIVE_QUALIFIED']) for (const version of [undefined,1,2]) {
+      const result = await check({ ...base, liveProviderConnectivity: connectivity, providerQualification: qualification, ...(version === undefined ? {} : { contractVersion: version }) });
+      assert.equal(result.ok, true); assert.equal(result.liveProviderConnectivity, connectivity); assert.equal(result.providerQualification, qualification); assert.equal(result.contractVersion, version);
+    }
+    for (const payload of [{...base,contractVersion:3},{...base,contractVersion:null},{...base,liveProviderConnectivity:'UNKNOWN'},{...base,providerQualification:'UNKNOWN'},{...base,ok:false}]) {
+      const result = await check(payload); assert.equal(result.ok, false); assert.equal(result.failure.code, 'MALFORMED_RESPONSE');
+    }
+    console.log('PASS');
+  `], consumer);
+  check(healthContract === 'PASS', 'installed health client contract failed');
   const cjsResolved = run(process.execPath, ['-e',
     "const p = require.resolve('iips-production-market-data/dhan-server'); console.log(p)"], consumer);
   check(cjsResolved.includes('dist/package/src/providers/dhan/package.js'),

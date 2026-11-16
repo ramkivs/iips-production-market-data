@@ -71,9 +71,9 @@ export interface DhanMarketDataReadiness {
   /** Provider credential configuration observed from the daemon (never the credentials). */
   readonly providerConfiguration: 'CONFIGURED' | 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE';
   /** Live provider connectivity is never checked in pre-access mode. */
-  readonly liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS';
+  readonly liveProviderConnectivity: ServiceHealth['liveProviderConnectivity'];
   /** Provider qualification: synthetic only, never live-qualified. */
-  readonly providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED';
+  readonly providerQualification: ServiceHealth['providerQualification'];
   /** Mandatory pre-access disclosure. */
   readonly disclosure: string;
 }

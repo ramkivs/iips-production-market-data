@@ -212,6 +212,7 @@ describe('W-06 — first authenticated request evidence', () => {
 
     const health = await service.health();
     assert.deepStrictEqual(health, {
+      contractVersion: 2,
       service: 'UP',
       providerConfiguration: 'CONFIGURED',
       liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS',

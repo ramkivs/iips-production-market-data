@@ -207,3 +207,37 @@ describe('DHAN-D3D contract-drift prevention', () => {
     assert.notDeepStrictEqual(Object.keys(drifted).sort(), D01_PAYLOAD_KEYS.filter((k) => k in drifted));
   });
 });
+
+describe('W-07 health contract drift (synthetic, no network)', () => {
+  const base = { service: 'UP', providerConfiguration: 'CONFIGURED', liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS', providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED' };
+  const connectivity = ['NOT_CHECKED_PRE_ACCESS', 'CONNECTED_LIVE'] as const;
+  const qualification = ['SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED', 'LIVE_QUALIFIED'] as const;
+  const versions = [undefined, 1, 2] as const;
+  const clientFor = (payload: unknown) => new dhanServerEntry.MarketDataTransportClient('http://127.0.0.1:8791', 'synthetic-local-transport', {
+    env: {}, fetchImpl: async () => new Response(JSON.stringify(payload), { status: 200, headers: { 'content-type': 'application/json' } }),
+  });
+
+  it('round-trips each governed value pair for legacy, v1 and v2 without inferring provider state', async () => {
+    assert.strictEqual(dhanServerEntry.DHAN_HEALTH_CONTRACT_VERSION, 2);
+    assert.strictEqual(dhanServerEntry.DHAN_HEALTH_CONTRACT_LEGACY_VERSION, 1);
+    for (const liveProviderConnectivity of connectivity) for (const providerQualification of qualification) for (const contractVersion of versions) {
+      const payload = { ...base, liveProviderConnectivity, providerQualification, ...(contractVersion === undefined ? {} : {contractVersion}) };
+      const result = await clientFor(payload).health();
+      assert.strictEqual(result.ok, true, JSON.stringify(payload));
+      if (result.ok) { assert.strictEqual(result.liveProviderConnectivity, liveProviderConnectivity); assert.strictEqual(result.providerQualification, providerQualification); assert.strictEqual(result.contractVersion, contractVersion); }
+    }
+  });
+
+  it('rejects unknown, malformed and contradictory health payloads fail-closed', async () => {
+    const invalid: unknown[] = [null, [], 'health', {},
+      { ...base, liveProviderConnectivity: 'UNKNOWN' }, { ...base, providerQualification: 'UNKNOWN' },
+      { ...base, service: 'MAYBE' }, { ...base, providerConfiguration: 'OTHER' },
+      { ...base, ok: false }, { ...base, error: { code: 'failed' } }, { ...base, failure: {} },
+      ...[0,3,99,'2',null,1.5].map(contractVersion => ({ ...base, contractVersion }))];
+    for (const payload of invalid) {
+      const result = await clientFor(payload).health();
+      assert.strictEqual(result.ok, false, JSON.stringify(payload));
+      if (!result.ok) { assert.strictEqual(result.failure.code, 'MALFORMED_RESPONSE'); assert.strictEqual(result.service, 'DOWN'); }
+    }
+  });
+});

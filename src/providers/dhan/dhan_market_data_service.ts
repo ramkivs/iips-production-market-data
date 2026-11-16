@@ -68,15 +68,37 @@ export type HistoricalResponse =
   | { ok: true; result: DhanHistoricalNormalizationResult }
   | { ok: false; failure: DhanFailure };
 
+/** W-07 governed wire values; the independent fields do not establish a live claim by themselves. */
+export type DhanLiveProviderConnectivity = 'NOT_CHECKED_PRE_ACCESS' | 'CONNECTED_LIVE';
+export type DhanProviderQualification = 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED' | 'LIVE_QUALIFIED';
+export const DHAN_HEALTH_CONTRACT_VERSION = 2 as const;
+export const DHAN_HEALTH_CONTRACT_LEGACY_VERSION = 1 as const;
+export type DhanHealthContractVersion = typeof DHAN_HEALTH_CONTRACT_VERSION | typeof DHAN_HEALTH_CONTRACT_LEGACY_VERSION;
+
 export interface ServiceHealth {
-  /** Process-level availability of the composed service. */
+  /** Absent in legacy payloads. */
+  contractVersion?: DhanHealthContractVersion;
   service: 'UP' | 'DOWN';
-  /** Provider credential configuration state (never the credentials). */
   providerConfiguration: 'CONFIGURED' | 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE';
-  /** Live provider connectivity is NEVER claimed pre-access. */
-  liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS';
-  /** Provider qualification status. */
-  providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED';
+  liveProviderConnectivity: DhanLiveProviderConnectivity;
+  providerQualification: DhanProviderQualification;
+}
+
+/** Validate an untrusted wire payload without reflecting fields or inferring live evidence. */
+export function validateDhanServiceHealth(input: unknown): ServiceHealth | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const p = input as Record<string, unknown>;
+  if ((p.ok !== undefined && p.ok !== true) || p.error !== undefined || p.failure !== undefined) return null;
+  if (p.service !== 'UP' && p.service !== 'DOWN') return null;
+  if (p.providerConfiguration !== 'CONFIGURED' && p.providerConfiguration !== 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE') return null;
+  if (p.liveProviderConnectivity !== 'NOT_CHECKED_PRE_ACCESS' && p.liveProviderConnectivity !== 'CONNECTED_LIVE') return null;
+  if (p.providerQualification !== 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED' && p.providerQualification !== 'LIVE_QUALIFIED') return null;
+  if (p.contractVersion !== undefined && p.contractVersion !== DHAN_HEALTH_CONTRACT_LEGACY_VERSION && p.contractVersion !== DHAN_HEALTH_CONTRACT_VERSION) return null;
+  return {
+    service: p.service, providerConfiguration: p.providerConfiguration,
+    liveProviderConnectivity: p.liveProviderConnectivity, providerQualification: p.providerQualification,
+    ...(p.contractVersion !== undefined ? { contractVersion: p.contractVersion } : {}),
+  };
 }
 
 export interface DhanMarketDataServiceOptions {
@@ -354,6 +376,7 @@ export class DhanMarketDataService {
           : 'CONFIGURED',
       liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS',
       providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED',
+      contractVersion: DHAN_HEALTH_CONTRACT_VERSION,
     };
   }
 }

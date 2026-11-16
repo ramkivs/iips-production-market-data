@@ -362,11 +362,12 @@ describe('W-06 local transport recovery evidence (synthetic)', () => {
       });
       assert.strictEqual(response.status, 200);
 
-      // The exact body the operator's capture shows (the record's prefix + the literal tail).
+      // W-07 adds a version marker; the historic captured prefix remains unchanged.
+      // Do not describe the marker as part of the operator's earlier observation.
       const body = await response.text();
       assert.strictEqual(
         body,
-        '{"service":"UP","providerConfiguration":"CONFIGURED","liveProviderConnectivity":"NOT_CHECKED_PRE_ACCESS","providerQualification":"SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED"}'
+        '{"service":"UP","providerConfiguration":"CONFIGURED","liveProviderConnectivity":"NOT_CHECKED_PRE_ACCESS","providerQualification":"SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED","contractVersion":2}'
       );
       assert.ok(
         body.startsWith(
