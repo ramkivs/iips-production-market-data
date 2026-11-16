@@ -23,6 +23,7 @@ The [Program Authority architecture decision](IPD-D02-OWNERSHIP-ARCHITECTURE-DEC
 | D01 — Relationship subject | **APPROVED** | Use the existing S1 membership as subject for a separate explicit relationship to `owner-4dc756b3`, with the checks in the approved D01 default. No relationship is provisioned. |
 | D02 — Identity tuple | **APPROVED** | Do not create an additional personal identity or invent a separate D02 identity tuple. This is not a provisioning authorization. |
 | D03 — Tenant-scoped references | **APPROVED** | Enforce tenant-scoped ownership relationships and matching membership/tenant references as defined in the approved D03 default. No schema change is implemented. |
+| Local single-user applicability review | **REVIEW / RECOMMENDATIONS ONLY** | The [scope review](IPD-D02-LOCAL-SINGLE-USER-SCOPE-APPLICABILITY-REVIEW-2026-11-15.md) finds essential local correctness/data-integrity requirements, recommends simplifying or deferring several registry/account/re-key/approval-workflow details, and flags historical-row and D02/D05 authority evidence gaps. It changes no D01–D22 formal statuses or authority. |
 | Outstanding Program Authority decisions | **PENDING — 19 decisions (D04–D22)** | Decision package records alternatives, recommendations still marked NOT APPROVED, dependencies and separate approval statements. D01–D03 approvals do not grant implementation or operational authority. |
 | Historical database row inventory | **NOT PERFORMED / UNKNOWN** | Repository schema inventory is documented in §13.7. No operational database was accessed; actual counts, rows and collisions are unknown. PA must select historical-row treatment and separately authorize any read-only inventory/data migration procedure before rollout. |
 | Implementation authority | **NOT GRANTED** | Architectural direction does not authorize code, schema, resolver, authorization or verifier implementation. |
@@ -48,6 +49,7 @@ No relationship ID/row is created. No implementation authority is granted. Curre
 
 - Program Authority decision package (22 items; D01–D03 approved, D04–D22 pending): [`IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md`](IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md).
 - Recorded Program Authority approval for D01–D03 only: [`IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md`](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md).
+- Local single-user scope/applicability review (recommendations only; no status change): [`IPD-D02-LOCAL-SINGLE-USER-SCOPE-APPLICABILITY-REVIEW-2026-11-15.md`](IPD-D02-LOCAL-SINGLE-USER-SCOPE-APPLICABILITY-REVIEW-2026-11-15.md).
 - Independent technical review and conditions: [`IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md`](IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md).
 - Approved architectural direction: [`IPD-D02-OWNERSHIP-ARCHITECTURE-DECISION-2026-11-15.md`](IPD-D02-OWNERSHIP-ARCHITECTURE-DECISION-2026-11-15.md).
 - Detailed schema/resolver proposal (awaiting approval): [`IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md`](IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md).
