@@ -17,7 +17,7 @@ The 22-item register mixes real local correctness requirements with optional sou
 - Do not re-key historical S1-owner rows by assumption. Whether historical rows exist or conflict is **UNRESOLVED — EVIDENCE REQUIRED**; no operational database was read. Any later re-key is conditional on a specific choice, inventory and recovery plan.
 - Avoid imposing multi-user administration or a second approval ceremony. The current IPD operating model says the local owner is the sole operational authority for routine in-scope work. However, the D02 determination also records a specific restriction on operational provisioning/migration; its scope relative to the later operating model must be reconciled before any such action. This review does not lift it.
 
-Applicability labels below describe the decision’s necessity in this scope; they do **not** alter formal status. In particular, recommendations to simplify or defer D04–D22 are not dispositions or approvals. Classification totals: **ESSENTIAL 8; SIMPLIFY 8; NOT APPLICABLE TO CURRENT SCOPE 1; DEFER TO FUTURE SCOPE 2; UNRESOLVED — EVIDENCE REQUIRED 3.**
+Applicability labels below describe the decision’s necessity in this scope; they do **not** alter formal status. In particular, recommendations to simplify or defer D04–D22 are not dispositions or approvals. Classification totals: **ESSENTIAL 8; SIMPLIFY 8; ALREADY GOVERNED — RETAIN EXISTING LOCAL SINGLE-USER SCOPE 1; DEFER TO FUTURE SCOPE 2; UNRESOLVED — EVIDENCE REQUIRED 3.**
 
 ## Scope assumptions and exclusions
 
@@ -50,7 +50,7 @@ Applicability labels below describe the decision’s necessity in this scope; th
 | D17 | Re-key scope and affected records | **DEFER TO FUTURE SCOPE** | Only applies if D15 later selects re-key after evidence. | No migration now. If later approved, include every actual owner-key child, restore receipt and any then-existing source/link table. |
 | D18 | Schema migration boundaries and SQLite mechanics | **ESSENTIAL** | A durable relationship needs a compatible representation; changing schema incorrectly can break existing persistence. | If schema change is required, append a checksummed transactional migration, preserve old migrations, validate SQLite/FKs, and insert no operational rows. |
 | D19 | Re-key atomicity, rollback and recovery cutoff | **ESSENTIAL** | Any owner-key data move can damage durable history; recovery remains important for a local user. | Prefer no re-key; if later approved, use verified backup, one atomic transaction, pre/post integrity checks and a documented recovery path. No enterprise approval chain is needed for the engineering safeguard itself. |
-| D20 | Confirm local single-user security scope | **NOT APPLICABLE TO CURRENT SCOPE** | The environment is already defined by the user and current IPD operating model; no extra PA reconfirmation adds protection. | Record the scope and stop if it changes. Defer multi-user/hosted design until actually required. |
+| D20 | Local single-user security scope | **ALREADY GOVERNED — RETAIN EXISTING LOCAL SINGLE-USER SCOPE** | The applicable scope is already established in authoritative IPD operating-model records; do not treat it as inapplicable or request duplicate approval. | Preserve local Windows, single-user, non-production scope; exclude multi-user/tenant, hosted and commercial requirements. This disposition does not change formal D20 status or grant operational permissions. |
 | D21 | Separate Level D implementation-authority gate | **SIMPLIFY** | The current operating model gives the local owner authority over routine in-scope implementation; a second permission ceremony duplicates it. | Keep detailed design correctness and safeguards; use owner-directed work once required design decisions are settled. This review does not grant implementation or change the current recorded status. |
 | D22 | Level E operations, D5 evidence and D6 start decision | **UNRESOLVED — EVIDENCE REQUIRED** | Routine local operations are owner-directed under the operating model, but the D02 determination specifically says its adopted authority prohibits operational provisioning/migration; D5/D6 also have distinct historical gates. | Reconcile the specific D02 restriction and operating model before relationship-row provisioning or migration. Keep D5 blocked and D6 unstarted meanwhile; no action is authorized here. |
 
@@ -208,13 +208,13 @@ Applicability labels below describe the decision’s necessity in this scope; th
 
 **Future / dependency.** Detailed reverse-mapping cutoff applies only if D15 selects re-key. D19 remains pending. Evidence: package D19; operating model §Proportionate safeguards; design §§9, 13.7; review §4 migration/rollback.
 
-### D20 — NOT APPLICABLE TO CURRENT SCOPE: confirming local-only deployment
+### D20 — ALREADY GOVERNED — RETAIN EXISTING LOCAL SINGLE-USER SCOPE
 
-**Problem and scope fit.** The current scope is already explicit in the task and `docs/IPD-OPERATING-MODEL.md`. A second PA decision to confirm “single user/local” adds no current correctness control.
+**Problem and scope fit.** Package D20 asks whether the one-active-membership/one-active-owner constraint is intentionally for a local single-user environment or a broader authorization model. That local Windows, single-user, non-production scope is already established by the authoritative `docs/IPD-OPERATING-MODEL.md` and `docs/LOCAL-PERSONAL-USE-PERSISTENCE.md`, and is the scope specified for this review. The scope is applicable and governed; it is not an inapplicable requirement.
 
-**Simpler mechanism / minimum.** Treat the current app as local/single-user/non-production and document assumptions in the technical design; keep one active local S1 binding/membership. Do not build multi-tenant or organization administration. If the requirement changes, stop and redesign before relaxing uniqueness.
+**Recommendation / minimum.** Retain the existing local Windows, single-user, non-production application scope. Do not introduce multi-user, multi-tenant, hosted or commercial architecture requirements. Treat the authoritative scope decisions as sufficient; do not reopen the scope or request reapproval and do not create duplicate authority. If the deployment scope actually changes, follow the operating model’s new-direction requirement.
 
-**Future / dependency.** Hosted, multi-user, institutional or commercial expansion is excluded. D20 remains formally pending; this applicability label does not disposition it. Evidence: package D20; operating model §Operating context and authority / §Scope exclusions; local persistence §§1, 5.
+**Status and boundary.** This is an applicability recommendation only. D20 remains formally **PENDING** in the decision register until separately dispositioned; this review does not close it. Retaining local scope does not imply or grant implementation, provisioning, migration or operational permission, and does not override the specific D02/D05 restriction discussed under D22. Evidence: package D20; operating model §Operating context and authority / §Scope exclusions; local persistence §§1, 5.
 
 ### D21 — SIMPLIFY: separate implementation-authorization ceremony
 
@@ -230,7 +230,7 @@ Applicability labels below describe the decision’s necessity in this scope; th
 
 **Simpler mechanism / minimum.** Do not infer that the broad Level E package gate survives unchanged for all routine local actions, and do not infer that the operating model silently repeals the specific D02 prohibition. Resolve the exact scope of that adopted restriction (or obtain an explicit amendment) before creating the D02 relationship/owner/source rows or moving historical data. Routine local portfolio CRUD under existing authority is distinct from D02 identity provisioning. Keep D5 blocked and D6 unstarted under current records.
 
-**Future / dependency.** D22 depends on reconciling the D02/D05 authority with the operating model and on decisions D15–D19 if historical data is involved. D22 remains pending and no operational authorization is granted by this review. Evidence: package D22; determination §2 (specific D05/provisioning wording) and §7; architecture decision §§3–6; operating model §§Operating context and authority, §Scope exclusions; D5 tracker.
+**Future / dependency.** D22 depends on reconciling the D02/D05 authority with the operating model and on decisions D15–D19 if historical data is involved. D20’s already-governed local scope does not override or resolve the specific D02/D05 provisioning/migration restriction. D22 remains pending and no operational authorization is granted by this review. Evidence: package D22; determination §2 (specific D05/provisioning wording) and §7; architecture decision §§3–6; operating model §§Operating context and authority, §Scope exclusions; D5 tracker.
 
 ## Minimum viable local single-user ownership model
 
@@ -251,7 +251,7 @@ This is an applicability recommendation, not approval of a reduced schema. In pa
 
 - **Simplify:** D04’s one-active-link invariant (retain only the local cardinality needed); D05’s admin lifecycle; D06’s UUID/actor/authority-reference machinery; D07’s capability framework; D10’s dynamic provider catalog; D12’s hybrid/account uniqueness; D13’s root source/link tables; D21’s separate implementation approval tier. Apply D19’s recovery safeguards proportionately rather than adding approval ceremony.
 - **Defer:** D11 account-level opaque IDs/deduplication; D17 re-key row mechanics until a re-key is selected and evidence exists.
-- **Not applicable now:** D20 reconfirmation of local-only scope; future multi-user/hosted requirements are out of scope.
+- **Already governed:** D20 — retain existing local Windows, single-user, non-production scope; do not request reapproval or create duplicate authority. Keep D20’s formal register status pending until separately dispositioned; no permission follows.
 - **Must remain:** D01–D03 approved identity/tenant decisions; D08 relationship-aware owner resolution; D09 transactional consistency; D14 no-inference provenance; D18 safe append-only schema evolution; D19 recovery safeguards.
 - **Evidence/authority unresolved:** D15/D16 historical data and collisions; D22 scope of the specific D02/D05 provisioning restriction and D5/D6 applicability.
 
@@ -288,7 +288,7 @@ Detailed schema approval does not require a dynamic provider registry, opaque br
 
 Recommend a single **minimum-local-schema disposition group**, not 22 separate ceremonial approval events:
 
-1. **Formally disposition D20 as not applicable** (the local scope is already established) and reconcile D21/D22’s proposed separate approval tiers with the local owner-directed model and the specific D02/D05 restriction. This is a governance/evidence clarification, not permission to provision.
+1. Retain the already-established D20 scope without reopening or reapproval; do not automatically close D20 in the formal register. Reconcile D21/D22’s proposed separate approval tiers with the local owner-directed model and the specific D02/D05 restriction. This is a scope/applicability recommendation, not permission to provision.
 2. **Approve or amend a reduced D04–D14 local design** that retains essential singleton, lifecycle, transaction, audit and existing-row provenance behavior while deferring dynamic provider/account/source graph features. D01–D03 remain approved; do not reopen them absent explicit amendment.
 3. **Defer D15–D17** until a need for historical inclusion is established; if needed, obtain the explicit scope authority for read-only inventory, then decide alias versus re-key only from evidence. Keep D19 recovery safeguards in any future data operation.
 4. **Resolve D18** as an append-only, schema-only migration mechanics choice after disposable SQLite compatibility validation, if the minimum relationship cannot fit existing schema.
