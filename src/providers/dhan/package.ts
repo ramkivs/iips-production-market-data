@@ -24,12 +24,16 @@ export {
   DhanTransportTimeoutError,
   DhanTransportUnavailableError,
   DHAN_MARKET_QUOTE_PATH,
+  CUSTOM_INJECTED_VAULT_BACKEND_ID,
+  UNKNOWN_VAULT_BACKEND_ID,
+  sanitizeVaultBackendId,
 } from './dhan_api_client.js';
 export type {
   DhanApiClientOptions,
   DhanHttpRequest,
   DhanHttpResponse,
   DhanHttpTransport,
+  DhanVendorEgressMode,
 } from './dhan_api_client.js';
 export {
   DHAN_PROVIDER_ID,
@@ -110,13 +114,22 @@ export {
   dhanQuoteCacheKey,
   dhanHistoricalCacheKey,
 } from './dhan_operational_controls.js';
-export type { DhanSecurityScope, CacheLookup, RefreshOutcome, RetryOptions } from './dhan_operational_controls.js';
+export type {
+  DhanSecurityScope,
+  CacheLookup,
+  RefreshOutcome,
+  RetryOptions,
+  DhanAggregateCacheState,
+  DhanQuoteCacheDiagnostics,
+} from './dhan_operational_controls.js';
 // Composed IPD-owned service + authenticated server-to-server transport (DHAN-P5).
 export {
   DhanMarketDataService,
   DHAN_HEALTH_CONTRACT_VERSION,
   DHAN_HEALTH_CONTRACT_LEGACY_VERSION,
+  DHAN_DIAGNOSTICS_CONTRACT_VERSION,
   validateDhanServiceHealth,
+  validateDhanServiceDiagnostics,
 } from './dhan_market_data_service.js';
 export type {
   QuoteRequest,
@@ -124,6 +137,11 @@ export type {
   HistoricalServiceRequest,
   HistoricalResponse,
   ServiceHealth,
+  ServiceDiagnostics,
+  DhanProviderState,
+  DhanCredentialResolutionOutcome,
+  DhanDiagnosticsRequestCounters,
+  DhanDiagnosticsContractVersion,
   DhanLiveProviderConnectivity,
   DhanProviderQualification,
   DhanHealthContractVersion,
@@ -143,6 +161,7 @@ export type {
   MarketDataTransportQuoteOutcome,
   MarketDataTransportHistoricalOutcome,
   MarketDataTransportHealthOutcome,
+  MarketDataTransportDiagnosticsOutcome,
 } from './dhan_market_data_http.js';
 
 // Provider-neutral consumption contract (what downstream apps actually use).

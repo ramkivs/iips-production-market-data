@@ -53,6 +53,22 @@ export function dhanHistoricalCacheKey(req: {
 
 export type CacheLookupState = 'CURRENT' | 'STALE' | 'UNAVAILABLE' | 'MISS';
 
+export type DhanAggregateCacheState =
+  | 'EMPTY'
+  | 'CURRENT'
+  | 'STALE'
+  | 'UNAVAILABLE'
+  | 'MIXED';
+
+export interface DhanQuoteCacheDiagnostics {
+  readonly size: number;
+  readonly capacity: number;
+  readonly state: DhanAggregateCacheState;
+  readonly currentEntries: number;
+  readonly staleEntries: number;
+  readonly unavailableEntries: number;
+}
+
 export interface CacheLookup<T> {
   state: CacheLookupState;
   entry?: T;
@@ -114,6 +130,66 @@ export class DhanBoundedCache<T extends { provenance: { asOf: string } }> {
 
   public get size(): number {
     return this.map.size;
+  }
+
+  public get maxEntries(): number {
+    return this.capacity;
+  }
+
+  /**
+   * Pure observation-only summary of cached entry counts and aggregate freshness
+   * state at `nowIso`. Never touches LRU order, never invokes the provider, and
+   * never exposes cache keys, identities, or cached payloads (W-09 / D-7 §4).
+   */
+  public inspectStateSummary(nowIso: string): DhanQuoteCacheDiagnostics {
+    const size = this.map.size;
+    if (size === 0) {
+      return Object.freeze({
+        size: 0,
+        capacity: this.capacity,
+        state: 'EMPTY',
+        currentEntries: 0,
+        staleEntries: 0,
+        unavailableEntries: 0,
+      });
+    }
+
+    let currentEntries = 0;
+    let staleEntries = 0;
+    let unavailableEntries = 0;
+    for (const entry of this.map.values()) {
+      const classified =
+        typeof entry?.provenance?.asOf === 'string'
+          ? this.classify(entry, nowIso).state
+          : 'UNAVAILABLE';
+      if (classified === 'CURRENT') {
+        currentEntries += 1;
+      } else if (classified === 'STALE') {
+        staleEntries += 1;
+      } else {
+        unavailableEntries += 1;
+      }
+    }
+
+    let state: DhanAggregateCacheState;
+    if (currentEntries === size) {
+      state = 'CURRENT';
+    } else if (staleEntries === size) {
+      state = 'STALE';
+    } else if (unavailableEntries === size) {
+      state = 'UNAVAILABLE';
+    } else {
+      state = 'MIXED';
+    }
+
+    return Object.freeze({
+      size,
+      capacity: this.capacity,
+      state,
+      currentEntries,
+      staleEntries,
+      unavailableEntries,
+    });
   }
 }
 

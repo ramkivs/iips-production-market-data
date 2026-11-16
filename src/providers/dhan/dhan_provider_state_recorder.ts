@@ -138,15 +138,25 @@ export interface DhanProviderStateRecorderOptions {
   readonly now?: () => number;
 }
 
+export type DhanRecorderInteractionKind = 'MARKET_DATA' | 'VERIFICATION_PROBE';
+
 export interface RecordProviderSuccessInput {
   readonly at: string;
   readonly latencyMs: number;
+  readonly kind?: DhanRecorderInteractionKind;
 }
 
 export interface RecordProviderFailureInput {
   readonly category: DhanObservedFailureCategory;
   readonly at: string;
   readonly latencyMs?: number;
+}
+
+export interface DhanRecorderInteractionCounts {
+  readonly vendorSuccesses: number;
+  readonly providerFailures: number;
+  readonly marketDataSuccesses: number;
+  readonly localReadinessVerified: boolean;
 }
 
 function normalizeIsoUtcTimestamp(candidate: unknown, fallbackNowMs: () => number): string {
@@ -179,6 +189,10 @@ export class DhanProviderStateRecorder {
   private lastLatencyMs: number | null = null;
   private consecutiveAuthFailures = 0;
   private authLatched = false;
+  private vendorSuccesses = 0;
+  private providerFailures = 0;
+  private marketDataSuccesses = 0;
+  private localReadinessVerified = false;
 
   constructor(options: DhanProviderStateRecorderOptions = {}) {
     this.now = options.now ?? (() => Date.now());
@@ -186,6 +200,28 @@ export class DhanProviderStateRecorder {
 
   public isAuthLatched(): boolean {
     return this.authLatched;
+  }
+
+  /**
+   * Records that V1 local credential readiness verification succeeded without
+   * issuing a vendor probe (`VERIFIED_LOCAL_ONLY`, D-7 §3).
+   */
+  public recordLocalReadinessVerified(): void {
+    if (!this.authLatched) {
+      this.localReadinessVerified = true;
+    }
+  }
+
+  /**
+   * Pure observation-only read of bounded interaction counters; never mutates state.
+   */
+  public getInteractionCounts(): DhanRecorderInteractionCounts {
+    return Object.freeze({
+      vendorSuccesses: this.vendorSuccesses,
+      providerFailures: this.providerFailures,
+      marketDataSuccesses: this.marketDataSuccesses,
+      localReadinessVerified: this.localReadinessVerified,
+    });
   }
 
   /**
@@ -204,6 +240,11 @@ export class DhanProviderStateRecorder {
     this.lastFailure = null;
     this.lastAuthOutcome = 'AUTHENTICATED';
     this.consecutiveAuthFailures = 0;
+    this.localReadinessVerified = true;
+    this.vendorSuccesses += 1;
+    if (input?.kind !== 'VERIFICATION_PROBE') {
+      this.marketDataSuccesses += 1;
+    }
     return this.snapshot();
   }
 
@@ -225,6 +266,7 @@ export class DhanProviderStateRecorder {
     );
 
     this.lastFailure = Object.freeze({ category, at });
+    this.providerFailures += 1;
     if (latencyMs !== null) {
       this.lastLatencyMs = latencyMs;
     }
