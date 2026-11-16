@@ -47,6 +47,25 @@ export type {
 export { DhanProviderError } from './dhan_failures.js';
 export type { DhanFailure, DhanFailureCode, DhanResult } from './dhan_failures.js';
 export {
+  DhanProviderStateRecorder,
+  DHAN_AUTH_LATCH_THRESHOLD,
+  GOVERNED_PROVIDER_FAILURE_CATEGORIES,
+  isGovernedProviderFailureCategory,
+} from './dhan_provider_state_recorder.js';
+export type {
+  DhanObservedFailureCategory,
+  DhanRecordedFailure,
+  DhanAuthOutcome,
+  DhanProviderObservedState,
+  DhanVerificationMode,
+  DhanVerificationOutcomeCode,
+  VerifyProviderConnectionOptions,
+  ProviderVerificationResult,
+  DhanProviderStateRecorderOptions,
+  RecordProviderSuccessInput,
+  RecordProviderFailureInput,
+} from './dhan_provider_state_recorder.js';
+export {
   DhanInstrumentRegistry,
   DhanInstrumentMappingError,
   DhanInstrumentMappingConflictError,
