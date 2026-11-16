@@ -1,5 +1,7 @@
 # Stage 1 Admission Decision Record — Dhan Credential and Authenticated Transport Admission
 
+> **Historical record:** This describes the revisions and admission scope identified below, not a current cross-revision daemon procedure. For the version-specific W-11 candidate, selector, configuration and unresolved host verification, see [the daemon configuration handoff](DHAN-W11-DAEMON-CONFIGURATION-HANDOFF.md). No historical evidence is changed.
+
 - **Document ID**: `IPD-DHAN-STAGE1-ADMISSION-2026-11-08`
 - **Date**: `2026-11-08`
 - **Status**: **ADMITTED FOR LOCAL NON-PRODUCTION SERVER-SIDE FOUNDATION ONLY** (`SYNTHETIC_VERIFIED / NOT_LIVE_VERIFIED / PRODUCTION_NOT_AUTHORIZED`)
