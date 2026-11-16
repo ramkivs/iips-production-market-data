@@ -1,0 +1,125 @@
+{
+  "schema": "IPD_W04_IRR_MERGE_READBACK_V1",
+  "readAtUtc": "2026-11-16T19:22:00Z",
+  "method": "GitHub REST API through gh api, read only; no IRR checkout, no IRR write",
+  "commit": {
+    "additions": 12017,
+    "committerDate": "2026-11-16T19:03:51Z",
+    "deletions": 112,
+    "filesChanged": 53,
+    "message": "Merge pull request #568 from ramkivs/arena/e8f9f3d2-iips-review-recovered-reconcile",
+    "parents": [
+      "fa4e298791be8a0f68ffa7521736539bcce722bd",
+      "7f53974e44c4ee89d4d253758b15bf15ac3a5a25"
+    ],
+    "sha": "064195397dfdb32bf0f34a461b02fd6b9f9a8df0",
+    "tree": "a478ecbe948740a8a976a47ab1808f36082130e5"
+  },
+  "mainBranchHead": {
+    "committerDate": "2026-11-16T19:03:51Z",
+    "sha": "064195397dfdb32bf0f34a461b02fd6b9f9a8df0"
+  },
+  "pullRequestsOfTheCommit": [
+    {
+      "base": "main",
+      "head": "7f53974e44c4ee89d4d253758b15bf15ac3a5a25",
+      "merge_commit_sha": "064195397dfdb32bf0f34a461b02fd6b9f9a8df0",
+      "merged_at": "2026-11-16T19:03:51Z",
+      "number": 568,
+      "state": "closed",
+      "title": "Identity projection (D114), W05, W07, W10, W11, Windows named-pipe IPC fix, tracker \u00a716.285 \u2014 reconciled with main (supersedes #563)"
+    }
+  ],
+  "checkRunsOnTheCommit": [
+    {
+      "completed_at": "2026-11-16T19:06:41Z",
+      "conclusion": "success",
+      "name": "Typecheck \u00b7 Test \u00b7 Build",
+      "status": "completed"
+    },
+    {
+      "completed_at": "2026-11-16T19:04:30Z",
+      "conclusion": "success",
+      "name": "Python compile \u00b7 source/evidence/tracker validation",
+      "status": "completed"
+    }
+  ],
+  "pullRequests": [
+    {
+      "base": "a835d4af019ab4f677ab238ec42d44326f06a771",
+      "head": "87658602966cfedf98fa59a627807d160808f645",
+      "merged": true,
+      "merged_at": "2026-11-16T19:03:53Z",
+      "number": 563,
+      "state": "closed",
+      "title": "Snapshot-to-Live W07: Financial limitation resolution (L-038, L-039, L-040 preservation) & XBRL ingestion fixes"
+    },
+    {
+      "base": "08411bcd6d782a601fe5c82cc9983d076831148d",
+      "head": "92eda04bf4ff28dfcbd1761bc2614ac9a1c41127",
+      "merged": false,
+      "merged_at": null,
+      "number": 566,
+      "state": "open",
+      "title": "W04: superseding identity approval W04-D1-20261115-01 - record and validation evidence (digest only)"
+    },
+    {
+      "base": "fa4e298791be8a0f68ffa7521736539bcce722bd",
+      "head": "7f53974e44c4ee89d4d253758b15bf15ac3a5a25",
+      "merged": true,
+      "merged_at": "2026-11-16T19:03:51Z",
+      "number": 568,
+      "state": "closed",
+      "title": "Identity projection (D114), W05, W07, W10, W11, Windows named-pipe IPC fix, tracker \u00a716.285 \u2014 reconciled with main (supersedes #563)"
+    }
+  ],
+  "ancestry": [
+    {
+      "ahead_by": 26,
+      "base": "08411bcd6d782a601fe5c82cc9983d076831148d",
+      "behind_by": 0,
+      "filesChanged": 89,
+      "head": "064195397dfdb32bf0f34a461b02fd6b9f9a8df0",
+      "identitySourceFilesChanged": [
+        "frontend/server/investment/holding-identity-transport.ts",
+        "frontend/server/investment/portfolioContext.ts",
+        "iips-platform/src/investment/identity/coverage.ts",
+        "iips-platform/src/investment/identity/coverageEndpoint.ts",
+        "iips-platform/src/investment/identity/d114Projection.ts",
+        "iips-platform/src/investment/identity/resolver.ts",
+        "iips-platform/src/investment/identity/sources.ts",
+        "iips-platform/src/investment/identity/types.ts"
+      ],
+      "status": "ahead"
+    },
+    {
+      "ahead_by": 27,
+      "base": "7f3f7db14eb6baeda2f8e9ddfac5045d43cce1a9",
+      "behind_by": 0,
+      "filesChanged": 84,
+      "head": "064195397dfdb32bf0f34a461b02fd6b9f9a8df0",
+      "identitySourceFilesChanged": [
+        "iips-platform/src/investment/identity/coverage.ts"
+      ],
+      "status": "ahead"
+    },
+    {
+      "ahead_by": 22,
+      "base": "d10afbb31573d999f4b331484fcb79c510df1304",
+      "behind_by": 0,
+      "filesChanged": 51,
+      "head": "064195397dfdb32bf0f34a461b02fd6b9f9a8df0",
+      "identitySourceFilesChanged": [],
+      "status": "ahead"
+    },
+    {
+      "ahead_by": 21,
+      "base": "87658602966cfedf98fa59a627807d160808f645",
+      "behind_by": 0,
+      "filesChanged": 51,
+      "head": "064195397dfdb32bf0f34a461b02fd6b9f9a8df0",
+      "identitySourceFilesChanged": [],
+      "status": "ahead"
+    }
+  ]
+}

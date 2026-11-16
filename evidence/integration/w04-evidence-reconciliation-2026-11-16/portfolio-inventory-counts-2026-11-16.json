@@ -1,0 +1,68 @@
+{
+  "schema": "IPD_W04_INVENTORY_COUNTS_EXTRACT_V1",
+  "archive": {
+    "name": "d02-d5-d16-inventory-20261116T143819255Z-96672044.zip",
+    "sha256": "813183b382a26d0b6affeeaee04d44b0ea0057bea140a83221b460d8720da1b3",
+    "bytes": 27601,
+    "entries": 17,
+    "entriesEqualToTheArchiveManifest": 16,
+    "resultsEntrySha256": "ac7a0ed83fb4829268b8cb02836cf98a2a8e682eda96c9ac603b96e92130c5d3"
+  },
+  "run": {
+    "disposition": "INVENTORY_COMPLETE_READ_ONLY_VERIFIED",
+    "exitCode": 0,
+    "startedAtUtc": "2026-11-16T14:38:20.828Z",
+    "completedAtUtc": "2026-11-16T14:38:20.850Z",
+    "databasePreSha256": "6d683b3b897f09156fd51bd7ba6e5cfc3a69f734a00da9f12c103da720b70673",
+    "databasePostSha256": "6d683b3b897f09156fd51bd7ba6e5cfc3a69f734a00da9f12c103da720b70673",
+    "databasePrePostSha256Identical": true,
+    "sidecarsAbsentPreAndPost": true,
+    "statementsExecuted": 21,
+    "statementsInCatalog": 21,
+    "queryOnlyPragmaInsideSnapshot": [
+      {
+        "query_only": 1
+      }
+    ]
+  },
+  "portfolio": {
+    "portfolioId": "DHAN_PORTFOLIO",
+    "status": "ACTIVE",
+    "currentRevision": 1,
+    "revisions": [
+      {
+        "revision": 1,
+        "operation": "INITIAL",
+        "holdingsCount": 64
+      }
+    ]
+  },
+  "currentRevisionHoldings": {
+    "rows": 64,
+    "active": 64,
+    "inactive": 0,
+    "securityIdentityPopulated": 1,
+    "securityIdentityNull": 63,
+    "activeWithSecurityIdentityPopulated": 1,
+    "activeWithSecurityIdentityNull": 63,
+    "groups": [
+      {
+        "sourceBroker": "DHAN",
+        "active": 1,
+        "identityStatus": "RESOLVED",
+        "resolutionDisposition": "CANONICAL_P04",
+        "securityIdentityState": "NULL",
+        "holdingRows": 63
+      },
+      {
+        "sourceBroker": "DHAN",
+        "active": 1,
+        "identityStatus": "RESOLVED",
+        "resolutionDisposition": "CANONICAL_P04",
+        "securityIdentityState": "POPULATED",
+        "holdingRows": 1
+      }
+    ]
+  },
+  "leftOut": "market value, weights, revision digests, names, labels and audit detail are not copied"
+}

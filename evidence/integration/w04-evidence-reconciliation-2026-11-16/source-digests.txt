@@ -1,0 +1,8 @@
+# W04 evidence reconciliation, 2026-11-16. SHA-256 of files relied on that are not on main when this record was written.
+# Columns: SHA-256, bytes, commit, Git blob, path at that commit.
+e5f099e1b70609cc056a54d399cb07c23abb8965b671e99897e09cce62e2c666  57822  a93278fb32fbfe31f01e0572950734cc836fb86f  19e99c9f17bbe8a25b0a1d91fc1c1223a5dbfd98  docs/integration/IIPS-CURRENT-PORTFOLIO-W04-P04-D114-IDENTITY-SEMANTICS-AND-COVERAGE-ACCEPTANCE-BASIS-2026-11-14.md
+efc5f6a396b220e34518e017a2655b7ffdb9de3602a6219981cee2dd55d691a1  72401  a93278fb32fbfe31f01e0572950734cc836fb86f  a0af714db8e822f0699001c07e8436511ad1722e  docs/integration/IIPS-CURRENT-PORTFOLIO-W04-IDENTITY-PROVENANCE-AND-GOVERNANCE-COMPLETION-2026-11-15.md
+813183b382a26d0b6affeeaee04d44b0ea0057bea140a83221b460d8720da1b3  27601  8132c5b6bba0051cbac95dab060096f2983e7396  36364ca514f2c126f97017abcd371bdeb752b2fd  evidence/d02-inventory-2026-11-16/windows-host/d02-d5-d16-inventory-20261116T143819255Z-96672044.zip
+# Entries of the archive read by the extract script (SHA-256 from the archive's own sha256s.txt, recomputed).
+ac7a0ed83fb4829268b8cb02836cf98a2a8e682eda96c9ac603b96e92130c5d3  02-q01-q14-query-results.json
+bf94a6dec157c83ab22b6ca3fd5dcedb8977d14667046a83cd904139fc4ddc7f  d5-d16-inventory-summary.json
