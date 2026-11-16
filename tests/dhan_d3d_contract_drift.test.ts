@@ -203,3 +203,158 @@ describe('DHAN-D3D contract-drift prevention', () => {
     assert.notDeepStrictEqual(Object.keys(drifted).sort(), D01_PAYLOAD_KEYS.filter((k) => k in drifted));
   });
 });
+
+describe('W-07 health contract drift and D-7 compatibility (synthetic, no network)', () => {
+  const base = {
+    service: 'UP',
+    providerConfiguration: 'CONFIGURED',
+    liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS',
+    providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED',
+  } as const;
+  const connectivity = ['NOT_CHECKED_PRE_ACCESS', 'CONNECTED_LIVE'] as const;
+  const qualification = ['SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED', 'LIVE_QUALIFIED'] as const;
+  const versions = [undefined, 1, 2] as const;
+  const clientFor = (payload: unknown) =>
+    new dhanServerEntry.MarketDataTransportClient('http://127.0.0.1:8791', 'synthetic-local-transport', {
+      env: {},
+      fetchImpl: async () =>
+        new Response(JSON.stringify(payload), { status: 200, headers: { 'content-type': 'application/json' } }),
+    });
+
+  it('W07-01: exports governed version constants and validator on ./dhan-server', () => {
+    assert.strictEqual(dhanServerEntry.DHAN_HEALTH_CONTRACT_VERSION, 2);
+    assert.strictEqual(dhanServerEntry.DHAN_HEALTH_CONTRACT_LEGACY_VERSION, 1);
+    assert.strictEqual(typeof dhanServerEntry.validateDhanServiceHealth, 'function');
+  });
+
+  it('W07-02: round-trips every governed connectivity/qualification pair across legacy (absent), v1 and v2 identically without reflecting untrusted fields', async () => {
+    for (const service of ['UP', 'DOWN'] as const) {
+      for (const providerConfiguration of ['CONFIGURED', 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'] as const) {
+        for (const liveProviderConnectivity of connectivity) {
+          for (const providerQualification of qualification) {
+            for (const contractVersion of versions) {
+              const wire = {
+                service,
+                providerConfiguration,
+                liveProviderConnectivity,
+                providerQualification,
+                untrustedExtra: 'never-reflected',
+                ...(contractVersion === undefined ? {} : { contractVersion }),
+              };
+              const validated = dhanServerEntry.validateDhanServiceHealth(wire);
+              assert.notStrictEqual(validated, null, JSON.stringify(wire));
+              const expected = {
+                service,
+                providerConfiguration,
+                liveProviderConnectivity,
+                providerQualification,
+                ...(contractVersion === undefined ? {} : { contractVersion }),
+              };
+              assert.deepStrictEqual(validated, expected);
+              assert.strictEqual('contractVersion' in validated!, contractVersion !== undefined);
+
+              const result = await clientFor(wire).health();
+              assert.strictEqual(result.ok, true, JSON.stringify(wire));
+              if (result.ok) {
+                assert.deepStrictEqual(result, { ok: true, ...expected });
+                assert.strictEqual('contractVersion' in result, contractVersion !== undefined);
+                assert.strictEqual('untrustedExtra' in result, false);
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  it('W07-03: rejects unknown values, unsupported versions, malformed shapes and contradictory payloads fail-closed', async () => {
+    const invalid: unknown[] = [
+      null,
+      [],
+      'health',
+      42,
+      {},
+      { service: 'UP' },
+      { ...base, liveProviderConnectivity: 'UNKNOWN' },
+      { ...base, liveProviderConnectivity: 'CONNECTED_MAYBE' },
+      { ...base, providerQualification: 'UNKNOWN' },
+      { ...base, providerQualification: 'PROBABLY_LIVE' },
+      { ...base, service: 'MAYBE' },
+      { ...base, providerConfiguration: 'OTHER' },
+      { ...base, ok: false },
+      { ...base, ok: 'true' },
+      { ...base, ok: null },
+      { ...base, error: { code: 'failed' } },
+      { ...base, error: null },
+      { ...base, failure: {} },
+      { ...base, failure: null },
+      ...[0, -1, 3, 99, '1', '2', null, true, 1.5, {}, []].map((contractVersion) => ({
+        ...base,
+        contractVersion,
+      })),
+    ];
+    for (const payload of invalid) {
+      assert.strictEqual(dhanServerEntry.validateDhanServiceHealth(payload), null, JSON.stringify(payload));
+      const result = await clientFor(payload).health();
+      assert.strictEqual(result.ok, false, JSON.stringify(payload));
+      if (!result.ok) {
+        assert.strictEqual(result.failure.code, 'MALFORMED_RESPONSE');
+        assert.strictEqual(result.service, 'DOWN');
+      }
+    }
+  });
+
+  it('W07-04: composed DhanMarketDataService and loopback HTTP emit contractVersion 2 and make zero live connectivity/qualification claims pre-W-08', async () => {
+    const { SecurityMaster } = await import('../src/identity/security_master.js');
+    let transportCalls = 0;
+    const cfg = dhanServerEntry.resolveDhanProviderConfig({});
+    const service = new dhanServerEntry.DhanMarketDataService({
+      client: new dhanServerEntry.DhanApiClient({
+        config: cfg.config,
+        transport: {
+          async send() {
+            transportCalls += 1;
+            throw new Error('W-07 health must never invoke vendor transport');
+          },
+        },
+      }),
+      securityMaster: new SecurityMaster(),
+      instrumentRegistry: new dhanServerEntry.DhanInstrumentRegistry(),
+    });
+    service.start();
+    const directHealth = await service.health();
+    assert.deepStrictEqual(directHealth, {
+      contractVersion: 2,
+      service: 'UP',
+      providerConfiguration: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE',
+      liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS',
+      providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED',
+    });
+    assert.strictEqual(transportCalls, 0);
+
+    const server = dhanServerEntry.createMarketDataHttpServer({
+      service,
+      token: 'w07-loopback-token',
+      env: {},
+    });
+    await new Promise<void>((resolveListen) => server.listen(0, '127.0.0.1', () => resolveListen()));
+    try {
+      const address = server.address();
+      assert.ok(address && typeof address === 'object');
+      const client = new dhanServerEntry.MarketDataTransportClient(
+        `http://127.0.0.1:${address.port}`,
+        'w07-loopback-token',
+        { env: {} },
+      );
+      const httpHealth = await client.health();
+      assert.deepStrictEqual(httpHealth, {
+        ok: true,
+        ...directHealth,
+      });
+      assert.strictEqual(transportCalls, 0);
+    } finally {
+      service.stop();
+      await new Promise<void>((resolveClose) => server.close(() => resolveClose()));
+    }
+  });
+});

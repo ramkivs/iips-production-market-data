@@ -300,6 +300,169 @@ try {
   const esmResolved = run(process.execPath, ['--input-type=module', '-e',
     "import('iips-production-market-data/dhan-server').then((m) => { for (const k of ['DhanServerHttpsTransport', 'LocalHostVaultDhanCredentialResolver', 'DisabledWindowsHostVaultBackend', 'startMarketDataDaemon']) { if (k in m) throw new Error(k + ' leaked onto ./dhan-server'); } if (typeof m.MarketDataTransportClient !== 'function') throw new Error('MarketDataTransportClient missing from ./dhan-server'); console.log(Object.keys(m).length); })"], consumer);
   check(Number(esmResolved) > 0, './dhan-server ESM import resolved no exports from the installed package');
+  console.log('[package-consumer] W-07 installed health-client contract');
+  const healthContract = run(process.execPath, ['--input-type=module', '-e', `
+    import {
+      MarketDataTransportClient,
+      DhanMarketDataService,
+      DhanApiClient,
+      PreAccessNoNetworkTransport,
+      DhanInstrumentRegistry,
+      createMarketDataHttpServer,
+      resolveDhanProviderConfig,
+      DHAN_HEALTH_CONTRACT_VERSION,
+      DHAN_HEALTH_CONTRACT_LEGACY_VERSION,
+      validateDhanServiceHealth,
+    } from 'iips-production-market-data/dhan-server';
+    import { SecurityMaster } from './node_modules/iips-production-market-data/dist/package/src/identity/security_master.js';
+    import assert from 'node:assert/strict';
+
+    const base = {
+      service: 'UP',
+      providerConfiguration: 'CONFIGURED',
+      liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS',
+      providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED',
+    };
+    async function checkViaClient(payload) {
+      const client = new MarketDataTransportClient('http://127.0.0.1:8791', 'synthetic-local', {
+        env: {},
+        fetchImpl: async () => new Response(JSON.stringify(payload), { status: 200, headers: { 'content-type': 'application/json' } }),
+      });
+      return client.health();
+    }
+
+    assert.equal(DHAN_HEALTH_CONTRACT_VERSION, 2);
+    assert.equal(DHAN_HEALTH_CONTRACT_LEGACY_VERSION, 1);
+
+    for (const connectivity of ['NOT_CHECKED_PRE_ACCESS', 'CONNECTED_LIVE']) {
+      for (const qualification of ['SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED', 'LIVE_QUALIFIED']) {
+        for (const version of [undefined, 1, 2]) {
+          const wire = {
+            ...base,
+            liveProviderConnectivity: connectivity,
+            providerQualification: qualification,
+            untrustedExtra: 'must-not-reflect',
+            ...(version === undefined ? {} : { contractVersion: version }),
+          };
+          const direct = validateDhanServiceHealth(wire);
+          const result = await checkViaClient(wire);
+          assert.notEqual(direct, null);
+          assert.equal(result.ok, true);
+          assert.equal(result.liveProviderConnectivity, connectivity);
+          assert.equal(result.providerQualification, qualification);
+          assert.equal(result.contractVersion, version);
+          assert.equal('contractVersion' in result, version !== undefined);
+          assert.equal('untrustedExtra' in result, false);
+          assert.deepEqual(direct, {
+            service: 'UP',
+            providerConfiguration: 'CONFIGURED',
+            liveProviderConnectivity: connectivity,
+            providerQualification: qualification,
+            ...(version === undefined ? {} : { contractVersion: version }),
+          });
+        }
+      }
+    }
+
+    const invalidPayloads = [
+      null,
+      [],
+      'health',
+      {},
+      { ...base, contractVersion: 0 },
+      { ...base, contractVersion: 3 },
+      { ...base, contractVersion: 99 },
+      { ...base, contractVersion: '2' },
+      { ...base, contractVersion: null },
+      { ...base, contractVersion: 1.5 },
+      { ...base, liveProviderConnectivity: 'UNKNOWN' },
+      { ...base, providerQualification: 'UNKNOWN' },
+      { ...base, service: 'MAYBE' },
+      { ...base, providerConfiguration: 'OTHER' },
+      { ...base, ok: false },
+      { ...base, ok: 'true' },
+      { ...base, error: { code: 'failed' } },
+      { ...base, failure: {} },
+    ];
+    for (const payload of invalidPayloads) {
+      assert.equal(validateDhanServiceHealth(payload), null);
+      const result = await checkViaClient(payload);
+      assert.equal(result.ok, false);
+      assert.equal(result.service, 'DOWN');
+      assert.equal(result.failure.code, 'MALFORMED_RESPONSE');
+    }
+
+    // Real loopback HTTP round-trip against installed DhanMarketDataService + createMarketDataHttpServer:
+    // W-07 emits contractVersion 2 and strictly preserves pre-access non-live claims.
+    const cfg = resolveDhanProviderConfig({});
+    const service = new DhanMarketDataService({
+      client: new DhanApiClient({ config: cfg.config, transport: new PreAccessNoNetworkTransport() }),
+      securityMaster: new SecurityMaster(),
+      instrumentRegistry: new DhanInstrumentRegistry(),
+    });
+    service.start();
+    const server = createMarketDataHttpServer({ service, token: 'installed-roundtrip-token', env: {} });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    try {
+      const addr = server.address();
+      const liveClient = new MarketDataTransportClient(\`http://127.0.0.1:\${addr.port}\`, 'installed-roundtrip-token', { env: {} });
+      const liveHealth = await liveClient.health();
+      assert.deepEqual(liveHealth, {
+        ok: true,
+        contractVersion: 2,
+        service: 'UP',
+        providerConfiguration: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE',
+        liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS',
+        providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED',
+      });
+    } finally {
+      service.stop();
+      await new Promise((resolve) => server.close(resolve));
+    }
+    console.log('PASS');
+  `], consumer);
+  check(healthContract === 'PASS', 'installed health client contract failed');
+  writeFileSync(join(consumer, 'w07-health-types.mts'), `
+import {
+  DHAN_HEALTH_CONTRACT_VERSION,
+  DHAN_HEALTH_CONTRACT_LEGACY_VERSION,
+  validateDhanServiceHealth,
+  MarketDataTransportClient,
+  type DhanHealthContractVersion,
+  type DhanLiveProviderConnectivity,
+  type DhanProviderQualification,
+  type MarketDataTransportHealthOutcome,
+  type ServiceHealth,
+} from 'iips-production-market-data/dhan-server';
+
+const vCurrent: DhanHealthContractVersion = DHAN_HEALTH_CONTRACT_VERSION;
+const vLegacy: DhanHealthContractVersion = DHAN_HEALTH_CONTRACT_LEGACY_VERSION;
+const connectivityValues: readonly DhanLiveProviderConnectivity[] = ['NOT_CHECKED_PRE_ACCESS', 'CONNECTED_LIVE'];
+const qualificationValues: readonly DhanProviderQualification[] = ['SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED', 'LIVE_QUALIFIED'];
+const legacyHealth: ServiceHealth = {
+  service: 'UP',
+  providerConfiguration: 'CONFIGURED',
+  liveProviderConnectivity: connectivityValues[0]!,
+  providerQualification: qualificationValues[0]!,
+};
+const v2Health: ServiceHealth = {
+  ...legacyHealth,
+  contractVersion: vCurrent,
+  liveProviderConnectivity: connectivityValues[1]!,
+  providerQualification: qualificationValues[1]!,
+};
+const validated: ServiceHealth | null = validateDhanServiceHealth({ ...v2Health, contractVersion: vLegacy });
+const client = new MarketDataTransportClient('http://127.0.0.1:8791', 'tok', { env: {} });
+const outcomePromise: Promise<MarketDataTransportHealthOutcome> = client.health();
+void validated;
+void outcomePromise;
+`);
+  writeFileSync(join(consumer, 'tsconfig.w07.json'), JSON.stringify({
+    extends: './tsconfig.json',
+    compilerOptions: { noEmit: true },
+    files: ['./w07-health-types.mts'],
+  }, null, 2));
+  run(process.execPath, [join(repoRoot, 'node_modules/typescript/bin/tsc'), '-p', join(consumer, 'tsconfig.w07.json'), '--pretty', 'false'], consumer);
   const cjsResolved = run(process.execPath, ['-e',
     "const p = require.resolve('iips-production-market-data/dhan-server'); console.log(p)"], consumer);
   check(cjsResolved.includes('dist/package/src/providers/dhan/package.js'),

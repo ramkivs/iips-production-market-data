@@ -47,6 +47,25 @@ export type {
 export { DhanProviderError } from './dhan_failures.js';
 export type { DhanFailure, DhanFailureCode, DhanResult } from './dhan_failures.js';
 export {
+  DhanProviderStateRecorder,
+  DHAN_AUTH_LATCH_THRESHOLD,
+  GOVERNED_PROVIDER_FAILURE_CATEGORIES,
+  isGovernedProviderFailureCategory,
+} from './dhan_provider_state_recorder.js';
+export type {
+  DhanObservedFailureCategory,
+  DhanRecordedFailure,
+  DhanAuthOutcome,
+  DhanProviderObservedState,
+  DhanVerificationMode,
+  DhanVerificationOutcomeCode,
+  VerifyProviderConnectionOptions,
+  ProviderVerificationResult,
+  DhanProviderStateRecorderOptions,
+  RecordProviderSuccessInput,
+  RecordProviderFailureInput,
+} from './dhan_provider_state_recorder.js';
+export {
   DhanInstrumentRegistry,
   DhanInstrumentMappingError,
   DhanInstrumentMappingConflictError,
@@ -93,8 +112,22 @@ export {
 } from './dhan_operational_controls.js';
 export type { DhanSecurityScope, CacheLookup, RefreshOutcome, RetryOptions } from './dhan_operational_controls.js';
 // Composed IPD-owned service + authenticated server-to-server transport (DHAN-P5).
-export { DhanMarketDataService } from './dhan_market_data_service.js';
-export type { QuoteRequest, QuoteResponse, HistoricalServiceRequest, HistoricalResponse, ServiceHealth } from './dhan_market_data_service.js';
+export {
+  DhanMarketDataService,
+  DHAN_HEALTH_CONTRACT_VERSION,
+  DHAN_HEALTH_CONTRACT_LEGACY_VERSION,
+  validateDhanServiceHealth,
+} from './dhan_market_data_service.js';
+export type {
+  QuoteRequest,
+  QuoteResponse,
+  HistoricalServiceRequest,
+  HistoricalResponse,
+  ServiceHealth,
+  DhanLiveProviderConnectivity,
+  DhanProviderQualification,
+  DhanHealthContractVersion,
+} from './dhan_market_data_service.js';
 export {
   createMarketDataHttpServer,
   isLoopbackTransportHost,

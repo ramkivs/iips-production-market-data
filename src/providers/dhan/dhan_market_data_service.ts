@@ -24,6 +24,11 @@ import { DhanResult, DhanFailure, dhanFailure } from './dhan_failures.js';
 import { DhanInstrumentResolutionService } from './dhan_instrument_mapping_integration.js';
 import { DhanInstrumentRegistry } from './dhan_instrument_map.js';
 import { DhanMarketDataSource } from './dhan_market_data_source.js';
+import type {
+  DhanProviderObservedState,
+  ProviderVerificationResult,
+  VerifyProviderConnectionOptions,
+} from './dhan_provider_state_recorder.js';
 import {
   DhanBoundedCache,
   DhanConcurrencyLimiter,
@@ -58,15 +63,60 @@ export type HistoricalResponse =
   | { ok: true; result: DhanHistoricalNormalizationResult }
   | { ok: false; failure: DhanFailure };
 
+/** W-07 governed D-7 wire values; independent wire fields do not establish a live claim by themselves. */
+export type DhanLiveProviderConnectivity = 'NOT_CHECKED_PRE_ACCESS' | 'CONNECTED_LIVE';
+export type DhanProviderQualification = 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED' | 'LIVE_QUALIFIED';
+export const DHAN_HEALTH_CONTRACT_VERSION = 2 as const;
+export const DHAN_HEALTH_CONTRACT_LEGACY_VERSION = 1 as const;
+export type DhanHealthContractVersion =
+  | typeof DHAN_HEALTH_CONTRACT_VERSION
+  | typeof DHAN_HEALTH_CONTRACT_LEGACY_VERSION;
+
 export interface ServiceHealth {
+  /** Absent in legacy payloads; numeric 1 (legacy) or 2 (W-07) when present. */
+  contractVersion?: DhanHealthContractVersion;
   /** Process-level availability of the composed service. */
   service: 'UP' | 'DOWN';
   /** Provider credential configuration state (never the credentials). */
   providerConfiguration: 'CONFIGURED' | 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE';
-  /** Live provider connectivity is NEVER claimed pre-access. */
-  liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS';
-  /** Provider qualification status. */
-  providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED';
+  /** Governed D-7 connectivity state derived from observed W-08 provider interactions. */
+  liveProviderConnectivity: DhanLiveProviderConnectivity;
+  /** Governed D-7 qualification state; closed only by M2/M3 live qualification evidence. */
+  providerQualification: DhanProviderQualification;
+}
+
+/** Validate an untrusted wire payload without reflecting fields or inferring live evidence. */
+export function validateDhanServiceHealth(input: unknown): ServiceHealth | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const p = input as Record<string, unknown>;
+  if ((p.ok !== undefined && p.ok !== true) || p.error !== undefined || p.failure !== undefined) return null;
+  if (p.service !== 'UP' && p.service !== 'DOWN') return null;
+  if (p.providerConfiguration !== 'CONFIGURED' && p.providerConfiguration !== 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE') {
+    return null;
+  }
+  if (p.liveProviderConnectivity !== 'NOT_CHECKED_PRE_ACCESS' && p.liveProviderConnectivity !== 'CONNECTED_LIVE') {
+    return null;
+  }
+  if (
+    p.providerQualification !== 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED' &&
+    p.providerQualification !== 'LIVE_QUALIFIED'
+  ) {
+    return null;
+  }
+  if (
+    p.contractVersion !== undefined &&
+    p.contractVersion !== DHAN_HEALTH_CONTRACT_LEGACY_VERSION &&
+    p.contractVersion !== DHAN_HEALTH_CONTRACT_VERSION
+  ) {
+    return null;
+  }
+  return {
+    service: p.service,
+    providerConfiguration: p.providerConfiguration,
+    liveProviderConnectivity: p.liveProviderConnectivity,
+    providerQualification: p.providerQualification,
+    ...(p.contractVersion !== undefined ? { contractVersion: p.contractVersion } : {}),
+  };
 }
 
 export interface DhanMarketDataServiceOptions {
@@ -88,6 +138,7 @@ export class DhanMarketDataService {
   private readonly source: DhanMarketDataSource;
   private readonly historical: DhanHistoricalAdapter;
   private readonly resolution: DhanInstrumentResolutionService;
+  private readonly instrumentRegistry: DhanInstrumentRegistry;
   private readonly orchestrator: DhanRefreshOrchestrator;
   private readonly cache: DhanBoundedCache<CanonicalEnvelope<MarketQuotePayload>>;
   private readonly limiter: DhanRateLimiter;
@@ -99,6 +150,7 @@ export class DhanMarketDataService {
 
   constructor(options: DhanMarketDataServiceOptions) {
     this.client = options.client;
+    this.instrumentRegistry = options.instrumentRegistry;
     this.now = options.now ?? (() => new Date());
     this.source = new DhanMarketDataSource({
       client: options.client,
@@ -243,18 +295,76 @@ export class DhanMarketDataService {
   }
 
   /**
-   * Readiness/health. A healthy process NEVER implies live Dhan connectivity.
+   * Pure observation-only read of the bounded W-08 in-process provider state recorder.
+   * Never triggers a provider call, credential read, or state mutation.
+   */
+  public getObservedProviderState(): DhanProviderObservedState {
+    return this.client.getObservedState();
+  }
+
+  /**
+   * Separate explicit operator-initiated connection verification action (D-7 §3 / W-08).
+   * Performs V1 local readiness checks and at most ONE authenticated V2 probe,
+   * records its outcome in the shared W-08 recorder, and performs no automatic
+   * retry, background polling, or credential re-reading.
+   */
+  public async verifyConnection(
+    options?: VerifyProviderConnectionOptions
+  ): Promise<ProviderVerificationResult> {
+    const checkedAt = this.now().toISOString();
+    if (!this.running) {
+      return {
+        outcome: 'NOT_ATTEMPTED_NOT_READY',
+        probeAttempted: false,
+        probeCount: 0,
+        failureCategory: 'PROVIDER_STATUS_FAILURE',
+        latencyMs: null,
+        checkedAt,
+        observedState: this.client.getObservedState(),
+      };
+    }
+
+    const activeMapping =
+      this.instrumentRegistry.list().find((m) => m.active !== false) ?? null;
+    const probeInstrument = activeMapping
+      ? {
+          exchangeSegment: activeMapping.exchangeSegment,
+          dhanSecurityId: activeMapping.dhanSecurityId,
+        }
+      : null;
+
+    return this.client.probeOnce(probeInstrument, {
+      localOnly: options?.mode === 'LOCAL_ONLY',
+      checkedAt,
+      acquireProbePermit: () => this.limiter.tryAcquire(),
+    });
+  }
+
+  /**
+   * Observational readiness/health (W-07 / W-08 / D-7).
+   * Reports the last observed recorder state; NEVER initiates a provider request,
+   * NEVER resolves credentials, and NEVER mutates recorder state.
    */
   public async health(): Promise<ServiceHealth> {
-    const providerHealth = await this.source.healthCheck();
+    const config = this.client.getConfig();
+    const observed = this.client.getObservedState();
+    const connectedLive =
+      this.running &&
+      config.readiness === 'CREDENTIAL_REFERENCES_CONFIGURED' &&
+      observed.lastSuccessAt !== null &&
+      observed.lastAuthOutcome === 'AUTHENTICATED' &&
+      observed.lastFailure === null &&
+      !observed.authLatched;
+
     return {
       service: this.running ? 'UP' : 'DOWN',
       providerConfiguration:
-        providerHealth.status === 'DOWN' && this.client.getConfig().readiness === 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'
+        config.readiness === 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'
           ? 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'
           : 'CONFIGURED',
-      liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS',
+      liveProviderConnectivity: connectedLive ? 'CONNECTED_LIVE' : 'NOT_CHECKED_PRE_ACCESS',
       providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED',
+      contractVersion: DHAN_HEALTH_CONTRACT_VERSION,
     };
   }
 }
