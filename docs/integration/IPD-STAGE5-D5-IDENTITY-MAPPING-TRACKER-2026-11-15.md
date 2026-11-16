@@ -1,6 +1,6 @@
 # IPD Stage 5 D5 — identity mapping and resolution tracker
 
-**Tracker status:** active blocker. **Product ownership: APPROVED. Architectural direction: APPROVED. Identity-to-owner relationship direction: APPROVED (not provisioned). Detailed schema: AWAITING APPROVAL. Implementation authority: NOT GRANTED. Operational provisioning: NOT AUTHORIZED. D5: BLOCKED. D6: NOT STARTED.**
+**Tracker status:** active blocker. **Product ownership: APPROVED. Architectural direction: APPROVED. Identity-to-owner relationship direction: APPROVED (not provisioned). Design review: ACCEPTED WITH CONDITIONS. Detailed schema: AWAITING PROGRAM AUTHORITY APPROVAL. Implementation authority: NOT GRANTED. Operational provisioning: NOT AUTHORIZED. D5: BLOCKED. D6: NOT STARTED.**
 
 This IPD-owned tracker records the current Stage 5 prerequisite without changing historical Gate 4/Gate 5 evidence or the general portfolio roadmap. It is governed by the [IPD personal local operating model](../IPD-OPERATING-MODEL.md). It does not authorize operational access, provisioning, migration, reassignment, database changes, or IPC operations.
 
@@ -8,7 +8,7 @@ This IPD-owned tracker records the current Stage 5 prerequisite without changing
 
 The Program Authority direction approves `owner-4dc756b3` as the overall owner of personal investment portfolios across broker and manual sources. Source and provenance remain independently represented; S1/Direct P1 functionality must not be silently replaced or invalidated.
 
-The [Program Authority architecture decision](IPD-D02-OWNERSHIP-ARCHITECTURE-DECISION-2026-11-15.md) approves preserving the existing S1 identity/binding/membership and connecting that personal identity to D02 owner `owner-4dc756b3` through a separate explicit ownership relationship. The prior [architecture investigation](IPD-D02-PERSONAL-PORTFOLIO-OWNERSHIP-ARCHITECTURE-PROPOSAL-2026-11-15.md) remains the evidence-backed rationale. The detailed [relationship/schema design](IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md) is a proposal awaiting approval; it creates no relationship row or identifier. No separate D02 principal, binding or membership is proposed.
+The [Program Authority architecture decision](IPD-D02-OWNERSHIP-ARCHITECTURE-DECISION-2026-11-15.md) approves preserving the existing S1 identity/binding/membership and connecting that personal identity to D02 owner `owner-4dc756b3` through a separate explicit ownership relationship. The prior [architecture investigation](IPD-D02-PERSONAL-PORTFOLIO-OWNERSHIP-ARCHITECTURE-PROPOSAL-2026-11-15.md) remains the evidence-backed rationale. The revised [relationship/schema design](IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md) addresses every finding in the independent review with explicit schema, source links, authorization boundary, transaction rules and historical-data plan; its traceability is in §13.10 and exact Program Authority decisions are in §13.11. The independent review outcome is **ACCEPTED WITH CONDITIONS** as a design baseline only. No relationship row or identifier is created; no separate D02 principal, binding or membership is proposed.
 
 ## Blocker and resolution criteria
 
@@ -18,7 +18,9 @@ The [Program Authority architecture decision](IPD-D02-OWNERSHIP-ARCHITECTURE-DEC
 | S1 / Direct P1 identity | **ESTABLISHED for its existing purpose** — `ramki-personal-local` / `ipd-personal-local` / `ipd-owner-ramki-personal`, binding `c5808abaffd072d6401ce63ad86c6ac0`, membership `d25dcc5370100b00766efc5166f65cf3` | Effective S1 determination; do not silently change. |
 | S1 identity → D02 overall owner relationship direction | **APPROVED ARCHITECTURE / NOT PROVISIONED** | Preserve S1 tuple; establish a separate relationship to `owner-4dc756b3`. No row/relationship ID created. Detailed schema and implementation remain pending. |
 | Separate D02 principal / binding / membership | **NOT PART OF APPROVED DIRECTION** | Preserve existing S1 identity; do not create duplicate identity identifiers. Proposed relationship ID is not assigned and must not be derived. |
-| Detailed schema | **AWAITING APPROVAL** | The linked technical design proposes owner registry, membership-to-owner relationship, UUIDv4 opaque relationship IDs, FKs, one-to-one active uniqueness, lifecycle, source records and historical compatibility. Program Authority review is required before implementation; no migration in this task. |
+| Independent design review | **ACCEPTED WITH CONDITIONS** | Acceptance report maps the prior conditions to revised design §13.10. This is technical review only and not schema or implementation authority. |
+| Detailed schema | **AWAITING PROGRAM AUTHORITY APPROVAL** | Revised §13 defines ID/NOT NULL constraints, FKs, uniqueness, source catalog/cardinality/link tables, transaction-bound authorization, complete schema inventory, re-key/rollback and tests. Exact PA decisions remain in §13.11; no migration in this task. |
+| Historical database row inventory | **NOT PERFORMED / UNKNOWN** | Repository schema inventory is documented in §13.7. No operational database was accessed; actual counts, rows and collisions are unknown. PA must select historical-row treatment and separately authorize any read-only inventory/data migration procedure before rollout. |
 | Implementation authority | **NOT GRANTED** | Architectural direction does not authorize code, schema, resolver, authorization or verifier implementation. |
 | Operational provisioning / database modification | **NOT AUTHORIZED** | This design task grants no database access, row creation, identity provisioning, owner reassignment or migration execution. Separate applicable authority and procedure are required. |
 | Read-only D5 verifier | **NOT IMPLEMENTED** | Only after detailed schema approval and implementation authority. It must use the holdings-specific acceptance predicate, independently verify exact approved fields, preserve read-only database integrity, and test wrong owner/tenant, missing/multiple binding or membership, and generic-success/holdings-failure cases. |
@@ -33,13 +35,14 @@ No relationship ID/row is created. No implementation authority is granted. Curre
 
 ## Next actions and authority
 
-1. **Program Authority:** review and approve or amend the detailed schema/resolver proposal, including relationship identifier/lifecycle, foreign keys, one-to-one active uniqueness, source metadata and historical-record treatment. This design approval would still not grant implementation or operational authority.
+1. **Program Authority:** decide the exact items in technical design §13.11: detailed schema/FKs/lifecycle, provider/source cardinality and links, authorization boundary, historical S1-owner row treatment, and separate implementation/operational authority. Design approval alone does not grant implementation or provisioning.
 2. **IPD engineering:** perform no implementation until separate implementation authority is granted; retain current fail-closed D02 behavior.
 3. **IPD engineering:** D5 verifier implementation/testing only after detailed schema approval and implementation authority.
 4. **Authorized host operation:** D5 verification only under later applicable authority/procedure; D6/live holdings remains unstarted.
 
 ## Evidence checked
 
+- Independent technical review and conditions: [`IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md`](IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md).
 - Approved architectural direction: [`IPD-D02-OWNERSHIP-ARCHITECTURE-DECISION-2026-11-15.md`](IPD-D02-OWNERSHIP-ARCHITECTURE-DECISION-2026-11-15.md).
 - Detailed schema/resolver proposal (awaiting approval): [`IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md`](IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md).
 - Prior IPD architecture investigation (the architecture direction is now approved; detailed schema remains pending): [`IPD-D02-PERSONAL-PORTFOLIO-OWNERSHIP-ARCHITECTURE-PROPOSAL-2026-11-15.md`](IPD-D02-PERSONAL-PORTFOLIO-OWNERSHIP-ARCHITECTURE-PROPOSAL-2026-11-15.md).
