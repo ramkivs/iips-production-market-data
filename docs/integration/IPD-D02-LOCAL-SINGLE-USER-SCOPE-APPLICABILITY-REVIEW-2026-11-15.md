@@ -310,6 +310,7 @@ No code, schema, migration, database, identity, owner, relationship row, portfol
 
 - Published decision package (all D01–D22 text, alternatives, recommendations, dependencies and status): [`IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md`](IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md).
 - D01–D03 approval record: [`IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md`](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md).
+- **Subsequent follow-up, not an input to this review:** focused D04–D06 reconciliation and proposed wording (recommendations only; formal statuses remain pending): [`IPD-D02-D04-D06-LOCAL-SINGLE-USER-RECONCILIATION-2026-11-15.md`](IPD-D02-D04-D06-LOCAL-SINGLE-USER-RECONCILIATION-2026-11-15.md).
 - Revised technical design, §§1–13: [`IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md`](IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md).
 - Independent technical acceptance review: [`IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md`](IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md).
 - Product ownership determination: [`IPD-D02-OVERALL-PERSONAL-PORTFOLIO-OWNERSHIP-DETERMINATION-2026-11-15.md`](IPD-D02-OVERALL-PERSONAL-PORTFOLIO-OWNERSHIP-DETERMINATION-2026-11-15.md).
