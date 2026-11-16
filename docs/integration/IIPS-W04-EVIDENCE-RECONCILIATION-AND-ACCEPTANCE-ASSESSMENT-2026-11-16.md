@@ -5,8 +5,9 @@
 **Type:** record only. It consolidates evidence that already exists. It ran nothing on the Windows host, read no database, imported nothing, assigned no identity, changed no tool file and wrote nothing to IRR.
 **Repositories read:** IPD `ramkivs/iips-production-market-data` at `main` `75db511d2d322d39d76c66b603adaf780913ef1f`; PR #166 head `742adba6b9964706a5e8cd901d4f2a3c1332f00a`; PR #156 head `a93278fb32fbfe31f01e0572950734cc836fb86f`; PR #163 head `3a656c2c4bf7181c04e360c64227003c7b577090` (not changed); branch `arena/c32aea42-iips-production-market-data` at `8132c5b6bba0051cbac95dab060096f2983e7396`. IRR `ramkivs/iips-review-recovered` through the GitHub API only, at `main` `064195397dfdb32bf0f34a461b02fd6b9f9a8df0`.
 **Evidence folder of this record:** [`evidence/integration/w04-evidence-reconciliation-2026-11-16/`](../../evidence/integration/w04-evidence-reconciliation-2026-11-16/README.md)
+**Second pass, 2026-11-16:** made against IPD `main` `d80d77345bed965c2a7e660ef272fd53a234d0a7` and the same heads of PR #156, PR #163, branch `arena/c32aea42-…` and IRR `main` as above, all read again. It resolves the difference in the D02 document (section 3.3.1), carries the inventory archive to `main` unchanged (section 3.3), and assesses the roadmap criteria (sections 8.3 to 8.5). It ran nothing on the host and repeated no verification.
 
-**Result.** W04 is **measured: 1 of 64 holdings of revision 1 has a stored security identity, 63 have none.** Identity coverage is **not complete** and is not claimed. The measurement meets the W04 deliverable with three recorded limits (section 8.3). **W04 is not accepted by this record.** Acceptance as measured is recommended and is one statement of the Principal (section 10).
+**Result.** W04 is **measured: 1 of 64 holdings of revision 1 has a stored security identity, 63 have none.** Identity coverage is **not complete** and is not claimed. **The W04 acceptance criteria of the roadmap are met as measured**, with three recorded limits that do not prevent it (section 8.3). Acceptance as measured, 1 of 64 with 63 unresolved, is recommended. The statement of acceptance is the Principal's, and this record does not write it for him (section 10).
 
 ## 0. Summary
 
@@ -17,7 +18,7 @@
 | Actual identity coverage | **1 of 64 stored; 63 explicitly unresolved** | HO, from two separate host outputs held in the repository |
 | IRR integration | Merged on IRR `main` at `0641953`: a stored identity now reaches the IRR resolver | R for the merge and its checks. The host run of that code: U |
 | Evidence completeness | Incomplete in named places (section 7) | — |
-| W04 acceptance | Not accepted. Acceptance as measured recommended | Section 8 |
+| W04 acceptance | Roadmap criteria met as measured. Acceptance as measured recommended: 1 of 64, 63 unresolved | Section 8 |
 
 ## 1. How to read this record
 
@@ -34,10 +35,11 @@
 | Source | State on 2026-11-16 | W04 content | Treatment |
 |---|---|---|---|
 | IPD `main` `75db511` | — | W04 roadmap entry of 2026-11-15, 13 W04 records, the E4 host output, the P7 registry | Base of this record |
+| IPD `main` `d80d773` (second pass) | PR #170 merged 2026-11-16T19:37:46Z | None. Eight files of Dhan provider code and tests | Merged into this branch. No file in common with this record |
 | PR #166, head `742adba` | Open | Roadmap block for the superseding approval `W04-D1-20261115-01` | Kept as written; a later record is added under it (section 3.6) |
 | PR #156, head `a93278f` | Open, 36 commits ahead of its base, 39 behind `main` | Its last two commits only: two W04 documents and one roadmap line. The other 34 commits are Dhan provider work | The two documents are carried with a note; the roadmap line is not carried (section 6) |
 | PR #163, head `3a656c2` | Open | Import qualification | **Not changed** |
-| Branch `arena/c32aea42-…`, head `8132c5b` | No pull request | The read-only database inventory of 2026-11-16 | Counts recorded here; the archive is referenced by commit and digest (section 3.3) |
+| Branch `arena/c32aea42-…`, head `8132c5b` | No pull request | The read-only database inventory of 2026-11-16 | Counts recorded here. The archive is carried to `main` unchanged (section 3.3). The D02 document of that branch is not carried; it is corrected by section 3.3.1 |
 | IRR `main` `0641953` | Merged 2026-11-16T19:03:51Z | Identity projection | Recorded (section 3.5) |
 | IRR PR #566, head `92eda04` | Open | Supersession record for the approval | Referenced; not changed |
 
@@ -73,7 +75,7 @@ This shows that each of the 64 original holdings is an exact member of the regis
 
 ### 3.3 Portfolio inventory, 2026-11-16
 
-The Principal ran the read-only D02 D5/D16 inventory on the host database and published its archive on branch `arena/c32aea42-iips-production-market-data`. The run was made for the D02 ownership work. Its figures for `DHAN_PORTFOLIO` are W04 evidence.
+The Principal ran the read-only D02 D5/D16 inventory on the host database and published its archive on branch `arena/c32aea42-iips-production-market-data`. The run was made for the D02 ownership work. Its figures for `DHAN_PORTFOLIO` are W04 evidence. The archive is now also on `main`, unchanged: [archive](../../evidence/d02-inventory-2026-11-16/windows-host/d02-d5-d16-inventory-20261116T143819255Z-96672044.zip).
 
 | Item | Value | Label |
 |---|---|---|
@@ -92,9 +94,44 @@ The counts are reproduced from the archive by [`extract_w04_inventory_counts.py`
 
 **No write since 2026-11-12 (D).** The file time of the database is `2026-11-12T10:45:20.439Z`. On the condition that the file time is a true record of the last write, none of the host steps of 14, 15 and 16 November wrote to the database, and the stored holdings are those the capture recorded on 2026-11-13 describes. The counts agree: 64, 1 and 63 in the capture, in the E4 output and in the inventory.
 
-**The archive is not copied to `main`.** Its result file states `LOCAL_PRINCIPAL_REVIEW_REQUIRED_BEFORE_EXTERNAL_SHARING`; it holds raw rows, among them a portfolio value. This repository is public. The archive stays where the Principal published it and is identified above by commit, blob and SHA-256. Only counts are copied here. Whether to carry the archive to `main` is noted in section 10.
+**The archive is carried to `main` unchanged (R).** The first pass of this record left the archive on its branch, because its result file states `LOCAL_PRINCIPAL_REVIEW_REQUIRED_BEFORE_EXTERNAL_SHARING`. On 2026-11-16 the Principal stated that the archive is intentional test data and is not to be sanitized or removed. That is the review the notice asks for. The archive is therefore copied to `main` at the path it has on its branch, as the same Git blob `36364ca514f2c126f97017abcd371bdeb752b2fd`, so that the W04 measurement no longer rests on a branch without a pull request. No byte of it was changed. The copy on branch `arena/c32aea42-…` is untouched.
 
-**One difference found on that branch (R).** Its document `IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md` gives, for `DHAN_PORTFOLIO`, a portfolio name, a total market value and a weight sum that differ from the rows of the archive (statements Q06 and Q07). The values are not repeated here. Its counts (revision 1, 64 active, 1 populated, 63 `NULL`) agree with the archive. That document belongs to the D02 work on a branch this record does not write; the difference is recorded for its owner.
+### 3.3.1 Correction to the D02 reconciliation document
+
+The document `docs/integration/IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md` describes the archive of section 3.3. It exists only on branch `arena/c32aea42-…`, written by commit `8132c5b6bba0051cbac95dab060096f2983e7396` (17,702 bytes, SHA-256 `d4993aefa2beaaa89c605c46db4a3c9efdbf9e63ff2fd8adba513e09ae84e38d`). For `DHAN_PORTFOLIO` it differs from the archive in three values, all on its line 80.
+
+| Field | The document, line 80 | The archive | Statement of the archive |
+|---|---|---|---|
+| `portfolio_name` | `Dhan Broker Holdings` | `DHAN_PORTFOLIO` | Q06 |
+| `total_market_value` of revision 1 | `3353794.55` | `468500.4000000001` | Q07 |
+| `weight_sum_percentage` of revision 1 | `100.01` | `100.00000000000003` | Q07 |
+
+**The values of the archive are authoritative (R).** The archive is the output of the host run. Its SHA-256 and its 16 manifest entries were checked. The document is a narrative written after the run. The stored name of the portfolio is the same text as its identifier.
+
+**Why they differ (R, to the extent the repository shows).** The three values of the document were not taken from the archive, and they have no other source:
+
+- None of the three occurs in any of the 17 entries of the archive.
+- A search of the whole history of this repository, all fetched branches included, finds the two numbers in one commit only, `8132c5b`, and in one file only, the document. That commit wrote the document in a single step. The same search finds the name there and in the header comment of one test file, where it is the title of a workstream.
+- The other files of the D02 evidence on that branch (the evidence README, the status JSON, the decision package and the tracker) do not carry them.
+- The two numbers are not the values of another portfolio or revision of the database. The archive holds 13 revision totals; none equals `3353794.55`, and no sum of them does.
+- A code search of IRR `main` does not find the market value. It finds the words "Dhan Broker Holdings" in earlier records as the title of the import workstream. They are not a stored portfolio name.
+
+The cause is an authoring error in the narrative: the three values were written without a source. The commit names an automated agent session as co-author. How the two numbers were arrived at cannot be recovered from the repository, and this record does not guess.
+
+**What line 80 has right.** Every other value on it equals the archive: the creation time, revision 1, `INITIAL`, broker `DHAN`, 64 active holdings, 1 populated and 63 `NULL` security identities, `RESOLVED`, `CANONICAL_P04`, and one `SAVED_NEW_BATCH` contribution.
+
+**Two further points from the same comparison.**
+
+1. Line 59 of the document gives "Total tables: 13". The archive shows 10 tables and 7 indexes. 13 is the number of revisions.
+2. Line 81 gives `amount = 500` for the one contribution of the portfolio named `TEST`. The archive holds no contribution amount, because statement Q09 does not select that column. The archive neither supports nor contradicts the figure. 500 is the total market value of revision 2 of that portfolio.
+
+The comparison covered line 80 in full and these two points. It is not an audit of the whole D02 document.
+
+**Effect.** None on W04: the revision, the holding count and the 1 and 63 are equal in both. None was found on the D02 dispositions of the document: it states that a portfolio name is never treated as ownership evidence, and no disposition in it uses the market value, the weight sum, the table count or the amount.
+
+**How it is corrected.** This section is the correction of record on `main`. The document itself is on a branch that this work cannot write, so it is not edited; a comment carrying this correction is attached to commit `8132c5b` on GitHub. When the D02 branch is next worked on, lines 59, 80 and 81 are to be corrected there from the archive. The archive and the test data are not changed.
+
+The comparison is reproduced by [`compare_d02_document_with_archive.py`](../../evidence/integration/w04-evidence-reconciliation-2026-11-16/compare_d02_document_with_archive.py); its output is [`d02-document-archive-comparison-2026-11-16.json`](../../evidence/integration/w04-evidence-reconciliation-2026-11-16/d02-document-archive-comparison-2026-11-16.json).
 
 ### 3.4 Import lineage (E4), 2026-11-14
 
@@ -222,7 +259,7 @@ None of these is requested by this record. They are named so that no reader take
 | 6 | The Broker Import evidence journal (not found on the host) and the typed reason at import (never kept) | The cause of the 63 |
 | 7 | Which IPD build and which P7 registry the host loaded at the import | The cause of the 63 |
 | 8 | The approval record `W04-D1-20261115-01`. It is on the host; only its digest is published. IRR PR #566, which holds its supersession record, is open | Section 3.6 |
-| 9 | The inventory archive on `main`. It is on branch `arena/c32aea42-…` only | Section 3.3. If that branch is deleted before the archive is carried, the archive is no longer reachable from a branch |
+| 9 | Closed in the second pass: the inventory archive is now on `main`, carried unchanged | Section 3.3 |
 
 ## 8. Acceptance assessment
 
@@ -261,11 +298,27 @@ Limits that an acceptance as measured would carry:
 2. The resolver outcome and the issuer mapping of the one qualified holding are operator-reported. The values are not in the repository.
 3. The installation of 2026-11-14 and the registry verification of 2026-11-15 are operator-reported summaries. Their outputs are not in the repository.
 
-### 8.4 Determination
+**Do the limits prevent acceptance as measured? No.** Each limit lowers the grade of one piece of supporting evidence. None of them touches the measured count, which rests on two host outputs held on `main` (sections 3.3 and 3.4). The roadmap provides for exactly this case. Its operating model says that the listed tests and readback are objective closure evidence and "do not impose a separate human sign-off", that checks are to be independent "where feasible", and that limitations are to be documented "when independent check is infeasible". Removing any of the three limits needs output from the host. Host work and the repetition of completed verification are outside this work, so an independent check is not feasible here, and the limits are documented instead.
 
-**W04 can be accepted as measured at 1 of 64, with 63 holdings explicitly unresolved.** The roadmap does not require 64 of 64 for W04, and the three limits concern the grade of some evidence, not the measured count, which rests on host output held in the repository.
+### 8.4 Confirmation of the five points, second pass
 
-Such an acceptance would mean: the measurement is complete and is the W04 result. It would not mean any of the following, and this record claims none of them:
+| Point | Finding | Evidence, and where it is |
+|---|---|---|
+| Installation and registry verification | **Present.** Installation complete on 2026-11-14 with 2,388 of 2,388 both ways; registry verification of 2026-11-15 `ALL_64_MATCH_PUBLISHED_MANIFEST` | Operator-reported records on `main` (sections 3.1 and 3.2). The three installed file digests are reproduced by test IIX-04 on every run of the suite; the registry and its 4,680 mappings are on `main` |
+| Import lineage for all 64 holdings | **Present: 64 of 64 reproduced** (`REPRODUCED_ALL`) | Host output on `main` (section 3.4). Its import-content digest equals the contribution digest in the archive |
+| Revision 1 and coverage of 1 of 64 | **Present: revision 1, 64 active holdings, identity on 1, none on 63** | Host output, now on `main` (section 3.3), re-extracted in this pass with an equal result |
+| IRR integration on merged `main` | **Present.** `064195397dfdb32bf0f34a461b02fd6b9f9a8df0` is still the head of IRR `main`, read again in this pass | GitHub API (section 3.5) |
+| Remaining limitations | The three limits of section 8.3 and the unavailable items of section 7, rows 1 to 8 | **They do not prevent acceptance as measured** (paragraph above) |
+
+No requirement of 64 of 64 is applied. The roadmap does not set one for W04.
+
+### 8.5 Determination
+
+**The W04 acceptance criteria of the roadmap are met as measured: 1 of 64, with 63 holdings explicitly unresolved.** The deliverable (same-revision counts in five categories, with source versions) is delivered. The acceptance evidence (reconciled rows, no symbol-only identity) is in the repository. The exact mapping of the one qualified holding is reported and not shown, which is limit 2. The predecessor W03 supplies the revision and the holding count, and both are now host output on `main`.
+
+**Recommendation: accept W04 as measured.** Disposition: 1 of 64 measured, 63 unresolved. No further evidence, host step or approval is needed for it.
+
+Such an acceptance means: the measurement is complete and is the W04 result. It does not mean any of the following, and this record claims none of them:
 
 - that 64 holdings are identified, or that identity coverage is complete;
 - that `1/64` is a threshold; θI stays not established and W20 stays not accepted;
@@ -276,17 +329,18 @@ Such an acceptance would mean: the measurement is complete and is the W04 result
 
 ## 9. What this record did not do
 
-No host operation. No installation, provisioning or re-provisioning. No database read or change. No statement import. No identity check repeated. No approval written, renewed or replaced. No file of the provisioning tool, the approval check or the P7 utilities changed. No IRR write. PR #163 not changed. No holding identifier, quantity, price or value reproduced.
+No host operation. No installation, provisioning or re-provisioning. No database read or change. No statement import. No identity check repeated. No approval written, renewed or replaced. No file of the provisioning tool, the approval check or the P7 utilities changed. No IRR write. PR #163 not changed. No holding identifier, quantity or price reproduced. One revision total and one weight sum of the test data are stated in section 3.3.1, because they are the subject of the correction. The archive was copied; it was not opened for change, sanitized or removed.
 
 ## 10. For the Principal
 
-One decision closes W04:
+Nothing further is needed from the Principal for the W04 evidence, for its publication or for the work that follows. No host step, no approval and no file is requested.
 
-- **Accept W04 as measured at 1 of 64, with the three limits of section 8.3**, or name the limit that must be removed first. Each limit can be removed only by evidence from the host.
+One thing is his and is not written here for him: the statement of acceptance. This record recommends it (section 8.5). Until he states it, the roadmap reads "criteria met as measured, acceptance recommended". When he states it, one line of the roadmap changes to "accepted as measured".
 
-One point of handling, not of acceptance:
+Closed in the second pass:
 
-- The inventory archive is on a public branch and states that it needs the Principal's review before external sharing. It holds raw rows, among them a portfolio value. Either carry it to `main` as it is, or replace it on that branch with a sanitized copy. Until then that branch should not be deleted.
+- The handling of the inventory archive. The Principal stated on 2026-11-16 that it is intentional test data, not to be sanitized or removed. It is on `main` unchanged.
+- The difference in the D02 document (section 3.3.1).
 
 ## 11. Validation of this record
 
@@ -301,4 +355,18 @@ One point of handling, not of acceptance:
 | Test IIX-04, with the published manifest: the export gives the three digests installed on 2026-11-14 (section 3.6) | Pass |
 | Full test suite on this branch after the merge of `main` `75db511` (build, then `npm test`) | 1,669 tests: 1,668 passed, 0 failed, 1 skipped |
 
-The change is documentation and one read-only evidence script. No source, test, tool or workflow file is changed by it.
+Second pass:
+
+| Check | Result |
+|---|---|
+| Archive on `main` against the archive on branch `arena/c32aea42-…` | Same Git blob `36364ca514f2c126f97017abcd371bdeb752b2fd`, same SHA-256, 27,601 bytes |
+| Counts extracted again, from the archive on `main` | Equal to the committed extract |
+| Comparison of the D02 document with the archive | 3 values of line 80 and 1 table count differ; 9 values agree; 1 figure is not in the archive |
+| Comparison script on another archive, and on another document | Refused, exit codes 3 and 4 |
+| History search for the three differing values | The two numbers: commit `8132c5b` only, the document only |
+| IRR `main`, read again | `064195397dfdb32bf0f34a461b02fd6b9f9a8df0`, unchanged |
+| Heads of PR #156, PR #163 and branch `arena/c32aea42-…`, read again | `a93278f`, `3a656c2`, `8132c5b`: unchanged, and not written by this work |
+| Relative links of this record, of the roadmap and of the evidence folder | All resolve |
+| Full test suite after the merge of `main` `d80d773` (build, then `npm test`); test IIX-04 included | 1,677 tests: 1,676 passed, 0 failed, 1 skipped |
+
+The change is documentation, two read-only evidence scripts and one evidence archive copied unchanged. No source, test, tool or workflow file is changed by it.

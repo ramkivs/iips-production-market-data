@@ -1,0 +1,139 @@
+{
+  "schema": "IPD_W04_D02_DOCUMENT_ARCHIVE_COMPARISON_V1",
+  "authority": "the archive (host output); the document is a narrative written from it",
+  "archive": {
+    "sha256": "813183b382a26d0b6affeeaee04d44b0ea0057bea140a83221b460d8720da1b3",
+    "bytes": 27601
+  },
+  "document": {
+    "path": "docs/integration/IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md",
+    "commit": "8132c5b6bba0051cbac95dab060096f2983e7396",
+    "sha256": "d4993aefa2beaaa89c605c46db4a3c9efdbf9e63ff2fd8adba513e09ae84e38d",
+    "bytes": 17702
+  },
+  "portfolio": "DHAN_PORTFOLIO",
+  "differing": [
+    {
+      "field": "portfolio_name",
+      "documentLine": 80,
+      "document": "Dhan Broker Holdings",
+      "archive": "DHAN_PORTFOLIO",
+      "archiveSource": "Q06",
+      "equal": false
+    },
+    {
+      "field": "total_market_value",
+      "documentLine": 80,
+      "document": 3353794.55,
+      "archive": 468500.4000000001,
+      "archiveSource": "Q07",
+      "equal": false
+    },
+    {
+      "field": "weight_sum_percentage",
+      "documentLine": 80,
+      "document": 100.01,
+      "archive": 100.00000000000003,
+      "archiveSource": "Q07",
+      "equal": false
+    },
+    {
+      "field": "number of tables",
+      "documentLine": 59,
+      "document": 13,
+      "archive": 10,
+      "archiveSource": "03-migration-ledger-and-schema-evidence.json schemaObjectsByType.table",
+      "equal": false
+    }
+  ],
+  "agreeing": [
+    {
+      "field": "created_at",
+      "documentLine": 80,
+      "document": "2026-11-11T17:05:50.679Z",
+      "archive": "2026-11-11T17:05:50.679Z",
+      "archiveSource": "Q06",
+      "equal": true
+    },
+    {
+      "field": "current_revision",
+      "documentLine": 80,
+      "document": 1,
+      "archive": 1,
+      "archiveSource": "Q06",
+      "equal": true
+    },
+    {
+      "field": "operation",
+      "documentLine": 80,
+      "document": "INITIAL",
+      "archive": "INITIAL",
+      "archiveSource": "Q07",
+      "equal": true
+    },
+    {
+      "field": "active holding rows",
+      "documentLine": 80,
+      "document": 64,
+      "archive": 64,
+      "archiveSource": "Q08",
+      "equal": true
+    },
+    {
+      "field": "declared holdings count",
+      "documentLine": 80,
+      "document": 64,
+      "archive": 64,
+      "archiveSource": "Q07",
+      "equal": true
+    },
+    {
+      "field": "security_identity populated",
+      "documentLine": 80,
+      "document": 1,
+      "archive": 1,
+      "archiveSource": "Q08",
+      "equal": true
+    },
+    {
+      "field": "security_identity NULL",
+      "documentLine": 80,
+      "document": 63,
+      "archive": 63,
+      "archiveSource": "Q08",
+      "equal": true
+    },
+    {
+      "field": "identity_status",
+      "documentLine": 80,
+      "document": "RESOLVED",
+      "archive": "RESOLVED",
+      "archiveSource": "Q08",
+      "equal": true
+    },
+    {
+      "field": "resolution_disposition",
+      "documentLine": 80,
+      "document": "CANONICAL_P04",
+      "archive": "CANONICAL_P04",
+      "archiveSource": "Q08",
+      "equal": true
+    }
+  ],
+  "differingDocumentValuesFoundAnywhereInTheArchive": {
+    "Dhan Broker Holdings": false,
+    "3353794.55": false,
+    "100.01": false
+  },
+  "notInTheArchive": [
+    {
+      "field": "contribution amount of PERSONAL-fa8ad7bc-efec-5562-cfbd-de362b782fa2",
+      "documentLine": 81,
+      "document": 500,
+      "archive": null,
+      "reason": "statement Q09 does not select the amount column",
+      "q09HasAmountColumn": false
+    }
+  ],
+  "effectOnTheW04Counts": "none: revision, holding count and the 1 and 63 of the security identity are equal in both"
+}
