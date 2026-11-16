@@ -30,6 +30,7 @@ import { selectDhanQuote } from './dhan_dto.js';
 import { DhanFailure, DhanProviderError } from './dhan_failures.js';
 import { DhanInstrumentRegistry } from './dhan_instrument_map.js';
 import { normalizeDhanQuoteToCanonical } from './dhan_normalizer.js';
+import type { DhanProviderObservedState } from './dhan_provider_state_recorder.js';
 
 export interface DhanMarketDataSourceOptions {
   client: DhanApiClient;
@@ -45,8 +46,6 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
   private readonly instrumentRegistry: DhanInstrumentRegistry;
   private readonly now: () => Date;
   private lastFailure: DhanFailure | null = null;
-  private lastSuccessAt: string | null = null;
-  private lastLatencyMs = 0;
 
   constructor(options: DhanMarketDataSourceOptions) {
     this.client = options.client;
@@ -65,6 +64,11 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
   /** Last deterministic failure observed, for operator diagnostics. */
   public getLastFailure(): DhanFailure | null {
     return this.lastFailure;
+  }
+
+  /** Observation-only snapshot of the shared W-08 provider state recorder. */
+  public getObservedState(): DhanProviderObservedState {
+    return this.client.getObservedState();
   }
 
   /**
@@ -113,20 +117,28 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
     }
 
     const mapping = resolution.mapping;
-    const callResult = await this.client.fetchMarketQuotes([
-      { exchangeSegment: mapping.exchangeSegment, dhanSecurityId: mapping.dhanSecurityId },
-    ]);
+    const callResult = await this.client.fetchMarketQuotes(
+      [{ exchangeSegment: mapping.exchangeSegment, dhanSecurityId: mapping.dhanSecurityId }],
+      { deferSuccessRecording: true }
+    );
 
     if (!callResult.ok) {
       throw this.fail(callResult.failure);
     }
 
+    const receivedAt = this.now().toISOString();
+    const latencyMs = callResult.value.metrics.latencyMs;
+
     const selected = selectDhanQuote(callResult.value.dto, mapping.exchangeSegment, mapping.dhanSecurityId);
     if (!selected.ok) {
+      this.client.getStateRecorder().recordFailure({
+        category: selected.failure.code,
+        at: receivedAt,
+        latencyMs,
+      });
       throw this.fail(selected.failure);
     }
 
-    const receivedAt = this.now().toISOString();
     const normalized = normalizeDhanQuoteToCanonical({
       quote: selected.value,
       mapping,
@@ -136,12 +148,19 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
     });
 
     if (!normalized.ok) {
+      this.client.getStateRecorder().recordFailure({
+        category: normalized.failure.code,
+        at: receivedAt,
+        latencyMs,
+      });
       throw this.fail(normalized.failure);
     }
 
     this.lastFailure = null;
-    this.lastSuccessAt = receivedAt;
-    this.lastLatencyMs = callResult.value.metrics.latencyMs;
+    this.client.getStateRecorder().recordSuccess({
+      at: receivedAt,
+      latencyMs,
+    });
     return normalized.value.envelope;
   }
 
@@ -160,23 +179,29 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
   }
 
   /**
-   * Reports provider health WITHOUT performing any network call.
-   * Pre-access (no credentials configured) is reported as DOWN, never HEALTHY.
+   * Reports provider health WITHOUT performing any network call or mutating
+   * recorder state. Pre-access (no credentials configured) is reported as DOWN,
+   * never HEALTHY.
    */
   public async healthCheck(): Promise<ProviderHealth> {
     const config = this.client.getConfig();
+    const observed = this.client.getObservedState();
     const heartbeat = this.now().toISOString();
 
     if (config.readiness === 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE') {
       return { status: 'DOWN', latencyMs: 0, lastHeartbeat: heartbeat };
     }
-    if (this.lastFailure) {
-      return { status: 'DOWN', latencyMs: this.lastLatencyMs, lastHeartbeat: heartbeat };
+    if (observed.authLatched || observed.lastFailure !== null) {
+      return { status: 'DOWN', latencyMs: observed.lastLatencyMs ?? 0, lastHeartbeat: heartbeat };
     }
-    if (!this.lastSuccessAt) {
+    if (!observed.lastSuccessAt) {
       return { status: 'DEGRADED', latencyMs: 0, lastHeartbeat: heartbeat };
     }
-    return { status: 'HEALTHY', latencyMs: this.lastLatencyMs, lastHeartbeat: this.lastSuccessAt };
+    return {
+      status: 'HEALTHY',
+      latencyMs: observed.lastLatencyMs ?? 0,
+      lastHeartbeat: observed.lastSuccessAt,
+    };
   }
 
   private fail(failure: DhanFailure): DhanProviderError {

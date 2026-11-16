@@ -28,7 +28,12 @@ import {
   DhanMarketQuoteResponseDto,
   parseDhanMarketQuoteResponse,
 } from './dhan_dto.js';
-import { DhanResult, dhanFailure, dhanOk } from './dhan_failures.js';
+import { DhanFailureCode, DhanResult, dhanFailure, dhanOk } from './dhan_failures.js';
+import {
+  DhanProviderObservedState,
+  DhanProviderStateRecorder,
+  ProviderVerificationResult,
+} from './dhan_provider_state_recorder.js';
 
 export interface DhanHttpRequest {
   method: 'GET' | 'POST';
@@ -100,6 +105,22 @@ export interface DhanApiClientOptions {
   credentialResolver?: DhanCredentialResolver;
   /** Injected clock for deterministic latency measurement in tests. */
   now?: () => number;
+  /** Optional shared W-08 in-process observed state recorder. */
+  stateRecorder?: DhanProviderStateRecorder;
+}
+
+export interface DhanExecuteOptions {
+  /**
+   * Internal composition hook allowing higher-level adapters (quote / historical)
+   * to complete vendor payload validation before recording a successful interaction.
+   */
+  readonly deferSuccessRecording?: boolean;
+}
+
+export interface DhanProbeOnceOptions {
+  readonly localOnly?: boolean;
+  readonly checkedAt?: string;
+  readonly acquireProbePermit?: () => boolean;
 }
 
 export interface DhanApiCallMetrics {
@@ -120,16 +141,33 @@ export class DhanApiClient {
   private readonly transport: DhanHttpTransport;
   private readonly credentialResolver: DhanCredentialResolver;
   private readonly now: () => number;
+  private readonly stateRecorder: DhanProviderStateRecorder;
 
   constructor(options: DhanApiClientOptions) {
     this.config = options.config;
     this.transport = options.transport ?? new PreAccessNoNetworkTransport();
     this.credentialResolver = options.credentialResolver ?? new PreAccessDhanCredentialResolver();
     this.now = options.now ?? (() => Date.now());
+    this.stateRecorder =
+      options.stateRecorder ?? new DhanProviderStateRecorder({ now: this.now });
   }
 
   public getConfig(): DhanProviderConfig {
     return this.config;
+  }
+
+  /** Shared W-08 in-process observed state recorder. */
+  public getStateRecorder(): DhanProviderStateRecorder {
+    return this.stateRecorder;
+  }
+
+  /** Observation-only snapshot of recorded provider state; never triggers I/O or mutates state. */
+  public getObservedState(): DhanProviderObservedState {
+    return this.stateRecorder.snapshot();
+  }
+
+  public nowIso(): string {
+    return new Date(this.now()).toISOString();
   }
 
   /**
@@ -150,7 +188,8 @@ export class DhanApiClient {
    * Returns a deterministic result; never throws for expected failure modes.
    */
   public async fetchMarketQuotes(
-    instruments: readonly DhanQuoteRequestInstrument[]
+    instruments: readonly DhanQuoteRequestInstrument[],
+    options?: DhanExecuteOptions
   ): Promise<DhanResult<DhanQuoteCallOutcome>> {
     if (instruments.length === 0) {
       return dhanFailure('MISSING_REQUIRED_FIELD', 'At least one instrument is required for a Dhan quote request', {
@@ -160,30 +199,41 @@ export class DhanApiClient {
 
     const call = await this.executeJsonPost(
       DHAN_MARKET_QUOTE_PATH,
-      DhanApiClient.buildQuoteRequestBody(instruments)
+      DhanApiClient.buildQuoteRequestBody(instruments),
+      { deferSuccessRecording: true }
     );
     if (!call.ok) return call;
 
     const parsed = parseDhanMarketQuoteResponse(call.value.json);
     if (!parsed.ok) {
+      this.stateRecorder.recordFailure({
+        category: parsed.failure.code,
+        at: this.nowIso(),
+        latencyMs: call.value.metrics.latencyMs,
+      });
       return {
         ok: false,
         failure: { ...parsed.failure, httpStatus: call.value.metrics.httpStatus },
       };
     }
 
+    if (!options?.deferSuccessRecording) {
+      this.stateRecorder.recordSuccess({
+        at: this.nowIso(),
+        latencyMs: call.value.metrics.latencyMs,
+      });
+    }
+
     return dhanOk({ dto: parsed.value, metrics: call.value.metrics });
   }
 
   /**
-   * DHAN-D2: shared credential-ready POST execution used by every Dhan endpoint.
-   * Performs credential resolution, header injection, timeout, HTTP status mapping and
-   * JSON decoding. Endpoint-specific structural validation happens in the callers.
+   * Resolves and locally validates Dhan credentials once (D-2 / D-7 V1).
+   * Performs zero network calls and never retains or echoes credential material.
    */
-  public async executeJsonPost(
-    pathSuffix: string,
-    body: string
-  ): Promise<DhanResult<{ json: unknown; metrics: DhanApiCallMetrics }>> {
+  private async resolveReadyCredentials(
+    nowMs: number
+  ): Promise<DhanResult<{ accessToken: string; clientId: string; expiresAt?: string }>> {
     const runtimeEnv = typeof process !== 'undefined' && process.env ? process.env : {};
     if (isDhanProductionEnvironment(runtimeEnv)) {
       return dhanFailure(
@@ -192,7 +242,6 @@ export class DhanApiClient {
       );
     }
 
-    const nowMs = this.now();
     for (const ref of [this.config.accessTokenRef, this.config.clientIdRef]) {
       if (!ref) continue;
       if (ref.status === 'EXPIRED' || ref.status === 'REVOKED') {
@@ -248,6 +297,39 @@ export class DhanApiClient {
       }
     }
 
+    return dhanOk(credentials);
+  }
+
+  /**
+   * DHAN-D2 / W-08: shared credential-ready POST execution used by every Dhan endpoint.
+   * Performs auth-latch enforcement, credential resolution, header injection, timeout,
+   * HTTP status mapping, JSON decoding, and W-08 state recording.
+   */
+  public async executeJsonPost(
+    pathSuffix: string,
+    body: string,
+    options?: DhanExecuteOptions
+  ): Promise<DhanResult<{ json: unknown; metrics: DhanApiCallMetrics }>> {
+    // D-2 / D-7 §2.2–§2.3: latched auth failure blocks further credential reads and vendor calls
+    // until operator intervention and restart.
+    if (this.stateRecorder.isAuthLatched()) {
+      return dhanFailure(
+        'AUTHENTICATION_FAILURE',
+        'Dhan authentication is latched after repeated rejections; operator intervention and restart required'
+      );
+    }
+
+    const nowMs = this.now();
+    const resolved = await this.resolveReadyCredentials(nowMs);
+    if (!resolved.ok) {
+      this.stateRecorder.recordFailure({
+        category: resolved.failure.code,
+        at: new Date(nowMs).toISOString(),
+      });
+      return resolved;
+    }
+
+    const credentials = resolved.value;
     const request: DhanHttpRequest = {
       method: 'POST',
       url: `${this.config.baseUrl}${pathSuffix}`,
@@ -267,34 +349,287 @@ export class DhanApiClient {
     try {
       response = await this.withTimeout(this.transport.send(request), this.config.timeoutMs);
     } catch (err: unknown) {
-      const latencyMs = Math.max(0, this.now() - startedAt);
+      const finishedAt = this.now();
+      const latencyMs = Math.max(0, finishedAt - startedAt);
+      const at = new Date(finishedAt).toISOString();
       if (err instanceof DhanProductionNotAuthorizedError) {
+        this.stateRecorder.recordFailure({ category: 'PRODUCTION_NOT_AUTHORIZED', at });
         return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan vendor egress is not authorized');
       }
       if (err instanceof DhanTransportTimeoutError) {
+        this.stateRecorder.recordFailure({ category: 'TIMEOUT', at, latencyMs });
         return dhanFailure('TIMEOUT', `Dhan request exceeded the configured timeout of ${this.config.timeoutMs}ms`);
       }
       if (err instanceof DhanTransportUnavailableError) {
+        const recordLatency = this.transport instanceof PreAccessNoNetworkTransport ? undefined : latencyMs;
+        this.stateRecorder.recordFailure({
+          category: 'TRANSPORT_FAILURE',
+          at,
+          ...(recordLatency !== undefined ? { latencyMs: recordLatency } : {}),
+        });
         return dhanFailure('TRANSPORT_FAILURE', 'Dhan transport is unavailable');
       }
-      void latencyMs;
+      this.stateRecorder.recordFailure({ category: 'TRANSPORT_FAILURE', at, latencyMs });
       return dhanFailure('TRANSPORT_FAILURE', 'Dhan transport failed before a response was received');
     }
 
-    const latencyMs = Math.max(0, this.now() - startedAt);
+    const finishedAt = this.now();
+    const latencyMs = Math.max(0, finishedAt - startedAt);
+    const at = new Date(finishedAt).toISOString();
     const statusFailure = DhanApiClient.mapHttpStatus(response.status);
-    if (statusFailure) return statusFailure;
+    if (statusFailure) {
+      this.stateRecorder.recordFailure({
+        category: statusFailure.failure.code,
+        at,
+        latencyMs,
+      });
+      return statusFailure;
+    }
 
     let parsedJson: unknown;
     try {
       parsedJson = JSON.parse(response.bodyText);
     } catch {
+      this.stateRecorder.recordFailure({
+        category: 'MALFORMED_RESPONSE',
+        at,
+        latencyMs,
+      });
       return dhanFailure('MALFORMED_RESPONSE', 'Dhan response body is not valid JSON', {
         httpStatus: response.status,
       });
     }
 
+    if (!options?.deferSuccessRecording) {
+      this.stateRecorder.recordSuccess({ at, latencyMs });
+    }
+
     return dhanOk({ json: parsedJson, metrics: { latencyMs, httpStatus: response.status } });
+  }
+
+  /**
+   * D-7 §3 / W-08 single-shot operator verification probe (V1 local check + at most one V2 probe).
+   * - Never retries, never loops, never polls, and resolves credentials at most once.
+   * - Records V1 expiry and all V2 outcomes in the shared `DhanProviderStateRecorder`.
+   */
+  public async probeOnce(
+    probeInstrument: DhanQuoteRequestInstrument | null,
+    options?: DhanProbeOnceOptions
+  ): Promise<ProviderVerificationResult> {
+    const nowMs = this.now();
+    const checkedAt = options?.checkedAt ?? new Date(nowMs).toISOString();
+
+    if (this.stateRecorder.isAuthLatched()) {
+      return {
+        outcome: 'AUTH_REJECTED',
+        probeAttempted: false,
+        probeCount: 0,
+        failureCategory: 'AUTHENTICATION_FAILURE',
+        latencyMs: null,
+        checkedAt,
+        observedState: this.stateRecorder.snapshot(),
+      };
+    }
+
+    // V1 static readiness check before invoking credential resolver.
+    if (this.config.readiness === 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE') {
+      return {
+        outcome: 'NOT_ATTEMPTED_NOT_READY',
+        probeAttempted: false,
+        probeCount: 0,
+        failureCategory: 'CREDENTIALS_UNAVAILABLE',
+        latencyMs: null,
+        checkedAt,
+        observedState: this.stateRecorder.snapshot(),
+      };
+    }
+
+    // V1 local credential check (single resolution, zero re-reads).
+    const resolved = await this.resolveReadyCredentials(nowMs);
+    if (!resolved.ok) {
+      if (resolved.failure.code === 'CREDENTIALS_EXPIRED') {
+        const observedState = this.stateRecorder.recordFailure({
+          category: 'CREDENTIALS_EXPIRED',
+          at: checkedAt,
+        });
+        return {
+          outcome: 'EXPIRED_LOCAL',
+          probeAttempted: false,
+          probeCount: 0,
+          failureCategory: 'CREDENTIALS_EXPIRED',
+          latencyMs: null,
+          checkedAt,
+          observedState,
+        };
+      }
+      return {
+        outcome: 'NOT_ATTEMPTED_NOT_READY',
+        probeAttempted: false,
+        probeCount: 0,
+        failureCategory: resolved.failure.code,
+        latencyMs: null,
+        checkedAt,
+        observedState: this.stateRecorder.snapshot(),
+      };
+    }
+
+    if (options?.localOnly === true || probeInstrument === null) {
+      return {
+        outcome: 'VERIFIED_LOCAL_ONLY',
+        probeAttempted: false,
+        probeCount: 0,
+        failureCategory: null,
+        latencyMs: null,
+        checkedAt,
+        observedState: this.stateRecorder.snapshot(),
+      };
+    }
+
+    if (this.transport instanceof PreAccessNoNetworkTransport) {
+      return {
+        outcome: 'NOT_ATTEMPTED_NOT_READY',
+        probeAttempted: false,
+        probeCount: 0,
+        failureCategory: 'TRANSPORT_FAILURE',
+        latencyMs: null,
+        checkedAt,
+        observedState: this.stateRecorder.snapshot(),
+      };
+    }
+
+    if (options?.acquireProbePermit && !options.acquireProbePermit()) {
+      return {
+        outcome: 'NOT_ATTEMPTED_NOT_READY',
+        probeAttempted: false,
+        probeCount: 0,
+        failureCategory: 'RATE_LIMITED',
+        latencyMs: null,
+        checkedAt,
+        observedState: this.stateRecorder.snapshot(),
+      };
+    }
+
+    // V2: single bounded authenticated probe using the already-resolved credentials (zero re-reads, zero retries).
+    const credentials = resolved.value;
+    const request: DhanHttpRequest = {
+      method: 'POST',
+      url: `${this.config.baseUrl}${DHAN_MARKET_QUOTE_PATH}`,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'access-token': credentials.accessToken,
+        'client-id': credentials.clientId,
+      },
+      body: DhanApiClient.buildQuoteRequestBody([probeInstrument]),
+      timeoutMs: this.config.timeoutMs,
+    };
+
+    const startedAt = this.now();
+    let response: DhanHttpResponse;
+    try {
+      response = await this.withTimeout(this.transport.send(request), this.config.timeoutMs);
+    } catch (err: unknown) {
+      const finishedAt = this.now();
+      const latencyMs = Math.max(0, finishedAt - startedAt);
+      const at = new Date(finishedAt).toISOString();
+      if (err instanceof DhanProductionNotAuthorizedError) {
+        const observedState = this.stateRecorder.recordFailure({
+          category: 'PRODUCTION_NOT_AUTHORIZED',
+          at,
+        });
+        return {
+          outcome: 'NOT_ATTEMPTED_NOT_READY',
+          probeAttempted: false,
+          probeCount: 0,
+          failureCategory: 'PRODUCTION_NOT_AUTHORIZED',
+          latencyMs: null,
+          checkedAt: at,
+          observedState,
+        };
+      }
+      const category: DhanFailureCode =
+        err instanceof DhanTransportTimeoutError ? 'TIMEOUT' : 'TRANSPORT_FAILURE';
+      const observedState = this.stateRecorder.recordFailure({ category, at, latencyMs });
+      return {
+        outcome: 'FAILED_TRANSPORT',
+        probeAttempted: true,
+        probeCount: 1,
+        failureCategory: category,
+        latencyMs,
+        checkedAt: at,
+        observedState,
+      };
+    }
+
+    const finishedAt = this.now();
+    const latencyMs = Math.max(0, finishedAt - startedAt);
+    const at = new Date(finishedAt).toISOString();
+    const statusFailure = DhanApiClient.mapHttpStatus(response.status);
+    if (statusFailure) {
+      const category = statusFailure.failure.code;
+      const observedState = this.stateRecorder.recordFailure({ category, at, latencyMs });
+      const outcome =
+        category === 'AUTHENTICATION_FAILURE'
+          ? 'AUTH_REJECTED'
+          : category === 'TIMEOUT'
+            ? 'FAILED_TRANSPORT'
+            : 'FAILED_VENDOR_RESPONSE';
+      return {
+        outcome,
+        probeAttempted: true,
+        probeCount: 1,
+        failureCategory: category,
+        latencyMs,
+        checkedAt: at,
+        observedState,
+      };
+    }
+
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(response.bodyText);
+    } catch {
+      const observedState = this.stateRecorder.recordFailure({
+        category: 'MALFORMED_RESPONSE',
+        at,
+        latencyMs,
+      });
+      return {
+        outcome: 'FAILED_VENDOR_RESPONSE',
+        probeAttempted: true,
+        probeCount: 1,
+        failureCategory: 'MALFORMED_RESPONSE',
+        latencyMs,
+        checkedAt: at,
+        observedState,
+      };
+    }
+
+    const parsedQuote = parseDhanMarketQuoteResponse(parsedJson);
+    if (!parsedQuote.ok) {
+      const category = parsedQuote.failure.code;
+      const observedState = this.stateRecorder.recordFailure({ category, at, latencyMs });
+      return {
+        outcome: 'FAILED_VENDOR_RESPONSE',
+        probeAttempted: true,
+        probeCount: 1,
+        failureCategory: category,
+        latencyMs,
+        checkedAt: at,
+        observedState,
+      };
+    }
+
+    const observedState = this.stateRecorder.recordSuccess({ at, latencyMs });
+    return {
+      outcome: 'VERIFIED_VENDOR_ACCEPTED',
+      probeAttempted: true,
+      probeCount: 1,
+      failureCategory: null,
+      latencyMs,
+      checkedAt: at,
+      observedState,
+    };
   }
 
   /**
