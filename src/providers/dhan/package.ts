@@ -93,8 +93,22 @@ export {
 } from './dhan_operational_controls.js';
 export type { DhanSecurityScope, CacheLookup, RefreshOutcome, RetryOptions } from './dhan_operational_controls.js';
 // Composed IPD-owned service + authenticated server-to-server transport (DHAN-P5).
-export { DhanMarketDataService } from './dhan_market_data_service.js';
-export type { QuoteRequest, QuoteResponse, HistoricalServiceRequest, HistoricalResponse, ServiceHealth } from './dhan_market_data_service.js';
+export {
+  DhanMarketDataService,
+  DHAN_HEALTH_CONTRACT_VERSION,
+  DHAN_HEALTH_CONTRACT_LEGACY_VERSION,
+  validateDhanServiceHealth,
+} from './dhan_market_data_service.js';
+export type {
+  QuoteRequest,
+  QuoteResponse,
+  HistoricalServiceRequest,
+  HistoricalResponse,
+  ServiceHealth,
+  DhanLiveProviderConnectivity,
+  DhanProviderQualification,
+  DhanHealthContractVersion,
+} from './dhan_market_data_service.js';
 export {
   createMarketDataHttpServer,
   isLoopbackTransportHost,
