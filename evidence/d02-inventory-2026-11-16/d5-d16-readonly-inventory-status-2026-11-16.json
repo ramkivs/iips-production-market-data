@@ -1,0 +1,248 @@
+{
+  "schema": "iips.ipd.d02.d5-d16-readonly-inventory-status/v1",
+  "recordedDate": "2026-11-16",
+  "repository": "ramkivs/iips-production-market-data",
+  "sessionWorkingBranch": "arena/c32aea42-iips-production-market-data",
+  "carriedD02LineBranch": "arena/14cbd9d2-iips-production-market-data",
+  "carriedD02StartingCommit": "743ce46f8eda7b5f74a5dcaf9e34783586f49cc7",
+  "sessionMainBaseCommit": "901e4791e271cafdb777d56f9f66f6867b3f60c6",
+  "programAuthorityApproval": {
+    "approvalDate": "2026-11-16",
+    "authority": "Ramki, acting as Program Authority",
+    "level": "Level E (narrow operational read-only inspection only)",
+    "scope": [
+      "D5 identity-mapping evidence",
+      "D16 historical inventory and collision assessment"
+    ],
+    "authorizedActivities": [
+      "Read-only inspection of the existing database",
+      "Inventory of existing portfolio and ownership records",
+      "Identification of candidate historical portfolios",
+      "Counts of relevant records and relationships",
+      "Identification of duplicate identifiers, collisions, NULL relationships and orphan records",
+      "Inspection of existing migration ledger state without executing migrations",
+      "Collection of evidence concerning historical ownership and provenance",
+      "Documentation of unknown or ambiguous records without assigning inferred ownership"
+    ],
+    "absoluteProhibitions": [
+      "Schema changes",
+      "Migration execution or migration-ledger writes",
+      "Portfolio or holding writes",
+      "Identity provisioning or reassignment",
+      "Historical re-keying or ownership movement",
+      "Tombstone restoration",
+      "Reset or replacement operations",
+      "Application startup if it could invoke the migration runner",
+      "D5 acceptance or D6 execution",
+      "IRR repository changes",
+      "PR merging",
+      "Dependency installation or database modification"
+    ]
+  },
+  "safeExecutionPreflight": {
+    "observedAtUtc": "2026-11-16T12:55:24.779Z",
+    "executionEnvironment": {
+      "platform": "linux",
+      "arch": "x64",
+      "kernel": "Linux 6.1.158+ x86_64",
+      "nodeVersion": "22.22.3",
+      "bundledSqliteVersion": "3.51.3",
+      "isPrincipalWindowsHost": false
+    },
+    "targetDatabaseIdentification": {
+      "designatedWindowsDatabasePath": "C:\\iips-data\\iips\\user-portfolio.sqlite",
+      "runtimeEnvSetting": "IIPS_G3_DATABASE_PATH",
+      "runtimeEnvValue": null,
+      "allIipsIpdEnvVarsUnset": true,
+      "designatedPathExistsInEnvironment": false,
+      "anySqliteDatabaseFilesInEnvironment": false
+    },
+    "startupAndMigrationPathAudit": {
+      "normalApplicationStartup": {
+        "module": "src/ipc/entrypoint.ts (startIpcServer)",
+        "safeForReadOnlyInventory": false,
+        "reasonsDisqualified": [
+          "Calls openDatabase() in src/persistence/connection.ts, which executes mkdirSync, opens new DatabaseSync(filePath) in read-write/create mode (creating an empty SQLite file if absent), and issues PRAGMA journal_mode = DELETE and PRAGMA synchronous = FULL.",
+          "Calls ensureMigrations(db, GATE3_MIGRATIONS) in src/persistence/migration_ledger.ts, which executes CREATE TABLE IF NOT EXISTS _migration_ledger and applies pending migrations 001..006 inside BEGIN IMMEDIATE ... COMMIT.",
+          "Constructs ClassPJournal in src/ipc/entrypoint.ts, creating/writing ipc-diagnostics on disk.",
+          "CLI entrypoint sets IIPS_LOCAL_PERSONAL_USE=1 and binds the IPC listener."
+        ]
+      },
+      "runtimeBindingResolver": {
+        "module": "src/persistence/binding.ts (resolveActiveBinding / resolveActiveHoldingsBinding)",
+        "safeForReadOnlyInventory": false,
+        "reasonsDisqualified": [
+          "Executes BEGIN IMMEDIATE ... COMMIT, requiring a SQLite write lock."
+        ]
+      },
+      "directP1VerifyMode": {
+        "module": "src/persistence/directP1Provisioning.ts (verifyProvisionedDatabase / --mode=verify)",
+        "safeForReadOnlyInventory": false,
+        "reasonsDisqualified": [
+          "Uses gateAPrimeValidation.ts GATE3_MIGRATIONS (001..004 only), failing DP-V1 and DP-V2 on databases migrated through 005_holding_security_identity and 006_portfolio_restore.",
+          "Does not refuse active -wal/-shm/-journal sidecars before open and does not emit the required D16 portfolio/holding/contribution/restore-receipt/collision/orphan/NULL-relationship inventory."
+        ]
+      },
+      "confirmedReadOnlyInspectionMethod": {
+        "driver": "node:sqlite DatabaseSync(dbPath, { open: true, readOnly: true })",
+        "preOpenChecks": [
+          "Verify no IPD/IRR process holds the database open.",
+          "Refuse immediately if <db>-wal, <db>-shm, or <db>-journal sidecar files exist.",
+          "Verify via fs.lstatSync that target exists, is a regular file (not symlink/directory), size >= 100 bytes, and starts with 16-byte header 'SQLite format 3\\0'.",
+          "Compute pre-open sizeBytes, mtimeIso, and full-file SHA-256."
+        ],
+        "connectionPragmas": [
+          "PRAGMA query_only = ON;",
+          "PRAGMA temp_store = MEMORY;"
+        ],
+        "snapshotWrapper": "BEGIN DEFERRED; ... SELECT / read-only PRAGMA queries Q01..Q14 only ... ROLLBACK;",
+        "postCloseChecks": [
+          "Close DatabaseSync handle.",
+          "Confirm zero -wal, -shm, or -journal sidecar files exist.",
+          "Recompute sizeBytes, mtimeIso, and full-file SHA-256 and require exact byte-for-byte equality with pre-open values."
+        ],
+        "readOnlyMissingFileProbe": {
+          "threw": true,
+          "code": "ERR_SQLITE_ERROR",
+          "errcode": 14,
+          "errstr": "unable to open database file",
+          "fileCreated": false
+        }
+      }
+    }
+  },
+  "inventoryOutcome": {
+    "status": "BLOCKED_HOST_DATABASE_UNREACHABLE",
+    "blockerCode": "B02_WINDOWS_HOST_DATABASE_UNREACHABLE_IN_LINUX_SANDBOX",
+    "blockerSummary": "The designated local SQLite database (C:\\iips-data\\iips\\user-portfolio.sqlite) resides on the Principal's local Windows host and does not exist in, and is unreachable from, the Arena Linux x86_64 sandbox. Safe execution stopped without creating, seeding, migrating or modifying any database.",
+    "databaseMutated": false,
+    "dependenciesInstalled": false,
+    "applicationStarted": false,
+    "migrationsExecuted": false
+  },
+  "evidenceReport": {
+    "databaseIdentityAndFileMetadata": {
+      "status": "NOT_OBTAINED",
+      "designatedPath": "C:\\iips-data\\iips\\user-portfolio.sqlite",
+      "observedInSandbox": false,
+      "fileSizeBytes": null,
+      "mtimeUtc": null,
+      "preInspectionSha256": null,
+      "postInspectionSha256": null,
+      "sidecarFilesPresent": null
+    },
+    "existingPortfolioAndOwnershipRecordCounts": {
+      "status": "NOT_OBTAINED",
+      "tables": {
+        "_migration_ledger": null,
+        "local_principal_bindings": null,
+        "local_principal_memberships": null,
+        "portfolios": null,
+        "portfolio_revisions": null,
+        "portfolio_holdings": null,
+        "portfolio_contributions": null,
+        "portfolio_restore_receipts": null,
+        "audit_events": null,
+        "portfolio_owner_registry_candidate": null,
+        "personal_identity_owner_relationships_candidate": null,
+        "portfolio_source_provider_catalog_candidate": null,
+        "portfolio_source_records_candidate": null,
+        "portfolio_holding_source_links_candidate": null,
+        "portfolio_contribution_source_links_candidate": null
+      },
+      "priorPublishedHostCaptureContextNote": "IIPS-W11-DEP1-CAPTURE-EVIDENCE-DISPOSITION-2026-11-13.md recorded an operator-reported protocol v1 IPC read of 1 active portfolio at revision 1 with 64 holdings on 2026-11-13, but protocol v1 omits canonical_owner_id, tenant_id, tombstoned portfolios, bindings/memberships, restore receipts, _migration_ledger and audit_events. It is not direct SQLite table evidence and is not substituted here."
+    },
+    "candidateHistoricalPortfolios": {
+      "status": "NOT_OBTAINED",
+      "candidateRows": null,
+      "ownershipInferenceApplied": false
+    },
+    "duplicateIdentifiersAndCollisions": {
+      "status": "NOT_OBTAINED",
+      "d02DestinationOwner": "owner-4dc756b3",
+      "d02DestinationTenant": "ipd-personal-local",
+      "s1HistoricalOwner": "ipd-owner-ramki-personal",
+      "collisionsObserved": null
+    },
+    "orphanAndNullRelationshipRecords": {
+      "status": "NOT_OBTAINED",
+      "foreignKeyCheckViolations": null,
+      "orphanRows": null,
+      "nullProvenanceContributionRows": null,
+      "nullSecurityIdentityHoldingRows": null,
+      "s1ToD02RelationshipRows": null
+    },
+    "existingMigrationLedgerContents": {
+      "liveDatabaseStatus": "NOT_OBTAINED",
+      "liveLedgerRows": null,
+      "pinnedRepositoryMigrations": [
+        {
+          "id": "001_initial_schema",
+          "expectedSqlSha256": "08e712fd323f547413618f0443ec361015b136285c28b519d967f02b6d9580ab"
+        },
+        {
+          "id": "002_audit_event_sequence",
+          "expectedSqlSha256": "01892a862c8a877c97403a938123fb575cb43f9445d4c5345aa209f5adae47ed"
+        },
+        {
+          "id": "003_local_principal_bindings",
+          "expectedSqlSha256": "7967acc06584811df9cf37e05b84d78d6126b6dae979ee79e0523dfce924004e"
+        },
+        {
+          "id": "004_portfolio_contribution_provenance",
+          "expectedSqlSha256": "0dbf90c129154d8c547b6c5876157877c5e12790ebf2b35c741640751ea7b0ac"
+        },
+        {
+          "id": "005_holding_security_identity",
+          "expectedSqlSha256": "09fb8b68775a3c6cf799852a0c5c0146ea6971911097cb006a1782a9d415ec04"
+        },
+        {
+          "id": "006_portfolio_restore",
+          "expectedSqlSha256": "989a75518ca2fb4803a037e4e59df9053a2e10f38b42a40e67fa4bea01e3f342"
+        }
+      ]
+    },
+    "historicalOwnershipAndProvenanceEvidence": {
+      "status": "NOT_OBTAINED",
+      "ruleEnforced": "Historical ownership is never inferred from source_broker, file_name, MANUAL:<SYMBOL> sentinels, symbol names, or portfolio labels."
+    },
+    "unresolvedRecordsAndReasons": [
+      {
+        "item": "Live SQLite D5 identity-mapping state (local_principal_bindings, local_principal_memberships, audit_events, candidate relationship tables)",
+        "reason": "Designated Windows database C:\\iips-data\\iips\\user-portfolio.sqlite is unreachable from the Arena Linux sandbox; IIPS_G3_DATABASE_PATH is unset and zero SQLite files exist locally."
+      },
+      {
+        "item": "Live SQLite D16 historical portfolio inventory, destination collision check, orphan/FK check, NULL provenance/relationship counts, and applied _migration_ledger state",
+        "reason": "Designated Windows database C:\\iips-data\\iips\\user-portfolio.sqlite is unreachable from the Arena Linux sandbox; fabricating or inferring live rows from checked-in schema or prior IPC v1 summaries is prohibited."
+      }
+    ]
+  },
+  "acceptanceBoundary": {
+    "d01ToD03": "APPROVED (2026-11-15, discrete Level C defaults only)",
+    "d04ToD22": "PENDING",
+    "narrowReadOnlyInventory": "APPROVED (2026-11-16, Level E read-only D5/D16 inspection only)",
+    "detailedSchemaApproval": "PENDING",
+    "implementationAuthority": "NOT_GRANTED",
+    "provisioningOrMigrationAuthorization": "NOT_AUTHORIZED",
+    "d5Status": "BLOCKED",
+    "d6Status": "NOT_STARTED"
+  },
+  "inspectedArtifactSha256": {
+    "docs/integration/IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md": "e8b3be245f7499dd17cb4faa95a87761f9383dfdc4f0a0f5515d1706295a3aa3",
+    "docs/integration/IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md": "15939002fb1973739a81ce83ab32f96cf640124f019a33b06c7c73c7cdbe8960",
+    "docs/integration/IPD-STAGE5-D5-IDENTITY-MAPPING-TRACKER-2026-11-15.md": "a2df840dc11662acd8e07c1fd434f7a1edad6b2a432f59a8c6577239cbc43084",
+    "src/ipc/entrypoint.ts": "3a7059b0b3bb2d024181bc8a9370a897c8613f2e29f826cfc6a1b80b5ffb7803",
+    "src/persistence/connection.ts": "51beab4e7b06ce4c44043ca04d678c4b193dd43fe3a0e53e895e481365e38a67",
+    "src/persistence/migration_ledger.ts": "c4b702401c2ecdf23bcd13bf4431eee2a1d550a0e3b5999065df1ad9b6cf33f4",
+    "src/persistence/binding.ts": "61dfeb55c57dbaffa11b89a25ed1d6f80e24c588fbeee6dc5848737d50834603",
+    "src/persistence/portfolio_store.ts": "16ae4c683a0371ab1b5fe6eac7c7df869530faa2e69a9e64e5cd5798754d152e",
+    "src/persistence/audit.ts": "3a11b42e18ec3116ef85e4333e06bb5f017f79b0e12adc4ee3695207db1f6525",
+    "src/persistence/directP1Provisioning.ts": "b5dd4c37eea8521b9f3fd333a75db4c7bbe003255d5818680cc31da547e7a826",
+    "src/persistence/migrations/001_initial_schema.ts": "6aaff75c60053feed639617f42025ef8d58e5a8c8f7d987dd1804e0e2bdab4d3",
+    "src/persistence/migrations/002_audit_event_sequence.ts": "bac1fa890eb460c76e380f5e1d4e19067a5b48a9f2b002ca7449d9da484f6056",
+    "src/persistence/migrations/003_local_principal_bindings.ts": "30b5eab65f24267e9b7f9992fc5a7fe2978f613a979f033265a228831656df28",
+    "src/persistence/migrations/004_portfolio_contribution_provenance.ts": "12f32e51a4b7c350ac125b473f7a7b07f4cc7be33f17c6c4e7da39ed0eaafe6a",
+    "src/persistence/migrations/005_holding_security_identity.ts": "921a94f67066d50665fa43f8789f7ed324c056c60c722f45dbbcb29dce833778",
+    "src/persistence/migrations/006_portfolio_restore.ts": "55dd45405914d7ba4494608c8fc5c4b2b72a548077b05ce6aa6fe482c62ee495"
+  }
+}

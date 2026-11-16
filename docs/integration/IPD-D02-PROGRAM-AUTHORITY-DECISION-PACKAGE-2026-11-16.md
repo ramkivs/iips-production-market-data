@@ -1,9 +1,9 @@
 # IPD Program Authority decision package — D02 overall personal portfolio ownership
 
-**Prepared:** 2026-11-15 (filename follows the requested 2026-11-16 package identifier)
+**Prepared:** 2026-11-15 (filename follows the requested 2026-11-16 package identifier; updated 2026-11-16 to record the narrow PA read-only D5/D16 evidence inventory approval)
 **Owner:** IPD (`ramkivs/iips-production-market-data`)
-**Decision status:** **D01–D03 APPROVED as recorded; D04–D22 PENDING. Pending proposed defaults remain NOT APPROVED until explicitly accepted by the Program Authority.**
-**Approval boundary:** This package requests decisions; it is not itself an approval, implementation instruction, database authorization, identity provision, migration authorization, D5 pass or D6 authorization.
+**Decision status:** **D01–D03 APPROVED as recorded (2026-11-15); narrow Level E read-only D5/D16 evidence inventory APPROVED as recorded (2026-11-16); D04–D22 register dispositions PENDING. Pending proposed defaults remain NOT APPROVED until explicitly accepted by the Program Authority.**
+**Approval boundary:** This package requests decisions; except as recorded in the linked [approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md) (D01–D03 discrete Level C defaults on 2026-11-15, and a strictly non-mutating Level E read-only D5/D16 evidence inventory of the existing local database on 2026-11-16), it grants no schema approval, implementation instruction, database mutation, identity/relationship/owner/source provisioning, migration authorization, D5 acceptance or D6 authorization.
 
 ## Executive summary
 
@@ -11,7 +11,7 @@ Product ownership and the high-level architecture are already approved: `owner-4
 
 The detailed schema is **AWAITING APPROVAL**. The current design baseline proposes a relationship anchored to the established S1 membership, a tenant-safe owner registry, constrained relationship/source records, explicit source-to-holding and source-to-contribution links, a transaction-bound D02 access boundary, and a separate, later-authorized historical-data decision. The independent review's outcome remains **ACCEPTED WITH CONDITIONS** as a design baseline only.
 
-This register contains **22 decision items**: **D01–D03 APPROVED** by the explicit PA direction recorded in the [approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md); **D04–D22 PENDING**. Recommendations for pending items remain NOT APPROVED. Some historical-data choices cannot be finalized until a separately authorized, read-only live database inventory identifies actual rows, null provenance, foreign-key state and destination collisions. No live database was accessed for this package.
+This register contains **22 decision items**: **D01–D03 APPROVED** (2026-11-15) and a **narrow Level E read-only D5/D16 evidence inventory APPROVED** (2026-11-16) by the explicit PA directions recorded in the [approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md); **D04–D22 register items remain PENDING**. Recommendations for pending items remain NOT APPROVED. Historical-data choices cannot be finalized until the authorized read-only live database inventory identifies actual rows, null provenance, foreign-key state and destination collisions on the Principal's local Windows host. In the 2026-11-16 Arena Linux sandbox run, the designated Windows database (`C:\iips-data\iips\user-portfolio.sqlite`) was unreachable/absent (`IIPS_G3_DATABASE_PATH` unset; zero SQLite files present), so safe execution stopped without touching or creating any database; see the [D5/D16 read-only inventory and host-blocker report](IPD-D02-D5-D16-READ-ONLY-INVENTORY-AND-BLOCKER-REPORT-2026-11-16.md).
 
 The complete proposed technical detail and acceptance tests are in the [revised relationship technical design](IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md), particularly §§13.1–13.11. The prior independent findings are in the [acceptance review](IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md). This register makes the choices and approval boundaries explicit for PA disposition.
 
@@ -34,13 +34,13 @@ These are illustrative IDs, not provisioned rows. Equality of overall owner does
 | **B — Architectural direction** | **APPROVED** | Preserve the existing S1 principal, binding, membership, tenant and S1 `canonical_owner_id`; connect that existing personal identity to D02 owner `owner-4dc756b3` using a separate explicit ownership relationship. Do not substitute the D02 owner into S1. The original Level B record did not select the relationship FK subject or detailed schema; the later D01–D03 approvals settle only their named defaults, not the rest of Level C. |
 | **C — Detailed technical schema** | **PENDING / AWAITING APPROVAL** | D01–D03 are approved as discrete design decisions; the full schema and D04–D20 choices remain pending. Acceptance of a design does not authorize implementation. |
 | **D — Implementation authority** | **NOT GRANTED** | Must be separately and explicitly granted. Level C approval does not grant it. |
-| **E — Operational provisioning and migration** | **NOT AUTHORIZED** | No identity/relationship/owner/source row creation, database access, re-key or migration is authorized. Any later operation needs its own explicit scope, evidence and operational authority. |
+| **E — Operational provisioning and migration** | **NARROW READ-ONLY INVENTORY AUTHORIZED (2026-11-16); ALL PROVISIONING AND MIGRATION NOT AUTHORIZED** | On 2026-11-16, the Program Authority authorized strictly non-mutating read-only inspection of the existing local database solely for D5 identity-mapping evidence and D16 historical inventory/collision assessment (recorded in the [approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md#2-narrow-level-e-read-only-d5d16-evidence-inventory-approved-on-2026-11-16)). Schema changes, migration execution, `_migration_ledger` writes, portfolio/holding writes, identity/relationship/owner/source row creation, historical re-keying, tombstone restoration, reset/replacement, startup invoking migrations, D5 acceptance and D6 execution remain **NOT AUTHORIZED**. |
 
-The product determination explicitly left the identity contract and technical mapping pending. The later architecture decision resolved the high-level choice in favor of preserving S1 and a separate relationship, but expressly left the membership FK role, schema, resolver, source design and historical treatment unapproved. No D02 principal, binding or membership values are established or needed by the recommended approach; do not invent or derive any. The later PA approvals recorded for D01–D03 settle only those three named defaults; they do not approve remaining schema choices or implementation.
+The product determination explicitly left the identity contract and technical mapping pending. The later architecture decision resolved the high-level choice in favor of preserving S1 and a separate relationship, but expressly left the membership FK role, schema, resolver, source design and historical treatment unapproved. No D02 principal, binding or membership values are established or needed by the recommended approach; do not invent or derive any. The later PA approvals recorded for D01–D03 settle only those three named defaults, and the 2026-11-16 PA approval authorizes only the strictly non-mutating read-only D5/D16 evidence inventory; neither approves remaining schema choices, implementation, provisioning or migration.
 
 ## Decision register
 
-**Register count: 22 decision items; 3 approved and 19 pending.** D01–D03 are approved as recorded in the linked PA approval record. D04–D22 remain **PENDING**, and their proposed defaults are **NOT APPROVED**. “Approval requested” specifies the authority level only; it does not grant a later level automatically.
+**Register count: 22 decision items; 3 discrete Level C decisions approved (D01–D03) and 19 register items pending (D04–D22), with a narrow Level E read-only D5/D16 evidence inventory separately approved on 2026-11-16.** D01–D03 and the narrow 2026-11-16 read-only inventory authorization are recorded in the linked [PA approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md). D04–D22 register dispositions remain **PENDING**, and their proposed defaults are **NOT APPROVED**. “Approval requested” specifies the authority level only; it does not grant a later level automatically.
 
 ### D01 — Relationship subject and exact identity fields — APPROVED
 
@@ -151,8 +151,8 @@ The product determination explicitly left the identity contract and technical ma
 
 - **What / why:** Decide the exact preflight evidence and what happens when the live store has an existing D02 destination, orphan, cross-tenant row, duplicate key, ambiguous provenance or non-invertible restore receipt. Repository migrations 001–006 give a schema inventory, not actual row state.
 - **Alternatives and consequences:** (a) read-only inventory/manifest, exact ownership proof, batch-wide stop on any inconsistency; (b) resolve collisions by merging/overwriting/choosing a winner; (c) skip conflicting rows and partially migrate. (b)/(c) risk silent data loss, mixed ownership and partial history.
-- **Technical recommendation — NOT APPROVED:** Require a separately authorized, read-only inventory first; exact table/FK/row count/key/null/digest report, source records/links if present, `foreign_key_check`, and hashed manifest. Any collision, orphan, unknown owner, ambiguous row or restore receipt stops the whole proposed batch; no merge, overwrite, winner selection or partial migration. PA decides disposition after seeing evidence.
-- **Risk / S1 effect / approval:** Actual counts, candidate IDs and collisions are unknown; no safe final re-key choice can be made without live inventory. No S1 change during read-only inventory. **Level C preconditions now; Level E read-only authority before inventory; separate Level E migration authority later.**
+- **Technical recommendation — NOT APPROVED (narrow Level E read-only inventory authorized 2026-11-16; Level C collision/stop policy still PENDING):** Require a separately authorized, read-only inventory first; exact table/FK/row count/key/null/digest report, source records/links if present, `foreign_key_check`, and hashed manifest. Any collision, orphan, unknown owner, ambiguous row or restore receipt stops the whole proposed batch; no merge, overwrite, winner selection or partial migration. PA decides disposition after seeing evidence.
+- **Risk / S1 effect / approval:** On 2026-11-16 the Program Authority granted narrow Level E read-only inspection authority for D5/D16 evidence collection (see [approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md#2-narrow-level-e-read-only-d5d16-evidence-inventory-approved-on-2026-11-16)); in the 2026-11-16 Linux sandbox pass, the local Windows database (`C:\iips-data\iips\user-portfolio.sqlite`) was unreachable/absent, so actual counts, candidate IDs and collisions remain unknown pending Windows host execution (see [D5/D16 inventory and blocker report](IPD-D02-D5-D16-READ-ONLY-INVENTORY-AND-BLOCKER-REPORT-2026-11-16.md)). No S1 change occurs during read-only inventory. **Level C policy disposition still PENDING; narrow Level E read-only inventory APPROVED (2026-11-16); separate Level E migration authority still NOT AUTHORIZED.**
 
 ### D17 — Re-key scope and affected records
 
@@ -193,65 +193,67 @@ The product determination explicitly left the identity contract and technical ma
 
 - **What / why:** Decide later whether to create owner/relationship/provider/source rows, inspect or move live records, perform host-specific D5 verification, or begin D6. These are different operational acts with different risk and evidence.
 - **Alternatives and consequences:** (a) no operations now and request each separately after design/implementation; (b) combine relationship provisioning, data migration and D5 in one run; (c) infer success from synthetic tests/readiness. (b)/(c) bypass independent controls and do not establish host evidence.
-- **Technical recommendation — NOT APPROVED:** Keep operational provisioning/database modification **NOT AUTHORIZED**, D5 **BLOCKED**, D6 **NOT STARTED**. Later authorize read-only inventory separately, then any approved migration/provisioning separately; D5 needs the prescribed read-only verifier and exact host evidence; D6 needs its own prerequisites and authority.
-- **Risk / S1 effect / approval:** D02 remains blocked until independently authorized and verified. D5/D6 are not S1 changes but must preserve Direct P1. **Separate Level E authorization for each inventory/provisioning/migration operation, separate D5 acceptance/evidence decision, and separate D6 authority. Nothing here grants them.**
+- **Technical recommendation — NOT APPROVED (narrow Level E read-only D5/D16 evidence inventory authorized 2026-11-16; all provisioning, mutation, migration, D5 acceptance and D6 remain NOT AUTHORIZED):** Keep operational provisioning/database modification **NOT AUTHORIZED**, D5 **BLOCKED**, D6 **NOT STARTED**. Execute the separately authorized 2026-11-16 read-only inventory on the Windows host without database mutation; request any approved migration/provisioning separately; D5 needs the prescribed read-only verifier and exact host evidence; D6 needs its own prerequisites and authority.
+- **Risk / S1 effect / approval:** D02 remains blocked until independently authorized and verified. D5/D6 are not S1 changes but must preserve Direct P1. **Narrow Level E read-only D5/D16 inventory APPROVED on 2026-11-16 ([approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md#2-narrow-level-e-read-only-d5d16-evidence-inventory-approved-on-2026-11-16)); separate Level E authorization still required for each provisioning/migration operation, separate D5 acceptance/evidence decision, and separate D6 authority.**
 
 ## Dependencies and safe sequencing
 
 1. D01–D03 establish the approved identity subject, no-new-identity rule and tenant-scoped FK direction. D04–D06 remain pending for multiplicity, lifecycle and audit. Do not assign a relationship ID or row before separate authority and implementation/operational approvals.
 2. D07–D09 establish the non-bypassable resolver/authorization boundary and its transaction semantics. D07 must be resolved before implementation because a facade that cannot be proven complete requires the schema-FK alternative.
 3. D10–D14 establish provider/account identity, source cardinality, row links and historical unknown-provenance behavior. D13 depends on D10–D12; D17 depends on D13–D16.
-4. D15 chooses a high-level historical disposition, but D16 evidence is required before deciding which actual rows can safely be re-keyed or whether collisions exist. Thus no final per-row re-key decision can precede the separately authorized live inventory.
+4. D15 chooses a high-level historical disposition, but D16 evidence is required before deciding which actual rows can safely be re-keyed or whether collisions exist. Thus no final per-row re-key decision can precede completion of the authorized read-only live inventory on the Windows host.
 5. D17–D19 apply only if re-key is selected; they require D18 schema mechanics, D16 preflight and separate Level E authority. No schema migration should seed or reassign data.
-6. D20 limits the design to local single-user use. D21 comes only after Level C decisions; D22 operational acts come only after their own scope/evidence approvals. D5 and D6 do not follow automatically from any prior level.
+6. D20 limits the design to local single-user use. D21 comes only after Level C decisions; remaining D22 operational acts come only after their own scope/evidence approvals. D5 and D6 do not follow automatically from any prior level or from read-only inventory completion.
 
 ## Decisions blocked on unavailable live evidence
 
-The repository schema inventory (migrations 001–006) identifies possible owner-bearing tables, including `portfolio_restore_receipts`; the revised design additionally lists proposed source records and source-link tables. It is not a live data inventory. Actual row counts, candidate historical portfolio IDs, destination collisions, orphan rows, live migration-ledger state, and the presence of any proposed source rows are **unknown**.
+The repository schema inventory (migrations 001–006) identifies possible owner-bearing tables, including `portfolio_restore_receipts`; the revised design additionally lists proposed source records and source-link tables. It is not a live data inventory. On **2026-11-16**, the Program Authority authorized a narrowly scoped, strictly non-mutating read-only D5/D16 evidence inventory of the existing local database ([approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md#2-narrow-level-e-read-only-d5d16-evidence-inventory-approved-on-2026-11-16)). In the 2026-11-16 Arena Linux sandbox execution ([D5/D16 inventory and blocker report](IPD-D02-D5-D16-READ-ONLY-INVENTORY-AND-BLOCKER-REPORT-2026-11-16.md)), safe preflight established a genuinely read-only `node:sqlite` inspection method and verified why normal startup (`src/ipc/entrypoint.ts`) must not be used, but confirmed that the designated local database (`C:\iips-data\iips\user-portfolio.sqlite`) resides on the Principal's local Windows host and does not exist in the Linux sandbox (`IIPS_G3_DATABASE_PATH` unset; zero SQLite files present). Accordingly, execution stopped safely without creating or touching any database, and actual row counts, candidate historical portfolio IDs, destination collisions, orphan rows, live migration-ledger state, and the presence of any proposed source rows remain **unknown / not obtained** until the read-only query set is executed on the Windows host.
 
-Consequently, D15 cannot choose safely between full historical inclusion, a particular alias scope and re-key readiness; D16 cannot assess actual collisions or ownership proof; D17 cannot produce exact row coverage or fingerprints; D19 cannot finalize a real recovery manifest. A future read-only inventory itself requires separate authority and must not alter the database. No database was opened for this package.
+Consequently, D15 cannot choose safely between full historical inclusion, a particular alias scope and re-key readiness; D16 cannot finalize collision disposition or ownership proof; D17 cannot produce exact row coverage or fingerprints; D19 cannot finalize a real recovery manifest. Even when the authorized read-only inventory is completed on the Windows host, inventory completion does not constitute D5 acceptance, schema approval, implementation authorization, provisioning/migration authorization or D6 authorization; the resulting evidence must be presented for separate review and acceptance.
 
-Other evidence gaps: supported SQLite runtime behavior has not been validated by disposable tests here; no provider-specific account ID contract or stable opaque-token issuance evidence exists in the cited authority; no actor identity/reason-code evidence procedure is established. These are explicit inputs to D06, D10–D11 and D18, not facts to infer.
+Other evidence gaps: supported SQLite runtime behavior for candidate D02 DDL has not been validated as a schema-acceptance gate; no provider-specific account ID contract or stable opaque-token issuance evidence exists in the cited authority; no actor identity/reason-code evidence procedure is established. These are explicit inputs to D06, D10–D11 and D18, not facts to infer.
 
 ## Explicit Program Authority statements requested
 
-The Program Authority has recorded `APPROVE` for D01–D03 in the linked approval record. For D04–D22, record explicitly `APPROVE`, `AMEND` (with exact replacement rule), or `DEFER/REJECT`. A non-response or general endorsement is not acceptance. Suggested form:
+The Program Authority has recorded `APPROVE` for D01–D03 (2026-11-15) and `APPROVE` for the narrowly scoped, strictly non-mutating Level E read-only D5/D16 evidence inventory (2026-11-16) in the linked [approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md). For D04–D22 register dispositions, record explicitly `APPROVE`, `AMEND` (with exact replacement rule), or `DEFER/REJECT`. A non-response or general endorsement is not acceptance. Suggested form:
 
-> I, acting as Program Authority, approve/amend/defer decision IDs ____. My approval is limited to Level C detailed design unless a separate Level D implementation statement is explicitly included below. I do not authorize operational database access, provisioning or migration unless I separately state its exact scope, environment, evidence procedure and rollback authority. D5/D6 status is unchanged unless separately decided.
+> I, acting as Program Authority, approve/amend/defer decision IDs ____. My approval is limited to Level C detailed design unless a separate Level D implementation statement is explicitly included below. Except for the already-recorded narrow 2026-11-16 read-only D5/D16 evidence inventory, I do not authorize operational database mutation, provisioning or migration unless I separately state its exact scope, environment, evidence procedure and rollback authority. D5/D6 status is unchanged unless separately decided.
 
 Then, if applicable, issue separately:
 
 - **Level C:** “I approve the remaining detailed design choices identified by D04–D20, as amended in the attached/referenced record.” D01–D03 are already recorded as approved. Any such approval covers design only, not implementation or operations.
 - **Level D:** “I grant implementation authority for the specifically named code/schema/test scope, with stated exclusions and acceptance evidence.” This does not authorize live database operations.
-- **Level E:** “I authorize only the named read-only inventory or specific provisioning/migration operation, on the stated environment and records, with the named operator, backup, pre/post evidence, collision stop rules, rollback/recovery and audit procedure.” No blanket Level E grant is implied.
-- **D5:** “I accept the named verifier predicate and host-specific evidence for this run.” Synthetic tests alone are insufficient.
+- **Level E:** “I authorize only the named specific provisioning/migration operation, on the stated environment and records, with the named operator, backup, pre/post evidence, collision stop rules, rollback/recovery and audit procedure.” (The narrow 2026-11-16 read-only D5/D16 evidence inventory is already recorded; no blanket Level E grant is implied.)
+- **D5:** “I accept the named verifier predicate and host-specific evidence for this run.” Synthetic tests or inventory completion alone are insufficient.
 - **D6:** issue a separate start decision only after D5 and all D6 prerequisites are satisfied.
 
 ## Final approval checklist
 
 - [ ] Confirm Levels A and B remain as already approved; do not conflate either with C–E.
 - [x] D01–D03 approved exactly as recorded; do not infer approval beyond those defaults.
+- [x] Narrow Level E read-only D5/D16 evidence inventory approved (2026-11-16) strictly without database mutation, migration execution, provisioning, D5 acceptance or D6 authorization.
 - [ ] Record an explicit disposition for each **D04–D22**; their proposed defaults remain `NOT APPROVED` until accepted.
 - [ ] Resolve any change to the high-level S1-preserving relationship direction through a new Level B decision.
 - [ ] Approve/amend detailed schema, tenant FKs, multiplicity, lifecycle, source catalogue/cardinality/links and transaction/authorization boundaries (Level C).
 - [ ] Confirm that the local single-user limitation is accepted; do not imply hosted/multi-user support.
-- [ ] Keep historical row treatment provisional until the separately authorized live inventory and collision evidence exist.
+- [ ] Keep historical row treatment provisional until the authorized live Windows host inventory and collision evidence are collected and separately reviewed.
 - [ ] Keep migration/recovery design separate from migration execution; no partial or inferred re-key.
 - [ ] If desired, issue Level D implementation authority separately and narrowly.
-- [ ] If desired, issue each Level E read-only/provisioning/migration authority separately with operational safeguards.
-- [ ] Keep D5 **BLOCKED** until the approved verifier and prescribed host evidence pass; keep D6 **NOT STARTED** pending its own authority.
-- [ ] Confirm no relationship, owner, provider, source or portfolio rows are created by this decision package.
+- [ ] If desired, issue each remaining Level E provisioning/migration authority separately with operational safeguards.
+- [ ] Keep D5 **BLOCKED** until the approved verifier and prescribed host evidence pass and are separately accepted; keep D6 **NOT STARTED** pending its own authority.
+- [ ] Confirm no relationship, owner, provider, source or portfolio rows are created by this decision package or by read-only inventory.
 
 ## Current status
 
 - Product ownership: **APPROVED**.
 - Architectural direction: **APPROVED**.
 - Revised design baseline: **ACCEPTED WITH CONDITIONS** (independent engineering review only).
-- D01–D03: **APPROVED** as recorded; D04–D22 outstanding Program Authority decisions: **PENDING** (19 items).
+- D01–D03: **APPROVED** as recorded (2026-11-15); D04–D22 outstanding Program Authority register decisions: **PENDING** (19 items).
+- Narrow Level E read-only D5/D16 evidence inventory: **APPROVED** as recorded (2026-11-16; Linux sandbox run safely stopped on Windows host database unreachability — host execution pending).
 - Detailed schema approval: **PENDING**.
 - Implementation authority: **NOT GRANTED**.
-- Operational provisioning and migration: **NOT AUTHORIZED**.
+- Operational provisioning, database mutation and migration: **NOT AUTHORIZED**.
 - D5: **BLOCKED**.
 - D6: **NOT STARTED**.
 
-**This package is a decision request, not an approval. No implementation, database access/change, identity or relationship provisioning, owner reassignment, migration, D5 verifier, D6 operation, IPC/live holdings operation, dependency installation or IRR change is authorized.**
+**Except for the recorded D01–D03 design defaults (2026-11-15) and the narrowly scoped, strictly non-mutating read-only D5/D16 evidence inventory (2026-11-16), this package remains a decision request, not an approval. No implementation, database modification, migration execution, identity or relationship provisioning, owner reassignment, tombstone restoration, reset/replacement, D5 verifier implementation/acceptance, D6 operation, IPC/live holdings startup, dependency installation or IRR change is authorized.**
