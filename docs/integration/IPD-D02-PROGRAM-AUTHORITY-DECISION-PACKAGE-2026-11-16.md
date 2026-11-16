@@ -2,7 +2,7 @@
 
 **Prepared:** 2026-11-15 (filename follows the requested 2026-11-16 package identifier)
 **Owner:** IPD (`ramkivs/iips-production-market-data`)
-**Decision status:** **DECISION REQUEST — ALL PROPOSED DEFAULTS BELOW ARE NOT APPROVED UNTIL THE PROGRAM AUTHORITY EXPLICITLY ACCEPTS THEM.**
+**Decision status:** **D01–D03 APPROVED as recorded; D04–D22 PENDING. Pending proposed defaults remain NOT APPROVED until explicitly accepted by the Program Authority.**
 **Approval boundary:** This package requests decisions; it is not itself an approval, implementation instruction, database authorization, identity provision, migration authorization, D5 pass or D6 authorization.
 
 ## Executive summary
@@ -11,7 +11,7 @@ Product ownership and the high-level architecture are already approved: `owner-4
 
 The detailed schema is **AWAITING APPROVAL**. The current design baseline proposes a relationship anchored to the established S1 membership, a tenant-safe owner registry, constrained relationship/source records, explicit source-to-holding and source-to-contribution links, a transaction-bound D02 access boundary, and a separate, later-authorized historical-data decision. The independent review's outcome remains **ACCEPTED WITH CONDITIONS** as a design baseline only.
 
-This register identifies **22 outstanding Program Authority decisions/authorizations**. Recommendations are technical defaults, not choices already made by the Program Authority. Some historical-data choices cannot be finalized until a separately authorized, read-only live database inventory identifies the actual rows, null provenance, foreign-key state and destination collisions. No live database was accessed for this package.
+This register contains **22 decision items**: **D01–D03 APPROVED** by the explicit PA direction recorded in the [approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md); **D04–D22 PENDING**. Recommendations for pending items remain NOT APPROVED. Some historical-data choices cannot be finalized until a separately authorized, read-only live database inventory identifies actual rows, null provenance, foreign-key state and destination collisions. No live database was accessed for this package.
 
 The complete proposed technical detail and acceptance tests are in the [revised relationship technical design](IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md), particularly §§13.1–13.11. The prior independent findings are in the [acceptance review](IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md). This register makes the choices and approval boundaries explicit for PA disposition.
 
@@ -31,37 +31,37 @@ These are illustrative IDs, not provisioned rows. Equality of overall owner does
 | Level | Status | Scope and limit |
 |---|---|---|
 | **A — Product ownership** | **APPROVED** | `owner-4dc756b3` on tenant `ipd-personal-local` is the overall personal portfolio owner across Dhan, Zerodha, other supported brokers and manual entries. Portfolio identity and source/provenance remain distinct. This is product policy, not a schema or data-change approval. |
-| **B — Architectural direction** | **APPROVED** | Preserve the existing S1 principal, binding, membership, tenant and S1 `canonical_owner_id`; connect that existing personal identity to D02 owner `owner-4dc756b3` using a separate explicit ownership relationship. Do not substitute the D02 owner into S1. This selects the architectural direction, not the relationship FK subject, columns, keys, authorization implementation or lifecycle details. |
-| **C — Detailed technical schema** | **PENDING / AWAITING APPROVAL** | Requires an explicit PA decision on the detailed choices below. Acceptance of a design does not authorize implementation. |
+| **B — Architectural direction** | **APPROVED** | Preserve the existing S1 principal, binding, membership, tenant and S1 `canonical_owner_id`; connect that existing personal identity to D02 owner `owner-4dc756b3` using a separate explicit ownership relationship. Do not substitute the D02 owner into S1. The original Level B record did not select the relationship FK subject or detailed schema; the later D01–D03 approvals settle only their named defaults, not the rest of Level C. |
+| **C — Detailed technical schema** | **PENDING / AWAITING APPROVAL** | D01–D03 are approved as discrete design decisions; the full schema and D04–D20 choices remain pending. Acceptance of a design does not authorize implementation. |
 | **D — Implementation authority** | **NOT GRANTED** | Must be separately and explicitly granted. Level C approval does not grant it. |
 | **E — Operational provisioning and migration** | **NOT AUTHORIZED** | No identity/relationship/owner/source row creation, database access, re-key or migration is authorized. Any later operation needs its own explicit scope, evidence and operational authority. |
 
-The product determination explicitly left the identity contract and technical mapping pending. The later architecture decision resolved the high-level choice in favor of preserving S1 and a separate relationship, but expressly left the membership FK role, schema, resolver, source design and historical treatment unapproved. No D02 principal, binding or membership values are established or needed by the recommended approach; do not invent or derive any.
+The product determination explicitly left the identity contract and technical mapping pending. The later architecture decision resolved the high-level choice in favor of preserving S1 and a separate relationship, but expressly left the membership FK role, schema, resolver, source design and historical treatment unapproved. No D02 principal, binding or membership values are established or needed by the recommended approach; do not invent or derive any. The later PA approvals recorded for D01–D03 settle only those three named defaults; they do not approve remaining schema choices or implementation.
 
 ## Decision register
 
-**Register count: 22.** Every proposed default below is **NOT APPROVED** until the Program Authority records explicit acceptance. “Approval requested” specifies the authority level only; it does not grant a later level automatically.
+**Register count: 22 decision items; 3 approved and 19 pending.** D01–D03 are approved as recorded in the linked PA approval record. D04–D22 remain **PENDING**, and their proposed defaults are **NOT APPROVED**. “Approval requested” specifies the authority level only; it does not grant a later level automatically.
 
-### D01 — Relationship subject and exact identity fields
+### D01 — Relationship subject and exact identity fields — APPROVED
 
 - **What / why:** Decide which existing identity record anchors the new relationship, and which S1 fields the resolver must check. This determines whether the proposed relation is actually tied to the established user rather than a free-form principal label.
 - **Alternatives and consequences:** (a) FK to the existing membership and also verify its binding, principal, tenant and S1 owner; (b) relation keyed only to a principal or binding, weakening database linkage to membership; (c) create another D02 context, which would amend the already-approved Level B direction and interacts with the current global single-active constraints.
-- **Technical recommendation — NOT APPROVED:** Use the established membership `d25dcc5370100b00766efc5166f65cf3` as FK subject; on every resolve, verify binding `c5808abaffd072d6401ce63ad86c6ac0`, principal `ramki-personal-local`, tenant `ipd-personal-local`, S1 owner `ipd-owner-ramki-personal`, and ACTIVE statuses. Do not create another principal/binding/membership under this direction.
-- **Risk / S1 effect / approval:** The membership row's continuing validity and exact parent checks must be tested; a stale or mismatched row must fail closed. This preserves S1 and Direct P1; using a changed S1 owner would break the recorded contract. **Level C approval requested.** Any change to Level B needs a new architecture decision; no implementation authority follows.
+- **Technical recommendation — APPROVED (D01):** Use the established membership `d25dcc5370100b00766efc5166f65cf3` as FK subject; on every resolve, verify binding `c5808abaffd072d6401ce63ad86c6ac0`, principal `ramki-personal-local`, tenant `ipd-personal-local`, S1 owner `ipd-owner-ramki-personal`, and ACTIVE statuses. Do not create another principal/binding/membership under this direction. Approval is limited to this decision default; it is not schema or implementation approval.
+- **Risk / S1 effect / approval:** The membership row's continuing validity and exact parent checks must be tested; a stale or mismatched row must fail closed. This preserves S1 and Direct P1; using a changed S1 owner would break the recorded contract. **D01 Level C decision: APPROVED.** Any change to Level B needs a new architecture decision; no implementation authority follows.
 
-### D02 — No new D02 principal, binding or membership; identity-value contract
+### D02 — No new D02 principal, binding or membership; identity-value contract — APPROVED
 
 - **What / why:** Explicitly confirm that D02 ownership is represented by the relationship, not by fabricating a second identity tuple or deriving new IDs. The earlier product determination left D02 identity values unresolved; the approved architecture says preserve the S1 identity.
 - **Alternatives and consequences:** (a) keep the S1 identity and add only a separate ownership relationship; (b) create a distinct D02 identity context, which requires amending Level B, changing the current one-active-binding/membership model, and defining coexistence and Direct P1 behavior; (c) repoint S1's owner to D02, which conflicts with the approved preservation rule and changes generic S1 behavior.
-- **Technical recommendation — NOT APPROVED:** Confirm (a); define no D02 principal/binding/membership ID. The relationship ID is a separate opaque record ID, not a new identity ID.
-- **Risk / S1 effect / approval:** A later requirement for multiple principals/devices would need a new model. (a) leaves S1 unchanged; (b)/(c) affect S1 and require Level B reconsideration. **Level C confirmation requested; any new identity or S1-value change requires a separate Level B determination and does not authorize provisioning.**
+- **Technical recommendation — APPROVED (D02):** Confirm (a); define no D02 principal/binding/membership ID. The relationship ID is a separate opaque record ID, not a new identity ID. Approval is limited to this identity-value decision; it is not provisioning or schema approval.
+- **Risk / S1 effect / approval:** A later requirement for multiple principals/devices would need a new model. (a) leaves S1 unchanged; (b)/(c) affect S1 and require Level B reconsideration. **D02 Level C decision: APPROVED.** Any new identity or S1-value change requires a separate Level B determination and does not authorize provisioning.
 
-### D03 — Relationship and owner tenant/FK requirements
+### D03 — Relationship and owner tenant/FK requirements — APPROVED
 
 - **What / why:** Decide the exact parent keys, tenant equality and delete behavior. A bare ID FK could accidentally connect a membership or D02 owner across tenants.
 - **Alternatives and consequences:** (a) composite FK `(membership_id, membership_tenant_id)` and `(owner_tenant_id, portfolio_owner_id)`, require membership and owner tenant equality, restrictive deletes; (b) single-column IDs with tenant checks only in application logic; (c) no registry FK. (b)/(c) permit more inconsistent rows if a caller bypasses the resolver.
-- **Technical recommendation — NOT APPROVED:** Use composite tenant-scoped FKs, parent unique indexes created first, `RESTRICT` deletes and explicit tenant equality. Resolver checks owner registry and membership/binding statuses because an FK cannot enforce ACTIVE state.
-- **Risk / S1 effect / approval:** Composite parent keys and supported SQLite behavior require disposable validation; no S1 data change is needed. **Level C approval requested; no migration is authorized.**
+- **Technical recommendation — APPROVED (D03):** Use composite tenant-scoped FKs, parent unique indexes created first, `RESTRICT` deletes and explicit tenant equality. Resolver checks owner registry and membership/binding statuses because an FK cannot enforce ACTIVE state. This records the proposed D03 default only; DDL validation and full schema approval remain pending.
+- **Risk / S1 effect / approval:** Composite parent keys and supported SQLite behavior require disposable validation; no S1 data change is needed. **D03 Level C decision: APPROVED.** No migration is authorized.
 
 ### D04 — Relationship multiplicity and active uniqueness
 
@@ -198,7 +198,7 @@ The product determination explicitly left the identity contract and technical ma
 
 ## Dependencies and safe sequencing
 
-1. D01–D06 establish the exact identity subject, keys, multiplicity, lifecycle and audit contract. Do not assign a relationship ID or row before these and Level C approval.
+1. D01–D03 establish the approved identity subject, no-new-identity rule and tenant-scoped FK direction. D04–D06 remain pending for multiplicity, lifecycle and audit. Do not assign a relationship ID or row before separate authority and implementation/operational approvals.
 2. D07–D09 establish the non-bypassable resolver/authorization boundary and its transaction semantics. D07 must be resolved before implementation because a facade that cannot be proven complete requires the schema-FK alternative.
 3. D10–D14 establish provider/account identity, source cardinality, row links and historical unknown-provenance behavior. D13 depends on D10–D12; D17 depends on D13–D16.
 4. D15 chooses a high-level historical disposition, but D16 evidence is required before deciding which actual rows can safely be re-keyed or whether collisions exist. Thus no final per-row re-key decision can precede the separately authorized live inventory.
@@ -215,13 +215,13 @@ Other evidence gaps: supported SQLite runtime behavior has not been validated by
 
 ## Explicit Program Authority statements requested
 
-The Program Authority should record a decision against each D01–D22 entry, explicitly `APPROVE`, `AMEND` (with exact replacement rule), or `DEFER/REJECT`. A non-response or general endorsement is not acceptance. Suggested form:
+The Program Authority has recorded `APPROVE` for D01–D03 in the linked approval record. For D04–D22, record explicitly `APPROVE`, `AMEND` (with exact replacement rule), or `DEFER/REJECT`. A non-response or general endorsement is not acceptance. Suggested form:
 
 > I, acting as Program Authority, approve/amend/defer decision IDs ____. My approval is limited to Level C detailed design unless a separate Level D implementation statement is explicitly included below. I do not authorize operational database access, provisioning or migration unless I separately state its exact scope, environment, evidence procedure and rollback authority. D5/D6 status is unchanged unless separately decided.
 
 Then, if applicable, issue separately:
 
-- **Level C:** “I approve the detailed design choices identified by D01–D20, as amended in the attached/referenced record.” This approves design only.
+- **Level C:** “I approve the remaining detailed design choices identified by D04–D20, as amended in the attached/referenced record.” D01–D03 are already recorded as approved. Any such approval covers design only, not implementation or operations.
 - **Level D:** “I grant implementation authority for the specifically named code/schema/test scope, with stated exclusions and acceptance evidence.” This does not authorize live database operations.
 - **Level E:** “I authorize only the named read-only inventory or specific provisioning/migration operation, on the stated environment and records, with the named operator, backup, pre/post evidence, collision stop rules, rollback/recovery and audit procedure.” No blanket Level E grant is implied.
 - **D5:** “I accept the named verifier predicate and host-specific evidence for this run.” Synthetic tests alone are insufficient.
@@ -230,7 +230,8 @@ Then, if applicable, issue separately:
 ## Final approval checklist
 
 - [ ] Confirm Levels A and B remain as already approved; do not conflate either with C–E.
-- [ ] Record an explicit disposition for each **D01–D22**; mark every proposed default `NOT APPROVED` until accepted.
+- [x] D01–D03 approved exactly as recorded; do not infer approval beyond those defaults.
+- [ ] Record an explicit disposition for each **D04–D22**; their proposed defaults remain `NOT APPROVED` until accepted.
 - [ ] Resolve any change to the high-level S1-preserving relationship direction through a new Level B decision.
 - [ ] Approve/amend detailed schema, tenant FKs, multiplicity, lifecycle, source catalogue/cardinality/links and transaction/authorization boundaries (Level C).
 - [ ] Confirm that the local single-user limitation is accepted; do not imply hosted/multi-user support.
@@ -246,7 +247,7 @@ Then, if applicable, issue separately:
 - Product ownership: **APPROVED**.
 - Architectural direction: **APPROVED**.
 - Revised design baseline: **ACCEPTED WITH CONDITIONS** (independent engineering review only).
-- Outstanding Program Authority decisions: **PENDING** (D01–D22).
+- D01–D03: **APPROVED** as recorded; D04–D22 outstanding Program Authority decisions: **PENDING** (19 items).
 - Detailed schema approval: **PENDING**.
 - Implementation authority: **NOT GRANTED**.
 - Operational provisioning and migration: **NOT AUTHORIZED**.
