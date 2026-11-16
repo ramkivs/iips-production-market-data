@@ -272,12 +272,25 @@ export interface DhanCredentialMaterial {
 }
 
 /**
+ * Non-locating vault backend readiness summary (D-7 §4.1).
+ * Carries only an opaque identifier and boolean capability flag — never paths or URIs.
+ */
+export interface DhanVaultBackendReadinessSummary {
+  readonly backendId: string;
+  readonly liveResolutionSupported: boolean;
+}
+
+/**
  * Externally supplied credential resolver.
  * Returning null is the explicit, supported pre-access state.
  */
 export interface DhanCredentialResolver {
   resolve(config: DhanProviderConfig): Promise<DhanCredentialMaterial | null>;
+  /** Pure non-IO metadata summary; never resolves or touches secrets. */
+  describeBackendReadiness?(): DhanVaultBackendReadinessSummary;
 }
+
+export const PRE_ACCESS_VAULT_BACKEND_ID = 'PRE_ACCESS_NO_CREDENTIALS';
 
 /**
  * Default resolver for the pre-access gate: always reports "no credentials".
@@ -285,6 +298,13 @@ export interface DhanCredentialResolver {
  * the adapter, the DTO boundary or the canonical normalization path.
  */
 export class PreAccessDhanCredentialResolver implements DhanCredentialResolver {
+  public describeBackendReadiness(): DhanVaultBackendReadinessSummary {
+    return {
+      backendId: PRE_ACCESS_VAULT_BACKEND_ID,
+      liveResolutionSupported: false,
+    };
+  }
+
   public async resolve(): Promise<DhanCredentialMaterial | null> {
     return null;
   }

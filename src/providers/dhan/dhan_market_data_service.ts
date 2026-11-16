@@ -16,18 +16,30 @@ import { CanonicalEnvelope } from '../../contracts/envelope.js';
 import { isD114SecurityIdentity, type D114SecurityIdentity } from '../../contracts/types.js';
 import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
 import { SecurityMaster } from '../../identity/security_master.js';
-import { DhanApiClient } from './dhan_api_client.js';
+import {
+  DhanApiClient,
+  type DhanVendorEgressMode,
+  sanitizeVaultBackendId,
+} from './dhan_api_client.js';
+import {
+  type DhanCredentialReadiness,
+  isDhanProductionEnvironment,
+} from './dhan_config.js';
 import { DhanHistoricalAdapter, DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
 import { DhanHistoricalRequest } from './dhan_historical_dto.js';
 import { DhanExchangeSegment } from './dhan_dto.js';
-import { DhanResult, DhanFailure, dhanFailure } from './dhan_failures.js';
+import { DhanFailure, dhanFailure } from './dhan_failures.js';
 import { DhanInstrumentResolutionService } from './dhan_instrument_mapping_integration.js';
 import { DhanInstrumentRegistry } from './dhan_instrument_map.js';
 import { DhanMarketDataSource } from './dhan_market_data_source.js';
-import type {
-  DhanProviderObservedState,
-  ProviderVerificationResult,
-  VerifyProviderConnectionOptions,
+import {
+  isGovernedProviderFailureCategory,
+  type DhanAuthOutcome,
+  type DhanObservedFailureCategory,
+  type DhanProviderObservedState,
+  type DhanRecordedFailure,
+  type ProviderVerificationResult,
+  type VerifyProviderConnectionOptions,
 } from './dhan_provider_state_recorder.js';
 import {
   DhanBoundedCache,
@@ -37,6 +49,8 @@ import {
   DhanRequestCoalescer,
   DhanSecurityScope,
   dhanQuoteCacheKey,
+  type DhanAggregateCacheState,
+  type DhanQuoteCacheDiagnostics,
 } from './dhan_operational_controls.js';
 
 // ── Consumer-facing (provider-neutral) request/response contracts ────────────
@@ -119,6 +133,289 @@ export function validateDhanServiceHealth(input: unknown): ServiceHealth | null 
   };
 }
 
+// ── W-09 / D-7 governed diagnostics contract (MAY list only) ─────────────────
+
+export const DHAN_DIAGNOSTICS_CONTRACT_VERSION = 1 as const;
+export type DhanDiagnosticsContractVersion = typeof DHAN_DIAGNOSTICS_CONTRACT_VERSION;
+
+/** Normative D-7 §2 eight-state provider vocabulary (no aliases, no extras). */
+export type DhanProviderState =
+  | 'UNCONFIGURED'
+  | 'CONFIGURED'
+  | 'CREDENTIALS_RESOLVED'
+  | 'AUTHENTICATED'
+  | 'OPERATIONAL'
+  | 'EXPIRED'
+  | 'DEGRADED'
+  | 'UNAVAILABLE';
+
+/** Enumerated D-7 §4.1 credential-resolution status codes (never locations or URIs). */
+export type DhanCredentialResolutionOutcome =
+  | 'UNCONFIGURED'
+  | 'CONFIGURATION_INCOMPLETE'
+  | 'PRODUCTION_NOT_AUTHORIZED'
+  | 'CREDENTIALS_UNAVAILABLE'
+  | 'CREDENTIALS_EXPIRED'
+  | 'CONFIGURED_NOT_RESOLVED'
+  | 'CREDENTIALS_RESOLVED';
+
+export interface DhanDiagnosticsRequestCounters {
+  readonly quoteRequests: number;
+  readonly quoteCacheHits: number;
+  readonly historicalRequests: number;
+  readonly verificationProbes: number;
+  readonly vendorRequestsTotal: number;
+  readonly vendorSuccesses: number;
+  readonly providerFailures: number;
+}
+
+/**
+ * Governed `/v1/diagnostics` payload (W-09 / D-7 §4.1 MAY list).
+ * By construction contains only closed enumerations, non-locating backend IDs,
+ * canonical ISO-8601 UTC timestamps, counts, and booleans — never secret values,
+ * `vault://` references, filesystem/carrier paths, child-process output, or
+ * raw provider error messages (D-7 §4.2).
+ */
+export interface ServiceDiagnostics {
+  readonly contractVersion: DhanDiagnosticsContractVersion;
+  readonly service: 'UP' | 'DOWN';
+  readonly providerState: DhanProviderState;
+  readonly providerConfiguration: 'CONFIGURED' | 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE';
+  readonly providerReadiness: DhanCredentialReadiness;
+  readonly vaultBackendId: string;
+  readonly liveCredentialResolutionSupported: boolean;
+  readonly vendorEgressMode: DhanVendorEgressMode;
+  readonly credentialResolutionOutcome: DhanCredentialResolutionOutcome;
+  readonly liveProviderConnectivity: DhanLiveProviderConnectivity;
+  readonly providerQualification: DhanProviderQualification;
+  readonly lastSuccessAt: string | null;
+  readonly lastFailureCategory: DhanObservedFailureCategory | null;
+  readonly lastFailure: DhanRecordedFailure | null;
+  readonly lastAuthOutcome: DhanAuthOutcome;
+  readonly lastLatencyMs: number | null;
+  readonly consecutiveAuthFailures: number;
+  readonly authLatched: boolean;
+  readonly requestCounters: DhanDiagnosticsRequestCounters;
+  readonly qualifiedMappingsLoaded: number;
+  readonly quoteCache: DhanQuoteCacheDiagnostics;
+}
+
+const VALID_PROVIDER_STATES: ReadonlySet<DhanProviderState> = new Set([
+  'UNCONFIGURED',
+  'CONFIGURED',
+  'CREDENTIALS_RESOLVED',
+  'AUTHENTICATED',
+  'OPERATIONAL',
+  'EXPIRED',
+  'DEGRADED',
+  'UNAVAILABLE',
+]);
+
+const VALID_CREDENTIAL_RESOLUTION_OUTCOMES: ReadonlySet<DhanCredentialResolutionOutcome> = new Set([
+  'UNCONFIGURED',
+  'CONFIGURATION_INCOMPLETE',
+  'PRODUCTION_NOT_AUTHORIZED',
+  'CREDENTIALS_UNAVAILABLE',
+  'CREDENTIALS_EXPIRED',
+  'CONFIGURED_NOT_RESOLVED',
+  'CREDENTIALS_RESOLVED',
+]);
+
+const VALID_VENDOR_EGRESS_MODES: ReadonlySet<DhanVendorEgressMode> = new Set([
+  'DISABLED_PRE_ACCESS',
+  'IPD_SERVER_HTTPS',
+  'SYNTHETIC_INJECTED',
+]);
+
+const VALID_AUTH_OUTCOMES: ReadonlySet<DhanAuthOutcome> = new Set([
+  'NOT_CHECKED',
+  'AUTHENTICATED',
+  'AUTHENTICATION_FAILURE',
+  'CREDENTIALS_EXPIRED',
+  'CREDENTIALS_UNAVAILABLE',
+]);
+
+const VALID_CACHE_STATES: ReadonlySet<DhanAggregateCacheState> = new Set([
+  'EMPTY',
+  'CURRENT',
+  'STALE',
+  'UNAVAILABLE',
+  'MIXED',
+]);
+
+const CANONICAL_ISO_UTC_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+function isCanonicalIsoUtc(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    CANONICAL_ISO_UTC_PATTERN.test(value) &&
+    Number.isFinite(Date.parse(value))
+  );
+}
+
+function isNonNegativeInt(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+}
+
+/**
+ * Validates an untrusted `/v1/diagnostics` wire payload fail-closed without
+ * reflecting unknown fields or accepting unwhitelisted identifiers/strings.
+ */
+export function validateDhanServiceDiagnostics(input: unknown): ServiceDiagnostics | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const p = input as Record<string, unknown>;
+  if ((p.ok !== undefined && p.ok !== true) || p.error !== undefined || p.failure !== undefined) {
+    return null;
+  }
+  if (p.contractVersion !== DHAN_DIAGNOSTICS_CONTRACT_VERSION) return null;
+  if (p.service !== 'UP' && p.service !== 'DOWN') return null;
+  if (typeof p.providerState !== 'string' || !VALID_PROVIDER_STATES.has(p.providerState as DhanProviderState)) {
+    return null;
+  }
+  if (p.providerConfiguration !== 'CONFIGURED' && p.providerConfiguration !== 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE') {
+    return null;
+  }
+  if (
+    p.providerReadiness !== 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE' &&
+    p.providerReadiness !== 'CREDENTIAL_REFERENCES_CONFIGURED'
+  ) {
+    return null;
+  }
+  if (
+    typeof p.vaultBackendId !== 'string' ||
+    sanitizeVaultBackendId(p.vaultBackendId) !== p.vaultBackendId
+  ) {
+    return null;
+  }
+  if (typeof p.liveCredentialResolutionSupported !== 'boolean') return null;
+  if (
+    typeof p.vendorEgressMode !== 'string' ||
+    !VALID_VENDOR_EGRESS_MODES.has(p.vendorEgressMode as DhanVendorEgressMode)
+  ) {
+    return null;
+  }
+  if (
+    typeof p.credentialResolutionOutcome !== 'string' ||
+    !VALID_CREDENTIAL_RESOLUTION_OUTCOMES.has(
+      p.credentialResolutionOutcome as DhanCredentialResolutionOutcome
+    )
+  ) {
+    return null;
+  }
+  if (p.liveProviderConnectivity !== 'NOT_CHECKED_PRE_ACCESS' && p.liveProviderConnectivity !== 'CONNECTED_LIVE') {
+    return null;
+  }
+  if (
+    p.providerQualification !== 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED' &&
+    p.providerQualification !== 'LIVE_QUALIFIED'
+  ) {
+    return null;
+  }
+  if (p.lastSuccessAt !== null && !isCanonicalIsoUtc(p.lastSuccessAt)) return null;
+  if (p.lastFailureCategory !== null && !isGovernedProviderFailureCategory(p.lastFailureCategory)) {
+    return null;
+  }
+
+  let validatedLastFailure: DhanRecordedFailure | null = null;
+  if (p.lastFailure !== null) {
+    if (!p.lastFailure || typeof p.lastFailure !== 'object' || Array.isArray(p.lastFailure)) {
+      return null;
+    }
+    const lf = p.lastFailure as Record<string, unknown>;
+    if (!isGovernedProviderFailureCategory(lf.category) || !isCanonicalIsoUtc(lf.at)) {
+      return null;
+    }
+    validatedLastFailure = { category: lf.category, at: lf.at };
+  }
+  if ((validatedLastFailure?.category ?? null) !== p.lastFailureCategory) return null;
+
+  if (typeof p.lastAuthOutcome !== 'string' || !VALID_AUTH_OUTCOMES.has(p.lastAuthOutcome as DhanAuthOutcome)) {
+    return null;
+  }
+  if (
+    p.lastLatencyMs !== null &&
+    (typeof p.lastLatencyMs !== 'number' || !Number.isFinite(p.lastLatencyMs) || p.lastLatencyMs < 0)
+  ) {
+    return null;
+  }
+  if (!isNonNegativeInt(p.consecutiveAuthFailures)) return null;
+  if (typeof p.authLatched !== 'boolean') return null;
+  if (!isNonNegativeInt(p.qualifiedMappingsLoaded)) return null;
+
+  if (!p.requestCounters || typeof p.requestCounters !== 'object' || Array.isArray(p.requestCounters)) {
+    return null;
+  }
+  const rc = p.requestCounters as Record<string, unknown>;
+  if (
+    !isNonNegativeInt(rc.quoteRequests) ||
+    !isNonNegativeInt(rc.quoteCacheHits) ||
+    !isNonNegativeInt(rc.historicalRequests) ||
+    !isNonNegativeInt(rc.verificationProbes) ||
+    !isNonNegativeInt(rc.vendorRequestsTotal) ||
+    !isNonNegativeInt(rc.vendorSuccesses) ||
+    !isNonNegativeInt(rc.providerFailures)
+  ) {
+    return null;
+  }
+
+  if (!p.quoteCache || typeof p.quoteCache !== 'object' || Array.isArray(p.quoteCache)) {
+    return null;
+  }
+  const qc = p.quoteCache as Record<string, unknown>;
+  if (
+    !isNonNegativeInt(qc.size) ||
+    !isNonNegativeInt(qc.capacity) ||
+    qc.capacity <= 0 ||
+    typeof qc.state !== 'string' ||
+    !VALID_CACHE_STATES.has(qc.state as DhanAggregateCacheState) ||
+    !isNonNegativeInt(qc.currentEntries) ||
+    !isNonNegativeInt(qc.staleEntries) ||
+    !isNonNegativeInt(qc.unavailableEntries) ||
+    qc.currentEntries + qc.staleEntries + qc.unavailableEntries !== qc.size
+  ) {
+    return null;
+  }
+
+  return {
+    contractVersion: DHAN_DIAGNOSTICS_CONTRACT_VERSION,
+    service: p.service,
+    providerState: p.providerState as DhanProviderState,
+    providerConfiguration: p.providerConfiguration,
+    providerReadiness: p.providerReadiness,
+    vaultBackendId: p.vaultBackendId,
+    liveCredentialResolutionSupported: p.liveCredentialResolutionSupported,
+    vendorEgressMode: p.vendorEgressMode as DhanVendorEgressMode,
+    credentialResolutionOutcome: p.credentialResolutionOutcome as DhanCredentialResolutionOutcome,
+    liveProviderConnectivity: p.liveProviderConnectivity,
+    providerQualification: p.providerQualification,
+    lastSuccessAt: p.lastSuccessAt,
+    lastFailureCategory: p.lastFailureCategory,
+    lastFailure: validatedLastFailure,
+    lastAuthOutcome: p.lastAuthOutcome as DhanAuthOutcome,
+    lastLatencyMs: p.lastLatencyMs,
+    consecutiveAuthFailures: p.consecutiveAuthFailures,
+    authLatched: p.authLatched,
+    requestCounters: {
+      quoteRequests: rc.quoteRequests,
+      quoteCacheHits: rc.quoteCacheHits,
+      historicalRequests: rc.historicalRequests,
+      verificationProbes: rc.verificationProbes,
+      vendorRequestsTotal: rc.vendorRequestsTotal,
+      vendorSuccesses: rc.vendorSuccesses,
+      providerFailures: rc.providerFailures,
+    },
+    qualifiedMappingsLoaded: p.qualifiedMappingsLoaded,
+    quoteCache: {
+      size: qc.size,
+      capacity: qc.capacity,
+      state: qc.state as DhanAggregateCacheState,
+      currentEntries: qc.currentEntries,
+      staleEntries: qc.staleEntries,
+      unavailableEntries: qc.unavailableEntries,
+    },
+  };
+}
+
 export interface DhanMarketDataServiceOptions {
   client: DhanApiClient;
   securityMaster: SecurityMaster;
@@ -146,6 +443,10 @@ export class DhanMarketDataService {
   private readonly now: () => Date;
   // Bounded diagnostic history, separate from observation cache; never affects execution.
   private readonly refreshStatus = new Map<string, RefreshStatus>();
+  private quoteRequests = 0;
+  private quoteCacheHits = 0;
+  private historicalRequests = 0;
+  private verificationProbes = 0;
   private running = false;
 
   constructor(options: DhanMarketDataServiceOptions) {
@@ -209,6 +510,7 @@ export class DhanMarketDataService {
    * concurrency), never directly to the provider.
    */
   public async getQuote(request: QuoteRequest): Promise<QuoteResponse> {
+    this.quoteRequests += 1;
     if (!this.running) return { ok: false, failure: dhanFailure('PROVIDER_STATUS_FAILURE', 'service not started').failure };
     if (!request || typeof request.companyId !== 'string' || !request.companyId.trim()) {
       return { ok: false, failure: dhanFailure('MISSING_REQUIRED_FIELD', 'companyId is required', { field: 'companyId' }).failure };
@@ -243,6 +545,9 @@ export class DhanMarketDataService {
 
     const outcomes = await this.orchestrator.refresh([scope]);
     const outcome = outcomes[0]!;
+    if (outcome.status === 'SKIPPED_FRESH') {
+      this.quoteCacheHits += 1;
+    }
     const key = dhanQuoteCacheKey(scope);
     const previous = this.refreshStatus.get(key);
     this.refreshStatus.delete(key);
@@ -285,6 +590,7 @@ export class DhanMarketDataService {
 
   /** Canonical historical request through the existing D02 adapter path. */
   public async getHistorical(request: HistoricalServiceRequest): Promise<HistoricalResponse> {
+    this.historicalRequests += 1;
     if (!this.running) return { ok: false, failure: dhanFailure('PROVIDER_STATUS_FAILURE', 'service not started').failure };
     if (!this.limiter.tryAcquire()) {
       return { ok: false, failure: dhanFailure('RATE_LIMITED', 'provider request budget exhausted').failure };
@@ -333,11 +639,13 @@ export class DhanMarketDataService {
         }
       : null;
 
-    return this.client.probeOnce(probeInstrument, {
+    const result = await this.client.probeOnce(probeInstrument, {
       localOnly: options?.mode === 'LOCAL_ONLY',
       checkedAt,
       acquireProbePermit: () => this.limiter.tryAcquire(),
     });
+    this.verificationProbes += result.probeCount;
+    return result;
   }
 
   /**
@@ -366,5 +674,162 @@ export class DhanMarketDataService {
       providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED',
       contractVersion: DHAN_HEALTH_CONTRACT_VERSION,
     };
+  }
+
+  /**
+   * Pure observation-only diagnostics snapshot (W-09 / D-7 §4.1 MAY list).
+   * Reads existing authoritative runtime components without duplicating state,
+   * resolving credentials, invoking vendor transport, or mutating any counter,
+   * cache LRU order, or recorder state.
+   */
+  public async getDiagnostics(): Promise<ServiceDiagnostics> {
+    const nowDate = this.now();
+    const nowMs = nowDate.getTime();
+    const nowIso = nowDate.toISOString();
+    const health = await this.health();
+    const config = this.client.getConfig();
+    const vaultReadiness = this.client.describeVaultBackendReadiness();
+    const vendorEgressMode = this.client.getVendorEgressMode();
+    const observed = this.client.getObservedState();
+    const counts = this.client.getStateRecorder().getInteractionCounts();
+    const vendorRequestsTotal = this.client.getVendorRequestsTotal();
+
+    // Evaluate static config metadata without reading or exposing SecretRef.keyPath (`vault://`).
+    const runtimeEnv = typeof process !== 'undefined' && process.env ? process.env : {};
+    let staticAnomaly:
+      | 'PRODUCTION_NOT_AUTHORIZED'
+      | 'CONFIGURATION_INCOMPLETE'
+      | 'CREDENTIALS_EXPIRED'
+      | 'UNCONFIGURED'
+      | null = null;
+    if (isDhanProductionEnvironment(runtimeEnv)) {
+      staticAnomaly = 'PRODUCTION_NOT_AUTHORIZED';
+    } else {
+      for (const ref of [config.accessTokenRef, config.clientIdRef]) {
+        if (!ref) continue;
+        if (ref.status === 'EXPIRED' || ref.status === 'REVOKED') {
+          staticAnomaly = 'CREDENTIALS_EXPIRED';
+          break;
+        }
+        if (ref.expiresAt !== undefined) {
+          const expMs = Date.parse(ref.expiresAt);
+          if (Number.isNaN(expMs)) {
+            staticAnomaly = 'CONFIGURATION_INCOMPLETE';
+            break;
+          }
+          if (expMs <= nowMs) {
+            staticAnomaly = 'CREDENTIALS_EXPIRED';
+            break;
+          }
+        }
+      }
+      if (staticAnomaly === null && config.readiness === 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE') {
+        staticAnomaly = config.missingKeys.length === 1 ? 'CONFIGURATION_INCOMPLETE' : 'UNCONFIGURED';
+      }
+    }
+
+    let credentialResolutionOutcome: DhanCredentialResolutionOutcome;
+    if (
+      staticAnomaly === 'PRODUCTION_NOT_AUTHORIZED' ||
+      observed.lastFailure?.category === 'PRODUCTION_NOT_AUTHORIZED'
+    ) {
+      credentialResolutionOutcome = 'PRODUCTION_NOT_AUTHORIZED';
+    } else if (
+      staticAnomaly === 'CONFIGURATION_INCOMPLETE' ||
+      observed.lastFailure?.category === 'CONFIGURATION_INCOMPLETE'
+    ) {
+      credentialResolutionOutcome = 'CONFIGURATION_INCOMPLETE';
+    } else if (
+      staticAnomaly === 'CREDENTIALS_EXPIRED' ||
+      observed.lastAuthOutcome === 'CREDENTIALS_EXPIRED'
+    ) {
+      credentialResolutionOutcome = 'CREDENTIALS_EXPIRED';
+    } else if (staticAnomaly === 'UNCONFIGURED') {
+      credentialResolutionOutcome = 'UNCONFIGURED';
+    } else if (
+      !vaultReadiness.liveResolutionSupported ||
+      observed.lastAuthOutcome === 'CREDENTIALS_UNAVAILABLE'
+    ) {
+      credentialResolutionOutcome = 'CREDENTIALS_UNAVAILABLE';
+    } else if (
+      counts.localReadinessVerified ||
+      observed.lastAuthOutcome === 'AUTHENTICATED' ||
+      observed.lastAuthOutcome === 'AUTHENTICATION_FAILURE' ||
+      vendorRequestsTotal > 0
+    ) {
+      credentialResolutionOutcome = 'CREDENTIALS_RESOLVED';
+    } else {
+      credentialResolutionOutcome = 'CONFIGURED_NOT_RESOLVED';
+    }
+
+    let providerState: DhanProviderState;
+    if (
+      !this.running ||
+      credentialResolutionOutcome === 'PRODUCTION_NOT_AUTHORIZED' ||
+      credentialResolutionOutcome === 'CONFIGURATION_INCOMPLETE'
+    ) {
+      providerState = 'UNAVAILABLE';
+    } else if (credentialResolutionOutcome === 'CREDENTIALS_EXPIRED') {
+      providerState = 'EXPIRED';
+    } else if (credentialResolutionOutcome === 'UNCONFIGURED') {
+      providerState = 'UNCONFIGURED';
+    } else if (observed.authLatched) {
+      providerState = 'DEGRADED';
+    } else if (observed.lastFailure !== null) {
+      if (observed.lastFailure.category === 'CREDENTIALS_UNAVAILABLE') {
+        providerState = vaultReadiness.liveResolutionSupported ? 'CONFIGURED' : 'UNAVAILABLE';
+      } else {
+        providerState = 'DEGRADED';
+      }
+    } else if (
+      observed.lastSuccessAt !== null &&
+      observed.lastAuthOutcome === 'AUTHENTICATED' &&
+      health.liveProviderConnectivity === 'CONNECTED_LIVE'
+    ) {
+      providerState = counts.marketDataSuccesses > 0 ? 'OPERATIONAL' : 'AUTHENTICATED';
+    } else if (!vaultReadiness.liveResolutionSupported) {
+      providerState = 'UNAVAILABLE';
+    } else if (counts.localReadinessVerified) {
+      providerState = 'CREDENTIALS_RESOLVED';
+    } else {
+      providerState = 'CONFIGURED';
+    }
+
+    const requestCounters: DhanDiagnosticsRequestCounters = Object.freeze({
+      quoteRequests: this.quoteRequests,
+      quoteCacheHits: this.quoteCacheHits,
+      historicalRequests: this.historicalRequests,
+      verificationProbes: this.verificationProbes,
+      vendorRequestsTotal,
+      vendorSuccesses: counts.vendorSuccesses,
+      providerFailures: counts.providerFailures,
+    });
+
+    const quoteCache = this.cache.inspectStateSummary(nowIso);
+    const qualifiedMappingsLoaded = this.instrumentRegistry.list().length;
+
+    return Object.freeze({
+      contractVersion: DHAN_DIAGNOSTICS_CONTRACT_VERSION,
+      service: health.service,
+      providerState,
+      providerConfiguration: health.providerConfiguration,
+      providerReadiness: config.readiness,
+      vaultBackendId: vaultReadiness.backendId,
+      liveCredentialResolutionSupported: vaultReadiness.liveResolutionSupported,
+      vendorEgressMode,
+      credentialResolutionOutcome,
+      liveProviderConnectivity: health.liveProviderConnectivity,
+      providerQualification: health.providerQualification,
+      lastSuccessAt: observed.lastSuccessAt,
+      lastFailureCategory: observed.lastFailure?.category ?? null,
+      lastFailure: observed.lastFailure,
+      lastAuthOutcome: observed.lastAuthOutcome,
+      lastLatencyMs: observed.lastLatencyMs,
+      consecutiveAuthFailures: observed.consecutiveAuthFailures,
+      authLatched: observed.authLatched,
+      requestCounters,
+      qualifiedMappingsLoaded,
+      quoteCache,
+    });
   }
 }

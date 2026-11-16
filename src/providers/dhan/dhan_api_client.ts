@@ -20,6 +20,7 @@
 import {
   DhanCredentialResolver,
   DhanProviderConfig,
+  DhanVaultBackendReadinessSummary,
   PreAccessDhanCredentialResolver,
   isDhanProductionEnvironment,
 } from './dhan_config.js';
@@ -99,6 +100,28 @@ export interface DhanQuoteRequestInstrument {
 
 export const DHAN_MARKET_QUOTE_PATH = '/marketfeed/quote';
 
+export type DhanVendorEgressMode =
+  | 'DISABLED_PRE_ACCESS'
+  | 'IPD_SERVER_HTTPS'
+  | 'SYNTHETIC_INJECTED';
+
+export const CUSTOM_INJECTED_VAULT_BACKEND_ID = 'CUSTOM_INJECTED_RESOLVER';
+export const UNKNOWN_VAULT_BACKEND_ID = 'UNKNOWN_VAULT_BACKEND';
+
+const GOVERNED_VAULT_BACKEND_ID_PATTERN = /^[A-Z][A-Z0-9_]{1,63}$/;
+
+/**
+ * Enforces D-7 §4.1/§4.2 non-locating backend identifier format by construction.
+ * Any string containing path separators, URI schemes, punctuation, whitespace,
+ * or non-governed characters is coerced fail-closed to `UNKNOWN_VAULT_BACKEND`.
+ */
+export function sanitizeVaultBackendId(candidate: unknown): string {
+  if (typeof candidate === 'string' && GOVERNED_VAULT_BACKEND_ID_PATTERN.test(candidate)) {
+    return candidate;
+  }
+  return UNKNOWN_VAULT_BACKEND_ID;
+}
+
 export interface DhanApiClientOptions {
   config: DhanProviderConfig;
   transport?: DhanHttpTransport;
@@ -142,6 +165,7 @@ export class DhanApiClient {
   private readonly credentialResolver: DhanCredentialResolver;
   private readonly now: () => number;
   private readonly stateRecorder: DhanProviderStateRecorder;
+  private vendorRequestsTotal = 0;
 
   constructor(options: DhanApiClientOptions) {
     this.config = options.config;
@@ -164,6 +188,47 @@ export class DhanApiClient {
   /** Observation-only snapshot of recorded provider state; never triggers I/O or mutates state. */
   public getObservedState(): DhanProviderObservedState {
     return this.stateRecorder.snapshot();
+  }
+
+  /**
+   * Pure observation-only read of the vault backend identifier and readiness (W-09 / D-7 §4.1).
+   * Never resolves secrets, touches carriers, or spawns child processes.
+   */
+  public describeVaultBackendReadiness(): DhanVaultBackendReadinessSummary {
+    if (typeof this.credentialResolver.describeBackendReadiness === 'function') {
+      try {
+        const described = this.credentialResolver.describeBackendReadiness();
+        return Object.freeze({
+          backendId: sanitizeVaultBackendId(described?.backendId),
+          liveResolutionSupported: described?.liveResolutionSupported === true,
+        });
+      } catch {
+        return Object.freeze({
+          backendId: UNKNOWN_VAULT_BACKEND_ID,
+          liveResolutionSupported: false,
+        });
+      }
+    }
+    return Object.freeze({
+      backendId: CUSTOM_INJECTED_VAULT_BACKEND_ID,
+      liveResolutionSupported: this.config.readiness === 'CREDENTIAL_REFERENCES_CONFIGURED',
+    });
+  }
+
+  /** Pure observation-only classification of configured outbound vendor transport mode (D-7 §4.1). */
+  public getVendorEgressMode(): DhanVendorEgressMode {
+    if (this.transport instanceof PreAccessNoNetworkTransport) {
+      return 'DISABLED_PRE_ACCESS';
+    }
+    if (this.transport.constructor?.name === 'DhanServerHttpsTransport') {
+      return 'IPD_SERVER_HTTPS';
+    }
+    return 'SYNTHETIC_INJECTED';
+  }
+
+  /** Total outbound vendor transport invocations attempted in this process lifetime. */
+  public getVendorRequestsTotal(): number {
+    return this.vendorRequestsTotal;
   }
 
   public nowIso(): string {
@@ -336,7 +401,7 @@ export class DhanApiClient {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        // Credential headers are constructed per request and discarded with it.
+      // Credential headers are constructed per request and discarded with it.
         'access-token': credentials.accessToken,
         'client-id': credentials.clientId,
       },
@@ -347,6 +412,9 @@ export class DhanApiClient {
     const startedAt = this.now();
     let response: DhanHttpResponse;
     try {
+      if (!(this.transport instanceof PreAccessNoNetworkTransport)) {
+        this.vendorRequestsTotal += 1;
+      }
       response = await this.withTimeout(this.transport.send(request), this.config.timeoutMs);
     } catch (err: unknown) {
       const finishedAt = this.now();
@@ -474,6 +542,7 @@ export class DhanApiClient {
     }
 
     if (options?.localOnly === true || probeInstrument === null) {
+      this.stateRecorder.recordLocalReadinessVerified();
       return {
         outcome: 'VERIFIED_LOCAL_ONLY',
         probeAttempted: false,
@@ -527,6 +596,7 @@ export class DhanApiClient {
     const startedAt = this.now();
     let response: DhanHttpResponse;
     try {
+      this.vendorRequestsTotal += 1;
       response = await this.withTimeout(this.transport.send(request), this.config.timeoutMs);
     } catch (err: unknown) {
       const finishedAt = this.now();
@@ -620,7 +690,11 @@ export class DhanApiClient {
       };
     }
 
-    const observedState = this.stateRecorder.recordSuccess({ at, latencyMs });
+    const observedState = this.stateRecorder.recordSuccess({
+      at,
+      latencyMs,
+      kind: 'VERIFICATION_PROBE',
+    });
     return {
       outcome: 'VERIFIED_VENDOR_ACCEPTED',
       probeAttempted: true,
