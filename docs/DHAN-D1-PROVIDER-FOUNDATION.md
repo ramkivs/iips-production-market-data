@@ -1,5 +1,10 @@
 # DHAN-D1 — Dhan Provider Foundation (Pre-Access Development Gate)
 
+> **Historical Gate Record & Current `main` Reference:** This document records the initial
+> `DHAN-D1` provider foundation gate. For the complete, `main`-authoritative environment-variable
+> table, loopback daemon configuration, 9-route HTTP surface, and operational controls, see
+> [`docs/integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md`](integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md).
+
 **Status:** PRE-ACCESS DEVELOPMENT ONLY
 **Gate:** DHAN-D1
 **Operating mode:** `PRE_ACCESS_NO_LIVE_CREDENTIALS`
@@ -61,12 +66,20 @@ No token, client id or secret value is present in source, fixtures, docs or test
 
 | Configuration key | Purpose | Committed? |
 | --- | --- | --- |
-| `IIPS_DHAN_BASE_URL` | Provider base URL override | No (default is the public documented base URL) |
-| `IIPS_DHAN_TIMEOUT_MS` | Request timeout (default 5000 ms) | No |
+| `IIPS_DHAN_BASE_URL` | Provider base URL override (default `https://api.dhan.co/v2`) | No |
+| `IIPS_DHAN_TIMEOUT_MS` | Outbound provider request timeout (default `5000` ms) | No |
 | `IIPS_DHAN_ACCESS_TOKEN_SECRET_PATH` | `vault://...` pointer to the access token | No |
 | `IIPS_DHAN_CLIENT_ID_SECRET_PATH` | `vault://...` pointer to the client id | No |
-| `IIPS_DHAN_VAULT_PROVIDER` | SecretRef vault provider enum | No |
-| `IIPS_DHAN_SECRET_VERSION` | SecretRef version | No |
+| `IIPS_DHAN_VAULT_PROVIDER` | `SecretRef` vault provider enum (default `LOCAL_MOCK_VAULT`) | No |
+| `IIPS_DHAN_SECRET_VERSION` | `SecretRef` version (default `v1`) | No |
+| `IIPS_DHAN_SECRET_STATUS` | `SecretRef` status enum (`ACTIVE`, `ROTATING`, `REVOKED`, `EXPIRED`; default `ACTIVE`) | No |
+| `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` | Optional access-token expiry timestamp (`CREDENTIALS_EXPIRED` when `<= now`) | No |
+
+Production mode (`NODE_ENV=production` or `IIPS_DEPLOYMENT_ENV=production`) is refused
+fail-closed with `PRODUCTION_NOT_AUTHORIZED`. Local HTTP daemon variables
+(`IIPS_MARKET_DATA_DAEMON_HOST`, `IIPS_MARKET_DATA_DAEMON_PORT`,
+`IIPS_MARKET_DATA_TRANSPORT_TOKEN`) are documented in
+[`docs/integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md`](integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md).
 
 Credential-readiness is a first-class state:
 
@@ -83,11 +96,12 @@ transport. No architectural rework of the adapter, DTO boundary or normalizer is
 Every boundary failure maps to exactly one code and fails closed — partial or unvalidated
 market data is never emitted:
 
-`CREDENTIALS_UNAVAILABLE`, `CONFIGURATION_INCOMPLETE`, `AUTHENTICATION_FAILURE`,
-`RATE_LIMITED`, `TIMEOUT`, `TRANSPORT_FAILURE`, `HTTP_ERROR`, `PROVIDER_STATUS_FAILURE`,
-`MALFORMED_RESPONSE`, `MISSING_REQUIRED_FIELD`, `INSTRUMENT_NOT_IN_RESPONSE`,
-`UNRESOLVED_INSTRUMENT`, `CANONICAL_VALIDATION_FAILURE`, `STALE_DATA_SUPPRESSED`,
-`UNSUPPORTED_DOMAIN`, `UNSUPPORTED_PRE_ACCESS_OPERATION`.
+`CREDENTIALS_UNAVAILABLE`, `CREDENTIALS_EXPIRED`, `CONFIGURATION_INCOMPLETE`,
+`PRODUCTION_NOT_AUTHORIZED`, `AUTHENTICATION_FAILURE`, `RATE_LIMITED`, `TIMEOUT`,
+`TRANSPORT_FAILURE`, `HTTP_ERROR`, `PROVIDER_STATUS_FAILURE`, `MALFORMED_RESPONSE`,
+`MISSING_REQUIRED_FIELD`, `INSTRUMENT_NOT_IN_RESPONSE`, `UNRESOLVED_INSTRUMENT`,
+`CANONICAL_VALIDATION_FAILURE`, `STALE_DATA_SUPPRESSED`, `UNSUPPORTED_DOMAIN`,
+`UNSUPPORTED_PRE_ACCESS_OPERATION`.
 
 ## 5. Instrument mapping boundary
 

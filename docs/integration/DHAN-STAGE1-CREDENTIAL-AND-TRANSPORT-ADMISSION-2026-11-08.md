@@ -1,5 +1,18 @@
 # Stage 1 Admission Decision Record — Dhan Credential and Authenticated Transport Admission
 
+> **Historical Admission Record (`2026-11-08`) — Current `main` Reconciliation Note:**
+> This document preserves the `2026-11-08` Stage 1 admission decision and evidence as recorded at
+> commits `59fdfd15…` / `7f8c5d04…`. Subsequent merges on authoritative IPD `main` updated the
+> retained P7 manifest to **`4,680` `QUALIFIED` mappings** (`5,180` total records, PR `#164`),
+> composed `DhanMarketDataService` operational defaults (`256`-entry quote LRU cache,
+> `60` requests / `60,000` ms shared rate limiter, `8` max in-flight quote concurrency, D02
+> historical uncached pending W-19), and added the P4 identity HTTP routes, P5 `GET /v1/freshness`,
+> W-07 `ServiceHealth` (`contractVersion: 2`, `#168`), W-08 observed-state recorder &
+> `verifyConnection` (`#169`), W-09 `GET /v1/diagnostics` (`#170`), and W-10
+> `POST /v1/connection/verify` (`#172`). For the authoritative current `main` daemon configuration
+> and operational specification, see
+> [`DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md`](DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md).
+
 - **Document ID**: `IPD-DHAN-STAGE1-ADMISSION-2026-11-08`
 - **Date**: `2026-11-08`
 - **Status**: **ADMITTED FOR LOCAL NON-PRODUCTION SERVER-SIDE FOUNDATION ONLY** (`SYNTHETIC_VERIFIED / NOT_LIVE_VERIFIED / PRODUCTION_NOT_AUTHORIZED`)
