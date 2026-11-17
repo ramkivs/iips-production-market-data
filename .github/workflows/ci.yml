@@ -55,6 +55,12 @@ jobs:
       # failures at the Publish step with tests=null while the guarded run itself passed).
       # This form writes the log deterministically, replays it, and preserves the npm exit code.
       - name: Test (guarded — zero tests is a failure)
+        # IIPS_POWERSHELL_RUNTIME_TESTS makes the process-runner case execute the real
+        # windows-setup/Iips-Common.ps1 runner on this image's PowerShell instead of skipping it:
+        # a skipped contract is not evidence. Windows PowerShell 5.1 execution is covered by the
+        # "W-02 process runner (PowerShell)" workflow, which runs the same case on windows-latest.
+        env:
+          IIPS_POWERSHELL_RUNTIME_TESTS: '1'
         run: |
           npm test > test-output.log 2>&1 || { rc=$?; cat test-output.log; exit $rc; }
           cat test-output.log

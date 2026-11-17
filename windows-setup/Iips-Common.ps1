@@ -36,7 +36,15 @@ $script:IipsExpectedIpdCommit = 'b605a61458a655bb555c6f340332fcf77a85c870'
 $script:IipsMinimumNodeMajor = 22
 $script:IipsMinimumNodeMinor = 13
 $script:IipsMinimumNodePatch = 0
-$script:IipsPreferredNodePath = 'C:\Node22\node-v22.16.0-win-x64\node.exe'
+# Bound for each toolchain version probe (node.exe --version, npm.cmd --version, npx.cmd --version).
+# It MUST be defined here: the resolver reads it while evaluating the probe call, and under
+# Set-StrictMode -Version Latest a reference to an unset variable throws BEFORE the runner is
+# invoked. Undefined, every candidate - including one supplied with -NodeExecutable - is skipped
+# and the resolver reports NODE_TOOLCHAIN_NOT_RESOLVED no matter what the caller passed.
+$script:IipsVersionProbeTimeoutMilliseconds = 10000
+# No preferred installation path is hardcoded: an installation that exists on one host and not on
+# another turns a deterministic resolver into a machine-specific one. Candidates come from
+# -NodeExecutable or from PATH (Get-Command node.exe -All), and each is verified end-to-end.
 
 # Direct P1 user-portfolio database - ALREADY PROVISIONED on the operator's Windows host.
 # These scripts verify it and never create, migrate, truncate or replace it.
@@ -155,10 +163,57 @@ function Write-IipsFinalStatus {
 # ----------------------------------------------------------------------------------------------
 <#
 .SYNOPSIS
+    Decides whether a Node.js version satisfies the IIPS floor (22.13.0, flag-free node:sqlite).
+
+.NOTES
+    Parsing is defensive: an unexpected shape returns $false rather than throwing, so a broken
+    probe can never be mistaken for a valid toolchain.
+#>
+function Test-IipsNodeVersionAtOrAboveFloor {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Version
+    )
+
+    $text = $Version.Trim()
+    if ($text.StartsWith('v')) { $text = $text.Substring(1) }
+    $parts = @($text.Split('.'))
+    if ($parts.Count -lt 3) { return $false }
+
+    $major = 0
+    $minor = 0
+    $patch = 0
+    if (-not [int]::TryParse($parts[0], [ref] $major)) { return $false }
+    if (-not [int]::TryParse($parts[1], [ref] $minor)) { return $false }
+    $patchText = [regex]::Match($parts[2], '^\d+').Value
+    if (-not [int]::TryParse($patchText, [ref] $patch)) { return $false }
+
+    if ($major -ne $script:IipsMinimumNodeMajor) { return ($major -gt $script:IipsMinimumNodeMajor) }
+    if ($minor -ne $script:IipsMinimumNodeMinor) { return ($minor -gt $script:IipsMinimumNodeMinor) }
+    return ($patch -ge $script:IipsMinimumNodePatch)
+}
+
+<#
+.SYNOPSIS
     Resolves node.exe, npm.cmd and npx.cmd from ONE installation and verifies them.
 
+.DESCRIPTION
+    Candidates are the explicitly supplied -NodeExecutable, or every node.exe that PATH resolves
+    (`Get-Command node.exe -All`). NO machine-specific installation path is assumed: a hardcoded
+    preferred directory is exactly what made the previous version work on one host and fail on
+    another.
+
+    For each candidate the SAME directory must hold node.exe, npm.cmd and npx.cmd. That co-location
+    is the single-installation guarantee: a runtime and a shim from two installations cannot be
+    mixed. Every version probe goes through Invoke-IipsProcess (bounded, async streams, kill on
+    timeout) and the shims are invoked through cmd.exe /d /s /c, never directly and never through
+    `npm exec` / `npx` discovery.
+
+    A candidate that fails any step is skipped with a reason code; when no candidate survives, the
+    failure is reported with those codes only - no personal paths, no machine names.
+
 .OUTPUTS
-    [pscustomobject] with NodeExe, NpmCmd, NpxCmd, NodeDir, NodeVersion, NpmVersion
+    [pscustomobject] with NodeExe, NpmCmd, NpxCmd, NodeDir, InstallRoot, NodeVersion, NpmVersion
 #>
 function Resolve-IipsNodeToolchain {
     param(
@@ -166,177 +221,528 @@ function Resolve-IipsNodeToolchain {
         [string] $NodeExecutable = ''
     )
 
-    $candidates = New-Object System.Collections.Generic.List[string]
-    if ($NodeExecutable.Length -gt 0) { $candidates.Add($NodeExecutable) }
-    $candidates.Add($script:IipsPreferredNodePath)
-    $onPath = Get-Command node.exe -ErrorAction SilentlyContinue
-    if ($null -ne $onPath) { $candidates.Add($onPath.Source) }
+    $nodeCandidates = New-Object System.Collections.Generic.List[string]
+    $reasons = New-Object System.Collections.Generic.List[string]
 
-    $nodeExe = $null
-    foreach ($c in $candidates) {
-        if (Test-Path -LiteralPath $c) { $nodeExe = (Resolve-Path -LiteralPath $c).Path; break }
+    if (-not [string]::IsNullOrWhiteSpace($NodeExecutable)) {
+        $nodeCandidates.Add($NodeExecutable)
     }
-    if ($null -eq $nodeExe) {
-        throw 'node.exe could not be found. Node.js >= 22.13.0 is required (flag-free node:sqlite). Pass -NodeExecutable with the full path to node.exe.'
+    if ([string]::IsNullOrWhiteSpace($NodeExecutable)) {
+        $commands = @(Get-Command node.exe -All -ErrorAction SilentlyContinue)
+        foreach ($command in $commands) {
+            if ($command.Source) { $nodeCandidates.Add($command.Source) }
+        }
+        if ($commands.Count -eq 0) { $reasons.Add('node-not-on-path') }
     }
+    if ($nodeCandidates.Count -eq 0) { $reasons.Add('no-candidate') }
 
-    $nodeDir = Split-Path -Parent $nodeExe
+    foreach ($candidate in $nodeCandidates) {
+        if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) {
+            $reasons.Add('node-not-a-file')
+            continue
+        }
 
-    # npm.cmd and npx.cmd MUST come from the same directory as node.exe. This is what prevents two
-    # Node.js installations from being mixed: the shims and the runtime are resolved as one unit.
-    $npmCmd = Join-Path $nodeDir 'npm.cmd'
-    $npxCmd = Join-Path $nodeDir 'npx.cmd'
-    if (-not (Test-Path -LiteralPath $npmCmd)) { throw "npm.cmd was not found beside node.exe at $npmCmd. The Node.js installation at $nodeDir is incomplete - use a full Node.js distribution, or pass -NodeExecutable pointing at a complete one." }
-    if (-not (Test-Path -LiteralPath $npxCmd)) { throw "npx.cmd was not found beside node.exe at $npxCmd. The Node.js installation at $nodeDir is incomplete." }
+        $nodePath = (Resolve-Path -LiteralPath $candidate).Path
+        $installDirectory = Split-Path -Parent $nodePath
 
-    # Make this installation first on PATH for every child process, so the internal `node` lookup
-    # performed by the npm/npx shims resolves to the same binary we invoked explicitly.
-    $env:PATH = $nodeDir + [System.IO.Path]::PathSeparator + $env:PATH
+        # node.exe, npm.cmd and npx.cmd MUST come from the same directory. This is what prevents
+        # two Node.js installations from being mixed: the shims and the runtime are one unit.
+        $npmPath = Join-Path $installDirectory 'npm.cmd'
+        $npxPath = Join-Path $installDirectory 'npx.cmd'
+        if (-not (Test-Path -LiteralPath $npmPath -PathType Leaf)) {
+            $reasons.Add('npm-missing-beside-node')
+            continue
+        }
+        if (-not (Test-Path -LiteralPath $npxPath -PathType Leaf)) {
+            $reasons.Add('npx-missing-beside-node')
+            continue
+        }
 
-    $nodeProbe = Invoke-IipsCapture -Executable $nodeExe -Arguments @('--version')
-    $versionRaw = $nodeProbe.Combined
-    if ($nodeProbe.ExitCode -ne 0) { throw "node.exe at $nodeExe did not run: $versionRaw" }
-    $versionText = $versionRaw.TrimStart('v')
-    $parts = $versionText.Split('.')
-    if ($parts.Count -lt 3) { throw "could not parse the Node.js version '$versionRaw'." }
-    $major = [int]$parts[0]
-    $minor = [int]$parts[1]
-    $patch = [int]($parts[2] -replace '[^0-9].*$', '')
+        $nodeProbe = $null
+        try {
+            $nodeProbe = Invoke-IipsProcess -FilePath $nodePath -Arguments '--version' -TimeoutMilliseconds $script:IipsVersionProbeTimeoutMilliseconds
+        }
+        catch {
+            $reasons.Add('node-version-probe-failed:' + (Get-IipsFailureCode -Message ([string]$_.Exception.Message)))
+            continue
+        }
+        if ($nodeProbe.ExitCode -ne 0) {
+            $reasons.Add('node-version-probe-nonzero')
+            continue
+        }
 
-    $floorOk = $false
-    if ($major -gt $script:IipsMinimumNodeMajor) { $floorOk = $true }
-    if ($major -eq $script:IipsMinimumNodeMajor -and $minor -gt $script:IipsMinimumNodeMinor) { $floorOk = $true }
-    if ($major -eq $script:IipsMinimumNodeMajor -and $minor -eq $script:IipsMinimumNodeMinor -and $patch -ge $script:IipsMinimumNodePatch) { $floorOk = $true }
-    if (-not $floorOk) { throw "Node.js $versionRaw at $nodeExe is below the required floor 22.13.0 (src/persistence/connection.ts MINIMUM_NODE_*)." }
+        $nodeVersion = $nodeProbe.StdOut.Trim()
+        if ([string]::IsNullOrWhiteSpace($nodeVersion)) {
+            $reasons.Add('node-version-empty')
+            continue
+        }
+        if (-not (Test-IipsNodeVersionAtOrAboveFloor -Version $nodeVersion)) {
+            $reasons.Add('node-version-below-floor')
+            continue
+        }
 
-    $npmProbe = Invoke-IipsCapture -Executable $npmCmd -Arguments @('--version')
-    $npmVersion = $npmProbe.Combined
-    if ($npmProbe.ExitCode -ne 0) { throw "npm.cmd at $npmCmd did not run: $npmVersion" }
-    $npxProbe = Invoke-IipsCapture -Executable $npxCmd -Arguments @('--version')
-    $npxVersion = $npxProbe.Combined
-    if ($npxProbe.ExitCode -ne 0) { throw "npx.cmd at $npxCmd did not run: $npxVersion" }
+        # The shims are batch files: cmd.exe /d /s /c through the bounded runner, never a direct
+        # start (CreateProcess cannot execute a .cmd) and never as an npm/npx discovery mechanism.
+        $npmProbe = $null
+        try {
+            $npmProbe = Invoke-IipsCmdShim -ShimPath $npmPath -Arguments @('--version') -TimeoutMilliseconds $script:IipsVersionProbeTimeoutMilliseconds
+        }
+        catch {
+            $reasons.Add('npm-version-probe-failed:' + (Get-IipsFailureCode -Message ([string]$_.Exception.Message)))
+            continue
+        }
+        if ($npmProbe.ExitCode -ne 0) {
+            $reasons.Add('npm-version-probe-nonzero')
+            continue
+        }
+        $npmVersion = $npmProbe.StdOut.Trim()
+        if ([string]::IsNullOrWhiteSpace($npmVersion)) {
+            $reasons.Add('npm-version-empty')
+            continue
+        }
 
-    # Anti-mixing proof: ask npm which node.exe it actually executes. A mismatch means a second
-    # installation is shadowing this one and must be fixed before setup proceeds.
-    $consistency = 'VERIFIED'
-    # The probe expression is written to a temporary .js file rather than passed as an inline -e
-    # argument, so no nested quoting has to survive Start-Process argument marshalling.
-    $probeDir = Join-Path $env:TEMP 'iips-node-probe'
-    if (-not (Test-Path -LiteralPath $probeDir)) { New-Item -ItemType Directory -Path $probeDir -Force | Out-Null }
-    $probeFile = Join-Path $probeDir ('which-node-' + ([System.Guid]::NewGuid().ToString('N').Substring(0, 8)) + '.js')
-    Set-Content -LiteralPath $probeFile -Value "process.stdout.write(process.execPath);" -Encoding ASCII
-    $probe = Invoke-IipsCapture -Executable $npmCmd -Arguments @('exec', '--', 'node', $probeFile)
-    $reported = $probe.StdOut.Trim()
-    if ($reported.Length -eq 0) { $reported = $probe.Combined.Trim() }
-    $probeExit = $probe.ExitCode
-    Remove-Item -LiteralPath $probeFile -Force -ErrorAction SilentlyContinue
-    if ($probeExit -ne 0) {
-        $consistency = 'NOT VERIFIED (npm exec probe unavailable) - same-directory resolution and PATH prepend applied instead'
-    }
-    if ($probeExit -eq 0) {
-        # Compare case-insensitively and with a single separator style, so the comparison is about
-        # the installation and not about how each side happens to spell the path.
-        $reportedNormalised = $reported.Trim('"').Replace('/', '\').TrimEnd('\')
-        $expectedNormalised = $nodeExe.Replace('/', '\').TrimEnd('\')
-        if (-not [string]::Equals($reportedNormalised, $expectedNormalised, [System.StringComparison]::OrdinalIgnoreCase)) {
-            throw "Node.js installation mixing detected: npm.cmd at $npmCmd executes '$reportedNormalised' but the resolved runtime is '$expectedNormalised'. Fix PATH so a single Node.js installation is used."
+        $npxProbe = $null
+        try {
+            $npxProbe = Invoke-IipsCmdShim -ShimPath $npxPath -Arguments @('--version') -TimeoutMilliseconds $script:IipsVersionProbeTimeoutMilliseconds
+        }
+        catch {
+            $reasons.Add('npx-version-probe-failed:' + (Get-IipsFailureCode -Message ([string]$_.Exception.Message)))
+            continue
+        }
+        if ($npxProbe.ExitCode -ne 0) {
+            $reasons.Add('npx-version-probe-nonzero')
+            continue
+        }
+        $npxVersion = $npxProbe.StdOut.Trim()
+        if ([string]::IsNullOrWhiteSpace($npxVersion)) {
+            $reasons.Add('npx-version-empty')
+            continue
+        }
+
+        # This installation first on PATH for every child process, so the internal `node` lookup
+        # performed by the npm/npx shims resolves to the runtime resolved here.
+        $env:PATH = $installDirectory + [System.IO.Path]::PathSeparator + $env:PATH
+
+        Write-IipsOk "node.exe : $nodePath ($nodeVersion)"
+        Write-IipsOk "npm.cmd  : $npmPath ($npmVersion)"
+        Write-IipsOk "npx.cmd  : $npxPath ($npxVersion)"
+        Write-IipsInfo 'single-installation check: VERIFIED (same directory, bounded probes)'
+
+        return [pscustomobject]@{
+            NodeExe     = $nodePath
+            NpmCmd      = $npmPath
+            NpxCmd      = $npxPath
+            NodeDir     = $installDirectory
+            InstallRoot = $installDirectory
+            NodeVersion = $nodeVersion
+            NpmVersion  = $npmVersion
         }
     }
 
-    Write-IipsOk "node.exe : $nodeExe ($versionRaw)"
-    Write-IipsOk "npm.cmd  : $npmCmd ($npmVersion)"
-    Write-IipsOk "npx.cmd  : $npxCmd ($npxVersion)"
-    Write-IipsInfo "single-installation check: $consistency"
-
-    return [pscustomobject]@{
-        NodeExe     = $nodeExe
-        NpmCmd      = $npmCmd
-        NpxCmd      = $npxCmd
-        NodeDir     = $nodeDir
-        NodeVersion = $versionRaw
-        NpmVersion  = $npmVersion
-    }
+    $reasonText = 'no-candidate'
+    if ($reasons.Count -gt 0) { $reasonText = (@($reasons | Select-Object -Unique) -join ', ') }
+    throw ('NODE_TOOLCHAIN_NOT_RESOLVED: no Node.js installation with node.exe, npm.cmd and npx.cmd in one directory could be verified ({0}). Node.js >= {1}.{2}.{3} is required (flag-free node:sqlite). Pass -NodeExecutable with the full path to node.exe.' -f $reasonText, $script:IipsMinimumNodeMajor, $script:IipsMinimumNodeMinor, $script:IipsMinimumNodePatch)
 }
+
 
 # ----------------------------------------------------------------------------------------------
 # Command invocation
 # ----------------------------------------------------------------------------------------------
 <#
 .SYNOPSIS
+    Facts about a failed process creation, with no path, no arguments and no payload.
+
+.DESCRIPTION
+    `Process.Start()` throws `System.ComponentModel.Win32Exception` and the native code is the
+    only thing that distinguishes "the image is missing" from "access denied" from "invalid
+    command line". That code was previously discarded by a bare `catch { $started = $false }`,
+    which left the caller with an opaque PROCESS_START_FAILED and no evidence. It is reported
+    here as `win32=<code> (<category>)`, or `type=<ExceptionType>` when no native code exists.
+
+    Deliberately NOT included: the executable path, the argument line, the stdin payload, or the
+    exception message (a message can carry a path).
+#>
+function Get-IipsStartFailureDetail {
+    param(
+        [Parameter(Mandatory = $false)]
+        $ErrorRecord = $null
+    )
+
+    if ($null -eq $ErrorRecord) {
+        return 'the operating system reported no process (Process.Start() returned false)'
+    }
+
+    $exception = $ErrorRecord.Exception
+    if ($null -eq $exception) { return 'the failure carried no exception object' }
+    if ($null -ne $exception.InnerException) { $exception = $exception.InnerException }
+
+    $nativeProperty = $exception.PSObject.Properties['NativeErrorCode']
+    if ($null -ne $nativeProperty) {
+        $code = [int] $nativeProperty.Value
+        return ('win32={0} ({1})' -f $code, (Get-IipsWin32Reason -Code $code))
+    }
+
+    return ('type=' + $exception.GetType().Name)
+}
+
+<#
+.SYNOPSIS
+    A fixed category for the Win32 codes that process creation actually produces.
+#>
+<#
+.SYNOPSIS
+    The failure code of a caught runner exception, and nothing else.
+
+.DESCRIPTION
+    Reason codes are concatenated into NODE_TOOLCHAIN_NOT_RESOLVED messages, which must stay free
+    of paths and personal data. This whitelists the only two shapes the runner produces
+    (`PROCESS_X` and `PROCESS_X:win32=<n> (<category>)`) and returns `unknown` for anything else,
+    so no message text can reach the caller through this path.
+#>
+function Get-IipsFailureCode {
+    param(
+        [Parameter(Mandatory = $false)]
+        [string] $Message = ''
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Message)) { return 'unknown' }
+    $match = [regex]::Match($Message, '^(PROCESS_[A-Z_]+)(:\s*win32=\d+\s*\([a-z-]+\))?')
+    if (-not $match.Success) { return 'unknown' }
+    if (-not $match.Groups[2].Success) { return $match.Groups[1].Value }
+    return ($match.Groups[1].Value + ':' + ($match.Groups[2].Value -replace '^:\s*', ''))
+}
+
+function Get-IipsWin32Reason {
+    param(
+        [Parameter(Mandatory = $true)]
+        [int] $Code
+    )
+
+    if ($Code -eq 2) { return 'file-not-found' }
+    if ($Code -eq 3) { return 'path-not-found' }
+    if ($Code -eq 5) { return 'access-denied' }
+    if ($Code -eq 87) { return 'invalid-parameter' }
+    if ($Code -eq 193) { return 'not-a-valid-application' }
+    if ($Code -eq 206) { return 'filename-too-long' }
+    if ($Code -eq 267) { return 'invalid-directory' }
+    if ($Code -eq 740) { return 'elevation-required' }
+    return 'unclassified'
+}
+
+<#
+.SYNOPSIS
+    Runs a native executable with bounded execution and captures stdout and stderr SEPARATELY.
+
+.DESCRIPTION
+    PowerShell 5.1 compatible. `System.Diagnostics.Process` with UseShellExecute = $false is used
+    directly, never Start-Process -Wait and never `& $exe 2>&1 | ...`:
+
+    * Start-Process -Wait waits for the ENTIRE process tree and has no timeout. That is what hung
+      toolchain discovery at `[01-preconditions]`: a shim that leaves a grandchild behind blocks
+      the wait forever, and there is nothing to interrupt it.
+    * Under $ErrorActionPreference = 'Stop', merging stderr into the pipeline turns every stderr
+      line into an ErrorRecord and the first one terminates the caller.
+
+    Both streams are read ASYNCHRONOUSLY and BOTH reads start before the wait. Draining one stream
+    while the child fills the other is the classic pipe deadlock: a child that writes more than
+    one pipe buffer of stderr while stdout is being read blocks forever, and the reverse.
+
+    A child that exceeds its timeout is KILLED, and the failure is reported as PROCESS_TIMEOUT. A
+    child that cannot start is PROCESS_START_FAILED. Neither message carries the child's output,
+    its arguments, or the stdin payload: none of those may reach a log.
+
+    Resource disposal is explicit on both the success and the failure path. The repository forbids
+    `finally`, so the body is wrapped in try/catch and the process is disposed once afterwards.
+
+.PARAMETER StandardInput
+    Payload written to the child's stdin, which is then CLOSED so a child that reads to end-of-file
+    (the W-02 harness does exactly that) is released. Passing this parameter is the only way data
+    reaches a child: never argv, never a temporary file. The payload is never echoed, logged, or
+    placed in an exception message.
+
+.OUTPUTS
+    [pscustomobject] with ExitCode, StdOut, StdErr, StdErrByteLength, TimedOut, StdinFailed, DurationMs
+#>
+function Invoke-IipsProcess {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string] $FilePath,
+
+        [Parameter(Mandatory = $false)]
+        [string] $Arguments = '',
+
+        [Parameter(Mandatory = $false)]
+        [string] $WorkingDirectory = '',
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 600000)]
+        [int] $TimeoutMilliseconds = 15000,
+
+        [Parameter(Mandatory = $false)]
+        [AllowEmptyString()]
+        [string] $StandardInput = ''
+    )
+
+    if (-not (Test-Path -LiteralPath $FilePath -PathType Leaf)) {
+        throw 'PROCESS_EXECUTABLE_NOT_FOUND: the executable does not exist at the explicit path given.'
+    }
+
+    $wantsStdin = $PSBoundParameters.ContainsKey('StandardInput')
+
+    $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $startInfo.FileName = $FilePath
+    $startInfo.Arguments = $Arguments
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    $startInfo.RedirectStandardInput = $wantsStdin
+    if ($WorkingDirectory.Length -gt 0) { $startInfo.WorkingDirectory = $WorkingDirectory }
+
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $startInfo
+
+    $startedUtc = [DateTime]::UtcNow
+    $failure = $null
+    $result = $null
+    $stdinFailed = $false
+
+    try {
+        $started = $false
+        $startError = $null
+        try { $started = $process.Start() }
+        catch {
+            $started = $false
+            $startError = $_
+        }
+        if (-not $started) {
+            throw ('PROCESS_START_FAILED: {0}' -f (Get-IipsStartFailureDetail -ErrorRecord $startError))
+        }
+
+        # Begin BOTH reads immediately, before waiting. Waiting first can deadlock on a full pipe.
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+
+        if ($wantsStdin) {
+            try {
+                $process.StandardInput.Write($StandardInput)
+                $process.StandardInput.Close()
+            }
+            catch {
+                # The child may have exited before reading its stdin. That is recorded, not hidden:
+                # the exit code and the captured streams remain authoritative.
+                $stdinFailed = $true
+            }
+        }
+
+        $completed = $process.WaitForExit($TimeoutMilliseconds)
+        if (-not $completed) {
+            try {
+                $process.Kill()
+                $process.WaitForExit()
+            }
+            catch {
+                # Kill can fail if the child exited between the timeout and the kill. The timeout
+                # remains the primary failure.
+                $null = $_.Exception.Message
+            }
+            throw ('PROCESS_TIMEOUT: the child process exceeded {0} ms and was terminated.' -f $TimeoutMilliseconds)
+        }
+
+        # The child has exited, but a grandchild that inherited the pipe handles can keep a read
+        # open. Waiting for the reads without a bound would reintroduce exactly the hang this
+        # runner exists to remove, so completion is bounded too.
+        $stdoutReady = $stdoutTask.Wait(5000)
+        $stderrReady = $stderrTask.Wait(5000)
+        if (-not $stdoutReady -or -not $stderrReady) {
+            throw 'PROCESS_OUTPUT_INCOMPLETE: the child exited but its output pipes were still held open (a descendant process most likely inherited them).'
+        }
+
+        $stdout = [string] $stdoutTask.GetAwaiter().GetResult()
+        $stderr = [string] $stderrTask.GetAwaiter().GetResult()
+
+        $result = [pscustomobject]@{
+            ExitCode         = [int] $process.ExitCode
+            StdOut           = $stdout
+            StdErr           = $stderr
+            StdErrByteLength = [int] [System.Text.Encoding]::UTF8.GetByteCount($stderr)
+            TimedOut         = $false
+            StdinFailed      = $stdinFailed
+            DurationMs       = [int] (([DateTime]::UtcNow - $startedUtc).TotalMilliseconds)
+        }
+    }
+    catch {
+        $failure = $_
+    }
+
+    $process.Dispose()
+
+    if ($null -ne $failure) { throw $failure }
+    return $result
+}
+
+<#
+.SYNOPSIS
+    Quotes one argument vector for a Win32 command line (CommandLineToArgvW rules).
+
+.NOTES
+    Every backslash that precedes a quote is doubled, inner quotes are escaped, and the token is
+    wrapped in quotes when it contains whitespace or a quote. No secret is ever placed on a
+    command line by this repository; this exists so that PATHS with spaces survive intact.
+#>
+function Get-IipsQuotedArguments {
+    param(
+        [Parameter(Mandatory = $false)]
+        [string[]] $Arguments = @()
+    )
+
+    $tokens = New-Object System.Collections.Generic.List[string]
+    foreach ($argument in $Arguments) {
+        $token = [string] $argument
+        if ($token.Length -eq 0) {
+            $tokens.Add('""')
+            continue
+        }
+        if ($token -notmatch '[\s"]') {
+            $tokens.Add($token)
+            continue
+        }
+
+        $builder = New-Object System.Text.StringBuilder
+        [void] $builder.Append('"')
+        $backslashes = 0
+        foreach ($character in $token.ToCharArray()) {
+            if ($character -eq '\') {
+                $backslashes = $backslashes + 1
+                continue
+            }
+            if ($character -eq '"') {
+                [void] $builder.Append(('\' * (($backslashes * 2) + 1)))
+                [void] $builder.Append('"')
+                $backslashes = 0
+                continue
+            }
+            if ($backslashes -gt 0) {
+                [void] $builder.Append(('\' * $backslashes))
+                $backslashes = 0
+            }
+            [void] $builder.Append($character)
+        }
+        if ($backslashes -gt 0) { [void] $builder.Append(('\' * ($backslashes * 2))) }
+        [void] $builder.Append('"')
+        $tokens.Add($builder.ToString())
+    }
+
+    return ($tokens -join ' ')
+}
+
+<#
+.SYNOPSIS
+    Runs a .cmd / .bat shim through cmd.exe with bounded execution.
+
+.DESCRIPTION
+    A batch shim is not a valid CreateProcess target when UseShellExecute = $false, so it is
+    invoked as `cmd.exe /d /s /c "<shim>" <args>`. `/d` skips AutoRun commands and `/s` makes cmd
+    strip exactly the outer quotes, which is what allows a quoted shim path containing spaces.
+    This is the ONLY place a shim is started, and it is started by explicit absolute path.
+#>
+function Invoke-IipsCmdShim {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string] $ShimPath,
+
+        [Parameter(Mandatory = $false)]
+        [string[]] $Arguments = @(),
+
+        [Parameter(Mandatory = $false)]
+        [string] $WorkingDirectory = '',
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 600000)]
+        [int] $TimeoutMilliseconds = 15000
+    )
+
+    $cmdExe = Join-Path $env:SystemRoot 'System32\cmd.exe'
+    if (-not (Test-Path -LiteralPath $cmdExe -PathType Leaf)) {
+        $comspec = [string] $env:ComSpec
+        if ([string]::IsNullOrWhiteSpace($comspec)) {
+            throw 'CMD_EXE_NOT_FOUND: cmd.exe could only be located through SystemRoot or ComSpec, and neither is usable.'
+        }
+        $cmdExe = $comspec
+    }
+
+    $inner = '"' + $ShimPath + '"'
+    foreach ($argument in $Arguments) {
+        $inner = $inner + ' ' + (Get-IipsQuotedArguments -Arguments @([string] $argument))
+    }
+
+    $commandLine = '/d /s /c "' + $inner + '"'
+    return Invoke-IipsProcess -FilePath $cmdExe -Arguments $commandLine -WorkingDirectory $WorkingDirectory -TimeoutMilliseconds $TimeoutMilliseconds
+}
+
+<#
+.SYNOPSIS
     Runs a native executable by explicit path and returns its exit code with stdout and stderr
     captured SEPARATELY.
 
-.NOTES
-    WHY Start-Process WITH FILE REDIRECTION
+.DESCRIPTION
+    Thin compatibility wrapper over Invoke-IipsProcess: same bounded execution, same asynchronous
+    stream capture, same timeout kill. Nothing is written to a temporary file any more, so a child
+    that emits sensitive data cannot leave it on disk - a property the acceptance launcher depends
+    on for its stdin-only secret delivery.
 
-    The previous form was `& $exe @args 2>&1 | Out-String`. Under $ErrorActionPreference = 'Stop',
-    redirecting a native command's stderr into the PowerShell pipeline makes PowerShell wrap every
-    stderr line in an ErrorRecord, and the first one TERMINATES the caller. That is not theoretical:
-    `npm ci` writes progress and warnings to stderr as a matter of routine, and the fail-closed
-    harnesses write their diagnostics to stderr and exit non-zero BY DESIGN. Both were misreported
-    as script crashes on the real Windows host.
+    Kept under this name because every setup script calls it, and because its four-field result
+    (ExitCode / StdOut / StdErr / Combined) is the shape those scripts consume.
 
-    Start-Process with separate stdout and stderr files keeps native stderr entirely out of the
-    pipeline, so a non-zero exit code and a stderr diagnostic can be inspected as data.
-
-    Arguments containing spaces or quotes are individually quoted; two paths are never concatenated
-    into a single token.
+.PARAMETER TempRoot
+    Accepted for call-site compatibility only. No temporary files are created.
 #>
 function Invoke-IipsCapture {
     param(
-        [Parameter(Mandatory = $true)][string] $Executable,
-        [Parameter(Mandatory = $true)][string[]] $Arguments,
-        [Parameter(Mandatory = $false)][string] $WorkingDirectory = '',
-        [Parameter(Mandatory = $false)][string] $TempRoot = ''
+        [Parameter(Mandatory = $true)]
+        [string] $Executable,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $Arguments,
+
+        [Parameter(Mandatory = $false)]
+        [string] $WorkingDirectory = '',
+
+        [Parameter(Mandatory = $false)]
+        [string] $TempRoot = '',
+
+        [Parameter(Mandatory = $false)]
+        [ValidateRange(1, 600000)]
+        [int] $TimeoutMilliseconds = 600000
     )
 
-    if (-not (Test-Path -LiteralPath $Executable)) {
+    if (-not (Test-Path -LiteralPath $Executable -PathType Leaf)) {
         throw "executable not found at the explicit path '$Executable'. A bare command name is never resolved for IIPS setup."
     }
 
-    $tmp = $TempRoot
-    if ($tmp.Length -eq 0) { $tmp = Join-Path $env:TEMP 'iips-capture' }
-    if (-not (Test-Path -LiteralPath $tmp)) { New-Item -ItemType Directory -Path $tmp -Force | Out-Null }
+    $isBatch = $false
+    if ($Executable -match '\.(cmd|bat)$') { $isBatch = $true }
 
-    $stamp = (Get-Date -Format 'yyyyMMdd-HHmmss-fff') + '-' + ([System.Guid]::NewGuid().ToString('N').Substring(0, 8))
-    $outFile = Join-Path $tmp ("cap-$stamp-out.txt")
-    $errFile = Join-Path $tmp ("cap-$stamp-err.txt")
-
-    $tokens = New-Object System.Collections.Generic.List[string]
-    foreach ($a in $Arguments) {
-        $t = "$a"
-        if ($t -match '[\s"]') { $tokens.Add('"' + $t.Replace('"', '\"') + '"') }
-        if ($t -notmatch '[\s"]') { $tokens.Add($t) }
+    $captured = $null
+    if ($isBatch) {
+        $captured = Invoke-IipsCmdShim -ShimPath $Executable -Arguments $Arguments -WorkingDirectory $WorkingDirectory -TimeoutMilliseconds $TimeoutMilliseconds
+    }
+    if (-not $isBatch) {
+        $captured = Invoke-IipsProcess -FilePath $Executable -Arguments (Get-IipsQuotedArguments -Arguments $Arguments) -WorkingDirectory $WorkingDirectory -TimeoutMilliseconds $TimeoutMilliseconds
     }
 
-    $spParams = @{
-        FilePath               = $Executable
-        ArgumentList           = ($tokens -join ' ')
-        NoNewWindow            = $true
-        Wait                   = $true
-        PassThru               = $true
-        RedirectStandardOutput = $outFile
-        RedirectStandardError  = $errFile
-    }
-    if ($WorkingDirectory.Length -gt 0) { $spParams['WorkingDirectory'] = $WorkingDirectory }
-
-    $proc = Start-Process @spParams
-
-    $stdout = ''
-    $stderr = ''
-    if (Test-Path -LiteralPath $outFile) { $raw = Get-Content -LiteralPath $outFile -Raw; if ($null -ne $raw) { $stdout = $raw } }
-    if (Test-Path -LiteralPath $errFile) { $raw = Get-Content -LiteralPath $errFile -Raw; if ($null -ne $raw) { $stderr = $raw } }
-    Remove-Item -LiteralPath $outFile -Force -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $errFile -Force -ErrorAction SilentlyContinue
-
-    $exitCode = -1
-    if ($null -ne $proc.ExitCode) { $exitCode = [int]$proc.ExitCode }
+    $stdout = [string] $captured.StdOut
+    $stderr = [string] $captured.StdErr
 
     return [pscustomobject]@{
-        ExitCode = $exitCode
+        ExitCode = [int] $captured.ExitCode
         StdOut   = $stdout.Trim()
         StdErr   = $stderr.Trim()
-        Combined = ($stdout + "`n" + $stderr).Trim()
+        Combined = (($stdout + "`n" + $stderr).Trim())
     }
 }
 

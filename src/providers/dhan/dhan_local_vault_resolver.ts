@@ -4,23 +4,15 @@
  *
  * Governed under: AD-01..AD-18 / AD-CHARTER-2026-01 / AD-17 (Zero-Plaintext) / WS-A P03 (SecretRef)
  *
- * HOST VAULT INSPECTION FINDING (2026-11-08):
- *  Neither IPD (`src/security/secret_ref.ts`, `package.json`) nor the governed Windows
- *  workstation setup (`windows-setup/*`) includes an already-supported Windows secure vault
- *  integration (no Windows Credential Manager / Advapi32 CredReadW binding, no DPAPI
- *  CryptUnprotectData carrier contract, no PowerShell SecretStore integration, and no cloud
- *  or enterprise vault SDK).
- *
- *  Per Stage 1 governance:
- *   - No unsupported vault technology is silently selected or guessed.
- *   - The exact IPD-internal host-vault adapter contract (`LocalHostVaultSecretBackend`) and
- *     fail-closed `LocalHostVaultDhanCredentialResolver` are defined here while preserving
- *     the existing P03 `SecretRef` contract verbatim.
- *   - The default backend (`DisabledWindowsHostVaultBackend`) keeps live Dhan credential
- *     resolution explicitly DISABLED and fails closed until an approved Windows host-vault
- *     integration is provisioned under Program Authority governance.
- *   - Exclusively owned by IPD server-side code: NOT exported on `./dhan-server` and NEVER
- *     included in browser closures.
+ * HOST VAULT HISTORY (2026-11-08 Stage 1 → restored W-01..W-04):
+ *  Stage 1 found no approved Windows vault integration. A later governed lineage added
+ *  `WindowsDpapiHostVaultBackend` (user-scope DPAPI carriers) and the W-03 opt-in selector.
+ *  This module remains the internal adapter contract and fail-closed resolver:
+ *   - No backend is silently selected or guessed. `DisabledWindowsHostVaultBackend` remains
+ *     the default until an authorized operator explicitly selects and provisions DPAPI.
+ *   - A live backend must pass an awaited probe; a readiness summary alone is not enough.
+ *   - P03 `SecretRef` validation and per-request secret resolution remain enforced.
+ *   - Exclusively IPD server-side: NOT exported on `./dhan-server` or included in browsers.
  */
 
 import {
@@ -36,13 +28,23 @@ import {
   isDhanProductionEnvironment,
 } from './dhan_config.js';
 import { DhanProductionNotAuthorizedError } from './dhan_api_client.js';
+import { describeUtcTimestampRejection, parseStrictUtcTimestamp } from './dhan_utc_timestamp.js';
+import type { DpapiCarrierFailureReason } from './dhan_dpapi_carrier.js';
 
+/**
+ * Distinct, scrubbed resolution outcomes.
+ *
+ * The original Stage-1 reasons remain; W-02 adds the carrier and child-process reasons so
+ * a DPAPI failure can be diagnosed without ever exposing a path, a value or child output.
+ */
 export type DhanVaultFailureReason =
   | 'EXPIRED'
   | 'REVOKED'
   | 'INVALID_SECRET_REF'
   | 'VERSION_MISMATCH'
-  | 'BACKEND_FAILURE';
+  | 'BACKEND_FAILURE'
+  | 'CHILD_PROCESS_FAILURE'
+  | DpapiCarrierFailureReason;
 
 export type DhanVaultMappedCode =
   | 'CREDENTIALS_EXPIRED'
@@ -92,19 +94,29 @@ export interface LocalHostVaultBackendReadiness {
 }
 
 /**
- * Governed adapter contract that a future approved Windows local secure vault
- * integration must implement in IPD.
+ * Governed adapter contract implemented by the opt-in Windows DPAPI backend and by
+ * controlled synthetic backends used for offline tests.
  */
 export interface LocalHostVaultSecretBackend {
   readonly backendId: string;
   describeReadiness(): LocalHostVaultBackendReadiness;
+  /**
+   * Optional asynchronous readiness probe (W-02).
+   *
+   * A backend whose readiness requires I/O — a DPAPI probe read, an owner-only DACL
+   * check — cannot answer synchronously. When this is present the resolver awaits it
+   * instead of trusting the synchronous verdict, so live resolution is gated on real
+   * evidence. Backends that omit it (including `DisabledWindowsHostVaultBackend`) keep
+   * the Stage-1 behaviour exactly.
+   */
+  probeReadiness?(ref?: SecretRef): Promise<LocalHostVaultBackendReadiness>;
   readSecret(ref: SecretRef, asOfUtc: string): Promise<LocalHostVaultSecretRecord | null>;
 }
 
 export const UNPROVISIONED_WINDOWS_VAULT_BACKEND_ID = 'UNPROVISIONED_WINDOWS_HOST_VAULT';
 
 export const WINDOWS_HOST_VAULT_PREREQUISITE =
-  'No approved Windows local host secure vault integration exists in IPD; requires Program Authority selection and provisioning of a concrete Windows secret-store adapter (e.g. DPAPI / Windows Credential Manager) before live Dhan credential resolution can be enabled.';
+  'The disabled host-vault backend is selected; live credential resolution is off. An authorized operator must explicitly select and provision the Windows DPAPI backend on an approved host before live Dhan credential resolution can be enabled.';
 
 /**
  * Default backend on the current host environment.
@@ -163,6 +175,33 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     return this.backend.describeReadiness();
   }
 
+  /**
+   * Awaited, evidence-based readiness (W-03).
+   *
+   * `describeReadiness()` is the synchronous Stage-1 verdict: for a backend that needs a probe
+   * (`WindowsDpapiHostVaultBackend`) it is intentionally `false` until `probeReadiness()` has run.
+   * Startup must therefore await this method before it reports readiness or enables vendor egress,
+   * otherwise a provisioned host would always start with egress disabled.
+   *
+   * Never throws. A probe that fails for any reason yields an unready verdict with a fixed,
+   * non-locating summary, so a broken backend cannot crash startup or accidentally enable egress.
+   */
+  public async probeBackendReadiness(): Promise<LocalHostVaultBackendReadiness> {
+    if (this.backend.probeReadiness === undefined) {
+      return this.backend.describeReadiness();
+    }
+    try {
+      return await this.backend.probeReadiness();
+    } catch {
+      return {
+        backendId: this.backend.backendId,
+        liveResolutionSupported: false,
+        prerequisiteSummary:
+          'Host vault readiness probe failed; live credential resolution is disabled.',
+      };
+    }
+  }
+
   private validateRefPreFlight(ref: SecretRef, nowMs: number): void {
     const check = validateSecretRef(ref);
     if (!check.isValid) {
@@ -190,15 +229,16 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     }
 
     if (ref.expiresAt !== undefined) {
-      const expMs = Date.parse(ref.expiresAt);
-      if (Number.isNaN(expMs)) {
+      // Strict: an explicit timezone is required, so expiry means the same thing on every host.
+      const expiry = parseStrictUtcTimestamp(ref.expiresAt);
+      if (!expiry.ok) {
         throw new DhanVaultResolutionError(
           'INVALID_SECRET_REF',
           'CONFIGURATION_INCOMPLETE',
-          'Dhan SecretRef expiresAt is not a valid ISO-8601 UTC timestamp'
+          `Dhan SecretRef expiresAt ${describeUtcTimestampRejection(expiry.reason)}`
         );
       }
-      if (expMs <= nowMs) {
+      if (expiry.epochMs <= nowMs) {
         throw new DhanVaultResolutionError(
           'EXPIRED',
           'CREDENTIALS_EXPIRED',
@@ -232,15 +272,15 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     }
 
     if (record.expiresAt !== undefined) {
-      const expMs = Date.parse(record.expiresAt);
-      if (Number.isNaN(expMs)) {
+      const expiry = parseStrictUtcTimestamp(record.expiresAt);
+      if (!expiry.ok) {
         throw new DhanVaultResolutionError(
           'INVALID_SECRET_REF',
           'CONFIGURATION_INCOMPLETE',
-          'Host vault secret entry expiresAt is not a valid ISO-8601 UTC timestamp'
+          `Host vault secret entry expiresAt ${describeUtcTimestampRejection(expiry.reason)}`
         );
       }
-      if (expMs <= nowMs) {
+      if (expiry.epochMs <= nowMs) {
         throw new DhanVaultResolutionError(
           'EXPIRED',
           'CREDENTIALS_EXPIRED',
@@ -285,7 +325,12 @@ export class LocalHostVaultDhanCredentialResolver implements DhanCredentialResol
     this.validateRefPreFlight(config.clientIdRef, nowMs);
     this.validateRefPreFlight(config.accessTokenRef, nowMs);
 
-    if (!this.backend.describeReadiness().liveResolutionSupported) {
+    // Prefer the asynchronous, evidence-based probe when the backend offers one (W-02);
+    // otherwise the Stage-1 synchronous verdict is authoritative.
+    const readiness = this.backend.probeReadiness
+      ? await this.backend.probeReadiness()
+      : this.backend.describeReadiness();
+    if (!readiness.liveResolutionSupported) {
       // Live credential resolution remains disabled until an approved host-vault backend is provisioned.
       return null;
     }

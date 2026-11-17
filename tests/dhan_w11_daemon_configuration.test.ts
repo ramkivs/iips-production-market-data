@@ -4,18 +4,17 @@
  * Verifies (deterministic, offline, synthetic fixtures only — zero live Dhan calls):
  *  W11-01: Exact documentation-to-implementation parity across W-11 & reconciled IPD docs
  *          (all DHAN_ENV_KEYS, daemon env keys, defaults, all 9 MARKET_DATA_ROUTES, VaultProvider
- *          & SecretRefStatus enums, IRR separate non-alias env names, candidate-only selector
- *          absence on main, and AD-17 / D-7 secret-scanner hygiene).
- *  W11-02: Daemon environment defaults (127.0.0.1:8791, UNPROVISIONED_WINDOWS_HOST_VAULT,
- *          liveCredentialResolutionSupported=false, vendorEgressMode=DISABLED_PRE_ACCESS,
- *          4,680 qualified P7 mappings) and strict non-alias isolation against IRR consumer
- *          variables and candidate-only environment variables.
+ *          & SecretRefStatus enums, IRR separate non-alias env names, restored DPAPI selector
+ *          and two-key-path convention, and AD-17 / D-7 secret-scanner hygiene).
+ *  W11-02: Fail-closed daemon defaults (127.0.0.1:8791, disabled vault selector,
+ *          UNPROVISIONED_WINDOWS_HOST_VAULT, no vendor egress, 4,680 qualified P7 mappings)
+ *          and strict non-alias isolation against IRR consumer variables.
  *  W11-03: Fail-closed startup validation across host (loopback-only), port (1..65535),
- *          transport bearer token, CLI-argument prohibition (no argv reflection), and
- *          production-mode refusal (NODE_ENV / IIPS_DEPLOYMENT_ENV).
- *  W11-04: Complete SecretRef configuration, status, provider-enum, and expiry startup matrix
- *          (missing paths, malformed non-vault URI, unsupported WINDOWS_DPAPI provider on main,
- *          EXPIRED/REVOKED status, unparseable expiresAt, and past expiresAt).
+ *          transport bearer token, backend-selector allow-list, CLI-argument prohibition,
+ *          and production-mode refusal (NODE_ENV / IIPS_DEPLOYMENT_ENV).
+ *  W11-04: Complete SecretRef configuration, status, provider-enum, and strict UTC expiry
+ *          startup matrix (missing paths, malformed URI, valid/invalid WINDOWS_DPAPI pair,
+ *          EXPIRED/REVOKED status, unparseable/zone-less/past expiresAt).
  *  W11-05: Full 9-route authenticated loopback HTTP compatibility (health v2, diagnostics v1,
  *          connection/verify v1 LOCAL_ONLY & LIVE_PROBE, freshness D01 & D02, quotes, historical,
  *          and offline P4 identity search/resolve/qualify), bearer 401 enforcement, and clean
@@ -30,7 +29,14 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { buildD114SecurityIdentity } from '../src/contracts/types.js';
 import { scanTextForSecrets } from '../src/security/scanner.js';
-import type { SecretRefStatus, VaultProvider } from '../src/security/secret_ref.js';
+import {
+  DHAN_ACCESS_TOKEN_KEY_PATH,
+  DHAN_CLIENT_ID_KEY_PATH,
+  VAULT_PROVIDERS,
+  WINDOWS_DPAPI_VAULT_PROVIDER,
+  type SecretRefStatus,
+  type VaultProvider,
+} from '../src/security/secret_ref.js';
 import {
   DEFAULT_DAEMON_SHUTDOWN_TIMEOUT_MS,
   DEFAULT_MARKET_DATA_DAEMON_HOST,
@@ -42,6 +48,10 @@ import {
   DHAN_ENV_KEYS,
   DHAN_HEALTH_CONTRACT_VERSION,
   DHAN_VERIFICATION_CONTRACT_VERSION,
+  DHAN_VAULT_BACKEND_DISABLED,
+  DHAN_VAULT_BACKEND_ENV,
+  DHAN_VAULT_BACKEND_WINDOWS_DPAPI,
+  DHAN_VAULT_BACKEND_SELECTORS,
   MARKET_DATA_DAEMON_HOST_ENV,
   MARKET_DATA_DAEMON_PORT_ENV,
   MARKET_DATA_MAX_REQUEST_BYTES,
@@ -71,7 +81,7 @@ const SYNTHETIC_VAULT_PATHS_ENV: Readonly<Record<string, string>> = {
 };
 
 describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentation Consistency', () => {
-  it('W11-01: W-11 documentation matches authoritative IPD main constants, routes, defaults, and AD-17/D-7 hygiene', () => {
+  it('W11-01: W-11 documentation matches restored DPAPI and IPD constants, routes, defaults, and AD-17/D-7 hygiene', () => {
     const repoRoot = process.cwd();
     const w11DocPath = resolve(
       repoRoot,
@@ -105,6 +115,25 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
     assert.equal(DHAN_DIAGNOSTICS_CONTRACT_VERSION, 1);
     assert.equal(DHAN_VERIFICATION_CONTRACT_VERSION, 1);
     assert.equal(DHAN_AUTH_LATCH_THRESHOLD, 2);
+    assert.equal(DHAN_VAULT_BACKEND_ENV, 'IIPS_DHAN_VAULT_BACKEND');
+    assert.equal(DHAN_VAULT_BACKEND_DISABLED, 'disabled');
+    assert.equal(DHAN_VAULT_BACKEND_WINDOWS_DPAPI, 'windows-dpapi');
+    assert.deepEqual(DHAN_VAULT_BACKEND_SELECTORS, ['disabled', 'windows-dpapi']);
+    assert.equal(WINDOWS_DPAPI_VAULT_PROVIDER, 'WINDOWS_DPAPI');
+    assert.equal(DHAN_CLIENT_ID_KEY_PATH, 'vault://dhan/client-id');
+    assert.equal(DHAN_ACCESS_TOKEN_KEY_PATH, 'vault://dhan/access-token');
+    for (const setting of [
+      DHAN_VAULT_BACKEND_ENV,
+      DHAN_VAULT_BACKEND_DISABLED,
+      DHAN_VAULT_BACKEND_WINDOWS_DPAPI,
+      'DHAN_CLIENT_ID_KEY_PATH',
+      'DHAN_ACCESS_TOKEN_KEY_PATH',
+      'dhan:credential',
+      'parseStrictUtcTimestamp',
+      'validateTransportToken',
+    ]) {
+      assert.ok(w11Doc.includes(setting), `W-11 doc must describe restored ${setting}`);
+    }
 
     // Every DHAN_ENV_KEYS entry (both key property name and env-var name) must be documented.
     for (const [propName, envName] of Object.entries(DHAN_ENV_KEYS)) {
@@ -162,7 +191,9 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       'HASHICORP_VAULT',
       'AZURE_KEY_VAULT',
       'TEST_ENCLAVE',
+      'WINDOWS_DPAPI',
     ];
+    assert.deepEqual(VAULT_PROVIDERS, vaultProviders);
     for (const vp of vaultProviders) {
       assert.ok(w11Doc.includes(`'${vp}'`), `W-11 doc must list VaultProvider '${vp}'`);
     }
@@ -194,17 +225,15 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       assert.ok(w11Doc.includes(diagField), `W-11 doc must document ServiceDiagnostics.${diagField}`);
     }
 
-    // Verify diverged candidate-only env names do NOT exist anywhere in src/providers/dhan/*.ts.
+    // The selector is now a deliberate restoration; only the unadmitted retry knob stays absent.
+    const daemonSource = readFileSync(resolve(repoRoot, 'src/providers/dhan/dhan_local_daemon.ts'), 'utf8');
+    assert.ok(daemonSource.includes("export const DHAN_VAULT_BACKEND_ENV = 'IIPS_DHAN_VAULT_BACKEND'"));
     const dhanSrcDir = resolve(repoRoot, 'src/providers/dhan');
     for (const file of readdirSync(dhanSrcDir).filter((f) => f.endsWith('.ts'))) {
       const content = readFileSync(resolve(dhanSrcDir, file), 'utf8');
       assert.ok(
-        !content.includes('IIPS_DHAN_VAULT_BACKEND'),
-        `src/providers/dhan/${file} must not contain candidate-only IIPS_DHAN_VAULT_BACKEND`
-      );
-      assert.ok(
         !content.includes('IIPS_DHAN_QUOTE_MAX_ATTEMPTS'),
-        `src/providers/dhan/${file} must not contain candidate-only IIPS_DHAN_QUOTE_MAX_ATTEMPTS`
+        `src/providers/dhan/${file} must not introduce IIPS_DHAN_QUOTE_MAX_ATTEMPTS`
       );
     }
 
@@ -226,21 +255,19 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
     }
   });
 
-  it('W11-02: daemon defaults and non-alias isolation against IRR consumer and candidate-only env vars', async () => {
+  it('W11-02: disabled backend is the fail-closed default; IRR consumer env vars are not aliases', async () => {
     const manifestRegistry = loadGovernedP7InstrumentRegistry();
     assert.equal(manifestRegistry.size, 4680);
 
     // Port env defaults to 8791 when unset or blank; host defaults to 127.0.0.1 when unset.
-    // Inject IRR + candidate variables into env to prove IPD daemon ignores both sets.
+    // Inject IRR-owned variables to prove they are not IPD daemon aliases.
     const pollutedEnv: Record<string, string> = {
       [MARKET_DATA_TRANSPORT_TOKEN_ENV]: SYNTHETIC_TRANSPORT_BEARER,
       [MARKET_DATA_DAEMON_PORT_ENV]: '   ',
-      // IRR-owned consumer variables (must be ignored by IPD daemon):
       IIPS_MARKET_DATA_TRANSPORT_URL: 'http://0.0.0.0:9999',
       IIPS_MARKET_DATA_BASE_URL: 'http://0.0.0.0:9998',
       IIPS_MARKET_DATA_TIMEOUT_MS: '1',
-      // Diverged candidate-only variables (must be ignored by IPD main daemon):
-      IIPS_DHAN_VAULT_BACKEND: 'windows-dpapi',
+      // Only this unadmitted candidate setting remains ignored by IPD:
       IIPS_DHAN_QUOTE_MAX_ATTEMPTS: '99',
     };
 
@@ -258,7 +285,9 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       assert.equal(started.diagnostics.boundAddress, '127.0.0.1');
       assert.ok(started.diagnostics.port > 0 && started.diagnostics.port <= 65535);
       assert.equal(started.diagnostics.providerReadiness, 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE');
+      assert.equal(started.diagnostics.vaultBackendSelector, 'disabled');
       assert.equal(started.diagnostics.vaultBackendId, 'UNPROVISIONED_WINDOWS_HOST_VAULT');
+      assert.equal(started.diagnostics.vaultBackendReadiness, 'NOT_READY');
       assert.equal(started.diagnostics.liveCredentialResolutionSupported, false);
       assert.equal(started.diagnostics.vendorEgressMode, 'DISABLED_PRE_ACCESS');
       assert.equal(started.diagnostics.qualifiedMappingsLoaded, 4680);
@@ -268,6 +297,8 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       const line = formatDaemonStartupLine(started.diagnostics);
       assert.ok(line.includes('providerReadiness=PRE_ACCESS_CREDENTIALS_UNAVAILABLE'));
       assert.ok(line.includes('vaultBackend=UNPROVISIONED_WINDOWS_HOST_VAULT'));
+      assert.ok(line.includes('vaultBackendSelector=disabled'));
+      assert.ok(line.includes('vaultBackendReadiness=NOT_READY'));
       assert.ok(line.includes('liveCredentialResolution=false'));
       assert.ok(line.includes('vendorEgress=DISABLED_PRE_ACCESS'));
       assert.ok(line.includes('qualifiedMappings=4680'));
@@ -295,6 +326,21 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
         assert.equal(res.phase, 'validate');
         assert.equal(res.code, 'NON_LOOPBACK_HOST_REFUSED');
       }
+    }
+
+    // A bad vault selector is refused before config, vault or socket work; its value is never echoed.
+    const refusedBackend = await startMarketDataDaemon({
+      env: {
+        [MARKET_DATA_TRANSPORT_TOKEN_ENV]: SYNTHETIC_TRANSPORT_BEARER,
+        [DHAN_VAULT_BACKEND_ENV]: 'untrusted-location-or-secret',
+      },
+      port: 0,
+    });
+    assert.equal(refusedBackend.ok, false);
+    if (!refusedBackend.ok) {
+      assert.equal(refusedBackend.phase, 'validate');
+      assert.equal(refusedBackend.code, 'VAULT_BACKEND_NOT_ALLOWED');
+      assert.ok(!refusedBackend.error.includes('untrusted-location-or-secret'));
     }
 
     // Port validation via IIPS_MARKET_DATA_DAEMON_PORT (note '0' is refused via env!)
@@ -371,7 +417,38 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       assert.equal(validCfg.config.timeoutMs, 5000);
     }
 
-    // 3. Invalid timeout strings fall back to 5000 ms
+    // 3. The restored WINDOWS_DPAPI provider admits only the governed separate key paths.
+    const windowsEnv = {
+      [DHAN_ENV_KEYS.clientIdSecretPath]: DHAN_CLIENT_ID_KEY_PATH,
+      [DHAN_ENV_KEYS.accessTokenSecretPath]: DHAN_ACCESS_TOKEN_KEY_PATH,
+      [DHAN_ENV_KEYS.secretVaultProvider]: WINDOWS_DPAPI_VAULT_PROVIDER,
+      [DHAN_ENV_KEYS.accessTokenExpiresAt]: '2026-11-17T15:00:00+05:30',
+    };
+    const windowsConfig = resolveDhanProviderConfig(windowsEnv, NOW_DATE);
+    assert.equal(windowsConfig.ok, true);
+    if (windowsConfig.ok) {
+      assert.equal(windowsConfig.config.clientIdRef?.keyPath, DHAN_CLIENT_ID_KEY_PATH);
+      assert.equal(windowsConfig.config.accessTokenRef?.keyPath, DHAN_ACCESS_TOKEN_KEY_PATH);
+      assert.equal(windowsConfig.config.accessTokenRef?.vaultProvider, 'WINDOWS_DPAPI');
+    }
+    // A configured Windows provider never enables egress with the default disabled selector.
+    const disabledWindows = await startMarketDataDaemon({
+      env: { ...windowsEnv, [MARKET_DATA_TRANSPORT_TOKEN_ENV]: SYNTHETIC_TRANSPORT_BEARER },
+      port: 0,
+      now: () => NOW_DATE,
+    });
+    assert.equal(disabledWindows.ok, true);
+    if (disabledWindows.ok) {
+      try {
+        assert.equal(disabledWindows.diagnostics.vaultBackendSelector, 'disabled');
+        assert.equal(disabledWindows.diagnostics.vendorEgressMode, 'DISABLED_PRE_ACCESS');
+        assert.equal(disabledWindows.diagnostics.liveCredentialResolutionSupported, false);
+      } finally {
+        await disabledWindows.handle.shutdown();
+      }
+    }
+
+    // 4. Invalid timeout strings fall back to 5000 ms
     for (const rawTimeout of ['', '0', '-250', 'not-a-number']) {
       const cfg = resolveDhanProviderConfig(
         { ...SYNTHETIC_VAULT_PATHS_ENV, [DHAN_ENV_KEYS.timeoutMs]: rawTimeout },
@@ -381,7 +458,7 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       if (cfg.ok) assert.equal(cfg.config.timeoutMs, 5000);
     }
 
-    // 4. CONFIGURATION_INCOMPLETE cases refuse daemon startup at phase 'configure'
+    // 5. CONFIGURATION_INCOMPLETE cases refuse daemon startup at phase 'configure'
     const incompleteCases: ReadonlyArray<{ label: string; env: Record<string, string> }> = [
       {
         label: 'non-vault URI on clientIdSecretPath',
@@ -391,10 +468,24 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
         },
       },
       {
-        label: 'candidate-only WINDOWS_DPAPI VaultProvider on main',
+        label: 'unknown VaultProvider',
         env: {
           ...SYNTHETIC_VAULT_PATHS_ENV,
-          [DHAN_ENV_KEYS.secretVaultProvider]: 'WINDOWS_DPAPI',
+          [DHAN_ENV_KEYS.secretVaultProvider]: 'NOT_AN_ADMITTED_PROVIDER',
+        },
+      },
+      {
+        label: 'WINDOWS_DPAPI with the wrong role-specific key path',
+        env: {
+          ...windowsEnv,
+          [DHAN_ENV_KEYS.clientIdSecretPath]: 'vault://dhan/not-client-id',
+        },
+      },
+      {
+        label: 'WINDOWS_DPAPI with shared key path',
+        env: {
+          ...windowsEnv,
+          [DHAN_ENV_KEYS.accessTokenSecretPath]: DHAN_CLIENT_ID_KEY_PATH,
         },
       },
       {
@@ -409,6 +500,13 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
         env: {
           ...SYNTHETIC_VAULT_PATHS_ENV,
           [DHAN_ENV_KEYS.accessTokenExpiresAt]: 'not-a-timestamp',
+        },
+      },
+      {
+        label: 'zone-less accessTokenExpiresAt (host-local ambiguity)',
+        env: {
+          ...windowsEnv,
+          [DHAN_ENV_KEYS.accessTokenExpiresAt]: '2026-11-17T09:30:00',
         },
       },
     ];
@@ -429,7 +527,7 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       }
     }
 
-    // 5. CREDENTIALS_EXPIRED cases (EXPIRED/REVOKED status or past expiresAt) allow loopback
+    // 6. CREDENTIALS_EXPIRED cases (EXPIRED/REVOKED status or past expiresAt) allow loopback
     //    daemon startup with vendorEgressMode=DISABLED_PRE_ACCESS and providerState=EXPIRED.
     const expiredCases: ReadonlyArray<{ label: string; env: Record<string, string> }> = [
       {
@@ -684,6 +782,9 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       'runMarketDataDaemonCli',
       'LocalHostVaultDhanCredentialResolver',
       'DisabledWindowsHostVaultBackend',
+      'WindowsDpapiHostVaultBackend',
+      'provisionDhanCredential',
+      'runDhanCredentialStoreCli',
       'DhanServerHttpsTransport',
     ]) {
       assert.ok(

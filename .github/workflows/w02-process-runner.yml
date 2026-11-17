@@ -1,0 +1,67 @@
+name: W-02 process runner (PowerShell)
+
+# The bounded process runner in windows-setup/Iips-Common.ps1 is the vehicle for every child
+# process in W-02, and its contract can only be proven by executing it. This job executes it on
+# both platforms that can run PowerShell, so the runtime case (W-02-INF-05) is actually run in CI
+# instead of being skipped: Windows PowerShell 5.1 is the host the launcher targets, and `pwsh`
+# on Linux is what the development environment has.
+#
+# The job is targeted on purpose: it builds and runs the process-runner contracts only, never the
+# full suite, and it never touches DPAPI/ACL acceptance (that stays a manual, Windows-only run).
+
+on:
+  pull_request:
+    paths:
+      - windows-setup/**
+      - windows-acceptance/**
+      - tests/w02_acceptance_process.test.ts
+      - tests/w02_acceptance_harness.test.ts
+      - tests/fixtures/fake_dpapi_child.mjs
+      - .github/workflows/w02-process-runner.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runner:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - run: npm ci --ignore-scripts
+
+      - run: npm run build:tsc
+
+      - name: Structural contracts (platform independent)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          python3 windows-setup/.validate-scripts.py windows-setup
+          python3 windows-setup/.validate-scripts.py windows-acceptance
+
+      - name: Real runner on this host's PowerShell
+        shell: bash
+        env:
+          IIPS_POWERSHELL_RUNTIME_TESTS: '1'
+        run: |
+          set +e
+          node --test dist/tests/w02_acceptance_process.test.js > runtime.log 2>&1
+          code=$?
+          cat runtime.log
+          cat runtime.log >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" -ne 0 ]; then
+            # Surface the failing case as an annotation: run logs are not always retrievable, and a
+            # sanitized PROCESS_START_FAILED with its win32 code is the evidence needed to fix it.
+            node --input-type=module -e 'import fs from "node:fs"; const lines=fs.readFileSync("runtime.log","utf8").split("\n"); for(let i=0;i<lines.length;i++) if(lines[i].includes("not ok")) { const detail=lines.slice(Math.max(0,i-2),i+40).join("\n").replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A"); console.log("::error title=Process runner failure::"+detail); }'
+          fi
+          exit "$code"

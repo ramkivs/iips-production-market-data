@@ -32,6 +32,7 @@ import { DhanFailure, dhanFailure } from './dhan_failures.js';
 import { DhanInstrumentResolutionService } from './dhan_instrument_mapping_integration.js';
 import { DhanInstrumentRegistry } from './dhan_instrument_map.js';
 import { DhanMarketDataSource } from './dhan_market_data_source.js';
+import { DHAN_PROVIDER_STATES, type DhanProviderState } from './dhan_provider_state.js';
 import {
   isGovernedProviderFailureCategory,
   type DhanAuthOutcome,
@@ -43,6 +44,7 @@ import {
   type ProviderVerificationResult,
   type VerifyProviderConnectionOptions,
 } from './dhan_provider_state_recorder.js';
+import { parseStrictUtcTimestamp } from './dhan_utc_timestamp.js';
 import {
   DhanBoundedCache,
   DhanConcurrencyLimiter,
@@ -140,16 +142,8 @@ export function validateDhanServiceHealth(input: unknown): ServiceHealth | null 
 export const DHAN_DIAGNOSTICS_CONTRACT_VERSION = 1 as const;
 export type DhanDiagnosticsContractVersion = typeof DHAN_DIAGNOSTICS_CONTRACT_VERSION;
 
-/** Normative D-7 §2 eight-state provider vocabulary (no aliases, no extras). */
-export type DhanProviderState =
-  | 'UNCONFIGURED'
-  | 'CONFIGURED'
-  | 'CREDENTIALS_RESOLVED'
-  | 'AUTHENTICATED'
-  | 'OPERATIONAL'
-  | 'EXPIRED'
-  | 'DEGRADED'
-  | 'UNAVAILABLE';
+/** Normative D-7 §2 eight-state provider vocabulary (re-exported from dhan_provider_state). */
+export type { DhanProviderState };
 
 /** Enumerated D-7 §4.1 credential-resolution status codes (never locations or URIs). */
 export type DhanCredentialResolutionOutcome =
@@ -202,16 +196,7 @@ export interface ServiceDiagnostics {
   readonly quoteCache: DhanQuoteCacheDiagnostics;
 }
 
-const VALID_PROVIDER_STATES: ReadonlySet<DhanProviderState> = new Set([
-  'UNCONFIGURED',
-  'CONFIGURED',
-  'CREDENTIALS_RESOLVED',
-  'AUTHENTICATED',
-  'OPERATIONAL',
-  'EXPIRED',
-  'DEGRADED',
-  'UNAVAILABLE',
-]);
+const VALID_PROVIDER_STATES: ReadonlySet<DhanProviderState> = new Set(DHAN_PROVIDER_STATES);
 
 const VALID_CREDENTIAL_RESOLUTION_OUTCOMES: ReadonlySet<DhanCredentialResolutionOutcome> = new Set([
   'UNCONFIGURED',
@@ -976,12 +961,12 @@ export class DhanMarketDataService {
           break;
         }
         if (ref.expiresAt !== undefined) {
-          const expMs = Date.parse(ref.expiresAt);
-          if (Number.isNaN(expMs)) {
+          const expiry = parseStrictUtcTimestamp(ref.expiresAt);
+          if (!expiry.ok) {
             staticAnomaly = 'CONFIGURATION_INCOMPLETE';
             break;
           }
-          if (expMs <= nowMs) {
+          if (expiry.epochMs <= nowMs) {
             staticAnomaly = 'CREDENTIALS_EXPIRED';
             break;
           }
