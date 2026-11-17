@@ -128,8 +128,10 @@ export {
   DHAN_HEALTH_CONTRACT_VERSION,
   DHAN_HEALTH_CONTRACT_LEGACY_VERSION,
   DHAN_DIAGNOSTICS_CONTRACT_VERSION,
+  DHAN_VERIFICATION_CONTRACT_VERSION,
   validateDhanServiceHealth,
   validateDhanServiceDiagnostics,
+  validateDhanConnectionVerification,
 } from './dhan_market_data_service.js';
 export type {
   QuoteRequest,
@@ -138,10 +140,12 @@ export type {
   HistoricalResponse,
   ServiceHealth,
   ServiceDiagnostics,
+  ServiceConnectionVerification,
   DhanProviderState,
   DhanCredentialResolutionOutcome,
   DhanDiagnosticsRequestCounters,
   DhanDiagnosticsContractVersion,
+  DhanVerificationContractVersion,
   DhanLiveProviderConnectivity,
   DhanProviderQualification,
   DhanHealthContractVersion,
@@ -162,6 +166,7 @@ export type {
   MarketDataTransportHistoricalOutcome,
   MarketDataTransportHealthOutcome,
   MarketDataTransportDiagnosticsOutcome,
+  MarketDataTransportVerifyOutcome,
 } from './dhan_market_data_http.js';
 
 // Provider-neutral consumption contract (what downstream apps actually use).

@@ -14,10 +14,12 @@
  *     every missing/invalid credential, authentication, timeout, validation or
  *     transport failure and never opens direct vendor egress.
  *
- * Routes (all JSON, all POST except health):
- *   POST /v1/quotes      { companyId, securityId: 'ISIN:<isin>:<series>', exchangeSegment? } -> D01 envelope or error
- *   POST /v1/historical  { companyId, exchangeSegment?, isin?, interval, fromDate, toDate } -> D02 result or error
- *   GET  /v1/health      -> ServiceHealth (never implies live connectivity)
+ * Routes (all JSON, authenticated):
+ *   POST /v1/quotes            { companyId, securityId: 'ISIN:<isin>:<series>', exchangeSegment? } -> D01 envelope or error
+ *   POST /v1/historical        { companyId, exchangeSegment?, isin?, interval, fromDate, toDate } -> D02 result or error
+ *   GET  /v1/health            -> ServiceHealth (observational; never triggers vendor call)
+ *   GET  /v1/diagnostics       -> ServiceDiagnostics (observational; D-7 §4.1 MAY list only)
+ *   POST /v1/connection/verify { mode?: 'LIVE_PROBE' | 'LOCAL_ONLY' } -> ServiceConnectionVerification (single-shot W-08 verify)
  *
  * Auth: `Authorization: Bearer <token>` where the token comes from env
  *   IIPS_MARKET_DATA_TRANSPORT_TOKEN. The transport credential is separate
@@ -39,12 +41,19 @@ import { buildD114SecurityIdentity, isD114SecurityId, isD114SecurityIdentity } f
 import { isDhanProductionEnvironment, type DhanEnvSource } from './dhan_config.js';
 import { DhanFailureCode } from './dhan_failures.js';
 import { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
+import type {
+  DhanVerificationMode,
+  VerifyProviderConnectionOptions,
+} from './dhan_provider_state_recorder.js';
 import {
   DhanMarketDataService,
+  buildServiceConnectionVerification,
+  validateDhanConnectionVerification,
   validateDhanServiceDiagnostics,
   validateDhanServiceHealth,
   QuoteRequest,
   HistoricalServiceRequest,
+  ServiceConnectionVerification,
   ServiceDiagnostics,
   ServiceHealth,
 } from './dhan_market_data_service.js';
@@ -55,6 +64,7 @@ export const MARKET_DATA_ROUTES = {
   historical: '/v1/historical',
   health: '/v1/health',
   diagnostics: '/v1/diagnostics',
+  verifyConnection: '/v1/connection/verify',
   freshness: '/v1/freshness',
   instrumentSearch: '/v1/instruments/search',
   identityResolve: '/v1/identity/resolve',
@@ -97,6 +107,10 @@ export type MarketDataTransportHealthOutcome =
 
 export type MarketDataTransportDiagnosticsOutcome =
   | ({ readonly ok: true } & ServiceDiagnostics)
+  | { readonly ok: false; readonly failure: MarketDataTransportFailure };
+
+export type MarketDataTransportVerifyOutcome =
+  | ({ readonly ok: true } & ServiceConnectionVerification)
   | { readonly ok: false; readonly failure: MarketDataTransportFailure };
 
 export interface MarketDataTransportClientOptions {
@@ -236,6 +250,73 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
           sendError(res, 400, 'MALFORMED_REQUEST', 'freshness requires a valid domain and exact quote scope'); return;
         }
         sendJson(res, 200, service.getFreshness({ domain, companyId, exchangeSegment: segment, securityIdentity: identity })); return;
+      }
+
+      if (path === MARKET_DATA_ROUTES.verifyConnection && req.method === 'POST') {
+        if ((req.url?.length ?? 0) > 2048 || url.searchParams.size > 0) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'verifyConnection accepts no query parameters');
+          return;
+        }
+
+        const rawVerifyBody = await readBody(req, MARKET_DATA_MAX_REQUEST_BYTES);
+        if (typeof rawVerifyBody !== 'string') {
+          sendError(res, 413, 'REQUEST_TOO_LARGE', 'request body exceeds the configured limit');
+          return;
+        }
+
+        let verifyParsed: unknown = {};
+        if (rawVerifyBody.trim() !== '') {
+          try {
+            verifyParsed = JSON.parse(rawVerifyBody);
+          } catch {
+            sendError(res, 400, 'MALFORMED_REQUEST', 'request body is not valid JSON');
+            return;
+          }
+        }
+
+        if (typeof verifyParsed !== 'object' || verifyParsed === null || Array.isArray(verifyParsed)) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'request body must be an object');
+          return;
+        }
+
+        const verifyBody = verifyParsed as Record<string, unknown>;
+        if (Object.keys(verifyBody).some((key) => key !== 'mode')) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'unexpected request field');
+          return;
+        }
+        if (
+          verifyBody.mode !== undefined &&
+          verifyBody.mode !== 'LIVE_PROBE' &&
+          verifyBody.mode !== 'LOCAL_ONLY'
+        ) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'mode must be LIVE_PROBE or LOCAL_ONLY');
+          return;
+        }
+
+        const mode: DhanVerificationMode =
+          verifyBody.mode === 'LOCAL_ONLY' ? 'LOCAL_ONLY' : 'LIVE_PROBE';
+        let verifyTimer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          const verifyOutcome = await Promise.race([
+            (async () => {
+              const verification = await service.verifyConnection({ mode });
+              const diagnostics = await service.getDiagnostics();
+              return buildServiceConnectionVerification(mode, verification, diagnostics);
+            })(),
+            new Promise<'TIMEOUT'>((resolvePromise) => {
+              verifyTimer = setTimeout(() => resolvePromise('TIMEOUT'), timeoutMs);
+              verifyTimer.unref?.();
+            }),
+          ]);
+          if (verifyOutcome === 'TIMEOUT') {
+            sendError(res, 504, 'REQUEST_TIMEOUT', 'request exceeded the bounded execution time');
+            return;
+          }
+          sendJson(res, 200, verifyOutcome);
+          return;
+        } finally {
+          if (verifyTimer !== undefined) clearTimeout(verifyTimer);
+        }
       }
 
       const identityRoute = path === MARKET_DATA_ROUTES.instrumentSearch || path === MARKET_DATA_ROUTES.identityResolve || path === MARKET_DATA_ROUTES.identityQualify;
@@ -667,6 +748,69 @@ export class MarketDataTransportClient {
       failure: {
         code: 'MALFORMED_RESPONSE',
         message: 'market-data transport returned a malformed diagnostics payload',
+        httpStatus: call.status,
+      },
+    };
+  }
+
+  /**
+   * Explicit operator-initiated single-shot connection verification over loopback
+   * (`POST /v1/connection/verify`, D-7 §3 / W-08 / W-10).
+   * Issues at most ONE HTTP request, performs no automatic retry, and validates
+   * the returned D-7 verification payload fail-closed.
+   */
+  public async verifyConnection(
+    options?: VerifyProviderConnectionOptions
+  ): Promise<MarketDataTransportVerifyOutcome> {
+    if (options !== undefined) {
+      if (typeof options !== 'object' || options === null || Array.isArray(options)) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message: 'verifyConnection options must be an object when provided',
+          },
+        };
+      }
+      const rawOpts = options as Record<string, unknown>;
+      if (Object.keys(rawOpts).some((k) => k !== 'mode')) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message: 'verifyConnection options allow only optional mode',
+          },
+        };
+      }
+      if (
+        rawOpts.mode !== undefined &&
+        rawOpts.mode !== 'LIVE_PROBE' &&
+        rawOpts.mode !== 'LOCAL_ONLY'
+      ) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message: 'verifyConnection mode must be LIVE_PROBE or LOCAL_ONLY',
+          },
+        };
+      }
+    }
+
+    const body = options?.mode !== undefined ? { mode: options.mode } : {};
+    const call = await this.requestJson('POST', MARKET_DATA_ROUTES.verifyConnection, body);
+    if (!call.ok) {
+      return { ok: false, failure: call.failure };
+    }
+
+    const payload = validateDhanConnectionVerification(call.json);
+    if (payload) return { ok: true, ...payload };
+
+    return {
+      ok: false,
+      failure: {
+        code: 'MALFORMED_RESPONSE',
+        message: 'market-data transport returned a malformed connection verification payload',
         httpStatus: call.status,
       },
     };
