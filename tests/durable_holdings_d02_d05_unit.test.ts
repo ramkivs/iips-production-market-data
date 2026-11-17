@@ -30,6 +30,9 @@ import { GATE3_MIGRATIONS } from '../src/ipc/entrypoint.js';
 import {
   resolveActiveBinding,
   resolveActiveHoldingsBinding,
+  resolveD02PortfolioAccess,
+  resolveD02PortfolioAccessInCurrentTransaction,
+  D02RelationshipAbsentError,
   HOLDINGS_CANONICAL_OWNER_ID,
   HOLDINGS_TENANT_ID,
   BindingAbsentError,
@@ -52,7 +55,12 @@ import type { BrokerObservationResolver } from '../src/identity/broker_observati
 
 const HOLDINGS_OWNER = HOLDINGS_CANONICAL_OWNER_ID;
 const HOLDINGS_TENANT = HOLDINGS_TENANT_ID;
-const S1_OWNER = 'ipd-owner-ramki-personal';
+// Approved S1 identity values (architecture decision, D01–D02).
+const S1_PRINCIPAL_LABEL = 'ramki-personal-local';
+const S1_BINDING_ID = 'c5808abaffd072d6401ce63ad86c6ac0';
+const S1_MEMBERSHIP_ID = 'd25dcc5370100b00766efc5166f65cf3';
+const S1_MEMBERSHIP_OWNER = 'ipd-owner-ramki-personal';
+const S1_OWNER = S1_MEMBERSHIP_OWNER;
 const S1_TENANT = 'ipd-personal-local';
 
 const root = mkdtempSync(join(tmpdir(), 'iips-d02-d05-unit-'));
@@ -73,6 +81,7 @@ function seedBinding(
     bindingId?: string;
     membershipId?: string;
     status?: 'ACTIVE' | 'REVOKED';
+    principalLabel?: string;
   } = {},
 ): ActiveOwner {
   const {
@@ -81,12 +90,13 @@ function seedBinding(
     bindingId = 'fx-b-1',
     membershipId = 'fx-m-1',
     status = 'ACTIVE',
+    principalLabel = 'fixture-operator',
   } = options;
   const now = new Date().toISOString();
   db.prepare(
     `INSERT INTO local_principal_bindings (binding_id, principal_label, status, created_at, updated_at, revoked_at)
-     VALUES (?, 'fixture-operator', ?, ?, ?, NULL)`,
-  ).run(bindingId, status, now, now);
+     VALUES (?, ?, ?, ?, ?, NULL)`,
+  ).run(bindingId, principalLabel, status, now, now);
   db.prepare(
     `INSERT INTO local_principal_memberships (membership_id, binding_id, tenant_id, canonical_owner_id, status, created_at, updated_at, revoked_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, NULL)`,
@@ -236,6 +246,227 @@ describe('D02 — holdings binding contract (direct resolution)', () => {
   it('HOLDINGS constants match the approved D02 pair', () => {
     assert.equal(HOLDINGS_CANONICAL_OWNER_ID, 'owner-4dc756b3');
     assert.equal(HOLDINGS_TENANT_ID, 'ipd-personal-local');
+  });
+});
+
+describe('D02 — relationship resolver (fail-closed until separately provisioned)', () => {
+  function seedRelationshipTables(db: DatabaseSync): void {
+    const now = new Date().toISOString();
+    // Owner registry: approved D02 target on the retained technical tenant.
+    db.prepare(
+      `INSERT INTO portfolio_owner_registry (tenant_id, portfolio_owner_id, owner_kind, status, created_at, updated_at, revoked_at)
+       VALUES (?, ?, 'PERSONAL_OVERALL', 'ACTIVE', ?, ?, NULL)`,
+    ).run(HOLDINGS_TENANT, HOLDINGS_OWNER, now, now);
+    // Relationship: S1 membership -> D02 overall owner.
+    db.prepare(
+      `INSERT INTO personal_identity_owner_relationships
+       (relationship_id, membership_id, membership_tenant_id, owner_tenant_id, portfolio_owner_id,
+        relationship_type, status, authority_record_ref, created_at, updated_at, revoked_at)
+       VALUES (?, ?, ?, ?, ?, 'OVERALL_PERSONAL_PORTFOLIO_OWNER', 'ACTIVE',
+        'docs/integration/IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md#d04', ?, ?, NULL)`,
+    ).run(
+      'fx-r-1',
+      S1_MEMBERSHIP_ID,
+      S1_TENANT,
+      HOLDINGS_TENANT,
+      HOLDINGS_OWNER,
+      now,
+      now,
+    );
+  }
+
+  function seedRelationshipSchema(db: DatabaseSync): void {
+    const now = new Date().toISOString();
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS portfolio_owner_registry (
+        tenant_id TEXT NOT NULL,
+        portfolio_owner_id TEXT NOT NULL,
+        owner_kind TEXT NOT NULL CHECK (owner_kind = 'PERSONAL_OVERALL'),
+        status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'REVOKED')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        revoked_at TEXT,
+        PRIMARY KEY (tenant_id, portfolio_owner_id),
+        CHECK ((status = 'ACTIVE' AND revoked_at IS NULL) OR
+               (status = 'REVOKED' AND revoked_at IS NOT NULL))
+      )`,
+    ).run();
+    db.prepare(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_membership_id_tenant
+       ON local_principal_memberships (membership_id, tenant_id)`,
+    ).run();
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS personal_identity_owner_relationships (
+        relationship_id TEXT NOT NULL PRIMARY KEY,
+        membership_id TEXT NOT NULL,
+        membership_tenant_id TEXT NOT NULL,
+        owner_tenant_id TEXT NOT NULL,
+        portfolio_owner_id TEXT NOT NULL,
+        relationship_type TEXT NOT NULL CHECK (relationship_type = 'OVERALL_PERSONAL_PORTFOLIO_OWNER'),
+        status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'REVOKED')),
+        authority_record_ref TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        revoked_at TEXT,
+        CHECK (membership_tenant_id = owner_tenant_id),
+        CHECK ((status = 'ACTIVE' AND revoked_at IS NULL) OR
+               (status = 'REVOKED' AND revoked_at IS NOT NULL)),
+        FOREIGN KEY (membership_id, membership_tenant_id)
+          REFERENCES local_principal_memberships (membership_id, tenant_id) ON DELETE RESTRICT,
+        FOREIGN KEY (owner_tenant_id, portfolio_owner_id)
+          REFERENCES portfolio_owner_registry (tenant_id, portfolio_owner_id) ON DELETE RESTRICT
+      )`,
+    ).run();
+    db.prepare(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_active_relationship_per_membership
+       ON personal_identity_owner_relationships (membership_id, relationship_type) WHERE status = 'ACTIVE'`,
+    ).run();
+    db.prepare(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_active_membership_per_overall_owner
+       ON personal_identity_owner_relationships (owner_tenant_id, portfolio_owner_id, relationship_type) WHERE status = 'ACTIVE'`,
+    ).run();
+  }
+
+  function seedS1Tuple(db: DatabaseSync): void {
+    seedBinding(db, {
+      owner: S1_MEMBERSHIP_OWNER,
+      tenant: S1_TENANT,
+      bindingId: S1_BINDING_ID,
+      membershipId: S1_MEMBERSHIP_ID,
+      principalLabel: S1_PRINCIPAL_LABEL,
+    });
+  }
+
+  it('fails closed when relationship tables are not provisioned', () => {
+    // The current schema has no personal_identity_owner_relationships or
+    // portfolio_owner_registry tables. Resolution must fail closed, not
+    // fabricate a D02 context from the S1 tuple or the D02 constant.
+    seedS1Tuple(db!);
+    assert.throws(() => resolveD02PortfolioAccess(db!), D02RelationshipAbsentError);
+  });
+
+  it('resolves the distinct D02 portfolio-owner context when relationship exists', () => {
+    seedRelationshipSchema(db!);
+    seedS1Tuple(db!);
+    seedRelationshipTables(db!);
+    const access = resolveD02PortfolioAccess(db!);
+    assert.equal(access.principalLabel, S1_PRINCIPAL_LABEL);
+    assert.equal(access.bindingId, S1_BINDING_ID);
+    assert.equal(access.membershipId, S1_MEMBERSHIP_ID);
+    assert.equal(access.membershipOwnerId, S1_MEMBERSHIP_OWNER);
+    assert.equal(access.tenantId, S1_TENANT);
+    assert.equal(access.relationshipId, 'fx-r-1');
+    assert.equal(access.portfolioOwnerId, HOLDINGS_OWNER);
+    // Membership owner and portfolio owner remain strictly distinct.
+    assert.notEqual(access.membershipOwnerId, access.portfolioOwnerId);
+  });
+
+  it('fails closed when S1 binding ID does not match the approved tuple', () => {
+    seedRelationshipSchema(db!);
+    seedBinding(db!, { owner: S1_MEMBERSHIP_OWNER, tenant: S1_TENANT });
+    assert.throws(() => resolveD02PortfolioAccess(db!), D02RelationshipAbsentError);
+  });
+
+  it('fails closed when S1 principal label does not match', () => {
+    seedRelationshipSchema(db!);
+    seedBinding(db!, {
+      owner: S1_MEMBERSHIP_OWNER,
+      tenant: S1_TENANT,
+      bindingId: S1_BINDING_ID,
+      membershipId: S1_MEMBERSHIP_ID,
+    });
+    // Corrupt the principal label after seeding.
+    const now = new Date().toISOString();
+    db!.prepare(
+      `UPDATE local_principal_bindings SET principal_label = 'wrong-principal' WHERE binding_id = ?`,
+    ).run(S1_BINDING_ID);
+    assert.throws(() => resolveD02PortfolioAccess(db!), D02RelationshipAbsentError);
+  });
+
+  it('fails closed when no ACTIVE relationship exists for the membership', () => {
+    seedRelationshipSchema(db!);
+    seedS1Tuple(db!);
+    // Owner registry exists but no relationship row.
+    const now = new Date().toISOString();
+    db!.prepare(
+      `INSERT INTO portfolio_owner_registry (tenant_id, portfolio_owner_id, owner_kind, status, created_at, updated_at, revoked_at)
+       VALUES (?, ?, 'PERSONAL_OVERALL', 'ACTIVE', ?, ?, NULL)`,
+    ).run(S1_TENANT, HOLDINGS_OWNER, now, now);
+    assert.throws(() => resolveD02PortfolioAccess(db!), D02RelationshipAbsentError);
+  });
+
+  it('fails closed when the relationship is revoked', () => {
+    seedRelationshipSchema(db!);
+    seedS1Tuple(db!);
+    seedRelationshipTables(db!);
+    const now = new Date().toISOString();
+    db!.prepare(
+      `UPDATE personal_identity_owner_relationships SET status = 'REVOKED', revoked_at = ? WHERE relationship_id = 'fx-r-1'`,
+    ).run(now);
+    assert.throws(() => resolveD02PortfolioAccess(db!), D02RelationshipAbsentError);
+  });
+
+  it('fails closed when the owner registry is REVOKED', () => {
+    seedRelationshipSchema(db!);
+    seedS1Tuple(db!);
+    seedRelationshipTables(db!);
+    const now = new Date().toISOString();
+    db!.prepare(
+      `UPDATE portfolio_owner_registry SET status = 'REVOKED', revoked_at = ? WHERE tenant_id = ? AND portfolio_owner_id = ?`,
+    ).run(now, S1_TENANT, HOLDINGS_OWNER);
+    assert.throws(() => resolveD02PortfolioAccess(db!), D02RelationshipAbsentError);
+  });
+
+  it('fails closed when the relationship names a wrong portfolio owner', () => {
+    seedRelationshipSchema(db!);
+    seedS1Tuple(db!);
+    const now = new Date().toISOString();
+    db!.prepare(
+      `INSERT INTO portfolio_owner_registry (tenant_id, portfolio_owner_id, owner_kind, status, created_at, updated_at, revoked_at)
+       VALUES (?, ?, 'PERSONAL_OVERALL', 'ACTIVE', ?, ?, NULL)`,
+    ).run(S1_TENANT, 'wrong-owner-12345678', now, now);
+    db!.prepare(
+      `INSERT INTO personal_identity_owner_relationships
+       (relationship_id, membership_id, membership_tenant_id, owner_tenant_id, portfolio_owner_id,
+        relationship_type, status, authority_record_ref, created_at, updated_at, revoked_at)
+       VALUES ('fx-r-2', ?, ?, ?, ?, 'OVERALL_PERSONAL_PORTFOLIO_OWNER', 'ACTIVE',
+        'docs/integration/IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md#d04', ?, ?, NULL)`,
+    ).run(S1_MEMBERSHIP_ID, S1_TENANT, S1_TENANT, 'wrong-owner-12345678', now, now);
+    assert.throws(() => resolveD02PortfolioAccess(db!), D02RelationshipAbsentError);
+  });
+
+  it('fails closed when more than one ACTIVE relationship exists', () => {
+    seedRelationshipSchema(db!);
+    seedS1Tuple(db!);
+    seedRelationshipTables(db!);
+    const now = new Date().toISOString();
+    // Temporarily drop the partial unique index to simulate a corrupted or
+    // legacy database where the storage-level guard is absent. The resolver's
+    // cardinality check is defense in depth and must still fail closed.
+    db!.prepare(`DROP INDEX IF EXISTS uq_active_relationship_per_membership`).run();
+    // Second owner registry entry for a different owner.
+    db!.prepare(
+      `INSERT INTO portfolio_owner_registry (tenant_id, portfolio_owner_id, owner_kind, status, created_at, updated_at, revoked_at)
+       VALUES (?, ?, 'PERSONAL_OVERALL', 'ACTIVE', ?, ?, NULL)`,
+    ).run(S1_TENANT, 'owner-second-12345678', now, now);
+    // Second active relationship for the same membership.
+    db!.prepare(
+      `INSERT INTO personal_identity_owner_relationships
+       (relationship_id, membership_id, membership_tenant_id, owner_tenant_id, portfolio_owner_id,
+        relationship_type, status, authority_record_ref, created_at, updated_at, revoked_at)
+       VALUES ('fx-r-4', ?, ?, ?, ?, 'OVERALL_PERSONAL_PORTFOLIO_OWNER', 'ACTIVE',
+        'docs/integration/IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md#d04', ?, ?, NULL)`,
+    ).run(S1_MEMBERSHIP_ID, S1_TENANT, S1_TENANT, 'owner-second-12345678', now, now);
+    assert.throws(() => resolveD02PortfolioAccess(db!), D02RelationshipAbsentError);
+  });
+
+  it('resolveD02PortfolioAccessInCurrentTransaction requires an active transaction', () => {
+    seedRelationshipSchema(db!);
+    seedS1Tuple(db!);
+    assert.throws(() =>
+      resolveD02PortfolioAccessInCurrentTransaction(db!),
+      /requires an active transaction/,
+    );
   });
 });
 
