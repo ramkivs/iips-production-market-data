@@ -63,48 +63,6 @@ The product determination explicitly left the identity contract and technical ma
 - **Technical recommendation — APPROVED (D03):** Use composite tenant-scoped FKs, parent unique indexes created first, `RESTRICT` deletes and explicit tenant equality. Resolver checks owner registry and membership/binding statuses because an FK cannot enforce ACTIVE state. This records the proposed D03 default only; DDL validation and full schema approval remain pending.
 - **Risk / S1 effect / approval:** Composite parent keys and supported SQLite behavior require disposable validation; no S1 data change is needed. **D03 Level C decision: APPROVED.** No migration is authorized.
 
-### D04 — Relationship multiplicity and active uniqueness
-
-- **What / why:** Decide whether one S1 membership may have multiple active overall-owner relationships and whether one overall owner may be linked to multiple active memberships. This is an explicit single-user model choice.
-- **Alternatives and consequences:** (a) one active relationship per membership/type and one active membership per tenant/owner/type; (b) permit multiple memberships per owner for multiple devices/principals; (c) allow multiple active owners for a membership. (b)/(c) need different identity and authorization semantics and can make owner resolution ambiguous.
-- **Technical recommendation — NOT APPROVED:** Keep both partial unique indexes enforcing one-to-one active linkage for this local single-user scope. Multiple historical REVOKED rows remain allowed.
-- **Risk / S1 effect / approval:** This intentionally blocks future multi-device or multi-principal use until a new authority-approved design. It does not alter current S1 values. **Level C approval requested; scope expansion requires a new Level B/C decision, not an ad-hoc index relaxation.**
-
-### D05 — Owner registry lifecycle and revocation
-
-- **What / why:** Decide whether owner-registry entries can be revoked, whether revocation is terminal, and what happens to active relationships pointing at a revoked owner. FKs prove existence, not active authorization.
-- **Alternatives and consequences:** (a) terminal REVOKED state and atomically revoke all active relationships with audit; (b) leave active relationships in place but make every resolver reject them; (c) allow owner reactivation or silent relationship reactivation. (b) leaves confusing stale rows; (c) weakens revocation history.
-- **Technical recommendation — NOT APPROVED:** Registry revocation is terminal for that identity; one transaction marks the owner and its active relationships revoked and appends audit events. Every access also checks both states. Re-establishment requires renewed authority and a new relationship ID; do not silently reactivate.
-- **Risk / S1 effect / approval:** Recovery from mistaken revocation requires a new explicit authority path; S1 itself remains untouched. **Level C approval requested.**
-
-### D06 — Relationship/source IDs, authority reference and audit event
-
-- **What / why:** Decide ID format/generation, collision response, authority-reference form, and which actor/reason/audit fields are mandatory. IDs and audit records are evidence and lifecycle controls, not arbitrary labels.
-- **Alternatives and consequences:** (a) canonical UUIDv4 with NOT NULL/format checks, cryptographic generation after authorization, collision abort; (b) derive IDs from S1/source/account values, risking leakage/correlation and deterministic collisions; (c) application-only format checks. Authority reference could be a canonical IPD record plus content digest, or an authority-defined immutable catalogue.
-- **Technical recommendation — NOT APPROVED:** Opaque canonical lowercase UUIDv4; DB-level NOT NULL and check constraints; collision abort/transaction rollback; non-empty canonical authority record reference with digest. Append-only event records action, prior/new state, membership/binding/tenant, owner/tenant, authority reference, UTC time, actor reference and reason code—never credentials or account tokens. Do not invent actor identity or reason vocabulary.
-- **Risk / S1 effect / approval:** SQLite CHECK support and actor evidence source remain to validate/define; no ID is generated now. **Level C approval requested for exact fields, reference, actor source and reason taxonomy.**
-
-### D07 — Portfolio-to-owner registry FK versus complete access facade
-
-- **What / why:** Current portfolios do not FK to the proposed owner registry. Decide whether the production D02 boundary is a private capability-gated facade or a schema rebuild adding a portfolio-to-registry FK.
-- **Alternatives and consequences:** (a) make the private transaction-bound facade the only production-facing store API and prove no dispatcher can call raw owner-taking methods; (b) add a schema-level FK, potentially requiring table rebuild/compatibility work; (c) retain today's raw `OwnerRef` access, which leaves an internal bypass.
-- **Technical recommendation — NOT APPROVED:** Adopt (a) only if architecture/import-graph tests prove every D02 read/write path is behind the capability; otherwise require (b) before implementation. Never accept (c).
-- **Risk / S1 effect / approval:** Facade completeness is an implementation risk; a schema change has migration/compatibility risk. Direct P1 remains on its generic S1 path. **Level C approval requested for the boundary and fallback; no code or migration authority follows.**
-
-### D08 — D02 resolver and authorization contract
-
-- **What / why:** Decide how the relationship becomes a D02 owner context, what exact checks are mandatory, which IDs are derived versus request-controlled, and refusal behavior. This prevents request data or a constant from selecting the owner.
-- **Alternatives and consequences:** (a) resolve fresh from the sole active S1 tuple, relationship and active owner registry; return a distinct D02 context; (b) accept owner/relationship IDs from IPC or cache the result; (c) change generic `ActiveOwner` globally. (b)/(c) create spoofing/race or Direct P1 regression risk.
-- **Technical recommendation — NOT APPROVED:** D02-only context derived solely from verified DB rows; all SQL predicates include resolved tenant, D02 owner, exact portfolio and revision/status; absent, duplicate, revoked, malformed, cross-tenant or foreign context yields sanitized no-data/no-effect refusal. No IPC-supplied owner/relationship.
-- **Risk / S1 effect / approval:** Every consumer path must be inventoried; fail-closed behavior can temporarily make D02 unavailable. S1/Direct P1 must remain byte-for-byte semantically unchanged. **Level C approval requested.**
-
-### D09 — Transaction boundaries, nested work and concurrency
-
-- **What / why:** Decide how validation remains consistent with the read or mutation, and who owns the DB connection/transaction. Separate relation-resolution and data queries allow revocation races.
-- **Alternatives and consequences:** (a) same-connection read snapshot; writes use `BEGIN IMMEDIATE` from relation resolution through authorization and all writes; (b) resolve/commit then query separately; (c) open nested independent transactions/connections. (b)/(c) permit time-of-check/time-of-use races or partial writes.
-- **Technical recommendation — NOT APPROVED:** One wrapper owns the transaction; resolver and data query share the same snapshot/connection. A write validates, authorizes, writes source/portfolio/link rows and commits atomically; errors roll back all. Nested operations reuse the context/savepoint; they cannot commit the outer transaction or open another connection.
-- **Risk / S1 effect / approval:** Locking/concurrency and transaction API need synthetic tests. Keep the existing generic resolver behavior for Direct P1. **Level C approval requested; no implementation is authorized.**
-
 ### D10 — Provider taxonomy, normalization and catalog governance
 
 - **What / why:** Decide whether source providers are a controlled catalog or arbitrary strings, which codes are initially recognized, who can add/revoke a code, and how adapter aliases map to a canonical code.
@@ -258,7 +216,71 @@ The five D5 acceptance components were reconciled against the verified Windows-h
 
 Do not infer implementation or provisioning authority from inventory evidence. Inventory completion does not constitute D5 acceptance, schema approval, implementation authorization, provisioning/migration authorization, or D6 authorization.
 
-data
+## Authority Reconciliation — D02 Relationship Resolver Implementation (2026-11-16)
+
+This section records the reconciliation of the newly added D02 relationship resolver code
+in `src/persistence/binding.ts` against the governing authority records. It is an
+evidence-backed assessment, not a PA decision.
+
+### Previously authorized code and behavior
+
+**Governing provision:** Original D02/D03/D05 engineering act
+(IIPS-V3-PA-D02-D03-D05-ENGINEERING-2026-11-06-01, blob cea7fed5618ed08683cf9d12d22b0a6e02c557f4,
+5-file envelope).
+
+| Element | Authorized scope | Governing provision |
+|---------|-----------------|---------------------|
+| File envelope | `src/ipc/protocol.ts`, `src/ipc/dispatch.ts`, `src/persistence/binding.ts`, `src/persistence/portfolio_store.ts`, `src/persistence/brokerImportPersistence.ts` | Engineering act §2 (file envelope) |
+| Activity | Local non-production IPD engineering and isolated synthetic testing | Engineering act |
+| Purpose | Approved v2/owner/snapshot contract | Engineering act |
+| Test fixtures | Synthetic disposable fixture binding creation for tests only | Engineering act |
+| Status | Not revoked by later PENDING statuses | Decision package D21 section |
+
+**Previously authorized code in `binding.ts`:** `resolveActiveBinding`, `resolveActiveBindingInCurrentTransaction`, `resolveActiveHoldingsBinding`, `resolveActiveHoldingsBindingInCurrentTransaction`, `HOLDINGS_CANONICAL_OWNER_ID`, `HOLDINGS_TENANT_ID`, `BindingAbsentError`, `BindingInvalidError`, Direct P1 generic resolver behavior — all unchanged.
+
+### Newly introduced resolver behavior
+
+| Element | Description | Authority status |
+|---------|-------------|-----------------|
+| `D02RelationshipAbsentError` | New error class for fail-closed D02 relationship resolution | New code in authorized file envelope |
+| `ResolvedD02PortfolioAccess` | New interface with distinct `membershipOwnerId`/`portfolioOwnerId` | New code in authorized file envelope |
+| `resolveD02PortfolioAccess(db)` | Opens own BEGIN IMMEDIATE; validates S1 tuple + relationship + owner registry; fails closed | Implements D08 resolver contract (Level C PENDING) |
+| `resolveD02PortfolioAccessInCurrentTransaction(db)` | Caller-held transaction variant; requires active transaction | Implements D08/D09 contract (Level C PENDING) |
+| Relationship/owner-registry schema | NOT created — tables do not exist in current schema | No DDL or migration authored |
+| Relationship row provisioning | NONE — resolver always fails closed on current schema | Not provisioned; D22 NOT AUTHORIZED |
+
+### Overlap with the approved engineering envelope
+
+**In scope:**
+- The resolver code lives in `src/persistence/binding.ts`, which is in the authorized file envelope.
+- It is local non-production IPD engineering (fail-closed read-only resolution).
+- It creates no tables, inserts no rows, modifies no data.
+- The 12 resolver tests use synthetic disposable fixtures in temp directories only.
+- Direct P1 behavior is byte-for-byte unchanged.
+
+**Outside scope:**
+- The resolver implements the D08 resolver contract (fresh resolution from S1 tuple + relationship + active owner registry), which depends on Level C decisions D04–D09 that remain PENDING.
+- D21 implementation authority for the new S1-to-D02 relationship is NOT GRANTED.
+- D22 operational provisioning/migration is NOT AUTHORIZED.
+
+### Authority-scope deviation (requires disposition)
+
+**Finding:** The D02 relationship resolver code added to `src/persistence/binding.ts` implements D08 resolver behavior that depends on Level C decisions (D04–D09) which remain PENDING, and D21 implementation authority is NOT GRANTED. While the code resides in the authorized file envelope and is fail-closed (no provisioning), it implements behavior whose governing design decisions have not been approved at Level C.
+
+**Required disposition:** Program Authority must either:
+1. **Approve the code as within existing authority** — if PA determines the fail-closed, no-provisioning resolver code is covered by the existing engineering act's "local non-production IPD engineering and isolated synthetic testing" authorization for binding.ts; or
+2. **Require Level C approval first** — if PA determines the D08 resolver contract implementation requires separate Level C approval before the code can remain; or
+3. **Direct removal or modification** — if PA determines the code exceeds the authorized envelope.
+
+**Code disposition:** The code and tests are preserved as evidence. No deletion or rewrite is performed by this reconciliation. The resolver remains fail-closed and unprovisioned regardless of disposition.
+
+### Decisions NOT affected by this deviation
+
+- D5 remains BLOCKED; D6 remains NOT STARTED.
+- D21 remains NOT GRANTED; D22 remains NOT AUTHORIZED.
+- Level C remains PENDING; mutating Level E remains NOT AUTHORIZED.
+- No relationship row, owner record, or schema change exists or is created by this code.
+
 ## D04–D20 Technical Resolution and Implementation Evidence
 
 This section records the complete technical resolution for decisions D04–D20, including the
