@@ -282,7 +282,7 @@ The five D5 acceptance components were reconciled against the verified Windows-h
 |---|---|---|---|---|---|---|
 | **D5-T1** | Approved mapping: D01–D03 relationship direction (S1 preserved, separate explicit relationship to D02 owner `owner-4dc756b3`) | D01–D03 APPROVED (2026-11-15); architectural direction APPROVED; active S1 tuple confirmed (`binding c5808abaffd072d6401ce63ad86c6ac0`, membership `d25dcc5370100b00766efc5166f65cf3`, `canonical_owner_id = ipd-owner-ramki-personal`) | Decision package D01–D03; approval record; Q04a/Q04b | PASS | D01–D03 approved as recorded; S1 identity established and preserved | Relationship not provisioned (zero `owner-4dc756b3` rows); separate PA implementation authority required |
 | **D5-T2** | Approved representation: Level C detailed technical schema approval | Level C APPROVED for D04–D20 (2026-11-16); detailed technical schema design is now approved at Level C | Decision package D04–D20; this record | Level C prerequisite MET; not automatically PASS | Level C design approval is a necessary but not sufficient condition for D5-T2. D5-T2 requires separate PA acceptance as part of the D5-T5 collective acceptance of D5-T1 through T4. No schema change is implemented. | Separate PA acceptance of D5-T2 evidence required (via D5-T5); no schema change implemented |
-| **D5-T3** | Implemented/read-only verifier tests: D5 verifier using holdings-specific acceptance predicate | Read-only D5 verifier IMPLEMENTED at `src/persistence/d5-readonly-verifier.ts`; exported function `verifyD5ReadOnly(db: DatabaseSync): D5VerificationResult`; tests pass against all acceptance predicates | `src/persistence/d5-readonly-verifier.ts`; `tests/durable_holdings_d02_d05_unit.test.ts` (D5 describe block) | PASS | D21 Level D implementation authority GRANTED (2026-11-16); verifier implements all five acceptance predicates: holdings-specific field verification, wrong owner/tenant rejection, missing/multiple binding/membership rejection, generic-success/holdings-failure separation, read-only integrity. 7 verifier tests pass. | None — D5-T3 criterion fully satisfied | Implementation requirement |
+| **D5-T3** | Implemented/read-only verifier tests: D5 verifier using holdings-specific acceptance predicate | Read-only D5 verifier IMPLEMENTED at `src/persistence/d5-readonly-verifier.ts`; exported function `verifyD5ReadOnly(db: DatabaseSync): D5VerificationResult`; tests pass against all acceptance predicates | `src/persistence/d5-readonly-verifier.ts`; `tests/durable_holdings_d02_d05_unit.test.ts` (D5 describe block) | PASS | D21 Level D implementation authority GRANTED (2026-11-17); verifier implements all five acceptance predicates: holdings-specific field verification, wrong owner/tenant rejection, missing/multiple binding/membership rejection, generic-success/holdings-failure separation, read-only integrity. 10 verifier tests pass. | None — D5-T3 criterion fully satisfied | Implementation requirement |
 | **D5-T4** | Prescribed host evidence: read-only Windows-host inventory with pre/post integrity proof | INVENTORY_COMPLETE_READ_ONLY_VERIFIED (exit code 0); pre/post DB SHA-256 byte-identical (`6d683b3b...`); zero sidecars; Q01–Q14 all EXECUTED_OK (21 statements); `integrity_check ok`, `foreign_key_check 0 violations`; audit chain verified | ZIP bundle; `01-preflight`; `02-q01-q14`; `03-migration-ledger` | PASS | All 21 Q01–Q14 statements executed OK inside read-only `BEGIN DEFERRED ... ROLLBACK`; pre/post hash equality and zero sidecars verified | Evidence must be separately accepted by PA; inventory completion is not D5 acceptance |
 | **D5-T5** | Separate PA acceptance: PA acceptance of verifier predicate and prescribed host evidence | Not yet accepted; separate gate remains closed; `d5Accepted: false` | `d5-d16-inventory-summary.json`; tracker blocker table | PENDING | Separate PA acceptance required; no D5 acceptance inferred from inventory completion or Level C design approval or D5-T2 PASS or D5-T3 PASS | PA must explicitly accept D5-T1 through D5-T4 collectively; D5 remains BLOCKED until accepted |
 
@@ -372,7 +372,7 @@ The Program Authority has explicitly **RATIFIED** RD-2026-11-16. The existing `r
 
 ---
 
-## D21 Level D Implementation Authority — D5 Read-Only Verifier (GRANTED 2026-11-16)
+## D21 Level D Implementation Authority — D5 Read-Only Verifier (GRANTED 2026-11-17)
 
 This is a **separate Level D implementation authority grant**, distinct from D04–D20 Level C design approval and RD-2026-11-16 resolver ratification. It does not grant D22 Level E operational provisioning/migration authority.
 
@@ -440,7 +440,7 @@ The following are **EXCLUDED** from this Level D authority request:
 
 ### Implementation record
 
-This Level D grant authorizes implementation of the D5 read-only verifier and targeted verifier tests within the stated scope and exclusions only. The verifier module is implemented at `src/persistence/d5-readonly-verifier.ts` with exported function `verifyD5ReadOnly(db: DatabaseSync): D5VerificationResult`. Targeted verifier tests are in `tests/durable_holdings_d02_d05_unit.test.ts` (D5 describe block). It does not authorize D22 Level E operations, D5-T5 acceptance, or D6 startup.
+This Level D grant (2026-11-17) authorizes implementation of the D5 read-only verifier and targeted verifier tests within the stated scope and exclusions only. The verifier module is implemented at `src/persistence/d5-readonly-verifier.ts` with exported function `verifyD5ReadOnly(db: DatabaseSync): D5VerificationResult`. Targeted verifier tests are in `tests/durable_holdings_d02_d05_unit.test.ts` (D5 describe block). It does not authorize D22 Level E operations, D5-T5 acceptance, or D6 startup.
 
 ---
 
@@ -448,11 +448,11 @@ This Level D grant authorizes implementation of the D5 read-only verifier and ta
 
 The Program Authority has issued the following explicit decisions:
 
-1. **D04–D20: APPROVED** (Level C detailed design approval, 2026-11-16). Covers design only — not implementation, provisioning, or migration. D21 Level D implementation authority remains NOT GRANTED. D22 Level E operational provisioning/migration remains NOT AUTHORIZED.
+1. **D04–D20: APPROVED** (Level C detailed design approval, 2026-11-16). Covers design only — not implementation, provisioning, or migration. D21 Level D implementation authority was GRANTED separately (2026-11-17) for the D5 read-only verifier; D04–D20 Level C approval itself does not grant D21. D22 Level E operational provisioning/migration remains NOT AUTHORIZED.
 
 2. **RD-2026-11-16: RATIFIED** (2026-11-16). The existing `resolveD02PortfolioAccess()` and `resolveD02PortfolioAccessInCurrentTransaction()` implementation and their associated 12 unit tests are ratified under the existing engineering authorization (IIPS-V3-PA-D02-D03-D05-ENGINEERING-2026-11-06-01, 5-file envelope including `src/persistence/binding.ts`). Ratification does NOT grant D21 Level D or D22 Level E authority.
 
-**D21 Level D implementation authority:** GRANTED (2026-11-16) for the D5 read-only verifier and targeted verifier tests, scoped to `src/persistence/d5-readonly-verifier.ts` and `tests/durable_holdings_d02_d05_unit.test.ts`, with stated exclusions (no relationship provisioning, no record creation, no migration, no live-host activity, no D22 Level E, no D6 startup, no IRR or main changes). Does not authorize live database operations.
+**D21 Level D implementation authority:** GRANTED (2026-11-17) for the D5 read-only verifier and targeted verifier tests, scoped to `src/persistence/d5-readonly-verifier.ts` and `tests/durable_holdings_d02_d05_unit.test.ts`, with stated exclusions (no relationship provisioning, no record creation, no migration, no live-host activity, no D22 Level E, no D6 startup, no IRR or main changes). Does not authorize live database operations.
 
 **D22 Level E operational provisioning/migration:** NOT AUTHORIZED — requires separate explicit Level E authorization for each named operation.
 

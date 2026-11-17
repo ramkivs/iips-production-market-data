@@ -1,6 +1,6 @@
 /** D5 — read-only verifier for the S1-to-D02 identity mapping.
  *
- * Implemented under D21 Level D implementation authority (granted 2026-11-16),
+ * Implemented under D21 Level D implementation authority (granted 2026-11-17),
  * scoped to read-only verification only. Uses the ratified D02 resolver from
  * src/persistence/binding.ts (resolveD02PortfolioAccessInCurrentTransaction,
  * D02RelationshipAbsentError, ResolvedD02PortfolioAccess). No new resolver

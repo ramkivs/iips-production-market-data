@@ -880,4 +880,108 @@ describe('D5 — read-only verifier (D21 Level D scope)', () => {
     assert.ok(steps.includes('binding-membership-cardinality-check'));
     assert.ok(result.passed);
   });
+
+  it('verifier fails closed on multiple ACTIVE bindings (ambiguous binding)', () => {
+    const now = new Date().toISOString();
+    seedBinding(db!, {
+      owner: D5_S1_MEMBERSHIP_OWNER,
+      tenant: D5_S1_TENANT_ID,
+      bindingId: D5_S1_BINDING_ID,
+      membershipId: D5_S1_MEMBERSHIP_ID,
+      principalLabel: D5_S1_PRINCIPAL_LABEL,
+    });
+    seedRelationshipSchema(db!);
+    seedRelationshipSchemaAndS1(db!);
+
+    // Drop the storage-level partial unique index to simulate an ambiguous
+    // database where multiple ACTIVE bindings coexist. The resolver's
+    // cardinality check is defense in depth and must still fail closed.
+    db!.prepare(`DROP INDEX IF EXISTS idx_local_principal_bindings_single_active`).run();
+    db!.prepare(
+      `INSERT INTO local_principal_bindings (binding_id, principal_label, status, created_at, updated_at, revoked_at)
+       VALUES ('fx-b-2', 'ambiguous-binding', 'ACTIVE', ?, ?, NULL)`,
+    ).run(now, now);
+
+    const result = verifyD5ReadOnly(db!);
+    assert.ok(!result.passed, 'verifier should fail closed on ambiguous ACTIVE bindings');
+    assert.ok(result.error !== null, 'verifier should record an error');
+    assert.ok(
+      result.error!.includes('more than one ACTIVE local principal binding exists'),
+      'verifier error should reference the ambiguous binding cardinality violation',
+    );
+  });
+
+  it('verifier fails closed on multiple ACTIVE memberships (ambiguous membership)', () => {
+    const now = new Date().toISOString();
+    seedBinding(db!, {
+      owner: D5_S1_MEMBERSHIP_OWNER,
+      tenant: D5_S1_TENANT_ID,
+      bindingId: D5_S1_BINDING_ID,
+      membershipId: D5_S1_MEMBERSHIP_ID,
+      principalLabel: D5_S1_PRINCIPAL_LABEL,
+    });
+    seedRelationshipSchema(db!);
+    seedRelationshipSchemaAndS1(db!);
+
+    // Drop the storage-level partial unique index to simulate an ambiguous
+    // database where multiple ACTIVE memberships coexist. The resolver's
+    // cardinality check is defense in depth and must still fail closed.
+    db!.prepare(`DROP INDEX IF EXISTS idx_local_principal_memberships_single_active`).run();
+    db!.prepare(
+      `INSERT INTO local_principal_memberships (membership_id, binding_id, tenant_id, canonical_owner_id, status, created_at, updated_at, revoked_at)
+       VALUES ('fx-m-2', ?, ?, ?, 'ACTIVE', ?, ?, NULL)`,
+    ).run(D5_S1_BINDING_ID, D5_S1_TENANT_ID, D5_S1_MEMBERSHIP_OWNER, now, now);
+
+    const result = verifyD5ReadOnly(db!);
+    assert.ok(!result.passed, 'verifier should fail closed on ambiguous ACTIVE memberships');
+    assert.ok(result.error !== null, 'verifier should record an error');
+    assert.ok(
+      result.error!.includes('more than one ACTIVE membership') ||
+        result.error!.includes('BindingInvalidError'),
+      'verifier error should reference the ambiguous membership cardinality violation',
+    );
+  });
+
+  it('verifier demonstrates generic-success/holdings-failure domain separation', () => {
+    const now = new Date().toISOString();
+    seedBinding(db!, {
+      owner: D5_S1_MEMBERSHIP_OWNER,
+      tenant: D5_S1_TENANT_ID,
+      bindingId: D5_S1_BINDING_ID,
+      membershipId: D5_S1_MEMBERSHIP_ID,
+      principalLabel: D5_S1_PRINCIPAL_LABEL,
+    });
+    seedRelationshipSchema(db!);
+    seedRelationshipSchemaAndS1(db!);
+
+    const before = captureRowCounts(db!);
+    const result = verifyD5ReadOnly(db!);
+    const after = captureRowCounts(db!);
+
+    // D02 relationship resolution succeeds (generic success at D02 level).
+    assert.ok(result.passed, `verifier should pass: ${result.error ?? JSON.stringify(result.evidence)}`);
+    assert.ok(result.s1Tuple !== null, 'verifier should resolve the S1 tuple');
+    assert.ok(result.d02Relationship !== null, 'verifier should resolve the D02 relationship');
+
+    // Holdings domain remains strictly separate — no holdings-domain writes
+    // were attempted by the verifier; table row counts are unchanged.
+    assert.deepEqual(before, after, 'verifier must not modify any holdings-domain table');
+
+    // The evidence explicitly records D02-vs-holdings domain separation.
+    assert.ok(
+      result.evidence.some(
+        (e) => e.step === 'd02-vs-holdings-domain-separation' && e.passed,
+      ),
+      'verifier evidence should record domain separation as passed',
+    );
+
+    // The verifier does not claim holdings-domain success merely because
+    // D02 relationship resolution succeeded — the two domains remain distinct.
+    assert.ok(
+      !result.evidence.some(
+        (e) => e.step === 'd02-vs-holdings-domain-separation' && !e.passed,
+      ),
+      'domain separation evidence must not report a false cross-domain pass',
+    );
+  });
 });
