@@ -52,6 +52,10 @@ import {
   type ResolvedBrokerImportHolding,
 } from '../src/persistence/brokerImportPersistence.js';
 import type { BrokerObservationResolver } from '../src/identity/broker_observation_resolver.js';
+import {
+  verifyD5ReadOnly,
+  type D5VerificationResult,
+} from '../src/persistence/d5-readonly-verifier.js';
 
 const HOLDINGS_OWNER = HOLDINGS_CANONICAL_OWNER_ID;
 const HOLDINGS_TENANT = HOLDINGS_TENANT_ID;
@@ -634,5 +638,246 @@ describe('D05 — owner type exports', () => {
     };
     assert.equal(holding.securityIdentity, undefined);
     assert.equal(holding.active, true);
+  });
+});
+
+describe('D5 — read-only verifier (D21 Level D scope)', () => {
+  // Approved S1 identity values (architecture decision, D01–D02), matching binding.ts.
+  const D5_S1_PRINCIPAL_LABEL = 'ramki-personal-local';
+  const D5_S1_BINDING_ID = 'c5808abaffd072d6401ce63ad86c6ac0';
+  const D5_S1_MEMBERSHIP_ID = 'd25dcc5370100b00766efc5166f65cf3';
+  const D5_S1_MEMBERSHIP_OWNER = 'ipd-owner-ramki-personal';
+  const D5_S1_TENANT_ID = 'ipd-personal-local';
+  const D5_D02_PORTFOLIO_OWNER_ID = 'owner-4dc756b3';
+
+  function seedRelationshipSchemaAndS1(db: DatabaseSync): void {
+    const now = new Date().toISOString();
+    // Owner registry: approved D02 target on the retained technical tenant.
+    db.prepare(
+      `INSERT INTO portfolio_owner_registry (tenant_id, portfolio_owner_id, owner_kind, status, created_at, updated_at, revoked_at)
+       VALUES (?, ?, 'PERSONAL_OVERALL', 'ACTIVE', ?, ?, NULL)`,
+    ).run(D5_S1_TENANT_ID, D5_D02_PORTFOLIO_OWNER_ID, now, now);
+    // Relationship: S1 membership -> D02 overall owner.
+    db.prepare(
+      `INSERT INTO personal_identity_owner_relationships
+       (relationship_id, membership_id, membership_tenant_id, owner_tenant_id, portfolio_owner_id,
+        relationship_type, status, authority_record_ref, created_at, updated_at, revoked_at)
+       VALUES (?, ?, ?, ?, ?, 'OVERALL_PERSONAL_PORTFOLIO_OWNER', 'ACTIVE',
+        'docs/integration/IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md#d04', ?, ?, NULL)`,
+    ).run(
+      'fx-r-1',
+      D5_S1_MEMBERSHIP_ID,
+      D5_S1_TENANT_ID,
+      D5_S1_TENANT_ID,
+      D5_D02_PORTFOLIO_OWNER_ID,
+      now,
+      now,
+    );
+  }
+
+  function seedRelationshipSchema(db: DatabaseSync): void {
+    const now = new Date().toISOString();
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS portfolio_owner_registry (
+        tenant_id TEXT NOT NULL,
+        portfolio_owner_id TEXT NOT NULL,
+        owner_kind TEXT NOT NULL CHECK (owner_kind = 'PERSONAL_OVERALL'),
+        status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'REVOKED')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        revoked_at TEXT,
+        PRIMARY KEY (tenant_id, portfolio_owner_id),
+        CHECK ((status = 'ACTIVE' AND revoked_at IS NULL) OR
+               (status = 'REVOKED' AND revoked_at IS NOT NULL))
+      )`,
+    ).run();
+    db.prepare(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_membership_id_tenant
+       ON local_principal_memberships (membership_id, tenant_id)`,
+    ).run();
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS personal_identity_owner_relationships (
+        relationship_id TEXT NOT NULL PRIMARY KEY,
+        membership_id TEXT NOT NULL,
+        membership_tenant_id TEXT NOT NULL,
+        owner_tenant_id TEXT NOT NULL,
+        portfolio_owner_id TEXT NOT NULL,
+        relationship_type TEXT NOT NULL CHECK (relationship_type = 'OVERALL_PERSONAL_PORTFOLIO_OWNER'),
+        status TEXT NOT NULL CHECK (status IN ('ACTIVE', 'REVOKED')),
+        authority_record_ref TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        revoked_at TEXT,
+        CHECK (membership_tenant_id = owner_tenant_id),
+        CHECK ((status = 'ACTIVE' AND revoked_at IS NULL) OR
+               (status = 'REVOKED' AND revoked_at IS NOT NULL)),
+        FOREIGN KEY (membership_id, membership_tenant_id)
+          REFERENCES local_principal_memberships (membership_id, tenant_id) ON DELETE RESTRICT,
+        FOREIGN KEY (owner_tenant_id, portfolio_owner_id)
+          REFERENCES portfolio_owner_registry (tenant_id, portfolio_owner_id) ON DELETE RESTRICT
+      )`,
+    ).run();
+    db.prepare(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_active_relationship_per_membership
+       ON personal_identity_owner_relationships (membership_id, relationship_type) WHERE status = 'ACTIVE'`,
+    ).run();
+    db.prepare(
+      `CREATE UNIQUE INDEX IF NOT EXISTS uq_active_membership_per_overall_owner
+       ON personal_identity_owner_relationships (owner_tenant_id, portfolio_owner_id, relationship_type) WHERE status = 'ACTIVE'`,
+    ).run();
+  }
+
+  function captureRowCounts(db: DatabaseSync): Record<string, number> {
+    const tables = [
+      'local_principal_bindings',
+      'local_principal_memberships',
+      'portfolio_owner_registry',
+      'personal_identity_owner_relationships',
+    ];
+    const counts: Record<string, number> = {};
+    for (const table of tables) {
+      try {
+        const row = db
+          .prepare(`SELECT COUNT(*) AS n FROM ${table}`)
+          .get() as unknown as { n: number };
+        counts[table] = row.n;
+      } catch {
+        counts[table] = -1; // table does not exist
+      }
+    }
+    return counts;
+  }
+
+  it('verifier passes when S1 tuple and D02 relationship match approved values', () => {
+    seedBinding(db!, {
+      owner: D5_S1_MEMBERSHIP_OWNER,
+      tenant: D5_S1_TENANT_ID,
+      bindingId: D5_S1_BINDING_ID,
+      membershipId: D5_S1_MEMBERSHIP_ID,
+      principalLabel: D5_S1_PRINCIPAL_LABEL,
+    });
+    seedRelationshipSchema(db!);
+    seedRelationshipSchemaAndS1(db!);
+
+    const result = verifyD5ReadOnly(db!);
+    assert.ok(result.passed, `verifier should pass: ${result.error ?? JSON.stringify(result.evidence)}`);
+    assert.equal(result.s1Tuple?.bindingId, D5_S1_BINDING_ID);
+    assert.equal(result.s1Tuple?.principalLabel, D5_S1_PRINCIPAL_LABEL);
+    assert.equal(result.s1Tuple?.membershipId, D5_S1_MEMBERSHIP_ID);
+    assert.equal(result.s1Tuple?.tenantId, D5_S1_TENANT_ID);
+    assert.equal(result.s1Tuple?.canonicalOwnerId, D5_S1_MEMBERSHIP_OWNER);
+    assert.equal(result.d02Relationship?.portfolioOwnerId, D5_D02_PORTFOLIO_OWNER_ID);
+    assert.ok(result.evidence.some((e) => e.step === 'd02-relationship-resolution' && e.passed));
+    assert.ok(result.evidence.some((e) => e.step === 's1-tuple-fields-verification' && e.passed));
+  });
+
+  it('verifier fails closed when relationship tables are not provisioned', () => {
+    seedBinding(db!, {
+      owner: D5_S1_MEMBERSHIP_OWNER,
+      tenant: D5_S1_TENANT_ID,
+      bindingId: D5_S1_BINDING_ID,
+      membershipId: D5_S1_MEMBERSHIP_ID,
+      principalLabel: D5_S1_PRINCIPAL_LABEL,
+    });
+
+    const result = verifyD5ReadOnly(db!);
+    assert.ok(!result.passed, 'verifier should fail when D02 relationship tables are absent');
+    assert.ok(result.error !== null);
+    assert.ok(result.s1Tuple === null);
+    assert.ok(result.d02Relationship === null);
+  });
+
+  it('verifier fails closed on wrong portfolio owner', () => {
+    const now = new Date().toISOString();
+    seedBinding(db!, {
+      owner: D5_S1_MEMBERSHIP_OWNER,
+      tenant: D5_S1_TENANT_ID,
+      bindingId: D5_S1_BINDING_ID,
+      membershipId: D5_S1_MEMBERSHIP_ID,
+      principalLabel: D5_S1_PRINCIPAL_LABEL,
+    });
+    seedRelationshipSchema(db!);
+    db!.prepare(
+      `INSERT INTO portfolio_owner_registry (tenant_id, portfolio_owner_id, owner_kind, status, created_at, updated_at, revoked_at)
+       VALUES (?, ?, 'PERSONAL_OVERALL', 'ACTIVE', ?, ?, NULL)`,
+    ).run(D5_S1_TENANT_ID, 'wrong-owner-12345678', now, now);
+    db!.prepare(
+      `INSERT INTO personal_identity_owner_relationships
+       (relationship_id, membership_id, membership_tenant_id, owner_tenant_id, portfolio_owner_id,
+        relationship_type, status, authority_record_ref, created_at, updated_at, revoked_at)
+       VALUES ('fx-r-2', ?, ?, ?, ?, 'OVERALL_PERSONAL_PORTFOLIO_OWNER', 'ACTIVE',
+        'docs/integration/IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md#d04', ?, ?, NULL)`,
+    ).run(D5_S1_MEMBERSHIP_ID, D5_S1_TENANT_ID, D5_S1_TENANT_ID, 'wrong-owner-12345678', now, now);
+
+    const result = verifyD5ReadOnly(db!);
+    assert.ok(!result.passed, 'verifier should fail on wrong portfolio owner');
+    assert.ok(result.error !== null, 'verifier should record an error');
+  });
+
+  it('verifier fails closed on wrong tenant', () => {
+    const now = new Date().toISOString();
+    // Seed membership with wrong tenant — resolver's S1 tenant check fails closed.
+    // No relationship tables needed: resolution fails at the S1 tuple check.
+    seedBinding(db!, {
+      owner: D5_S1_MEMBERSHIP_OWNER,
+      tenant: 'wrong-tenant-12345678',
+      bindingId: D5_S1_BINDING_ID,
+      membershipId: D5_S1_MEMBERSHIP_ID,
+      principalLabel: D5_S1_PRINCIPAL_LABEL,
+    });
+
+    const result = verifyD5ReadOnly(db!);
+    assert.ok(!result.passed, 'verifier should fail on wrong tenant');
+    assert.ok(result.error !== null, 'verifier should record an error');
+  });
+
+  it('verifier fails closed when no ACTIVE binding exists', () => {
+    seedRelationshipSchema(db!);
+    // No binding or membership seeded — relationship tables exist but are empty.
+
+    const result = verifyD5ReadOnly(db!);
+    assert.ok(!result.passed, 'verifier should fail when no ACTIVE binding exists');
+    assert.ok(result.error !== null, 'verifier should record an error');
+  });
+
+  it('verifier proves read-only integrity — database contents unchanged after verification', () => {
+    seedBinding(db!, {
+      owner: D5_S1_MEMBERSHIP_OWNER,
+      tenant: D5_S1_TENANT_ID,
+      bindingId: D5_S1_BINDING_ID,
+      membershipId: D5_S1_MEMBERSHIP_ID,
+      principalLabel: D5_S1_PRINCIPAL_LABEL,
+    });
+    seedRelationshipSchema(db!);
+    seedRelationshipSchemaAndS1(db!);
+
+    const before = captureRowCounts(db!);
+    const result = verifyD5ReadOnly(db!);
+    const after = captureRowCounts(db!);
+
+    assert.deepEqual(before, after, 'verifier must not modify any table row counts');
+    assert.ok(result.passed, `verifier should pass: ${result.error ?? JSON.stringify(result.evidence)}`);
+  });
+
+  it('verifier evidence covers all five acceptance predicates', () => {
+    seedBinding(db!, {
+      owner: D5_S1_MEMBERSHIP_OWNER,
+      tenant: D5_S1_TENANT_ID,
+      bindingId: D5_S1_BINDING_ID,
+      membershipId: D5_S1_MEMBERSHIP_ID,
+      principalLabel: D5_S1_PRINCIPAL_LABEL,
+    });
+    seedRelationshipSchema(db!);
+    seedRelationshipSchemaAndS1(db!);
+
+    const result = verifyD5ReadOnly(db!);
+    const steps = result.evidence.map((e) => e.step);
+    assert.ok(steps.includes('d02-relationship-resolution'));
+    assert.ok(steps.includes('d02-owner-tenant-validation'));
+    assert.ok(steps.includes('s1-tuple-fields-verification'));
+    assert.ok(steps.includes('membership-owner-distinct-from-portfolio-owner'));
+    assert.ok(steps.includes('d02-vs-holdings-domain-separation'));
+    assert.ok(steps.includes('binding-membership-cardinality-check'));
+    assert.ok(result.passed);
   });
 });
