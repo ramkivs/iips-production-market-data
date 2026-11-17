@@ -41,8 +41,11 @@ import { DhanFailureCode } from './dhan_failures.js';
 import { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
 import {
   DhanMarketDataService,
+  validateDhanServiceDiagnostics,
+  validateDhanServiceHealth,
   QuoteRequest,
   HistoricalServiceRequest,
+  ServiceDiagnostics,
   ServiceHealth,
 } from './dhan_market_data_service.js';
 
@@ -51,6 +54,7 @@ export const MARKET_DATA_ROUTES = {
   quotes: '/v1/quotes',
   historical: '/v1/historical',
   health: '/v1/health',
+  diagnostics: '/v1/diagnostics',
   freshness: '/v1/freshness',
   instrumentSearch: '/v1/instruments/search',
   identityResolve: '/v1/identity/resolve',
@@ -90,6 +94,10 @@ export type MarketDataTransportHistoricalOutcome =
 export type MarketDataTransportHealthOutcome =
   | ({ readonly ok: true } & ServiceHealth)
   | { readonly ok: false; readonly service: 'DOWN'; readonly failure: MarketDataTransportFailure };
+
+export type MarketDataTransportDiagnosticsOutcome =
+  | ({ readonly ok: true } & ServiceDiagnostics)
+  | { readonly ok: false; readonly failure: MarketDataTransportFailure };
 
 export interface MarketDataTransportClientOptions {
   readonly timeoutMs?: number;
@@ -196,6 +204,15 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
 
       if (path === MARKET_DATA_ROUTES.health && req.method === 'GET') {
         sendJson(res, 200, await service.health());
+        return;
+      }
+
+      if (path === MARKET_DATA_ROUTES.diagnostics && req.method === 'GET') {
+        if ((req.url?.length ?? 0) > 2048 || url.searchParams.size > 0) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'diagnostics accepts no query parameters');
+          return;
+        }
+        sendJson(res, 200, await service.getDiagnostics());
         return;
       }
 
@@ -618,23 +635,8 @@ export class MarketDataTransportClient {
       return { ok: false, service: 'DOWN', failure: call.failure };
     }
 
-    const payload = call.json as Partial<ServiceHealth> | null;
-    if (
-      payload &&
-      (payload.service === 'UP' || payload.service === 'DOWN') &&
-      (payload.providerConfiguration === 'CONFIGURED' ||
-        payload.providerConfiguration === 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE') &&
-      payload.liveProviderConnectivity === 'NOT_CHECKED_PRE_ACCESS' &&
-      payload.providerQualification === 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED'
-    ) {
-      return {
-        ok: true,
-        service: payload.service,
-        providerConfiguration: payload.providerConfiguration,
-        liveProviderConnectivity: payload.liveProviderConnectivity,
-        providerQualification: payload.providerQualification,
-      };
-    }
+    const payload = validateDhanServiceHealth(call.json);
+    if (payload) return { ok: true, ...payload };
 
     return {
       ok: false,
@@ -642,6 +644,29 @@ export class MarketDataTransportClient {
       failure: {
         code: 'MALFORMED_RESPONSE',
         message: 'market-data transport returned a malformed health payload',
+        httpStatus: call.status,
+      },
+    };
+  }
+
+  /**
+   * Read-only authenticated loopback `/v1/diagnostics` read (W-09 / D-7 §4.1).
+   * Validates every field fail-closed and never triggers vendor calls or state mutation.
+   */
+  public async diagnostics(): Promise<MarketDataTransportDiagnosticsOutcome> {
+    const call = await this.requestJson('GET', MARKET_DATA_ROUTES.diagnostics);
+    if (!call.ok) {
+      return { ok: false, failure: call.failure };
+    }
+
+    const payload = validateDhanServiceDiagnostics(call.json);
+    if (payload) return { ok: true, ...payload };
+
+    return {
+      ok: false,
+      failure: {
+        code: 'MALFORMED_RESPONSE',
+        message: 'market-data transport returned a malformed diagnostics payload',
         httpStatus: call.status,
       },
     };

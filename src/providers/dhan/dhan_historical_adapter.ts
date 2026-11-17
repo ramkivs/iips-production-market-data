@@ -156,21 +156,41 @@ export class DhanHistoricalAdapter {
         interval: request.interval,
         fromDate: range.value.fromDate,
         toDate: range.value.toDate,
-      })
+      }),
+      { deferSuccessRecording: true }
     );
     if (!call.ok) return call;
 
+    const latencyMs = call.value.metrics.latencyMs;
+    const at = this.client.nowIso();
+
     const parsed = parseDhanHistoricalResponse(call.value.json);
     if (!parsed.ok) {
+      this.client.getStateRecorder().recordFailure({
+        category: parsed.failure.code,
+        at,
+        latencyMs,
+      });
       return { ok: false, failure: { ...parsed.failure, httpStatus: call.value.metrics.httpStatus } };
     }
 
-    return normalizeDhanHistoricalToCandles({
+    const normalized = normalizeDhanHistoricalToCandles({
       dto: parsed.value,
       mapping,
       interval: request.interval,
       fromDate: range.value.fromDate,
       toDate: range.value.toDate,
     });
+    if (!normalized.ok) {
+      this.client.getStateRecorder().recordFailure({
+        category: normalized.failure.code,
+        at,
+        latencyMs,
+      });
+      return normalized;
+    }
+
+    this.client.getStateRecorder().recordSuccess({ at, latencyMs });
+    return normalized;
   }
 }
