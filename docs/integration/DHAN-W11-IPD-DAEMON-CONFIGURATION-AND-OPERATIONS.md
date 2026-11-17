@@ -409,13 +409,19 @@ three identity routes also return `404 NOT_FOUND`; `startMarketDataDaemon` alway
   the guarded `npm test` executed **1,902 tests** (**1,898 passed, 0 failed, 4 skipped**).
   `windows-setup/.validate-scripts.py` reported **310 pass / 0 fail**. All tests are
   synthetic/offline; no live Dhan credentials or vendor calls were used.
-- **Installed-package consumer**: `npm run test:package-consumer` packed, installed,
-  imported (ESM + CJS), typechecked, and exercised the installed package successfully,
-  but its verbatim pinned IRR importer fetch returned **GitHub HTTP 403** because this
-  sandbox's GitHub integration lacks read access to the private IRR repository. The full
-  cross-repository command therefore **did not pass**; it must be rerun with authorized IRR
-  read access. A separate installed-package browser-bundle scan completed with
-  `forbiddenHits: []` and no server/DPAPI symbol in the closure.
+- **Installed-package consumer (local vs CI)**: The local
+  `npm run test:package-consumer` packed, installed, imported (ESM + CJS), typechecked,
+  and exercised the installed package, but its pinned IRR fetch returned **GitHub HTTP 403**
+  because this sandbox's GitHub connection lacks read access to the private IRR repository;
+  the local command therefore **did not pass**. A separate installed-package browser scan
+  found `forbiddenHits: []`. The same complete package-consumer step **passed** in authorized
+  GitHub Actions on PR `#174` at integration commit `8d68edbfa24dcd080fff67f8ba86c19a076ab85e`
+  ([CI run 44091781102](https://github.com/ramkivs/iips-production-market-data/actions/runs/44091781102));
+  its guarded test, build, and typecheck steps passed as well. The separate W-02 process-runner
+  workflow passed on both Windows and Ubuntu
+  ([run 44091781180](https://github.com/ramkivs/iips-production-market-data/actions/runs/44091781180)).
+  These are synthetic/contract checks, not Windows-host credential provisioning or live Dhan
+  vendor qualification.
 
 ### 9.3 Remaining Cross-Repository / Operator Dependencies for Overall Roadmap W-11
 
