@@ -1,6 +1,6 @@
 # IPD Program Authority approval record — D02 decisions D01–D03 and narrow D5/D16 read-only evidence inventory
 
-**Decision dates:** 2026-11-15 (Level C decisions D01–D03); 2026-11-16 (narrow Level E read-only D5/D16 evidence inventory)
+**Decision dates:** 2026-11-15 (Level C decisions D01–D03); 2026-11-16 (Level C decisions D04–D20; RD-2026-11-16 resolver deviation ratification; narrow Level E read-only D5/D16 evidence inventory)
 **Authority:** Ramki, acting as Program Authority, as explicitly stated in the directions supplied for these tasks.
 **Owner:** IPD (`ramkivs/iips-production-market-data`)
 **Related register:** [D02 Program Authority Decision Package](IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md)
@@ -17,6 +17,27 @@ On 2026-11-15, the Program Authority explicitly approved the proposed defaults f
 | **D01 — Relationship subject** | “Connect the existing S1 membership to D02 overall portfolio owner `owner-4dc756b3` through a separate explicit ownership relationship.” | Selects D01 alternative **(a)** and its proposed default: the established S1 membership is the relationship FK subject, with the specified S1 binding, principal, tenant, owner and ACTIVE-state checks on resolution. It rejects a principal/binding-only subject and does not create another D02 context. | **APPROVED — this decision only** |
 | **D02 — Identity values** | “Do not create an additional personal user identity or invent a separate D02 identity tuple.” | Selects D02 alternative **(a)** and its proposed default: preserve the existing S1 identity and represent D02 ownership through the separate relationship; no new D02 principal, binding or membership value is assigned or derived. The relationship record ID remains a different concept and is not an identity tuple. | **APPROVED — this decision only** |
 | **D03 — Tenant-scoped references** | “Enforce tenant-scoped ownership relationships and matching membership/tenant references.” | Selects D03 alternative **(a)** and its proposed default: tenant-scoped composite membership and owner-registry FKs, matching membership/owner tenant values, required parent unique keys, and restrictive deletion. Resolver status checks remain necessary because FKs do not prove ACTIVE state. | **APPROVED — this decision only** |
+
+### 3. Level C detailed design decisions approved on 2026-11-16 (D04–D20)
+
+On 2026-11-16, the Program Authority explicitly **APPROVED** the detailed technical schema design for decisions **D04 through D20** in the published decision package. This is **Level C detailed design approval only** — it covers schema, multiplicity, lifecycle, IDs, authority reference, audit events, authorization boundary, resolver contract, transaction boundaries, provider taxonomy, account identity, source cardinality, row links, historical provenance, historical disposition, inventory/collision policy, re-key scope, migration mechanics, rollback/recovery, and local single-user scope.
+
+**This Level C approval does NOT:**
+- Grant D21 Level D implementation authority (remains NOT GRANTED)
+- Grant D22 Level E operational provisioning/migration authority (remains NOT AUTHORIZED)
+- Authorize any database mutation, schema change, migration execution, or relationship row creation
+- Constitute D5 acceptance (D5 remains BLOCKED)
+- Authorize D6 (remains NOT STARTED)
+
+### 4. Resolver deviation ratification on 2026-11-16 (RD-2026-11-16)
+
+On 2026-11-16, the Program Authority explicitly **RATIFIED** RD-2026-11-16: the existing `resolveD02PortfolioAccess()` and `resolveD02PortfolioAccessInCurrentTransaction()` implementation in `src/persistence/binding.ts` and their associated 12 unit tests in `tests/durable_holdings_d02_d05_unit.test.ts`. Ratification is under the existing engineering authorization (IIPS-V3-PA-D02-D03-D05-ENGINEERING-2026-11-06-01, 5-file envelope including `src/persistence/binding.ts`).
+
+**This ratification does NOT:**
+- Grant D21 Level D implementation authority (remains NOT GRANTED)
+- Grant D22 Level E operational provisioning/migration authority (remains NOT AUTHORIZED)
+- Authorize any relationship row provisioning or data migration
+- Constitute D5 acceptance (D5 remains BLOCKED)
 
 ## Correspondence and scope check
 
@@ -39,10 +60,11 @@ On **2026-11-16**, the Program Authority explicitly approved a **narrowly scoped
 
 ## Decisions not approved by this record
 
-- **D04–D22 register dispositions: PENDING.** No Level C design approval is inferred from D01–D03 or from the 2026-11-16 read-only inventory authorization; D15–D19 historical disposition/collision/re-key/recovery rules and D22's broader operational choices remain pending separate review and acceptance after live host inventory evidence is obtained.
-- **Detailed schema approval: PENDING.** Neither D01–D03 nor the 2026-11-16 read-only inventory authorization approves the entire Level C design or closes its remaining choices and evidence gates.
-- **Implementation authority: NOT GRANTED.** No code, schema implementation, migration or D5 verifier implementation is authorized.
-- **Operational provisioning, schema/migration execution or database mutation: NOT AUTHORIZED.** Only the strictly non-mutating read-only inspection of the existing local database for D5/D16 evidence collection is authorized (2026-11-16); no identity/relationship/owner/source row creation, portfolio/holding write, re-key, reassignment, tombstone restoration, reset/replacement or migration execution is authorized.
-- **D5: BLOCKED. D6: NOT STARTED.** Inventory authorization or completion does not constitute D5 acceptance or D6 authorization; resulting evidence must be presented for separate review and acceptance.
+- **D04–D20: APPROVED** at Level C detailed design (2026-11-16) — recorded in section 3 above. Design approval only; does not grant implementation, provisioning, or migration.
+- **RD-2026-11-16: RATIFIED** — recorded in section 4 above. Does NOT grant D21 Level D or D22 Level E authority.
+- **D21 Level D implementation authority: NOT GRANTED.** Requires a separate explicit Level D statement naming specific code/schema/test scope. Level C design approval does not imply Level D.
+- **D22 Level E operational provisioning/migration: NOT AUTHORIZED.** Requires separate explicit Level E authorization for each named operation.
+- **D5: BLOCKED.** D5-T2 Level C prerequisite met but requires separate PA acceptance via D5-T5; D5-T3 FAIL (Level D NOT GRANTED, verifier not implemented); D5-T5 PENDING (separate PA acceptance required).
+- **D6: NOT STARTED.** Remains out of scope until D5 passes and its evidence is separately accepted.
 
 No relationship ID or row has been created, and no database file was created or modified. In the 2026-11-16 Arena Linux sandbox run, the designated Windows host database (`C:\iips-data\iips\user-portfolio.sqlite`) is absent/unreachable (`IIPS_G3_DATABASE_PATH` unset; zero SQLite files present), so live row inspection stopped safely with the exact host-access blocker and read-only SQL inspection specification recorded in [IPD-D02-D5-D16-READ-ONLY-INVENTORY-AND-BLOCKER-REPORT-2026-11-16.md](IPD-D02-D5-D16-READ-ONLY-INVENTORY-AND-BLOCKER-REPORT-2026-11-16.md). The existing S1 tuple and Direct P1 behavior remain unchanged.
