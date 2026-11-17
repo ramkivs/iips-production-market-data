@@ -68,34 +68,3 @@ D16 (inventory scope, ownership proof, collision policy) findings, kept distinct
 | Historical disposition | 2 active S1-owner candidate portfolios obtained (`DHAN_PORTFOLIO`, `PERSONAL-fa8ad7bc-efec-5562-cfbd-de362b782fa2`); `DEFAULT_PORTFOLIO` excluded test data | Q06, Q08, Q09 results | OBSERVATION | D15 cannot choose between full historical inclusion, alias scope, re-key readiness without separate PA disposition and operator intent evidence | Separate PA disposition under D15/D16; no re-key, merge, or overwrite |
 
 ## Live reconciliation results (2026-11-16)
-
-The [Program Authority decision record](IPD-D02-OWNERSHIP-ARCHITECTURE-DECISION-2026-11-15.md) now approves preservation of S1 and a separate explicit relationship to D02 owner `owner-4dc756b3`. The earlier [architecture proposal](IPD-D02-PERSONAL-PORTFOLIO-OWNERSHIP-ARCHITECTURE-PROPOSAL-2026-11-15.md) supplies the verified current-state analysis. The [detailed technical design](IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md) specifies candidate schema, resolver, lifecycle, history, tests and acceptance criteria; it remains **AWAITING APPROVAL**.
-
-No relationship ID/row is created. No implementation authority is granted. Current exact membership-owner resolver behavior must keep failing closed until a separately approved and implemented D02 relationship resolver exists. No D5 verifier implementation or D6 operation proceeds under this decision.
-
-## Next actions and authority
-
-1. **Windows host read-only inventory (executed 2026-11-16 under the 2026-11-16 PA approval):** the strictly read-only offline inspection of `C:\iips-data\iips\user-portfolio.sqlite` was executed (never normal startup `src/ipc/entrypoint.ts`); pre/post SHA-256 byte equality and zero sidecars verified (`INVENTORY_COMPLETE_READ_ONLY_VERIFIED`, exit code `0`). The resulting D5/D16 evidence is submitted for separate review and acceptance in [`IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md`](IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md), without inferring historical ownership from source labels. Inventory completion is not D5 acceptance.
-2. **Program Authority:** D01–D03 (2026-11-15) and the narrow Level E read-only D5/D16 inventory (2026-11-16) are recorded APPROVED; disposition remaining items D04–D22 in the [decision package](IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md). Their defaults remain NOT APPROVED until explicitly accepted. Design approval or inventory completion alone does not grant implementation or provisioning.
-3. **IPD engineering:** perform no implementation until separate implementation authority is granted; retain current fail-closed D02 behavior.
-4. **IPD engineering:** D5 verifier implementation/testing only after detailed schema approval and implementation authority.
-5. **Authorized host operation:** formal D5 verification and acceptance only under later applicable authority/procedure; D6/live holdings remains unstarted.
-
-## Evidence checked
-
-- Program Authority decision package (22 items; D01–D03 approved, narrow 2026-11-16 read-only D5/D16 inventory approved, D04–D22 pending): [`IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md`](IPD-D02-PROGRAM-AUTHORITY-DECISION-PACKAGE-2026-11-16.md).
-- Recorded Program Authority approvals (D01–D03 on 2026-11-15; narrow Level E read-only D5/D16 evidence inventory on 2026-11-16): [`IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md`](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md).
-- D5/D16 read-only evidence inventory preflight, Linux-sandbox host-access blocker report, and exact read-only SQL query set (2026-11-16): [`IPD-D02-D5-D16-READ-ONLY-INVENTORY-AND-BLOCKER-REPORT-2026-11-16.md`](IPD-D02-D5-D16-READ-ONLY-INVENTORY-AND-BLOCKER-REPORT-2026-11-16.md) and [`evidence/d02-inventory-2026-11-16/d5-d16-readonly-inventory-status-2026-11-16.json`](../../evidence/d02-inventory-2026-11-16/d5-d16-readonly-inventory-status-2026-11-16.json).
-- Local single-user scope/applicability review (recommendations only; no status change): [`IPD-D02-LOCAL-SINGLE-USER-SCOPE-APPLICABILITY-REVIEW-2026-11-15.md`](IPD-D02-LOCAL-SINGLE-USER-SCOPE-APPLICABILITY-REVIEW-2026-11-15.md).
-- Independent technical review and conditions: [`IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md`](IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md).
-- Approved architectural direction: [`IPD-D02-OWNERSHIP-ARCHITECTURE-DECISION-2026-11-15.md`](IPD-D02-OWNERSHIP-ARCHITECTURE-DECISION-2026-11-15.md).
-- Detailed schema/resolver proposal (awaiting approval): [`IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md`](IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md).
-- Prior IPD architecture investigation (the architecture direction is now approved; detailed schema remains pending): [`IPD-D02-PERSONAL-PORTFOLIO-OWNERSHIP-ARCHITECTURE-PROPOSAL-2026-11-15.md`](IPD-D02-PERSONAL-PORTFOLIO-OWNERSHIP-ARCHITECTURE-PROPOSAL-2026-11-15.md).
-- Effective S1 identity-value determination: [`IIPS_V3_CAP02_S1_IDENTITY_VALUE_DETERMINATION_EFFECTIVE_2026-10-24.md`](../../evidence/cross-repository/IIPS_V3_CAP02_S1_IDENTITY_VALUE_DETERMINATION_EFFECTIVE_2026-10-24.md).
-- IPD mirror of the adopted D02/D03/D05 authority and reconstruction: [`IIPS_V3_D02_D03_D05_RECONSTRUCTION_IPD_IMPLEMENTATION_EVIDENCE_2026-11-06.md`](../../evidence/cross-repository/IIPS_V3_D02_D03_D05_RECONSTRUCTION_IPD_IMPLEMENTATION_EVIDENCE_2026-11-06.md); authority blob `cea7fed5618ed08683cf9d12d22b0a6e02c557f4` independently matched against IRR main content (read-only).
-- Binding predicate and D02 owner requirement: [`src/persistence/binding.ts`](../../src/persistence/binding.ts).
-- Single-active schema constraint: [`migration 003`](../../src/persistence/migrations/003_local_principal_bindings.ts).
-- Legacy S1-only Direct P1 verification: [`src/persistence/directP1Provisioning.ts`](../../src/persistence/directP1Provisioning.ts), DP-V5–DP-V8; DP-V8 calls the generic resolver.
-- Existing D02 fixture tests are synthetic and explicitly not operational provisioning: [`tests/durable_holdings_contract_v1.test.ts`](../../tests/durable_holdings_contract_v1.test.ts) and [`tests/durable_holdings_recovery_v1.test.ts`](../../tests/durable_holdings_recovery_v1.test.ts).
-
-**No source code, identity record, database, migration, environment, or runtime was modified.**
