@@ -1,5 +1,13 @@
 # W-07 — IPD Health Contract and IRR Coordination Handoff
 
+> **Historical W-07 Handoff Record (Post-Merge Update):** Coordinated W-07 (`#168` on IPD `main`,
+> `#567` on IRR `main`), W-08 (`#169`), W-09 (`#170`), and W-10 (`#172` on IPD `main`, `#569` on
+> IRR `main`) are now merged. On current IPD `main`, `DhanMarketDataService.health()` emits
+> `contractVersion: 2` and derives `liveProviderConnectivity` from the W-08 observed-state
+> recorder without initiating vendor calls. For the current `main` daemon configuration, routes,
+> and operational specification, see
+> [`DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md`](DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md).
+
 **Status:** Focused, `main`-based IPD W-07 implementation published from `901e4791e271cafdb777d56f9f66f6867b3f60c6` on branch `arena/a2e97767-iips-production-market-data`. Coordinated W-07 remains **PARTIAL** until IRR PR [#567](https://github.com/ramkivs/iips-review-recovered/pull/567) (`arena/4bdc1e8b-iips-review-recovered`, head `2a45f675840be95671c520b66857b4bfde99f1d3`) advances its `iips-production-market-data` pin to the exact published head commit SHA recorded on this IPD PR and completes cross-repository verification. Do not merge either leg or start W-08 on the basis of this record alone.
 
 ## Authority and Clean `main` Baseline

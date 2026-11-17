@@ -1,0 +1,381 @@
+# W-11 — IPD Market-Data Daemon Configuration and Operational Specification
+
+- **Document ID**: `IPD-DHAN-W11-DAEMON-CONFIGURATION-2026-11-16`
+- **Repository**: `ramkivs/iips-production-market-data` (`IPD`)
+- **Authoritative `main` Baseline**: `1ce6a829a7ce65550356a0071c108a60f2d813be`
+- **IPD W-11 Scope Status**: **COMPLETE (IPD-OWNED CONFIGURATION, RECONCILIATION & SYNTHETIC VERIFICATION)**
+- **Overall Roadmap W-11 Status**: **PARTIAL** *(pending separate operator-executed, version-correlated connected-daemon verification across IRR and IPD on the approved Windows host)*
+- **Operating Boundary**: **LOCAL, SINGLE-USER, NON-PRODUCTION ONLY (`PRODUCTION_NOT_AUTHORIZED` IN PRODUCTION)**
+
+> **Zero-Secret & Non-Live Evidence Notice (AD-17 / D-7):** This specification is derived
+> directly from the authoritative IPD `main` source tree and verified exclusively with
+> deterministic, offline synthetic tests. No live Dhan vendor requests were executed, no
+> Dhan credentials or transport tokens were provisioned or inspected, and no secret values,
+> concrete operator `vault://` paths, or credential-carrier filesystem locations appear in
+> this document.
+
+---
+
+## 1. Scope, Roadmap W-11 Boundary, and `main` Lineage Reconciliation
+
+### 1.1 Authoritative IPD `main` Lineage (`1ce6a829a7ce65550356a0071c108a60f2d813be`)
+
+This document specifies the exact runtime configuration, environment-variable handling,
+defaults, loopback transport contract, credential-backend behavior, startup/shutdown rules,
+HTTP endpoints, and timeout/operational controls implemented on authoritative IPD `main` at
+`1ce6a829a7ce65550356a0071c108a60f2d813be`:
+
+- **Stage 1 & P4–P7 Foundation**: `src/providers/dhan/dhan_config.ts`,
+  `src/providers/dhan/dhan_local_daemon.ts`, `src/providers/dhan/dhan_local_vault_resolver.ts`,
+  `src/providers/dhan/dhan_market_data_http.ts`, `src/providers/dhan/dhan_market_data_service.ts`,
+  `src/providers/dhan/dhan_operational_controls.ts`, `src/providers/dhan/dhan_server_egress.ts`,
+  and `evidence/dhan-p7/qualification-manifest.json` (`4,680` `QUALIFIED` NSE/BSE mappings out of
+  `5,180` retained records).
+- **W-07 (`#168`)**: Versioned `ServiceHealth` contract (`DHAN_HEALTH_CONTRACT_VERSION = 2`) and
+  fail-closed `validateDhanServiceHealth`.
+- **W-08 (`#169`)**: Bounded in-process `DhanProviderStateRecorder` (`DHAN_AUTH_LATCH_THRESHOLD = 2`)
+  and explicit single-shot `DhanMarketDataService.verifyConnection` / `DhanApiClient.probeOnce`.
+- **W-09 (`#170`)**: Authenticated loopback `GET /v1/diagnostics` (`DHAN_DIAGNOSTICS_CONTRACT_VERSION = 1`)
+  and `MarketDataTransportClient.diagnostics()` under D-7 §4.1 disclosure bounds.
+- **W-10 (`#172`)**: Authenticated loopback `POST /v1/connection/verify`
+  (`DHAN_VERIFICATION_CONTRACT_VERSION = 1`) and `MarketDataTransportClient.verifyConnection()`.
+- **Coordinated IRR Pin**: Authoritative IRR `main` (`ramkivs/iips-review-recovered`,
+  re-verified in IRR PR `#572` at `752fb3e89da1f5e7f50802e15a7bf3b1af472e19` following IRR W-10
+  PR `#569`) pins `iips-production-market-data` to `1ce6a829a7ce65550356a0071c108a60f2d813be`.
+
+### 1.2 Explicit Isolation of Diverged Unmerged Candidate Lineage
+
+An earlier unmerged IPD candidate branch (`arena/9015787b-iips-production-market-data`,
+commits `a8ffd10ab4ba5d3b024bedc522da531b4c1bebbf` / `bcfa6cbbcaff63a8c55f4d7395c4cbb5d0088d52`)
+diverged from IPD `main` prior to W-07..W-10. Operators and integrators **must not** apply
+candidate-only settings to IPD `main`:
+
+| Diverged Candidate Item (`bcfa6cb…`) | Authoritative IPD `main` Reality (`1ce6a829…`) |
+| :--- | :--- |
+| `IIPS_DHAN_VAULT_BACKEND` (`disabled` / `windows-dpapi`) | **Does not exist on `main`.** Ignored by `dhan_local_daemon.ts` and `dhan_config.ts`. Standalone CLI startup unconditionally uses `DisabledWindowsHostVaultBackend` (`UNPROVISIONED_WINDOWS_HOST_VAULT`, `liveResolutionSupported: false`). |
+| `WINDOWS_DPAPI` value in `IIPS_DHAN_VAULT_PROVIDER` | **Not admitted in `src/security/secret_ref.ts` on `main`.** Setting `IIPS_DHAN_VAULT_PROVIDER=WINDOWS_DPAPI` alongside configured `vault://` paths fails `validateSecretRef` and causes `CONFIGURATION_INCOMPLETE` startup refusal. |
+| `IIPS_DHAN_QUOTE_MAX_ATTEMPTS` | **Does not exist on `main`.** Quote retry attempts use the code constant `maxAttempts = 3` in `withBoundedRetry`. |
+| Stricter custom regex on `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` | **`main` uses `Date.parse(raw)` validation** (`!Number.isNaN(Date.parse(raw))`) in `resolveDhanProviderConfig` and `LocalHostVaultDhanCredentialResolver` (recommended format remains canonical UTC ISO-8601 `YYYY-MM-DDTHH:mm:ss.sssZ`). |
+| Pre-W-07..W-10 route surface (lacking `/v1/diagnostics` & `/v1/connection/verify`) | **`main` includes W-07, W-08, W-09, and W-10** (`ServiceHealth` `contractVersion: 2`, `GET /v1/diagnostics`, `POST /v1/connection/verify`). |
+
+---
+
+## 2. Environment Variables Read by IPD (Exact `main` Implementation)
+
+IPD intentionally ships **no `.env` or `.env.example` file** in the repository so placeholder
+files are never confused with active runtime configuration or accidentally populated with live
+secrets in a tracked working tree. All runtime configuration is read from the process
+environment (`process.env` or an explicitly passed `DhanEnvSource` in programmatic tests).
+
+### 2.1 Daemon Listener & Transport Authentication Variables
+
+| Environment Variable | Source Constant & Module | Default Value | Validation & Exact Runtime Behavior on `main` |
+| :--- | :--- | :--- | :--- |
+| `IIPS_MARKET_DATA_DAEMON_HOST` | `MARKET_DATA_DAEMON_HOST_ENV` (`src/providers/dhan/dhan_local_daemon.ts`) | `'127.0.0.1'` (`DEFAULT_MARKET_DATA_DAEMON_HOST`) | Defaults to `'127.0.0.1'` when **unset (`undefined`)**. Validated case-insensitively after `.trim()` by `isLoopbackTransportHost`: only `'127.0.0.1'`, `'::1'`, `'[::1]'`, and `'localhost'` are accepted. Empty/whitespace strings (`''`), `'0.0.0.0'`, `'::'`, LAN IPs, and external DNS names fail closed at startup phase `'validate'` with code `NON_LOOPBACK_HOST_REFUSED` before any socket is created. |
+| `IIPS_MARKET_DATA_DAEMON_PORT` | `MARKET_DATA_DAEMON_PORT_ENV` (`src/providers/dhan/dhan_local_daemon.ts`) | `8791` (`DEFAULT_MARKET_DATA_DAEMON_PORT`) | Absent or whitespace-only falls back to `8791`. When non-empty, `.trim()` must match `/^\d+$/` and parse as an integer in `1..65535`. `'0'`, negative numbers, decimals, ports `> 65535`, or non-numeric strings fail closed at phase `'validate'` with code `INVALID_PORT`. *(Programmatic `options.port = 0` ephemeral port binding exists solely as an in-process `startMarketDataDaemon` test seam, never via the environment variable.)* |
+| `IIPS_MARKET_DATA_TRANSPORT_TOKEN` | `MARKET_DATA_TRANSPORT_TOKEN_ENV` (`src/providers/dhan/dhan_market_data_http.ts`) | *(none — required)* | Required local server-to-server HTTP bearer secret. Missing or whitespace-only (`!token.trim()`) fails closed at phase `'validate'` with code `TRANSPORT_TOKEN_MISSING` (and throws synchronously if `createMarketDataHttpServer` is called directly). Captured once at server creation for the lifetime of the daemon process; rotating it requires restarting the daemon. **Never** a Dhan API credential. |
+
+### 2.2 Dhan Provider & `SecretRef` Metadata Variables (`DHAN_ENV_KEYS`)
+
+All provider configuration keys are defined in `DHAN_ENV_KEYS` (`src/providers/dhan/dhan_config.ts`)
+and evaluated by `resolveDhanProviderConfig(env, now)`:
+
+| Environment Variable | `DHAN_ENV_KEYS` Property | Default Value | Validation & Exact Runtime Behavior on `main` |
+| :--- | :--- | :--- | :--- |
+| `IIPS_DHAN_BASE_URL` | `baseUrl` | `'https://api.dhan.co/v2'` (`DHAN_DEFAULT_BASE_URL`) | Absent or whitespace-only falls back to `'https://api.dhan.co/v2'`; trailing slashes are stripped (`replace(/\/+$/, '')`). When `DhanServerHttpsTransport` is constructed, the URL must parse as `https:` with no embedded `username`, `password`, or query string (`search === ''`), and every outbound request URL must stay within the configured origin and path prefix. |
+| `IIPS_DHAN_TIMEOUT_MS` | `timeoutMs` | `5000` (`DHAN_DEFAULT_TIMEOUT_MS`, in ms) | Parsed via `Number.parseInt(raw, 10)`. Absent, empty, non-numeric (`NaN`), or `<= 0` falls back to `5000`. Controls per-attempt outbound Dhan HTTPS timeout (`AbortSignal.timeout(request.timeoutMs)`), distinct from the `10,000` ms loopback HTTP request timeout. |
+| `IIPS_DHAN_CLIENT_ID_SECRET_PATH` | `clientIdSecretPath` | *(unset)* | External `SecretRef.keyPath` pointer to the Dhan client identifier (must begin with `'vault://'`, never a plaintext client ID). See §2.4 for exact readiness matrix. |
+| `IIPS_DHAN_ACCESS_TOKEN_SECRET_PATH` | `accessTokenSecretPath` | *(unset)* | External `SecretRef.keyPath` pointer to the Dhan access token (must begin with `'vault://'`, never a plaintext token). See §2.4 for exact readiness matrix. |
+| `IIPS_DHAN_VAULT_PROVIDER` | `secretVaultProvider` | `'LOCAL_MOCK_VAULT'` | Optional `VaultProvider` identifier (`src/security/secret_ref.ts`). Absent or whitespace-only defaults to `'LOCAL_MOCK_VAULT'`. Admitted values on `main`: `'LOCAL_MOCK_VAULT'`, `'AWS_SECRETS_MANAGER'`, `'HASHICORP_VAULT'`, `'AZURE_KEY_VAULT'`, `'TEST_ENCLAVE'`. Validated via `validateSecretRef` whenever both secret paths are non-empty; an unaccepted value yields `CONFIGURATION_INCOMPLETE` and refuses daemon startup at phase `'configure'`. |
+| `IIPS_DHAN_SECRET_VERSION` | `secretVersion` | `'v1'` | Optional `SecretRef.version`. Absent or whitespace-only defaults to `'v1'`. When `LocalHostVaultDhanCredentialResolver` reads a vault record that specifies `record.version`, a mismatch against `ref.version` fails closed with `CREDENTIALS_UNAVAILABLE`. |
+| `IIPS_DHAN_SECRET_STATUS` | `secretStatus` | `'ACTIVE'` | Optional `SecretRefStatus` (`'ACTIVE'`, `'ROTATING'`, `'REVOKED'`, `'EXPIRED'`). Absent or whitespace-only defaults to `'ACTIVE'`. When both secret paths are present: any unknown status string yields `CONFIGURATION_INCOMPLETE` (daemon startup refused at phase `'configure'`); `'EXPIRED'` or `'REVOKED'` yields `ok: false`, `readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'`, `failureCode: 'CREDENTIALS_EXPIRED'` (daemon starts on loopback with `vendorEgressMode: 'DISABLED_PRE_ACCESS'` and `providerState: 'EXPIRED'`). |
+| `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` | `accessTokenExpiresAt` | *(unset)* | Optional timestamp string evaluated when both secret paths are present. Unparseable values (`Number.isNaN(Date.parse(raw))`) yield `CONFIGURATION_INCOMPLETE` (daemon startup refused at phase `'configure'`). Timestamps with `Date.parse(raw) <= now.getTime()` yield `CREDENTIALS_EXPIRED` (daemon starts on loopback in `PRE_ACCESS_CREDENTIALS_UNAVAILABLE` / `providerState: 'EXPIRED'`). Re-checked dynamically at request time by `LocalHostVaultDhanCredentialResolver`. |
+
+### 2.3 Deployment & TLS Guard Environment Variables
+
+| Environment Variable | Checked By | Guard Rule on `main` |
+| :--- | :--- | :--- |
+| `NODE_ENV` | `isDhanProductionEnvironment` (`dhan_config.ts`, enforced in daemon, config, vault resolver, API client, HTTPS egress, HTTP server, and HTTP client) | Trimmed case-insensitive `'production'` fails closed immediately with `PRODUCTION_NOT_AUTHORIZED` (daemon startup refused at phase `'validate'`, exit code `1`). |
+| `IIPS_DEPLOYMENT_ENV` | `isDhanProductionEnvironment` (same 7 enforcement points as `NODE_ENV`) | Trimmed case-insensitive `'production'` fails closed immediately with `PRODUCTION_NOT_AUTHORIZED`. |
+| `NODE_TLS_REJECT_UNAUTHORIZED` | `DhanServerHttpsTransport` (`dhan_server_egress.ts`) | Trimmed value `'0'` is refused fail-closed (`DhanTransportUnavailableError` -> `TRANSPORT_FAILURE`) both at transport construction and before every `send()` call. TLS certificate verification cannot be disabled. |
+
+### 2.4 Startup Outcome Matrix for Credential Configuration States
+
+| Secret-Path & Metadata State | `resolveDhanProviderConfig` Result | Daemon Startup Outcome (`startMarketDataDaemon`) | Loopback `/v1/health` & `/v1/diagnostics` State |
+| :--- | :--- | :--- | :--- |
+| Both `IIPS_DHAN_*_SECRET_PATH` unset or blank | `ok: false`, `failure.code: 'CREDENTIALS_UNAVAILABLE'`, `config.readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'` (`missingKeys.length === 2`) | **Starts and listens** (`vendorEgressMode: 'DISABLED_PRE_ACCESS'`) | `service: 'UP'`, `providerConfiguration: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'`, `providerState: 'UNCONFIGURED'` |
+| Exactly one `IIPS_DHAN_*_SECRET_PATH` set (`missingKeys.length === 1`) | `ok: false`, `failure.code: 'CREDENTIALS_UNAVAILABLE'`, `config.readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'` | **Starts and listens** (`vendorEgressMode: 'DISABLED_PRE_ACCESS'`) | `service: 'UP'`, `providerConfiguration: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'`, `credentialResolutionOutcome: 'CONFIGURATION_INCOMPLETE'`, `providerState: 'UNAVAILABLE'` |
+| Both `vault://` paths valid, status `'ACTIVE'` / `'ROTATING'`, `expiresAt` absent or future | `ok: true`, `config.readiness: 'CREDENTIAL_REFERENCES_CONFIGURED'` | **Starts and listens** (`vendorEgressMode: 'DISABLED_PRE_ACCESS'` on default unprovisioned vault backend; `'IPD_SERVER_HTTPS'` only if an active `LocalHostVaultSecretBackend` is programmatically injected) | `service: 'UP'`, `providerConfiguration: 'CONFIGURED'`; `providerState: 'UNAVAILABLE'` when `liveCredentialResolutionSupported === false`, or `'CONFIGURED'` when an active vault backend is injected |
+| Both `vault://` paths valid, but `IIPS_DHAN_SECRET_STATUS` is `'EXPIRED'`/`'REVOKED'` or `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT <= now` | `ok: false`, `failure.code: 'CREDENTIALS_EXPIRED'`, `config.readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'` | **Starts and listens** (`vendorEgressMode: 'DISABLED_PRE_ACCESS'`) | `service: 'UP'`, `providerConfiguration: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'`, `providerState: 'EXPIRED'` |
+| Both secret paths non-empty, but non-`vault://` URI, invalid `VaultProvider`, invalid `SecretRefStatus`, or unparseable `expiresAt` | `ok: false`, `failure.code: 'CONFIGURATION_INCOMPLETE'` | **Refuses startup** at phase `'configure'` (`code: 'CONFIGURATION_INCOMPLETE'`, exit code `1`, no socket opened) | *(daemon not listening)* |
+
+---
+
+## 3. Compatibility Distinction vs IRR Consumer Environment Variables
+
+IRR (`ramkivs/iips-review-recovered`) owns its own server-side consumer configuration. IPD's
+daemon **does not read** IRR's URL or timeout variables, and neither repository treats IRR's
+two URL settings as aliases or fallbacks for each other:
+
+| IRR Consumer Variable (Read by IRR Only) | Consumed By (in IRR) | IRR Default | Relationship to IPD Daemon |
+| :--- | :--- | :--- | :--- |
+| `IIPS_MARKET_DATA_TRANSPORT_URL` | IRR offline identity HTTP consumer (`/v1/instruments/search`, `/v1/identity/resolve`, `/v1/identity/qualify`) | *(none — required by IRR identity path; fixed `10,000` ms client timeout in IRR)* | **Not read by IPD.** Must be set in IRR's environment to the exact `http://<host>:<port>` where IPD's daemon is listening (by default `http://127.0.0.1:8791`). |
+| `IIPS_MARKET_DATA_BASE_URL` | IRR quote, historical, health, freshness, diagnostics, and connection-verify consumer (`MarketDataTransportClient`) | `http://127.0.0.1:8791` | **Not read by IPD.** Matches IPD's default listener (`127.0.0.1:8791`). Must address the **same** IPD daemon listener as `IIPS_MARKET_DATA_TRANSPORT_URL`. |
+| `IIPS_MARKET_DATA_TIMEOUT_MS` | IRR `MarketDataTransportClient` `options.timeoutMs` override | `10000` (`10,000` ms) | **Not read by IPD.** Governs IRR's client-side `AbortSignal.timeout` on quote/history/health/diagnostics/verify calls, not IRR's identity path and not IPD's `IIPS_DHAN_TIMEOUT_MS` (`5,000` ms) or IPD's server-side `MARKET_DATA_REQUEST_TIMEOUT_MS` (`10,000` ms). |
+| `IIPS_MARKET_DATA_TRANSPORT_TOKEN` | Shared name read by **both** IPD server (`createMarketDataHttpServer` / `startMarketDataDaemon`) and IRR HTTP clients | *(none — required in both processes)* | Both processes must receive the identical non-empty bearer token from operator-managed process environment injection. Never hardcode, log, or commit. |
+
+---
+
+## 4. Daemon Port (`8791`), Loopback Binding, and Network-Access Behavior
+
+1. **Default Listener**: `http://127.0.0.1:8791` (`DEFAULT_MARKET_DATA_DAEMON_HOST = '127.0.0.1'`,
+   `DEFAULT_MARKET_DATA_DAEMON_PORT = 8791`). When `IIPS_MARKET_DATA_DAEMON_HOST` is `'::1'` or
+   `'[::1]'`, `startMarketDataDaemon` normalizes the socket listen host to `'::1'` and formats
+   `diagnostics.baseUrl` as `http://[::1]:<port>`.
+2. **Three-Layer Loopback Listener Enforcement**:
+   - **Pre-socket validation (`startMarketDataDaemon` & `createMarketDataHttpServer`)**:
+     `isLoopbackTransportHost` accepts only `'127.0.0.1'`, `'::1'`, `'[::1]'`, and `'localhost'`.
+     Public/wildcard/LAN addresses (`'0.0.0.0'`, `'::'`, `'192.168.x.x'`, `'10.x.x.x'`, external
+     hostnames) are rejected before `server.listen` is invoked.
+   - **Wrapped `server.listen` guard (`dhan_market_data_http.ts`)**: `createMarketDataHttpServer`
+     patches `server.listen` so callers cannot bypass the loopback restriction when passing a
+     port or `ListenOptions`.
+   - **Post-bind kernel verification (`dhan_local_daemon.ts`)**: After `server.listen` succeeds,
+     `startMarketDataDaemon` inspects `server.address()` (`AddressInfo`) via
+     `isVerifiedLoopbackBoundAddress` and requires the kernel-resolved bound address to be
+     `'127.0.0.1'`, `'::1'`, or `'::ffff:127.0.0.1'`. Any other resolved address (for example,
+     if a tampered hosts file mapped `localhost` to a non-loopback interface) triggers immediate
+     `service.stop()` + `server.close()` rollback and fails closed with `BIND_FAILED`. Port
+     collisions (`EADDRINUSE`) likewise roll back cleanly with `BIND_FAILED`.
+3. **Client Loopback Preflight (`MarketDataTransportClient`)**:
+   - Accepts **only** `http://` URLs whose `hostname` passes `isLoopbackTransportHost`, with
+     empty `username`, `password`, and `search`, and sets `redirect: 'error'` on `fetch`.
+   - Rejects `https://` loopback URLs, remote/LAN hosts, `api.dhan.co` URLs, query parameters,
+     and embedded URL credentials with `{ ok: false, failure: { code: 'TRANSPORT_FAILURE' } }`
+     before issuing any network call.
+4. **Outbound Vendor Egress Control (`DhanServerHttpsTransport` vs `PreAccessNoNetworkTransport`)**:
+   - Outbound vendor egress (`DhanServerHttpsTransport`) is wired **only** when
+     `credentialResolver.isLiveResolutionSupported() === true` **and**
+     `resolveDhanProviderConfig` returns `ok === true`.
+   - Otherwise (including every standalone CLI launch on `main`, because the default vault
+     backend reports `liveResolutionSupported: false`), the daemon wires
+     `PreAccessNoNetworkTransport` (`vendorEgressMode: 'DISABLED_PRE_ACCESS'`), which never
+     opens a network socket.
+   - When active via programmatic vault-backend injection, `DhanServerHttpsTransport` enforces
+     `https:` protocol, exact origin + path-prefix pinning against `config.baseUrl`
+     (`https://api.dhan.co/v2`), `redirect: 'error'`, TLS verification
+     (`NODE_TLS_REJECT_UNAUTHORIZED !== '0'`), and `AbortSignal.timeout(request.timeoutMs)`.
+
+---
+
+## 5. Transport Authentication, Dhan Backend Selection, and Credential Configuration
+
+### 5.1 Loopback Transport Authentication (`IIPS_MARKET_DATA_TRANSPORT_TOKEN`)
+
+- Every route on `createMarketDataHttpServer` authenticates **before** route dispatch or JSON
+  body parsing.
+- Expected header: `Authorization: Bearer <token>` (exact `'Bearer '` prefix, case-sensitive).
+- Verification: `tokenMatches` converts both strings to UTF-8 `Buffer`s, checks equal byte
+  length, and compares with `node:crypto` `timingSafeEqual`.
+- Missing `Authorization` header, non-`Bearer ` scheme, empty token, or mismatched token returns
+  HTTP `401` with `{"error":{"code":"UNAUTHENTICATED","message":"missing or invalid transport credential"}}`.
+- Transport tokens are strictly local IPC bearer secrets between authorized local processes
+  (e.g. IRR backend -> IPD daemon) and are **never** forwarded to Dhan or accepted from URLs.
+
+### 5.2 Dhan Vault Backend Selection on Authoritative `main`
+
+- `src/providers/dhan/dhan_local_vault_resolver.ts` defines the internal
+  `LocalHostVaultSecretBackend` SPI (`describeReadiness()`, `readSecret(ref, asOfUtc)`) and
+  `LocalHostVaultDhanCredentialResolver`.
+- Because IPD `main` contains zero native OS secret-store bindings (`package.json` runtime
+  dependencies contain only `react-router-dom`), `LocalHostVaultDhanCredentialResolver` defaults
+  unconditionally to `DisabledWindowsHostVaultBackend`:
+  - `backendId`: `'UNPROVISIONED_WINDOWS_HOST_VAULT'` (`UNPROVISIONED_WINDOWS_VAULT_BACKEND_ID`)
+  - `liveResolutionSupported`: `false`
+- **No environment-variable backend selector exists on `main`.** Selecting a live host secret
+  store on `main` requires programmatic injection via `StartMarketDataDaemonOptions.vaultBackend`
+  (or `credentialResolver`) inside IPD, pending separate Phase 1 host-vault convergence on
+  `main`.
+- `sanitizeVaultBackendId` (`src/providers/dhan/dhan_api_client.ts`) enforces the D-7 §4.1/§4.2
+  format `/^[A-Z][A-Z0-9_]{1,63}$/`; any non-conforming string (paths, URIs, punctuation,
+  lowercase text) is coerced fail-closed to `'UNKNOWN_VAULT_BACKEND'`.
+
+### 5.3 `SecretRef` Contract and Per-Request Credential Handling
+
+- Dhan credentials are represented in configuration exclusively as `SecretRef` metadata objects
+  (`src/security/secret_ref.ts`):
+  `{ secretId: string, vaultProvider: VaultProvider, keyPath: 'vault://...', version: string, status: SecretRefStatus, expiresAt?: string }`.
+- Neither `resolveDhanProviderConfig` nor `DhanMarketDataService` ever stores plaintext
+  `client-id` or `access-token` values on configuration objects, caches, envelopes, health
+  responses, diagnostics responses, startup logs, or exceptions.
+- When live resolution is active via an injected `LocalHostVaultSecretBackend`:
+  1. `LocalHostVaultDhanCredentialResolver.resolve(config)` checks non-production mode,
+     re-validates both `SecretRef`s (`validateSecretRef`), checks `SecretRef.status` and
+     `SecretRef.expiresAt` against `now()`, invokes `backend.readSecret(...)` for both
+     references, verifies non-empty trimmed secret values, checks `record.status` and
+     `record.expiresAt`, and enforces `record.version === ref.version` when `record.version` is
+     present.
+  2. `DhanApiClient` places resolved values into outbound per-request HTTP headers
+     (`access-token`, `client-id`, plus `Accept: application/json` and `Content-Type: application/json`)
+     for that single call only and discards them immediately on return.
+  3. Backend exceptions are caught and scrubbed to a generic static message
+     (`'Local host-vault backend failed closed during secret lookup'`) so raw OS/vault errors or
+     secret fragments can never leak.
+
+---
+
+## 6. Build, Startup, Lifecycle, and Shutdown Requirements
+
+1. **Runtime Prerequisite**: Node.js **`>= 22.13.0`**, non-production environment
+   (`NODE_ENV` and `IIPS_DEPLOYMENT_ENV` must **not** equal `'production'`).
+2. **Build Step Required Before CLI Launch**:
+   - `package.json` defines `"start:market-data-daemon": "node dist/src/providers/dhan/dhan_local_daemon.js"`.
+   - Run `npm run build` (full repository + subpackage build) or `npm run build:tsc` (`tsc`) first
+     so `dist/src/providers/dhan/dhan_local_daemon.js` matches the checked-out source commit.
+3. **Standalone Launch Command**:
+   - Inject `IIPS_MARKET_DATA_TRANSPORT_TOKEN` (and optional `IIPS_MARKET_DATA_DAEMON_HOST`,
+     `IIPS_MARKET_DATA_DAEMON_PORT`, `IIPS_DHAN_*` variables) via the operator's external
+     process environment, then run:
+     ```text
+     npm run start:market-data-daemon
+     ```
+   - **Zero CLI Arguments Allowed**: Passing any command-line argument after the script path
+     (`process.argv.slice(2).length > 0`) causes immediate refusal at phase `'validate'` with
+     `CLI_ARGUMENTS_FORBIDDEN` and exit code `1`, **without** echoing `argv` values. Never pass
+     `--port`, `--host`, or tokens on the command line.
+4. **Relationship to `windows-setup/03-Start-IipsServers.ps1`**:
+   - The checksum-pinned `windows-setup/` bundle (`03-Start-IipsServers.ps1`) starts IRR
+     (`127.0.0.1:8787` API, `127.0.0.1:5176` frontend) and optional IPD portfolio IPC; it
+     **does not** start `start:market-data-daemon` (`127.0.0.1:8791`).
+   - Start the IPD market-data daemon **before** starting IRR market-data/identity consumers,
+     and stop IRR consumers **before** stopping the daemon.
+5. **Offline Registry Loading & Sanitized Startup Output**:
+   - During startup, the daemon loads `getGovernedBroadSecurityMaster()` and
+     `loadGovernedP7InstrumentRegistry()` from local `evidence/dhan-p7/qualification-manifest.json`
+     (`4,680` `QUALIFIED` mappings on `main`) with **zero** network requests.
+   - On successful bind, `runMarketDataDaemonCli` writes one sanitized line to `stderr`
+     (`DaemonCliIo.writeStderr`, defaulting to `console.error`) via `formatDaemonStartupLine`:
+     ```text
+     [ipd-market-data-daemon] listening on http://127.0.0.1:8791 (providerReadiness=..., vaultBackend=UNPROVISIONED_WINDOWS_HOST_VAULT, liveCredentialResolution=false, vendorEgress=DISABLED_PRE_ACCESS, qualifiedMappings=4680)
+     ```
+6. **Graceful Shutdown & Configuration Reload**:
+   - `runMarketDataDaemonCli` registers `SIGINT` and `SIGTERM` handlers (`once`) that invoke
+     idempotent `handle.shutdown()` (`service.stop()` — clearing the in-memory quote cache and
+     halting new refreshes — followed by `server.close()` bounded by
+     `DEFAULT_DAEMON_SHUTDOWN_TIMEOUT_MS = 5,000` ms, after which `server.closeAllConnections()`
+     is called if needed).
+   - Environment variables are read at startup/request preflight; changing
+     `IIPS_MARKET_DATA_TRANSPORT_TOKEN`, listener host/port, or `IIPS_DHAN_*` variables requires
+     a clean daemon restart.
+
+---
+
+## 7. Authenticated Loopback HTTP Endpoints (`MARKET_DATA_ROUTES`)
+
+All **9** routes require `Authorization: Bearer <IIPS_MARKET_DATA_TRANSPORT_TOKEN>`, return
+`application/json`, enforce `MARKET_DATA_MAX_REQUEST_BYTES = 16,384` bytes (`16 KiB`) on `POST`
+bodies (`413 REQUEST_TOO_LARGE`), and emit transport errors as
+`{"error":{"code":"<CODE>","message":"<MESSAGE>"}}`:
+
+| Method & Path (`MARKET_DATA_ROUTES`) | Purpose & Request Contract | Success Payload (`HTTP 200`) | Error Status Mapping | Outbound Vendor Call Possible? |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET /v1/health` (`health`) | Observational service & provider health (`ServiceHealth`, W-07 `contractVersion: 2`). | `{ service: 'UP' \| 'DOWN', providerConfiguration: 'CONFIGURED' \| 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE', liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS' \| 'CONNECTED_LIVE', providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED' \| 'LIVE_QUALIFIED', contractVersion: 2 }` | `401` (`UNAUTHENTICATED`), `404` (wrong method) | **Never** (reads W-08 in-memory recorder only). |
+| `GET /v1/diagnostics` (`diagnostics`) | Sanitized D-7 §4.1 operational diagnostics (`ServiceDiagnostics`, W-09 `contractVersion: 1`; 8-state `providerState`: `'UNCONFIGURED' \| 'CONFIGURED' \| 'CREDENTIALS_RESOLVED' \| 'AUTHENTICATED' \| 'OPERATIONAL' \| 'EXPIRED' \| 'DEGRADED' \| 'UNAVAILABLE'`). Rejects any query string or `req.url.length > 2048` with `400`. | `{ contractVersion: 1, service, providerState, providerConfiguration, providerReadiness, vaultBackendId, liveCredentialResolutionSupported, vendorEgressMode, credentialResolutionOutcome, liveProviderConnectivity, providerQualification, lastSuccessAt, lastFailureCategory, lastFailure, lastAuthOutcome, lastLatencyMs, consecutiveAuthFailures, authLatched, requestCounters, qualifiedMappingsLoaded, quoteCache }` | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `404` (wrong method) | **Never** (pure read-only snapshot; never mutates state or reads secrets). |
+| `POST /v1/connection/verify` (`verifyConnection`) | Explicit operator-initiated single-shot connection verification (`ServiceConnectionVerification`, W-08 / W-10 `contractVersion: 1`). Rejects query params; empty `{}` or `{ mode?: 'LIVE_PROBE' \| 'LOCAL_ONLY' }` body (`mode` defaults to `'LIVE_PROBE'`). | `{ contractVersion: 1, mode, outcome, providerState, localReadinessEstablished, probeAttempted, probeCount, failureCategory, checkedAt, latencyMs, observedState, diagnostics }` | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `413` (`REQUEST_TOO_LARGE`), `504` (`REQUEST_TIMEOUT`) | **`LOCAL_ONLY`: Never.** **`LIVE_PROBE`:** At most **1** probe (`probeCount <= 1`, zero retries), only when service is running, credentials resolve, auth latch is clear, rate permit succeeds, and vendor egress is enabled. |
+| `GET /v1/freshness` (`freshness`) | Read-only cache/observation freshness (`FreshnessStatus`, P5). Query params: `?domain=D02_OHLCV` (alone) or `?domain=D01_QUOTES&companyId=<id>&exchangeSegment=NSE_EQ\|BSE_EQ&securityId=ISIN:<isin>:<series>`. | `{ domain, cacheState: 'CURRENT' \| 'STALE' \| 'UNAVAILABLE' \| 'MISS' \| 'NOT_AVAILABLE', asOf, receivedAt, evaluatedAt, observationEvaluatedAt, timestampEvidence, thresholdSeconds, ageSeconds, verdict: 'GOOD' \| 'STALE' \| 'UNAVAILABLE' \| 'UNKNOWN', staleConcessionActive, suppressExecution, eligibleForUse, lastRefresh: { outcome, lastFailure } }` *(Note: `D02_OHLCV` currently returns `cacheState: 'NOT_AVAILABLE'`, `verdict: 'UNKNOWN'`, `lastRefresh.outcome: 'UNKNOWN'` because `DhanHistoricalAdapter` is uncached pending W-19.)* | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `404` (wrong method) | **Never** (`cache.peek` only; never refreshes or touches LRU order). |
+| `POST /v1/quotes` (`quotes`) | Canonical D01 quote fetch via P4 orchestrator. Body: `{ companyId, securityId: 'ISIN:<isin>:<series>', exchangeSegment?: 'NSE_EQ' \| 'BSE_EQ' }` (`exchangeSegment` defaults to `'NSE_EQ'`). | `{ ok: true, envelope: CanonicalEnvelope<MarketQuotePayload>, freshness: 'CURRENT' \| 'STALE' }` | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `413` (`REQUEST_TOO_LARGE`), `429` (`RATE_LIMITED`), `502` (provider/domain failure), `504` (`REQUEST_TIMEOUT`) | **Yes, on cache miss/stale** when identity resolves and live credentials + egress are active (otherwise fails closed before socket I/O). |
+| `POST /v1/historical` (`historical`) | Canonical D02 daily OHLCV fetch. Body: `{ companyId, exchangeSegment?, isin?, interval, fromDate, toDate, isAdjusted? }`. | `{ ok: true, result: DhanHistoricalNormalizationResult }` | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `413` (`REQUEST_TOO_LARGE`), `429` (`RATE_LIMITED`), `502` (provider/domain failure), `504` (`REQUEST_TIMEOUT`) | **Yes**, single-shot when identity resolves and live credentials + egress are active. |
+| `POST /v1/instruments/search` (`instrumentSearch`) | Offline P4 registry + P04 master search (`DhanIdentityApiService.search`). Body: `{ query: string }` (non-empty trimmed, `<= 100` chars). | `{ results: InstrumentSearchResult[] }` (at most `100` rows) | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `413` (`REQUEST_TOO_LARGE`) | **Never** (offline local master/registry only). |
+| `POST /v1/identity/resolve` (`identityResolve`) | Offline exact D114 identity resolution (`DhanIdentityApiService.resolve`). Body: `{ companyId, exchange: 'NSE' \| 'BSE', securityId: 'ISIN:<isin>:<series>' }`. | `IdentityApiResult` (`QUALIFIED` \| `UNRESOLVED` \| `AMBIGUOUS`, HTTP `200`) | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `413` (`REQUEST_TOO_LARGE`) | **Never** (offline local master/registry only). |
+| `POST /v1/identity/qualify` (`identityQualify`) | Offline holding identity qualification (`DhanIdentityApiService.qualify`). Body: `{ isin?: string, exchange: 'NSE' \| 'BSE', symbol?: string }`. | `IdentityApiResult` (`QUALIFIED` \| `UNRESOLVED` \| `AMBIGUOUS`, HTTP `200`) | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `413` (`REQUEST_TOO_LARGE`) | **Never** (offline local master/registry only). |
+
+Any unknown path or unsupported HTTP method (after bearer authentication) returns HTTP `404`
+with `{"error":{"code":"NOT_FOUND","message":"unknown route"}}`. Note that when
+`createMarketDataHttpServer` is instantiated directly without `options.identityService`, the
+three identity routes also return `404 NOT_FOUND`; `startMarketDataDaemon` always wires
+`DhanIdentityApiService` from `securityMaster` and `instrumentRegistry`.
+
+---
+
+## 8. Timeout Settings and Operational Controls Summary
+
+| Control / Setting | Default Value on `main` | Configuration Surface | Scope & Fail-Closed Behavior |
+| :--- | :--- | :--- | :--- |
+| **Outbound Dhan HTTP timeout** | **`5,000` ms** (`DHAN_DEFAULT_TIMEOUT_MS`) | `IIPS_DHAN_TIMEOUT_MS` env var | Per-attempt `AbortSignal.timeout` inside `DhanServerHttpsTransport` -> `DhanTransportTimeoutError` -> `TIMEOUT`. |
+| **Loopback HTTP server execution timeout** | **`10,000` ms** (`MARKET_DATA_REQUEST_TIMEOUT_MS`) | Programmatic `requestTimeoutMs` option only *(no env var)* | Bounds `POST /v1/quotes`, `POST /v1/historical`, and `POST /v1/connection/verify` -> HTTP `504` (`REQUEST_TIMEOUT`). |
+| **IPD `MarketDataTransportClient` timeout** | **`10,000` ms** (`MARKET_DATA_REQUEST_TIMEOUT_MS`) | `new MarketDataTransportClient(url, token, { timeoutMs })` *(IRR passes `IIPS_MARKET_DATA_TIMEOUT_MS`, default `10,000` ms)* | Client-side `AbortSignal.timeout` -> `{ ok: false, failure: { code: 'TIMEOUT' } }`. |
+| **Daemon shutdown drain timeout** | **`5,000` ms** (`DEFAULT_DAEMON_SHUTDOWN_TIMEOUT_MS`) | Programmatic `shutdownTimeoutMs` option only *(no env var)* | Bounds `server.close()` during `shutdown()` / `SIGINT` / `SIGTERM`, then forces `closeAllConnections()`. |
+| **Loopback HTTP `POST` body cap** | **`16,384` bytes (`16 KiB`)** (`MARKET_DATA_MAX_REQUEST_BYTES`) | Fixed constant | Streams exceeding `16 KiB` abort immediately with HTTP `413` (`REQUEST_TOO_LARGE`). |
+| **Quote LRU cache (`DhanBoundedCache`)** | **`256` entries** | Programmatic `DhanMarketDataServiceOptions.cache` | Keyed by `COMPANY_ID\|SEGMENT\|ISIN\|SERIES`. Freshness is evaluated from `provenance.asOf` (AD-12 D01 threshold `900s`: `<= 900s` `CURRENT`/`GOOD`, `> 900s..1,800s` `STALE` with concession, `> 1,800s` suppressed/`UNAVAILABLE`), never from insertion time. Cleared on `service.stop()`. |
+| **Refresh status diagnostic map** | **`256` entries** | Fixed internal bound (`DhanMarketDataService`) | Retains per-scope last refresh outcome for `/v1/freshness` without affecting quote execution. |
+| **Shared rate limiter (`DhanRateLimiter`)** | **`60` requests / `60,000` ms** | Programmatic `DhanMarketDataServiceOptions.limiter` | Sliding-window permit shared across quote cache-miss refreshes, `getHistorical`, and `verifyConnection` `LIVE_PROBE` attempts. Exhaustion fails closed with `RATE_LIMITED` (HTTP `429` on `/v1/quotes` and `/v1/historical`). |
+| **Quote concurrency limiter (`DhanConcurrencyLimiter`)** | **`8` max in-flight**, **`1,024` max queued waiters** | Programmatic `DhanMarketDataServiceOptions.concurrency` | Bounds concurrent quote fetches in `DhanRefreshOrchestrator`; queue overflow fails closed with `TRANSPORT_FAILURE`. |
+| **Duplicate quote request coalescer** | Enabled per `COMPANY_ID\|SEGMENT\|ISIN\|SERIES` | Programmatic `DhanMarketDataServiceOptions.coalescer` | Concurrent requests for the identical security scope share one in-flight execution. |
+| **Quote transient retry (`withBoundedRetry`)** | **`3` max attempts** (`100` ms base exponential backoff + `0..50%` jitter) | Fixed in `DhanRefreshOrchestrator` | Retries **only** transient codes (`RATE_LIMITED`, `TIMEOUT`, `TRANSPORT_FAILURE`, `HTTP_ERROR` with `httpStatus >= 500`). Permanent failures (`AUTHENTICATION_FAILURE`, `CREDENTIALS_UNAVAILABLE`, `CREDENTIALS_EXPIRED`, `UNRESOLVED_INSTRUMENT`, `HTTP_ERROR` `< 500`) are **never** retried. `getHistorical` and `verifyConnection` perform **0** retries (`1` attempt max). |
+| **Consecutive auth-failure latch (`W-08`)** | **`2` consecutive `AUTHENTICATION_FAILURE`s** (`DHAN_AUTH_LATCH_THRESHOLD`) | Fixed in `DhanProviderStateRecorder` | Latches `authLatched: true` (`providerState: 'DEGRADED'`, `lastAuthOutcome: 'AUTHENTICATION_FAILURE'`) and blocks further `verifyConnection` live probes until a non-auth reset/success path or process restart. |
+
+---
+
+## 9. W-11 Documentation Reconciliation Log, Verification Evidence, and Remaining Dependencies
+
+### 9.1 W-11 Documentation Inconsistencies Audited and Corrected in IPD
+
+1. **Missing `main`-authoritative W-11 daemon configuration specification**: Published this
+   `main`-verified specification (`docs/integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md`)
+   and explicitly isolated diverged candidate-only settings (`IIPS_DHAN_VAULT_BACKEND`,
+   `WINDOWS_DPAPI`, `IIPS_DHAN_QUOTE_MAX_ATTEMPTS`) that do not exist on IPD `main`.
+2. **`docs/DHAN-D1-PROVIDER-FOUNDATION.md` (§3 & §4)**: Added `IIPS_DHAN_SECRET_STATUS` (default
+   `'ACTIVE'`) and `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` (optional expiry timestamp) to complete
+   all 8 `DHAN_ENV_KEYS`, documented the `NODE_ENV` / `IIPS_DEPLOYMENT_ENV` non-production
+   guard, added `CREDENTIALS_EXPIRED` and `PRODUCTION_NOT_AUTHORIZED` to the failure taxonomy
+   list, and linked this W-11 specification.
+3. **`docs/integration/DHAN-STAGE1-CREDENTIAL-AND-TRANSPORT-ADMISSION-2026-11-08.md`**: Added an
+   explicit current-`main` reconciliation note preserving the 2026-11-08 Stage 1 historical
+   record while correcting stale readers on post-Stage-1 `main` facts (`4,680` qualified P7
+   mappings after PR `#164` vs historical `96`; actual `DhanMarketDataService` operational
+   defaults of `256` quote cache / `60 per 60,000 ms` shared rate limiter / `8` concurrency /
+   uncached D02 historical pending W-19 vs historical narrative numbers; and the complete 9-route
+   HTTP surface including P4 identity, P5 `/v1/freshness`, W-07 `ServiceHealth` v2, W-09
+   `/v1/diagnostics`, and W-10 `POST /v1/connection/verify`).
+4. **`docs/integration/DHAN-W07-HEALTH-CONTRACT-HANDOFF.md`**: Added a post-merge status banner
+   clarifying that W-07 (`#168` + IRR `#567`), W-08 (`#169`), W-09 (`#170`), and W-10 (`#172` +
+   IRR `#569`) are merged on `main` and pointing to this W-11 operational specification.
+5. **`src/providers/dhan/dhan_market_data_http.ts` header comment**: Updated the file header
+   route summary so all **9** routes in `MARKET_DATA_ROUTES` (including `/v1/freshness`,
+   `/v1/instruments/search`, `/v1/identity/resolve`, and `/v1/identity/qualify`) are listed
+   accurately without altering runtime code.
+
+### 9.2 Synthetic Offline Verification Evidence
+
+- **`tests/dhan_w11_daemon_configuration.test.ts` (`W11-01..06`)**: Verifies exact parity between
+  documented constants/defaults/routes and IPD `main` exports, non-alias isolation against IRR
+  consumer variables and candidate-only variables, loopback/port/CLI-arg/bearer/production
+  refusal guards, missing/malformed/expired `SecretRef` behavior, full 9-route loopback HTTP
+  compatibility (`health`, `diagnostics`, `connection/verify`, `freshness`, `quotes`,
+  `historical`, `instruments/search`, `identity/resolve`, `identity/qualify`), `./dhan-server`
+  vs browser export boundaries, and AD-17 / D-7 secret-scanner compliance (`scanTextForSecrets`:
+  zero violations).
+- **Build, Typecheck & Installed Package Consumer (`npm run build`, `tsc --noEmit`, `npm run test:package-consumer`)**:
+  Verified cleanly with zero live Dhan calls and `forbiddenHits: []` on the browser bundle.
+
+### 9.3 Remaining Cross-Repository / Operator Dependencies for Overall Roadmap W-11
+
+Completing IPD's W-11 configuration, compatibility, and synthetic verification deliverables does
+**not** mark overall roadmap W-11 complete. Overall W-11 remains **`PARTIAL`** pending:
+
+1. **Operator-Executed Connected-Daemon Dry-Run (IRR + IPD on Approved Host)**: An authorized
+   operator starting IPD's `npm run start:market-data-daemon` and IRR on version-correlated,
+   owner-approved checkouts with matching `IIPS_MARKET_DATA_TRANSPORT_TOKEN` and
+   `IIPS_MARKET_DATA_TRANSPORT_URL` / `IIPS_MARKET_DATA_BASE_URL` pointing to
+   `http://127.0.0.1:8791`, recording sanitized evidence across all four capabilities (Status,
+   Quotes, History, Freshness).
+2. **Separate IPD Roadmap Prerequisites for Live Vendor Traffic & D02 Freshness**:
+   - **Phase 1 Host-Vault Convergence on IPD `main`**: `main` currently ships
+     `DisabledWindowsHostVaultBackend` (`UNPROVISIONED_WINDOWS_HOST_VAULT`,
+     `liveResolutionSupported: false`, `vendorEgressMode: 'DISABLED_PRE_ACCESS'`). Live Dhan
+     vendor traffic on `main` remains fail-closed until an approved host-vault backend is
+     admitted and converged onto `main` under separate scope.
+   - **W-19 D02 Historical Freshness / Cache Wiring**: `GET /v1/freshness?domain=D02_OHLCV`
+     honestly reports `cacheState: 'NOT_AVAILABLE'` (`verdict: 'UNKNOWN'`,
+     `lastRefresh.outcome: 'UNKNOWN'`) on current `main` until `DhanHistoricalCache` is wired
+     under roadmap W-19.

@@ -15,11 +15,15 @@
  *     transport failure and never opens direct vendor egress.
  *
  * Routes (all JSON, authenticated):
- *   POST /v1/quotes            { companyId, securityId: 'ISIN:<isin>:<series>', exchangeSegment? } -> D01 envelope or error
- *   POST /v1/historical        { companyId, exchangeSegment?, isin?, interval, fromDate, toDate } -> D02 result or error
- *   GET  /v1/health            -> ServiceHealth (observational; never triggers vendor call)
- *   GET  /v1/diagnostics       -> ServiceDiagnostics (observational; D-7 §4.1 MAY list only)
- *   POST /v1/connection/verify { mode?: 'LIVE_PROBE' | 'LOCAL_ONLY' } -> ServiceConnectionVerification (single-shot W-08 verify)
+ *   POST /v1/quotes             { companyId, securityId: 'ISIN:<isin>:<series>', exchangeSegment? } -> D01 envelope or error
+ *   POST /v1/historical         { companyId, exchangeSegment?, isin?, interval, fromDate, toDate } -> D02 result or error
+ *   GET  /v1/health             -> ServiceHealth (observational; never triggers vendor call)
+ *   GET  /v1/diagnostics        -> ServiceDiagnostics (observational; D-7 §4.1 MAY list only)
+ *   POST /v1/connection/verify  { mode?: 'LIVE_PROBE' | 'LOCAL_ONLY' } -> ServiceConnectionVerification (single-shot W-08 verify)
+ *   GET  /v1/freshness          ?domain=D02_OHLCV | ?domain=D01_QUOTES&companyId=...&exchangeSegment=...&securityId=... -> FreshnessStatus
+ *   POST /v1/instruments/search { query } -> offline P4 candidate search (when identityService supplied)
+ *   POST /v1/identity/resolve   { companyId, exchange, securityId } -> offline exact D114 identity resolution
+ *   POST /v1/identity/qualify   { isin?, exchange, symbol? } -> offline holding identity qualification
  *
  * Auth: `Authorization: Bearer <token>` where the token comes from env
  *   IIPS_MARKET_DATA_TRANSPORT_TOKEN. The transport credential is separate
