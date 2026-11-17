@@ -2,28 +2,31 @@
 
 - **Document ID**: `IPD-DHAN-W11-DAEMON-CONFIGURATION-2026-11-16`
 - **Repository**: `ramkivs/iips-production-market-data` (`IPD`)
-- **Authoritative `main` Baseline**: `1ce6a829a7ce65550356a0071c108a60f2d813be`
-- **IPD W-11 Scope Status**: **COMPLETE (IPD-OWNED CONFIGURATION, RECONCILIATION & SYNTHETIC VERIFICATION)**
+- **Integration Base**: `main` at `b4a9f0f3601c2c56960aa15796370af0b7664d39` (W-11); DPAPI source restored from `8bbc299620bf4e88bd5f57f3f784b6894d99c3c9`
+- **IPD W-11 Scope Status**: **COMPLETE (IPD-OWNED CONFIGURATION, RECONCILIATION & SYNTHETIC VERIFICATION); DPAPI RESTORATION VERIFIED ON THIS BRANCH**
 - **Overall Roadmap W-11 Status**: **PARTIAL** *(pending separate operator-executed, version-correlated connected-daemon verification across IRR and IPD on the approved Windows host)*
 - **Operating Boundary**: **LOCAL, SINGLE-USER, NON-PRODUCTION ONLY (`PRODUCTION_NOT_AUTHORIZED` IN PRODUCTION)**
 
 > **Zero-Secret & Non-Live Evidence Notice (AD-17 / D-7):** This specification is derived
-> directly from the authoritative IPD `main` source tree and verified exclusively with
+> from IPD's W-11 baseline plus the restored DPAPI lineage and verified exclusively with
 > deterministic, offline synthetic tests. No live Dhan vendor requests were executed, no
 > Dhan credentials or transport tokens were provisioned or inspected, and no secret values,
-> concrete operator `vault://` paths, or credential-carrier filesystem locations appear in
-> this document.
+> operator-specific `vault://` paths, or credential-carrier filesystem locations appear in
+> this document. Canonical logical key-path names below are identifiers, not OS paths.
 
 ---
 
 ## 1. Scope, Roadmap W-11 Boundary, and `main` Lineage Reconciliation
 
-### 1.1 Authoritative IPD `main` Lineage (`1ce6a829a7ce65550356a0071c108a60f2d813be`)
+### 1.1 W-11 Baseline and Restored DPAPI Lineage
 
-This document specifies the exact runtime configuration, environment-variable handling,
-defaults, loopback transport contract, credential-backend behavior, startup/shutdown rules,
-HTTP endpoints, and timeout/operational controls implemented on authoritative IPD `main` at
-`1ce6a829a7ce65550356a0071c108a60f2d813be`:
+This document specifies the runtime configuration, environment-variable handling, defaults,
+loopback transport contract, credential-backend behavior, startup/shutdown rules, HTTP
+endpoints, and operational controls on this branch, which brings the known-good DPAPI lineage
+(`8bbc299620bf4e88bd5f57f3f784b6894d99c3c9`) forward to the W-11 `main` baseline
+(`b4a9f0f3601c2c56960aa15796370af0b7664d39`). The earlier W-11 document described
+`main` at `1ce6a829a7ce65550356a0071c108a60f2d813be`; that description of a *past*
+source tree is retained as history, not current runtime guidance:
 
 - **Stage 1 & P4–P7 Foundation**: `src/providers/dhan/dhan_config.ts`,
   `src/providers/dhan/dhan_local_daemon.ts`, `src/providers/dhan/dhan_local_vault_resolver.ts`,
@@ -39,24 +42,31 @@ HTTP endpoints, and timeout/operational controls implemented on authoritative IP
   and `MarketDataTransportClient.diagnostics()` under D-7 §4.1 disclosure bounds.
 - **W-10 (`#172`)**: Authenticated loopback `POST /v1/connection/verify`
   (`DHAN_VERIFICATION_CONTRACT_VERSION = 1`) and `MarketDataTransportClient.verifyConnection()`.
+- **Restored DPAPI W-01..W-04 and W-06**: `WINDOWS_DPAPI` SecretRefs with two distinct
+  logical key paths; owner-only ACL and per-user DPAPI carrier backend; fail-closed daemon
+  selector (`IIPS_DHAN_VAULT_BACKEND`, default `disabled`); `dhan:credential` utility for
+  provisioning/rotation/verification; strict UTC expiry; and bounded transport-token parsing.
+  These additions are internal to IPD and do not remove or roll back W-07..W-11 endpoints.
 - **Coordinated IRR Pin**: Authoritative IRR `main` (`ramkivs/iips-review-recovered`,
   re-verified in IRR PR `#572` at `752fb3e89da1f5e7f50802e15a7bf3b1af472e19` following IRR W-10
   PR `#569`) pins `iips-production-market-data` to `1ce6a829a7ce65550356a0071c108a60f2d813be`.
+  This is a historical IRR pin, **not** evidence that IRR already consumes this restored branch;
+  an operator must version-correlate and test both repositories before connected use.
 
-### 1.2 Explicit Isolation of Diverged Unmerged Candidate Lineage
+### 1.2 Reconciliation of the Earlier Unmerged Candidate Lineage
 
-An earlier unmerged IPD candidate branch (`arena/9015787b-iips-production-market-data`,
-commits `a8ffd10ab4ba5d3b024bedc522da531b4c1bebbf` / `bcfa6cbbcaff63a8c55f4d7395c4cbb5d0088d52`)
-diverged from IPD `main` prior to W-07..W-10. Operators and integrators **must not** apply
-candidate-only settings to IPD `main`:
+The earlier W-11 audit correctly noted that the candidate DPAPI branch had **not** been merged
+at its then-current `main` commit. This restoration intentionally brings the known-good
+`8bbc2996` implementation onto the W-11 baseline; the old "not on main" guidance no longer
+applies to the resulting code. Do not mistake the two independent settings below for aliases:
 
-| Diverged Candidate Item (`bcfa6cb…`) | Authoritative IPD `main` Reality (`1ce6a829…`) |
+| Earlier discrepancy | Behavior after this restoration |
 | :--- | :--- |
-| `IIPS_DHAN_VAULT_BACKEND` (`disabled` / `windows-dpapi`) | **Does not exist on `main`.** Ignored by `dhan_local_daemon.ts` and `dhan_config.ts`. Standalone CLI startup unconditionally uses `DisabledWindowsHostVaultBackend` (`UNPROVISIONED_WINDOWS_HOST_VAULT`, `liveResolutionSupported: false`). |
-| `WINDOWS_DPAPI` value in `IIPS_DHAN_VAULT_PROVIDER` | **Not admitted in `src/security/secret_ref.ts` on `main`.** Setting `IIPS_DHAN_VAULT_PROVIDER=WINDOWS_DPAPI` alongside configured `vault://` paths fails `validateSecretRef` and causes `CONFIGURATION_INCOMPLETE` startup refusal. |
-| `IIPS_DHAN_QUOTE_MAX_ATTEMPTS` | **Does not exist on `main`.** Quote retry attempts use the code constant `maxAttempts = 3` in `withBoundedRetry`. |
-| Stricter custom regex on `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` | **`main` uses `Date.parse(raw)` validation** (`!Number.isNaN(Date.parse(raw))`) in `resolveDhanProviderConfig` and `LocalHostVaultDhanCredentialResolver` (recommended format remains canonical UTC ISO-8601 `YYYY-MM-DDTHH:mm:ss.sssZ`). |
-| Pre-W-07..W-10 route surface (lacking `/v1/diagnostics` & `/v1/connection/verify`) | **`main` includes W-07, W-08, W-09, and W-10** (`ServiceHealth` `contractVersion: 2`, `GET /v1/diagnostics`, `POST /v1/connection/verify`). |
+| `IIPS_DHAN_VAULT_BACKEND` | **Now supported** by the daemon (`DHAN_VAULT_BACKEND_ENV`): `disabled` by default, or explicitly `windows-dpapi`. Unknown values refuse startup at phase `validate` without echoing the value. An unset selector never enables vendor egress. |
+| `WINDOWS_DPAPI` in `IIPS_DHAN_VAULT_PROVIDER` | **Now admitted** as `VaultProvider`; this selects the *SecretRef metadata format*, not the runtime backend. Config validation accepts separate `vault://` paths with the correct `client-id` and `access-token` leaf names; actual D-1 carriers use `DHAN_CLIENT_ID_KEY_PATH` and `DHAN_ACCESS_TOKEN_KEY_PATH` so mismatched scopes cannot read them. To use DPAPI at runtime also select `windows-dpapi`, provision both carriers and pass the readiness probe on an approved Windows host. |
+| `IIPS_DHAN_QUOTE_MAX_ATTEMPTS` | **Still unsupported.** Quote retry attempts remain the governed code constant (`maxAttempts = 3`); this variable is not read. |
+| Zone-less `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` | **Now refused** by `parseStrictUtcTimestamp` across config, resolver, API client, and diagnostics. An explicit `Z` or numeric timezone offset is required; no host-local interpretation or implicit `Z` is permitted. |
+| Pre-W-07..W-10 route surface | **Not restored over newer routes.** W-07 health v2, W-08 recorder, W-09 diagnostics, W-10 connection verification, and all nine IPD routes remain available. |
 
 ---
 
@@ -73,7 +83,8 @@ environment (`process.env` or an explicitly passed `DhanEnvSource` in programmat
 | :--- | :--- | :--- | :--- |
 | `IIPS_MARKET_DATA_DAEMON_HOST` | `MARKET_DATA_DAEMON_HOST_ENV` (`src/providers/dhan/dhan_local_daemon.ts`) | `'127.0.0.1'` (`DEFAULT_MARKET_DATA_DAEMON_HOST`) | Defaults to `'127.0.0.1'` when **unset (`undefined`)**. Validated case-insensitively after `.trim()` by `isLoopbackTransportHost`: only `'127.0.0.1'`, `'::1'`, `'[::1]'`, and `'localhost'` are accepted. Empty/whitespace strings (`''`), `'0.0.0.0'`, `'::'`, LAN IPs, and external DNS names fail closed at startup phase `'validate'` with code `NON_LOOPBACK_HOST_REFUSED` before any socket is created. |
 | `IIPS_MARKET_DATA_DAEMON_PORT` | `MARKET_DATA_DAEMON_PORT_ENV` (`src/providers/dhan/dhan_local_daemon.ts`) | `8791` (`DEFAULT_MARKET_DATA_DAEMON_PORT`) | Absent or whitespace-only falls back to `8791`. When non-empty, `.trim()` must match `/^\d+$/` and parse as an integer in `1..65535`. `'0'`, negative numbers, decimals, ports `> 65535`, or non-numeric strings fail closed at phase `'validate'` with code `INVALID_PORT`. *(Programmatic `options.port = 0` ephemeral port binding exists solely as an in-process `startMarketDataDaemon` test seam, never via the environment variable.)* |
-| `IIPS_MARKET_DATA_TRANSPORT_TOKEN` | `MARKET_DATA_TRANSPORT_TOKEN_ENV` (`src/providers/dhan/dhan_market_data_http.ts`) | *(none — required)* | Required local server-to-server HTTP bearer secret. Missing or whitespace-only (`!token.trim()`) fails closed at phase `'validate'` with code `TRANSPORT_TOKEN_MISSING` (and throws synchronously if `createMarketDataHttpServer` is called directly). Captured once at server creation for the lifetime of the daemon process; rotating it requires restarting the daemon. **Never** a Dhan API credential. |
+| `IIPS_MARKET_DATA_TRANSPORT_TOKEN` | `MARKET_DATA_TRANSPORT_TOKEN_ENV` (`src/providers/dhan/dhan_market_data_http.ts`) | *(none — required)* | Required local server-to-server bearer secret. `validateTransportToken` refuses missing/blank (`TRANSPORT_TOKEN_MISSING`), non-ASCII/control (`TRANSPORT_TOKEN_NOT_ASCII`), and leading/trailing/interior whitespace (`TRANSPORT_TOKEN_WHITESPACE`) before binding. `createMarketDataHttpServer` also validates direct callers. Captured once for the daemon lifetime; rotation requires a restart. **Never** a Dhan API credential. |
+| `IIPS_DHAN_VAULT_BACKEND` | `DHAN_VAULT_BACKEND_ENV` (`src/providers/dhan/dhan_local_daemon.ts`) | `'disabled'` | Exact, case-sensitive allow-list: `'disabled'` or `'windows-dpapi'`; unset/blank means `'disabled'`. Unknown values fail closed at phase `'validate'` with `VAULT_BACKEND_NOT_ALLOWED` before any vault or socket work, without echoing input. `windows-dpapi` awaits the backend probe and permits egress only when both configuration and backend readiness are valid. This selector is **not** `IIPS_DHAN_VAULT_PROVIDER`. |
 
 ### 2.2 Dhan Provider & `SecretRef` Metadata Variables (`DHAN_ENV_KEYS`)
 
@@ -82,14 +93,19 @@ and evaluated by `resolveDhanProviderConfig(env, now)`:
 
 | Environment Variable | `DHAN_ENV_KEYS` Property | Default Value | Validation & Exact Runtime Behavior on `main` |
 | :--- | :--- | :--- | :--- |
-| `IIPS_DHAN_BASE_URL` | `baseUrl` | `'https://api.dhan.co/v2'` (`DHAN_DEFAULT_BASE_URL`) | Absent or whitespace-only falls back to `'https://api.dhan.co/v2'`; trailing slashes are stripped (`replace(/\/+$/, '')`). When `DhanServerHttpsTransport` is constructed, the URL must parse as `https:` with no embedded `username`, `password`, or query string (`search === ''`), and every outbound request URL must stay within the configured origin and path prefix. |
+| `IIPS_DHAN_BASE_URL` | `baseUrl` | `'https://api.dhan.co/v2'` (`DHAN_DEFAULT_BASE_URL`) | Absent or empty falls back to `'https://api.dhan.co/v2'`; trailing slashes are stripped (`replace(/\/+$/, '')`). Whitespace-only is **not** a valid HTTPS URL. When `DhanServerHttpsTransport` is constructed, the URL must parse as `https:` with no embedded `username`, `password`, or query string (`search === ''`), and every outbound request URL must stay within the configured origin and path prefix. |
 | `IIPS_DHAN_TIMEOUT_MS` | `timeoutMs` | `5000` (`DHAN_DEFAULT_TIMEOUT_MS`, in ms) | Parsed via `Number.parseInt(raw, 10)`. Absent, empty, non-numeric (`NaN`), or `<= 0` falls back to `5000`. Controls per-attempt outbound Dhan HTTPS timeout (`AbortSignal.timeout(request.timeoutMs)`), distinct from the `10,000` ms loopback HTTP request timeout. |
 | `IIPS_DHAN_CLIENT_ID_SECRET_PATH` | `clientIdSecretPath` | *(unset)* | External `SecretRef.keyPath` pointer to the Dhan client identifier (must begin with `'vault://'`, never a plaintext client ID). See §2.4 for exact readiness matrix. |
 | `IIPS_DHAN_ACCESS_TOKEN_SECRET_PATH` | `accessTokenSecretPath` | *(unset)* | External `SecretRef.keyPath` pointer to the Dhan access token (must begin with `'vault://'`, never a plaintext token). See §2.4 for exact readiness matrix. |
-| `IIPS_DHAN_VAULT_PROVIDER` | `secretVaultProvider` | `'LOCAL_MOCK_VAULT'` | Optional `VaultProvider` identifier (`src/security/secret_ref.ts`). Absent or whitespace-only defaults to `'LOCAL_MOCK_VAULT'`. Admitted values on `main`: `'LOCAL_MOCK_VAULT'`, `'AWS_SECRETS_MANAGER'`, `'HASHICORP_VAULT'`, `'AZURE_KEY_VAULT'`, `'TEST_ENCLAVE'`. Validated via `validateSecretRef` whenever both secret paths are non-empty; an unaccepted value yields `CONFIGURATION_INCOMPLETE` and refuses daemon startup at phase `'configure'`. |
-| `IIPS_DHAN_SECRET_VERSION` | `secretVersion` | `'v1'` | Optional `SecretRef.version`. Absent or whitespace-only defaults to `'v1'`. When `LocalHostVaultDhanCredentialResolver` reads a vault record that specifies `record.version`, a mismatch against `ref.version` fails closed with `CREDENTIALS_UNAVAILABLE`. |
-| `IIPS_DHAN_SECRET_STATUS` | `secretStatus` | `'ACTIVE'` | Optional `SecretRefStatus` (`'ACTIVE'`, `'ROTATING'`, `'REVOKED'`, `'EXPIRED'`). Absent or whitespace-only defaults to `'ACTIVE'`. When both secret paths are present: any unknown status string yields `CONFIGURATION_INCOMPLETE` (daemon startup refused at phase `'configure'`); `'EXPIRED'` or `'REVOKED'` yields `ok: false`, `readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'`, `failureCode: 'CREDENTIALS_EXPIRED'` (daemon starts on loopback with `vendorEgressMode: 'DISABLED_PRE_ACCESS'` and `providerState: 'EXPIRED'`). |
-| `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` | `accessTokenExpiresAt` | *(unset)* | Optional timestamp string evaluated when both secret paths are present. Unparseable values (`Number.isNaN(Date.parse(raw))`) yield `CONFIGURATION_INCOMPLETE` (daemon startup refused at phase `'configure'`). Timestamps with `Date.parse(raw) <= now.getTime()` yield `CREDENTIALS_EXPIRED` (daemon starts on loopback in `PRE_ACCESS_CREDENTIALS_UNAVAILABLE` / `providerState: 'EXPIRED'`). Re-checked dynamically at request time by `LocalHostVaultDhanCredentialResolver`. |
+| `IIPS_DHAN_VAULT_PROVIDER` | `secretVaultProvider` | `'LOCAL_MOCK_VAULT'` | `SecretRef.vaultProvider` metadata (not a backend selector). Absent defaults to `'LOCAL_MOCK_VAULT'`. Admitted values: `'LOCAL_MOCK_VAULT'`, `'AWS_SECRETS_MANAGER'`, `'HASHICORP_VAULT'`, `'AZURE_KEY_VAULT'`, `'TEST_ENCLAVE'`, `'WINDOWS_DPAPI'`. For `'WINDOWS_DPAPI'`, `validateDhanSecretKeyPaths` additionally requires a separate role-specific key path for each secret; unknown provider or malformed pair refuses startup with `CONFIGURATION_INCOMPLETE`. |
+| `IIPS_DHAN_SECRET_VERSION` | `secretVersion` | `'v1'` | Optional `SecretRef.version`. Absent or empty defaults to `'v1'`. Match the version stamped into each carrier by `dhan:credential`; a mismatch against the backend's record fails closed with `CREDENTIALS_UNAVAILABLE`. |
+| `IIPS_DHAN_SECRET_STATUS` | `secretStatus` | `'ACTIVE'` | Optional `SecretRefStatus` (`'ACTIVE'`, `'ROTATING'`, `'REVOKED'`, `'EXPIRED'`). Absent or empty defaults to `'ACTIVE'`. With both secret paths configured: any unknown status (including whitespace-only) yields `CONFIGURATION_INCOMPLETE` (phase `'configure'`); `'EXPIRED'` or `'REVOKED'` yields `CREDENTIALS_EXPIRED` (loopback listener starts with egress off and `providerState: 'EXPIRED'`). |
+| `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` | `accessTokenExpiresAt` | *(unset)* | Optional timestamp evaluated when both secret paths are present. `parseStrictUtcTimestamp` requires explicit `Z` or a numeric timezone offset, real calendar time and valid offset; malformed and zone-less values yield `CONFIGURATION_INCOMPLETE` (phase `'configure'`). An instant `<= now` yields `CREDENTIALS_EXPIRED` (loopback listener remains fail-closed with `providerState: 'EXPIRED'`). Expiry is checked again during credential resolution, API preflight, and diagnostics; the input value is never echoed on refusal. |
+
+For `'WINDOWS_DPAPI'`, use the *logical* (non-filesystem) `DHAN_CLIENT_ID_KEY_PATH`
+(`vault://dhan/client-id`) and `DHAN_ACCESS_TOKEN_KEY_PATH` (`vault://dhan/access-token`)
+for `clientIdSecretPath` and `accessTokenSecretPath`, respectively. Both must be distinct and
+role-specific. These references alone never make a backend ready or prove vendor connectivity.
 
 ### 2.3 Deployment & TLS Guard Environment Variables
 
@@ -105,9 +121,9 @@ and evaluated by `resolveDhanProviderConfig(env, now)`:
 | :--- | :--- | :--- | :--- |
 | Both `IIPS_DHAN_*_SECRET_PATH` unset or blank | `ok: false`, `failure.code: 'CREDENTIALS_UNAVAILABLE'`, `config.readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'` (`missingKeys.length === 2`) | **Starts and listens** (`vendorEgressMode: 'DISABLED_PRE_ACCESS'`) | `service: 'UP'`, `providerConfiguration: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'`, `providerState: 'UNCONFIGURED'` |
 | Exactly one `IIPS_DHAN_*_SECRET_PATH` set (`missingKeys.length === 1`) | `ok: false`, `failure.code: 'CREDENTIALS_UNAVAILABLE'`, `config.readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'` | **Starts and listens** (`vendorEgressMode: 'DISABLED_PRE_ACCESS'`) | `service: 'UP'`, `providerConfiguration: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'`, `credentialResolutionOutcome: 'CONFIGURATION_INCOMPLETE'`, `providerState: 'UNAVAILABLE'` |
-| Both `vault://` paths valid, status `'ACTIVE'` / `'ROTATING'`, `expiresAt` absent or future | `ok: true`, `config.readiness: 'CREDENTIAL_REFERENCES_CONFIGURED'` | **Starts and listens** (`vendorEgressMode: 'DISABLED_PRE_ACCESS'` on default unprovisioned vault backend; `'IPD_SERVER_HTTPS'` only if an active `LocalHostVaultSecretBackend` is programmatically injected) | `service: 'UP'`, `providerConfiguration: 'CONFIGURED'`; `providerState: 'UNAVAILABLE'` when `liveCredentialResolutionSupported === false`, or `'CONFIGURED'` when an active vault backend is injected |
+| Both `vault://` paths valid (governed pair for `WINDOWS_DPAPI`), status `'ACTIVE'` / `'ROTATING'`, `expiresAt` absent or future | `ok: true`, `config.readiness: 'CREDENTIAL_REFERENCES_CONFIGURED'` | **Starts and listens** with egress off when selector is absent/`disabled`. When explicitly `windows-dpapi`, vendor egress is **permitted** only after the awaited probe reports ready on a provisioned, approved Windows host; an injected backend is a controlled test seam. | `service: 'UP'`, `providerConfiguration: 'CONFIGURED'`; `providerState: 'UNAVAILABLE'` if the backend is not ready, or at most `'CREDENTIALS_RESOLVED'` on local evidence when it is ready — never vendor-authenticated by startup alone. |
 | Both `vault://` paths valid, but `IIPS_DHAN_SECRET_STATUS` is `'EXPIRED'`/`'REVOKED'` or `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT <= now` | `ok: false`, `failure.code: 'CREDENTIALS_EXPIRED'`, `config.readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'` | **Starts and listens** (`vendorEgressMode: 'DISABLED_PRE_ACCESS'`) | `service: 'UP'`, `providerConfiguration: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'`, `providerState: 'EXPIRED'` |
-| Both secret paths non-empty, but non-`vault://` URI, invalid `VaultProvider`, invalid `SecretRefStatus`, or unparseable `expiresAt` | `ok: false`, `failure.code: 'CONFIGURATION_INCOMPLETE'` | **Refuses startup** at phase `'configure'` (`code: 'CONFIGURATION_INCOMPLETE'`, exit code `1`, no socket opened) | *(daemon not listening)* |
+| Both secret paths non-empty, but non-`vault://` URI, an invalid/shared Windows key-path pair, invalid `VaultProvider`/`SecretRefStatus`, or malformed/zone-less `expiresAt` | `ok: false`, `failure.code: 'CONFIGURATION_INCOMPLETE'` | **Refuses startup** at phase `'configure'` (`code: 'CONFIGURATION_INCOMPLETE'`, exit code `1`, no socket opened) | *(daemon not listening)* |
 
 ---
 
@@ -145,8 +161,8 @@ two URL settings as aliases or fallbacks for each other:
      `isVerifiedLoopbackBoundAddress` and requires the kernel-resolved bound address to be
      `'127.0.0.1'`, `'::1'`, or `'::ffff:127.0.0.1'`. Any other resolved address (for example,
      if a tampered hosts file mapped `localhost` to a non-loopback interface) triggers immediate
-     `service.stop()` + `server.close()` rollback and fails closed with `BIND_FAILED`. Port
-     collisions (`EADDRINUSE`) likewise roll back cleanly with `BIND_FAILED`.
+     `service.stop()` + `server.close()` rollback and fails closed with
+     `NON_LOOPBACK_HOST_REFUSED`. Port collisions (`EADDRINUSE`) roll back with `BIND_FAILED`.
 3. **Client Loopback Preflight (`MarketDataTransportClient`)**:
    - Accepts **only** `http://` URLs whose `hostname` passes `isLoopbackTransportHost`, with
      empty `username`, `password`, and `search`, and sets `redirect: 'error'` on `fetch`.
@@ -154,14 +170,15 @@ two URL settings as aliases or fallbacks for each other:
      and embedded URL credentials with `{ ok: false, failure: { code: 'TRANSPORT_FAILURE' } }`
      before issuing any network call.
 4. **Outbound Vendor Egress Control (`DhanServerHttpsTransport` vs `PreAccessNoNetworkTransport`)**:
-   - Outbound vendor egress (`DhanServerHttpsTransport`) is wired **only** when
-     `credentialResolver.isLiveResolutionSupported() === true` **and**
-     `resolveDhanProviderConfig` returns `ok === true`.
-   - Otherwise (including every standalone CLI launch on `main`, because the default vault
-     backend reports `liveResolutionSupported: false`), the daemon wires
-     `PreAccessNoNetworkTransport` (`vendorEgressMode: 'DISABLED_PRE_ACCESS'`), which never
-     opens a network socket.
-   - When active via programmatic vault-backend injection, `DhanServerHttpsTransport` enforces
+   - Outbound vendor egress (`DhanServerHttpsTransport`) is wired **only** when the awaited
+     `probeBackendReadiness()` reports `liveResolutionSupported: true` **and**
+     `resolveDhanProviderConfig` returns `ok === true`. The default `disabled` backend keeps
+     egress off; `windows-dpapi` does **not** imply readiness just because it was selected.
+   - Otherwise (including every unprovisioned, non-Windows, invalid-DACL, missing-carrier or
+     expired configuration), the daemon wires `PreAccessNoNetworkTransport`
+     (`vendorEgressMode: 'DISABLED_PRE_ACCESS'`), which never opens a vendor socket.
+   - When active on an approved Windows host (or via a controlled injected test backend),
+     `DhanServerHttpsTransport` enforces
      `https:` protocol, exact origin + path-prefix pinning against `config.baseUrl`
      (`https://api.dhan.co/v2`), `redirect: 'error'`, TLS verification
      (`NODE_TLS_REJECT_UNAUTHORIZED !== '0'`), and `AbortSignal.timeout(request.timeoutMs)`.
@@ -174,31 +191,41 @@ two URL settings as aliases or fallbacks for each other:
 
 - Every route on `createMarketDataHttpServer` authenticates **before** route dispatch or JSON
   body parsing.
-- Expected header: `Authorization: Bearer <token>` (exact `'Bearer '` prefix, case-sensitive).
-- Verification: `tokenMatches` converts both strings to UTF-8 `Buffer`s, checks equal byte
-  length, and compares with `node:crypto` `timingSafeEqual`.
-- Missing `Authorization` header, non-`Bearer ` scheme, empty token, or mismatched token returns
-  HTTP `401` with `{"error":{"code":"UNAUTHENTICATED","message":"missing or invalid transport credential"}}`.
+- Expected header: `Authorization: Bearer <token>`. `parseBearerAuthorization` accepts the
+  scheme **case-insensitively** and an SP/HTAB separator (RFC 7235 §2.1), but refuses malformed
+  or whitespace-contaminated credentials; it never repairs or trims a token into a match.
+- `validateTransportToken` refuses an untransmittable token at startup; the client uses the same
+  validation. `tokenMatches` checks equal UTF-8 byte length before `node:crypto`'s
+  `timingSafeEqual` comparison.
+- Missing/invalid `Authorization`, a different scheme, or a mismatched credential returns HTTP
+  `401` with `{"error":{"code":"UNAUTHENTICATED","message":"missing or invalid transport credential"}}`.
 - Transport tokens are strictly local IPC bearer secrets between authorized local processes
   (e.g. IRR backend -> IPD daemon) and are **never** forwarded to Dhan or accepted from URLs.
 
-### 5.2 Dhan Vault Backend Selection on Authoritative `main`
+### 5.2 Dhan Vault Backend Selection (W-03 / D-1)
 
 - `src/providers/dhan/dhan_local_vault_resolver.ts` defines the internal
-  `LocalHostVaultSecretBackend` SPI (`describeReadiness()`, `readSecret(ref, asOfUtc)`) and
-  `LocalHostVaultDhanCredentialResolver`.
-- Because IPD `main` contains zero native OS secret-store bindings (`package.json` runtime
-  dependencies contain only `react-router-dom`), `LocalHostVaultDhanCredentialResolver` defaults
-  unconditionally to `DisabledWindowsHostVaultBackend`:
-  - `backendId`: `'UNPROVISIONED_WINDOWS_HOST_VAULT'` (`UNPROVISIONED_WINDOWS_VAULT_BACKEND_ID`)
-  - `liveResolutionSupported`: `false`
-- **No environment-variable backend selector exists on `main`.** Selecting a live host secret
-  store on `main` requires programmatic injection via `StartMarketDataDaemonOptions.vaultBackend`
-  (or `credentialResolver`) inside IPD, pending separate Phase 1 host-vault convergence on
-  `main`.
+  `LocalHostVaultSecretBackend` SPI (`describeReadiness()`, optional async
+  `probeReadiness()`, `readSecret(ref, asOfUtc)`) and `LocalHostVaultDhanCredentialResolver`.
+- The resolver alone defaults to `DisabledWindowsHostVaultBackend`; the **daemon** reads
+  `IIPS_DHAN_VAULT_BACKEND` via `parseDhanVaultBackendSelector`. Unset/blank/`disabled` selects
+  that disabled backend (`UNPROVISIONED_WINDOWS_HOST_VAULT`, `liveResolutionSupported: false`).
+  This remains the fail-closed default on every platform.
+- Explicit `windows-dpapi` selects `WindowsDpapiHostVaultBackend`
+  (`WINDOWS_DPAPI_USER_SCOPE`). Startup **awaits** `probeReadiness()` before reporting
+  `vaultBackendReadiness` and `credentialReadinessCode` or permitting egress. The backend checks
+  an approved Windows host, carrier location, **both** carriers, owner-only ACLs, envelope schema
+  and a DPAPI read. If any check fails, `liveResolutionSupported` is false, vendor egress stays
+  `DISABLED_PRE_ACCESS`, and a sanitized diagnostic explains non-readiness without a location.
+  A successful local probe is **not** vendor authentication.
+- `StartMarketDataDaemonOptions.vaultBackend` / `credentialResolver` remain **controlled test
+  seams**, not the only production means of selecting DPAPI. `vaultCarrierDirectory` is a
+  test/operator seam for an explicitly selected DPAPI backend; do not use it to bypass the
+  governed location or DACL policy.
 - `sanitizeVaultBackendId` (`src/providers/dhan/dhan_api_client.ts`) enforces the D-7 §4.1/§4.2
-  format `/^[A-Z][A-Z0-9_]{1,63}$/`; any non-conforming string (paths, URIs, punctuation,
-  lowercase text) is coerced fail-closed to `'UNKNOWN_VAULT_BACKEND'`.
+  format `/^[A-Z][A-Z0-9_]{1,63}$/`; invalid strings are coerced to
+  `'UNKNOWN_VAULT_BACKEND'`. The daemon startup line reports only sanitized identifiers and
+  readiness, never the logical key paths, carrier locations or secrets.
 
 ### 5.3 `SecretRef` Contract and Per-Request Credential Handling
 
@@ -208,19 +235,38 @@ two URL settings as aliases or fallbacks for each other:
 - Neither `resolveDhanProviderConfig` nor `DhanMarketDataService` ever stores plaintext
   `client-id` or `access-token` values on configuration objects, caches, envelopes, health
   responses, diagnostics responses, startup logs, or exceptions.
-- When live resolution is active via an injected `LocalHostVaultSecretBackend`:
+- When live resolution is active through an explicitly selected, ready DPAPI backend (or an
+  injected test backend):
   1. `LocalHostVaultDhanCredentialResolver.resolve(config)` checks non-production mode,
-     re-validates both `SecretRef`s (`validateSecretRef`), checks `SecretRef.status` and
-     `SecretRef.expiresAt` against `now()`, invokes `backend.readSecret(...)` for both
-     references, verifies non-empty trimmed secret values, checks `record.status` and
-     `record.expiresAt`, and enforces `record.version === ref.version` when `record.version` is
-     present.
-  2. `DhanApiClient` places resolved values into outbound per-request HTTP headers
-     (`access-token`, `client-id`, plus `Accept: application/json` and `Content-Type: application/json`)
-     for that single call only and discards them immediately on return.
-  3. Backend exceptions are caught and scrubbed to a generic static message
-     (`'Local host-vault backend failed closed during secret lookup'`) so raw OS/vault errors or
-     secret fragments can never leak.
+     re-validates both `SecretRef`s (`validateSecretRef`), checks status and strict UTC expiry,
+     reads both references, verifies non-empty values, checks record status/expiry, and enforces
+     `record.version === ref.version` when present. A backend exception becomes a scrubbed,
+     typed failure without raw OS/vault output.
+  2. `DhanApiClient` uses resolved values in outbound per-request headers (`access-token`,
+     `client-id`) only for that call; no credential is stored in a service field, cache, response,
+     envelope, diagnostic, error, or log. JS memory cannot be claimed to be securely zeroized.
+
+### 5.4 W-04 Local Credential Utility and D-1 Carrier Contract
+
+After a clean TypeScript build, an authorized owner on the approved Windows host can run
+`npm run dhan:credential -- --help` for the exact CLI vocabulary and
+`npm run dhan:credential -- verify all` for a location-free, value-free local status.
+`provision client-id`, `provision access-token`, `rotate client-id`, and `rotate access-token`
+are deliberate, separate operations; supply the value through a hidden interactive prompt or
+stdin, **never** as an argument, environment variable, tracked file, or log. For an access
+token, set strict UTC expiry with `--expires-at <UTC-Z-timestamp>` or
+`--expires-in-hours <positive-hours>`. The CLI refuses provisioning off Windows or inside a Git
+working tree. See `docs/integration/DHAN-W04-CREDENTIAL-PROVISIONING-AND-ROTATION-2026-11-12.md`
+and the D-6 operator procedure for guarded execution and rehearsal prerequisites.
+
+Each role has a separate DPAPI CurrentUser ciphertext-only carrier and a versioned envelope:
+`schemaVersion`, `secretId`, `vaultProvider`, `version`, `createdAtUtc`, `rotatedAtUtc`,
+optional token `expiresAtUtc`, and `ciphertext`. Rotation applies owner-only DACLs to the
+beside-file, writes and decrypts it for round-trip verification, then atomically swaps it;
+failures retain the previous carrier and remove temporary files. `verify` reports metadata and
+readability without exposing a value, logical key path, or filesystem location. Both carriers
+must pass the daemon's awaited readiness probe; even then local readiness is not proof of a
+vendor request or successful authentication.
 
 ---
 
@@ -230,8 +276,11 @@ two URL settings as aliases or fallbacks for each other:
    (`NODE_ENV` and `IIPS_DEPLOYMENT_ENV` must **not** equal `'production'`).
 2. **Build Step Required Before CLI Launch**:
    - `package.json` defines `"start:market-data-daemon": "node dist/src/providers/dhan/dhan_local_daemon.js"`.
-   - Run `npm run build` (full repository + subpackage build) or `npm run build:tsc` (`tsc`) first
-     so `dist/src/providers/dhan/dhan_local_daemon.js` matches the checked-out source commit.
+   - Run `npm run build` (full repository + subpackage build) or `npm run build:tsc` first.
+     The npm `prebuild` / `prebuild:tsc` hooks purge old compiled output before `tsc` emits
+     current modules; `npm run clean:dist` explicitly purges all `dist/` and frontend output.
+     Never execute a stale `dist/src/providers/dhan/dhan_credential_store_cli.js` left over
+     from another commit: TypeScript does not delete orphaned `.js` files on its own.
 3. **Standalone Launch Command**:
    - Inject `IIPS_MARKET_DATA_TRANSPORT_TOKEN` (and optional `IIPS_MARKET_DATA_DAEMON_HOST`,
      `IIPS_MARKET_DATA_DAEMON_PORT`, `IIPS_DHAN_*` variables) via the operator's external
@@ -256,7 +305,7 @@ two URL settings as aliases or fallbacks for each other:
    - On successful bind, `runMarketDataDaemonCli` writes one sanitized line to `stderr`
      (`DaemonCliIo.writeStderr`, defaulting to `console.error`) via `formatDaemonStartupLine`:
      ```text
-     [ipd-market-data-daemon] listening on http://127.0.0.1:8791 (providerReadiness=..., vaultBackend=UNPROVISIONED_WINDOWS_HOST_VAULT, liveCredentialResolution=false, vendorEgress=DISABLED_PRE_ACCESS, qualifiedMappings=4680)
+     [ipd-market-data-daemon] listening on http://127.0.0.1:8791 (providerReadiness=..., vaultBackend=UNPROVISIONED_WINDOWS_HOST_VAULT, vaultBackendSelector=disabled, vaultBackendReadiness=NOT_READY, liveCredentialResolution=false, credentialReadiness=CREDENTIALS_UNAVAILABLE, providerState=UNCONFIGURED, vendorEgress=DISABLED_PRE_ACCESS, qualifiedMappings=4680)
      ```
 6. **Graceful Shutdown & Configuration Reload**:
    - `runMarketDataDaemonCli` registers `SIGINT` and `SIGTERM` handlers (`once`) that invoke
@@ -320,10 +369,11 @@ three identity routes also return `404 NOT_FOUND`; `startMarketDataDaemon` alway
 
 ### 9.1 W-11 Documentation Inconsistencies Audited and Corrected in IPD
 
-1. **Missing `main`-authoritative W-11 daemon configuration specification**: Published this
-   `main`-verified specification (`docs/integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md`)
-   and explicitly isolated diverged candidate-only settings (`IIPS_DHAN_VAULT_BACKEND`,
-   `WINDOWS_DPAPI`, `IIPS_DHAN_QUOTE_MAX_ATTEMPTS`) that do not exist on IPD `main`.
+1. **W-11 configuration specification reconciled with restored DPAPI**: The original
+   W-11 document correctly identified DPAPI as unmerged at its old `main` pin. This branch
+   restores `IIPS_DHAN_VAULT_BACKEND`, `WINDOWS_DPAPI`, the two governed key paths, W-04 CLI,
+   and strict UTC expiry without losing W-07..W-11. Only `IIPS_DHAN_QUOTE_MAX_ATTEMPTS`
+   remains an unsupported candidate setting. This document now describes that combination.
 2. **`docs/DHAN-D1-PROVIDER-FOUNDATION.md` (§3 & §4)**: Added `IIPS_DHAN_SECRET_STATUS` (default
    `'ACTIVE'`) and `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` (optional expiry timestamp) to complete
    all 8 `DHAN_ENV_KEYS`, documented the `NODE_ENV` / `IIPS_DEPLOYMENT_ENV` non-production
@@ -340,23 +390,38 @@ three identity routes also return `404 NOT_FOUND`; `startMarketDataDaemon` alway
 4. **`docs/integration/DHAN-W07-HEALTH-CONTRACT-HANDOFF.md`**: Added a post-merge status banner
    clarifying that W-07 (`#168` + IRR `#567`), W-08 (`#169`), W-09 (`#170`), and W-10 (`#172` +
    IRR `#569`) are merged on `main` and pointing to this W-11 operational specification.
-5. **`src/providers/dhan/dhan_market_data_http.ts` header comment**: Updated the file header
-   route summary so all **9** routes in `MARKET_DATA_ROUTES` (including `/v1/freshness`,
-   `/v1/instruments/search`, `/v1/identity/resolve`, and `/v1/identity/qualify`) are listed
-   accurately without altering runtime code.
+5. **`src/providers/dhan/dhan_market_data_http.ts` integration**: Preserved all **9**
+   routes in `MARKET_DATA_ROUTES` (including `/v1/freshness`, `/v1/instruments/search`,
+   `/v1/identity/resolve`, and `/v1/identity/qualify`) while restoring strict bearer-token
+   validation and parser behavior from the DPAPI/P7 lineage.
 
 ### 9.2 Synthetic Offline Verification Evidence
 
-- **`tests/dhan_w11_daemon_configuration.test.ts` (`W11-01..06`)**: Verifies exact parity between
-  documented constants/defaults/routes and IPD `main` exports, non-alias isolation against IRR
-  consumer variables and candidate-only variables, loopback/port/CLI-arg/bearer/production
-  refusal guards, missing/malformed/expired `SecretRef` behavior, full 9-route loopback HTTP
+- **`tests/dhan_w11_daemon_configuration.test.ts` (`W11-01..06`)**: Verifies parity between
+  documented constants/defaults/routes and this branch's exports, non-alias isolation against IRR
+  consumer variables, the restored DPAPI selector and SecretRef pair, strict UTC expiry,
+  loopback/port/CLI-arg/bearer/production refusal guards, full 9-route loopback HTTP
   compatibility (`health`, `diagnostics`, `connection/verify`, `freshness`, `quotes`,
   `historical`, `instruments/search`, `identity/resolve`, `identity/qualify`), `./dhan-server`
   vs browser export boundaries, and AD-17 / D-7 secret-scanner compliance (`scanTextForSecrets`:
   zero violations).
-- **Build, Typecheck & Installed Package Consumer (`npm run build`, `tsc --noEmit`, `npm run test:package-consumer`)**:
-  Verified cleanly with zero live Dhan calls and `forbiddenHits: []` on the browser bundle.
+- **Current restoration verification**: `npx tsc --noEmit` and `npm run build` passed;
+  the guarded `npm test` executed **1,902 tests** (**1,898 passed, 0 failed, 4 skipped**).
+  `windows-setup/.validate-scripts.py` reported **310 pass / 0 fail**. All tests are
+  synthetic/offline; no live Dhan credentials or vendor calls were used.
+- **Installed-package consumer (local vs CI)**: The local
+  `npm run test:package-consumer` packed, installed, imported (ESM + CJS), typechecked,
+  and exercised the installed package, but its pinned IRR fetch returned **GitHub HTTP 403**
+  because this sandbox's GitHub connection lacks read access to the private IRR repository;
+  the local command therefore **did not pass**. A separate installed-package browser scan
+  found `forbiddenHits: []`. The same complete package-consumer step **passed** in authorized
+  GitHub Actions on PR `#174` at integration commit `8d68edbfa24dcd080fff67f8ba86c19a076ab85e`
+  ([CI run 44091781102](https://github.com/ramkivs/iips-production-market-data/actions/runs/44091781102));
+  its guarded test, build, and typecheck steps passed as well. The separate W-02 process-runner
+  workflow passed on both Windows and Ubuntu
+  ([run 44091781180](https://github.com/ramkivs/iips-production-market-data/actions/runs/44091781180)).
+  These are synthetic/contract checks, not Windows-host credential provisioning or live Dhan
+  vendor qualification.
 
 ### 9.3 Remaining Cross-Repository / Operator Dependencies for Overall Roadmap W-11
 
@@ -370,12 +435,38 @@ Completing IPD's W-11 configuration, compatibility, and synthetic verification d
    `http://127.0.0.1:8791`, recording sanitized evidence across all four capabilities (Status,
    Quotes, History, Freshness).
 2. **Separate IPD Roadmap Prerequisites for Live Vendor Traffic & D02 Freshness**:
-   - **Phase 1 Host-Vault Convergence on IPD `main`**: `main` currently ships
-     `DisabledWindowsHostVaultBackend` (`UNPROVISIONED_WINDOWS_HOST_VAULT`,
-     `liveResolutionSupported: false`, `vendorEgressMode: 'DISABLED_PRE_ACCESS'`). Live Dhan
-     vendor traffic on `main` remains fail-closed until an approved host-vault backend is
-     admitted and converged onto `main` under separate scope.
+   - **Approved Host Provisioning and Live Vendor Verification**: The restored source includes
+     an opt-in Windows DPAPI backend, but the selector still defaults to `disabled` and egress
+     stays fail-closed until an approved Windows host has both carriers, conforming ACLs,
+     valid configuration, and a successful readiness probe. An authorized operator must
+     perform and retain the separate live vendor verification; these synthetic tests do not
+     qualify that operation.
    - **W-19 D02 Historical Freshness / Cache Wiring**: `GET /v1/freshness?domain=D02_OHLCV`
      honestly reports `cacheState: 'NOT_AVAILABLE'` (`verdict: 'UNKNOWN'`,
-     `lastRefresh.outcome: 'UNKNOWN'`) on current `main` until `DhanHistoricalCache` is wired
+     `lastRefresh.outcome: 'UNKNOWN'`) in this branch until `DhanHistoricalCache` is wired
      under roadmap W-19.
+
+### 9.4 DPAPI Restoration and Clean-Build Root Cause
+
+The DPAPI lineage split from `main` after merge base
+`a624d06f66c376f03a29571cb24c3f0f77f0c24d` and advanced to known-good
+`8bbc299620bf4e88bd5f57f3f784b6894d99c3c9` without being merged into the later
+W-07..W-11 `main` baseline (`b4a9f0f3601c2c56960aa15796370af0b7664d39`).
+That is why the original W-11 audit saw neither the DPAPI backend nor the W-04 CLI on `main`.
+The two histories are now intentionally reconciled rather than replacing newer contracts.
+
+There was also a distinct **build-artifact** failure mode: a plain `tsc` overwrites the current
+`dist/src/security/secret_ref.js` but never removes compiled Dhan modules whose sources are
+absent from the checkout. Running it on `main` over an old DPAPI `dist/` left an orphaned
+`dhan_credential_store_cli.js` importing `DHAN_ACCESS_TOKEN_KEY_PATH` from a newly emitted
+`secret_ref.js` that no longer exported it. Compilation succeeded, but Node ESM import failed.
+This was neither a trustworthy clean build nor a source-level incompatibility.
+
+`npm run build` now removes `dist/` before compiling; `npm run build:tsc` clears only its
+TypeScript emit (`dist/src`, `dist/tests`, `dist/frontend`) while preserving package outputs;
+`pretest:package-consumer`, `prepack`, and `prepare` clean `dist/package` before rebuilding all
+public subpaths. `scripts/run-tests.mjs` also fails closed if it sees compiled `.test.js` or
+`dist/src/**/*.js` with no TypeScript source counterpart. The dedicated DPAPI restoration
+regression suite exercises the cleanup modes, orphan refusal, actual built ESM imports, and
+synthetic provision/rotate/verify with a fake DPAPI child process. No real credentials,
+Windows host, or vendor access are needed for these repository tests.

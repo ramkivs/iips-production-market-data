@@ -93,7 +93,15 @@ export type DhanMarketDataRouteFailureCode = MarketDataTransportFailureCode | 'Q
 export interface DhanMarketDataRouteFailure {
   readonly code: DhanMarketDataRouteFailureCode;
   readonly message: string;
+  /** The local daemon's HTTP status, when the daemon answered. */
   readonly httpStatus?: number;
+  /**
+   * The vendor's numeric HTTP status, when the daemon could attribute one (W-06).
+   *
+   * Diagnostic only, and never a verdict: `daemonAvailable` is derived from `httpStatus` alone, so
+   * adding this field cannot make a dead daemon look reachable.
+   */
+  readonly vendorHttpStatus?: number;
 }
 
 export interface DhanMarketDataQuoteSuccess {

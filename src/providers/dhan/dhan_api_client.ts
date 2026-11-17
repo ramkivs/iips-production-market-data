@@ -35,6 +35,7 @@ import {
   DhanProviderStateRecorder,
   ProviderVerificationResult,
 } from './dhan_provider_state_recorder.js';
+import { describeUtcTimestampRejection, parseStrictUtcTimestamp } from './dhan_utc_timestamp.js';
 
 export interface DhanHttpRequest {
   method: 'GET' | 'POST';
@@ -313,11 +314,15 @@ export class DhanApiClient {
         return dhanFailure('CREDENTIALS_EXPIRED', 'Dhan credential reference is expired or revoked');
       }
       if (ref.expiresAt !== undefined) {
-        const expMs = Date.parse(ref.expiresAt);
-        if (Number.isNaN(expMs)) {
-          return dhanFailure('CONFIGURATION_INCOMPLETE', 'Dhan SecretRef expiresAt is not a valid ISO-8601 timestamp');
+        // Strict UTC: a zone-less value is refused rather than read as host-local time (W-06).
+        const expiry = parseStrictUtcTimestamp(ref.expiresAt);
+        if (!expiry.ok) {
+          return dhanFailure(
+            'CONFIGURATION_INCOMPLETE',
+            `Dhan SecretRef expiresAt ${describeUtcTimestampRejection(expiry.reason)}`
+          );
         }
-        if (expMs <= nowMs) {
+        if (expiry.epochMs <= nowMs) {
           return dhanFailure('CREDENTIALS_EXPIRED', 'Dhan credential reference has expired');
         }
       }
@@ -356,8 +361,10 @@ export class DhanApiClient {
     }
 
     if (credentials.expiresAt !== undefined) {
-      const expMs = Date.parse(credentials.expiresAt);
-      if (Number.isNaN(expMs) || expMs <= nowMs) {
+      // A malformed expiry stays CREDENTIALS_EXPIRED here (pre-existing behaviour): the resolver has
+      // already rejected unusable metadata above, so this guard enforces the token's own deadline.
+      const expiry = parseStrictUtcTimestamp(credentials.expiresAt);
+      if (!expiry.ok || expiry.epochMs <= nowMs) {
         return dhanFailure('CREDENTIALS_EXPIRED', 'Resolved Dhan access token has expired');
       }
     }

@@ -31,6 +31,8 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const sourceTestsDir = join(repoRoot, 'tests');
 const compiledTestsDir = join(repoRoot, 'dist', 'tests');
+const sourceSrcDir = join(repoRoot, 'src');
+const compiledSrcDir = join(repoRoot, 'dist', 'src');
 
 const fail = (message, detail) => {
   console.error(`\n[test-guard] FAIL — ${message}`);
@@ -48,6 +50,20 @@ const listBySuffix = (dir, suffix) =>
         .sort()
         .map((name) => join(dir, name))
     : [];
+
+const walkBySuffix = (dir, suffix) => {
+  if (!existsSync(dir)) return [];
+  const found = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      found.push(...walkBySuffix(full, suffix));
+    } else if (entry.isFile() && entry.name.endsWith(suffix)) {
+      found.push(full);
+    }
+  }
+  return found.sort();
+};
 
 if (!existsSync(sourceTestsDir)) {
   fail('source test directory is missing', `expected ${relative(repoRoot, sourceTestsDir)}`);
@@ -88,6 +104,33 @@ if (stale.length > 0) {
   fail(
     `${stale.length} compiled test(s) are older than their sources — the build is stale`,
     `stale: ${stale.map((f) => relative(sourceTestsDir, f)).join(', ')}; re-run \`npm run build:tsc\``,
+  );
+}
+
+// Orphaned compiled tests or modules indicate a dirty dist/ from another commit or deleted file.
+const orphanedTests = files
+  .map((compiled) => relative(compiledTestsDir, compiled).replace(/\.js$/, '.ts'))
+  .filter((name) => !existsSync(join(sourceTestsDir, name)));
+if (orphanedTests.length > 0) {
+  fail(
+    `${orphanedTests.length} compiled test(s) have no TypeScript source counterpart — dist/ is dirty`,
+    `orphaned: ${orphanedTests.join(', ')}; run \`npm run build:tsc\` (or \`npm run build\`)`,
+  );
+}
+
+const orphanedSrcModules = walkBySuffix(compiledSrcDir, '.js')
+  .map((compiled) => relative(compiledSrcDir, compiled))
+  .filter((relJs) => {
+    const base = relJs.replace(/\.js$/, '');
+    return (
+      !existsSync(join(sourceSrcDir, `${base}.ts`)) &&
+      !existsSync(join(sourceSrcDir, `${base}.tsx`))
+    );
+  });
+if (orphanedSrcModules.length > 0) {
+  fail(
+    `${orphanedSrcModules.length} compiled module(s) in dist/src have no TypeScript source — dist/ is dirty`,
+    `orphaned: ${orphanedSrcModules.join(', ')}; run \`npm run build:tsc\` (or \`npm run build\`)`,
   );
 }
 

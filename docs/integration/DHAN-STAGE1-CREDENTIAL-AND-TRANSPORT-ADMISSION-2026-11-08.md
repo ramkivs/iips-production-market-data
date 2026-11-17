@@ -9,8 +9,11 @@
 > historical uncached pending W-19), and added the P4 identity HTTP routes, P5 `GET /v1/freshness`,
 > W-07 `ServiceHealth` (`contractVersion: 2`, `#168`), W-08 observed-state recorder &
 > `verifyConnection` (`#169`), W-09 `GET /v1/diagnostics` (`#170`), and W-10
-> `POST /v1/connection/verify` (`#172`). For the authoritative current `main` daemon configuration
-> and operational specification, see
+> `POST /v1/connection/verify` (`#172`). The W-11 + DPAPI restoration branch additionally
+> carries the opt-in `windows-dpapi` host backend, `WINDOWS_DPAPI` SecretRefs, two separate D-1
+> logical key paths, the W-04 credential utility, and strict UTC expiry. The historical table
+> below (including its 2026-11-08 conclusion that no Windows vault existed **then**) must not
+> be read as the current code's capability. For the reconciled daemon specification, see
 > [`DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md`](DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md).
 
 - **Document ID**: `IPD-DHAN-STAGE1-ADMISSION-2026-11-08`

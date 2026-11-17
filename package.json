@@ -4,19 +4,24 @@
   "description": "Institutional Investment Platform System (IIPS) - Production Market Data & Intelligence Pipeline",
   "type": "module",
   "scripts": {
+    "clean:dist": "node scripts/clean-dist.mjs",
+    "prebuild": "node scripts/clean-dist.mjs",
     "build": "tsc && vite build && npm run build:portfolio-ui-package && npm run build:pit-package && npm run build:dhan-package",
+    "prebuild:tsc": "node scripts/clean-dist.mjs --tsc-only",
     "build:tsc": "tsc",
     "build:vite": "vite build",
     "build:portfolio-ui-package": "tsc -p tsconfig.portfolio-ui-package.json",
     "build:pit-package": "tsc -p tsconfig.pit-package.json",
     "build:dhan-package": "tsc -p tsconfig.dhan-package.json",
     "start:market-data-daemon": "node dist/src/providers/dhan/dhan_local_daemon.js",
+    "dhan:credential": "node dist/src/providers/dhan/dhan_credential_store_cli.js",
     "dev": "vite",
     "test": "node scripts/run-tests.mjs",
     "test:direct": "node --test --experimental-strip-types tests/*.test.ts",
+    "pretest:package-consumer": "node scripts/clean-dist.mjs --package-only",
     "test:package-consumer": "npm run build:portfolio-ui-package && npm run build:pit-package && npm run build:dhan-package && node scripts/verify-public-package.mjs",
-    "prepack": "npm run build:portfolio-ui-package && npm run build:pit-package && npm run build:dhan-package",
-    "prepare": "npm run build:portfolio-ui-package && npm run build:pit-package && npm run build:dhan-package"
+    "prepack": "node scripts/clean-dist.mjs --package-only && npm run build:portfolio-ui-package && npm run build:pit-package && npm run build:dhan-package",
+    "prepare": "node scripts/clean-dist.mjs --package-only && npm run build:portfolio-ui-package && npm run build:pit-package && npm run build:dhan-package"
   },
   "keywords": [
     "iips",

@@ -1,8 +1,12 @@
 # DHAN-D1 — Dhan Provider Foundation (Pre-Access Development Gate)
 
-> **Historical Gate Record & Current `main` Reference:** This document records the initial
-> `DHAN-D1` provider foundation gate. For the complete, `main`-authoritative environment-variable
-> table, loopback daemon configuration, 9-route HTTP surface, and operational controls, see
+> **Historical Gate Record & Current Integration Reference:** This document records the initial
+> pre-access `DHAN-D1` provider gate, not the later credential-ready daemon. On the W-11 + DPAPI
+> restoration branch the Windows user-scope backend is explicitly selectable but disabled by
+> default; `WINDOWS_DPAPI` uses separate governed `DHAN_CLIENT_ID_KEY_PATH` and
+> `DHAN_ACCESS_TOKEN_KEY_PATH` references. No live vendor qualification is implied. For the
+> complete environment-variable table, fail-closed selector, 9-route HTTP surface, and
+> operational controls, see
 > [`docs/integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md`](integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md).
 
 **Status:** PRE-ACCESS DEVELOPMENT ONLY
@@ -70,10 +74,11 @@ No token, client id or secret value is present in source, fixtures, docs or test
 | `IIPS_DHAN_TIMEOUT_MS` | Outbound provider request timeout (default `5000` ms) | No |
 | `IIPS_DHAN_ACCESS_TOKEN_SECRET_PATH` | `vault://...` pointer to the access token | No |
 | `IIPS_DHAN_CLIENT_ID_SECRET_PATH` | `vault://...` pointer to the client id | No |
-| `IIPS_DHAN_VAULT_PROVIDER` | `SecretRef` vault provider enum (default `LOCAL_MOCK_VAULT`) | No |
+| `IIPS_DHAN_VAULT_PROVIDER` | `SecretRef` vault provider enum (default `LOCAL_MOCK_VAULT`; restored `WINDOWS_DPAPI` is supported with separate D-1 logical paths) | No |
+| `IIPS_DHAN_VAULT_BACKEND` | Daemon selector (`disabled` by default; explicit `windows-dpapi` requires approved host and successful readiness probe). Not a `SecretRef` provider alias. | No |
 | `IIPS_DHAN_SECRET_VERSION` | `SecretRef` version (default `v1`) | No |
 | `IIPS_DHAN_SECRET_STATUS` | `SecretRef` status enum (`ACTIVE`, `ROTATING`, `REVOKED`, `EXPIRED`; default `ACTIVE`) | No |
-| `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` | Optional access-token expiry timestamp (`CREDENTIALS_EXPIRED` when `<= now`) | No |
+| `IIPS_DHAN_ACCESS_TOKEN_EXPIRES_AT` | Optional strict timestamp with explicit UTC `Z` or numeric offset; malformed/zone-less values refuse configuration, `CREDENTIALS_EXPIRED` when `<= now` | No |
 
 Production mode (`NODE_ENV=production` or `IIPS_DEPLOYMENT_ENV=production`) is refused
 fail-closed with `PRODUCTION_NOT_AUTHORIZED`. Local HTTP daemon variables
