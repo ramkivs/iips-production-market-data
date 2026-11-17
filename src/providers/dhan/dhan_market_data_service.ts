@@ -38,6 +38,8 @@ import {
   type DhanObservedFailureCategory,
   type DhanProviderObservedState,
   type DhanRecordedFailure,
+  type DhanVerificationMode,
+  type DhanVerificationOutcomeCode,
   type ProviderVerificationResult,
   type VerifyProviderConnectionOptions,
 } from './dhan_provider_state_recorder.js';
@@ -414,6 +416,268 @@ export function validateDhanServiceDiagnostics(input: unknown): ServiceDiagnosti
       unavailableEntries: qc.unavailableEntries,
     },
   };
+}
+
+// ── Operator-initiated loopback connection verification contract (D-7 §3 / W-08 / W-10) ──
+
+export const DHAN_VERIFICATION_CONTRACT_VERSION = 1 as const;
+export type DhanVerificationContractVersion = typeof DHAN_VERIFICATION_CONTRACT_VERSION;
+
+/**
+ * Governed `/v1/connection/verify` response payload (D-7 §3 & §4.1 MAY list).
+ * Carries only enumerated outcome/state codes, booleans, bounded counts,
+ * non-negative latency, canonical ISO-8601 UTC timestamps, and the validated
+ * post-verification `ServiceDiagnostics` snapshot — never secrets, prefixes,
+ * `vault://` references, carrier paths, child-process output, or vendor messages.
+ */
+export interface ServiceConnectionVerification {
+  readonly contractVersion: DhanVerificationContractVersion;
+  readonly mode: DhanVerificationMode;
+  readonly outcome: DhanVerificationOutcomeCode;
+  readonly providerState: DhanProviderState;
+  readonly localReadinessEstablished: boolean;
+  readonly probeAttempted: boolean;
+  readonly probeCount: 0 | 1;
+  readonly failureCategory: DhanObservedFailureCategory | null;
+  readonly checkedAt: string;
+  readonly latencyMs: number | null;
+  readonly observedState: DhanProviderObservedState;
+  readonly diagnostics: ServiceDiagnostics;
+}
+
+const VALID_VERIFICATION_MODES: ReadonlySet<DhanVerificationMode> = new Set([
+  'LIVE_PROBE',
+  'LOCAL_ONLY',
+]);
+
+const VALID_VERIFICATION_OUTCOMES: ReadonlySet<DhanVerificationOutcomeCode> = new Set([
+  'VERIFIED_VENDOR_ACCEPTED',
+  'VERIFIED_LOCAL_ONLY',
+  'AUTH_REJECTED',
+  'EXPIRED_LOCAL',
+  'NOT_ATTEMPTED_NOT_READY',
+  'FAILED_TRANSPORT',
+  'FAILED_VENDOR_RESPONSE',
+]);
+
+/**
+ * Determines whether V1 local credential readiness succeeded during this
+ * single verification attempt (`DhanApiClient.probeOnce`), without conflating
+ * local credential readiness with V2 vendor authentication (D-7 §3 rule 5).
+ */
+export function deriveLocalReadinessEstablished(result: ProviderVerificationResult): boolean {
+  return (
+    result.outcome === 'VERIFIED_LOCAL_ONLY' ||
+    result.outcome === 'VERIFIED_VENDOR_ACCEPTED' ||
+    result.probeAttempted === true ||
+    (result.outcome === 'NOT_ATTEMPTED_NOT_READY' &&
+      (result.failureCategory === 'TRANSPORT_FAILURE' ||
+        result.failureCategory === 'RATE_LIMITED'))
+  );
+}
+
+/**
+ * Projects a W-08 `ProviderVerificationResult` and post-verification
+ * `ServiceDiagnostics` snapshot into a frozen, canonical wire payload.
+ */
+export function buildServiceConnectionVerification(
+  mode: DhanVerificationMode,
+  verification: ProviderVerificationResult,
+  diagnostics: ServiceDiagnostics
+): ServiceConnectionVerification {
+  const checkedAtParsed = Date.parse(verification.checkedAt);
+  const checkedAt = Number.isFinite(checkedAtParsed)
+    ? new Date(checkedAtParsed).toISOString()
+    : diagnostics.lastSuccessAt ?? new Date(0).toISOString();
+
+  const observedFailure: DhanRecordedFailure | null =
+    verification.observedState.lastFailure === null
+      ? null
+      : Object.freeze({
+          category: verification.observedState.lastFailure.category,
+          at: verification.observedState.lastFailure.at,
+        });
+
+  const observedState: DhanProviderObservedState = Object.freeze({
+    lastSuccessAt: verification.observedState.lastSuccessAt,
+    lastFailure: observedFailure,
+    lastAuthOutcome: verification.observedState.lastAuthOutcome,
+    lastLatencyMs: verification.observedState.lastLatencyMs,
+    consecutiveAuthFailures: verification.observedState.consecutiveAuthFailures,
+    authLatched: verification.observedState.authLatched,
+  });
+
+  return Object.freeze({
+    contractVersion: DHAN_VERIFICATION_CONTRACT_VERSION,
+    mode,
+    outcome: verification.outcome,
+    providerState: diagnostics.providerState,
+    localReadinessEstablished: deriveLocalReadinessEstablished(verification),
+    probeAttempted: verification.probeAttempted,
+    probeCount: verification.probeCount,
+    failureCategory: verification.failureCategory,
+    checkedAt,
+    latencyMs: verification.latencyMs,
+    observedState,
+    diagnostics,
+  });
+}
+
+function validateObservedProviderState(input: unknown): DhanProviderObservedState | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const o = input as Record<string, unknown>;
+  if (o.lastSuccessAt !== null && !isCanonicalIsoUtc(o.lastSuccessAt)) return null;
+
+  let validatedLastFailure: DhanRecordedFailure | null = null;
+  if (o.lastFailure !== null) {
+    if (!o.lastFailure || typeof o.lastFailure !== 'object' || Array.isArray(o.lastFailure)) {
+      return null;
+    }
+    const lf = o.lastFailure as Record<string, unknown>;
+    if (!isGovernedProviderFailureCategory(lf.category) || !isCanonicalIsoUtc(lf.at)) {
+      return null;
+    }
+    validatedLastFailure = Object.freeze({ category: lf.category, at: lf.at });
+  }
+
+  if (typeof o.lastAuthOutcome !== 'string' || !VALID_AUTH_OUTCOMES.has(o.lastAuthOutcome as DhanAuthOutcome)) {
+    return null;
+  }
+  if (
+    o.lastLatencyMs !== null &&
+    (typeof o.lastLatencyMs !== 'number' || !Number.isFinite(o.lastLatencyMs) || o.lastLatencyMs < 0)
+  ) {
+    return null;
+  }
+  if (!isNonNegativeInt(o.consecutiveAuthFailures)) return null;
+  if (typeof o.authLatched !== 'boolean') return null;
+
+  return Object.freeze({
+    lastSuccessAt: o.lastSuccessAt,
+    lastFailure: validatedLastFailure,
+    lastAuthOutcome: o.lastAuthOutcome as DhanAuthOutcome,
+    lastLatencyMs: o.lastLatencyMs,
+    consecutiveAuthFailures: o.consecutiveAuthFailures,
+    authLatched: o.authLatched,
+  });
+}
+
+/**
+ * Validates an untrusted `/v1/connection/verify` wire payload fail-closed without
+ * reflecting unknown fields or accepting contradictory V1/V2 claims (D-7 §3 / §5).
+ */
+export function validateDhanConnectionVerification(
+  input: unknown
+): ServiceConnectionVerification | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const p = input as Record<string, unknown>;
+  if ((p.ok !== undefined && p.ok !== true) || p.error !== undefined || p.failure !== undefined) {
+    return null;
+  }
+  if (p.contractVersion !== DHAN_VERIFICATION_CONTRACT_VERSION) return null;
+  if (typeof p.mode !== 'string' || !VALID_VERIFICATION_MODES.has(p.mode as DhanVerificationMode)) {
+    return null;
+  }
+  if (
+    typeof p.outcome !== 'string' ||
+    !VALID_VERIFICATION_OUTCOMES.has(p.outcome as DhanVerificationOutcomeCode)
+  ) {
+    return null;
+  }
+  if (
+    typeof p.providerState !== 'string' ||
+    !VALID_PROVIDER_STATES.has(p.providerState as DhanProviderState)
+  ) {
+    return null;
+  }
+  if (typeof p.localReadinessEstablished !== 'boolean') return null;
+  if (typeof p.probeAttempted !== 'boolean') return null;
+  if (p.probeCount !== 0 && p.probeCount !== 1) return null;
+  if (p.probeCount !== (p.probeAttempted ? 1 : 0)) return null;
+  if (p.mode === 'LOCAL_ONLY' && p.probeAttempted) return null;
+  if (p.failureCategory !== null && !isGovernedProviderFailureCategory(p.failureCategory)) {
+    return null;
+  }
+  if (!isCanonicalIsoUtc(p.checkedAt)) return null;
+  if (
+    p.latencyMs !== null &&
+    (typeof p.latencyMs !== 'number' || !Number.isFinite(p.latencyMs) || p.latencyMs < 0)
+  ) {
+    return null;
+  }
+  if (!p.probeAttempted && p.latencyMs !== null) return null;
+
+  const observedState = validateObservedProviderState(p.observedState);
+  if (!observedState) return null;
+
+  const diagnostics = validateDhanServiceDiagnostics(p.diagnostics);
+  if (!diagnostics) return null;
+  if (diagnostics.providerState !== p.providerState) return null;
+
+  // Enforce D-7 §3 V1/V2 invariants so local readiness is never misrepresented as vendor auth.
+  const outcome = p.outcome as DhanVerificationOutcomeCode;
+  if (outcome === 'VERIFIED_VENDOR_ACCEPTED') {
+    if (
+      p.mode !== 'LIVE_PROBE' ||
+      !p.localReadinessEstablished ||
+      !p.probeAttempted ||
+      p.probeCount !== 1 ||
+      p.failureCategory !== null
+    ) {
+      return null;
+    }
+  } else if (outcome === 'VERIFIED_LOCAL_ONLY') {
+    if (
+      !p.localReadinessEstablished ||
+      p.probeAttempted ||
+      p.probeCount !== 0 ||
+      p.failureCategory !== null
+    ) {
+      return null;
+    }
+    if (
+      observedState.lastSuccessAt === null &&
+      (p.providerState === 'AUTHENTICATED' ||
+        p.providerState === 'OPERATIONAL' ||
+        diagnostics.liveProviderConnectivity === 'CONNECTED_LIVE')
+    ) {
+      return null;
+    }
+  } else if (outcome === 'EXPIRED_LOCAL') {
+    if (
+      p.localReadinessEstablished ||
+      p.probeAttempted ||
+      p.probeCount !== 0 ||
+      p.failureCategory !== 'CREDENTIALS_EXPIRED'
+    ) {
+      return null;
+    }
+  } else {
+    if (p.failureCategory === null) return null;
+    if (outcome === 'NOT_ATTEMPTED_NOT_READY') {
+      if (p.probeAttempted || p.probeCount !== 0) return null;
+    } else if (outcome === 'FAILED_TRANSPORT' || outcome === 'FAILED_VENDOR_RESPONSE') {
+      if (!p.localReadinessEstablished || !p.probeAttempted || p.probeCount !== 1) return null;
+    } else if (outcome === 'AUTH_REJECTED') {
+      if (p.failureCategory !== 'AUTHENTICATION_FAILURE') return null;
+      if (p.probeAttempted && !p.localReadinessEstablished) return null;
+    }
+  }
+
+  return Object.freeze({
+    contractVersion: DHAN_VERIFICATION_CONTRACT_VERSION,
+    mode: p.mode as DhanVerificationMode,
+    outcome,
+    providerState: p.providerState as DhanProviderState,
+    localReadinessEstablished: p.localReadinessEstablished,
+    probeAttempted: p.probeAttempted,
+    probeCount: p.probeCount,
+    failureCategory: p.failureCategory,
+    checkedAt: p.checkedAt,
+    latencyMs: p.latencyMs,
+    observedState,
+    diagnostics,
+  });
 }
 
 export interface DhanMarketDataServiceOptions {
