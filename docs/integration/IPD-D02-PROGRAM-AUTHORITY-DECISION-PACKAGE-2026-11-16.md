@@ -11,7 +11,7 @@ Product ownership and the high-level architecture are already approved: `owner-4
 
 The detailed schema is **APPROVED at Level C** (D04–D20, 2026-11-16). The approved design baseline proposes a relationship anchored to the established S1 membership, a tenant-safe owner registry, constrained relationship/source records, explicit source-to-holding and source-to-contribution links, a transaction-bound D02 access boundary, and a separate, later-authorized historical-data decision. Level C approval covers design only — not implementation, provisioning, or migration. The independent review's outcome remains **ACCEPTED WITH CONDITIONS** as a design baseline only.
 
-This register contains **22 decision items**: **D01–D03 APPROVED** (2026-11-15) and a **narrow Level E read-only D5/D16 evidence inventory APPROVED** (2026-11-16) by the explicit PA directions recorded in the [approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md); **D04–D22 register items remain PENDING**. Recommendations for pending items remain NOT APPROVED. The authorized read-only live database inventory was executed on the Principal's Windows host `2026-11-16` (disposition `INVENTORY_COMPLETE_READ_ONLY_VERIFIED`, exit code `0`, zero mutations, pre/post SHA-256 byte-identical) and is reconciled in [`IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md`](IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md); actual rows, null provenance, foreign-key state and destination collisions are now obtained. Historical-data choices (D15 disposition, D16 collision policy, D17 scope, D19 recovery manifest) still require separate PA decisions; inventory completion is not D5 acceptance, schema approval, implementation authorization, provisioning/migration authorization, or D6 authorization. (In the 2026-11-16 Arena Linux sandbox run the designated Windows database was unreachable/absent (`IIPS_G3_DATABASE_PATH` unset; zero SQLite files present), so safe execution stopped without touching or creating any database; see the [D5/D16 read-only inventory and host-blocker report](IPD-D02-D5-D16-READ-ONLY-INVENTORY-AND-BLOCKER-REPORT-2026-11-16.md).)
+This register contains **22 decision items**: **D01–D03 APPROVED** (2026-11-15), **D04–D20 APPROVED at Level C** (2026-11-16), and a **narrow Level E read-only D5/D16 evidence inventory APPROVED** (2026-11-16) by the explicit PA directions recorded in the [approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md). **D21 Level D implementation authority remains NOT GRANTED** and **D22 Level E operational provisioning/migration remains NOT AUTHORIZED**. The authorized read-only live database inventory was executed on the Principal's Windows host `2026-11-16` (disposition `INVENTORY_COMPLETE_READ_ONLY_VERIFIED`, exit code `0`, zero mutations, pre/post SHA-256 byte-identical) and is reconciled in [`IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md`](IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md); actual rows, null provenance, foreign-key state and destination collisions are now obtained. Historical-data choices (D15 disposition, D16 collision policy, D17 scope, D19 recovery manifest) still require separate PA decisions; inventory completion is not D5 acceptance, schema approval, implementation authorization, provisioning/migration authorization, or D6 authorization. (In the 2026-11-16 Arena Linux sandbox run the designated Windows database was unreachable/absent (`IIPS_G3_DATABASE_PATH` unset; zero SQLite files present), so safe execution stopped without touching or creating any database; see the [D5/D16 read-only inventory and host-blocker report](IPD-D02-D5-D16-READ-ONLY-INVENTORY-AND-BLOCKER-REPORT-2026-11-16.md).)
 
 The complete proposed technical detail and acceptance tests are in the [revised relationship technical design](IPD-D02-OWNERSHIP-RELATIONSHIP-TECHNICAL-DESIGN-2026-11-15.md), particularly §§13.1–13.11. The prior independent findings are in the [acceptance review](IPD-D02-OWNERSHIP-RELATIONSHIP-DESIGN-ACCEPTANCE-REVIEW-2026-11-15.md). This register makes the choices and approval boundaries explicit for PA disposition.
 
@@ -157,12 +157,10 @@ The product determination explicitly left the identity contract and technical ma
 
 - **Decision ID and subject:** D13 — Root source registry versus derived evidence; row-level links.
 - **Existing technical recommendation:** Keep the root registry and both link tables; each new row has exactly one link, written in the same transaction; validate provider/source against `source_broker`/contribution evidence. Permit mixed-source portfolios only with distinct explicit records and links.
-- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
-- **Material consequences:**
-  - **APPROVE:** Root `portfolio_source_records` plus per-holding-revision and per-contribution link tables; each new row has exactly one link in the same transaction; validate provider/source against evidence; mixed-source portfolios only with distinct explicit records.
-  - **AMEND:** Derive source only from existing row evidence (no root table), or root table without links.
-  - **DEFER:** Decision remains pending; source records and link tables cannot be created.
-  - **REJECT:** No root registry; source remains derived from existing row evidence only.
+- **Exact proposed disposition:** APPROVED — Level C detailed design approval recorded (2026-11-16). PA explicit approval: D13 APPROVED.
+- **Material consequences (Level C design only):**
+  - Root `portfolio_source_records` plus per-holding-revision and per-contribution link tables; each new row has exactly one link in the same transaction; validate provider/source against evidence; mixed-source portfolios only with distinct explicit records.
+  - This approval covers detailed design only. It does not authorize implementation (D21 NOT GRANTED), provisioning (D22 NOT AUTHORIZED), or any relationship row creation.
 - **Dependencies:** Depends on D10–D12 (provider taxonomy, account identity, source cardinality). Blocks D17 (re-key scope depends on source tables).
 
 ### D14 — Historical source/provenance with NULL or no link
@@ -374,6 +372,76 @@ The Program Authority has explicitly **RATIFIED** RD-2026-11-16. The existing `r
 
 ---
 
+## D21 Level D Implementation Authority Request — D5 Read-Only Verifier (2026-11-16)
+
+This is a **separate Level D implementation authority request**, distinct from D04–D20 Level C design approval and RD-2026-11-16 resolver ratification. It does not grant D22 Level E operational provisioning/migration authority.
+
+### Decision ID and subject
+
+D21 — Level D implementation authority for the D5 read-only verifier and targeted verifier tests.
+
+### Scope requested
+
+The following implementation scope is requested for Level D authority:
+
+| Scope item | Description |
+|------------|-------------|
+| **D5 read-only verifier** | Implement a read-only verifier that validates the S1-to-D02 mapping and relationship representation against the approved D04–D20 design, using only read-only database access. |
+| **Targeted verifier tests** | Implement verifier tests using the holdings-specific acceptance predicate, testing wrong owner/tenant, missing/multiple binding or membership, and generic-success/holdings-failure cases. |
+| **Mapping verification** | Verify the approved S1-to-D02 mapping (S1 preserved, separate explicit relationship to D02 owner `owner-4dc756b3`) without modifying any data. |
+| **Evidence output** | Produce reproducible verification evidence and update the D5 identity-mapping tracker with results. |
+
+### Files and interfaces proposed for implementation
+
+| File | Interface / purpose |
+|------|---------------------|
+| `src/persistence/binding.ts` | Reuse `resolveD02PortfolioAccess`, `resolveD02PortfolioAccessInCurrentTransaction`, `D02RelationshipAbsentError`, `ResolvedD02PortfolioAccess` (ratified under RD-2026-11-16). No new resolver implementation. |
+| New verifier module | Read-only verifier function that resolves the S1 tuple, checks the D02 relationship, validates owner registry status, and returns pass/fail with evidence. |
+| `tests/durable_holdings_d02_d05_unit.test.ts` | Add targeted verifier test cases (wrong owner/tenant, missing/multiple binding/membership, generic-success/holdings-failure) using synthetic disposable fixtures. |
+
+### Acceptance predicates
+
+The verifier must:
+
+1. **Holdings-specific acceptance predicate:** Independently verify exact approved fields (binding ID `c5808abaffd072d6401ce63ad86c6ac0`, principal `ramki-personal-local`, membership `d25dcc5370100b00766efc5166f65cf3`, tenant `ipd-personal-local`, S1 owner `ipd-owner-ramki-personal`, D02 owner `owner-4dc756b3`) against live read-only database rows.
+2. **Wrong owner/tenant:** Reject when relationship owner tenant or portfolio owner does not match approved values.
+3. **Missing/multiple binding or membership:** Reject when no ACTIVE binding/membership exists or when multiple ACTIVE bindings/memberships exist.
+4. **Generic-success/holdings-failure:** Distinguish cases where D02 relationship resolution succeeds but holdings-domain operations fail (and vice versa), ensuring no false cross-domain pass.
+5. **Read-only integrity:** Preserve read-only database integrity — no INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, or migration execution.
+
+### Evidence outputs
+
+| Evidence output | Description |
+|-----------------|-------------|
+| Verifier test results | TAP-format test output showing pass/fail for each acceptance predicate case. |
+| Updated D5 tracker | D5-T3 status updated from FAIL to PASS (if verifier passes all predicates), with evidence reference. |
+| Reproducible verification | Verifier and tests runnable against synthetic disposable fixtures with deterministic results. |
+
+### Explicit exclusions
+
+The following are **EXCLUDED** from this Level D authority request:
+
+- **No relationship provisioning:** No INSERT into `personal_identity_owner_relationships` or `portfolio_owner_registry`. No relationship row creation.
+- **No record creation:** No owner, provider, source, or portfolio row creation of any kind.
+- **No migration:** No schema migration execution, no `_migration_ledger` writes, no DDL changes.
+- **No backfill or re-key:** No historical data movement, no owner key changes, no tombstone restoration.
+- **No live-host operational activity:** No access to the Principal's Windows host database (`C:\iips-data\iips\user-portfolio.sqlite`). No D22 Level E activity.
+- **No D6 implementation or startup:** D6 remains NOT STARTED. No IPC/live holdings startup.
+- **No IRR or main changes:** No modifications to the IRR repository or the `main` branch.
+
+### Authority boundaries preserved
+
+- **Level C:** D04–D20 APPROVED at Level C (2026-11-16). This D21 request builds on Level C design approval; it does not alter or expand Level C.
+- **Level E / D22:** NOT AUTHORIZED. This request explicitly excludes all operational provisioning/migration.
+- **D5-T5:** Remains PENDING. This D21 grant, if approved, enables D5-T3 implementation but does not constitute D5-T5 acceptance.
+- **D6:** NOT STARTED. Remains out of scope until D5 passes.
+
+### Required PA action
+
+Program Authority must explicitly `GRANT` or `DENY` this Level D implementation authority request. A `GRANT` authorizes implementation of the D5 read-only verifier and targeted verifier tests within the stated scope and exclusions only. It does not authorize D22 Level E operations, D5-T5 acceptance, or D6 startup.
+
+---
+
 ## Explicit Program Authority statements recorded
 
 The Program Authority has issued the following explicit decisions:
@@ -386,7 +454,7 @@ The Program Authority has issued the following explicit decisions:
 
 **D22 Level E operational provisioning/migration:** NOT AUTHORIZED — requires separate explicit Level E authorization for each named operation.
 
-**D5:** BLOCKED — D5-T2 Level C prerequisite met but requires separate PA acceptance via D5-T5; D5-T3 FAIL (Level D NOT GRANTED, verifier not implemented); D5-T5 PENDING (separate PA acceptance required).
+**D5:** BLOCKED — D5-T1 (PASS), D5-T2 (PASS — Level C detailed technical schema approval satisfied by D04–D20 Level C approval, 2026-11-16), D5-T4 (PASS); D5-T3 FAIL (Level D NOT GRANTED, verifier not implemented); D5-T5 PENDING (separate PA acceptance of D5-T1 through T4 required).
 
 **D6:** NOT STARTED — remains out of scope until D5 passes and its evidence is separately accepted.
 
