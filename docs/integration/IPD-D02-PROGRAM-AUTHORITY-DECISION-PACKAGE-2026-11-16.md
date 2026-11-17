@@ -63,96 +63,233 @@ The product determination explicitly left the identity contract and technical ma
 - **Technical recommendation — APPROVED (D03):** Use composite tenant-scoped FKs, parent unique indexes created first, `RESTRICT` deletes and explicit tenant equality. Resolver checks owner registry and membership/binding statuses because an FK cannot enforce ACTIVE state. This records the proposed D03 default only; DDL validation and full schema approval remain pending.
 - **Risk / S1 effect / approval:** Composite parent keys and supported SQLite behavior require disposable validation; no S1 data change is needed. **D03 Level C decision: APPROVED.** No migration is authorized.
 
+### D04 — Relationship multiplicity and active uniqueness
+
+- **Decision ID and subject:** D04 — Relationship multiplicity and active uniqueness.
+- **Existing technical recommendation:** Keep both partial unique indexes enforcing one-to-one active linkage for this local single-user scope. Multiple historical REVOKED rows remain allowed.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** One active relationship per membership/type and one active membership per owner/tenant/type become the storage-level invariant; resolver's cardinality check is defense in depth. Multi-device/multi-principal use is blocked until a new Level B/C decision.
+  - **AMEND:** Relaxation of the single-active constraint; requires new Level B scope decision and redesign of resolver logic.
+  - **DEFER:** Decision remains pending; resolver cannot be provisioned as relationship tables would lack the cardinality guard.
+  - **REJECT:** No active-uniqueness constraint at the storage layer; resolver's runtime cardinality check becomes the sole guard (weaker).
+- **Dependencies:** Depends on D01–D03 (identity subject, no-new-identity, tenant-scoped FKs). Blocks D08 (resolver contract depends on multiplicity semantics). Independent of D10–D14.
+
+### D05 — Owner registry lifecycle and revocation
+
+- **Decision ID and subject:** D05 — Owner registry lifecycle and revocation.
+- **Existing technical recommendation:** Registry revocation is terminal; one transaction marks the owner and its active relationships revoked with audit events; every access checks both states.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Terminal REVOKED state; `BEGIN IMMEDIATE` transaction marks owner REVOKED, linked relationships REVOKED with timestamps, appends audit events; resolver checks both relationship and owner-registry status.
+  - **AMEND:** Different revocation semantics (e.g., non-terminal revocation, deferred relationship revocation).
+  - **DEFER:** Decision remains pending; owner registry schema and revocation procedure cannot be finalized.
+  - **REJECT:** No terminal revocation; owner registry would lack lifecycle enforcement.
+- **Dependencies:** Depends on D06 (IDs, authority reference, audit event shape). Independent of D07–D09.
+
+### D06 — Relationship/source IDs, authority reference and audit event
+
+- **Decision ID and subject:** D06 — Relationship/source IDs, authority reference and audit event.
+- **Existing technical recommendation:** Opaque canonical lowercase UUIDv4; DB-level NOT NULL and check constraints; collision abort/transaction rollback; non-empty canonical authority record reference with digest. Append-only event records action, prior/new state, membership/binding/tenant, owner/tenant, authority reference, UTC time, actor reference and reason code—never credentials or account tokens.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Canonical UUIDv4 IDs with DB-level NOT NULL and CHECK constraints; collision aborts transaction; non-empty authority_record_ref; audit events append-only without credentials.
+  - **AMEND:** Different ID format (e.g., derived IDs), different authority reference form, or different audit event fields.
+  - **DEFER:** Decision remains pending; UUID CHECK syntax and actor evidence source remain undefined.
+  - **REJECT:** No UUID format constraints at the schema layer; ID format left to application logic.
+- **Dependencies:** Depends on D04 (multiplicity semantics affect ID generation), D05 (revocation affects audit event fields). Blocks D08 (resolver output includes relationship ID).
+
+### D07 — Portfolio-to-owner registry FK versus complete access facade
+
+- **Decision ID and subject:** D07 — Portfolio-to-owner registry FK versus complete access facade.
+- **Existing technical recommendation:** Adopt facade approach only if import-graph tests prove every D02 read/write path is behind the capability; otherwise require schema FK before implementation. Never retain raw OwnerRef access.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Facade approach (a) adopted with import-graph tests proving no dispatcher bypass; OR schema FK (b) required. Raw OwnerRef access (c) explicitly rejected.
+  - **AMEND:** Different boundary approach, e.g., hybrid facade+FK or explicit bypass list with review.
+  - **DEFER:** Decision remains pending; D02 implementation cannot proceed because the authorization boundary is undefined.
+  - **REJECT:** No non-bypassable boundary decision; raw OwnerRef access may remain (not recommended).
+- **Dependencies:** Depends on D04–D06 (relationship schema). Blocks D08 (resolver/authorization contract depends on boundary). Blocks D21 (implementation authority depends on boundary being resolved).
+
+### D08 — D02 resolver and authorization contract
+
+- **Decision ID and subject:** D08 — D02 resolver and authorization contract.
+- **Existing technical recommendation:** D02-only context derived solely from verified DB rows; all SQL predicates include resolved tenant, D02 owner, exact portfolio and revision/status; absent, duplicate, revoked, malformed, cross-tenant or foreign context yields sanitized no-data/no-effect refusal. No IPC-supplied owner/relationship.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Resolver resolves fresh from verified DB rows; returns distinct D02 context; fail-closed matrix covers all conditions; no caller-supplied IDs.
+  - **AMEND:** Different resolver output shape, different check set, or caller-supplied ID allowance (not recommended).
+  - **DEFER:** Decision remains pending; resolver output shape and call-site changes cannot be finalized.
+  - **REJECT:** No formal resolver contract; fail-closed behavior remains informal.
+- **Dependencies:** Depends on D04–D07 (multiplicity, lifecycle, IDs, boundary). Blocks D09 (transaction boundaries depend on resolver contract). Blocks D21 (implementation scope depends on resolver contract).
+
+### D09 — Transaction boundaries, nested work and concurrency
+
+- **Decision ID and subject:** D09 — Transaction boundaries, nested work and concurrency.
+- **Existing technical recommendation:** One wrapper owns the transaction; resolver and data query share same snapshot/connection; `BEGIN IMMEDIATE` from relation resolution through authorization and writes; nested operations reuse context/savepoints; no second connection.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Single `BEGIN IMMEDIATE` wrapper from relation resolution through writes; same connection/snapshot for resolver and data query; nested operations reuse context/savepoints.
+  - **AMEND:** Different transaction ownership model, e.g., separate resolve/commit/query phases (not recommended due to TOU race risk).
+  - **DEFER:** Decision remains pending; transaction wrapper API and savepoint semantics cannot be finalized.
+  - **REJECT:** No formal transaction boundary; TOUCTOU races possible between resolver and writes.
+- **Dependencies:** Depends on D08 (resolver contract defines what runs inside the transaction). Blocks D21 (implementation scope depends on transaction API).
+
 ### D10 — Provider taxonomy, normalization and catalog governance
 
-- **What / why:** Decide whether source providers are a controlled catalog or arbitrary strings, which codes are initially recognized, who can add/revoke a code, and how adapter aliases map to a canonical code.
-- **Alternatives and consequences:** (a) exact uppercase ASCII catalog keys such as `DHAN`, `ZERODHA`, `MANUAL_PERSONAL`; adapters map known aliases to one active key; (b) persist caller strings; (c) hard-code only the current two brokers. (b) enables spelling/identity drift; (c) blocks future approved providers.
-- **Technical recommendation — NOT APPROVED:** Catalog with unique exact codes and `BROKER`/`MANUAL` type; alias normalization must resolve exactly one active code; unknown/ambiguous inputs refuse. Catalog expansion/revocation is separately governed, and revoked codes remain readable in history but unavailable for new source/import use.
-- **Risk / S1 effect / approval:** The approved product scope includes other supported brokers, but their exact code list and governance are not established. No S1 effect. **Level C/product taxonomy approval requested.**
+- **Decision ID and subject:** D10 — Provider taxonomy, normalization and catalog governance.
+- **Existing technical recommendation:** Catalog with unique exact codes and `BROKER`/`MANUAL` type; alias normalization must resolve exactly one active code; unknown/ambiguous inputs refuse. Catalog expansion/revocation is separately governed, and revoked codes remain readable in history but unavailable for new source/import use.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Controlled catalog with exact uppercase ASCII keys (`DHAN`, `ZERODHA`, `MANUAL_PERSONAL`); adapter maps aliases to exactly one active code; unknown/ambiguous inputs refuse; revoked codes remain readable but unavailable for new import.
+  - **AMEND:** Different code set, different normalization rules, or different revocation/governance approach.
+  - **DEFER:** Decision remains pending; provider catalog schema cannot be created.
+  - **REJECT:** No controlled catalog; `source_broker` remains free text (existing behavior preserved).
+- **Dependencies:** Depends on D04–D06 (relationship schema context). Independent of D07–D09.
 
 ### D11 — Broker-account identity and normalization
 
-- **What / why:** Decide what stable key distinguishes a broker source stream without storing account numbers, usernames, credentials or tokens. The current authority does not specify provider account-ID formats or same-account cross-import deduplication.
-- **Alternatives and consequences:** (a) server-issued opaque canonical UUIDv4 stable for one provider/account stream; (b) store normalized provider account identifiers, adding sensitive-data and provider-specific normalization risk; (c) random token per import, which cannot recognize a continuing source stream; (d) provenance digest alone, which identifies an artifact, not necessarily an account.
-- **Technical recommendation — NOT APPROVED:** Use a server-owned opaque UUID token stable across imports for the same source stream; reject raw account/credential strings. Ask PA to confirm whether that provenance-level token is sufficient or provider-specific evidence/deduplication is required before asserting two streams are the same account.
-- **Risk / S1 effect / approval:** Token issuance/stability and cross-file deduplication remain unspecified. No S1 effect. **Level C and provider-identity policy approval requested; no real token/account lookup is authorized.**
+- **Decision ID and subject:** D11 — Broker-account identity and normalization.
+- **Existing technical recommendation:** Use a server-owned opaque UUID token stable across imports for the same source stream; reject raw account/credential strings. Ask PA to confirm whether that provenance-level token is sufficient or provider-specific evidence/deduplication is required before asserting two streams are the same account.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Server-issued opaque UUIDv4 token stable per provider/account stream; raw account numbers/usernames/credentials/tokens rejected; provenance-level token suffices or provider-specific evidence is required for same-account deduplication.
+  - **AMEND:** Different token model (e.g., provider-specific account identifiers), different stability guarantee, or different deduplication rule.
+  - **DEFER:** Decision remains pending; `source_account_ref` column and token issuance cannot be designed.
+  - **REJECT:** No opaque token; provider-specific account identifiers may be stored (sensitive-data risk).
+- **Dependencies:** Depends on D10 (provider catalog). Independent of D04–D09.
 
 ### D12 — Portfolio source cardinality and active uniqueness
 
-- **What / why:** Decide how many source records a portfolio may have, including whether hybrid portfolios and multiple streams of one provider are allowed, and what active tuple is unique.
-- **Alternatives and consequences:** (a) zero-or-more over lifecycle, with one active source per `(tenant, owner, portfolio, provider, opaque account ref)`; manual uses `MANUAL_PERSONAL`/NULL and is unique per portfolio; (b) exactly one source per portfolio; (c) unrestricted duplicates. (b) rules out explicit hybrid/import provenance; (c) permits duplicate active origins.
-- **Technical recommendation — NOT APPROVED:** Use (a), with partial unique index; revoked source remains historical and cannot receive new links. Distinct portfolios remain distinct even when provider is the same.
-- **Risk / S1 effect / approval:** Hybrid workflows add validation complexity and may need provider-level duplicate-account rules. No S1 effect. **Level C approval requested, including manual/hybrid policy.**
+- **Decision ID and subject:** D12 — Portfolio source cardinality and active uniqueness.
+- **Existing technical recommendation:** Use (a), with partial unique index; revoked source remains historical and cannot receive new links. Distinct portfolios remain distinct even when provider is the same.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Zero-or-more active sources per portfolio; one active source per `(tenant, owner, portfolio, provider, opaque account ref)`; manual uses `MANUAL_PERSONAL`/NULL unique per portfolio; revoked source remains historical and cannot receive new links.
+  - **AMEND:** Different cardinality model (e.g., exactly one source per portfolio, or unrestricted duplicates).
+  - **DEFER:** Decision remains pending; source records table and partial unique index cannot be created.
+  - **REJECT:** No active-source uniqueness constraint; duplicate active origins permitted.
+- **Dependencies:** Depends on D10–D11 (provider taxonomy and account identity). Independent of D04–D09.
 
 ### D13 — Root source registry versus derived evidence; row-level links
 
-- **What / why:** Decide whether a portfolio-level source registry is required or whether source should be derived from existing holding/contribution evidence. If a registry is kept, decide how every new holding revision and import contribution binds to it and how mismatches are refused.
-- **Alternatives and consequences:** (a) proposed root `portfolio_source_records` plus restrictive per-holding-revision and per-contribution link tables; (b) derive source only from existing row evidence, avoiding a root table but making portfolio-level origins/cardinality less explicit; (c) root table without links, which permits a Dhan root to disagree with Zerodha/manual rows.
-- **Technical recommendation — NOT APPROVED:** Keep the root registry and both link tables; each new row has exactly one link, written in the same transaction; validate provider/source against `source_broker`/contribution evidence. Permit mixed-source portfolios only with distinct explicit records and links.
-- **Risk / S1 effect / approval:** Additional schema and historical link treatment are required. Existing provenance must not be overwritten. **Level C approval requested.**
+- **Decision ID and subject:** D13 — Root source registry versus derived evidence; row-level links.
+- **Existing technical recommendation:** Keep the root registry and both link tables; each new row has exactly one link, written in the same transaction; validate provider/source against `source_broker`/contribution evidence. Permit mixed-source portfolios only with distinct explicit records and links.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Root `portfolio_source_records` plus per-holding-revision and per-contribution link tables; each new row has exactly one link in the same transaction; validate provider/source against evidence; mixed-source portfolios only with distinct explicit records.
+  - **AMEND:** Derive source only from existing row evidence (no root table), or root table without links.
+  - **DEFER:** Decision remains pending; source records and link tables cannot be created.
+  - **REJECT:** No root registry; source remains derived from existing row evidence only.
+- **Dependencies:** Depends on D10–D12 (provider taxonomy, account identity, source cardinality). Blocks D17 (re-key scope depends on source tables).
 
 ### D14 — Historical source/provenance with NULL or no link
 
-- **What / why:** Decide how existing contribution/holding records that predate the source registry are displayed and whether any are backfilled. Migration 004 deliberately left some historical import provenance NULL; no operational rows have been inspected.
-- **Alternatives and consequences:** (a) leave NULL/unlinked as `UNKNOWN` until evidence-backed disposition; (b) backfill from reliable original import records; (c) infer from symbol, portfolio name or likely broker. (c) fabricates provenance; (b) requires evidence review and scope.
-- **Technical recommendation — NOT APPROVED:** Preserve current values and label unknown/unlinked; only evidence-backed, separately authorized corrections may create links. Never infer from symbol/name or normalize away existing NULLs.
-- **Risk / S1 effect / approval:** Historical provenance can remain incomplete in D02 listings. S1/Direct P1 is unaffected. **Level C approval for treatment; each future correction needs its own operational authorization.**
+- **Decision ID and subject:** D14 — Historical source/provenance with NULL or no link.
+- **Existing technical recommendation:** Preserve current values and label unknown/unlinked; only evidence-backed, separately authorized corrections may create links. Never infer from symbol/name or normalize away existing NULLs.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** NULL/unlinked preserved as `UNKNOWN`; no backfill or inference from symbol/name/broker; only evidence-backed, separately authorized corrections may create links.
+  - **AMEND:** Backfill from reliable original import records, or limited inference from explicit evidence.
+  - **DEFER:** Decision remains pending; historical provenance treatment remains informal.
+  - **REJECT:** Backfill or inference permitted (not recommended — risks fabricating provenance).
+- **Dependencies:** Depends on D13 (source registry determines what NULL means). Independent of D04–D09 and D15–D20.
 
 ### D15 — Historical S1-owner portfolio disposition
 
-- **What / why:** Choose whether historical portfolios owned by `ipd-owner-ramki-personal` are initially separate from D02, exposed through an explicit alias/read projection, or re-keyed to `owner-4dc756b3`. The high-level ownership direction does not decide where existing rows live.
-- **Alternatives and consequences:** (a) defer/keep separate—safest and no data movement, but D02 cannot claim complete history; (b) a fully specified alias/read projection—avoids rewriting keys but adds dual-owner query, authorization, provenance and lifecycle complexity; (c) exact audited re-key—aligns storage with D02 owner but changes existing keys and needs inventory, collision policy, backup and separate authority.
-- **Technical recommendation — NOT APPROVED:** Do not move rows now. PA should first choose defer as the immediate safe state; decide alias versus re-key only after read-only inventory. If re-key is later chosen, migrate only rows proven to belong to the exact S1 personal identity/tenant; never merge.
-- **Risk / S1 effect / approval:** Defer means historical portfolios may not appear in D02 until a later decision. Alias can expose query leaks; re-key can affect recovery/idempotency. S1 identity itself stays unchanged, but row owners might change under (c). **Level C disposition now; separate Level E approval for any inventory/movement.**
+- **Decision ID and subject:** D15 — Historical S1-owner portfolio disposition.
+- **Existing technical recommendation:** Do not move rows now. PA should first choose defer as the immediate safe state; decide alias versus re-key only after read-only inventory. If re-key is later chosen, migrate only rows proven to belong to the exact S1 personal identity/tenant; never merge.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Defer/keep separate as immediate safe state; no data movement; alias vs re-key decided only after read-only inventory evidence.
+  - **AMEND:** Choose alias/read projection now, or choose re-key scope now (requires D16 evidence first).
+  - **DEFER:** Decision remains pending; historical portfolios remain separate indefinitely until disposition.
+  - **REJECT:** Immediate re-key or alias chosen without waiting for D16 evidence (risky — may collide with live data).
+- **Dependencies:** Depends on D16 (inventory evidence required before deciding which rows can safely be re-keyed). Depends on D13–D14 (source treatment affects what moves). Blocks D17–D19 (re-key scope, atomicity, recovery depend on disposition).
 
 ### D16 — Inventory scope, ownership proof and collision policy
 
-- **What / why:** Decide the exact preflight evidence and what happens when the live store has an existing D02 destination, orphan, cross-tenant row, duplicate key, ambiguous provenance or non-invertible restore receipt. Repository migrations 001–006 give a schema inventory, not actual row state.
-- **Alternatives and consequences:** (a) read-only inventory/manifest, exact ownership proof, batch-wide stop on any inconsistency; (b) resolve collisions by merging/overwriting/choosing a winner; (c) skip conflicting rows and partially migrate. (b)/(c) risk silent data loss, mixed ownership and partial history.
-- **Technical recommendation — NOT APPROVED (narrow Level E read-only inventory authorized 2026-11-16; Level C collision/stop policy still PENDING):** Require a separately authorized, read-only inventory first; exact table/FK/row count/key/null/digest report, source records/links if present, `foreign_key_check`, and hashed manifest. Any collision, orphan, unknown owner, ambiguous row or restore receipt stops the whole proposed batch; no merge, overwrite, winner selection or partial migration. PA decides disposition after seeing evidence.
-- **Risk / S1 effect / approval:** The narrow Level E read-only inspection authorized for D5/D16 evidence collection on 2026-11-16 ([approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md#2-narrow-level-e-read-only-d5d16-evidence-inventory-approved-on-2026-11-16)) was executed on the Principal's Windows host and is reconciled in [`IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md`](IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md): actual counts (3 portfolios / 13 revisions / 142 holdings / 6 contributions / 1 restore receipt, all under `ipd-owner-ramki-personal`/`ipd-personal-local`), candidate IDs (no D02-target `owner-4dc756b3` rows), collisions (`Q11a`: 0), and the sole blocker-unresolved record (`DEFAULT_PORTFOLIO` `Q12b`, excluded test data) are now obtained. No S1 change occurs during read-only inventory. **(The 2026-11-16 Arena Linux sandbox pass found the local Windows database unreachable/absent and stopped safely; see [D5/D16 inventory and blocker report](IPD-D02-D5-D16-READ-ONLY-INVENTORY-AND-BLOCKER-REPORT-2026-11-16.md).)** Level C policy disposition still **PENDING**; narrow Level E read-only inventory **APPROVED (2026-11-16)** and **EXECUTED**; separate Level E migration authority still **NOT AUTHORIZED.**
+- **Decision ID and subject:** D16 — Inventory scope, ownership proof and collision policy.
+- **Existing technical recommendation:** Require a separately authorized, read-only inventory first; exact table/FK/row count/key/null/digest report, source records/links if present, `foreign_key_check`, and hashed manifest. Any collision, orphan, unknown owner, ambiguous row or restore receipt stops the whole proposed batch; no merge, overwrite, winner selection or partial migration. PA decides disposition after seeing evidence.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Read-only inventory/manifest with batch-wide stop on any inconsistency; exact ownership proof; collision/stop policy enforced; no merge/overwrite/partial migration.
+  - **AMEND:** Different collision handling (e.g., merge/overwrite — not recommended due to data loss risk).
+  - **DEFER:** Decision remains pending; collision/stop policy undefined; no migration can proceed.
+  - **REJECT:** No formal collision/stop policy; inconsistent batches may proceed partially.
+- **Dependencies:** Depends on D15 (historical disposition affects what inventory looks for). Evidence already obtained from the 2026-11-16 read-only inventory (Q01–Q14 executed, zero collisions, pre/post byte-identical). Blocks D17–D19 (re-key depends on collision policy).
 
 ### D17 — Re-key scope and affected records
 
-- **What / why:** If PA later allows re-key, decide exactly which tables/fields move, and how restore idempotency and source lineage are preserved. A partial table list breaks FKs or auditability.
-- **Alternatives and consequences:** (a) exact proven portfolio rows and all owner-key children in one authorized batch; (b) only change `portfolios`; (c) migrate holdings but omit contributions, restore receipts, sources or links. (b)/(c) leave dangling or inconsistent history.
-- **Technical recommendation — NOT APPROVED:** Include `portfolios`, revisions, holdings, contributions, restore receipts and any approved source records/holding links/contribution links; preserve portfolio/source/revision IDs and evidence. Recompute owner-dependent restore fingerprints while recording old/new values in a hashed manifest; never rewrite the audit hash chain or migration ledger.
-- **Risk / S1 effect / approval:** Exact applied schema and live data must be verified before SQL is designed. S1 principal/membership values remain unchanged, but portfolio owner keys would change if re-key is authorized. **Level C migration design only; actual movement requires Level E.**
+- **Decision ID and subject:** D17 — Re-key scope and affected records.
+- **Existing technical recommendation:** Include `portfolios`, revisions, holdings, contributions, restore receipts and any approved source records/holding links/contribution links; preserve portfolio/source/revision IDs and evidence. Recompute owner-dependent restore fingerprints while recording old/new values in a hashed manifest; never rewrite the audit hash chain or migration ledger.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Re-key scope defined (all owner-key tables in one batch if re-key chosen); IDs/revisions/digests preserved; owner-dependent fingerprints recomputed; audit hash chain and migration ledger never rewritten.
+  - **AMEND:** Partial re-key scope (e.g., portfolios only — not recommended due to dangling references).
+  - **DEFER:** Decision remains pending; re-key cannot be designed without D15 disposition and D16 evidence.
+  - **REJECT:** No re-key ever; historical portfolios remain separate permanently.
+- **Dependencies:** Depends on D15 (disposition determines whether re-key is chosen), D16 (collision policy), D13–D14 (source/link treatment). Requires separate Level E for actual movement.
 
 ### D18 — Schema migration boundaries and SQLite mechanics
 
-- **What / why:** Decide whether new relationship/source schema is an append-only migration, how supported SQLite features and existing migration-ledger behavior are validated, and whether schema changes ever seed records.
-- **Alternatives and consequences:** (a) append-only atomic schema migration with parent indexes first, foreign keys enabled, checksummed ledger; no data rows; (b) edit old migrations, risking checksum/history breakage; (c) combine schema and operational row creation/data movement, coupling rollback and authority.
-- **Technical recommendation — NOT APPROVED:** (a), tested against fresh/current synthetic schemas on the supported SQLite build: composite FKs, `RESTRICT`, partial/expression indexes, CHECK syntax, deferred-FK behavior and rollback. Schema change creates definitions only—not owner, relationship, provider seed, source or portfolio rows. Never edit applied migrations.
-- **Risk / S1 effect / approval:** Actual SQLite version/behavior is not yet evidenced in this package; incompatible syntax must block approval. No S1 data effect. **Level C schema approval; migration implementation remains Level D and no database operation is authorized.**
+- **Decision ID and subject:** D18 — Schema migration boundaries and SQLite mechanics.
+- **Existing technical recommendation:** Append-only atomic schema migration with parent indexes first, foreign keys enabled, checksummed ledger; no data rows; tested against fresh/current synthetic schemas on the supported SQLite build. Schema change creates definitions only—not owner, relationship, provider seed, source or portfolio rows. Never edit applied migrations.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** Append-only migration pattern validated; composite FKs, `RESTRICT`, partial/expression indexes, CHECK syntax, deferred-FK behavior tested on supported SQLite build; no seed rows in migrations.
+  - **AMEND:** Different migration pattern (e.g., editable migrations — not recommended due to checksum breakage).
+  - **DEFER:** Decision remains pending; no D02 schema migration can be authored.
+  - **REJECT:** No append-only migration constraint; schema changes may seed data or edit old migrations.
+- **Dependencies:** Depends on D04–D13 (schema content depends on earlier decisions). Blocks D19 (re-key atomicity depends on migration mechanics). Independent of D15–D17 content.
 
 ### D19 — Re-key atomicity, rollback and recovery cutoff
 
-- **What / why:** Decide when a failed or post-commit migration can be reversed, and what happens after new D02 writes make reversal unsafe.
-- **Alternatives and consequences:** (a) one transaction, pre-commit rollback on any mismatch, reverse only before new/conflicting D02 writes; otherwise restore verified backup/reconcile under separate authority; (b) partial compensation; (c) unconditional inverse update. (b)/(c) can overwrite new writes or create split ownership.
-- **Technical recommendation — NOT APPROVED:** Atomic `BEGIN IMMEDIATE`, pre/post manifests, FK/count/digest checks and all-or-nothing rollback; post-commit reverse only if manifest proves no new D02 writes or conflict. Otherwise no partial reversal: use verified backup/recovery procedure and audit reconciliation under a separate approval. Never delete audit history or rewind migration ledger.
-- **Risk / S1 effect / approval:** Recovery may require downtime and backup reconciliation; a post-write rollback may be impossible without a recovery plan. No operation authorized. **Level C procedure approval; actual recovery/migration is Level E.**
+- **Decision ID and subject:** D19 — Re-key atomicity, rollback and recovery cutoff.
+- **Existing technical recommendation:** Atomic `BEGIN IMMEDIATE`, pre/post manifests, FK/count/digest checks and all-or-nothing rollback; post-commit reverse only if manifest proves no new D02 writes or conflict. Otherwise no partial reversal: use verified backup/recovery procedure and audit reconciliation under a separate approval. Never delete audit history or rewind migration ledger.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** `BEGIN IMMEDIATE` with pre/post manifests; rollback before commit on any mismatch; post-commit reverse only under separate recovery authority if no conflicting writes; otherwise restore verified backup.
+  - **AMEND:** Partial compensation or different rollback cutoff (not recommended — risks split ownership).
+  - **DEFER:** Decision remains pending; no re-key migration can be executed.
+  - **REJECT:** No formal rollback/recovery procedure; partial reversal may overwrite new writes.
+- **Dependencies:** Depends on D18 (migration mechanics) and D17 (re-key scope). Requires separate Level E for actual execution.
 
 ### D20 — Local single-user security scope
 
-- **What / why:** Confirm the one-active-membership/one-active-owner constraint is intentionally local single-user and not a hosted, multi-user, multi-device or institutional authorization model.
-- **Alternatives and consequences:** (a) approve current local-only boundary and stop if scope grows; (b) weaken unique indexes now; (c) design a multi-principal model. (b) introduces ambiguity without solving authorization; (c) is broader work.
-- **Technical recommendation — NOT APPROVED:** Accept (a). Preserve strict indexes; any future scope expansion requires a new identity, revocation and isolation design.
-- **Risk / S1 effect / approval:** Does not support later multi-device/multi-user use without redesign. No S1 effect. **Level C scope approval; a changed product scope requires a new Level B/C decision.**
+- **Decision ID and subject:** D20 — Local single-user security scope.
+- **Existing technical recommendation:** Accept current local-only boundary; preserve strict indexes; any future scope expansion requires a new identity, revocation and isolation design.
+- **Exact proposed disposition:** NOT APPROVED — pending Level C disposition. PA must explicitly APPROVE, AMEND (with exact replacement), DEFER, or REJECT.
+- **Material consequences:**
+  - **APPROVE:** One-active-membership/one-active-owner constraint confirmed for local single-user only; no hosted/multi-user/institutional support implied.
+  - **AMEND:** Weaken unique indexes now (not recommended — introduces ambiguity) or design multi-principal model (broader work requiring new Level B/C).
+  - **DEFER:** Decision remains pending; scope boundary undefined.
+  - **REJECT:** No local-only constraint; scope may expand without new design.
+- **Dependencies:** Depends on D04 (multiplicity semantics). Independent of D10–D19.
 
 ### D21 — Implementation authority
 
-- **What / why:** Decide whether engineering may implement the approved detailed schema, resolver, authorization facade, source links and synthetic tests. Review acceptance and schema approval are not implementation authority.
-- **Alternatives and consequences:** (a) grant a narrowly scoped Level D authority after Level C approval; (b) defer; (c) allow implementation based only on the current architecture direction. (c) violates the documented approval boundary.
-- **Technical recommendation — NOT APPROVED for the new S1-to-D02 relationship:** Keep **NOT GRANTED** for the new S1-to-D02 relationship implementation until all Level C choices and acceptance criteria are explicitly accepted and a separate implementation scope is issued. No code, migrations or verifier work for the new relationship under this package. Owner-directed routine implementation authority under [IPD-OPERATING-MODEL.md](IPD-OPERATING-MODEL.md) covers other in-scope IPD implementation, configuration, testing, local data operations, verification, recovery and publication without repeated approval. The original D02/D03/D05 engineering act (IIPS-V3-PA-D02-D03-D05-ENGINEERING-2026-11-06-01, blob cea7fed5618ed08683cf9d12d22b0a6e02c557f4) authorizes local non-production IPD engineering and isolated synthetic testing for the approved v2/owner/snapshot contract (file envelope: src/ipc/protocol.ts, src/ipc/dispatch.ts, src/persistence/binding.ts, src/persistence/portfolio_store.ts, src/persistence/brokerImportPersistence.ts; synthetic disposable fixture binding creation for tests only). That existing authorization is not revoked by later PENDING statuses.
-- **Risk / S1 effect / approval:** Deferral keeps D02 fail-closed and unavailable through this new relationship; implementation after approval still needs S1/Direct P1 regression evidence. No current S1 change. **Separate Level D statement required; Level C cannot imply it.**
+- **Decision ID and subject:** D21 — Implementation authority.
+- **Existing technical recommendation:** Keep **NOT GRANTED** for the new S1-to-D02 relationship implementation until all Level C choices and acceptance criteria are explicitly accepted and a separate implementation scope is issued.
+- **Exact proposed disposition:** NOT GRANTED — pending separate Level D statement. PA must explicitly grant or deny.
+- **Material consequences:**
+  - **GRANT (after Level C):** Narrowly scoped Level D implementation authority for specifically named code/schema/test scope, with stated exclusions and acceptance evidence. Does not authorize live database operations.
+  - **DEFER:** D21 remains NOT GRANTED; no implementation work for the new S1-to-D02 relationship may proceed.
+  - **DENY:** Implementation authority explicitly withheld; existing code in binding.ts requires separate disposition (see Resolver Deviation decision below).
+- **Dependencies:** Depends on Level C approval of D04–D20. Independent of D22 (operational authority is separate). Does not grant D5-T5 acceptance or D6 authorization.
+- **Authority note:** Owner-directed routine implementation authority under IPD-OPERATING-MODEL.md covers other in-scope IPD implementation work, but is distinct from and outside the protected D02 relationship boundary.
 
 ### D22 — Operational provisioning, historical operation, D5 evidence and D6
 
-- **What / why:** Decide later whether to create owner/relationship/provider/source rows, inspect or move live records, perform host-specific D5 verification, or begin D6. These are different operational acts with different risk and evidence.
-- **Alternatives and consequences:** (a) no operations now and request each separately after design/implementation; (b) combine relationship provisioning, data migration and D5 in one run; (c) infer success from synthetic tests/readiness. (b)/(c) bypass independent controls and do not establish host evidence.
-- **Technical recommendation — NOT APPROVED for D02 operational provisioning/migration (narrow Level E read-only D5/D16 evidence inventory authorized 2026-11-16; all D02 provisioning, mutation, migration, D5 acceptance and D6 remain NOT AUTHORIZED):** Keep operational provisioning/database modification **NOT AUTHORIZED for the new S1-to-D02 relationship**, D5 **BLOCKED**, D6 **NOT STARTED**. Routine local work under the operating model is distinct from protected D02 operational provisioning/migration. Execute the separately authorized 2026-11-16 read-only inventory on the Windows host without database mutation; request any approved D02 migration/provisioning separately; D5 needs the prescribed read-only verifier and exact host evidence; D6 needs its own prerequisites and authority.
-- **Risk / S1 effect / approval:** D02 remains blocked until independently authorized and verified. D5/D6 are not S1 changes but must preserve Direct P1. **Narrow Level E read-only D5/D16 inventory APPROVED on 2026-11-16 ([approval record](IPD-D02-PROGRAM-AUTHORITY-APPROVAL-RECORD-2026-11-16.md#2-narrow-level-e-read-only-d5d16-evidence-inventory-approved-on-2026-11-16)); separate Level E authorization still required for each provisioning/migration operation, separate D5 acceptance/evidence decision, and separate D6 authority.**
+- **Decision ID and subject:** D22 — Operational provisioning, historical operation, D5 evidence and D6.
+- **Existing technical recommendation:** Keep operational provisioning/database modification **NOT AUTHORIZED for the new S1-to-D02 relationship**, D5 **BLOCKED**, D6 **NOT STARTED**.
+- **Exact proposed disposition:** NOT AUTHORIZED — pending separate Level E authorization for each named operation. PA must explicitly authorize each provisioning/migration operation, D5 acceptance, and D6 start.
+- **Material consequences:**
+  - **AUTHORIZE (per operation):** Separate Level E authorization for each named provisioning/migration operation with operational safeguards; D5 acceptance only after T1–T4 collectively accepted; D6 start only after D5 prerequisites satisfied.
+  - **DEFER:** D22 remains NOT AUTHORIZED; D5 remains BLOCKED; D6 remains NOT STARTED.
+  - **DENY:** Operational authority explicitly withheld for specified operations.
+- **Dependencies:** Depends on D21 (implementation must precede provisioning). Depends on D5-T5 (separate PA acceptance). Independent of D04–D20 Level C decisions except as prerequisites.
+- **Authority note:** The narrow Level E read-only D5/D16 evidence inventory approved on 2026-11-16 is EXECUTED; all mutating Level E operations remain NOT AUTHORIZED.
 
 ## Dependencies and safe sequencing
 
@@ -216,13 +353,15 @@ The five D5 acceptance components were reconciled against the verified Windows-h
 
 Do not infer implementation or provisioning authority from inventory evidence. Inventory completion does not constitute D5 acceptance, schema approval, implementation authorization, provisioning/migration authorization, or D6 authorization.
 
-## Authority Reconciliation — D02 Relationship Resolver Implementation (2026-11-16)
+## Resolver Deviation Disposition — D02 Relationship Resolver Implementation (RD-2026-11-16)
 
-This section records the reconciliation of the newly added D02 relationship resolver code
-in `src/persistence/binding.ts` against the governing authority records. It is an
-evidence-backed assessment, not a PA decision.
+This is a **separate decision matter**, distinct from D04–D20 Level C design approval. It does not combine with D04–D20 approval and does not imply D21 or D22 authority.
 
-### Previously authorized code and behavior
+### Decision ID and subject
+
+RD-2026-11-16 — Disposition of `resolveD02PortfolioAccess()` and `resolveD02PortfolioAccessInCurrentTransaction()` in `src/persistence/binding.ts` and their 12 unit tests in `tests/durable_holdings_d02_d05_unit.test.ts`.
+
+### Existing engineering authorization
 
 **Governing provision:** Original D02/D03/D05 engineering act
 (IIPS-V3-PA-D02-D03-D05-ENGINEERING-2026-11-06-01, blob cea7fed5618ed08683cf9d12d22b0a6e02c557f4,
@@ -238,407 +377,39 @@ evidence-backed assessment, not a PA decision.
 
 **Previously authorized code in `binding.ts`:** `resolveActiveBinding`, `resolveActiveBindingInCurrentTransaction`, `resolveActiveHoldingsBinding`, `resolveActiveHoldingsBindingInCurrentTransaction`, `HOLDINGS_CANONICAL_OWNER_ID`, `HOLDINGS_TENANT_ID`, `BindingAbsentError`, `BindingInvalidError`, Direct P1 generic resolver behavior — all unchanged.
 
-### Newly introduced resolver behavior
+### Exact behavior implemented
 
-| Element | Description | Authority status |
-|---------|-------------|-----------------|
-| `D02RelationshipAbsentError` | New error class for fail-closed D02 relationship resolution | New code in authorized file envelope |
-| `ResolvedD02PortfolioAccess` | New interface with distinct `membershipOwnerId`/`portfolioOwnerId` | New code in authorized file envelope |
-| `resolveD02PortfolioAccess(db)` | Opens own BEGIN IMMEDIATE; validates S1 tuple + relationship + owner registry; fails closed | Implements D08 resolver contract (Level C PENDING) |
-| `resolveD02PortfolioAccessInCurrentTransaction(db)` | Caller-held transaction variant; requires active transaction | Implements D08/D09 contract (Level C PENDING) |
-| Relationship/owner-registry schema | NOT created — tables do not exist in current schema | No DDL or migration authored |
-| Relationship row provisioning | NONE — resolver always fails closed on current schema | Not provisioned; D22 NOT AUTHORIZED |
+| Element | Description |
+|---------|-------------|
+| `D02RelationshipAbsentError` | New error class for fail-closed D02 relationship resolution |
+| `ResolvedD02PortfolioAccess` | New interface with distinct `membershipOwnerId`/`portfolioOwnerId` |
+| `resolveD02PortfolioAccess(db)` | Opens own `BEGIN IMMEDIATE`; validates S1 tuple + relationship + owner registry; fails closed |
+| `resolveD02PortfolioAccessInCurrentTransaction(db)` | Caller-held transaction variant; requires active transaction |
+| 12 unit tests | Fail-closed matrix covering all resolver conditions, using synthetic disposable fixtures |
 
-### Overlap with the approved engineering envelope
+### Why the implementation may exceed approved design authority
 
-**In scope:**
-- The resolver code lives in `src/persistence/binding.ts`, which is in the authorized file envelope.
-- It is local non-production IPD engineering (fail-closed read-only resolution).
-- It creates no tables, inserts no rows, modifies no data.
-- The 12 resolver tests use synthetic disposable fixtures in temp directories only.
-- Direct P1 behavior is byte-for-byte unchanged.
+- The resolver implements the **D08 resolver contract** (fresh resolution from S1 tuple + relationship + active owner registry), which depends on Level C decisions D04–D09 that remain **PENDING**.
+- **D21 implementation authority is NOT GRANTED** for the new S1-to-D02 relationship.
+- **D22 operational provisioning is NOT AUTHORIZED.**
+- While the code resides in the authorized file envelope and is fail-closed (no tables created, no rows inserted, no data modified), it implements behavior whose governing design decisions have not been approved at Level C.
 
-**Outside scope:**
-- The resolver implements the D08 resolver contract (fresh resolution from S1 tuple + relationship + active owner registry), which depends on Level C decisions D04–D09 that remain PENDING.
-- D21 implementation authority for the new S1-to-D02 relationship is NOT GRANTED.
-- D22 operational provisioning/migration is NOT AUTHORIZED.
+### Proposed disposition choices
 
-### Authority-scope deviation (requires disposition)
+PA must choose one:
 
-**Finding:** The D02 relationship resolver code added to `src/persistence/binding.ts` implements D08 resolver behavior that depends on Level C decisions (D04–D09) which remain PENDING, and D21 implementation authority is NOT GRANTED. While the code resides in the authorized file envelope and is fail-closed (no provisioning), it implements behavior whose governing design decisions have not been approved at Level C.
+1. **RATIFY:** Determine that the fail-closed, no-provisioning resolver code is covered by the existing engineering act's "local non-production IPD engineering and isolated synthetic testing" authorization for `binding.ts`. The code and tests remain as evidence. No D21 or D22 authority is implied.
 
-**Required disposition:** Program Authority must either:
-1. **Approve the code as within existing authority** — if PA determines the fail-closed, no-provisioning resolver code is covered by the existing engineering act's "local non-production IPD engineering and isolated synthetic testing" authorization for binding.ts; or
-2. **Require Level C approval first** — if PA determines the D08 resolver contract implementation requires separate Level C approval before the code can remain; or
-3. **Direct removal or modification** — if PA determines the code exceeds the authorized envelope.
+2. **REQUIRE MODIFICATION/REMOVAL:** Determine that the D08 resolver contract implementation requires separate Level C approval before the code can remain. Direct removal or modification of the resolver code and its tests.
 
-**Code disposition:** The code and tests are preserved as evidence. No deletion or rewrite is performed by this reconciliation. The resolver remains fail-closed and unprovisioned regardless of disposition.
+3. **DEFER PENDING LEVEL C APPROVAL:** Defer disposition until Level C decisions D04–D20 are explicitly accepted. Code and tests preserved as evidence; no action taken on them now.
 
-### Decisions NOT affected by this deviation
+### Authority boundaries preserved
 
-- D5 remains BLOCKED; D6 remains NOT STARTED.
-- D21 remains NOT GRANTED; D22 remains NOT AUTHORIZED.
-- Level C remains PENDING; mutating Level E remains NOT AUTHORIZED.
-- No relationship row, owner record, or schema change exists or is created by this code.
-
-## D04–D20 Technical Resolution and Implementation Evidence
-
-This section records the complete technical resolution for decisions D04–D20, including the
-exact technical requirement, existing implementation evidence, implementation gaps, minimum
-technically sufficient design recommendations, and unresolved assumptions. All recommendations
-remain **NOT APPROVED** until explicitly accepted by the Program Authority at Level C.
-
-### Implementation evidence (existing, verified)
-
-The following code already exists in the repository and was validated by 56 passing unit
-tests (`tests/durable_holdings_d02_d05_unit.test.ts`) plus 9 conformance tests:
-
-- `src/persistence/binding.ts` — `resolveActiveBinding`, `resolveActiveHoldingsBinding`,
-  `HOLDINGS_CANONICAL_OWNER_ID` (`owner-4dc756b3`), `HOLDINGS_TENANT_ID` (`ipd-personal-local`),
-  `BindingAbsentError`, `BindingInvalidError`, `D02RelationshipAbsentError` (new),
-  `ResolvedD02PortfolioAccess` interface (new), `resolveD02PortfolioAccess` (new),
-  `resolveD02PortfolioAccessInCurrentTransaction` (new). Direct P1 behavior unchanged.
-- `src/persistence/portfolio_store.ts` — `evaluatePortSaveGuard` (W-1 default deny),
-  `findCallerSuppliedIdentityKeys` (C7 scan), `DurablePortfolioStore` with
-  `withHoldingsSnapshotTransaction`, `saveSnapshotV2`, `createEmptySnapshot`, all v2
-  primitives, `withBrokerImportTransaction`, owner-scoped read/write methods.
-- `src/persistence/brokerImportPersistence.ts` — `mapBrokerImportHoldings` (sorting,
-  `securityIdentity` null when inputs absent), `evaluateBrokerImportIdentityGate`
-  (saveable/refused), `computeBrokerImportProvenance` (deterministic, content-sensitive),
-  `persistBrokerImport`, `reconcileBrokerImportByRead`, `reconcileSnapshotV2ByRead`.
-- `src/ipc/protocol.ts` — v2 closed operation set, `IPC_REFUSED_WIRE_KEYS` (C7),
-  `findRefusedWireKeys`, one-request-per-connection settlement, `classAFrame`/`successFrame`.
-- `src/ipc/dispatch.ts` — v2 reads/refusals only; v2 writes `WRITE_NOT_AUTHORIZED`;
-  v1 writes under `IIPS_LOCAL_PERSONAL_USE=1`; binding resolution per request;
-  `evaluatePortSaveGuard` integration; C7 scan before store access.
-- Migrations 001–006 — `local_principal_bindings`/`local_principal_memberships` with
-  partial unique indexes (migration 003), contribution provenance (migration 004),
-  restore receipts (migration 006), all checksummed and immutable.
-
-### D04 — Relationship multiplicity and active uniqueness
-
-**Exact technical requirement:** One active relationship per membership/type and one active
-membership per owner/tenant/type. Partial unique indexes enforce this at the storage layer.
-Historical REVOKED rows remain allowed.
-
-**Existing implementation:** Migration 003 enforces single-active at the binding/membership
-level via `idx_local_principal_bindings_single_active` and
-`idx_local_principal_memberships_single_active`. The `resolveD02PortfolioAccess` resolver
-adds cardinality checks for relationships.
-
-**Implementation gap:** No `personal_identity_owner_relationships` table exists; no composite
-parent index on `local_principal_memberships (membership_id, tenant_id)`; no relationship-level
-partial unique indexes.
-
-**Minimum sufficient design:** Keep both partial unique indexes for local single-user scope.
-Add `uq_active_relationship_per_membership` and `uq_active_membership_per_overall_owner`.
-The resolver's cardinality check is defense in depth beyond the database index.
-
-**Unresolved:** SQLite CHECK support for UUIDv4 format needs validation on the supported
-SQLite build. Multiple historical REVOKED rows are allowed by design.
-
-### D05 — Owner registry lifecycle and revocation
-
-**Exact technical requirement:** Registry revocation is terminal; one transaction marks the
-owner and its active relationships revoked with audit events; every access checks both states.
-
-**Existing implementation:** No `portfolio_owner_registry` table exists. No revocation
-transaction exists.
-
-**Implementation gap:** Owner registry schema, revocation procedure, audit event shape.
-
-**Minimum sufficient design:** Terminal REVOKED state; `BEGIN IMMEDIATE` transaction marks
-owner REVOKED, marks linked relationships REVOKED with timestamps, appends audit events;
-resolver checks both relationship and owner-registry status. Re-establishment requires new
-relationship ID and renewed authority; no silent reactivation.
-
-**Unresolved:** Actor identity source and reason-code vocabulary are not defined (D06).
-
-### D06 — Relationship/source IDs, authority reference and audit event
-
-**Exact technical requirement:** Canonical lowercase UUIDv4 IDs with NOT NULL and CHECK
-constraints; collision abort; non-empty canonical authority record reference with digest;
-append-only audit events with action, state, membership/binding/tenant, owner/tenant,
-authority reference, UTC time, actor reference, reason code.
-
-**Existing implementation:** `randomUUID` from `node:crypto` used in `createEmptySnapshot`
-and portfolio creation. No UUIDv4 CHECK constraint in any migration.
-
-**Implementation gap:** No UUIDv4 CHECK constraint; no audit event schema for relationship
-changes; no authority reference validation.
-
-**Minimum sufficient design:** Canonical UUIDv4 CHECK (length 36, lowercase, correct hyphens,
-version 4, variant 8/9/a/b, hex-only); DB-level NOT NULL; collision aborts transaction;
-non-empty `authority_record_ref`; audit events append-only without credentials.
-
-**Unresolved:** SQLite UUID CHECK syntax compatibility on supported build; actor source
-evidence procedure; reason-code taxonomy.
-
-### D07 — Portfolio-to-owner registry FK versus complete access facade
-
-**Exact technical requirement:** Non-bypassable authorization boundary — either a proven-complete
-private facade or a schema-level portfolio-to-registry FK.
-
-**Existing implementation:** `DurablePortfolioStore` accepts `OwnerRef` directly; dispatcher
-resolves owner and passes to store methods. No proof that low-level methods are unreachable
-from production dispatch.
-
-**Implementation gap:** No import-graph tests proving no dispatcher bypass; no schema-level FK
-from portfolios to owner registry.
-
-**Minimum sufficient design:** Adopt facade approach (a) with import-graph tests proving every
-D02 read/write path is behind the capability; otherwise require schema FK (b). Never retain
-raw `OwnerRef` access (c).
-
-**Unresolved:** Whether facade completeness can be statically proven; migration/compatibility
-risk if schema FK is chosen.
-
-### D08 — D02 resolver and authorization contract
-
-**Exact technical requirement:** Resolve fresh from verified DB rows (S1 tuple + relationship +
-active owner registry); return distinct D02 context; all SQL predicates include resolved
-tenant, D02 owner, exact portfolio and revision/status; absent/duplicate/revoked/malformed/
-cross-tenant/foreign yields sanitized refusal; no IPC-supplied owner/relationship.
-
-**Existing implementation:** `resolveActiveHoldingsBinding` checks D02 owner pair directly
-(owner-4dc756b3 / ipd-personal-local) without relationship. New `resolveD02PortfolioAccess`
-implements the relationship-based contract but fails closed (tables not provisioned).
-
-**Implementation gap:** No relationship tables; no distinct `ResolvedD02PortfolioAccess` type
-in production dispatch paths; no D02 call-site inventory.
-
-**Minimum sufficient design:** D02-only context derived solely from verified DB rows; no
-caching; no caller-supplied IDs; resolver called inside the same `BEGIN IMMEDIATE` as writes;
-fail-closed matrix covers all 10 conditions.
-
-**Unresolved:** Exact resolver output shape in production types; changes to
-`resolveActiveHoldingsBinding` call sites; Direct P1 regression evidence.
-
-### D09 — Transaction boundaries, nested work and concurrency
-
-**Exact technical requirement:** One wrapper owns the transaction; resolver and data query
-share same snapshot/connection; `BEGIN IMMEDIATE` from relation resolution through
-authorization and writes; nested operations reuse context/savepoints; no second connection.
-
-**Existing implementation:** `DurablePortfolioStore.withTransaction` does `BEGIN IMMEDIATE`;
-`resolveActiveBinding` opens/closes its own transaction; `resolveActiveBindingInCurrentTransaction`
-requires an active transaction.
-
-**Implementation gap:** Generic resolver opens/closes its own transaction — cannot be called
-within an outer transaction without conflict. No single transaction wrapper spanning
-relationship resolution + data query.
-
-**Minimum sufficient design:** New `withD02PortfolioAccess(db, mode, work)` wrapper owning
-the outer transaction; resolver and data query share the same connection/snapshot;
-`resolveD02PortfolioAccessInCurrentTransaction` for in-transaction use.
-
-**Unresolved:** Locking/concurrency behavior needs synthetic tests; savepoint semantics for
-nested operations.
-
-### D10 — Provider taxonomy, normalization and catalog governance
-
-**Exact technical requirement:** Controlled catalog of provider codes; exact uppercase ASCII
-keys (`DHAN`, `ZERODHA`, `MANUAL_PERSONAL`); adapter maps aliases to exactly one active code;
-unknown/ambiguous inputs refuse.
-
-**Existing implementation:** No `portfolio_source_provider_catalog` table. `source_broker`
-stored as free text in `portfolio_holdings` and `portfolio_contributions`.
-
-**Implementation gap:** No provider catalog table; no alias normalization; no provider code
-governance.
-
-**Minimum sufficient design:** Catalog with unique exact codes and `BROKER`/`MANUAL` type;
-alias normalization resolves exactly one active code; revoked codes remain readable but
-unavailable for new import.
-
-**Unresolved:** Exact code list for other supported brokers; catalog change governance;
-provider-specific account ID contract.
-
-### D11 — Broker-account identity and normalization
-
-**Exact technical requirement:** Server-issued opaque UUIDv4 token stable per provider/account
-stream; reject raw account numbers/usernames/credentials/tokens.
-
-**Existing implementation:** No `source_account_ref` column exists. No opaque token issuance.
-
-**Implementation gap:** No source account reference mechanism; no token stability guarantee.
-
-**Minimum sufficient design:** Server-owned opaque UUIDv4 token per source stream; never store
-raw account/credential strings; if provider cannot supply stable stream, refuse account-level
-match.
-
-**Unresolved:** Whether provenance-level token suffices for account-level deduplication;
-PA must confirm fallback policy.
-
-### D12 — Portfolio source cardinality and active uniqueness
-
-**Exact technical requirement:** Zero-or-more active sources per portfolio; one active source
-per `(tenant, owner, portfolio, provider, account ref)`; manual uses `MANUAL_PERSONAL`/NULL
-unique per portfolio.
-
-**Existing implementation:** No `portfolio_source_records` table; no active-source uniqueness.
-
-**Implementation gap:** No source records table; no partial unique index on active source tuple.
-
-**Minimum sufficient design:** Root registry with partial unique index; revoked source remains
-historical and cannot receive new links; distinct portfolios remain distinct under same
-provider.
-
-**Unresolved:** Hybrid portfolio policy; manual/hybrid semantics need product approval.
-
-### D13 — Root source registry versus derived evidence; row-level links
-
-**Exact technical requirement:** Root `portfolio_source_records` plus per-holding-revision and
-per-contribution link tables; each new row has exactly one link in the same transaction;
-validate provider/source against evidence.
-
-**Existing implementation:** No source tables or link tables. `portfolio_holdings.source_broker`
-and `portfolio_contributions` carry row-level evidence.
-
-**Implementation gap:** No `portfolio_source_records`; no `portfolio_holding_source_links`;
-no `portfolio_contribution_source_links`.
-
-**Minimum sufficient design:** Keep root registry and both link tables; new writes create
-source row and links in same transaction; revoked sources readable but cannot receive new
-links; existing NULL provenance remains NULL/unknown.
-
-**Unresolved:** Whether registry is required vs. deriving source from existing evidence;
-mixed-source portfolio support.
-
-### D14 — Historical source/provenance with NULL or no link
-
-**Exact technical requirement:** Preserve NULL/unlinked as UNKNOWN; no backfill or inference
-from symbol/name/broker.
-
-**Existing implementation:** Migration 004 left historical provenance NULL. 140/142 holdings
-have NULL `security_identity`. Current code never infers identity.
-
-**Implementation gap:** None for current behavior; needs formalization in schema.
-
-**Minimum sufficient design:** Preserve current values; label unknown; only evidence-backed
-corrections may create links; never infer from symbol/name or normalize away NULLs.
-
-**Unresolved:** None significant.
-
-### D15 — Historical S1-owner portfolio disposition
-
-**Exact technical requirement:** Decide whether historical S1-owner portfolios are separate,
-aliased, or re-keyed to D02 owner. No data movement without separate authority.
-
-**Existing implementation:** Read-only inventory (2026-11-16) found 2 active S1 portfolios
-(`DHAN_PORTFOLIO`, `PERSONAL-*`) and 0 D02 target rows. No re-key procedure exists.
-
-**Implementation gap:** No re-key migration; no alias/read projection; no audit manifest for
-old/new fingerprints.
-
-**Minimum sufficient design:** Defer — keep separate until PA decides alias vs re-key. If
-re-key later chosen, include `portfolios`, revisions, holdings, contributions, restore
-receipts, source records/links; preserve IDs/revisions/digests; recompute restore fingerprints.
-
-**Unresolved:** PA disposition needed for `DHAN_PORTFOLIO` and `PERSONAL-*`; `DEFAULT_PORTFOLIO`
-excluded as test data.
-
-### D16 — Inventory scope, ownership proof and collision policy
-
-**Exact technical requirement:** Read-only inventory with preflight evidence; batch-wide stop
-on any collision, orphan, ambiguous row, or non-invertible restore receipt.
-
-**Existing implementation:** Read-only inventory executed on Windows host 2026-11-16; Q01–Q14
-all EXECUTED_OK; pre/post SHA-256 byte-identical; `integrity_check ok`; `foreign_key_check`
-0 violations; Q11a collisions 0.
-
-**Implementation gap:** Level C collision/stop policy not yet approved.
-
-**Minimum sufficient design:** Read-only inventory first; exact table/FK/row count/key/null/
-digest report; any collision stops the whole batch; no merge/overwrite/partial migration.
-
-**Unresolved:** Level C collision policy approval; separate Level E migration authority.
-
-### D17 — Re-key scope and affected records
-
-**Exact technical requirement:** If re-key, include portfolios, revisions, holdings,
-contributions, restore receipts, source records/links; preserve IDs/revisions/digests.
-
-**Existing implementation:** Schema inventory identifies all owner-key tables (migrations 001–
-006). No re-key migration exists.
-
-**Implementation gap:** No re-key procedure; no fingerprint manifest; no rollback procedure.
-
-**Minimum sufficient design:** Include all owner-key tables in one batch; preserve
-portfolio/source/revision IDs and evidence; recompute owner-dependent restore fingerprints;
-record old/new fingerprint pair in manifest.
-
-**Unresolved:** Re-key not authorized; pending PA decision under D15.
-
-### D18 — Schema migration boundaries and SQLite mechanics
-
-**Exact technical requirement:** Append-only migration; composite FKs; `foreign_keys=ON`;
-checksummed ledger; no seed rows; parents before children.
-
-**Existing implementation:** Migration ledger; migrations 001–006 checksummed; `foreign_keys=ON`
-pattern used; append-only migrations.
-
-**Implementation gap:** No D02 migration exists; SQLite UUID CHECK syntax untested on supported
-build.
-
-**Minimum sufficient design:** Append-only schema migration with parent indexes first; no data
-rows; never edit applied migrations; test partial/expression indexes, CHECKs, deferred FKs.
-
-**Unresolved:** Supported SQLite version behavior for candidate D02 DDL.
-
-### D19 — Re-key atomicity, rollback and recovery cutoff
-
-**Exact technical requirement:** Atomic `BEGIN IMMEDIATE`; pre/post manifests; rollback before
-commit; verified backup after commit; no partial reversal after conflicting writes.
-
-**Existing implementation:** `withTransaction` pattern; `proveSettledForReconciliation` zero-write
-probe; append-only audit chain.
-
-**Implementation gap:** No re-key migration; no rollback/recovery procedure; no pre/post
-manifest tooling.
-
-**Minimum sufficient design:** `BEGIN IMMEDIATE` with `PRAGMA defer_foreign_keys=ON`;
-rollback before commit on any mismatch; after commit, reverse only under separate recovery
-authority if no conflicting writes; otherwise restore verified backup.
-
-**Unresolved:** Separate recovery authority needed; executable tested procedure.
-
-### D20 — Local single-user security scope
-
-**Exact technical requirement:** One-active-membership/one-active-owner constraint for local
-single-user only; no hosted/multi-user/institutional support implied.
-
-**Existing implementation:** Migration 003 partial unique indexes; `IPD-OPERATING-MODEL.md`
-confirms scope.
-
-**Implementation gap:** None significant.
-
-**Minimum sufficient design:** Accept local-only scope; preserve strict indexes; any future
-scope expansion requires new authority-approved model.
-
-**Unresolved:** None significant.
-
-### Level C decisions required from Program Authority
-
-PA must explicitly `APPROVE`, `AMEND` (with exact replacement), or `DEFER/REJECT` each of
-D04–D20. Approval covers Level C detailed design only — not implementation, provisioning, or
-operations.
-
-### Level D implementation authority (D21)
-
-After Level C approval, PA must issue a separate Level D statement granting implementation
-authority for specifically named code/schema/test scope, with stated exclusions and acceptance
-evidence. This does not authorize live database operations.
-
-### D5-T2 and D5-T3 unlock path
-
-| D5 component | Current status | What unlocks it |
-|--------------|---------------|-----------------|
-| D5-T2 (approved representation) | FAIL — Level C pending | PA Level C approval of D04–D20 detailed schema |
-| D5-T3 (read-only verifier tests) | FAIL — not implemented | Level C approval + Level D implementation authority |
-| D5-T5 (separate PA acceptance) | PENDING | PA acceptance of D5-T1–T4 collectively |
-
-D5 remains **BLOCKED** until T2, T3, and T5 are resolved. D6 remains **NOT STARTED**.
+- **Level C:** This deviation decision is separate from D04–D20 Level C design approval. Ratification does not approve the D08 resolver contract design.
+- **Level D / D21:** Ratification does not grant implementation authority. D21 remains NOT GRANTED until separately issued after Level C approval.
+- **Level E / D22:** Ratification does not authorize operational provisioning or migration. D22 remains NOT AUTHORIZED.
+- **D5-T5:** Ratification does not constitute D5 acceptance. D5-T5 remains a separate acceptance requirement.
 
 ---
 
