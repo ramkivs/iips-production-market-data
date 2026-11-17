@@ -281,12 +281,12 @@ The five D5 acceptance components were reconciled against the verified Windows-h
 | D5-T | Required condition | Evidence observed | Evidence reference | Result | Exact reason | Remaining decision / dependency |
 |---|---|---|---|---|---|---|
 | **D5-T1** | Approved mapping: D01–D03 relationship direction (S1 preserved, separate explicit relationship to D02 owner `owner-4dc756b3`) | D01–D03 APPROVED (2026-11-15); architectural direction APPROVED; active S1 tuple confirmed (`binding c5808abaffd072d6401ce63ad86c6ac0`, membership `d25dcc5370100b00766efc5166f65cf3`, `canonical_owner_id = ipd-owner-ramki-personal`) | Decision package D01–D03; approval record; Q04a/Q04b | PASS | D01–D03 approved as recorded; S1 identity established and preserved | Relationship not provisioned (zero `owner-4dc756b3` rows); separate PA implementation authority required |
-| **D5-T2** | Approved representation: Level C detailed technical schema approval | Level C APPROVED for D04–D20 (2026-11-16); detailed technical schema design is now approved at Level C | Decision package D04–D20; this record | Level C prerequisite MET; not automatically PASS | Level C design approval is a necessary but not sufficient condition for D5-T2. D5-T2 requires separate PA acceptance as part of the D5-T5 collective acceptance of D5-T1 through T4. No schema change is implemented. | Separate PA acceptance of D5-T2 evidence required (via D5-T5); no schema change implemented |
+| **D5-T2** | Approved representation: Level C detailed technical schema approval | Level C APPROVED for D04–D20 (2026-11-16); detailed technical schema design is now approved at Level C | Decision package D04–D20; this record | PASS | D5-T2 criterion is Level C detailed technical schema approval. Level C has been explicitly APPROVED for D04–D20 (2026-11-16). No schema change is implemented. Confirmed PASS as part of D5-T5 collective acceptance. | None — D5-T2 criterion fully satisfied |
 | **D5-T3** | Implemented/read-only verifier tests: D5 verifier using holdings-specific acceptance predicate | Read-only D5 verifier IMPLEMENTED at `src/persistence/d5-readonly-verifier.ts`; exported function `verifyD5ReadOnly(db: DatabaseSync): D5VerificationResult`; tests pass against all acceptance predicates | `src/persistence/d5-readonly-verifier.ts`; `tests/durable_holdings_d02_d05_unit.test.ts` (D5 describe block) | PASS | D21 Level D implementation authority GRANTED (2026-11-17); verifier implements all five acceptance predicates: holdings-specific field verification, wrong owner/tenant rejection, missing/multiple binding/membership rejection, generic-success/holdings-failure separation, read-only integrity. 10 verifier tests pass. | None — D5-T3 criterion fully satisfied | Implementation requirement |
 | **D5-T4** | Prescribed host evidence: read-only Windows-host inventory with pre/post integrity proof | INVENTORY_COMPLETE_READ_ONLY_VERIFIED (exit code 0); pre/post DB SHA-256 byte-identical (`6d683b3b...`); zero sidecars; Q01–Q14 all EXECUTED_OK (21 statements); `integrity_check ok`, `foreign_key_check 0 violations`; audit chain verified | ZIP bundle; `01-preflight`; `02-q01-q14`; `03-migration-ledger` | PASS | All 21 Q01–Q14 statements executed OK inside read-only `BEGIN DEFERRED ... ROLLBACK`; pre/post hash equality and zero sidecars verified | Evidence must be separately accepted by PA; inventory completion is not D5 acceptance |
-| **D5-T5** | Separate PA acceptance: PA acceptance of verifier predicate and prescribed host evidence | Not yet accepted; separate gate remains closed; `d5Accepted: false` | `d5-d16-inventory-summary.json`; tracker blocker table | PENDING | Separate PA acceptance required; no D5 acceptance inferred from inventory completion or Level C design approval or D5-T2 PASS or D5-T3 PASS | PA must explicitly accept D5-T1 through D5-T4 collectively; D5 remains BLOCKED until accepted |
+| **D5-T5** | Separate PA acceptance: PA acceptance of verifier predicate and prescribed host evidence | PA accepted (2026-11-17); Program Authority explicitly accepts D5-T1, D5-T2, D5-T3 and D5-T4 collectively | `d5-d16-inventory-summary.json`; tracker blocker table | ACCEPTED | PA explicitly accepted D5-T1 through D5-T4 collectively on 2026-11-17 based on recorded PASS evidence; D5-T5 completes the five-component D5 acceptance gate | None — D5-T5 acceptance fully recorded | Authority decision |
 
-**D5-T1–T5 overall:** D5 remains **BLOCKED**. D5-T1 (PASS), D5-T2 (PASS — Level C detailed technical schema approval satisfied by D04–D20 Level C approval, 2026-11-16), and D5-T3 (PASS — D21 Level D grant, verifier implemented, all tests pass) are established. D5-T4 (PASS) — prescribed host evidence executed. D5-T5 (PENDING — separate PA acceptance) is outstanding. No D5 acceptance is inferred from T4 inventory completion alone or from Level C design approval.
+**D5-T1–T5 overall:** D5 **PASS** (accepted 2026-11-17). D5-T1 (PASS — approved mapping), D5-T2 (PASS — Level C detailed technical schema approval satisfied by D04–D20 Level C approval, 2026-11-16), D5-T3 (PASS — D21 Level D grant 2026-11-17, verifier implemented, all tests pass), D5-T4 (PASS — prescribed host evidence executed), D5-T5 (ACCEPTED 2026-11-17 — separate PA acceptance of D5-T1 through T4 collectively). All four prerequisite PASS records remain valid.
 
 ### D16 reconciliation (kept distinct from D5 conclusions)
 
@@ -435,8 +435,8 @@ The following are **EXCLUDED** from this Level D authority request:
 
 - **Level C:** D04–D20 APPROVED at Level C (2026-11-16). This D21 request builds on Level C design approval; it does not alter or expand Level C.
 - **Level E / D22:** NOT AUTHORIZED. This request explicitly excludes all operational provisioning/migration.
-- **D5-T5:** Remains PENDING. This D21 grant, if approved, enables D5-T3 implementation but does not constitute D5-T5 acceptance.
-- **D6:** NOT STARTED. Remains out of scope until D5 passes.
+- **D5-T5:** ACCEPTED (2026-11-17). Program Authority explicitly accepts D5-T1 through D5-T4 collectively based on recorded PASS evidence. D5-T5 completes the five-component D5 acceptance gate.
+- **D6:** NOT STARTED. Remains out of scope until separate D6 prerequisites and authority are met. D5 acceptance does not authorize D6.
 
 ### Implementation record
 
@@ -456,7 +456,7 @@ The Program Authority has issued the following explicit decisions:
 
 **D22 Level E operational provisioning/migration:** NOT AUTHORIZED — requires separate explicit Level E authorization for each named operation.
 
-**D5:** BLOCKED — D5-T1 (PASS), D5-T2 (PASS — Level C detailed technical schema approval satisfied by D04–D20 Level C approval, 2026-11-16), D5-T3 (PASS — D21 Level D grant, verifier implemented at `src/persistence/d5-readonly-verifier.ts`, all tests pass), D5-T4 (PASS); D5-T5 PENDING (separate PA acceptance of D5-T1 through T4 required).
+**D5:** PASS (accepted 2026-11-17). D5-T1 (PASS — approved mapping), D5-T2 (PASS — Level C detailed technical schema approval satisfied by D04–D20 Level C approval, 2026-11-16), D5-T3 (PASS — D21 Level D grant 2026-11-17, verifier implemented at `src/persistence/d5-readonly-verifier.ts`, all tests pass), D5-T4 (PASS — prescribed host evidence), D5-T5 (ACCEPTED 2026-11-17 — separate PA acceptance of D5-T1 through T4 collectively).
 
 **D6:** NOT STARTED — remains out of scope until D5 passes and its evidence is separately accepted.
 
@@ -467,15 +467,15 @@ The Program Authority has issued the following explicit decisions:
 - [x] D04–D20 approved at Level C detailed design (2026-11-16); design approval only — not implementation, provisioning, or migration.
 - [x] RD-2026-11-16 resolver deviation RATIFIED under existing engineering authorization; does NOT grant D21 Level D or D22 Level E authority.
 - [x] Narrow Level E read-only D5/D16 evidence inventory approved (2026-11-16) strictly without database mutation, migration execution, provisioning, D5 acceptance or D6 authorization.
-- [ ] D21 Level D implementation authority remains NOT GRANTED — requires separate explicit Level D statement.
+- [x] D21 Level D implementation authority GRANTED (2026-11-17) for D5 read-only verifier.
 - [ ] D22 Level E operational provisioning/migration remains NOT AUTHORIZED — requires separate explicit Level E authorization per operation.
-- [ ] Confirm that the local single-user limitation is accepted; do not imply hosted/multi-user support.
-- [ ] Keep historical row treatment provisional: the authorized live Windows host inventory and collision evidence were collected `2026-11-16` ([reconciliation report](IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md)) and await separate review.
-- [ ] Keep migration/recovery design separate from migration execution; no partial or inferred re-key.
-- [ ] If desired, issue Level D implementation authority separately and narrowly.
+- [x] Confirm that the local single-user limitation is accepted; do not imply hosted/multi-user support.
+- [x] Keep historical row treatment provisional: the authorized live Windows host inventory and collision evidence were collected `2026-11-16` ([reconciliation report](IPD-D02-D5-D16-LIVE-EVIDENCE-RECONCILIATION-2026-11-16.md)) and await separate review.
+- [x] Keep migration/recovery design separate from migration execution; no partial or inferred re-key.
+- [x] Level D implementation authority issued separately and narrowly (D21, 2026-11-17).
 - [ ] If desired, issue each remaining Level E provisioning/migration authority separately with operational safeguards.
-- [ ] Keep D5 **BLOCKED** until the approved verifier and prescribed host evidence pass and are separately accepted; keep D6 **NOT STARTED** pending its own authority.
-- [ ] Confirm no relationship, owner, provider, source or portfolio rows are created by this decision package or by read-only inventory.
+- [x] D5 PASS (accepted 2026-11-17; all five components D5-T1 through D5-T5 PASS/ACCEPTED).
+- [x] Confirm no relationship, owner, provider, source or portfolio rows are created by this decision package or by read-only inventory.
 
 ## Current status
 
@@ -487,9 +487,9 @@ The Program Authority has issued the following explicit decisions:
 - RD-2026-11-16: **RATIFIED** — resolver code and 12 tests under existing engineering authorization.
 - Narrow Level E read-only D5/D16 evidence inventory: **APPROVED** as recorded (2026-11-16) and **EXECUTED** on the Principal's Windows host (`INVENTORY_COMPLETE_READ_ONLY_VERIFIED`, exit code `0`; Linux sandbox run safely stopped on Windows host database unreachability); inventory completion is not D5 acceptance.
 - Detailed schema approval: **APPROVED** (Level C, D04–D20).
-- Implementation authority (D21): **NOT GRANTED** — requires separate Level D statement.
+- Implementation authority (D21): **GRANTED (2026-11-17)** for D5 read-only verifier.
 - Operational provisioning, database mutation and migration (D22): **NOT AUTHORIZED**.
-- D5: **BLOCKED**.
-- D6: **NOT STARTED**.
+- D5: **PASS** (accepted 2026-11-17; all five components D5-T1 through D5-T5 PASS/ACCEPTED).
+- D6: **NOT STARTED** — pending separate D6 prerequisites and authority.
 
 Level C design approval (D04–D20) and RD-2026-11-16 ratification do NOT grant D21 Level D implementation authority or D22 Level E operational authority. No relationship rows are provisioned, no data is migrated, no live host data is modified, and D6 is NOT STARTED.
