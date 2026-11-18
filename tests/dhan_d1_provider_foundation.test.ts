@@ -212,7 +212,7 @@ describe('DHAN-D1: Pre-Access Provider Foundation (synthetic fixtures only)', ()
     const client = new DhanApiClient({ config: resolution.config, transport });
 
     const result = await client.fetchMarketQuotes([
-      { exchangeSegment: 'NSE_EQ', dhanSecurityId: 'SYNTH-NSE-EQ-0001' },
+      { exchangeSegment: 'NSE_EQ', dhanSecurityId: '900000001' },
     ]);
 
     assert.strictEqual(result.ok, false);
@@ -228,7 +228,7 @@ describe('DHAN-D1: Pre-Access Provider Foundation (synthetic fixtures only)', ()
       credentialResolver: new SyntheticCredentialResolver(),
     });
     const result = await client.fetchMarketQuotes([
-      { exchangeSegment: 'NSE_EQ', dhanSecurityId: 'SYNTH-NSE-EQ-0001' },
+      { exchangeSegment: 'NSE_EQ', dhanSecurityId: '900000001' },
     ]);
     assert.strictEqual(result.ok, false);
     if (!result.ok) assert.strictEqual(result.failure.code, 'TRANSPORT_FAILURE');
@@ -244,7 +244,7 @@ describe('DHAN-D1: Pre-Access Provider Foundation (synthetic fixtures only)', ()
     assert.ok(request.url.endsWith('/marketfeed/quote'));
     assert.strictEqual(request.headers['access-token'], SYNTHETIC_ACCESS_VALUE);
     assert.strictEqual(request.headers['client-id'], SYNTHETIC_CLIENT_VALUE);
-    assert.deepStrictEqual(JSON.parse(request.body as string), { NSE_EQ: ['SYNTH-NSE-EQ-0001'] });
+    assert.deepStrictEqual(JSON.parse(request.body as string), { NSE_EQ: [900000001] });
   });
 
   it('DHAN-D1-06: valid synthetic data normalizes into the EXISTING canonical contract', async () => {

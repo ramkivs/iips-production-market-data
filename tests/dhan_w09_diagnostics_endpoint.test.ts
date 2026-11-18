@@ -77,7 +77,7 @@ const MAPPING_INFY: DhanInstrumentMapping = {
   exchange: 'NSE',
   symbol: 'INFY',
   exchangeSegment: 'NSE_EQ',
-  dhanSecurityId: 'SYNTH-INFY-1594',
+  dhanSecurityId: '1594',
   mappingProvenance: 'SYNTHETIC_PRE_ACCESS_FIXTURE',
   instrumentType: 'EQUITY',
   active: true,
@@ -90,7 +90,7 @@ const MAPPING_TCS: DhanInstrumentMapping = {
   exchange: 'NSE',
   symbol: 'TCS',
   exchangeSegment: 'NSE_EQ',
-  dhanSecurityId: 'SYNTH-TCS-11536',
+  dhanSecurityId: '11536',
   mappingProvenance: 'SYNTHETIC_PRE_ACCESS_FIXTURE',
   instrumentType: 'EQUITY',
   active: true,
@@ -120,7 +120,7 @@ const EXPECTED_DIAGNOSTICS_KEYS = [
   'vendorEgressMode',
 ].sort();
 
-function quoteVendorPayload(tradeTimeIst: string, dhanSecurityId = 'SYNTH-INFY-1594', ltp = 1860.25) {
+function quoteVendorPayload(tradeTimeIst: string, dhanSecurityId = '1594', ltp = 1860.25) {
   return {
     status: 'success',
     data: {
@@ -574,7 +574,7 @@ describe('W-09 authenticated loopback /v1/diagnostics route & D-7 disclosure pol
         {
           kind: 'http',
           status: 200,
-          bodyText: JSON.stringify(quoteVendorPayload('16/11/2026 10:14:58', 'SYNTH-INFY-1594', 1860.25)),
+          bodyText: JSON.stringify(quoteVendorPayload('16/11/2026 10:14:58', '1594', 1860.25)),
           latencyMs: 25,
         },
         // 2. Historical 1D candles -> succeeds
@@ -588,7 +588,7 @@ describe('W-09 authenticated loopback /v1/diagnostics route & D-7 disclosure pol
         {
           kind: 'http',
           status: 200,
-          bodyText: JSON.stringify(quoteVendorPayload('16/11/2026 10:35:00', 'SYNTH-TCS-11536', 4120.0)),
+          bodyText: JSON.stringify(quoteVendorPayload('16/11/2026 10:35:00', '11536', 4120.0)),
           latencyMs: 30,
         },
         // 4. Verify probe -> 401 failure
@@ -785,7 +785,7 @@ describe('W-09 authenticated loopback /v1/diagnostics route & D-7 disclosure pol
         {
           kind: 'http',
           status: 200,
-          bodyText: JSON.stringify(quoteVendorPayload('16/11/2026 10:14:58', 'SYNTH-INFY-1594', 1860.25)),
+          bodyText: JSON.stringify(quoteVendorPayload('16/11/2026 10:14:58', '1594', 1860.25)),
           latencyMs: 31,
         },
       ],

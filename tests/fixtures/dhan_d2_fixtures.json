@@ -1,5 +1,5 @@
 {
- "notice": "DHAN-D2 SYNTHETIC PRE-ACCESS FIXTURES. Deterministic, locally authored test data only. Contains NO credentials, NO real Dhan security identifiers, NO observed live Dhan response and NO claim of real Dhan historical coverage. All provider identifiers are explicit SYNTH- placeholders.",
+ "notice": "DHAN-D2 SYNTHETIC PRE-ACCESS FIXTURES. Deterministic, locally authored test data only. Contains NO credentials, NO real Dhan security identifiers, NO observed live Dhan response and NO claim of real Dhan historical coverage. Numeric provider identifiers are locally authored synthetic placeholders and are not verified live mappings.",
  "gate": "DHAN-D2",
  "label": "PRE_ACCESS / SYNTHETIC / OFFLINE",
  "evaluationInstant": "2026-09-25T10:05:00.000Z",
@@ -10,7 +10,7 @@
     "exchange": "NSE",
     "symbol": "INFY",
     "exchangeSegment": "NSE_EQ",
-    "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+    "dhanSecurityId": "900000001",
     "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE",
     "isin": "INE009A01021"
    },
@@ -19,7 +19,7 @@
     "exchange": "NSE",
     "symbol": "TCS",
     "exchangeSegment": "NSE_EQ",
-    "dhanSecurityId": "SYNTH-NSE-EQ-0002",
+    "dhanSecurityId": "900000002",
     "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE",
     "isin": "INE467B01029"
    }
@@ -27,7 +27,7 @@
   "malformed": [
    {
     "_case": "NOT_AN_OBJECT",
-    "row": "INFY,NSE_EQ,SYNTH-NSE-EQ-0001",
+    "row": "INFY,NSE_EQ,900000001",
     "expectedField": null
    },
    {
@@ -36,7 +36,7 @@
      "exchange": "NSE",
      "symbol": "INFY",
      "exchangeSegment": "NSE_EQ",
-     "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+     "dhanSecurityId": "900000001",
      "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
     },
     "expectedField": "companyId"
@@ -59,7 +59,7 @@
      "exchange": "NSE",
      "symbol": "INFY",
      "exchangeSegment": "NSE_COMMODITY",
-     "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+     "dhanSecurityId": "900000001",
      "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
     },
     "expectedField": "exchangeSegment"
@@ -71,7 +71,7 @@
      "exchange": "BSE",
      "symbol": "INFY",
      "exchangeSegment": "NSE_EQ",
-     "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+     "dhanSecurityId": "900000001",
      "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE"
     },
     "expectedField": "exchange"
@@ -83,7 +83,7 @@
      "exchange": "NSE",
      "symbol": "INFY",
      "exchangeSegment": "NSE_EQ",
-     "dhanSecurityId": "SYNTH-NSE-EQ-0001"
+     "dhanSecurityId": "900000001"
     },
     "expectedField": "mappingProvenance"
    }
@@ -94,7 +94,7 @@
     "exchange": "NSE",
     "symbol": "INFY",
     "exchangeSegment": "NSE_EQ",
-    "dhanSecurityId": "SYNTH-NSE-EQ-9999",
+    "dhanSecurityId": "900009999",
     "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE",
     "isin": "INE009A01021"
    },
@@ -103,7 +103,7 @@
     "exchange": "NSE",
     "symbol": "WIPRO",
     "exchangeSegment": "NSE_EQ",
-    "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+    "dhanSecurityId": "900000001",
     "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE",
     "isin": "INE013A01018"
    },
@@ -112,7 +112,7 @@
     "exchange": "NSE",
     "symbol": "INFY",
     "exchangeSegment": "NSE_EQ",
-    "dhanSecurityId": "SYNTH-NSE-EQ-0001",
+    "dhanSecurityId": "900000001",
     "mappingProvenance": "SYNTHETIC_PRE_ACCESS_FIXTURE",
     "isin": "INE009A01021"
    }
@@ -211,7 +211,7 @@
     "status": "success",
     "data": {
      "NSE_EQ": {
-      "SYNTH-NSE-EQ-0001": {
+      "900000001": {
        "last_price": 1520.35,
        "ohlc": {
         "open": 1510.0,
@@ -234,7 +234,7 @@
     "status": "success",
     "data": {
      "NSE_EQ": {
-      "SYNTH-NSE-EQ-0001": {
+      "900000001": {
        "last_price": 0,
        "ohlc": {
         "open": 1510.0,
@@ -257,7 +257,7 @@
     "status": "success",
     "data": {
      "NSE_EQ": {
-      "SYNTH-NSE-EQ-0001": {
+      "900000001": {
        "last_price": 1520.35,
        "ohlc": {
         "open": 1510.0,
@@ -280,7 +280,7 @@
     "status": "success",
     "data": {
      "NSE_EQ": {
-      "SYNTH-NSE-EQ-0001": {
+      "900000001": {
        "last_price": 1520.35,
        "ohlc": {
         "open": 1510.0,
@@ -309,7 +309,7 @@
         ]
        }
       },
-      "SYNTH-NSE-EQ-0002": {
+      "900000002": {
        "last_price": 3850.5,
        "ohlc": {
         "open": 3820.0,
@@ -349,7 +349,7 @@
     "status": "success",
     "data": {
      "NSE_EQ": {
-      "SYNTH-NSE-EQ-0001": {
+      "900000001": {
        "last_price": 1519.0,
        "ohlc": {
         "open": 1510.0,
@@ -361,7 +361,7 @@
        "net_change": 11.0,
        "last_trade_time": "25/09/2026 15:10:00"
       },
-      "SYNTH-NSE-EQ-0002": {
+      "900000002": {
        "last_price": 3845.0,
        "ohlc": {
         "open": 3820.0,

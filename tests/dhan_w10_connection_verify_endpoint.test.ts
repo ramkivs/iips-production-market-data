@@ -76,7 +76,7 @@ const MAPPING_INFY: DhanInstrumentMapping = {
   exchange: 'NSE',
   symbol: 'INFY',
   exchangeSegment: 'NSE_EQ',
-  dhanSecurityId: 'SYNTH-INFY-1594',
+  dhanSecurityId: '1594',
   mappingProvenance: 'SYNTHETIC_PRE_ACCESS_FIXTURE',
   instrumentType: 'EQUITY',
   active: true,
@@ -102,7 +102,7 @@ function validVendorQuotePayload(tradeTimeIst = '16/11/2026 10:15:00') {
     status: 'success',
     data: {
       NSE_EQ: {
-        'SYNTH-INFY-1594': {
+        '1594': {
           last_price: 1862.5,
           ohlc: { open: 1848, close: 1842, high: 1871, low: 1840 },
           volume: 1540000,
@@ -137,7 +137,7 @@ function assertZeroSensitiveDisclosure(serialized: string, options?: { allowSlas
     CANARY_CHILD_STDERR,
     CANARY_VENDOR_ERROR,
     'DH-901',
-    'SYNTH-INFY-1594',
+    '1594',
   ];
   for (const needle of forbiddenSubstrings) {
     assert.strictEqual(

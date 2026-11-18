@@ -34,7 +34,7 @@ const MAPPING = {
   exchange: 'NSE' as const,
   symbol: 'SYNTHA',
   exchangeSegment: 'NSE_EQ' as const,
-  dhanSecurityId: 'SYNTH-NSE-EQ-1001',
+  dhanSecurityId: '900001001',
   mappingProvenance: 'SYNTHETIC_PRE_ACCESS_FIXTURE' as const,
   instrumentType: 'EQUITY' as const,
   active: true,
@@ -45,7 +45,7 @@ function quoteBody(ltp = 1520.35) {
     status: 'success',
     data: {
       NSE_EQ: {
-        'SYNTH-NSE-EQ-1001': {
+        '900001001': {
           last_price: ltp,
           ohlc: { open: 1510, close: ltp, high: 1530, low: 1505.5 },
           volume: 2540000,
@@ -60,7 +60,7 @@ function quoteBody(ltp = 1520.35) {
 function makeService(transport: DhanHttpTransport, opts: { fail?: boolean } = {}) {
   const registry = new DhanInstrumentRegistry();
   registry.register(MAPPING);
-  registry.register({ ...MAPPING, isin: 'INE000SYNTH2', securityId: 'ISIN:INE000SYNTH2:EQ', symbol: 'SYNTHA2', dhanSecurityId: 'SYNTH-NSE-EQ-1002' });
+  registry.register({ ...MAPPING, isin: 'INE000SYNTH2', securityId: 'ISIN:INE000SYNTH2:EQ', symbol: 'SYNTHA2', dhanSecurityId: '900001002' });
   const sm = new SecurityMaster();
   sm.registerEntity({
     companyId: 'COMP-SYNTH-A', isin: 'INE000SYNTH1', companyName: 'Synth A', industry: 'T', sector: 'T',
@@ -116,7 +116,7 @@ describe('DHAN-P5 composed service & transport (synthetic)', () => {
       assert.ok(['CURRENT', 'STALE'].includes(res.freshness));
       // No vendor/provider identifiers leak into the consumer response.
       const text = JSON.stringify(res);
-      assert.ok(!text.includes('SYNTH-NSE-EQ'));
+      assert.ok(!text.includes('900001001'));
       assert.ok(!text.toLowerCase().includes('dhan'));
       assert.ok(!text.includes('synthetic-dhan-token'));
     });
@@ -179,7 +179,7 @@ describe('DHAN-P5 composed service & transport (synthetic)', () => {
     if (res.ok) {
       assert.strictEqual(res.result.returnedCandleCount, 1);
       assert.strictEqual(res.result.candles[0]!.interval, '1d');
-      assert.ok(!JSON.stringify(res.result).includes('SYNTH-NSE-EQ'));
+      assert.ok(!JSON.stringify(res.result).includes('900001001'));
     }
     // Malformed provider response -> explicit failure, never cached as valid.
     const badService = makeService(okTransport('garbage'));

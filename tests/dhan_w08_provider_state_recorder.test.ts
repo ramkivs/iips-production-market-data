@@ -59,7 +59,7 @@ const INFY_MAPPING: DhanInstrumentMapping = {
   exchange: 'NSE',
   symbol: 'INFY',
   exchangeSegment: 'NSE_EQ',
-  dhanSecurityId: 'SYNTH-INFY-1594',
+  dhanSecurityId: '1594',
   mappingProvenance: 'SYNTHETIC_PRE_ACCESS_FIXTURE',
   instrumentType: 'EQUITY',
   active: true,
@@ -70,7 +70,7 @@ function validQuoteVendorPayload(ltp = 1845.5) {
     status: 'success',
     data: {
       NSE_EQ: {
-        'SYNTH-INFY-1594': {
+        '1594': {
           last_price: ltp,
           ohlc: { open: 1830, close: 1825, high: 1852, low: 1822 },
           volume: 1450000,
