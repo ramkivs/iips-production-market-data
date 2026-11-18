@@ -8,6 +8,9 @@ branch `arena/84d1e063-iips-production-market-data`.
 **Roadmap authority:** IRR repository, `docs/integration/DHAN-LIVE-INTEGRATION-IMPLEMENTATION-ROADMAP-2026-11-11.md`
 (v1.1), §W-06 — read-only, not modified.
 **Current milestone status:** **M1 NOT ACHIEVED. W-06 OPEN.** Unchanged by this record.
+**Superseded (2026-11-18):** M1 was subsequently **SATISFIED** by one operator-executed live Reliance
+quote at checkout `2685562` — see [live Reliance operator acceptance](DHAN-LIVE-RELIANCE-QUOTE-OPERATOR-ACCEPTANCE-2026-11-18.md). The
+investigation below remains the record of the earlier `AUTHENTICATION_FAILURE` and is not rewritten.
 **Safety footer:** see §2 and §12. Nothing here authorises vendor egress.
 
 ---
@@ -469,9 +472,15 @@ the position this investigation is in.
 
 ## 12. M1 and W-06 status
 
+> **Superseded 2026-11-18:** the M1 row below records the state at the time of this investigation.
+> M1 was later **satisfied** by one operator-executed live Reliance quote at checkout `2685562`
+> ([live Reliance operator acceptance](DHAN-LIVE-RELIANCE-QUOTE-OPERATOR-ACCEPTANCE-2026-11-18.md)).
+> W-06's remaining work is coverage measurement and field-shape/rate-limit qualification, not proof
+> that an authenticated interaction can succeed.
+
 | Item | Status |
 | --- | --- |
-| **M1** | **NOT ACHIEVED** — no successful authenticated vendor interaction has occurred |
+| **M1** | **NOT ACHIEVED** — no successful authenticated vendor interaction has occurred *(as of this record; satisfied 2026-11-18)* |
 | **W-06** | **OPEN** — its evidence clause was satisfied by the captured typed auth failure; a vendor rejection is not a completed authenticated interaction |
 | W-06 evidence clause | satisfied (unchanged, previously recorded) |
 | D-6 | complete (unchanged) |

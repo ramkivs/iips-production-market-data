@@ -19,6 +19,14 @@
 - **Document ID**: `IPD-DHAN-STAGE1-ADMISSION-2026-11-08`
 - **Date**: `2026-11-08`
 - **Status**: **ADMITTED FOR LOCAL NON-PRODUCTION SERVER-SIDE FOUNDATION ONLY** (`SYNTHETIC_VERIFIED / NOT_LIVE_VERIFIED / PRODUCTION_NOT_AUTHORIZED`)
+> **Live-status reconciliation (2026-11-18):** item 4 ("Live Dhan authentication — NOT VERIFIED") below
+> is **superseded**. On 2026-11-18 the operator executed **one** live Reliance quote through the local
+> Windows daemon at checkout `2685562`; it returned HTTP 200 with a canonical `D01_QUOTES` envelope
+> (`qualityState: GOOD`, `freshness: CURRENT`) — see
+> [live Reliance operator acceptance](DHAN-LIVE-RELIANCE-QUOTE-OPERATOR-ACCEPTANCE-2026-11-18.md).
+> Item 5 (live **quote qualification**) remains **NOT VERIFIED**, and `providerQualification` remains
+> `SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED`: one accepted quote does not qualify the provider, and no code
+> change raises it. Production remains **NOT AUTHORIZED**.
 - **Authoritative Provider Repository (IPD)**: `ramkivs/iips-production-market-data` (initial Stage 1 admission from `main` `59fdfd157632dbdbc220ae03d9d0b8e047d4ef19`; local operational wiring completed from `main` `7f8c5d046e24819e4635a3d2766c1cc9ae13a2f5`)
 - **Downstream Consumer Repository (IRR)**: `ramkivs/iips-review-recovered` (inspected read-only at `main` `820e7efced6800ec077c021d1c7fafaeb093e1fc`; **unmodified**; PR #515 and PR #516 untouched)
 - **Governed Authorities**: `AD-01..AD-18`, `AD-CHARTER-2026-01`, `AD-17` (Zero-Plaintext Secret Governance), `WS-A P03` (`SecretRef`), `WS-A P04` (`D114SecurityIdentity`), `Gate 3` (Portfolio Write Fence), `DHAN-D1`, `DHAN-D2`, `DHAN-P4..P7`
@@ -258,6 +266,6 @@ Before live non-production Dhan quote retrieval can occur in Stage 2+, the follo
 | **1. Local vault resolver** | **BLOCKED on concrete Windows host-vault integration** *(adapter contract & fail-closed `LocalHostVaultDhanCredentialResolver` implemented; live credential resolution disabled)* | No supported Windows secure vault integration exists in IPD; no unsupported vault technology was guessed (`S1-OW-01`, `S1-OW-02`). |
 | **2. Daemon launcher** | **IMPLEMENTED** (`src/providers/dhan/dhan_local_daemon.ts`, `npm run start:market-data-daemon`) | Loopback-only, bearer-token gated, CLI-arg forbidden, production-refusing, graceful startup failure & `SIGINT`/`SIGTERM` shutdown verified (`S1-OW-03`, `S1-OW-04`). |
 | **3. Synthetic local operational verification** | **PASS** (`105` suite files, `1356` executed / `1355` passed / `0` failed / `1` skipped; `test:package-consumer` `PASS`, `forbiddenHits: []`) | Verified across `tests/dhan_stage1_operational_wiring.test.ts` (`S1-OW-01..05`) and `tests/dhan_stage1_admission.test.ts` (`S1-01..10`) with synthetic credentials and transports only. |
-| **4. Live Dhan authentication** | **NOT VERIFIED** | Zero Dhan credentials provisioned; zero live calls made to `api.dhan.co`. |
-| **5. Live quote qualification** | **NOT VERIFIED** | `providerQualification` remains `SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED`. |
+| **4. Live Dhan authentication** | **NOT VERIFIED** *(as of 2026-11-08; **superseded 2026-11-18** — one live Reliance quote returned HTTP 200, see below)* | Zero Dhan credentials provisioned; zero live calls made to `api.dhan.co`. |
+| **5. Live quote qualification** | **NOT VERIFIED** | `providerQualification` remains `SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED`; still true — one live Reliance observation does not qualify the provider. |
 | **6. Production** | **NOT AUTHORIZED** | Refused fail-closed (`PRODUCTION_NOT_AUTHORIZED`) across config, resolver, client, egress, server, daemon, and transport client. |
