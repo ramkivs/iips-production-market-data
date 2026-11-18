@@ -25,10 +25,10 @@ function envelope(asOf: unknown, receivedAt: unknown = iso(time)) {
 function rig(cache = new DhanBoundedCache<CanonicalEnvelope<MarketQuotePayload>>(2)) {
   let now = time; let calls = 0; let fail = false;
   const registry = new DhanInstrumentRegistry();
-  registry.register({ companyId:'COMP-A', isin:id.isin, securityId:id.securityId, exchange:'NSE', exchangeSegment:'NSE_EQ', symbol:'SYN', dhanSecurityId:'PRIVATE', mappingProvenance:'SYNTHETIC_PRE_ACCESS_FIXTURE', active:true });
+  registry.register({ companyId:'COMP-A', isin:id.isin, securityId:id.securityId, exchange:'NSE', exchangeSegment:'NSE_EQ', symbol:'SYN', dhanSecurityId:'900001001', mappingProvenance:'SYNTHETIC_PRE_ACCESS_FIXTURE', active:true });
   const client = new DhanApiClient({ config:{baseUrl:'https://synthetic.invalid', timeoutMs:1000, readiness:'PRE_ACCESS_CREDENTIALS_UNAVAILABLE'} as never,
     credentialResolver:{resolve:async () => ({accessToken:'SECRET', clientId:'CLIENT'})} as never,
-    transport:{ async send() { calls++; return fail ? {status:400, bodyText:'SECRET PROVIDER DETAIL'} : { status:200, bodyText:JSON.stringify({status:'success',data:{NSE_EQ:{PRIVATE:{last_price:100, ohlc:{open:99,close:99,high:101,low:98}, volume:100, net_change:1, last_trade_time:'25/09/2026 15:29:58'}}}}) }; } } });
+    transport:{ async send() { calls++; return fail ? {status:400, bodyText:'SECRET PROVIDER DETAIL'} : { status:200, bodyText:JSON.stringify({status:'success',data:{NSE_EQ:{900001001:{last_price:100, ohlc:{open:99,close:99,high:101,low:98}, volume:100, net_change:1, last_trade_time:'25/09/2026 15:29:58'}}}}) }; } } });
   const service = new DhanMarketDataService({ client, securityMaster:new SecurityMaster(), instrumentRegistry:registry, cache, now:() => new Date(now) });
   service.start();
   return {service, cache, advance:(ms:number) => {now += ms;}, fail:() => {fail=true;}, calls:() => calls};

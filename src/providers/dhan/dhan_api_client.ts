@@ -237,14 +237,22 @@ export class DhanApiClient {
   }
 
   /**
-   * Builds the Dhan market-quote request body:
-   *   { "NSE_EQ": ["<securityId>", ...], ... }
+   * Keep registry identifiers as strings; serialize cash-equity IDs as JSON integers at the
+   * vendor boundary. Reject non-canonical or unsafe values instead of rounding or guessing.
    */
   public static buildQuoteRequestBody(instruments: readonly DhanQuoteRequestInstrument[]): string {
-    const grouped: Record<string, string[]> = {};
+    const grouped: Partial<Record<DhanExchangeSegment, number[]>> = {};
     for (const instrument of instruments) {
-      const bucket = grouped[instrument.exchangeSegment] || (grouped[instrument.exchangeSegment] = []);
-      if (!bucket.includes(instrument.dhanSecurityId)) bucket.push(instrument.dhanSecurityId);
+      const id = instrument.dhanSecurityId;
+      if (typeof id !== 'string' || !/^[1-9][0-9]*$/.test(id)) {
+        throw new TypeError('Dhan quote security ID must be a positive decimal integer');
+      }
+      const numericId = Number(id);
+      if (!Number.isSafeInteger(numericId)) {
+        throw new TypeError('Dhan quote security ID exceeds the safe integer range');
+      }
+      const bucket = grouped[instrument.exchangeSegment] ?? (grouped[instrument.exchangeSegment] = []);
+      if (!bucket.includes(numericId)) bucket.push(numericId);
     }
     return JSON.stringify(grouped);
   }
@@ -263,11 +271,13 @@ export class DhanApiClient {
       });
     }
 
-    const call = await this.executeJsonPost(
-      DHAN_MARKET_QUOTE_PATH,
-      DhanApiClient.buildQuoteRequestBody(instruments),
-      { deferSuccessRecording: true }
-    );
+    let body: string;
+    try {
+      body = DhanApiClient.buildQuoteRequestBody(instruments);
+    } catch {
+      return dhanFailure('MALFORMED_INSTRUMENT_MAPPING', 'Dhan quote security ID is not a valid safe positive integer');
+    }
+    const call = await this.executeJsonPost(DHAN_MARKET_QUOTE_PATH, body, { deferSuccessRecording: true });
     if (!call.ok) return call;
 
     const parsed = parseDhanMarketQuoteResponse(call.value.json);
@@ -573,6 +583,17 @@ export class DhanApiClient {
       };
     }
 
+    let body: string;
+    try {
+      body = DhanApiClient.buildQuoteRequestBody([probeInstrument]);
+    } catch {
+      return {
+        outcome: 'NOT_ATTEMPTED_NOT_READY', probeAttempted: false, probeCount: 0,
+        failureCategory: 'MALFORMED_INSTRUMENT_MAPPING', latencyMs: null, checkedAt,
+        observedState: this.stateRecorder.snapshot(),
+      };
+    }
+
     if (options?.acquireProbePermit && !options.acquireProbePermit()) {
       return {
         outcome: 'NOT_ATTEMPTED_NOT_READY',
@@ -596,7 +617,7 @@ export class DhanApiClient {
         'access-token': credentials.accessToken,
         'client-id': credentials.clientId,
       },
-      body: DhanApiClient.buildQuoteRequestBody([probeInstrument]),
+      body,
       timeoutMs: this.config.timeoutMs,
     };
 

@@ -44,7 +44,7 @@ const MAPPING = {
   exchange: 'NSE' as const,
   symbol: 'SYNTHA',
   exchangeSegment: 'NSE_EQ' as const,
-  dhanSecurityId: 'SYNTH-NSE-EQ-1001',
+  dhanSecurityId: '900001001',
   mappingProvenance: 'SYNTHETIC_PRE_ACCESS_FIXTURE' as const,
   instrumentType: 'EQUITY' as const,
   active: true,
@@ -60,7 +60,7 @@ function quoteVendorBody(ltp = 1520.35) {
     status: 'success',
     data: {
       NSE_EQ: {
-        'SYNTH-NSE-EQ-1001': {
+        '900001001': {
           last_price: ltp,
           ohlc: { open: 1510, close: ltp, high: 1530, low: 1505.5 },
           volume: 2540000,
@@ -175,7 +175,7 @@ function stripComments(source: string): string {
 }
 
 function assertNoVendorLeakage(text: string): void {
-  assert.ok(!text.includes('SYNTH-NSE-EQ'), 'Dhan vendor security id must not leak to the consumer');
+  assert.ok(!text.includes('900001001'), 'Dhan vendor security id must not leak to the consumer');
   assert.ok(!text.toLowerCase().includes('dhan'), 'Dhan vendor identifiers must not leak to the consumer');
   assert.ok(!text.includes('synthetic-dhan-token'), 'Dhan credential material must not leak to the consumer');
 }

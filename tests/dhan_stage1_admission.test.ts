@@ -57,7 +57,7 @@ function makeQuoteWire(ltp: number): string {
     status: 'success',
     data: {
       NSE_EQ: {
-        'SYNTH-NSE-EQ-1594': {
+        '900001594': {
           last_price: ltp,
           ohlc: { open: ltp - 5, high: ltp + 5, low: ltp - 10, close: ltp - 2 },
           volume: 10_000,
@@ -98,7 +98,7 @@ function buildTestService(opts: {
     exchange: 'NSE',
     symbol: 'INFY',
     exchangeSegment: 'NSE_EQ',
-    dhanSecurityId: 'SYNTH-NSE-EQ-1594',
+    dhanSecurityId: '900001594',
     mappingProvenance: 'SYNTHETIC_PRE_ACCESS_FIXTURE',
     instrumentType: 'EQUITY',
     active: true,
