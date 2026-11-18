@@ -1,0 +1,48 @@
+{
+  "schema": "IPD_W05_ACCESS_READBACK_V1",
+  "readAtUtc": "2026-11-18T16:25Z",
+  "session": "IPD session on branch arena/0fe17087-iips-production-market-data",
+  "ipd": {
+    "repository": "ramkivs/iips-production-market-data",
+    "private": true,
+    "defaultBranch": "main",
+    "readable": true,
+    "main": "2685562522f1a2fd1d745a7857f771bf21453315",
+    "mainIsMergeOf": "pull request 176",
+    "roadmap": {
+      "path": "docs/integration/IIPS-CURRENT-PORTFOLIO-EXECUTION-ROADMAP.md",
+      "gitBlob": "7affba55a5ba568333fdc2961a322c2f76b4c671",
+      "sha256": "875938b087bca87415c5215283967049d331d609383095ecc93adfe7e5e98e89",
+      "bytes": 75412,
+      "lines": 357,
+      "lastChangedBy": "0e473fc16723ae21115e65dc0887caad69173c93",
+      "lastChangedAtUtc": "2026-11-16T19:52:29Z"
+    },
+    "openPullRequestThatAlsoEditsTheRoadmap": {
+      "number": 171,
+      "head": "9bab49523aa84ab3701561a07c5a7b8e3b9d5abc",
+      "roadmapGitBlobAtHead": "2e0c7e87e7b5118f421626f8f83b683f59b16077",
+      "merged": false,
+      "w05LinesIdenticalToMain": true,
+      "note": "It rewords the authority language and the W04 status. It does not change the W05 item, the index rows of W05, W07, W10, W15 and W20, the dependency line of W05, the Financial row of section K, or blocker B03."
+    }
+  },
+  "irr": {
+    "repository": "ramkivs/iips-review-recovered",
+    "readable": false,
+    "attempts": [
+      {"method": "REST GET /repos/{repo}", "result": "HTTP 403 Resource not accessible by integration"},
+      {"method": "REST GET /repos/{repo}/pulls/598", "result": "HTTP 403 Resource not accessible by integration"},
+      {"method": "REST GET /repos/{repo}/pulls/598/files", "result": "HTTP 403 Resource not accessible by integration"},
+      {"method": "REST GET /repos/{repo}/pulls/598/commits", "result": "HTTP 403 Resource not accessible by integration"},
+      {"method": "REST GET /repos/{repo}/branches/main", "result": "HTTP 403 Resource not accessible by integration"},
+      {"method": "REST GET /repos/{repo}/contents/docs/integration/W05-ISSUER-LEVEL-FINANCIAL-DATA-LIFECYCLE-2026-11-17.md", "result": "HTTP 403 Resource not accessible by integration"},
+      {"method": "GraphQL repository(owner, name)", "result": "FORBIDDEN Resource not accessible by integration"},
+      {"method": "git ls-remote over HTTPS with the session credential", "result": "HTTP 403"},
+      {"method": "codeload zip, anonymous", "result": "HTTP 404"},
+      {"method": "REST GET /installation/repositories", "result": "HTTP 403 Resource not accessible by integration"}
+    ],
+    "consequence": "No statement about IRR in this record is verified by IPD. Until 2026-11-16 IRR was readable from IPD sessions through the GitHub API."
+  },
+  "writes": "none outside the IPD working branch"
+}
