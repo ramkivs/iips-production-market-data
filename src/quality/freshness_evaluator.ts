@@ -6,6 +6,7 @@
  */
 
 import { DataDomain, QualityState } from '../contracts/types.js';
+import { explicitInstant, istDate, parseTradingCalendar, type SessionFreshnessContext } from './trading_calendar.js';
 
 export interface FreshnessThresholdConfig {
   domain: DataDomain;
@@ -25,7 +26,13 @@ export const DEFAULT_FRESHNESS_CONFIG: Record<DataDomain, number> = {
 };
 
 export interface FreshnessEvaluationResult {
+  /** Active-session seconds, completed-day equivalents, or legacy elapsed seconds (see basis). */
   ageSeconds: number;
+  basis?: 'SESSION_TIME' | 'COMPLETED_TRADING_DAYS';
+  sessionState?: 'OPEN' | 'CLOSED';
+  calendarVersion?: string;
+  completedTradingDays?: number;
+  calendarIssue?: 'INVALID_CALENDAR' | 'MISSING_COVERAGE' | 'INVALID_OBSERVATION';
   quality: QualityState;
   nominalThresholdSeconds: number;
   staleConcessionActive: boolean;
@@ -41,7 +48,8 @@ export interface FreshnessEvaluationResult {
 export function evaluateFreshness(
   timestamp: string,
   domain: DataDomain,
-  evaluationTime: string = new Date().toISOString()
+  evaluationTime: string,
+  session?: SessionFreshnessContext
 ): FreshnessEvaluationResult {
   const dataTimeMs = Date.parse(timestamp);
   const evalTimeMs = Date.parse(evaluationTime);
@@ -56,11 +64,50 @@ export function evaluateFreshness(
     };
   }
 
-  const ageSeconds = Math.max(0, (evalTimeMs - dataTimeMs) / 1000);
+  let ageSeconds = Math.max(0, (evalTimeMs - dataTimeMs) / 1000);
+  let sessionEvidence: Partial<FreshnessEvaluationResult> = {};
+  if (session) {
+    const basis = session.kind === 'QUOTE' ? 'SESSION_TIME' : 'COMPLETED_TRADING_DAYS';
+    const invalid = (calendarIssue: NonNullable<FreshnessEvaluationResult['calendarIssue']>): FreshnessEvaluationResult => ({
+      ageSeconds: Infinity, quality: 'UNAVAILABLE', nominalThresholdSeconds: DEFAULT_FRESHNESS_CONFIG[domain],
+      staleConcessionActive: false, suppressExecution: true, basis, calendarIssue,
+      calendarVersion: session.calendar?.version,
+    });
+    if (!explicitInstant(timestamp) || !explicitInstant(evaluationTime) || dataTimeMs > evalTimeMs ||
+        !['NSE', 'BSE'].includes(session.exchange) ||
+        (session.kind === 'QUOTE' ? domain !== 'D01_QUOTES' : domain !== 'D02_OHLCV')) return invalid('INVALID_OBSERVATION');
+    let calendar;
+    try { calendar = parseTradingCalendar(session.calendar); } catch { return invalid('INVALID_CALENDAR'); }
+    const from = istDate(dataTimeMs), to = istDate(evalTimeMs);
+    const days = new Map(calendar.days.filter(d => d.exchange === session.exchange).map(d => [d.date, d]));
+    const observed = days.get(from);
+    if (!observed || observed.status === 'UNKNOWN') return invalid('MISSING_COVERAGE');
+    if (observed.status !== 'OPEN') return invalid('INVALID_OBSERVATION');
+    if (session.kind === 'QUOTE' && !observed.sessions.some(s => Date.parse(s.opensAt) <= dataTimeMs && dataTimeMs <= Date.parse(s.closesAt))) return invalid('INVALID_OBSERVATION');
+    if (session.kind === 'DAILY_CLOSE' && (!session.completed || session.observationDate !== from ||
+        Date.parse(observed.sessions[observed.sessions.length - 1].closesAt) > evalTimeMs)) return invalid('INVALID_OBSERVATION');
+    ageSeconds = 0;
+    let completedTradingDays = 0;
+    // Visit EVERY date, including weekends: missing rows are unknown, never inferred closed.
+    for (let ms = Date.parse(from); ms <= Date.parse(to); ms += 86_400_000) {
+      const date = new Date(ms).toISOString().slice(0, 10), day = days.get(date);
+      if (!day || day.status === 'UNKNOWN') return invalid('MISSING_COVERAGE');
+      if (day.status !== 'OPEN') continue;
+      if (date > from && Date.parse(day.sessions[day.sessions.length - 1].closesAt) <= evalTimeMs) completedTradingDays++;
+      if (session.kind === 'QUOTE') for (const interval of day.sessions) {
+        ageSeconds += Math.max(0, Math.min(evalTimeMs, Date.parse(interval.closesAt)) - Math.max(dataTimeMs, Date.parse(interval.opensAt))) / 1000;
+      }
+    }
+    // D02 retains its own 24h/48h nominal/concession contract, expressed in completed
+    // exchange-day equivalents. This is NOT IID's five-trading-day eligibility verdict.
+    if (session.kind === 'DAILY_CLOSE') ageSeconds = completedTradingDays * 86_400;
+    sessionEvidence = { basis, sessionState: days.get(to)!.sessions.some(s => Date.parse(s.opensAt) <= evalTimeMs && evalTimeMs < Date.parse(s.closesAt)) ? 'OPEN' : 'CLOSED', calendarVersion: calendar.version, ...(session.kind === 'DAILY_CLOSE' ? { completedTradingDays } : {}) };
+  }
   const threshold = DEFAULT_FRESHNESS_CONFIG[domain] || 3600;
 
   if (ageSeconds <= threshold) {
     return {
+      ...sessionEvidence,
       ageSeconds,
       quality: 'GOOD',
       nominalThresholdSeconds: threshold,
@@ -71,6 +118,7 @@ export function evaluateFreshness(
 
   if (ageSeconds <= 2 * threshold) {
     return {
+      ...sessionEvidence,
       ageSeconds,
       quality: 'STALE',
       nominalThresholdSeconds: threshold,
@@ -80,6 +128,7 @@ export function evaluateFreshness(
   }
 
   return {
+    ...sessionEvidence,
     ageSeconds,
     quality: 'UNAVAILABLE',
     nominalThresholdSeconds: threshold,

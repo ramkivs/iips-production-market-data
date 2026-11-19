@@ -191,3 +191,7 @@ export type { IdentityApiResult, ExactIdentityRequest, InstrumentSearchResult } 
 export type { HoldingIdentityInput, SecurityIdentityQualificationResult, SecurityIdentityQualified, SecurityIdentityUnresolved } from './dhan_security_identity_service.js';
 
 export type { FreshnessDomain, FreshnessStatus, RefreshStatus } from './dhan_freshness_status.js';
+
+// Offline session-calendar input; no calendar service or implicit market coverage.
+export { parseTradingCalendar } from '../../quality/trading_calendar.js';
+export type { TradingCalendar, TradingCalendarDay, SessionFreshnessContext } from '../../quality/trading_calendar.js';

@@ -1,3 +1,4 @@
+import { parseTradingCalendar, type TradingCalendar, type EquityExchange } from '../../quality/trading_calendar.js';
 /**
  * Institutional Investment Platform System (IIPS)
  * Dhan Provider-Side Operational Controls (DHAN-P4)
@@ -81,6 +82,11 @@ export interface CacheLookup<T> {
  */
 export class DhanBoundedCache<T extends { provenance: { asOf: string } }> {
   private readonly map = new Map<string, T>();
+  private tradingCalendar?: TradingCalendar;
+  /** Session policy is shared with normalization/status; existing entries are re-evaluated. */
+  public setTradingCalendar(calendar?: TradingCalendar): void {
+    this.tradingCalendar = calendar ? parseTradingCalendar(calendar) : undefined;
+  }
   constructor(private readonly capacity: number) {
     if (!Number.isInteger(capacity) || capacity <= 0) throw new Error('cache capacity must be a positive integer');
   }
@@ -103,8 +109,8 @@ export class DhanBoundedCache<T extends { provenance: { asOf: string } }> {
     return this.classify(entry, nowIso);
   }
 
-  private classify(entry: T, nowIso: string): CacheLookup<T> {
-    const freshness = evaluateFreshness(entry.provenance?.asOf, 'D01_QUOTES', nowIso);
+  public classify(entry: T, nowIso: string): CacheLookup<T> {
+    const freshness = evaluateFreshness(entry.provenance?.asOf, 'D01_QUOTES', nowIso, this.tradingCalendar ? { kind: 'QUOTE', calendar: this.tradingCalendar, exchange: (entry as T & { payload?: { exchange?: EquityExchange } }).payload?.exchange as EquityExchange } : undefined);
     if (freshness.suppressExecution) return { state: 'UNAVAILABLE', entry };
     return { state: freshness.quality === 'GOOD' ? 'CURRENT' : 'STALE', entry };
   }
@@ -415,12 +421,13 @@ export class DhanRefreshOrchestrator {
           try {
             const result = await withBoundedRetry(() => this.fetchQuote(scope));
             if (result.ok) {
+              const classified = this.cache.classify(result.value, nowIso);
+              if (classified.state === 'UNAVAILABLE') return { status: 'FAILURE', scope, code: 'STALE_DATA_SUPPRESSED', priorPreserved: cached.state !== 'MISS' } as RefreshOutcome;
               this.cache.set(key, result.value);
-              const freshness = evaluateFreshness(result.value.provenance.asOf, 'D01_QUOTES', nowIso);
               return {
                 status: 'SUCCESS',
                 scope,
-                cacheState: freshness.quality === 'GOOD' ? 'CURRENT' : 'STALE',
+                cacheState: classified.state === 'CURRENT' ? 'CURRENT' : 'STALE',
               } as RefreshOutcome;
             }
             return {

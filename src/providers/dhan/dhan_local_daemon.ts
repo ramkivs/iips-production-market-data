@@ -1,3 +1,4 @@
+import { parseTradingCalendar } from '../../quality/trading_calendar.js';
 import { DhanIdentityApiService } from './dhan_identity_api.js';
 /**
  * Institutional Investment Platform System (IIPS)
@@ -246,6 +247,8 @@ export interface StartMarketDataDaemonOptions {
   readonly securityMaster?: SecurityMaster;
   readonly instrumentRegistry?: DhanInstrumentRegistry;
   readonly p7ManifestPath?: string;
+  /** Explicit local JSON snapshot; never downloaded or generated from weekdays. */
+  readonly tradingCalendarPath?: string;
   readonly now?: () => Date;
 }
 
@@ -535,7 +538,10 @@ export async function startMarketDataDaemon(
     now: () => now().getTime(),
   });
 
+  const calendarPath = options.tradingCalendarPath ?? env['IIPS_TRADING_CALENDAR_PATH'];
+  const tradingCalendar = calendarPath ? parseTradingCalendar(JSON.parse(readFileSync(calendarPath, 'utf8'))) : undefined;
   const service = new DhanMarketDataService({
+    tradingCalendar,
     client: apiClient,
     securityMaster,
     instrumentRegistry,

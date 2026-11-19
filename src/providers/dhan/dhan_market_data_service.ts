@@ -1,3 +1,4 @@
+import { parseTradingCalendar, type TradingCalendar } from '../../quality/trading_calendar.js';
 /**
  * Institutional Investment Platform System (IIPS)
  * IPD-Owned Composed Dhan Market-Data Service (DHAN-P5)
@@ -666,6 +667,8 @@ export function validateDhanConnectionVerification(
 }
 
 export interface DhanMarketDataServiceOptions {
+  /** Explicit offline calendar; absent means legacy elapsed-time mode, not guessed sessions. */
+  tradingCalendar?: TradingCalendar;
   client: DhanApiClient;
   securityMaster: SecurityMaster;
   instrumentRegistry: DhanInstrumentRegistry;
@@ -681,6 +684,7 @@ export interface DhanMarketDataServiceOptions {
  * this service or its transport — they never construct Dhan primitives.
  */
 export class DhanMarketDataService {
+  private readonly tradingCalendar?: TradingCalendar;
   private readonly source: DhanMarketDataSource;
   private readonly historical: DhanHistoricalAdapter;
   private readonly resolution: DhanInstrumentResolutionService;
@@ -699,20 +703,24 @@ export class DhanMarketDataService {
   private running = false;
 
   constructor(options: DhanMarketDataServiceOptions) {
+    this.tradingCalendar = options.tradingCalendar ? parseTradingCalendar(options.tradingCalendar) : undefined;
     this.client = options.client;
     this.instrumentRegistry = options.instrumentRegistry;
     this.now = options.now ?? (() => new Date());
     this.source = new DhanMarketDataSource({
+      tradingCalendar: this.tradingCalendar,
       client: options.client,
       instrumentRegistry: options.instrumentRegistry,
       now: this.now,
     });
     this.historical = new DhanHistoricalAdapter({
+      tradingCalendar: this.tradingCalendar,
       client: options.client,
       instrumentRegistry: options.instrumentRegistry,
     });
     this.resolution = new DhanInstrumentResolutionService(options.securityMaster, options.instrumentRegistry);
     this.cache = options.cache ?? new DhanBoundedCache<CanonicalEnvelope<MarketQuotePayload>>(256);
+    this.cache.setTradingCalendar(this.tradingCalendar);
     this.limiter = options.limiter ?? new DhanRateLimiter({ maxRequests: 60, windowMs: 60_000, now: () => this.now().getTime() });
     const concurrency = options.concurrency ?? new DhanConcurrencyLimiter(8);
     const coalescer = options.coalescer ?? new DhanRequestCoalescer();
@@ -834,7 +842,7 @@ export class DhanMarketDataService {
     if (request.domain === 'D02_OHLCV') return freshnessStatus(request.domain, null, evaluatedAt, unknown);
     const scope: DhanSecurityScope = { companyId: request.companyId, exchangeSegment: request.exchangeSegment, isin: request.securityIdentity.isin, series: request.securityIdentity.series };
     const key = dhanQuoteCacheKey(scope);
-    return freshnessStatus(request.domain, this.cache.peek(key, evaluatedAt), evaluatedAt, this.refreshStatus.get(key) ?? unknown);
+    return freshnessStatus(request.domain, this.cache.peek(key, evaluatedAt), evaluatedAt, this.refreshStatus.get(key) ?? unknown, this.tradingCalendar ? { kind: 'QUOTE', calendar: this.tradingCalendar, exchange: request.exchangeSegment === 'NSE_EQ' ? 'NSE' : 'BSE' } : undefined);
   }
 
   /** Canonical historical request through the existing D02 adapter path. */
