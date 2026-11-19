@@ -164,7 +164,12 @@ export function parseDhanHistoricalResponse(raw: unknown): DhanResult<DhanHistor
   return dhanOk(obj as unknown as DhanHistoricalResponseDto);
 }
 
-/** Builds the vendor request body. Contains no credential material. */
+/**
+ * Builds the vendor request body from a validated canonical range.
+ * Daily callers use inclusive dates; Dhan documents an exclusive toDate.
+ * Convert only the daily upper bound, using UTC calendar arithmetic (not trading days).
+ * Other provisional intervals are deliberately unchanged. No credential material.
+ */
 export function buildDhanHistoricalRequestBody(params: {
   dhanSecurityId: string;
   exchangeSegment: string;
@@ -179,6 +184,8 @@ export function buildDhanHistoricalRequestBody(params: {
     instrument: 'EQUITY',
     interval: params.interval,
     fromDate: params.fromDate,
-    toDate: params.toDate,
+    toDate: params.interval === '1D'
+      ? new Date(Date.parse(`${params.toDate}T00:00:00.000Z`) + 86_400_000).toISOString().split('T')[0]
+      : params.toDate,
   });
 }
