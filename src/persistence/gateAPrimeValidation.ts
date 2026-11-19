@@ -1,4 +1,6 @@
 import { migration006PortfolioRestore } from './migrations/006_portfolio_restore.js';
+import { migration007DailySnapshotObservations } from './migrations/007_daily_snapshot_observations.js';
+import { migration008UnresolvedImportEvidence } from './migrations/008_unresolved_import_evidence.js';
 /**
  * CAP-02 — Gate A′ successor read-only validation.
  *
@@ -61,6 +63,12 @@ export const DESIGNATED_MIGRATION_BLOBS = Object.freeze({
   '004_portfolio_contribution_provenance': '6bad5a5095b6bb94ce91a86a4b65f7ab915c516c',
   '005_holding_security_identity': '09fb8b68775a3c6cf799852a0c5c0146ea697191',
   '006_portfolio_restore': '989a75518ca2fb4803a037e4e59df9053a2e10f38',
+  // 007/008 — additive daily-snapshot support (broker-reported daily fields,
+  // per-row reconciliation state, import-operation identity and the
+  // unresolved-evidence store). Appended exactly as 005 and 006 were; the
+  // 001..006 blobs above are unchanged.
+  '007_daily_snapshot_observations': '82db05047585d2756a22533ebc62d78866c1149d2650b9e5672214a9f49399be',
+  '008_unresolved_import_evidence': '66c61e2d476b8387656aa93222fc981def88d4fb',
 });
 
 /** Kept local to the act rather than importing the IPC/startup module. */
@@ -71,6 +79,8 @@ export const GATE3_MIGRATIONS: readonly Migration[] = [
   migration004PortfolioContributionProvenance,
   migration005HoldingSecurityIdentity,
   migration006PortfolioRestore,
+  migration007DailySnapshotObservations,
+  migration008UnresolvedImportEvidence,
 ];
 
 export interface GateAPrimeValidationInput {

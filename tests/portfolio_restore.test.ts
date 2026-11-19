@@ -18,8 +18,8 @@ function fixture(saved = false, at = 1) {
  const original = saved ? 2 : 1;
  if(at !== 1) {
    db.prepare('UPDATE portfolio_holdings SET revision=?').run(original); // no-op, fixtures stay FK-valid
-   db.prepare('INSERT INTO portfolio_revisions SELECT portfolio_id,canonical_owner_id,?,operation,total_market_value,weight_sum_percentage,holdings_count,provenance_digest,content_digest,created_at FROM portfolio_revisions WHERE revision=?').run(at,original);
-   db.prepare('INSERT INTO portfolio_holdings SELECT canonical_owner_id,portfolio_id,?,holding_key,symbol,company_id,quantity,average_buy_price,current_price,market_value,weight_percentage,active,source_broker,lineage_digest,identity_status,resolution_disposition,created_at,security_identity FROM portfolio_holdings WHERE revision=?').run(at,original);
+   db.prepare('INSERT INTO portfolio_revisions SELECT portfolio_id,canonical_owner_id,?,operation,total_market_value,weight_sum_percentage,holdings_count,provenance_digest,content_digest,created_at,import_id FROM portfolio_revisions WHERE revision=?').run(at,original);
+   db.prepare('INSERT INTO portfolio_holdings SELECT canonical_owner_id,portfolio_id,?,holding_key,symbol,company_id,quantity,average_buy_price,current_price,market_value,weight_percentage,active,source_broker,lineage_digest,identity_status,resolution_disposition,created_at,security_identity,dp_qty,available_qty,profit_loss,pnl_percentage,reconciliation_state FROM portfolio_holdings WHERE revision=?').run(at,original);
    db.prepare('UPDATE portfolios SET current_revision=?').run(at);
  }
  const current = at !== 1 ? at : original;
@@ -59,10 +59,30 @@ test('cap 1000 succeeds; subsequent saves blocked; cap overflow has no effects',
 
 test('migration 006 preserves populated 005 data with foreign keys enabled',()=>{
  const db=new DatabaseSync(':memory:');db.exec('PRAGMA foreign_keys=ON');ensureMigrations(db,GATE3_MIGRATIONS.slice(0,5));
- // Populate using only the pre-006 write vocabulary, never an actual database.
- const store=new DurablePortfolioStore(db);store.create(owner,id,mapManualRequest([{symbol:'INFY',quantity:1,averageBuyPrice:1,currentPrice:1,active:true}]));store.delete(owner,id,1);
- const tables=['portfolios','portfolio_revisions','portfolio_holdings','portfolio_contributions'];const before=tables.map(t=>db.prepare(`SELECT * FROM ${t}`).all());
- ensureMigrations(db,GATE3_MIGRATIONS);assert.deepEqual(tables.map(t=>db.prepare(`SELECT * FROM ${t}`).all()),before);assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(),[]);
+ // Populate a 005-schema database using only the pre-006 write vocabulary, never an
+ // actual database. Written as explicit SQL because DurablePortfolioStore targets the
+ // fully migrated schema (it names the 007 columns), which is exactly the state this
+ // test exists to upgrade FROM.
+ const now=new Date().toISOString();
+ db.prepare("INSERT INTO portfolios (portfolio_id,canonical_owner_id,tenant_id,portfolio_name,current_revision,status,created_at,updated_at,deleted_at) VALUES (?,?,?,'legacy',1,'ACTIVE',?,?,NULL)").run(id,owner.canonicalOwnerId,owner.tenantId,now,now);
+ db.prepare("INSERT INTO portfolio_revisions (portfolio_id,canonical_owner_id,revision,operation,total_market_value,weight_sum_percentage,holdings_count,provenance_digest,content_digest,created_at) VALUES (?,?,1,'INITIAL',110,100,1,'legacy-provenance','legacy-digest',?)").run(id,owner.canonicalOwnerId,now);
+ db.prepare("INSERT INTO portfolio_holdings (canonical_owner_id,portfolio_id,revision,holding_key,symbol,company_id,quantity,average_buy_price,current_price,market_value,weight_percentage,active,source_broker,lineage_digest,identity_status,resolution_disposition,created_at) VALUES (?,?,1,'INFY','INFY','COMP-INFY',1,100,110,110,100,1,'legacy-broker','legacy-lineage','RESOLVED','CANONICAL_P04',?)").run(owner.canonicalOwnerId,id,now);
+ const tables=['portfolios','portfolio_revisions','portfolio_holdings','portfolio_contributions'];const rowsOf=(table:string)=>JSON.parse(JSON.stringify(db.prepare(`SELECT * FROM ${table}`).all()));
+ const before=tables.map(rowsOf);
+ // 006 rebuilds, 007/008 add columns: every pre-existing stored value must survive
+ // column-for-column, and no new row may appear.
+ ensureMigrations(db,GATE3_MIGRATIONS);
+ const store=new DurablePortfolioStore(db);
+ tables.forEach((t,index)=>{
+   const legacyColumns=Object.keys((before[index][0] ?? {}) as Record<string,unknown>);
+   const after=rowsOf(t).map((row:any)=>Object.fromEntries(Object.entries(row).filter(([k])=>legacyColumns.includes(k))));
+   assert.deepEqual(after,before[index],`${t} pre-existing values must survive the additive migrations`);
+ });
+ assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(),[]);
+ // Restoring requires deletion evidence: add the tombstone the legacy database
+ // would have carried, then restore revision 1 through the real path.
+ db.prepare("INSERT INTO portfolio_revisions (portfolio_id,canonical_owner_id,revision,operation,total_market_value,weight_sum_percentage,holdings_count,provenance_digest,content_digest,created_at) VALUES (?,?,2,'DELETE',0,0,0,?,NULL,?)").run(id,owner.canonicalOwnerId,`tombstone:${id}`,now);
+ db.exec(`UPDATE portfolios SET status='TOMBSTONED', deleted_at='${now}'`);
  assert.equal(store.restore(owner,id,1,'upgrade').revision,3);db.close();
 });
 

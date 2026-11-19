@@ -187,6 +187,11 @@ export function mapBrokerOutputToUserHoldings(
     marketValue: number;
     identityStatus?: 'RESOLVED' | 'UNRESOLVED';
     resolutionDisposition?: 'CANONICAL_P04' | 'NON_PRODUCTION_OPERATOR_BYPASS';
+    /** Broker-reported daily fields, kept verbatim; undefined = not reported. */
+    dpQty?: number;
+    availableQty?: number;
+    reportedPnl?: number;
+    reportedPnlPercentage?: number;
   }> = [];
 
   const isProduction = options?.executionEnvironment === 'PRODUCTION';
@@ -309,6 +314,11 @@ export function mapBrokerOutputToUserHoldings(
       firstRefusalRowIndex = group.rowIndices[0];
     }
 
+    // Broker-reported daily fields are taken from the group's FIRST row. A
+    // duplicated symbol group is a broker-side aggregation case; summing or
+    // re-deriving these four fields would produce a number the broker never
+    // reported, so the first verbatim value wins and a mismatch is not
+    // silently reconciled here.
     intermediateHoldings.push({
       symbol: group.symbol,
       companyId: resolvedCompanyId,
@@ -320,6 +330,10 @@ export function mapBrokerOutputToUserHoldings(
       marketValue,
       identityStatus,
       resolutionDisposition,
+      dpQty: group.items[0].dpQty,
+      availableQty: group.items[0].availableQty,
+      reportedPnl: group.items[0].reportedPnl,
+      reportedPnlPercentage: group.items[0].reportedPnlPercentage,
     });
   }
 
@@ -430,6 +444,11 @@ export function mapBrokerOutputToUserHoldings(
     userHoldings.push({
       ...holdingPayload,
       lineageDigest,
+      // Present only when the broker reported the field.
+      ...(base.dpQty === undefined ? {} : { dpQty: base.dpQty }),
+      ...(base.availableQty === undefined ? {} : { availableQty: base.availableQty }),
+      ...(base.reportedPnl === undefined ? {} : { profitLoss: base.reportedPnl }),
+      ...(base.reportedPnlPercentage === undefined ? {} : { pnlPercentage: base.reportedPnlPercentage }),
     });
   }
 

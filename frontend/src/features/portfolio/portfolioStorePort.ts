@@ -54,7 +54,17 @@ export type PortfolioPortRefusalCode =
   | 'INVALID_REQUEST'
   | 'WRITE_NOT_AUTHORIZED'
   | 'RESOURCE_UNAVAILABLE'
-  | 'UNAVAILABLE';
+  | 'UNAVAILABLE'
+  /**
+   * The snapshot has unresolved rows and needs explicit operator approval
+   * before ANY row is written. This is not a refusal of the import: the same
+   * request succeeds once the operator confirms the summary it was shown.
+   */
+  | 'PARTIAL_ACCEPTANCE_REQUIRED'
+  /** Duplicated symbol rows: refused explicitly, never summed or deduplicated. */
+  | 'REFUSED_DUPLICATE_ROWS'
+  /** The operator's approval does not bind to the current snapshot summary. */
+  | 'REFUSED_APPROVAL_MISMATCH';
 
 export interface PortfolioPortRefusedHolding {
   symbol: string;
@@ -138,6 +148,12 @@ export interface PortfolioPortSaveRefusal {
    * per-holding detail"; it is never a fabricated list.
    */
   refusedHoldings: PortfolioPortRefusedHolding[];
+  /**
+   * Present for `PARTIAL_ACCEPTANCE_REQUIRED`: the exact summary the operator
+   * must confirm (totals, resolved/unresolved counts, original identifiers and
+   * exact failure reasons). Nothing was written.
+   */
+  partialAcceptanceSummary?: import('../../../../src/contracts/broker_import_ipc.js').BrokerPartialAcceptanceSummary;
   /**
    * Unmutated portfolio snapshot, when the adapter actually holds one.
    * OPTIONAL: a Class A refusal carries no record, and an adapter must not

@@ -162,6 +162,13 @@ export function mapBrokerImportHoldings(
         identityStatus: h.identityStatus,
         resolutionDisposition: h.resolutionDisposition,
         securityIdentity,
+        // The four broker-reported daily fields pass through VERBATIM.
+        // `undefined` stays `null` (not reported) and is never back-filled
+        // with a value this application calculated.
+        dpQty: h.dpQty ?? null,
+        availableQty: h.availableQty ?? null,
+        profitLoss: h.profitLoss ?? null,
+        pnlPercentage: h.pnlPercentage ?? null,
       };
     });
 }

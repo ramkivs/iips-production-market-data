@@ -38,6 +38,18 @@ export interface PortfolioSaveOptions {
   fileName?: string;
   contentDigest?: string;
   lineageDigest?: string;
+  /**
+   * Explicit operator approval of a partially resolvable daily snapshot.
+   * Present only after the operator confirmed the exact summary it was shown;
+   * the durable layer refuses an approval whose digest does not bind to the
+   * current summary.
+   */
+  partialAcceptance?: {
+    approved: true;
+    approvedAt: string;
+    approvedBy: string;
+    summaryDigest: string;
+  };
   [key: string]: unknown;
 }
 

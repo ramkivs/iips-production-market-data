@@ -78,6 +78,18 @@ export interface FinappHolding {
   closePrice?: number;
   pnl?: number;
   pnlPercentage?: number;
+  /**
+   * The broker's own P&L figures, present ONLY when the file reported them.
+   * `pnl`/`pnlPercentage` above may be derived when the file omitted them; the
+   * two are kept apart so a derived value can never be stored as if the broker
+   * had reported it.
+   */
+  reportedPnl?: number;
+  reportedPnlPercentage?: number;
+  /** Depository (demat) quantity, verbatim from the broker file when present. */
+  dpQty?: number;
+  /** Quantity available to sell, verbatim from the broker file when present. */
+  availableQty?: number;
   sector?: string;
   exchange?: 'NSE' | 'BSE' | string;
   assetClass?: 'EQUITY' | 'ETF' | 'MUTUAL_FUND' | string;
@@ -163,6 +175,15 @@ export interface UserHoldingInput {
   identityStatus?: 'RESOLVED' | 'UNRESOLVED';
   resolutionDisposition?: 'CANONICAL_P04' | 'NON_PRODUCTION_OPERATOR_BYPASS';
   rawIdentifier?: string;
+  /** Broker-reported daily fields, carried through verbatim. Absent = not reported. */
+  dpQty?: number;
+  availableQty?: number;
+  profitLoss?: number;
+  pnlPercentage?: number;
+  /** Why the row is present in this revision (set on the reconciliation path). */
+  reconciliationState?: 'OBSERVED_IN_SNAPSHOT' | 'ABSENT_FROM_LATEST_SNAPSHOT' | 'EXITED_ZERO_QUANTITY' | 'PENDING_RECONCILIATION';
+  /** True when the row's values were carried forward rather than observed today. */
+  carriedForward?: boolean;
 }
 
 /**
@@ -233,6 +254,14 @@ export interface BrokerIngressRequest {
   targetWeightPrecision?: number; // Default 4
   allowNonProductionBypass?: boolean; // Block 3M-A Non-production Operator Bypass
   executionEnvironment?: 'PRODUCTION' | 'NON_PRODUCTION';
+  /**
+   * Durable import-operation identity. Supply the SAME value on a retry so the
+   * operation stays idempotent; omit it for a new operation. Never derived from
+   * the bytes alone — two different daily observations can share bytes.
+   */
+  importId?: string;
+  /** True when this file is a complete daily book (absence means exit-check). */
+  fullSnapshot?: boolean;
 }
 
 /**
@@ -266,5 +295,17 @@ export interface BrokerIngressResult {
     contentDigest: string; // Deterministic SHA-256 of raw input content
     lineageDigest: string; // Deterministic SHA-256 of normalized valid holdings
     dataVersion: string;
+    /**
+     * Durable identity of this import OPERATION, distinct from `contentDigest`.
+     *
+     * The digest identifies the BYTES; this identifies the OPERATION. Identical
+     * bytes uploaded again on a later day are a new operation (new revision),
+     * while a retry of the same operation stays idempotent. Supplied by the
+     * caller when the operation already has an id (a retry); otherwise the
+     * ingress derives one from the content digest and the observation time.
+     */
+    importId: string;
+    /** True when the caller declared this file to be a complete daily book. */
+    fullSnapshot: boolean;
   };
 }
