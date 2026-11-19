@@ -126,6 +126,19 @@ export class DurablePortfolioStorePort implements PortfolioStorePort {
     return this.store.contributions(owner, portfolioId);
   }
 
+  /**
+   * The durable handle this port is bound to.
+   *
+   * Exposed so the daily-snapshot consumer can hand the SAME database to
+   * `persistDailySnapshot`, which records unresolved-row evidence inside the
+   * caller's broker-import transaction. It is a handle, not a capability: every
+   * mutating method on the port still evaluates the write gate first, and the
+   * consumer that uses this is the one already injected behind that gate.
+   */
+  get database(): DatabaseSync {
+    return this.db;
+  }
+
   withBrokerImportTransaction<T>(owner: OwnerRef, work: (writer: this) => T): T {
     this.assertWritable(owner);
     return this.store.withBrokerImportTransaction(owner, () => work(this));

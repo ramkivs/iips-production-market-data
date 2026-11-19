@@ -159,3 +159,16 @@ export type { IdentityQuarantineRecord } from '../../src/identity/quarantine.js'
 
 // Browser-safe type-only contract; the IPC transport and implementation remain server-side.
 export type { BrokerImportIpcOperation, BrokerImportIpcRequest, BrokerImportIpcResponse, BrokerImportHolding, BrokerImportRequest, BrokerImportOutcome, BrokerImportSuccess, BrokerImportRefusal, BrokerImportOutcomeUnknown, BrokerImportRefusalCode, BrokerImportRefusedHolding } from '../contracts/broker_import_ipc.js';
+// PR #177 daily-snapshot vocabulary. Types only: publishing the shapes an operator
+// approval and its evidence take confers no transport, owner context or write authority.
+export type {
+  BrokerDailyFields,
+  BrokerPartialAcceptanceApproval,
+  BrokerPartialAcceptanceRequired,
+  BrokerPartialAcceptanceSummary,
+  BrokerSnapshotAbsentHolding,
+  BrokerSnapshotReconciliation,
+  BrokerSnapshotState,
+  BrokerSnapshotUnresolvedRow,
+  SnapshotRowDisposition,
+} from '../contracts/broker_import_ipc.js';

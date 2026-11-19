@@ -290,16 +290,51 @@ function executeLocalPersonalWrite(
   }
 }
 
-/** Validate untrusted wire structure before passing it to the existing consumer. */
+/**
+ * Validate untrusted wire structure before passing it to the existing consumer.
+ *
+ * The allowlists are CLOSED and remain the one place that decides which fields
+ * cross the wire. They admit exactly the two published payload generations:
+ *
+ *   - the original `BrokerImportRequest` (unchanged), and
+ *   - the additive daily-snapshot fields merged in PR #177 — import-operation
+ *     identity, the four broker-reported daily fields, and the explicit
+ *     partial-acceptance approval whose digest binds it to the assessment the
+ *     operator was shown.
+ *
+ * The additions are shape checks only. They confer no authority: the C7
+ * caller-authority scan runs before this function, and the approval is verified
+ * against the assessment summary digest by the persistence layer, not here.
+ * Anything else is still refused.
+ */
+const BROKER_IMPORT_FIELDS = [
+  'portfolioId', 'expectedRevision', 'holdings', 'contentDigest', 'fileName', 'sourceBroker', 'importedAt', 'mode',
+  // PR #177 additive daily-snapshot fields.
+  'importId', 'fullSnapshot', 'partialAcceptance',
+] as const;
+const BROKER_IMPORT_HOLDING_FIELDS = [
+  'symbol', 'isin', 'exchange', 'series', 'quantity', 'averageBuyPrice', 'currentPrice', 'marketValue',
+  'weightPercentage', 'active', 'sourceBroker', 'lineageDigest',
+  // PR #177 additive broker-reported daily fields.
+  'dpQty', 'availableQty', 'profitLoss', 'pnlPercentage',
+] as const;
+const BROKER_IMPORT_APPROVAL_FIELDS = ['approved', 'approvedAt', 'approvedBy', 'summaryDigest'] as const;
+
+const isOptionalFinite = (v: unknown) => v === undefined || v === null || (typeof v === 'number' && Number.isFinite(v));
+
 function brokerImportRequest(value: Record<string, unknown>): BrokerImportRequest {
-  const allowed = ['portfolioId', 'expectedRevision', 'holdings', 'contentDigest', 'fileName', 'sourceBroker', 'importedAt', 'mode'];
-  const holdingKeys = ['symbol', 'isin', 'exchange', 'series', 'quantity', 'averageBuyPrice', 'currentPrice', 'marketValue', 'weightPercentage', 'active', 'sourceBroker', 'lineageDigest'];
+  const allowed: readonly string[] = BROKER_IMPORT_FIELDS;
+  const holdingKeys: readonly string[] = BROKER_IMPORT_HOLDING_FIELDS;
   const invalid = () => { throw new InvalidPortfolioRequestError('invalid broker import payload'); };
   if (Object.keys(value).some(k => !allowed.includes(k)) || typeof value.portfolioId !== 'string' || !PERSONAL_PORTFOLIO_ID_PATTERN.test(value.portfolioId) ||
       !Number.isSafeInteger(value.expectedRevision) || (value.expectedRevision as number) < 0 ||
       !Array.isArray(value.holdings) || value.holdings.length === 0 ||
       !['contentDigest', 'fileName', 'sourceBroker', 'importedAt'].every(k => typeof value[k] === 'string' && (value[k] as string).trim().length > 0) ||
-      (value.mode !== undefined && value.mode !== 'MERGE' && value.mode !== 'REPLACE')) invalid();
+      (value.mode !== undefined && value.mode !== 'MERGE' && value.mode !== 'REPLACE') ||
+      // PR #177 additive fields: shape only, never authority.
+      (value.importId !== undefined && (typeof value.importId !== 'string' || value.importId.trim().length === 0)) ||
+      (value.fullSnapshot !== undefined && typeof value.fullSnapshot !== 'boolean') ||
+      !isBrokerApprovalShape(value.partialAcceptance)) invalid();
   for (const raw of value.holdings as unknown[]) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) invalid();
     const h = raw as Record<string, unknown>;
@@ -308,9 +343,35 @@ function brokerImportRequest(value: Record<string, unknown>): BrokerImportReques
         !['quantity', 'averageBuyPrice', 'currentPrice', 'marketValue', 'weightPercentage'].every(k => typeof h[k] === 'number' && Number.isFinite(h[k])) ||
         typeof h.active !== 'boolean' ||
         (h.isin !== undefined && typeof h.isin !== 'string') || (h.series !== undefined && typeof h.series !== 'string') ||
-        (h.exchange !== undefined && h.exchange !== 'NSE' && h.exchange !== 'BSE')) invalid();
+        (h.exchange !== undefined && h.exchange !== 'NSE' && h.exchange !== 'BSE') ||
+        // PR #177 additive daily fields: nullable numbers, verbatim. `undefined`
+        // and SQL-NULL-expressible `null` both mean "the broker did not report
+        // this field" and are distinct from an explicit 0.
+        !isOptionalFinite(h.dpQty) || !isOptionalFinite(h.availableQty) ||
+        !isOptionalFinite(h.profitLoss) || !isOptionalFinite(h.pnlPercentage)) invalid();
   }
   return value as unknown as BrokerImportRequest;
+}
+
+/**
+ * Shape of the explicit partial-acceptance approval. Absent is valid (the
+ * ordinary all-resolved path). Present must be a complete approval record; the
+ * DIGEST is checked against the assessment summary later, by the persistence
+ * layer that computed it, so a well-formed but wrong digest is refused there
+ * rather than here.
+ */
+function isBrokerApprovalShape(value: unknown): boolean {
+  if (value === undefined) return true;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  if (Object.keys(record).some((k) => !(BROKER_IMPORT_APPROVAL_FIELDS as readonly string[]).includes(k))) return false;
+  // `approved` must be the boolean literal true, matching the published
+  // `BrokerPartialAcceptanceApproval` type. A truthy string is not an approval.
+  if (record.approved !== true) return false;
+  return ['approvedAt', 'approvedBy', 'summaryDigest'].every((k) => {
+    const field = record[k];
+    return typeof field === 'string' && field.trim().length > 0;
+  });
 }
 
 export function createConnectionHandler(
