@@ -10,6 +10,9 @@ export interface RefreshStatus {
   readonly lastFailure: { readonly code: 'REFRESH_FAILED'; readonly priorPreserved: boolean } | null;
 }
 export interface FreshnessStatus {
+  /** Configuration is not source qualification; COVERED means the evaluator found explicit rows. */
+  readonly calendarMode: 'LEGACY_ELAPSED_UNQUALIFIED' | 'SESSION_CALENDAR_CONFIGURED' | 'NOT_APPLICABLE';
+  readonly calendarAssessment: 'NOT_CONFIGURED' | 'NOT_EVALUATED' | 'COVERED' | 'UNAVAILABLE';
   readonly ageBasis?: 'SESSION_TIME' | 'COMPLETED_TRADING_DAYS';
   readonly sessionState?: 'OPEN' | 'CLOSED';
   readonly calendarVersion?: string;
@@ -43,6 +46,8 @@ export function freshnessStatus(domain: FreshnessDomain, lookup: CacheLookup<Obs
   const evaluation = lookup?.entry ? evaluateFreshness(typeof raw === 'string' ? raw : '', domain, evaluatedAt, session) : null;
   const suppressExecution = evaluation?.suppressExecution ?? true;
   return {
+    calendarMode: domain === 'D02_OHLCV' && !lookup?.entry ? 'NOT_APPLICABLE' : session ? 'SESSION_CALENDAR_CONFIGURED' : 'LEGACY_ELAPSED_UNQUALIFIED',
+    calendarAssessment: domain === 'D02_OHLCV' && !lookup?.entry ? 'NOT_EVALUATED' : !session ? 'NOT_CONFIGURED' : !evaluation ? 'NOT_EVALUATED' : evaluation.calendarIssue || !evaluation.basis ? 'UNAVAILABLE' : 'COVERED',
     ...(evaluation?.basis ? { ageBasis: evaluation.basis, sessionState: evaluation.sessionState, calendarVersion: evaluation.calendarVersion, ...(evaluation.calendarIssue ? { calendarIssue: evaluation.calendarIssue } : {}) } : {}),
     domain,
     cacheState: lookup?.state ?? 'NOT_AVAILABLE',
