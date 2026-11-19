@@ -96,7 +96,29 @@ export interface HoldingInput {
    * company name, ISIN-only or exchange listing alone.
    */
   securityIdentity?: D114SecurityIdentity | null;
+  /**
+   * Broker-reported daily fields, stored VERBATIM. `undefined` means the broker
+   * file did not report the field; it is never replaced by a calculated value.
+   */
+  dpQty?: number | null;
+  availableQty?: number | null;
+  profitLoss?: number | null;
+  pnlPercentage?: number | null;
+  /** Why this holding is present in this revision. Absent = observed, unclassified. */
+  reconciliationState?: ReconciliationState | null;
+  /** True when values were carried forward from the last observation, not observed today. */
+  carriedForward?: boolean;
 }
+
+/**
+ * Why a holding appears in a revision. Separates "the broker reported it",
+ * "it was carried forward because it was absent", and "the broker reported zero".
+ */
+export type ReconciliationState =
+  | 'OBSERVED_IN_SNAPSHOT'
+  | 'ABSENT_FROM_LATEST_SNAPSHOT'
+  | 'EXITED_ZERO_QUANTITY'
+  | 'PENDING_RECONCILIATION';
 
 export type ContributionSemantics = 'SAVED_NEW_BATCH' | 'MERGED_INTO_EXISTING' | 'RESET' | 'REPLACE';
 
@@ -126,6 +148,21 @@ export interface PortfolioSaveRequest {
    * contribution row and the same duplicate protection.
    */
   readonly contentDigest?: string;
+  /**
+   * Durable identity of one import OPERATION, distinct from the source-file
+   * content digest. Two genuinely different daily snapshots may share identical
+   * bytes and therefore the same content digest; they carry different
+   * `importId`s and are legitimately distinct contributions. A retry of the
+   * SAME operation reuses its `importId` and remains an idempotent no-op.
+   *
+   * When absent, the contribution identity stays exactly the content digest
+   * (the pre-007 behaviour), so every existing caller is unaffected.
+   */
+  readonly importId?: string;
+  /** Explicit import-level acceptance state, recorded on the contribution. */
+  readonly snapshotState?: 'ACCEPTED' | 'PARTIALLY_ACCEPTED';
+  /** Count of holdings the import could not accept (unresolved identity). */
+  readonly unresolvedCount?: number | null;
 }
 
 export interface OwnerRef {
@@ -251,6 +288,12 @@ export interface PortfolioContribution {
   readonly lineageDigest: string | null;
   readonly importedAt: string | null;
   readonly semantics: ContributionSemantics | null;
+  /** Durable import-operation identity (007). NULL for pre-007 rows. */
+  readonly importId?: string | null;
+  /** ACCEPTED / PARTIALLY_ACCEPTED (007). NULL for pre-007 rows. */
+  readonly snapshotState?: string | null;
+  /** Unresolved rows retained as evidence for this contribution (007). */
+  readonly unresolvedCount?: number | null;
 }
 
 /**
@@ -852,7 +895,8 @@ export class DurablePortfolioStore {
     const rows = this.db
       .prepare(
         `SELECT contribution_id, amount, contributed_at, created_at, file_name, source_broker,
-                content_digest, lineage_digest, imported_at, contribution_semantics
+                content_digest, lineage_digest, imported_at, contribution_semantics,
+                import_id, snapshot_state, unresolved_count
            FROM portfolio_contributions
           WHERE canonical_owner_id = ? AND portfolio_id = ?
           ORDER BY contributed_at, contribution_id`,
@@ -868,6 +912,9 @@ export class DurablePortfolioStore {
       lineage_digest: string | null;
       imported_at: string | null;
       contribution_semantics: ContributionSemantics | null;
+      import_id: string | null;
+      snapshot_state: string | null;
+      unresolved_count: number | null;
     }>;
     return rows.map((row) => ({
       contributionId: row.contribution_id,
@@ -880,6 +927,9 @@ export class DurablePortfolioStore {
       lineageDigest: row.lineage_digest,
       importedAt: row.imported_at,
       semantics: row.contribution_semantics,
+      importId: row.import_id,
+      snapshotState: row.snapshot_state,
+      unresolvedCount: row.unresolved_count === null || row.unresolved_count === undefined ? null : Number(row.unresolved_count),
     }));
   }
 
@@ -1109,6 +1159,14 @@ export class DurablePortfolioStore {
       identityStatus: String(r.identity_status),
       resolutionDisposition: String(r.resolution_disposition),
       securityIdentity: this.projectedSecurityIdentity(r.security_identity, String(r.symbol)),
+      dpQty: r.dp_qty === null || r.dp_qty === undefined ? null : Number(r.dp_qty),
+      availableQty: r.available_qty === null || r.available_qty === undefined ? null : Number(r.available_qty),
+      profitLoss: r.profit_loss === null || r.profit_loss === undefined ? null : Number(r.profit_loss),
+      pnlPercentage: r.pnl_percentage === null || r.pnl_percentage === undefined ? null : Number(r.pnl_percentage),
+      reconciliationState:
+        typeof r.reconciliation_state === 'string'
+          ? (r.reconciliation_state as ReconciliationState)
+          : null,
     };
   }
 
@@ -1230,13 +1288,25 @@ export class DurablePortfolioStore {
     // The check reads the contribution ledger, not only the newest revision,
     // so re-importing an EARLIER broker file is also detected as a duplicate
     // and is not applied a second time.
-    const contributionId = request.contentDigest ?? contentDigest;
+    const contributionId = request.importId ?? request.contentDigest ?? contentDigest;
     if (operation === 'MERGE') {
-      const committed = this.db
-        .prepare(
-          'SELECT 1 AS present FROM portfolio_contributions WHERE canonical_owner_id = ? AND portfolio_id = ? AND contribution_id = ?',
-        )
-        .get(owner.canonicalOwnerId, portfolioId, contributionId) as { present: number } | undefined;
+      // Import-operation identity: when the caller supplies an `importId`, the
+      // retry key is that operation id, so two genuinely different daily
+      // snapshots with identical bytes are distinct contributions while a
+      // retry of the same operation stays an idempotent no-op.
+      // Without an `importId` the key remains the content digest exactly as
+      // before (Gate E W-8 / BI-08), so no existing caller changes behaviour.
+      const committed = request.importId
+        ? (this.db
+            .prepare(
+              'SELECT 1 AS present FROM portfolio_contributions WHERE canonical_owner_id = ? AND portfolio_id = ? AND import_id = ?',
+            )
+            .get(owner.canonicalOwnerId, portfolioId, request.importId) as { present: number } | undefined)
+        : (this.db
+            .prepare(
+              'SELECT 1 AS present FROM portfolio_contributions WHERE canonical_owner_id = ? AND portfolio_id = ? AND contribution_id = ?',
+            )
+            .get(owner.canonicalOwnerId, portfolioId, contributionId) as { present: number } | undefined);
       if (committed) {
         return expectedRevision;
       }
@@ -1244,8 +1314,10 @@ export class DurablePortfolioStore {
     const lastRevision = this.db
       .prepare('SELECT content_digest FROM portfolio_revisions WHERE canonical_owner_id = ? AND portfolio_id = ? ORDER BY revision DESC LIMIT 1')
       .get(owner.canonicalOwnerId, portfolioId) as { content_digest: string | null } | undefined;
-    if (lastRevision?.content_digest === contentDigest && operation !== 'DELETE') {
+    if (!request.importId && lastRevision?.content_digest === contentDigest && operation !== 'DELETE') {
       // Content-hash idempotency: no new revision, no new rows.
+      // An explicit `importId` operation identity supersedes this file-level
+      // fallback: the operation id is then the sole retry key, checked above.
       return expectedRevision;
     }
     const now = new Date().toISOString();
@@ -1264,8 +1336,8 @@ export class DurablePortfolioStore {
       .prepare(
         `INSERT INTO portfolio_revisions
            (portfolio_id, canonical_owner_id, revision, operation, total_market_value,
-            weight_sum_percentage, holdings_count, provenance_digest, content_digest, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            weight_sum_percentage, holdings_count, provenance_digest, content_digest, created_at, import_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         portfolioId,
@@ -1278,14 +1350,16 @@ export class DurablePortfolioStore {
         request.provenanceDigest,
         contentDigest,
         now,
+        request.importId ?? null,
       );
     this.afterMutation('revision-insert');
     const insertHolding = this.db.prepare(
       `INSERT INTO portfolio_holdings
          (canonical_owner_id, portfolio_id, revision, holding_key, symbol, company_id,
           quantity, average_buy_price, current_price, market_value, weight_percentage,
-          active, source_broker, lineage_digest, identity_status, resolution_disposition, security_identity, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          active, source_broker, lineage_digest, identity_status, resolution_disposition, security_identity, created_at,
+          dp_qty, available_qty, profit_loss, pnl_percentage, reconciliation_state)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     for (const h of request.holdings) {
       insertHolding.run(
@@ -1307,6 +1381,11 @@ export class DurablePortfolioStore {
         h.resolutionDisposition,
         h.securityIdentity ? JSON.stringify(h.securityIdentity) : null,
         now,
+        h.dpQty ?? null,
+        h.availableQty ?? null,
+        h.profitLoss ?? null,
+        h.pnlPercentage ?? null,
+        h.reconciliationState ?? null,
       );
       this.afterMutation(`holding-insert:${h.symbol}`);
     }
@@ -1322,8 +1401,9 @@ export class DurablePortfolioStore {
       .prepare(
         `INSERT INTO portfolio_contributions
            (canonical_owner_id, portfolio_id, contribution_id, amount, contributed_at, created_at,
-            file_name, source_broker, content_digest, lineage_digest, imported_at, contribution_semantics)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            file_name, source_broker, content_digest, lineage_digest, imported_at, contribution_semantics,
+            import_id, snapshot_state, unresolved_count)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         owner.canonicalOwnerId,
@@ -1338,6 +1418,9 @@ export class DurablePortfolioStore {
         request.brokerImportProvenance?.lineageDigest ?? null,
         request.brokerImportProvenance?.importedAt ?? null,
         request.brokerImportProvenance?.semantics ?? null,
+        request.importId ?? null,
+        request.snapshotState ?? null,
+        request.unresolvedCount === undefined ? null : request.unresolvedCount,
       );
     this.afterMutation('contribution-insert');
     return nextRevision;
@@ -1777,8 +1860,8 @@ export class DurablePortfolioStore {
       const revision = Number(last.revision) + 1;
       if (revision > this.revisionCap) throw new RevisionConflictError(`the immutable revision lifecycle is capped at ${this.revisionCap}`);
       const restoredAt = new Date().toISOString();
-      this.db.prepare(`INSERT INTO portfolio_revisions SELECT portfolio_id, canonical_owner_id, ?, 'RESTORE', total_market_value, weight_sum_percentage, holdings_count, provenance_digest, content_digest, ? FROM portfolio_revisions WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`).run(revision, restoredAt, owner.canonicalOwnerId, portfolioId, expectedRevision);
-      this.db.prepare(`INSERT INTO portfolio_holdings SELECT canonical_owner_id, portfolio_id, ?, holding_key, symbol, company_id, quantity, average_buy_price, current_price, market_value, weight_percentage, active, source_broker, lineage_digest, identity_status, resolution_disposition, created_at, security_identity FROM portfolio_holdings WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`).run(revision, owner.canonicalOwnerId, portfolioId, expectedRevision);
+      this.db.prepare(`INSERT INTO portfolio_revisions SELECT portfolio_id, canonical_owner_id, ?, 'RESTORE', total_market_value, weight_sum_percentage, holdings_count, provenance_digest, content_digest, ?, import_id FROM portfolio_revisions WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`).run(revision, restoredAt, owner.canonicalOwnerId, portfolioId, expectedRevision);
+      this.db.prepare(`INSERT INTO portfolio_holdings SELECT canonical_owner_id, portfolio_id, ?, holding_key, symbol, company_id, quantity, average_buy_price, current_price, market_value, weight_percentage, active, source_broker, lineage_digest, identity_status, resolution_disposition, created_at, security_identity, dp_qty, available_qty, profit_loss, pnl_percentage, reconciliation_state FROM portfolio_holdings WHERE canonical_owner_id = ? AND portfolio_id = ? AND revision = ?`).run(revision, owner.canonicalOwnerId, portfolioId, expectedRevision);
       this.db.prepare("UPDATE portfolios SET status = 'ACTIVE', current_revision = ?, updated_at = ? WHERE canonical_owner_id = ? AND tenant_id = ? AND portfolio_id = ?").run(revision, restoredAt, owner.canonicalOwnerId, owner.tenantId, portfolioId);
       this.db.prepare('INSERT INTO portfolio_restore_receipts VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(owner.canonicalOwnerId, owner.tenantId, portfolioId, idempotencyKey, fingerprint, revision, restoredAt, isSaved);
       this.afterMutation('restore-receipt-insert');

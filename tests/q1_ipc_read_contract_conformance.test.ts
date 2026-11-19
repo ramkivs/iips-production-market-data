@@ -994,6 +994,10 @@ describe('q1 / IPC read path conforms to CAP-03 DR-2 Option A', () => {
         // G-2 durable holding identity: the single authorized additive migration.
         '005_holding_security_identity',
         '006_portfolio_restore',
+        // Additive daily-snapshot support: new columns, one new table, new
+        // indexes. No existing column, row or meaning is changed.
+        '007_daily_snapshot_observations',
+        '008_unresolved_import_evidence',
       ],
     );
     assert.deepEqual(
@@ -1005,8 +1009,10 @@ describe('q1 / IPC read path conforms to CAP-03 DR-2 Option A', () => {
         '0dbf90c129154d8c547b6c5876157877c5e12790ebf2b35c741640751ea7b0ac',
         '09fb8b68775a3c6cf799852a0c5c0146ea6971911097cb006a1782a9d415ec04',
         '989a75518ca2fb4803a037e4e59df9053a2e10f38b42a40e67fa4bea01e3f342',
+        '82db05047585d2756a22533ebc62d78866c1149d2650b9e5672214a9f49399be',
+        '66c61e2d476b8387656aa93222fc981def88d4fb3adbe205bd931d2dc445142e',
       ],
-      'the applied schema is byte-frozen: no migration was added, removed or edited beyond authorized migrations 005 and 006',
+      'the applied schema is byte-frozen: migrations 001-006 are unchanged and only the authorized additive 007/008 were appended',
     );
   });
 

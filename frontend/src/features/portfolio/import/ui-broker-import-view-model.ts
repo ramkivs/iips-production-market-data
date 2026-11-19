@@ -29,6 +29,13 @@ import {
   PortfolioStorePort,
 } from '../portfolioStorePort.js';
 
+import {
+  buildPartialAcceptancePrompt,
+  presentSnapshotReconciliation,
+  type PartialAcceptancePrompt,
+  type SnapshotReconciliationPresentation,
+} from './daily-snapshot-view.js';
+
 export type BrokerImportUIState =
   | 'IDLE'
   | 'FILE_SELECTED'
@@ -152,6 +159,18 @@ export interface PortfolioBrokerImportViewModel {
     message: string;
     refusedHoldings: PortfolioPortRefusedHolding[];
   };
+  /**
+   * Present when the snapshot needs explicit confirmation before anything is
+   * written. The surface must render this and withhold the save action: nothing
+   * is persisted until the operator confirms THIS summary.
+   */
+  partialAcceptancePrompt?: PartialAcceptancePrompt;
+  /**
+   * Post-commit reconciliation report. When present and `complete === false`,
+   * the surface must present the snapshot as partially reconciled and show the
+   * carried-forward flags; weights are labelled derived.
+   */
+  snapshotReconciliation?: SnapshotReconciliationPresentation;
 }
 
 export class PortfolioBrokerImportController {
@@ -166,6 +185,12 @@ export class PortfolioBrokerImportController {
   private portOutcome: 'NONE' | 'SUCCESS' | 'REFUSED' | 'OUTCOME_UNKNOWN' = 'NONE';
   private outcomeUnknown?: PortfolioBrokerImportViewModel['outcomeUnknown'];
   private portRefusal?: PortfolioBrokerImportViewModel['portRefusal'];
+  /**
+   * Held until the operator confirms. NOTHING has been written while this is
+   * set: the summary is the exact set of rows the approval will bind to.
+   */
+  private pendingPartialAcceptance?: PartialAcceptancePrompt;
+  private snapshotReconciliation?: SnapshotReconciliationPresentation;
 
   constructor(securityMaster?: SecurityMaster) {
     this.securityMaster = securityMaster;
@@ -196,6 +221,8 @@ export class PortfolioBrokerImportController {
     this.commitReceipt = undefined;
     this.durable = false;
     this.selectedFileName = '';
+    this.pendingPartialAcceptance = undefined;
+    this.snapshotReconciliation = undefined;
   }
 
   /**
@@ -382,6 +409,18 @@ export class PortfolioBrokerImportController {
       return this.buildViewModel(viewportWidth);
     }
 
+    // The snapshot needs explicit approval. This is NOT a refusal of the data:
+    // nothing was written, and the operator is shown the exact summary to
+    // confirm. Declining leaves the store untouched.
+    if (outcome.code === 'PARTIAL_ACCEPTANCE_REQUIRED' && outcome.partialAcceptanceSummary) {
+      this.portOutcome = 'REFUSED';
+      this.portRefusal = undefined;
+      this.lastSaveResult = undefined;
+      this.currentState = 'PARTIAL_REJECTIONS';
+      this.pendingPartialAcceptance = buildPartialAcceptancePrompt(outcome.partialAcceptanceSummary);
+      return this.buildViewModel(viewportWidth);
+    }
+
     // Ordinary refusal: no record, no timestamp, no zero metrics, no durability
     // claim, and no unmutated portfolio snapshot unless the port supplied one.
     this.portOutcome = 'REFUSED';
@@ -391,6 +430,91 @@ export class PortfolioBrokerImportController {
       refusedHoldings: outcome.refusedHoldings ?? [],
     };
     this.lastSaveResult = undefined;
+    this.pendingPartialAcceptance = undefined;
+    this.currentState = 'REJECTED';
+    return this.buildViewModel(viewportWidth);
+  }
+
+  /** The pending acceptance prompt, if any. Nothing is written while it is set. */
+  public getPendingPartialAcceptance(): PartialAcceptancePrompt | undefined {
+    return this.pendingPartialAcceptance;
+  }
+
+  /**
+   * Operator declines the partial acceptance: NOTHING is persisted. No
+   * revision, no contribution and no evidence record is created.
+   */
+  public declinePartialAcceptance(viewportWidth: number = 1280): PortfolioBrokerImportViewModel {
+    this.pendingPartialAcceptance = undefined;
+    this.portOutcome = 'NONE';
+    this.lastSaveResult = undefined;
+    this.currentState = 'PREVIEW_READY';
+    return this.buildViewModel(viewportWidth);
+  }
+
+  /**
+   * Operator accepts the exact summary it was shown. Re-dispatches the SAME
+   * save with that summary's digest, so the write is bound to the rows the
+   * operator saw; the port refuses an approval that does not match.
+   */
+  public async acceptPartialAcceptanceViaPort(params: {
+    storePort: PortfolioStorePort;
+    portfolioId?: string;
+    viewportWidth?: number;
+    mode?: 'MERGE' | 'REPLACE';
+    expectedRevision?: number;
+    approvedAt?: string;
+    approvedBy?: string;
+  }): Promise<PortfolioBrokerImportViewModel> {
+    const prompt = this.pendingPartialAcceptance;
+    if (!prompt) return this.buildViewModel(params.viewportWidth ?? 1280);
+    const viewportWidth = params.viewportWidth ?? 1280;
+    // The prompt is cleared before dispatch so a repeated acceptance cannot
+    // commit the same approval twice.
+    this.pendingPartialAcceptance = undefined;
+    const outcome = await params.storePort.saveHoldings({
+      portfolioId: params.portfolioId || 'DEFAULT_PORTFOLIO',
+      holdings: this.lastIngressResult?.userHoldings ?? [],
+      options: {
+        mode: params.mode || 'MERGE',
+        sourceBroker: this.lastIngressResult?.provenance.sourceBroker ?? 'UNKNOWN',
+        fileName: this.lastIngressResult?.provenance.fileName ?? '',
+        contentDigest: this.lastIngressResult?.provenance.contentDigest ?? '',
+        lineageDigest: this.lastIngressResult?.provenance.lineageDigest ?? '',
+        partialAcceptance: {
+          approved: true,
+          approvedAt: params.approvedAt ?? new Date().toISOString(),
+          approvedBy: params.approvedBy ?? 'local-operator',
+          summaryDigest: prompt.summaryDigest,
+        },
+      },
+      expectedRevision: params.expectedRevision,
+    });
+    if (outcome.ok === true) {
+      this.commitReceipt = outcome.receipt;
+      this.durability = outcome.receipt.durability;
+      this.durable = outcome.receipt.durable === true;
+      this.portOutcome = 'SUCCESS';
+      this.lastSaveResult = outcome.result;
+      this.currentState = 'SAVE_SUCCESS';
+      return this.buildViewModel(viewportWidth);
+    }
+    if (outcome.ok === 'unknown') {
+      this.portOutcome = 'OUTCOME_UNKNOWN';
+      this.outcomeUnknown = {
+        message: outcome.message,
+        portfolioId: outcome.portfolioId,
+        reconciliationRequired: true,
+      };
+      this.currentState = 'OUTCOME_UNKNOWN';
+      return this.buildViewModel(viewportWidth);
+    }
+    this.portOutcome = 'REFUSED';
+    this.portRefusal = {
+      code: outcome.code,
+      message: outcome.message,
+      refusedHoldings: outcome.refusedHoldings ?? [],
+    };
     this.currentState = 'REJECTED';
     return this.buildViewModel(viewportWidth);
   }
@@ -590,6 +714,8 @@ export class PortfolioBrokerImportController {
       durable: this.durable === true && this.durability === 'DURABLE',
       portSaveGuard,
       portRefusal: this.portRefusal,
+      partialAcceptancePrompt: this.pendingPartialAcceptance,
+      snapshotReconciliation: this.snapshotReconciliation,
     };
   }
 }

@@ -338,17 +338,24 @@ function analyzePowerShell51Script(source: string): {
 
 describe('Direct P1 Provisioning — Runtime & Dependency Validation', () => {
   it('validates supported Node >= 22.13.0, flag-free node:sqlite, migrations 001..005, and S1 identity constants', () => {
+    // The historical 001..006 baseline is asserted as that exact ordered prefix;
+    // the chain then continues with the two additive daily-snapshot migrations
+    // 007/008, which add columns and one table and change no existing column.
     const report = validateRuntimeAndDependencies();
     assert.equal(report.minimumNodeVersion, '22.13.0');
     assert.equal(report.foreignKeysPragmaSupported, true);
     assert.match(report.sqliteVersion, /^\d+\.\d+\.\d+/);
-    assert.deepEqual(report.migrationIds, [
+    assert.deepEqual(report.migrationIds.slice(0, 6), [
       '001_initial_schema',
       '002_audit_event_sequence',
       '003_local_principal_bindings',
       '004_portfolio_contribution_provenance',
       '005_holding_security_identity',
       '006_portfolio_restore',
+    ]);
+    assert.deepEqual(report.migrationIds.slice(6), [
+      '007_daily_snapshot_observations',
+      '008_unresolved_import_evidence',
     ]);
     assert.equal(report.principalLabel, 'ramki-personal-local');
     assert.equal(report.tenantId, 'ipd-personal-local');
@@ -493,7 +500,17 @@ describe('Direct P1 Provisioning — Fresh Provisioning, Schema, Constraints & I
       }
 
       // Schema & migration ledger checks
-      assert.equal(result.schema.migrationCount, 6);
+      // 001..006 is the historical baseline; 007/008 add the daily-snapshot columns
+      // and the unresolved-evidence store without changing any existing column.
+      assert.equal(result.schema.migrationCount, GATE3_MIGRATIONS.length);
+      assert.deepEqual(GATE3_MIGRATIONS.map((m) => m.id).slice(0, 6), [
+        '001_initial_schema',
+        '002_audit_event_sequence',
+        '003_local_principal_bindings',
+        '004_portfolio_contribution_provenance',
+        '005_holding_security_identity',
+        '006_portfolio_restore',
+      ]);
       assert.deepEqual(
         result.schema.appliedMigrations.map((m) => m.migrationId),
         GATE3_MIGRATIONS.map((m) => m.id),

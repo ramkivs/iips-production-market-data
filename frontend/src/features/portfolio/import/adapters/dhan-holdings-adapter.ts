@@ -118,13 +118,19 @@ export class DhanHoldingsAdapter implements FinappBrokerAdapter {
     const symbolCol = headerMap.get('trading symbol') || headerMap.get('symbol') || headerMap.get('stock name') || headerMap.get('name');
     const isinCol = headerMap.get('isin');
     const exchangeCol = headerMap.get('exchange');
-    const qtyCol = headerMap.get('total qty') || headerMap.get('quantity') || headerMap.get('available qty') || headerMap.get('dp qty') || headerMap.get('total quantity') || headerMap.get('qty') || headerMap.get('qty.');
+    // Total Qty is the position. DP Qty / Available Qty are separate daily
+    // observations read below and must never be promoted into quantity.
+    const qtyCol = headerMap.get('total qty') || headerMap.get('quantity') || headerMap.get('total quantity') || headerMap.get('qty') || headerMap.get('qty.');
     const avgBuyPriceCol = headerMap.get('average buy price') || headerMap.get('average price') || headerMap.get('avg buy price') || headerMap.get('avg price') || headerMap.get('buy avg') || headerMap.get('avg. cost') || headerMap.get('buy price');
     const ltpCol = headerMap.get('last traded price') || headerMap.get('last traded') || headerMap.get('ltp') || headerMap.get('current price');
     const investmentCol = headerMap.get('investment') || headerMap.get('invested') || headerMap.get('invested value');
     const curValCol = headerMap.get('current value') || headerMap.get('market value');
     const pnlCol = headerMap.get('profit / loss') || headerMap.get('profit/loss') || headerMap.get('p&l');
     const pnlPctCol = headerMap.get('p&l %') || headerMap.get('profit / loss %') || headerMap.get('p&l(%)');
+    // DP Qty / Available Qty are first-class broker observations, NOT aliases of
+    // Total Qty: the demat quantity can differ from the total on the same day.
+    const dpQtyCol = headerMap.get('dp qty') || headerMap.get('dp quantity');
+    const availableQtyCol = headerMap.get('available qty') || headerMap.get('available quantity');
 
     // Variant determination
     const isWebUiVariant = !headerMap.has('trading symbol') && headerMap.has('name') && (headerMap.has('last traded') || headerMap.has('investment'));
@@ -167,8 +173,15 @@ export class DhanHoldingsAdapter implements FinappBrokerAdapter {
       const averagePrice = avgBuyPriceCol ? parseNumericCell(row[avgBuyPriceCol], 0) : 0;
       const ltp = ltpCol ? parseNumericCell(row[ltpCol], 0) : averagePrice;
       const curVal = curValCol ? parseNumericCell(row[curValCol], 0) : (quantity * ltp);
-      const pnl = pnlCol ? parseNumericCell(row[pnlCol], 0) : (curVal - (quantity * averagePrice));
-      const pnlPct = pnlPctCol ? parseNumericCell(row[pnlPctCol], 0) : (averagePrice > 0 ? ((ltp - averagePrice) / averagePrice) * 100 : 0);
+      // The broker's own P&L is captured separately from any derived value.
+      // `reportedPnl*` stays undefined when the column is absent, so the
+      // persistence layer can record "not reported" instead of a calculation.
+      const reportedPnl = pnlCol ? parseNumericCell(row[pnlCol], 0) : undefined;
+      const reportedPnlPct = pnlPctCol ? parseNumericCell(row[pnlPctCol], 0) : undefined;
+      const pnl = reportedPnl ?? (curVal - (quantity * averagePrice));
+      const pnlPct = reportedPnlPct ?? (averagePrice > 0 ? ((ltp - averagePrice) / averagePrice) * 100 : 0);
+      const dpQty = dpQtyCol ? parseNumericCell(row[dpQtyCol], 0) : undefined;
+      const availableQty = availableQtyCol ? parseNumericCell(row[availableQtyCol], 0) : undefined;
 
       const holding: FinappHolding = {
         symbol: rawSymbol.toUpperCase(),
@@ -179,6 +192,10 @@ export class DhanHoldingsAdapter implements FinappBrokerAdapter {
         closePrice: ltp,
         pnl,
         pnlPercentage: pnlPct,
+        reportedPnl,
+        reportedPnlPercentage: reportedPnlPct,
+        dpQty,
+        availableQty,
         exchange,
         assetClass: 'EQUITY',
         marketValue: curVal,

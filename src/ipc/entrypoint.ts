@@ -1,5 +1,7 @@
 import { ClassPJournal, CLASS_P_DIRECTORY_SETTING } from './classPJournal.js';
 import { migration006PortfolioRestore } from '../persistence/migrations/006_portfolio_restore.js';
+import { migration007DailySnapshotObservations } from '../persistence/migrations/007_daily_snapshot_observations.js';
+import { migration008UnresolvedImportEvidence } from '../persistence/migrations/008_unresolved_import_evidence.js';
 /**
  * Gate 3 — process entrypoint (act §4.2 item 14; C2/C5.3; T-E).
  *
@@ -51,6 +53,8 @@ export const GATE3_MIGRATIONS: readonly Migration[] = [
   migration004PortfolioContributionProvenance,
   migration005HoldingSecurityIdentity,
   migration006PortfolioRestore,
+  migration007DailySnapshotObservations,
+  migration008UnresolvedImportEvidence,
 ];
 
 export type StartupPhase = 'validate' | 'connect' | 'migrate' | 'verify' | 'diagnostics' | 'compose' | 'bind';

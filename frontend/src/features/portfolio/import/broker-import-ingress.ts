@@ -49,6 +49,19 @@ export class BrokerImportIngressOrchestrator {
     const rawContent = request.content;
     const contentDigest = computeSha256(rawContent);
 
+    // Import-operation identity (§4) is NOT the content digest. The digest
+    // identifies the bytes; identical bytes on a later day are a legitimately
+    // different observation. A caller retrying an operation supplies the same
+    // `importId`; a new operation omits it and one is derived from the bytes
+    // plus this operation's observation instant.
+    const fullSnapshot = request.fullSnapshot === true;
+    const importId = request.importId && request.importId.trim().length > 0
+      ? request.importId
+      : computeLineageHash(
+          { op: 'import.v1', contentDigest, asOf, fileName },
+          { sourceClassification: 'UNCLASSIFIED', asOf, dataVersion: 'v1.0.0-bi05' }
+        );
+
     // Edge Case 1: Empty file (0 bytes)
     const contentLength = typeof rawContent === 'string'
       ? rawContent.length
@@ -83,6 +96,8 @@ export class BrokerImportIngressOrchestrator {
         rejections,
         contentDigest,
         sourceBroker: 'UNKNOWN',
+        importId,
+        fullSnapshot,
         fileName,
         asOf,
       });
@@ -126,6 +141,8 @@ export class BrokerImportIngressOrchestrator {
         rejections,
         contentDigest,
         sourceBroker: 'UNKNOWN',
+        importId,
+        fullSnapshot,
         fileName,
         asOf,
       });
@@ -154,6 +171,8 @@ export class BrokerImportIngressOrchestrator {
         rejections,
         contentDigest,
         sourceBroker: 'UNKNOWN',
+        importId,
+        fullSnapshot,
         fileName,
         asOf,
       });
@@ -180,6 +199,8 @@ export class BrokerImportIngressOrchestrator {
         rejections,
         contentDigest,
         sourceBroker: detection.brokerType,
+        importId,
+        fullSnapshot,
         fileName,
         asOf,
       });
@@ -207,6 +228,8 @@ export class BrokerImportIngressOrchestrator {
         rejections,
         contentDigest,
         sourceBroker: detection.brokerType,
+        importId,
+        fullSnapshot,
         fileName,
         asOf,
       });
@@ -237,6 +260,8 @@ export class BrokerImportIngressOrchestrator {
         rejections,
         contentDigest,
         sourceBroker: detection.brokerType,
+        importId,
+        fullSnapshot,
         fileName,
         asOf,
       });
@@ -273,6 +298,8 @@ export class BrokerImportIngressOrchestrator {
         rejections,
         contentDigest,
         sourceBroker: detection.brokerType,
+        importId,
+        fullSnapshot,
         fileName,
         asOf,
       });
@@ -323,6 +350,8 @@ export class BrokerImportIngressOrchestrator {
         rejections,
         contentDigest,
         sourceBroker: detection.brokerType,
+        importId,
+        fullSnapshot,
         fileName,
         asOf,
         identityAssessments: refusalAssessments,
@@ -394,6 +423,8 @@ export class BrokerImportIngressOrchestrator {
         rejections,
         contentDigest,
         sourceBroker: detection.brokerType,
+        importId,
+        fullSnapshot,
         fileName,
         asOf,
       });
@@ -427,6 +458,8 @@ export class BrokerImportIngressOrchestrator {
         rejections,
         contentDigest,
         sourceBroker: detection.brokerType,
+        importId,
+        fullSnapshot,
         fileName,
         asOf,
       });
@@ -460,6 +493,8 @@ export class BrokerImportIngressOrchestrator {
           rejections,
           contentDigest,
           sourceBroker: detection.brokerType,
+          importId,
+          fullSnapshot,
           fileName,
           asOf,
         });
@@ -494,6 +529,8 @@ export class BrokerImportIngressOrchestrator {
         contentDigest,
         lineageDigest: mappingResult.provenance.lineageHash,
         dataVersion: 'v1.0.0-bi05',
+        importId,
+        fullSnapshot,
       },
     };
   }
@@ -518,6 +555,8 @@ export class BrokerImportIngressOrchestrator {
     asOf: string;
     identityAssessments?: readonly BrokerIdentityAssessment[];
     identitySummary?: BrokerIdentitySummary;
+    importId: string;
+    fullSnapshot: boolean;
   }): BrokerIngressResult {
     const emptyLineage = computeLineageHash(
       { disposition: params.disposition, stage: params.stageReached, errors: params.errors },
@@ -551,6 +590,8 @@ export class BrokerImportIngressOrchestrator {
         contentDigest: params.contentDigest,
         lineageDigest: emptyLineage,
         dataVersion: 'v1.0.0-bi05',
+        importId: params.importId,
+        fullSnapshot: params.fullSnapshot,
       },
     };
   }

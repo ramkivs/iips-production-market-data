@@ -65,6 +65,7 @@ import {
   MigrationIntegrityError,
   ensureMigrations,
   migrationChecksum,
+  type Migration,
 } from './migration_ledger.js';
 import { evaluatePortSaveGuard } from './portfolio_store.js';
 
@@ -294,6 +295,12 @@ const EXPECTED_MIGRATION_IDS = [
   '004_portfolio_contribution_provenance',
   '005_holding_security_identity',
   '006_portfolio_restore',
+  // 007/008 are additive daily-snapshot support: broker-reported daily fields,
+  // per-row reconciliation state, durable import-operation identity and the
+  // unresolved-evidence store. They add columns and one table; they change no
+  // existing column, row or meaning.
+  '007_daily_snapshot_observations',
+  '008_unresolved_import_evidence',
 ] as const;
 
 const EXPECTED_TABLE_COLUMNS: Readonly<Record<string, readonly ExpectedColumnSpec[]>> = {
@@ -324,6 +331,8 @@ const EXPECTED_TABLE_COLUMNS: Readonly<Record<string, readonly ExpectedColumnSpe
     { name: 'provenance_digest', type: 'TEXT', notnull: 1, pk: 0 },
     { name: 'content_digest', type: 'TEXT', notnull: 0, pk: 0 },
     { name: 'created_at', type: 'TEXT', notnull: 1, pk: 0 },
+    // 007: durable import-OPERATION identity (distinct from the source bytes).
+    { name: 'import_id', type: 'TEXT', notnull: 0, pk: 0 },
   ],
   portfolio_holdings: [
     { name: 'canonical_owner_id', type: 'TEXT', notnull: 1, pk: 1 },
@@ -344,6 +353,13 @@ const EXPECTED_TABLE_COLUMNS: Readonly<Record<string, readonly ExpectedColumnSpe
     { name: 'resolution_disposition', type: 'TEXT', notnull: 0, pk: 0 },
     { name: 'created_at', type: 'TEXT', notnull: 1, pk: 0 },
     { name: 'security_identity', type: 'TEXT', notnull: 0, pk: 0 },
+    // 007: the four broker-reported daily fields, stored verbatim (NULL = not
+    // reported, never a calculated substitute), plus the reconciliation state.
+    { name: 'dp_qty', type: 'REAL', notnull: 0, pk: 0 },
+    { name: 'available_qty', type: 'REAL', notnull: 0, pk: 0 },
+    { name: 'profit_loss', type: 'REAL', notnull: 0, pk: 0 },
+    { name: 'pnl_percentage', type: 'REAL', notnull: 0, pk: 0 },
+    { name: 'reconciliation_state', type: 'TEXT', notnull: 0, pk: 0 },
   ],
   portfolio_restore_receipts: [
     { name: 'canonical_owner_id', type: 'TEXT', notnull: 1, pk: 1 },
@@ -368,6 +384,39 @@ const EXPECTED_TABLE_COLUMNS: Readonly<Record<string, readonly ExpectedColumnSpe
     { name: 'lineage_digest', type: 'TEXT', notnull: 0, pk: 0 },
     { name: 'imported_at', type: 'TEXT', notnull: 0, pk: 0 },
     { name: 'contribution_semantics', type: 'TEXT', notnull: 0, pk: 0 },
+    // 007: import-operation identity, explicit acceptance state, outstanding count.
+    { name: 'import_id', type: 'TEXT', notnull: 0, pk: 0 },
+    { name: 'snapshot_state', type: 'TEXT', notnull: 0, pk: 0 },
+    { name: 'unresolved_count', type: 'INTEGER', notnull: 0, pk: 0 },
+  ],
+  // 008: retained evidence for rows an accepted partial snapshot could not resolve.
+  broker_snapshot_unresolved_rows: [
+    { name: 'canonical_owner_id', type: 'TEXT', notnull: 1, pk: 1 },
+    { name: 'portfolio_id', type: 'TEXT', notnull: 1, pk: 2 },
+    { name: 'import_id', type: 'TEXT', notnull: 1, pk: 3 },
+    { name: 'row_ordinal', type: 'INTEGER', notnull: 1, pk: 4 },
+    { name: 'observation_time', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'symbol', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'isin', type: 'TEXT', notnull: 0, pk: 0 },
+    { name: 'exchange', type: 'TEXT', notnull: 0, pk: 0 },
+    { name: 'series', type: 'TEXT', notnull: 0, pk: 0 },
+    { name: 'quantity', type: 'REAL', notnull: 1, pk: 0 },
+    { name: 'average_buy_price', type: 'REAL', notnull: 1, pk: 0 },
+    { name: 'current_price', type: 'REAL', notnull: 1, pk: 0 },
+    { name: 'market_value', type: 'REAL', notnull: 1, pk: 0 },
+    { name: 'dp_qty', type: 'REAL', notnull: 0, pk: 0 },
+    { name: 'available_qty', type: 'REAL', notnull: 0, pk: 0 },
+    { name: 'profit_loss', type: 'REAL', notnull: 0, pk: 0 },
+    { name: 'pnl_percentage', type: 'REAL', notnull: 0, pk: 0 },
+    { name: 'source_broker', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'lineage_digest', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'failure_reason', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'source_revision', type: 'TEXT', notnull: 0, pk: 0 },
+    { name: 'resolution_status', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'resolved_at', type: 'TEXT', notnull: 0, pk: 0 },
+    { name: 'resolved_company_id', type: 'TEXT', notnull: 0, pk: 0 },
+    { name: 'raw_payload', type: 'TEXT', notnull: 1, pk: 0 },
+    { name: 'created_at', type: 'TEXT', notnull: 1, pk: 0 },
   ],
   audit_events: [
     { name: 'id', type: 'INTEGER', notnull: 0, pk: 1 },
@@ -416,6 +465,15 @@ const EXPECTED_EXPLICIT_INDEXES: Readonly<Record<string, ExpectedIndexSpec>> = {
   },
   idx_local_principal_memberships_binding: {
     table: 'local_principal_memberships',
+    unique: 0,
+    partial: 0,
+  },
+  // 007/008 additive indexes: import-operation lookups and the outstanding
+  // unresolved-evidence query. Non-unique, non-partial, additive only.
+  idx_portfolio_revisions_import: { table: 'portfolio_revisions', unique: 0, partial: 0 },
+  idx_portfolio_contributions_import: { table: 'portfolio_contributions', unique: 0, partial: 0 },
+  idx_broker_unresolved_outstanding: {
+    table: 'broker_snapshot_unresolved_rows',
     unique: 0,
     partial: 0,
   },
@@ -533,7 +591,14 @@ function ancestorDirectories(targetDir: string, platform: NodeJS.Platform): stri
  */
 export function validateRuntimeAndDependencies(options?: {
   nodeVersion?: string;
+  /**
+   * The migration chain to validate. Defaults to the full shipped
+   * `GATE3_MIGRATIONS`; a caller may pass a pre-007 prefix to assert the
+   * historical baseline. The prefix must match `EXPECTED_MIGRATION_IDS` exactly.
+   */
+  migrations?: readonly Migration[];
 }): RuntimeDependencyReport {
+  const migrations = options?.migrations ?? GATE3_MIGRATIONS;
   const nodeVersion = options?.nodeVersion ?? process.versions.node;
   const minimumNodeVersion = `${MINIMUM_NODE_MAJOR}.${MINIMUM_NODE_MINOR}.${MINIMUM_NODE_PATCH}`;
 
@@ -580,17 +645,17 @@ export function validateRuntimeAndDependencies(options?: {
     );
   }
 
-  if (GATE3_MIGRATIONS.length !== EXPECTED_MIGRATION_IDS.length) {
+  if (migrations.length !== EXPECTED_MIGRATION_IDS.length) {
     throw new DirectProvisioningError(
       'MIGRATION_DEFINITION_INVALID',
-      `Expected ${EXPECTED_MIGRATION_IDS.length} ordered migrations, found ${GATE3_MIGRATIONS.length}.`,
+      `Expected ${EXPECTED_MIGRATION_IDS.length} ordered migrations, found ${migrations.length}.`,
     );
   }
 
   const migrationIds: string[] = [];
   const migrationChecksums: Record<string, string> = {};
   for (let i = 0; i < EXPECTED_MIGRATION_IDS.length; i += 1) {
-    const migration = GATE3_MIGRATIONS[i];
+    const migration = migrations[i];
     const expectedId = EXPECTED_MIGRATION_IDS[i];
     if (!migration || migration.id !== expectedId || !migration.sql.trim()) {
       throw new DirectProvisioningError(
