@@ -27,6 +27,7 @@ import {
   type BrokerImportRequest,
   type MapBrokerImportHoldingsOptions,
 } from '../persistence/brokerImportPersistence.js';
+import { persistDailySnapshot } from '../persistence/daily_snapshot_import.js';
 import type { OwnerRef } from '../persistence/portfolio_store.js';
 import type { SecurityMaster } from '../identity/security_master.js';
 import type { DhanInstrumentRegistry } from '../providers/dhan/dhan_instrument_map.js';
@@ -83,11 +84,44 @@ export function createBrokerImportConsumer(
  * returns `WRITE_NOT_AUTHORIZED` with `storeEffect: 'NONE'` and no row is
  * touched.
  */
+/**
+ * `resolver` is an internal seam for tests that must not depend on the governed
+ * registry's contents. Production callers omit it and every path then uses the
+ * governed broker-observation resolver exactly as before.
+ */
 export function submitBrokerImport(
   port: DurablePortfolioStorePort,
   owner: OwnerRef,
   request: BrokerImportRequest,
   options: MapBrokerImportHoldingsOptions = {},
+  resolver?: import('../identity/broker_observation_resolver.js').BrokerObservationResolver,
 ): BrokerImportOutcome {
-  return persistBrokerImport(port, owner, request, undefined, options);
+  // Two payload generations share this one operation, exactly as the published
+  // `BrokerImportRequest` describes:
+  //
+  //   - ORDINARY (unchanged). No approval, no snapshot identity: the existing
+  //     all-or-nothing `persistBrokerImport` decides, including its
+  //     `REFUSED_UNRESOLVED_IDENTITY` refusal. Nothing about this path changes.
+  //
+  //   - APPROVED PARTIAL ACCEPTANCE (PR #177). The request carries an explicit
+  //     `partialAcceptance` approval, or daily-snapshot identity (`importId` /
+  //     `fullSnapshot`). It is routed to the already-merged, already-tested
+  //     `persistDailySnapshot`, which re-assesses every row independently and
+  //     verifies the approval against the assessment summary digest it
+  //     recomputes itself. A mismatched digest is refused there.
+  //
+  // No second persistence mechanism is introduced: `persistDailySnapshot` is the
+  // accepted PR #177 implementation, unchanged, and it persists through the same
+  // guarded port and the same write gate as the ordinary path.
+  const isPartialAcceptance = request.partialAcceptance !== undefined
+    || request.importId !== undefined
+    || request.fullSnapshot === true;
+  if (!isPartialAcceptance) {
+    return persistBrokerImport(port, owner, request, resolver, options);
+  }
+  return persistDailySnapshot(port, port.database, owner, request, {
+    ...(resolver === undefined ? {} : { resolver }),
+    mapOptions: options,
+    operator: owner.canonicalOwnerId,
+  });
 }
