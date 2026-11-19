@@ -15,6 +15,7 @@ import { CanonicalEnvelope, createCanonicalEnvelope } from '../../contracts/enve
 import { computeLineageHash, DataProvenanceDTO } from '../../contracts/provenance.js';
 import { MarketQuotePayload, validateMarketQuotePayload } from '../../contracts/d01_quotes.js';
 import { OperatingMode, QualityState } from '../../contracts/types.js';
+import type { TradingCalendar } from '../../quality/trading_calendar.js';
 import { evaluateFreshness } from '../../quality/freshness_evaluator.js';
 import { DhanQuoteDto, parseDhanTradeTimeToUtcIso } from './dhan_dto.js';
 import { DhanInstrumentMapping } from './dhan_instrument_map.js';
@@ -25,6 +26,7 @@ const DHAN_SCHEMA_VERSION = '1.0.0';
 
 export interface DhanNormalizationInput {
   quote: DhanQuoteDto;
+  tradingCalendar?: TradingCalendar;
   mapping: DhanInstrumentMapping;
   /** Ingress receipt instant (ISO-8601 UTC). */
   receivedAt: string;
@@ -157,7 +159,7 @@ export function normalizeDhanQuoteToCanonical(
     );
   }
 
-  const freshness = evaluateFreshness(asOf, 'D01_QUOTES', evaluatedAt);
+  const freshness = evaluateFreshness(asOf, 'D01_QUOTES', evaluatedAt, input.tradingCalendar ? { kind: 'QUOTE', calendar: input.tradingCalendar, exchange: mapping.exchange } : undefined);
   if (freshness.suppressExecution) {
     return dhanFailure(
       'STALE_DATA_SUPPRESSED',

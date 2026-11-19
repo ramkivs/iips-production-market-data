@@ -1,3 +1,5 @@
+import { evaluateFreshness, type FreshnessEvaluationResult } from '../../quality/freshness_evaluator.js';
+import { istDate, parseTradingCalendar, type TradingCalendar } from '../../quality/trading_calendar.js';
 /**
  * Institutional Investment Platform System (IIPS)
  * Dhan Historical Adapter — Canonical D02 Normalization (DHAN-D2)
@@ -31,6 +33,8 @@ import { DhanExchangeSegment } from './dhan_dto.js';
 
 export interface DhanHistoricalNormalizationResult {
   candles: OHLCVCandle[];
+  /** Optional per-candle D02 assessment; never a live quote or IID five-day verdict. */
+  dailyFreshness?: readonly (Omit<FreshnessEvaluationResult, 'ageSeconds'> & { ageSeconds: number | null })[];
   requestedFromDate: string;
   requestedToDate: string;
   /** Candle count actually returned; never presented as coverage evidence. */
@@ -44,6 +48,8 @@ export interface DhanHistoricalNormalizationResult {
  * fails the whole batch closed (no partial historical series is emitted).
  */
 export function normalizeDhanHistoricalToCandles(params: {
+  tradingCalendar?: TradingCalendar;
+  evaluationTime?: string;
   dto: DhanHistoricalResponseDto;
   mapping: DhanInstrumentMapping;
   interval: DhanHistoricalRequest['interval'];
@@ -114,6 +120,14 @@ export function normalizeDhanHistoricalToCandles(params: {
     requestedToDate: params.toDate,
     returnedCandleCount: candles.length, // 0 is a valid empty result, never a failure
     coverageClaim: 'ACCESS_PENDING_UNVERIFIED',
+    ...(params.tradingCalendar && interval === '1D' ? { dailyFreshness: candles.map(c => {
+      const observationDate = istDate(Date.parse(c.candleStart));
+      const assessment = evaluateFreshness(c.candleStart, 'D02_OHLCV', params.evaluationTime ?? '', {
+        kind: 'DAILY_CLOSE', calendar: params.tradingCalendar!, exchange: mapping.exchange,
+        observationDate, completed: !!params.evaluationTime && Number.isFinite(Date.parse(params.evaluationTime)) && observationDate < istDate(Date.parse(params.evaluationTime)),
+      });
+      return { ...assessment, ageSeconds: Number.isFinite(assessment.ageSeconds) ? assessment.ageSeconds : null };
+    }) } : {}),
   });
 }
 
@@ -122,10 +136,12 @@ export function normalizeDhanHistoricalToCandles(params: {
  * DTO validation → canonical D02 normalization. Deterministic and fail-closed throughout.
  */
 export class DhanHistoricalAdapter {
+  private readonly tradingCalendar?: TradingCalendar;
   private readonly client: DhanApiClient;
   private readonly registry: DhanInstrumentRegistry;
 
-  constructor(options: { client: DhanApiClient; instrumentRegistry: DhanInstrumentRegistry }) {
+  constructor(options: { client: DhanApiClient; instrumentRegistry: DhanInstrumentRegistry; tradingCalendar?: TradingCalendar }) {
+    this.tradingCalendar = options.tradingCalendar ? parseTradingCalendar(options.tradingCalendar) : undefined;
     this.client = options.client;
     this.registry = options.instrumentRegistry;
   }
@@ -175,6 +191,8 @@ export class DhanHistoricalAdapter {
     }
 
     const normalized = normalizeDhanHistoricalToCandles({
+      tradingCalendar: this.tradingCalendar,
+      evaluationTime: at,
       dto: parsed.value,
       mapping,
       interval: request.interval,

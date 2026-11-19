@@ -1,3 +1,4 @@
+import type { SessionFreshnessContext } from '../../quality/trading_calendar.js';
 /** Read-only freshness projection. Evaluation is owned by the P07 evaluator. */
 import { DEFAULT_FRESHNESS_CONFIG, evaluateFreshness } from '../../quality/freshness_evaluator.js';
 import type { CacheLookup } from './dhan_operational_controls.js';
@@ -9,6 +10,13 @@ export interface RefreshStatus {
   readonly lastFailure: { readonly code: 'REFRESH_FAILED'; readonly priorPreserved: boolean } | null;
 }
 export interface FreshnessStatus {
+  /** Configuration is not source qualification; COVERED means the evaluator found explicit rows. */
+  readonly calendarMode: 'LEGACY_ELAPSED_UNQUALIFIED' | 'SESSION_CALENDAR_CONFIGURED' | 'NOT_APPLICABLE';
+  readonly calendarAssessment: 'NOT_CONFIGURED' | 'NOT_EVALUATED' | 'COVERED' | 'UNAVAILABLE';
+  readonly ageBasis?: 'SESSION_TIME' | 'COMPLETED_TRADING_DAYS';
+  readonly sessionState?: 'OPEN' | 'CLOSED';
+  readonly calendarVersion?: string;
+  readonly calendarIssue?: 'INVALID_CALENDAR' | 'MISSING_COVERAGE' | 'INVALID_OBSERVATION';
   readonly domain: FreshnessDomain;
   readonly cacheState: 'CURRENT' | 'STALE' | 'UNAVAILABLE' | 'MISS' | 'NOT_AVAILABLE';
   readonly asOf: string | null;
@@ -30,14 +38,17 @@ const validTime = (value: unknown): value is string => typeof value === 'string'
 type Observation = { provenance?: { asOf?: unknown; receivedAt?: unknown; evaluatedAt?: unknown } };
 
 /** Internal adapter over the evaluator, also handles absent or malformed evidence. */
-export function freshnessStatus(domain: FreshnessDomain, lookup: CacheLookup<Observation> | null, evaluatedAt: string, lastRefresh: RefreshStatus): FreshnessStatus {
+export function freshnessStatus(domain: FreshnessDomain, lookup: CacheLookup<Observation> | null, evaluatedAt: string, lastRefresh: RefreshStatus, session?: SessionFreshnessContext): FreshnessStatus {
   const provenance = lookup?.entry?.provenance;
   const raw = provenance?.asOf;
   const timestampEvidence = !lookup || !lookup.entry ? 'NOT_AVAILABLE' : raw === undefined || raw === null || raw === '' ? 'MISSING' : validTime(raw) ? 'VALID' : 'INVALID';
   // An invalid timestamp is evaluated by P07 too; Infinity is represented as null in JSON.
-  const evaluation = lookup?.entry ? evaluateFreshness(typeof raw === 'string' ? raw : '', domain, evaluatedAt) : null;
+  const evaluation = lookup?.entry ? evaluateFreshness(typeof raw === 'string' ? raw : '', domain, evaluatedAt, session) : null;
   const suppressExecution = evaluation?.suppressExecution ?? true;
   return {
+    calendarMode: domain === 'D02_OHLCV' && !lookup?.entry ? 'NOT_APPLICABLE' : session ? 'SESSION_CALENDAR_CONFIGURED' : 'LEGACY_ELAPSED_UNQUALIFIED',
+    calendarAssessment: domain === 'D02_OHLCV' && !lookup?.entry ? 'NOT_EVALUATED' : !session ? 'NOT_CONFIGURED' : !evaluation ? 'NOT_EVALUATED' : evaluation.calendarIssue || !evaluation.basis ? 'UNAVAILABLE' : 'COVERED',
+    ...(evaluation?.basis ? { ageBasis: evaluation.basis, sessionState: evaluation.sessionState, calendarVersion: evaluation.calendarVersion, ...(evaluation.calendarIssue ? { calendarIssue: evaluation.calendarIssue } : {}) } : {}),
     domain,
     cacheState: lookup?.state ?? 'NOT_AVAILABLE',
     asOf: validTime(raw) ? raw : null,

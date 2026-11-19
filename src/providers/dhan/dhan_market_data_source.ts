@@ -1,3 +1,4 @@
+import { parseTradingCalendar, type TradingCalendar } from '../../quality/trading_calendar.js';
 /**
  * Institutional Investment Platform System (IIPS)
  * Dhan Provider Adapter behind the Provider-Neutral SPI (DHAN-D1)
@@ -33,6 +34,7 @@ import { normalizeDhanQuoteToCanonical } from './dhan_normalizer.js';
 import type { DhanProviderObservedState } from './dhan_provider_state_recorder.js';
 
 export interface DhanMarketDataSourceOptions {
+  tradingCalendar?: TradingCalendar;
   client: DhanApiClient;
   instrumentRegistry: DhanInstrumentRegistry;
   /** Injected clock so envelopes and health are deterministic under test. */
@@ -45,9 +47,11 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
   private readonly client: DhanApiClient;
   private readonly instrumentRegistry: DhanInstrumentRegistry;
   private readonly now: () => Date;
+  private readonly tradingCalendar?: TradingCalendar;
   private lastFailure: DhanFailure | null = null;
 
   constructor(options: DhanMarketDataSourceOptions) {
+    this.tradingCalendar = options.tradingCalendar ? parseTradingCalendar(options.tradingCalendar) : undefined;
     this.client = options.client;
     this.instrumentRegistry = options.instrumentRegistry;
     this.now = options.now ?? (() => new Date());
@@ -140,6 +144,7 @@ export class DhanMarketDataSource implements MarketDataSource<MarketQuotePayload
     }
 
     const normalized = normalizeDhanQuoteToCanonical({
+      tradingCalendar: this.tradingCalendar,
       quote: selected.value,
       mapping,
       receivedAt,

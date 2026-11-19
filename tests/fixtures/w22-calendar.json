@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "id": "W22-SYNTHETIC-NOT-FOR-DEPLOYMENT",
+  "version": "fixture-v1",
+  "reviewedBy": "automated fixture only",
+  "days": [
+    {
+      "exchange": "NSE",
+      "date": "2026-11-13",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-13T03:45:00Z",
+          "closesAt": "2026-11-13T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-14",
+      "status": "CLOSED",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-15",
+      "status": "CLOSED",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-16",
+      "status": "CLOSED",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-17",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-17T03:45:00Z",
+          "closesAt": "2026-11-17T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-18",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-18T03:45:00Z",
+          "closesAt": "2026-11-18T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-19",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-19T03:45:00Z",
+          "closesAt": "2026-11-19T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-20",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-20T03:45:00Z",
+          "closesAt": "2026-11-20T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-21",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-21T03:45:00Z",
+          "closesAt": "2026-11-21T05:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-22",
+      "status": "CLOSED",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-23",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-23T03:45:00Z",
+          "closesAt": "2026-11-23T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-24",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-24T03:45:00Z",
+          "closesAt": "2026-11-24T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-25",
+      "status": "UNKNOWN",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-13",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-13T03:45:00Z",
+          "closesAt": "2026-11-13T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-14",
+      "status": "CLOSED",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-15",
+      "status": "CLOSED",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-16",
+      "status": "CLOSED",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-17",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-17T03:45:00Z",
+          "closesAt": "2026-11-17T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-18",
+      "status": "CLOSED",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-19",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-19T03:45:00Z",
+          "closesAt": "2026-11-19T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-20",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-20T03:45:00Z",
+          "closesAt": "2026-11-20T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-21",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-21T03:45:00Z",
+          "closesAt": "2026-11-21T05:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-22",
+      "status": "CLOSED",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-23",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-23T03:45:00Z",
+          "closesAt": "2026-11-23T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-24",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-24T03:45:00Z",
+          "closesAt": "2026-11-24T10:00:00Z"
+        }
+      ],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-25",
+      "status": "UNKNOWN",
+      "sessions": [],
+      "source": "SYNTHETIC W22 fixture; never use as a market calendar"
+    }
+  ]
+}
