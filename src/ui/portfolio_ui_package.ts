@@ -172,3 +172,5 @@ export type {
   BrokerSnapshotUnresolvedRow,
   SnapshotRowDisposition,
 } from '../contracts/broker_import_ipc.js';
+// Additive, type-only: what the security-identity step decided for an import (optional member of BrokerImportSuccess).
+export type { BrokerImportSecurityIdentityStatus, BrokerImportSecurityIdentityReason, BrokerImportQualificationSources, BrokerImportUnqualifiedHolding, BrokerImportSecurityIdentityQualificationSummary } from '../contracts/broker_import_ipc.js';
