@@ -30,6 +30,7 @@ import {
   diagnosticSink,
   findRefusedWireKeys,
   IPC_V2_WRITE_OPERATIONS,
+  IPC_V2_READ_OPERATIONS,
   IPC_WRITE_OPERATIONS,
   readSingleFrame,
   successFrame,
@@ -434,12 +435,13 @@ export function createConnectionHandler(
         }
 
         // Per-request binding resolution; no cache, no process-global owner.
-        // v2 holdings traffic additionally requires the prospectively
-        // extended D02 canonical owner on the retained technical tenant; v1
-        // keeps the existing generic resolution unchanged.
+        // v2 reads use the approved read-only S1 relationship in their data
+        // snapshot; v2 writes keep strict D02 resolution; v1 is unchanged.
+        const holdingsRead = envelope.v === 2 && IPC_V2_READ_OPERATIONS.includes(envelope.op);
         let owner;
         try {
-          owner = responseVersion === 2 ? resolveActiveHoldingsBinding(db) : resolveActiveBinding(db);
+          // Read authorization is performed with the data in one snapshot below.
+          if (!holdingsRead) owner = responseVersion === 2 ? resolveActiveHoldingsBinding(db) : resolveActiveBinding(db);
         } catch (error) {
           if (error instanceof BindingAbsentError) {
             refuse('BINDING_ABSENT', error.message);
@@ -452,14 +454,6 @@ export function createConnectionHandler(
           refuse('BINDING_INVALID', 'binding resolution failed');
           return;
         }
-
-        // Write authorization: W-1 default deny; the explicitly authorized
-        // personal-local principal is recognized via env switch + binding.
-        const writeGuard = evaluatePortSaveGuard({
-          env: options.env ?? process.env,
-          canonicalOwnerId: owner.canonicalOwnerId,
-          tenantId: owner.tenantId,
-        });
 
         // One-request-per-connection gate (T-2).
         //
@@ -553,15 +547,15 @@ export function createConnectionHandler(
           let v2Result: unknown;
           switch (op) {
             case 'portfolio.list':
-              v2Result = store.list(owner);
+              v2Result = store.readHoldingsPortfolio('portfolio.list');
               break;
             case 'portfolio.get':
               // The v2 read projection is the validated nullable contribution
               // projection; durability fields remain absent (DR-3).
-              v2Result = store.getV2(owner, String(payload.portfolioId));
+              v2Result = store.readHoldingsPortfolio('portfolio.get', String(payload.portfolioId));
               break;
             case 'portfolio.revisions':
-              v2Result = store.revisions(owner, String(payload.portfolioId));
+              v2Result = store.readHoldingsPortfolio('portfolio.revisions', String(payload.portfolioId));
               break;
             default:
               refuse('UNKNOWN_OPERATION', `not dispatched: ${String(op)}`);
@@ -570,6 +564,15 @@ export function createConnectionHandler(
           await writeGuarded(successFrame(op, v2Result, requestId, 2));
           return;
         }
+
+        if (!owner) throw new BindingInvalidError('no resolved owner');
+        // Write authorization: W-1 default deny; the explicitly authorized
+        // personal-local principal is recognized via env switch + binding.
+        const writeGuard = evaluatePortSaveGuard({
+          env: options.env ?? process.env,
+          canonicalOwnerId: owner.canonicalOwnerId,
+          tenantId: owner.tenantId,
+        });
 
         let result: unknown;
         if ((IPC_WRITE_OPERATIONS as readonly string[]).includes(envelope.op)) {
@@ -613,6 +616,10 @@ export function createConnectionHandler(
         // A throw before the writer is assigned (e.g. the C7 scan itself)
         // cannot produce a frame; the no-op writer keeps the path zero-byte.
         const write = writeGuarded;
+        if (error instanceof BindingAbsentError || error instanceof BindingInvalidError) {
+          refuse(error instanceof BindingAbsentError ? 'BINDING_ABSENT' : 'BINDING_INVALID', error.message);
+          return;
+        }
         if (error instanceof ResourceUnavailableError) {
           // Missing, foreign and tombstoned portfolios share one byte-stable outcome.
           await write(classAFrame(envelope.op, 'RESOURCE_UNAVAILABLE', envelope.requestId, RESOURCE_UNAVAILABLE_DETAIL, responseVersion));

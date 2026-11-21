@@ -131,3 +131,43 @@ The read-only investigation of merged PR #129 confirmed two static deviations ag
 2. **UNKNOWN/lost-acknowledgement reconciliation** — `reconcileSnapshotV2ByRead` now requires a zero-write writer-settlement probe (`BEGIN IMMEDIATE` + immediate `ROLLBACK`), two consistent read passes, and exact correspondence of contribution identity + stored digest copy + complete provenance and (when supplied) of the successor revision (`MERGE`, `holdingsCount >= 1`, finite non-negative value, 64-hex provenance). Absent + settled → `NOT_COMMITTED`; anything unproven → `UNRESOLVED`. No retry anywhere.
 
 Regression tests added: `V2-C05`, `V2-R06`. Guarded suite at amendment time: **1056 executed — 1055 passed — 0 failed — 1 skipped**. Build exit 0; `test:package-consumer` PASS. Full details, digests and non-authorizations: `evidence/cross-repository/IIPS_V3_D02_D03_D05_PR129_DEVIATION_CORRECTIONS_2026-11-06.md`. The contract, receipt schema, v1 semantics, cap, IRR v1 consumer and all operational boundaries are unchanged; H01–H12 remain **NOT QUALIFIED**.
+
+
+## S1 → D02 read-only relationship — approved bounded execution record
+
+### Authority and baseline
+
+The sole PA/PO explicitly approved `docs/integration/IPD-S1-D02-READ-RELATIONSHIP-TECHNICAL-DECISION-PROPOSAL.md` at published commit `43ecf9e280fd894d314e4a13052eef9bb08221f9`, then directed implementation under **“PA/PO APPROVAL — Proceed with IPD Implementation.”** This is the authority for the exact read-only authorization-semantics amendment: preserved authenticated S1 may act under D02 domain authority to read its own historical storage scope. Earlier records of S1 rejection continue to govern mutations; their historical read-only rejection is superseded only by this explicit exception. No new operation, wire field, response contract, schema version or transport version is introduced, and this record does not manufacture a new general contract release or grant broader cross-owner access.
+
+Work stays on designated branch `arena/d1c19f24-iips-production-market-data`. Fetched authoritative main was `c7c726bc446a239c3f37c010a1f3b60cfc57b15b`; shallow history initially prevented finding common ancestry, resolved by fetching full history, not allowing unrelated-history merge. Main was normally merged into this branch as `2969c12` before editing implementation. Existing main work was preserved, not reimplemented. Open PRs #171/#183 did not implement this relationship. The proposal's original base remains disclosed. No PR merge is authorized by this instruction.
+
+### Implemented delta
+
+- `src/persistence/binding.ts`: separate `HoldingsReadContext` and caller-transaction resolver. Exact S1 principal, tenant, stored owner, binding and membership must match; ACTIVE cardinality/attachment and unrevoked source rows are checked on one snapshot. Effective D02 and storage S1 are separate internal fields. Native D02 keeps its existing owner/tenant behavior. Neither strict holdings mutation resolver is weakened.
+- `src/persistence/portfolio_store.ts`: narrow `readHoldingsPortfolio` operation entry point owns/reuses the existing read snapshot, resolves authority inside it and projects list/getV2/revisions using one stored owner scope. It returns data only, not a callback or write-capable owner. Existing SQL predicates, detail/history authorization, validated nullable contributions and projections are reused. There is no dataset union, fallback search or rekey.
+- `src/ipc/dispatch.ts`: v2 reads defer authorization to this same-snapshot entry point; binding failures remain zero-byte Class P closes. v2 mutations still use strict D02 resolution and remain refused. v1 uses the existing generic binding and write guard. No framing/parser/response changes.
+- `tests/s1_d02_read_relationship.test.ts`: six synthetic/disposable fixture tests cover exact relationship identity, historical data after close/reopen, unchanged schema/rows/database bytes, same-ID owner separation, tenant isolation, native D02 compatibility, list/detail/history, invalid/revoked/malformed bindings and data, source revocation races, mutation isolation and wire refusals. Valid mutation fixture frames are independently parsed before asserting authorization refusal, so malformed payloads cannot masquerade as a successful mutation-isolation test.
+
+### Verification actually executed
+
+Environment: Linux sandbox, Node `v22.22.3`; no operational database or host endpoint accessed. Installed locked dependencies using `npm ci --ignore-scripts --no-audit --no-fund`; no dependency files changed. Initial compiler invocation before installation found no installed TypeScript; installation resolved the tooling prerequisite. Initial new tests exposed fixture errors (v2 list must omit payload; empty save holdings were not a valid mutation fixture; empty provenance string was not an invalid stored-value test). Fixtures were corrected/strengthened without changing the wire grammar or projection rules. Final results below supersede those development runs.
+
+| Command / evidence | Result |
+|---|---|
+| `npx --no-install tsc --noEmit --pretty false` | PASS |
+| `npm run build:tsc`; final `npx --no-install tsc --pretty false` | PASS |
+| New relationship suite | 6 passed / 0 failed / 0 skipped |
+| Affected compiled regression set (new relationship, `g3_binding_resolution`, `g3_ipc_framing`, `q1_ipc_read_contract_conformance`, `durable_holdings_contract_v1`, `durable_holdings_recovery_v1`, `personal_portfolio_local_path`, `stage2_binding_concurrency`) | **121 passed / 0 failed / 0 skipped** |
+| Three existing public package build targets (test prerequisites, not provider work) | PASS |
+| Guarded `npm test` (159 suite files) | **2,038 total / 2,034 passed / 4 skipped / 0 failed**, exit 0 |
+| `git diff --check` and complete scoped diff review | PASS |
+
+The full suite exercised the final executable implementation. Afterwards, only a resolver documentation comment and a strengthened valid-mutation fixture assertion changed; final typecheck/compilation and all 121 affected regressions were rerun successfully. No unrelated investigation or certification was repeated. Local transient logs: `/tmp/s1-d02-{build,focused,regressions,full}.log`; durable results are this record and committed tests, not reliance on those temporary files.
+
+The preservation test compares every table (including migration ledger, identity, audit and historical rows) plus complete SQLite file bytes before/after serving reads. The deterministic WAL/two-connection barrier commits revocation and a holdings update after the reader's first authorization SELECT: the in-flight read returns the coherent older holdings; the next request closes with zero bytes. Thus authorization cannot be selected before the snapshot of the protected data. Existing strict mutation and native D02 tests pass unchanged.
+
+### Remaining operational boundary and publication
+
+**Implemented and synthetically verified is not deployed, provisioned, real-data verified or Stage 5 accepted.** No schema/migration, binding change, runtime configuration, ownership rewrite, production action, IRR change or D5/D6 implementation occurred. Historic host inventory/capture remains evidence of its original dates, not of this build. Real-holder evidence requires separately authorized execution using existing IPC, with source binding/peer/running-artifact evidence and a reviewed list/get/history/get capture at one stable revision. Existing response fields do not attest to D02/binding identity; the PA/PO-approved evidence model must retain that limit. A consumer currently issuing only v1 does not automatically start issuing v2; consumer compatibility/selection is a responsibility of its owner, not an IRR change made here.
+
+Publish on the designated branch, fetch back the exact remote commit, and compare every changed file byte-for-byte. Report commit and verification identity with the task result rather than insert a self-referential hash into this commit. No force push, PR merge or host synchronization is part of publication.

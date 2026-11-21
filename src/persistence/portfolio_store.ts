@@ -24,6 +24,7 @@ import {
   BindingInvalidError,
   resolveActiveBindingInCurrentTransaction,
   resolveActiveHoldingsBindingInCurrentTransaction,
+  resolveHoldingsReadContextInCurrentTransaction,
 } from './binding.js';
 import { isD114SecurityIdentity, type D114SecurityIdentity } from '../contracts/types.js';
 import { isLocalPersonalUseEnabled } from '../ipc/localPersonalUse.js';
@@ -748,6 +749,20 @@ export class DurablePortfolioStore {
       if (this.db.isTransaction) this.db.exec('ROLLBACK;');
       throw error;
     }
+  }
+
+  /** Approved D02 read scope: resolve identity and project stored data within
+   * one snapshot. No callback/owner escapes that could grant write authority. */
+  readHoldingsPortfolio(op: 'portfolio.list' | 'portfolio.get' | 'portfolio.revisions', portfolioId?: string): PortfolioSummary[] | PortfolioDetail | RevisionEntry[] {
+    return this.withReadSnapshot(() => {
+      const context = resolveHoldingsReadContextInCurrentTransaction(this.db);
+      switch (op) {
+        case 'portfolio.list': return this.list(context.storageOwner);
+        case 'portfolio.get': return this.getV2(context.storageOwner, String(portfolioId));
+        case 'portfolio.revisions': return this.revisions(context.storageOwner, String(portfolioId));
+        default: throw new InvalidPortfolioRequestError('unsupported holdings read');
+      }
+    });
   }
 
   /**

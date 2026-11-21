@@ -1,6 +1,8 @@
 # S1 → D02 personal portfolio read relationship — technical decision proposal
 
-**Status: PROPOSED — PA/PO APPROVAL REQUIRED; NOT IMPLEMENTED.**
+**Current status: PA/PO APPROVED — bounded IPD read-only implementation completed; synthetic verification PASS; operational evidence pending.**
+
+The proposal text below is retained as the decision baseline published at `43ecf9e280fd894d314e4a13052eef9bb08221f9`. Its conditional/request wording is historical, not an assertion that approval is still missing. The sole PA/PO subsequently explicitly approved this exact proposal and granted implementation authority in the instruction headed **“PA/PO APPROVAL — Proceed with IPD Implementation.”** The approval preserves S1 identity/storage ownership, authorizes only resolver/v2 read orchestration and isolated verification, and excludes host provisioning/configuration, schema/migration, mutation authority and IRR changes. See the appended execution record in the existing D02 implementation evidence pack and the current roadmap entry. Publication is not merge, deployment or Stage 5 acceptance.
 
 The PA/PO is the sole user and decision authority for this personal, single-user, non-production application. Publishing this proposal is not approval, provisioning, operational activation, Stage 5 acceptance or permission to implement D5/D6.
 
