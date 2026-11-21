@@ -252,6 +252,9 @@ this section records it. The IRR record is not modified, and this record does no
 * It **does not** change the owner of D-7 (§ header), the acceptance criteria of §9, or the status of
   §11/§12. **IRR-side acceptance is still outstanding** (§12 U-1, U-3).
 * It **does not** establish M4 (§12 U-4) and **authorizes no implementation** (§11). W-24 remains open.
+  The M4 *interpretation* has since been formally recorded on IRR main
+  (`001848e9c81a4049cc1f6ea2664250ba6351c610`, §10.3), which resolves that question only; **M4 acceptance
+  remains not established**.
 
 ### 4.6 Structured diagnostic events and correlation identifiers
 
@@ -491,7 +494,7 @@ Nothing in this record may be cited as authority to change code.
 | U-1 | Does IRR accept this vocabulary and disclosure policy? The roadmap's exit criterion is *"model and disclosure policy accepted by both repos"* | Accept → W-10 may implement the §8 mapping. Reject → W-10 needs a revised mapping, and this record is amended; IPD-side work is unaffected | **IRR owner** (IRR is not modified by this record, and no IRR modification is authorized here) | **No.** W-03 is IPD-only and consumes the IPD half |
 | U-2 | Is the operator "Verify connection" action surfaced in the UI at all? The roadmap says such an action *may* perform one authenticated probe | Surface it → the §3 semantics bind it (W-09/W-15 work). Do not surface it → the semantics remain dormant and nothing else changes | **Operator / product authority**, inside W-09/W-15 scope | **No.** §3 fixes semantics only if the action is built |
 | U-3 | Does IRR accept the **2026-11-20 amendment** (§4.5–§4.10), including the §4.10 substring clarification? | Accept → the W-24 disclosure model is jointly accepted and W-24 implementation may be considered under §11. Reject or qualify → this record is amended again and the amendment is not binding on IRR | **IRR owner.** The owner decisions at `001848e9…` record the owner's intent; this IPD amendment is **awaiting IRR acceptance** and is not accepted on IRR's behalf | **No.** W-03 remains IPD-only and does not consume §4.6–§4.10 |
-| U-4 | Does the M4 Dhan leg equal IPD-local transport-attempt evidence, and has that been recorded in the roadmap? The owner decision interprets M4 this way but states a formal roadmap recording is still required | Record it → M4's Dhan leg is closed by the §4.6/§4.8 attempt evidence. Do not record it → **M4 acceptance is not established**, and no attempt evidence may be cited as M4 evidence | **Roadmap owner.** Not established by this record; recording it is a separate roadmap change outside this document | **No.** W-03 does not depend on M4 |
+| U-4 | **Resolved 2026-11-20 — interpretation recorded; acceptance still not established.** Has the M4 Dhan leg been formally defined as IPD-local transport-attempt evidence? | Now recorded → the IRR-generated `actionId` must reach IPD and be associated with IPD's local Dhan egress-attempt record. This demonstrates the local handoff and the locally observed outcome; it **does not prove Dhan received or processed the request**. No trace header or parameter is sent to Dhan, and vendor-side correlation is not required. The interpretation **changes no M4 criterion, dependency or status** | **Resolved by the roadmap owner** — recorded in IRR at immutable commit **`001848e9c81a4049cc1f6ea2664250ba6351c610`**, §10.3 (*Exit criteria*, +2/−0). That commit is not modified by this record, and this record does not speak for IRR | **No.** W-03 does not depend on M4 |
 
 No other question remains open: everything else D-7 must decide is prescribed by the roadmap and
 recorded above.
@@ -499,6 +502,19 @@ recorded above.
 **Standing status after the 2026-11-20 amendment:** W-24 is **open**; this IPD amendment is **awaiting IRR
 acceptance** (U-3); M4 acceptance is **not established** (U-4); and W-24 implementation is **not
 authorized** (§11). None of the four items above is closed by the amendment.
+
+**M4 interpretation, stated separately so it is not read as acceptance.** Four distinct things are often
+conflated, and only the first is settled:
+
+1. The **M4 interpretation** — that M4's Dhan leg means IPD-local transport-attempt evidence — is
+   **formally recorded on IRR main** at immutable commit `001848e9c81a4049cc1f6ea2664250ba6351c610`
+   (§10.3). This resolves the *interpretation question* only.
+2. This **IPD D-7 amendment** is **awaiting IRR acceptance** (U-3). Recording the interpretation is not
+   IRR's acceptance of this amendment.
+3. **M4 acceptance is NOT ESTABLISHED.** No M4 exit criterion has been met or demonstrated, and no
+   attempt evidence may be cited as satisfaction of M4. The interpretation changes no M4 criterion,
+   dependency or status.
+4. **W-24 implementation is NOT AUTHORIZED** (§11).
 
 ## 13. Relationship to W-03 (the next item)
 
