@@ -3,7 +3,10 @@
 **Decision ID:** `D-7`
 **Title:** Provider state model, the meaning of "verify connection", and the diagnostics disclosure policy
 **Status:** **ADOPTED FOR IPD** (governance decision, recorded 2026-11-12). IRR-side acceptance is
-outstanding and is **not** granted by this record (see §12).
+outstanding and is **not** granted by this record (see §12). **Amended 2026-11-20** to record the six
+W-24 owner decisions (§4.5–§4.9); the amendment adds decisions and clarifies §4.2's substring rule. It
+does not grant IRR acceptance, does not change the owner of D-7, and does not authorize implementation
+(§11).
 **Authority:** Program Authority under roadmap v1.1 (`DHAN-LIVE-ROADMAP-2026-11-11`), which names the
 owner of D-7 as **IPD + IRR**. Recorded in IPD under that owner's IPD half. **This is a governance
 decision, not implementation authorization** (§11).
@@ -190,7 +193,14 @@ call at implementation time.
 
 ### 4.2 MUST NOT be exposed — in any surface, in any form, including logs, errors, HTTP bodies, bundles
 
-1. Secret values, tokens, or **any prefix or substring** of them.
+1. Secret values, tokens, or **any prefix or substring** of them. This prohibition is about
+   *intentional* disclosure and remains absolute: no surface may emit a secret, a token, or a prefix or
+   substring of one. It is **not** a claim that a byte-for-byte match is mathematically impossible: a
+   randomly generated identifier (for example a UUID under §4.6) may, by coincidence, contain a
+   character run that also occurs inside a secret. See §4.10 for the clarification that governs how such
+   a coincidence is classified, and for the requirements on identifier generation and on untrusted
+   input. A coincidental overlap is not intentional disclosure **only** where the identifier was
+   generated independently, with no inspection of the secret (§4.10 rules 1–4).
 2. `vault://` references, of either secret.
 3. Carrier file names, paths or directories; the carrier root; the store directory.
 4. Any secret-store metadata from which a local sensitive location can be derived.
@@ -220,6 +230,159 @@ call at implementation time.
 | --- | --- | --- |
 | `describeDhanConfig` returns `accessTokenKeyPath` / `clientIdKeyPath` | `src/providers/dhan/dhan_config.ts:284-294` | **Superseded.** W-03 removes the key-path material from this output. Until W-03 lands, no new surface may consume or republish these fields |
 | IRR copies `vault://` pointers into its health report via `secretRefPointersOf` | IRR `frontend/server/market-data/dhanHealthTransport.ts:114`, used at `:189` and `:206` | **Superseded.** W-10 stops publishing them; this record does not modify IRR |
+
+### 4.5 Amendment record — W-24 owner decisions (2026-11-20)
+
+**Authority for this amendment.** The six decisions recorded in §4.6–§4.10 are the owner decisions
+recorded in `ramkivs/iips-review-recovered`, file
+`docs/integration/DHAN-W24-OWNER-DECISION-PROPOSAL-2026-11-21.md` (+137 lines), plus a +2/−0 line in
+`DHAN-LIVE-INTEGRATION-IMPLEMENTATION-ROADMAP-2026-11-11.md`, as merged at immutable commit
+**`001848e9c81a4049cc1f6ea2664250ba6351c610`** (merge of IRR PR #611). That commit is the authority;
+this section records it. The IRR record is not modified, and this record does not speak for IRR.
+
+**What this amendment does and does not do.**
+
+* It **adds** decisions: structured diagnostic events (§4.6), their closed failure enumeration (§4.7),
+  the in-memory rings (§4.8), the permitted correlation surfaces and operator-reader safeguards (§4.9),
+  and the clarification of the §4.2 substring rule (§4.10).
+* It **does not** replace, relax or re-open §4.1–§4.4. The §4.1 MAY list remains **exhaustive for the
+  surfaces §4.3 governs**. §4.6–§4.10 define a *separate* structured-event surface with its own
+  exhaustive allowlist; an event field is not thereby added to the §4.1 list, to `/v1/diagnostics`
+  (W-09-as-scoped-in-§4.3), to `ServiceHealth`, or to the public Status.
+* It **does not** change the owner of D-7 (§ header), the acceptance criteria of §9, or the status of
+  §11/§12. **IRR-side acceptance is still outstanding** (§12 U-1, U-3).
+* It **does not** establish M4 (§12 U-4) and **authorizes no implementation** (§11). W-24 remains open.
+
+### 4.6 Structured diagnostic events and correlation identifiers
+
+An internal structured diagnostic event, if and when W-24 is implemented, consists of **exactly** the
+following fields and no others. The field set is closed: adding a field requires a new owner decision,
+not an implementation choice.
+
+| Field | Kind | Permitted values / form |
+| --- | --- | --- |
+| `schemaVersion` | literal | the event-schema version |
+| `timestampUtc` | literal | ISO-8601 UTC |
+| `component` | enum | `IRR` \| `IPD` |
+| `operation` | enum | `QUOTE` \| `HISTORY` \| `FRESHNESS` |
+| `event` | enum | `ACTION_START` \| `ACTION_END` \| `REQUEST_ADMITTED` \| `REQUEST_END` \| `CACHE_HIT` \| `WORK_START` \| `WORK_JOIN` \| `ATTEMPT_START` \| `ATTEMPT_END` \| `TIMEOUT` \| `LATE_COMPLETION` |
+| `actionId` | identifier | opaque, lowercase UUIDv4 |
+| `workId` | identifier | opaque, lowercase UUIDv4 |
+| `attemptId` | identifier | opaque, lowercase UUIDv4 |
+| `outcome` | enum | `SUCCESS` \| `FAILURE` \| `TIMEOUT` \| `NOT_ATTEMPTED` \| `UNKNOWN` |
+| `failureCategory` | enum | one value from the closed enumeration in §4.7 |
+| `durationMs` | number | milliseconds, non-negative |
+| `sequence` | number | monotonically increasing within a ring |
+
+1. **Three opaque identifiers, never derived from payloads.** `actionId`, `workId` and `attemptId` are
+   independently generated lowercase UUIDv4 values. Each is opaque: it identifies a unit of work and
+   nothing else. It must not be derived from, hashed from, or computed over a credential, a payload, a
+   DTO, a business identifier, a URL, a path or a header value (§4.2).
+2. **D01 correlation.** In the D01 quote path, `traceId` identifies the **current** action and
+   `correlationId` identifies the **original producer** of the data. They are distinct roles and must
+   not be collapsed into one value.
+3. **No retroactive provenance.** Implementing correlation **does not** permit mutating provenance that
+   is already cached, and **does not** permit inventing provenance for D02. Where D02 has no producer
+   correlation, it reports none (§4.10's rules on absence apply by extension); a value is never
+   fabricated to fill the field.
+4. **Size ceiling.** A single serialized event must not exceed **1 KiB**. An event that would exceed the
+   ceiling is truncated by dropping optional numeric fields or is dropped — never by trimming into, or
+   quoting from, a prohibited value (§4.2).
+
+### 4.7 Closed failure enumeration
+
+`failureCategory` is drawn from this **closed** set of thirteen values:
+
+`VALIDATION_ERROR`, `AUTHENTICATION_FAILED`, `AUTHORIZATION_FAILED`, `CONFIGURATION_ERROR`,
+`READINESS_FAILED`, `IDENTITY_REJECTED`, `RATE_LIMITED`, `CACHE_ERROR`, `TRANSPORT_ERROR`,
+`PROVIDER_ERROR`, `TIMEOUT`, `CONTRACT_MISMATCH`, `INTERNAL_ERROR`
+
+1. **Unknown maps to `INTERNAL_ERROR`.** Any condition the enumeration does not name is recorded as
+   `INTERNAL_ERROR`. It is never mapped to a free-text message, and never to a category chosen for
+   appearance.
+2. **No message pass-through.** The category is the whole payload. Underlying exception text,
+   child-process output, paths and URLs remain prohibited (§4.2 items 1–8) and are not "the detail" of
+   a category.
+3. An earlier, different enum considered during W-24 is **superseded** by this list and is retained, if
+   at all, as history only. It must not be implemented.
+
+### 4.8 In-memory rings
+
+| Holder | Capacity | Storage |
+| --- | --- | --- |
+| IRR | **512** events | process-lifetime memory only |
+| IPD | **1,024** events | process-lifetime memory only |
+
+1. **Memory only.** Rings live for the lifetime of the process and are lost on exit. They are never
+   persisted.
+2. **No disk, no external sink.** No ring content may be written to a file, a log file, a database, a
+   message bus, an external collector, a crash dump or a telemetry endpoint. The prohibition is on the
+   *sink*, not on the transport used to reach it.
+3. **Oldest-event eviction.** At capacity, the oldest event is evicted. Rings do not grow, do not spill,
+   and do not block the writer.
+4. Ring contents are internal. Exposing them is permitted only through the operator readers in §4.9 and
+   is otherwise prohibited.
+
+### 4.9 Permitted correlation surfaces and operator-reader safeguards
+
+**Permitted surfaces.** Correlation metadata may appear only on these surfaces:
+
+1. **Internal IRR↔IPD trace headers**, on the internal hop between the two repos — not on any edge to a
+   third party.
+2. **D01 `traceId` / `correlationId`**, per §4.6 rule 2.
+3. **An IRR response action reference** — the identifier by which an IRR response refers back to the
+   action that produced it.
+4. **Separately authenticated, loopback-only operator readers** for the rings in §4.8.
+
+**Binding prohibitions carried forward from this amendment's authority** (unchanged, not narrowed):
+
+* No secret, token, `vault://` reference, path, URL, header, payload, DTO, business identifier, hash of a
+  business identifier, or arbitrary exception / child-process text may appear in an event or a ring.
+* **No trace metadata and no trace headers may be sent to Dhan.** Correlation is internal to IRR↔IPD.
+* **W-09 diagnostics as scoped in §4.3 and the public Status are unchanged.** They do not gain the rings,
+  the events, or the identifiers defined here.
+* **The browser has no access** to a ring and no access to a reader bearer token.
+
+**Reader safeguards (binding on any implementation).** Each operator reader must:
+
+1. **Reuse the existing operator bearer** credential rather than mint a new one;
+2. **Verify in constant time**, so a failing comparison leaks no timing signal;
+3. **Bind loopback-only** — no non-loopback origin is served, and the check is on the bound socket, not on
+   a header that a caller can set;
+4. Be **read-only**: no mutation, no eviction control, no ring reset;
+5. Be **never exposed to a browser**, directly or via any proxy the product ships;
+6. Have **no unauthenticated fallback** — a missing or unverifiable credential fails closed, and there is
+   no debug, localhost-exempt or "trusted network" bypass.
+
+### 4.10 Clarification of the §4.2 substring rule
+
+§4.2 item 1 prohibits emitting a secret, a token, or a prefix or substring of one. This subsection states
+what that prohibition does and does not claim. It **adds no permission** and **removes none**.
+
+1. **Coincidence is not disclosure.** A randomly generated identifier may contain a character run that
+   also occurs inside a secret. Where the identifier was generated independently and no secret was
+   inspected in order to produce or validate it, such a coincidental overlap is **not** intentional
+   disclosure and is not a breach of §4.2 item 1.
+2. **Not a zero-overlap guarantee.** This clarification is **not** a claim that overlap is mathematically
+   impossible, and no implementation may advertise, test for, or rely on a guaranteed zero-overlap
+   property. Absolute prevention cannot be achieved by choosing an identifier format.
+3. **Never inspect a secret to generate or validate an identifier.** Identifier generation must not read
+   secret material, and validation must not compare an identifier against secret material. Doing so would
+   convert a coincidental overlap into a disclosure and would itself breach §4.2.
+4. **The intentional-disclosure prohibitions are preserved in full.** Deliberately embedding, encoding,
+   hashing or salting a secret into an identifier remains prohibited. §4.10 does not authorize
+   intentional disclosure and must not be cited as if it did.
+5. **Canary tests are retained.** The existing tests that place a canary secret in the environment and
+   assert it never appears in a surface must be kept and must continue to pass. They test for
+   *intentional* disclosure; they must not be rewritten to assert universal substring absence, which
+   rule 2 disclaims, and they must not be deleted.
+6. **Trusted generation, untrusted input.** Identifiers minted inside the process must come from a
+   trusted generator (the platform UUID facility). Identifiers arriving from transport are **untrusted**
+   and must be validated before use — but **UUID syntax validation alone does not prove independent
+   generation**: a syntactically valid UUID could have been constructed *from* a secret by another party.
+   Input identifiers are therefore treated as opaque correlation handles only: they are never used to
+   build a secret, never compared against secret material, and never echoed into a surface that §4.2
+   governs.
 
 ## 5. Security and fail-closed requirements (binding on every implementing item)
 
@@ -327,9 +490,15 @@ Nothing in this record may be cited as authority to change code.
 | --- | --- | --- | --- | --- |
 | U-1 | Does IRR accept this vocabulary and disclosure policy? The roadmap's exit criterion is *"model and disclosure policy accepted by both repos"* | Accept → W-10 may implement the §8 mapping. Reject → W-10 needs a revised mapping, and this record is amended; IPD-side work is unaffected | **IRR owner** (IRR is not modified by this record, and no IRR modification is authorized here) | **No.** W-03 is IPD-only and consumes the IPD half |
 | U-2 | Is the operator "Verify connection" action surfaced in the UI at all? The roadmap says such an action *may* perform one authenticated probe | Surface it → the §3 semantics bind it (W-09/W-15 work). Do not surface it → the semantics remain dormant and nothing else changes | **Operator / product authority**, inside W-09/W-15 scope | **No.** §3 fixes semantics only if the action is built |
+| U-3 | Does IRR accept the **2026-11-20 amendment** (§4.5–§4.10), including the §4.10 substring clarification? | Accept → the W-24 disclosure model is jointly accepted and W-24 implementation may be considered under §11. Reject or qualify → this record is amended again and the amendment is not binding on IRR | **IRR owner.** The owner decisions at `001848e9…` record the owner's intent; this IPD amendment is **awaiting IRR acceptance** and is not accepted on IRR's behalf | **No.** W-03 remains IPD-only and does not consume §4.6–§4.10 |
+| U-4 | Does the M4 Dhan leg equal IPD-local transport-attempt evidence, and has that been recorded in the roadmap? The owner decision interprets M4 this way but states a formal roadmap recording is still required | Record it → M4's Dhan leg is closed by the §4.6/§4.8 attempt evidence. Do not record it → **M4 acceptance is not established**, and no attempt evidence may be cited as M4 evidence | **Roadmap owner.** Not established by this record; recording it is a separate roadmap change outside this document | **No.** W-03 does not depend on M4 |
 
 No other question remains open: everything else D-7 must decide is prescribed by the roadmap and
 recorded above.
+
+**Standing status after the 2026-11-20 amendment:** W-24 is **open**; this IPD amendment is **awaiting IRR
+acceptance** (U-3); M4 acceptance is **not established** (U-4); and W-24 implementation is **not
+authorized** (§11). None of the four items above is closed by the amendment.
 
 ## 13. Relationship to W-03 (the next item)
 
