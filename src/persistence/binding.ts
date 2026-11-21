@@ -95,9 +95,9 @@ export function resolveActiveBinding(db: DatabaseSync): ActiveOwner {
 }
 
 /**
- * Resolves the active owner without taking transaction ownership. The caller
- * must already hold BEGIN IMMEDIATE on this same connection, which serializes
- * this check with revocation and the caller's protected writes.
+ * Resolves the active owner without taking transaction ownership. Mutation
+ * callers must hold BEGIN IMMEDIATE to serialize revocation and writes. The
+ * read-only relationship caller holds a read snapshot through projection.
  */
 export function resolveActiveBindingInCurrentTransaction(db: DatabaseSync): ActiveOwner {
   if (!db.isTransaction) {
@@ -170,4 +170,43 @@ export function resolveActiveHoldingsBinding(db: DatabaseSync): ActiveOwner {
  */
 export function resolveActiveHoldingsBindingInCurrentTransaction(db: DatabaseSync): ActiveOwner {
   return assertHoldingsOwner(resolveActiveBindingInCurrentTransaction(db));
+}
+
+/** PA/PO-approved exact S1 → D02 relationship. Read authority is deliberately
+ * not an ActiveOwner: it cannot be supplied as holdings mutation authority. */
+export interface HoldingsReadContext {
+  readonly authenticatedBinding: ActiveOwner;
+  readonly effectiveDomainOwner: { readonly canonicalOwnerId: string; readonly tenantId: string };
+  readonly storageOwner: { readonly canonicalOwnerId: string; readonly tenantId: string };
+  readonly relationship: 'S1_D02_PERSONAL_READ' | 'NATIVE_D02_READ';
+}
+
+/** Caller owns the read transaction so authorization and data share a snapshot.
+ * Mutation resolvers above intentionally remain strict and unchanged. */
+export function resolveHoldingsReadContextInCurrentTransaction(db: DatabaseSync): HoldingsReadContext {
+  const authenticatedBinding = resolveActiveBindingInCurrentTransaction(db);
+  const owner = authenticatedBinding;
+  const native = owner.canonicalOwnerId === HOLDINGS_CANONICAL_OWNER_ID && owner.tenantId === HOLDINGS_TENANT_ID;
+  if (!native) {
+    if (owner.principalLabel !== 'ramki-personal-local' ||
+        owner.bindingId !== 'c5808abaffd072d6401ce63ad86c6ac0' ||
+        owner.membershipId !== 'd25dcc5370100b00766efc5166f65cf3' ||
+        owner.tenantId !== HOLDINGS_TENANT_ID ||
+        owner.canonicalOwnerId !== 'ipd-owner-ramki-personal') {
+      throw new BindingInvalidError('no authorized holdings read relationship');
+    }
+    const binding = db.prepare('SELECT revoked_at FROM local_principal_bindings WHERE binding_id = ?')
+      .get(owner.bindingId) as { revoked_at: string | null } | undefined;
+    const membership = db.prepare('SELECT revoked_at FROM local_principal_memberships WHERE membership_id = ?')
+      .get(owner.membershipId) as { revoked_at: string | null } | undefined;
+    if (!binding || !membership || binding.revoked_at !== null || membership.revoked_at !== null) {
+      throw new BindingInvalidError('the source identity is revoked or inconsistent');
+    }
+  }
+  return {
+    authenticatedBinding,
+    effectiveDomainOwner: { canonicalOwnerId: HOLDINGS_CANONICAL_OWNER_ID, tenantId: HOLDINGS_TENANT_ID },
+    storageOwner: { canonicalOwnerId: owner.canonicalOwnerId, tenantId: owner.tenantId },
+    relationship: native ? 'NATIVE_D02_READ' : 'S1_D02_PERSONAL_READ',
+  };
 }
