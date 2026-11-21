@@ -307,6 +307,20 @@ recorded in `ramkivs/iips-review-recovered`, file
 **`001848e9c81a4049cc1f6ea2664250ba6351c610`** (merge of IRR PR #611). That commit is the authority;
 this section records it. The IRR record is not modified, and this record does not speak for IRR.
 
+**Where the generation and credential-access requirements come from.** Two requirements recorded in this
+policy restate the owner decisions at **`001848e9c81a4049cc1f6ea2664250ba6351c610`** verbatim in
+substance, and cite them here so the policy cannot drift from them:
+
+* *"IDs must be independently and cryptographically generated, never derived from or populated using
+  secret material."* — § **D-7 prohibited information and substring clarification — OWNER APPROVED**
+  (line 131 of `DHAN-W24-OWNER-DECISION-PROPOSAL-2026-11-21.md`). Recorded as §4.6 rule 1 and §4.10 rule 6.
+* *"No secret inspection or credential resolution solely for tracing is authorized, and existing
+  disclosure prohibitions must not be weakened."* — § **4. D-7 — APPROVED WITH CONDITION** (line 87 of
+  the same document, in *Owner decisions recorded — 2026-11-21*). Recorded as §4.10 rule 3.
+
+Neither requirement creates a tracing permission; both are restrictions, and the first is a mandatory
+construction rule.
+
 **Subsequent owner clarification — surface 4 and the server-side boundary.** Two later clarifications in
 the same document are recorded at immutable commit
 **`06a2b0db30e662a9fc77423ed1b6f3569fcd224d`** (merge of IRR PR #612, +20/−0): the IRR response action
@@ -356,10 +370,15 @@ not an implementation choice.
 | `durationMs` | number | milliseconds, non-negative |
 | `sequence` | number | monotonically increasing within a ring |
 
-1. **Three opaque identifiers, never derived from payloads.** `actionId`, `workId` and `attemptId` are
-   independently generated lowercase UUIDv4 values. Each is opaque: it identifies a unit of work and
-   nothing else. It must not be derived from, hashed from, or computed over a credential, a payload, a
-   DTO, a business identifier, a URL, a path or a header value (§4.2).
+1. **Three opaque identifiers, cryptographically generated, never derived from payloads.** `actionId`,
+   `workId` and `attemptId` are independently generated lowercase UUIDv4 values. **Each of the three must
+   be generated using cryptographically secure randomness, from a trusted platform cryptographic
+   facility** — not from a predictable, seeded, time-ordered or application-supplied source. Each is
+   opaque: it identifies a unit of work and nothing else. It must not be derived from, hashed from, or
+   computed over a credential, a payload, a DTO, a business identifier, a URL, a path or a header value
+   (§4.2). Cryptographic generation is required so that an identifier cannot be predicted, reproduced or
+   reverse-derived from the material it references; it is **not** a guarantee of any property beyond
+   unpredictability, and it does not relax any prohibition in §4.2 or §4.10 (§4.10 rule 6).
 2. **D01 correlation — distinct roles, not necessarily distinct values.** In the D01 quote path,
    `traceId` identifies the **current** action and `correlationId` identifies the **original producer**
    of the data. The two fields carry distinct **semantic roles**, and neither may be silently
@@ -472,9 +491,34 @@ widen §4.2.1.
 2. **Not a zero-overlap guarantee.** This clarification is **not** a claim that overlap is mathematically
    impossible, and no implementation may advertise, test for, or rely on a guaranteed zero-overlap
    property. Absolute prevention cannot be achieved by choosing an identifier format.
-3. **Never inspect a secret to generate or validate an identifier.** Identifier generation must not read
-   secret material, and validation must not compare an identifier against secret material. Doing so would
-   convert a coincidental overlap into a disclosure and would itself breach §4.2.
+3. **Never inspect a secret to generate or validate an identifier, and never resolve a credential solely
+   for tracing.** Identifier generation must not read secret material, and validation must not compare an
+   identifier against secret material. Doing so would convert a coincidental overlap into a disclosure and
+   would itself breach §4.2.
+
+   **No credential resolution solely for tracing.** Tracing must never be a reason — or a trigger — to
+   resolve, retrieve, read, refresh, re-read, unprotect, unlock or otherwise access a credential, a
+   secret, a token or vault material, in IPD or across the IRR↔IPD boundary. Specifically, none of the
+   following may occur solely to generate, validate, correlate, acknowledge, record, read back or
+   diagnose a trace identifier, a header, an event or a ring entry:
+
+   * resolving a `VaultProvider` or calling `readSecret` / `describeReadiness` for a tracing purpose;
+   * selecting, switching or probing a secret-store backend because tracing needs one;
+   * refreshing, rotating or re-reading a token, or forcing a cache warm of credential material;
+   * triggering a DPAPI unprotect, a child-process credential read, or any equivalent access;
+   * opening a vault carrier, re-reading a carrier envelope or re-deriving a secret-store location.
+
+   Tracing therefore uses **only already-available, already-authorized context** — the identifiers,
+   version, timestamps and enumerated outcomes that the current action already holds in process. If a
+   credential is not already resolved for its own legitimate purpose, tracing **proceeds without it**; it
+   must never cause a resolution to happen, and it must never appear as the reason a credential was read.
+   A tracing path that fails when credentials are unavailable is a design defect, not a fallback: the
+   absence of credential material is not an error for tracing and must be reported as the enumerations in
+   §4.7 permit, without attempting access.
+
+   This prohibition **adds no permission and removes none**: the existing bar on comparing an identifier
+   against secret material stands, and neither this rule nor §4.10 authorizes any access to credential
+   material for any purpose.
 4. **The intentional-disclosure prohibitions are preserved in full.** Deliberately embedding, encoding,
    hashing or salting a secret into an identifier remains prohibited. §4.10 does not authorize
    intentional disclosure and must not be cited as if it did.
@@ -483,12 +527,20 @@ widen §4.2.1.
    *intentional* disclosure; they must not be rewritten to assert universal substring absence, which
    rule 2 disclaims, and they must not be deleted.
 6. **Trusted generation, untrusted input.** Identifiers minted inside the process must come from a
-   trusted generator (the platform UUID facility). Identifiers arriving from authenticated transport are
-   **untrusted** and must be validated before use — but **UUID syntax validation alone does not prove
-   independent generation**: a syntactically valid UUID could have been constructed *from* a secret by
-   another party. Input identifiers are therefore treated as opaque correlation handles only: they are
-   never used to build a secret and never compared against secret material. They may appear only on the
-   surfaces **§4.2.1** permits, and are prohibited on every other surface by §4.2.
+   **trusted platform cryptographic facility** and must satisfy §4.6 rule 1: cryptographically secure,
+   independently generated. Identifiers arriving from authenticated transport are **untrusted** and must
+   be validated before use — but **UUIDv4 syntax validation alone establishes neither independent
+   generation nor cryptographic generation**: a syntactically valid UUID is only a well-formed string, and
+   it could have been constructed *from* a secret by another party, supplied from a predictable source, or
+   reused from an earlier action. An identifier that passes syntax validation must therefore **never be
+   treated as proof of trusted generation**, and must never be accepted on the strength of its format
+   alone. Where trustworthy origin matters, only in-process generation from the trusted facility
+   establishes it; an inbound identifier is evidence of *what was claimed*, not of *how it was produced*.
+
+   Input identifiers are therefore treated as opaque correlation handles only: they are never used to
+   build a secret and never compared against secret material. They may appear only on the surfaces
+   **§4.2.1** permits, and are prohibited on every other surface by §4.2. Validation is syntax and
+   provenance-of-claim only; it never reads credential material (§4.10 rule 3).
 
    **Where a validated transport-supplied identifier may appear.** A validated identifier received over
    the authenticated IRR↔IPD loopback transport may be recorded or returned **only** on the **four**
