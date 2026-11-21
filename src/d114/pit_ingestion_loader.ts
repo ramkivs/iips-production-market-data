@@ -9,7 +9,7 @@
 import { PointInTimeStore, PITQuery } from '../pit/pit_store.js';
 import { UnifiedHistoricalAdapter, UnifiedParsedArchive, HistoricalArchiveFormat } from './unified_historical_adapter.js';
 import { CmUdiffParser } from './cm_udiff_parser.js';
-import { MarketQuotePayload, validateMarketQuotePayload } from '../contracts/d01_quotes.js';
+import { D01_SCHEMA_VERSION, MarketQuotePayload, validateMarketQuotePayload } from '../contracts/d01_quotes.js';
 import { OHLCVCandle, validateOHLCVCandle } from '../contracts/d02_ohlcv.js';
 import { CanonicalEnvelope, createCanonicalEnvelope } from '../contracts/envelope.js';
 import { computeLineageHash } from '../contracts/provenance.js';
@@ -343,7 +343,8 @@ export class HistoricalPitIngestionLoader {
           tenantId: 'IIPS_OFFLINE_BOOTSTRAP',
         },
         timestamp: asOfTimestamp,
-        schemaVersion: '1.0.0',
+        // D01 quotes carry the D01 contract version (D-5: payload retyped -> 2.0.0).
+        schemaVersion: D01_SCHEMA_VERSION,
       });
 
       this.quoteStore.append(envelopeD01);

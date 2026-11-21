@@ -10,7 +10,7 @@ import { CanonicalEnvelope, createCanonicalEnvelope, validateEnvelopeStructure }
 import { DataDomain, OperatingMode, QualityState, SourceClassification, ValidationResult } from '../contracts/types.js';
 import { computeLineageHash, DataProvenanceDTO } from '../contracts/provenance.js';
 import { DeadLetterQueue, DeadLetterRecord } from './dead_letter.js';
-import { validateMarketQuotePayload, MarketQuotePayload } from '../contracts/d01_quotes.js';
+import { D01_SCHEMA_VERSION, validateMarketQuotePayload, MarketQuotePayload } from '../contracts/d01_quotes.js';
 import { validateOHLCVCandle, OHLCVCandle } from '../contracts/d02_ohlcv.js';
 import { validateFundamentalStatement, FundamentalStatementPayload } from '../contracts/d03_fundamentals.js';
 import { validateCorporateAction, CorporateActionPayload } from '../contracts/d04_corporate_actions.js';
@@ -40,6 +40,19 @@ export interface IngestionInput {
 export type IngestionResult<T> =
   | { success: true; envelope: CanonicalEnvelope<T> }
   | { success: false; quarantineRecord: DeadLetterRecord };
+
+/**
+ * Canonical contract version emitted for a domain.
+ *
+ * P01_VERSIONING_COMPATIBILITY V1: `schemaVersion` versions the canonical field
+ * schema and changes when a field slot is added, removed, retyped or its
+ * obligations change. Only D01 has been retyped (D-5), so only D01 is 2.0.0.
+ * Every other domain deliberately inherits the shared `1.0.0` default, which is
+ * why this returns `undefined` for them rather than restating the literal.
+ */
+function domainSchemaVersion(domain: DataDomain): string | undefined {
+  return domain === 'D01_QUOTES' ? D01_SCHEMA_VERSION : undefined;
+}
 
 export class IngestionPipeline {
   private deadLetterQueue: DeadLetterQueue;
@@ -204,6 +217,11 @@ export class IngestionPipeline {
       payload: canonicalPayload,
       provenance,
       timestamp: receivedAt,
+      // The emitted version must be the CONTRACT version for this domain, never the
+      // shared envelope default. D-5 (approved 2026-11-21) retyped D01 bid/ask to
+      // `number | null`, so D01 is 2.0.0 while every other domain keeps the shared
+      // 1.0.0 default. Resolving it here keeps the shared default untouched.
+      schemaVersion: domainSchemaVersion(input.domain),
     });
 
     const envValidation = validateEnvelopeStructure(envelope);

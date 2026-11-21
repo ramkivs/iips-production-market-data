@@ -282,8 +282,10 @@ export class CmUdiffParser {
       symbol: row.TckrSymb,
       exchange: 'NSE',
       currency: 'INR',
-      bid: ltp,
-      ask: ltp,
+      // D-5 (approved 2026-11-21): this source supplies no top-of-book.
+      // Bid/ask are unavailable, reported as null — never substituted with LTP.
+      bid: null,
+      ask: null,
       ltp,
       open: parseFloat(row.OpnPric || row.ClsPric || '0'),
       high: parseFloat(row.HghPric || row.ClsPric || '0'),

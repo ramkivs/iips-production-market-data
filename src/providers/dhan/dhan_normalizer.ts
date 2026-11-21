@@ -13,7 +13,7 @@
 
 import { CanonicalEnvelope, createCanonicalEnvelope } from '../../contracts/envelope.js';
 import { computeLineageHash, DataProvenanceDTO } from '../../contracts/provenance.js';
-import { MarketQuotePayload, validateMarketQuotePayload } from '../../contracts/d01_quotes.js';
+import { D01_SCHEMA_VERSION, MarketQuotePayload, validateMarketQuotePayload } from '../../contracts/d01_quotes.js';
 import { OperatingMode, QualityState } from '../../contracts/types.js';
 import type { TradingCalendar } from '../../quality/trading_calendar.js';
 import { evaluateFreshness } from '../../quality/freshness_evaluator.js';
@@ -22,7 +22,17 @@ import { DhanInstrumentMapping } from './dhan_instrument_map.js';
 import { DhanResult, dhanFailure, dhanOk } from './dhan_failures.js';
 
 const DHAN_CANONICAL_DATA_VERSION = 'v1.0.0-d01-provider-foundation';
-const DHAN_SCHEMA_VERSION = '1.0.0';
+/**
+ * Schema version stamped on Dhan-emitted D01 envelopes.
+ *
+ * Per D-5 (approved 2026-11-21) the D01 payload was retyped (`bid`/`ask` became
+ * `number | null`), so D01 carries `2.0.0`. Per P01_VERSIONING_COMPATIBILITY V1,
+ * `schemaVersion` versions the canonical field schema and *is* the value that
+ * must change when a field slot is retyped — so the emitted envelope carries the
+ * D01 version, not the legacy envelope default. The previous `'1.0.0'` here was
+ * the mismatch that made the declared 2.0.0 unobservable on the wire.
+ */
+const DHAN_SCHEMA_VERSION = D01_SCHEMA_VERSION;
 
 export interface DhanNormalizationInput {
   quote: DhanQuoteDto;
@@ -49,10 +59,37 @@ function round2(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-function topOfBook(levels: Array<{ price: number }> | undefined): number {
-  if (!levels || levels.length === 0) return 0;
-  const price = levels[0]?.price;
-  return typeof price === 'number' && Number.isFinite(price) && price > 0 ? price : 0;
+/**
+ * Outcome of reading one depth side.
+ *
+ * `absent` and `invalid` are deliberately distinct. D-5 (approved 2026-11-21)
+ * requires that a missing side is `null`, but that a *supplied* malformed price
+ * is rejected — never silently converted into `null`, which would make bad data
+ * look like legitimate absence.
+ */
+type TopOfBookResult =
+  | { kind: 'present'; price: number }
+  | { kind: 'absent' }
+  | { kind: 'invalid'; price: unknown };
+
+/**
+ * Reads the best price of one depth side.
+ *
+ * - no side, or an empty side → `absent` (a genuine absence, reported as null);
+ * - a supplied price that is a finite, strictly positive number → `present`;
+ * - any other supplied price (zero, negative, non-finite, non-numeric, or a
+ *   missing price on a supplied level) → `invalid`, to be rejected upstream.
+ *
+ * D-5: an unavailable side is reported as `null` and is never substituted with
+ * `0`, but a malformed supplied price is never laundered into `null` either.
+ */
+function topOfBook(levels: Array<{ price: number }> | undefined): TopOfBookResult {
+  if (!levels || levels.length === 0) return { kind: 'absent' };
+  const price: unknown = levels[0]?.price;
+  if (typeof price === 'number' && Number.isFinite(price) && price > 0) {
+    return { kind: 'present', price };
+  }
+  return { kind: 'invalid', price };
 }
 
 /**
@@ -124,6 +161,21 @@ export function normalizeDhanQuoteToCanonical(
   }
   const pctChange = round2((change / previousClose) * 100);
 
+  // Depth sides are read before the payload is built so that a supplied but
+  // malformed price is rejected rather than laundered into `null`.
+  const bidSide = topOfBook(quote.depth?.buy);
+  const askSide = topOfBook(quote.depth?.sell);
+  for (const [field, side] of [['bid', bidSide], ['ask', askSide]] as const) {
+    if (side.kind === 'invalid') {
+      return dhanFailure(
+        'MALFORMED_RESPONSE',
+        `Dhan depth ${field} price must be a finite, strictly positive number when supplied `
+          + `(got ${String(side.price)}); use an absent side for unavailable depth`,
+        { field }
+      );
+    }
+  }
+
   // Field-by-field canonical construction. No vendor key is ever copied across,
   // so the emitted payload key-set is exactly the canonical D01 contract.
   const payload: MarketQuotePayload = {
@@ -131,8 +183,8 @@ export function normalizeDhanQuoteToCanonical(
     symbol: mapping.symbol,
     exchange: mapping.exchange,
     currency: 'INR',
-    bid: topOfBook(quote.depth?.buy),
-    ask: topOfBook(quote.depth?.sell),
+    bid: bidSide.kind === 'present' ? bidSide.price : null,
+    ask: askSide.kind === 'present' ? askSide.price : null,
     ltp: quote.last_price,
     open: quote.ohlc.open,
     high: quote.ohlc.high,

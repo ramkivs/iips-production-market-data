@@ -70,7 +70,10 @@ describe('DHAN-D3A normalization regression (synthetic)', () => {
     assert.strictEqual(envelope.domain, 'D01_QUOTES');
     assert.strictEqual(envelope.companyId, 'COMP-INFY');
     assert.strictEqual(envelope.mode, 'SNAPSHOT');
-    assert.strictEqual(envelope.schemaVersion, '1.0.0');
+    // D-5 (2026-11-21): the D01 payload was retyped (bid/ask are number|null),
+    // and P01_VERSIONING_COMPATIBILITY V1 versions the canonical field schema by
+    // schemaVersion — so the D01 envelope carries 2.0.0.
+    assert.strictEqual(envelope.schemaVersion, '2.0.0');
     assert.strictEqual(quality, 'GOOD');
     const p = envelope.payload;
     assert.strictEqual(p.companyId, 'COMP-INFY');
