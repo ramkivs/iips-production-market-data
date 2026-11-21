@@ -4,7 +4,8 @@
 **Title:** Provider state model, the meaning of "verify connection", and the diagnostics disclosure policy
 **Status:** **ADOPTED FOR IPD** (governance decision, recorded 2026-11-12). IRR-side acceptance is
 outstanding and is **not** granted by this record (see §12). **Amended 2026-11-20** to record the six
-W-24 owner decisions (§4.5–§4.9); the amendment adds decisions and clarifies §4.2's substring rule. It
+W-24 owner decisions (§4.6–§4.10, recorded in §4.5); the amendment adds decisions and clarifies §4.2's
+substring rule. It
 does not grant IRR acceptance, does not change the owner of D-7, and does not authorize implementation
 (§11).
 **Authority:** Program Authority under roadmap v1.1 (`DHAN-LIVE-ROADMAP-2026-11-11`), which names the
