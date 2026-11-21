@@ -193,6 +193,18 @@ call at implementation time.
 
 ### 4.2 MUST NOT be exposed — in any surface, in any form, including logs, errors, HTTP bodies, bundles
 
+**Scope and the single exception.** This section governs every surface. It admits **one** exception, and
+only one — the validated W-24 correlation identifiers enumerated in §4.2.1, on the surfaces §4.9
+approves and nowhere else:
+
+* this exception **covers identifiers only**. It does **not** permit exposing a secret, a token, a
+  `vault://` reference, a path, a URL, a payload, a DTO, a business identifier or its hash, exception or
+  child-process text, or credential material — items 1–8 below are **not** excepted, in whole or in part,
+  on any surface;
+* the exception is **exhaustive**: an identifier is permitted only on the three §4.9 surfaces, and every
+  other surface remains prohibited without qualification;
+* where this section and §4.10 might appear to conflict, §4.2.1 states the precedence.
+
 1. Secret values, tokens, or **any prefix or substring** of them. This prohibition is about
    *intentional* disclosure and remains absolute: no surface may emit a secret, a token, or a prefix or
    substring of one. It is **not** a claim that a byte-for-byte match is mathematically impossible: a
@@ -213,6 +225,42 @@ call at implementation time.
    echoed without a whitelist; the runner's `Get-IipsFailureCode` whitelist is the model).
 8. Any credential material in argv, a temporary file, or a shell history line (W-02 guarantee,
    restated here because diagnostics is the usual place it is lost).
+
+### 4.2.1 The sole exception — validated W-24 correlation identifiers
+
+This subsection is the **normative exception** to §4.2 and the **precedence rule** between §4.2 and
+§4.10. It exists because §4.2's chapeau claims *any* surface while §4.10 rule 6 permits identifiers on the
+§4.9 surfaces; read alone, each forbids the other's outcome. This subsection resolves that: §4.2 rule is
+the general prohibition, the exception below is the closed carve-out, and no other permission exists.
+
+**Permitted — exclusively, and exhaustively, on these three surfaces and no others:**
+
+1. **Allowlisted W-24 structured diagnostic events** (§4.6 field set) **and their authenticated operator
+   readers** (§4.8 rings, §4.9 reader safeguards).
+2. **D01 `traceId` and `correlationId`**, per §4.6 rule 2.
+3. **The IRR response action reference** — the current action ID by which an IRR response refers back to
+   the action that produced it.
+
+**Prohibited everywhere else — this list is illustrative of the prohibition, not a limit on it:**
+
+* **arbitrary logs and error messages** — including any log line, structured log field, stack trace,
+  exception message or failure text outside the §4.6 field set;
+* **existing §4.3 diagnostics and public status surfaces** — `/v1/diagnostics`, `ServiceHealth`, the
+  public Status and daemon startup lines remain governed by the exhaustive §4.1 MAY list and gain
+  **nothing** from this exception;
+* **unapproved HTTP bodies and responses** — any body or response field not listed above;
+* **browser-visible diagnostic surfaces** — no identifier reaches the browser, and no reader bearer
+  token does either;
+* **Dhan-facing requests and headers** — no identifier is sent to Dhan as a header, parameter or body
+  field;
+* **all other disclosure prohibited by §4.2** — items 1–8 apply in full and are **not** excepted.
+
+**Precedence, stated explicitly.** The three permitted surfaces are the **only** surfaces to which §4.2
+does not apply for these identifiers. On every other surface §4.2 continues to apply with full force, and
+§4.10 may not be read to widen this exception. Outside the three surfaces, an identifier is treated
+exactly as §4.2 treats any other prohibited value. The exception is limited to the identifiers
+themselves: it does not make a surface safe for any other value, and it does not authorize intentional
+disclosure of a secret (§4.10 rule 4).
 
 ### 4.3 Per-surface rendering (so W-03/W-09/W-10 need no judgement calls)
 
@@ -244,9 +292,12 @@ this section records it. The IRR record is not modified, and this record does no
 
 * It **adds** decisions: structured diagnostic events (§4.6), their closed failure enumeration (§4.7),
   the in-memory rings (§4.8), the permitted correlation surfaces and operator-reader safeguards (§4.9),
-  and the clarification of the §4.2 substring rule (§4.10).
-* It **does not** replace, relax or re-open §4.1–§4.4. The §4.1 MAY list remains **exhaustive for the
-  surfaces §4.3 governs**. §4.6–§4.10 define a *separate* structured-event surface with its own
+  the clarification of the §4.2 substring rule (§4.10), and the single normative exception to §4.2 for
+  validated W-24 correlation identifiers (**§4.2.1**), which also states the precedence between §4.2 and
+  §4.10.
+* It **does not** replace, relax or re-open §4.1–§4.4, save for the single narrow exception in §4.2.1,
+  which permits identifiers — and nothing else — on three surfaces. The §4.1 MAY list remains **exhaustive
+  for the surfaces §4.3 governs**. §4.6–§4.10 define a *separate* structured-event surface with its own
   exhaustive allowlist; an event field is not thereby added to the §4.1 list, to `/v1/diagnostics`
   (W-09-as-scoped-in-§4.3), to `ServiceHealth`, or to the public Status.
 * It **does not** change the owner of D-7 (§ header), the acceptance criteria of §9, or the status of
@@ -373,7 +424,10 @@ not an implementation choice.
 ### 4.10 Clarification of the §4.2 substring rule
 
 §4.2 item 1 prohibits emitting a secret, a token, or a prefix or substring of one. This subsection states
-what that prohibition does and does not claim. It **adds no permission** and **removes none**.
+what that prohibition does and does not claim. For the **substring** question it **adds no permission**
+and **removes none**; the one permission associated with identifiers on the W-24 surfaces is stated
+exclusively in **§4.2.1**, not here. Rule 6 records how untrusted identifiers are handled and does not
+widen §4.2.1.
 
 1. **Coincidence is not disclosure.** A randomly generated identifier may contain a character run that
    also occurs inside a secret. Where the identifier was generated independently and no secret was
@@ -397,24 +451,25 @@ what that prohibition does and does not claim. It **adds no permission** and **r
    **untrusted** and must be validated before use — but **UUID syntax validation alone does not prove
    independent generation**: a syntactically valid UUID could have been constructed *from* a secret by
    another party. Input identifiers are therefore treated as opaque correlation handles only: they are
-   never used to build a secret, never compared against secret material, and never echoed into a surface
-   that §4.2 governs.
+   never used to build a secret and never compared against secret material. They may appear only on the
+   surfaces **§4.2.1** permits, and are prohibited on every other surface by §4.2.
 
    **Where a validated transport-supplied identifier may appear.** A validated identifier received over
-   the authenticated IRR↔IPD loopback transport may be recorded or returned **only** on the surfaces
-   §4.9 approves:
+   the authenticated IRR↔IPD loopback transport may be recorded or returned **only** on the three surfaces
+   **§4.2.1** enumerates, which are the exhaustive allowlist:
 
    * **allowlisted structured diagnostic events** (§4.6 field set) and their **authenticated operator
      readers** (§4.9 reader safeguards);
    * **D01 `traceId` / `correlationId`**, per §4.6 rule 2;
    * the **IRR response action reference** (the current action ID).
 
-   It must **never** be echoed into arbitrary logs, error responses, HTTP bodies, or any existing §4.3
-   surface. In particular: the §4.3 surfaces (`/v1/diagnostics`, `ServiceHealth`, the public Status,
-   startup lines), which are governed by the exhaustive §4.1 MAY list, gain nothing from this rule and
-   must not carry transport-supplied identifiers; the approved trace headers are **not** logged as
-   headers and are **not** serialized into events, which carry only the allowlisted identifier fields;
-   and no request to Dhan carries an identifier header or parameter.
+   It must **never** be echoed into arbitrary logs, error responses, unapproved HTTP bodies, any existing
+   §4.3 surface, any browser-visible surface, or any Dhan-facing request or header. The §4.3 surfaces
+   (`/v1/diagnostics`, `ServiceHealth`, the public Status, startup lines) remain governed by the exhaustive
+   §4.1 MAY list, gain nothing from this rule, and must not carry transport-supplied identifiers; the
+   approved trace headers are **not** logged as headers and are **not** serialized into events, which carry
+   only the allowlisted identifier fields; and no request to Dhan carries an identifier header, parameter
+   or body field. **§4.2.1 states the precedence**, and this rule does not widen it.
 
 ## 5. Security and fail-closed requirements (binding on every implementing item)
 
