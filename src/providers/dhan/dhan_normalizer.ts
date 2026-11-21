@@ -22,6 +22,12 @@ import { DhanInstrumentMapping } from './dhan_instrument_map.js';
 import { DhanResult, dhanFailure, dhanOk } from './dhan_failures.js';
 
 const DHAN_CANONICAL_DATA_VERSION = 'v1.0.0-d01-provider-foundation';
+/**
+ * Shared canonical ENVELOPE version. Per D-5 (approved 2026-11-21) this stays
+ * `1.0.0`: the breaking change is to the D01 payload contract only, which is
+ * declared separately by `D01_SCHEMA_VERSION` (`2.0.0`) in
+ * `src/contracts/d01_quotes.ts`.
+ */
 const DHAN_SCHEMA_VERSION = '1.0.0';
 
 export interface DhanNormalizationInput {
@@ -49,10 +55,17 @@ function round2(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-function topOfBook(levels: Array<{ price: number }> | undefined): number {
-  if (!levels || levels.length === 0) return 0;
+/**
+ * Best price of one depth side, or `null` when the side is unavailable.
+ *
+ * D-5 (approved 2026-11-21): an unavailable side is reported as `null` and is
+ * never substituted with `0`. A level whose price is not a finite, strictly
+ * positive number is treated as unavailable rather than as a zero price.
+ */
+function topOfBook(levels: Array<{ price: number }> | undefined): number | null {
+  if (!levels || levels.length === 0) return null;
   const price = levels[0]?.price;
-  return typeof price === 'number' && Number.isFinite(price) && price > 0 ? price : 0;
+  return typeof price === 'number' && Number.isFinite(price) && price > 0 ? price : null;
 }
 
 /**

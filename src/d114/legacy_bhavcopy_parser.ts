@@ -194,8 +194,10 @@ export class LegacyBhavcopyParser {
       symbol: row.SYMBOL,
       exchange: 'NSE',
       currency: 'INR',
-      bid: ltp,
-      ask: ltp,
+      // D-5 (approved 2026-11-21): this source supplies no top-of-book.
+      // Bid/ask are unavailable, reported as null — never substituted with LTP.
+      bid: null,
+      ask: null,
       ltp,
       open: parseFloat(row.OPEN || row.CLOSE || '0'),
       high: parseFloat(row.HIGH || row.CLOSE || '0'),
