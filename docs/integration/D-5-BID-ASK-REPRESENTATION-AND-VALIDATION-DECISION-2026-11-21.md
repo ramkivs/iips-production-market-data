@@ -102,3 +102,55 @@ that repository's separate work.
 - Verification: targeted D-5 tests, quote and contract-drift regressions, typecheck, build and the
   complete guarded suite.
 - This record is committed with the implementation it authorises.
+
+---
+
+## 6. Implementation notes (added 2026-11-21, corrections pass)
+
+These notes record how the approved decisions are realised. They do not amend any approved decision.
+
+### 6.1 Declared vs emitted D01 version
+
+Approved decision 3 requires D01 schema version `2.0.0`; approved decision 4 keeps the
+**shared envelope** version at `1.0.0`. These are two independent axes
+(`P01_VERSIONING_COMPATIBILITY` V1: `schemaVersion` versions the canonical field schema and
+changes when a field slot is *retyped* — which D-5 did).
+
+Accordingly:
+
+- an **emitted D01 envelope** carries `schemaVersion: '2.0.0'`, so a consumer can identify the
+  D01 contract version from the wire object alone;
+- the **shared envelope default** (any non-D01 payload) remains `'1.0.0'` and is unchanged.
+
+An earlier revision declared `D01_SCHEMA_VERSION = '2.0.0'` but still stamped Dhan-emitted D01
+envelopes (and the D114 PIT D01 envelope) with `'1.0.0'`, so `2.0.0` appeared nowhere in the
+emitted JSON. That declared/emitted mismatch is corrected here.
+
+### 6.2 Absent depth vs malformed supplied price (normalisation)
+
+Dhan normalisation distinguishes three outcomes per depth side:
+
+| Depth side | Outcome |
+|---|---|
+| side absent, or empty | **absent** → `null`, quote accepted |
+| supplied finite price `> 0` | **present** → the price, quote accepted |
+| supplied zero, negative, non-finite, non-numeric or missing price | **invalid** → `MALFORMED_RESPONSE`, quote rejected |
+
+A malformed supplied price is **never** converted into `null`: doing so would make bad data
+indistinguishable from a genuinely absent side. One-sided quotes remain valid.
+
+### 6.3 Test-count reconciliation
+
+Guarded-suite counts before this pass differed between local and CI because CI sets
+`IIPS_POWERSHELL_RUNTIME_TESTS=1` (`.github/workflows/ci.yml`), which un-skips three
+PowerShell-gated cases on an image that has `pwsh`:
+
+| Case | Local | CI |
+|---|---|---|
+| W06-PS-01 (PowerShell runtime) | skipped | passes |
+| W06-PS-02 (PowerShell runtime) | skipped | passes |
+| W-02-INF-05 (real runner) | skipped | passes |
+| "the Windows endpoint is a named pipe" (Windows-only) | skipped | skipped |
+
+So `# tests` is identical on both hosts and the passed/skipped split differs by exactly three.
+No assertion is skipped to make a count look better.

@@ -103,6 +103,16 @@ function normalize(quote: DhanQuoteDto): MarketQuotePayload {
   return result.value.envelope.payload;
 }
 
+/** Normalise without asserting success, so rejection cases can be inspected. */
+function normalizeOrFail(quote: DhanQuoteDto) {
+  return normalizeDhanQuoteToCanonical({
+    quote,
+    mapping: MAPPING,
+    receivedAt: RECEIVED_AT,
+    evaluatedAt: EVALUATED_AT,
+  });
+}
+
 const fieldsOf = (r: { errors: Array<{ field: string }> }): string[] => r.errors.map((e) => e.field);
 
 // ---------------------------------------------------------------------------
@@ -146,28 +156,60 @@ describe('D-5 normalizer — bid/ask availability from market depth', () => {
     assert.strictEqual(p.ask, null);
   });
 
-  it('D5-06: a zero price level is unavailable, not a genuine zero price', () => {
-    const p = normalize(validQuote({
-      depth: { buy: [{ quantity: 1, orders: 1, price: 0 }], sell: [{ quantity: 1, orders: 1, price: 0 }] },
+  it('D5-06: an explicitly supplied zero price is rejected, never laundered into null', () => {
+    // A zero on a supplied level is malformed data, not absence. Converting it
+    // to null would make bad data indistinguishable from a genuinely absent side.
+    const r = normalizeOrFail(validQuote({
+      depth: { buy: [{ quantity: 1, orders: 1, price: 0 }], sell: [{ quantity: 1, orders: 1, price: 1520.5 }] },
     } as Partial<DhanQuoteDto>));
-    assert.strictEqual(p.bid, null);
-    assert.strictEqual(p.ask, null);
+    assert.strictEqual(r.ok, false, 'a supplied zero bid must be rejected');
+    if (r.ok) throw new Error('unreachable');
+    assert.strictEqual(r.failure.code, 'MALFORMED_RESPONSE');
   });
 
-  it('D5-07: a non-finite level price is unavailable', () => {
-    const p = normalize(validQuote({
-      depth: { buy: [{ quantity: 1, orders: 1, price: NaN }], sell: [{ quantity: 1, orders: 1, price: Infinity }] },
-    } as Partial<DhanQuoteDto>));
-    assert.strictEqual(p.bid, null);
-    assert.strictEqual(p.ask, null);
+  it('D5-07: a supplied non-finite price is rejected', () => {
+    for (const bad of [NaN, Infinity, -Infinity]) {
+      const r = normalizeOrFail(validQuote({
+        depth: { buy: [{ quantity: 1, orders: 1, price: bad }], sell: [{ quantity: 1, orders: 1, price: 1520.5 }] },
+      } as Partial<DhanQuoteDto>));
+      assert.strictEqual(r.ok, false, `a supplied ${String(bad)} bid must be rejected`);
+    }
   });
 
-  it('D5-08: a negative level price is unavailable', () => {
-    const p = normalize(validQuote({
-      depth: { buy: [{ quantity: 1, orders: 1, price: -10 }], sell: [{ quantity: 1, orders: 1, price: -20 }] },
+  it('D5-08: a supplied negative price is rejected', () => {
+    const r = normalizeOrFail(validQuote({
+      depth: { buy: [{ quantity: 1, orders: 1, price: -10 }], sell: [{ quantity: 1, orders: 1, price: 1520.5 }] },
     } as Partial<DhanQuoteDto>));
-    assert.strictEqual(p.bid, null);
-    assert.strictEqual(p.ask, null);
+    assert.strictEqual(r.ok, false, 'a supplied negative bid must be rejected');
+    if (r.ok) throw new Error('unreachable');
+    assert.strictEqual(r.failure.code, 'MALFORMED_RESPONSE');
+  });
+
+  it('D5-08a: a supplied non-numeric price is rejected', () => {
+    const r = normalizeOrFail(validQuote({
+      depth: { buy: [{ quantity: 1, orders: 1, price: '1520.25' as unknown as number }], sell: [{ quantity: 1, orders: 1, price: 1520.5 }] },
+    } as Partial<DhanQuoteDto>));
+    assert.strictEqual(r.ok, false, 'a string bid price must be rejected');
+  });
+
+  it('D5-08b: a malformed ask is rejected even when the bid is valid', () => {
+    const r = normalizeOrFail(validQuote({
+      depth: { buy: [{ quantity: 1, orders: 1, price: 1520.25 }], sell: [{ quantity: 1, orders: 1, price: 0 }] },
+    } as Partial<DhanQuoteDto>));
+    assert.strictEqual(r.ok, false, 'a supplied zero ask must be rejected');
+    if (r.ok) throw new Error('unreachable');
+    assert.ok(/ask/.test(r.failure.message), 'the rejection must identify the ask side');
+  });
+
+  it('D5-08c: absence and malformed supply are distinguished, not conflated', () => {
+    // Absent side -> accepted with null. Supplied-but-malformed -> rejected.
+    const absent = normalize(validQuote({ depth: { sell: [{ quantity: 1, orders: 1, price: 1520.5 }] } } as Partial<DhanQuoteDto>));
+    assert.strictEqual(absent.bid, null, 'genuinely absent bid becomes null');
+
+    const malformed = normalizeOrFail(validQuote({
+      depth: { buy: [{ quantity: 1, orders: 1, price: 0 }], sell: [{ quantity: 1, orders: 1, price: 1520.5 }] },
+    } as Partial<DhanQuoteDto>));
+    assert.strictEqual(malformed.ok, false, 'malformed supplied bid is rejected, not turned into null');
   });
 
   it('D5-09: unavailable bid/ask does not fail the quote or degrade its quality', () => {
@@ -303,26 +345,36 @@ describe('D-5 contract versioning', () => {
     assert.strictEqual(D01_SCHEMA_VERSION, '2.0.0');
   });
 
-  it('D5-27: the shared canonical envelope version remains 1.0.0', () => {
-    const result = normalizeDhanQuoteToCanonical({
-      quote: validQuote(),
-      mapping: MAPPING,
-      receivedAt: RECEIVED_AT,
-      evaluatedAt: EVALUATED_AT,
-    });
-    assert.strictEqual(result.ok, true);
+  it('D5-27: the emitted D01 envelope carries the D01 contract version on the wire', () => {
+    const result = normalizeOrFail(validQuote());
+    assert.strictEqual(result.ok, true, 'normalisation should succeed');
     if (!result.ok) throw new Error('unreachable');
-    assert.strictEqual(result.value.envelope.schemaVersion, '1.0.0',
-      'the D01 payload bump must not change the shared envelope version');
+
+    // 1. The emitted value equals the declared D01 contract version.
+    assert.strictEqual(result.value.envelope.schemaVersion, D01_SCHEMA_VERSION);
+    assert.strictEqual(result.value.envelope.schemaVersion, '2.0.0');
+
+    // 2. A consumer holding only the serialized wire object can identify 2.0.0
+    //    without access to any constant. This is the property that was broken:
+    //    the declared 2.0.0 used to appear nowhere in the emitted JSON.
+    const wire = JSON.parse(JSON.stringify(result.value.envelope)) as { schemaVersion: string };
+    assert.strictEqual(wire.schemaVersion, '2.0.0');
+    assert.ok(JSON.stringify(wire).includes('2.0.0'),
+      'the D01 contract version must be observable in the emitted JSON');
   });
 
-  it('D5-28: the shared envelope default version is unchanged at 1.0.0', () => {
-    const env = createCanonicalEnvelope({
-      envelopeId: 'env-d5-version-check',
-      domain: 'D01_QUOTES',
+  it('D5-27a: the shared envelope version and the D01 version are independent values', () => {
+    // The two axes are distinct (P01_VERSIONING_COMPATIBILITY V1: schemaVersion
+    // versions the canonical field schema). Independent proof rather than one
+    // value standing in for both:
+    //  - the shared envelope default is unchanged at 1.0.0 for a non-D01 payload;
+    //  - the D01 constant is 2.0.0 and differs from it.
+    const nonD01 = createCanonicalEnvelope({
+      envelopeId: 'env-d5-envelope-default',
+      domain: 'D02_OHLCV',
       mode: 'SNAPSHOT',
       companyId: 'COMP-INFY',
-      payload: payload(),
+      payload: { open: 1, high: 2, low: 0.5, close: 1.5, volume: 10 },
       provenance: {
         sourceId: 'SYNTHETIC',
         provider: 'DHAN',
@@ -332,7 +384,47 @@ describe('D-5 contract versioning', () => {
       } as never,
       timestamp: RECEIVED_AT,
     });
-    assert.strictEqual(env.schemaVersion, '1.0.0');
+    assert.strictEqual(nonD01.schemaVersion, '1.0.0',
+      'the shared envelope default must remain 1.0.0');
+    assert.notStrictEqual(nonD01.schemaVersion, D01_SCHEMA_VERSION,
+      'the D01 contract version must be independently identifiable from the envelope default');
+  });
+
+  it('D5-27b: the D114 PIT D01 envelope also carries 2.0.0 on the wire', () => {
+    const loader = new HistoricalPitIngestionLoader();
+    const result = loader.ingestArchiveContent(
+      'SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN\n'
+        + 'INFY,EQ,1510.00,1530.00,1505.50,1520.35,1520.35,1508.00,2540000,3860000000,25-SEP-2026,120000,INE009A01021\n',
+      { dateIso: '2026-09-25', sourceFilename: 'synthetic_bhavcopy.csv' },
+    );
+    assert.strictEqual(result.success, true, JSON.stringify(result));
+    const record = loader.getQuoteStore().queryAsOf({
+      companyId: 'INFY',
+      domain: 'D01_QUOTES',
+      asOf: '2026-09-25T23:59:59.000Z',
+    });
+    assert.ok(record, 'the D01 quote envelope should be stored');
+    const wire = JSON.parse(JSON.stringify(record)) as { schemaVersion: string };
+    assert.strictEqual(wire.schemaVersion, D01_SCHEMA_VERSION);
+    assert.strictEqual(wire.schemaVersion, '2.0.0');
+  });
+
+  it('D5-27c: a D02 candle envelope still carries the shared 1.0.0 envelope version', () => {
+    // The D01 bump must not leak into other domains that share the envelope.
+    const loader = new HistoricalPitIngestionLoader();
+    loader.ingestArchiveContent(
+      'SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,TIMESTAMP,TOTALTRADES,ISIN\n'
+        + 'INFY,EQ,1510.00,1530.00,1505.50,1520.35,1520.35,1508.00,2540000,3860000000,25-SEP-2026,120000,INE009A01021\n',
+      { dateIso: '2026-09-25', sourceFilename: 'synthetic_bhavcopy.csv' },
+    );
+    const candle = loader.getCandleStore().queryAsOf({
+      companyId: 'INFY',
+      domain: 'D02_OHLCV',
+      asOf: '2026-09-25T23:59:59.000Z',
+    });
+    assert.ok(candle, 'the D02 candle envelope should be stored');
+    assert.strictEqual((candle as { schemaVersion: string }).schemaVersion, '1.0.0',
+      'the shared envelope version for non-D01 domains must remain 1.0.0');
   });
 
   it('D5-29: the payload key set is unchanged — no sentinel or flag key was added', () => {
