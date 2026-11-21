@@ -201,8 +201,8 @@ approves and nowhere else:
   `vault://` reference, a path, a URL, a payload, a DTO, a business identifier or its hash, exception or
   child-process text, or credential material — items 1–8 below are **not** excepted, in whole or in part,
   on any surface;
-* the exception is **exhaustive**: an identifier is permitted only on the three §4.9 surfaces, and every
-  other surface remains prohibited without qualification;
+* the exception is **exhaustive**: an identifier is permitted only on the **four** §4.9 surfaces, and
+  every other surface remains prohibited without qualification;
 * where this section and §4.10 might appear to conflict, §4.2.1 states the precedence.
 
 1. Secret values, tokens, or **any prefix or substring** of them. This prohibition is about
@@ -233,13 +233,22 @@ This subsection is the **normative exception** to §4.2 and the **precedence rul
 §4.9 surfaces; read alone, each forbids the other's outcome. This subsection resolves that: §4.2 rule is
 the general prohibition, the exception below is the closed carve-out, and no other permission exists.
 
-**Permitted — exclusively, and exhaustively, on these three surfaces and no others:**
+**Permitted — exclusively, and exhaustively, on these four surfaces and no others:**
 
 1. **Allowlisted W-24 structured diagnostic events** (§4.6 field set) **and their authenticated operator
    readers** (§4.8 rings, §4.9 reader safeguards).
 2. **D01 `traceId` and `correlationId`**, per §4.6 rule 2.
 3. **The IRR response action reference** — the current action ID by which an IRR response refers back to
-   the action that produced it.
+   the action that produced it. **Server-side only: it is never delivered to the browser.** The reference
+   may exist in IRR server-side response-handling context and nowhere else.
+4. **Validated `X-IIPS-Trace-Version` and `X-IIPS-Action-Id` headers on the authenticated IRR↔IPD loopback
+   transport only.** These are the concrete wire names of the approved internal transport surface; the
+   original owner decision approved the surface, and the names were recorded by owner clarification. On
+   this surface only: incoming identifiers are validated before use and unsafe or invalid input is
+   rejected without being echoed; missing, invalid or incompatible trace acknowledgements **fail closed**,
+   and coverage is never silently claimed; a trace-contract mismatch is **not** retried automatically,
+   because the daemon may already have acted. These headers are **never logged**, **never serialized into
+   diagnostic events**, and **never sent to Dhan** — in no header, parameter or body field.
 
 **Prohibited everywhere else — this list is illustrative of the prohibition, not a limit on it:**
 
@@ -249,18 +258,28 @@ the general prohibition, the exception below is the closed carve-out, and no oth
   public Status and daemon startup lines remain governed by the exhaustive §4.1 MAY list and gain
   **nothing** from this exception;
 * **unapproved HTTP bodies and responses** — any body or response field not listed above;
-* **browser-visible diagnostic surfaces** — no identifier reaches the browser, and no reader bearer
-  token does either;
+* **browser-visible surfaces of every kind** — no identifier, response reference, diagnostic event, ring
+  content, operator-reader response or bearer credential reaches the browser. The server-side response
+  reference in item 3 is **not** an exception to this: it is never delivered to the browser. Handler
+  naming, test names or comments that call something a "response reference" create no browser
+  permission;
 * **Dhan-facing requests and headers** — no identifier is sent to Dhan as a header, parameter or body
   field;
 * **all other disclosure prohibited by §4.2** — items 1–8 apply in full and are **not** excepted.
 
-**Precedence, stated explicitly.** The three permitted surfaces are the **only** surfaces to which §4.2
+**Precedence, stated explicitly.** The four permitted surfaces are the **only** surfaces to which §4.2
 does not apply for these identifiers. On every other surface §4.2 continues to apply with full force, and
-§4.10 may not be read to widen this exception. Outside the three surfaces, an identifier is treated
+§4.10 may not be read to widen this exception. Outside the four surfaces, an identifier is treated
 exactly as §4.2 treats any other prohibited value. The exception is limited to the identifiers
-themselves: it does not make a surface safe for any other value, and it does not authorize intentional
-disclosure of a secret (§4.10 rule 4).
+themselves: it does not make a surface safe for any other value, it does not authorize intentional
+disclosure of a secret (§4.10 rule 4), and it does not authorize disclosure of the transport header
+*names* beyond surface 4 — the names identify the permitted surface and confer no permission of their own.
+
+**Transport headers carry the identifiers only.** A header on surface 4 carries its version and the
+opaque action ID, and nothing else. Presence of an approved header on the loopback hop is **not** a grant
+to copy that header — or any other header — into a log, an event, an error, an HTTP body or a §4.3
+surface. The owner clarification is explicit that transient transport authentication and the validated
+trace headers *do not* authorize exposing or recording headers in diagnostic events.
 
 ### 4.3 Per-surface rendering (so W-03/W-09/W-10 need no judgement calls)
 
@@ -288,6 +307,15 @@ recorded in `ramkivs/iips-review-recovered`, file
 **`001848e9c81a4049cc1f6ea2664250ba6351c610`** (merge of IRR PR #611). That commit is the authority;
 this section records it. The IRR record is not modified, and this record does not speak for IRR.
 
+**Subsequent owner clarification — surface 4 and the server-side boundary.** Two later clarifications in
+the same document are recorded at immutable commit
+**`06a2b0db30e662a9fc77423ed1b6f3569fcd224d`** (merge of IRR PR #612, +20/−0): the IRR response action
+reference is **server-side only and must never be delivered to the browser**; and authenticated IRR–IPD
+loopback transport is an approved surface whose concrete wire names are `X-IIPS-Trace-Version` and
+`X-IIPS-Action-Id`, recorded by that clarification because the original decision approved the surface
+without naming it. §4.2.1 and §4.9 record both. The two clarifications resolve *surface definition* only:
+they do not amend acceptance, do not establish M4, and do not authorize implementation.
+
 **What this amendment does and does not do.**
 
 * It **adds** decisions: structured diagnostic events (§4.6), their closed failure enumeration (§4.7),
@@ -296,7 +324,7 @@ this section records it. The IRR record is not modified, and this record does no
   validated W-24 correlation identifiers (**§4.2.1**), which also states the precedence between §4.2 and
   §4.10.
 * It **does not** replace, relax or re-open §4.1–§4.4, save for the single narrow exception in §4.2.1,
-  which permits identifiers — and nothing else — on three surfaces. The §4.1 MAY list remains **exhaustive
+  which permits identifiers — and nothing else — on four surfaces. The §4.1 MAY list remains **exhaustive
   for the surfaces §4.3 governs**. §4.6–§4.10 define a *separate* structured-event surface with its own
   exhaustive allowlist; an event field is not thereby added to the §4.1 list, to `/v1/diagnostics`
   (W-09-as-scoped-in-§4.3), to `ServiceHealth`, or to the public Status.
@@ -392,14 +420,17 @@ not an implementation choice.
 
 ### 4.9 Permitted correlation surfaces and operator-reader safeguards
 
-**Permitted surfaces.** Correlation metadata may appear only on these surfaces:
+**Permitted surfaces.** Correlation metadata may appear only on these **four** surfaces, which are the
+exhaustive list — the same four enumerated in §4.2.1:
 
-1. **Internal IRR↔IPD trace headers**, on the internal hop between the two repos — not on any edge to a
-   third party.
+1. **Allowlisted W-24 structured diagnostic events** (§4.6 field set) **and their separately
+   authenticated, loopback-only operator readers** for the rings in §4.8.
 2. **D01 `traceId` / `correlationId`**, per §4.6 rule 2.
 3. **An IRR response action reference** — the identifier by which an IRR response refers back to the
-   action that produced it.
-4. **Separately authenticated, loopback-only operator readers** for the rings in §4.8.
+   action that produced it. **Server-side only; never delivered to the browser.**
+4. **Internal IRR↔IPD trace headers** on the authenticated loopback hop between the two repos — not on any
+   edge to a third party. The concrete wire names are `X-IIPS-Trace-Version` and `X-IIPS-Action-Id`. These
+   are never logged and never serialized into diagnostic events.
 
 **Binding prohibitions carried forward from this amendment's authority** (unchanged, not narrowed):
 
@@ -408,7 +439,12 @@ not an implementation choice.
 * **No trace metadata and no trace headers may be sent to Dhan.** Correlation is internal to IRR↔IPD.
 * **W-09 diagnostics as scoped in §4.3 and the public Status are unchanged.** They do not gain the rings,
   the events, or the identifiers defined here.
-* **The browser has no access** to a ring and no access to a reader bearer token.
+* **The browser has no access** to diagnostic events, to a ring, to an operator reader, to a reader bearer
+  token, or to the server-side response reference of surface 3. No proxy the product ships may relay any
+  of these either.
+* **The transport headers are not a serialization channel.** `X-IIPS-Trace-Version` and
+  `X-IIPS-Action-Id` exist on the loopback hop only. They are never logged as headers, never written into
+  an event, and never forwarded to any other surface or party.
 
 **Reader safeguards (binding on any implementation).** Each operator reader must:
 
@@ -455,13 +491,15 @@ widen §4.2.1.
    surfaces **§4.2.1** permits, and are prohibited on every other surface by §4.2.
 
    **Where a validated transport-supplied identifier may appear.** A validated identifier received over
-   the authenticated IRR↔IPD loopback transport may be recorded or returned **only** on the three surfaces
-   **§4.2.1** enumerates, which are the exhaustive allowlist:
+   the authenticated IRR↔IPD loopback transport may be recorded or returned **only** on the **four**
+   surfaces **§4.2.1** enumerates, which are the exhaustive allowlist:
 
    * **allowlisted structured diagnostic events** (§4.6 field set) and their **authenticated operator
      readers** (§4.9 reader safeguards);
    * **D01 `traceId` / `correlationId`**, per §4.6 rule 2;
-   * the **IRR response action reference** (the current action ID).
+   * the **IRR response action reference** (the current action ID), **server-side only**;
+   * the **`X-IIPS-Trace-Version` / `X-IIPS-Action-Id` headers** on the authenticated loopback transport
+     itself — the hop on which the identifier arrives, not a place to store it.
 
    It must **never** be echoed into arbitrary logs, error responses, unapproved HTTP bodies, any existing
    §4.3 surface, any browser-visible surface, or any Dhan-facing request or header. The §4.3 surfaces
