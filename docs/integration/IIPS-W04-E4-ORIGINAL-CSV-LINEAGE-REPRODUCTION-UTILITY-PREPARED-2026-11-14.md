@@ -31,7 +31,7 @@ Sections 1 to 11 are kept as written when the utility was prepared, before any r
 
 Reported by the Principal and not verified here:
 
-- The original statement file was found on the host at `C:\Users\USER\Desktop\dhan_holdings_withisinv1.1 - Copy.csv`. Its import-content SHA-256 is `a3c3ee7635e24e56d1d2d6b9411a6de561f554addd382ab163344706e7b63107`, the content digest of the one committed import in the capture.
+- The original statement file was found on the host at `[REDACTED_LOCAL_PATH]\dhan_holdings_withisinv1.1 - Copy.csv`. Its import-content SHA-256 is `a3c3ee7635e24e56d1d2d6b9411a6de561f554addd382ab163344706e7b63107`, the content digest of the one committed import in the capture.
 - The capture is under `%LOCALAPPDATA%\IIPS\w11-dep1-capture\`. Its SHA-256 is `c5dd51f51025e3e17e3b798164c6b8078fa5487392d8f0dfd96be9bb7c79eda3`, exact-capture schema v1.
 - Target: `DHAN_PORTFOLIO`, revision 1, 64 holdings, 63 without a stored security identity. The earlier probe reproduced 1 of 64 lineage digests from the capture alone.
 
@@ -255,7 +255,7 @@ Invoke-WebRequest -UseBasicParsing -OutFile $tool -Uri 'https://raw.githubuserco
 (Get-FileHash -Algorithm SHA256 -LiteralPath $tool).Hash.ToLower()
 
 # 4. Run it. Read-only.
-$csv     = 'C:\Users\USER\Desktop\dhan_holdings_withisinv1.1 - Copy.csv'
+$csv     = '[REDACTED_LOCAL_PATH]\dhan_holdings_withisinv1.1 - Copy.csv'
 $capture = Join-Path $env:LOCALAPPDATA 'IIPS\w11-dep1-capture'
 $out  = & node $tool --csv $csv --capture-dir $capture
 $code = $LASTEXITCODE
@@ -431,7 +431,7 @@ Labels used from here on: **H** reported by the Principal from the host run; **S
 | CSV size | within 1 MiB | within the limit | `csv.size` PASS |
 | Capture SHA-256 | `c5dd51f51025e3e17e3b798164c6b8078fa5487392d8f0dfd96be9bb7c79eda3` | `c5dd51f51025e3e17e3b798164c6b8078fa5487392d8f0dfd96be9bb7c79eda3` | `capture.sha256` PASS |
 
-The CSV path given to the utility was `C:\Users\USER\Desktop\dhan_holdings_withisinv1.1 - Copy.csv`.
+The CSV path given to the utility was `[REDACTED_LOCAL_PATH]\dhan_holdings_withisinv1.1 - Copy.csv`.
 
 ### 12.3 The capture (H)
 

@@ -1,4 +1,9 @@
 import type { PortfolioRestoreReceipt } from '../contracts/portfolio_restore_ipc.js';
+import type {
+  BrokerImportQualificationSources,
+  BrokerImportSecurityIdentityReason,
+  BrokerImportSecurityIdentityStatus,
+} from '../contracts/broker_import_ipc.js';
 import { appendAuditEvent } from './audit.js';
 /**
  * Gate 3 — owner-scoped durable portfolio store.
@@ -129,6 +134,62 @@ export interface BrokerImportProvenance {
   readonly lineageDigest: string;
   readonly importedAt: string;
   readonly semantics: ContributionSemantics;
+}
+
+export const BROKER_IMPORT_QUALIFICATION_AUDIT_EVENT = 'BROKER_IMPORT_SECURITY_IDENTITY_QUALIFICATION';
+
+/**
+ * The qualification outcome of one imported holding, as computed at import.
+ *
+ * `companyId` is the COMPANY-level identity from the import gate.
+ * `securityIdentityStatus` is the SECURITY-level state and is independent of
+ * it. The `observed*` members are the identifiers exactly as the import row
+ * carried them (null when the row carried none); they are evidence about the
+ * row and are never derived from the company, the symbol or a master.
+ */
+export interface BrokerImportQualificationHoldingRecord {
+  readonly symbol: string;
+  readonly lineageDigest: string;
+  readonly companyId: string;
+  readonly securityIdentityStatus: BrokerImportSecurityIdentityStatus;
+  /** True when `qualifyHoldingSecurityIdentity` was called for this holding. */
+  readonly qualificationAttempted: boolean;
+  /** The typed reason; null for `QUALIFIED` and `BROKER_SUPPLIED_UNQUALIFIED`. */
+  readonly reason: BrokerImportSecurityIdentityReason | null;
+  /** The qualification service's own detail text, verbatim; null when none was produced. */
+  readonly details: string | null;
+  /** The stored `securityIdentity.securityId`, or null when none was stored. */
+  readonly securityId: string | null;
+  readonly observedIsin: string | null;
+  readonly observedExchange: string | null;
+  readonly observedSeries: string | null;
+}
+
+export interface BrokerImportQualificationCounts {
+  readonly holdings: number;
+  readonly companyIdentityResolved: number;
+  readonly securityIdentityQualified: number;
+  readonly securityIdentityBrokerSuppliedUnqualified: number;
+  readonly securityIdentityUnresolved: number;
+  readonly unresolvedByReason: Readonly<Record<string, number>>;
+}
+
+/** What is retained for one committed broker import. */
+export interface BrokerImportQualificationRecord {
+  readonly contentDigest: string;
+  readonly provenanceDigest: string;
+  readonly importedAt: string;
+  readonly sources: BrokerImportQualificationSources;
+  readonly counts: BrokerImportQualificationCounts;
+  readonly holdings: readonly BrokerImportQualificationHoldingRecord[];
+}
+
+/** A retained record as read back from the audit chain. */
+export interface StoredBrokerImportQualificationRecord extends BrokerImportQualificationRecord {
+  readonly revision: number;
+  readonly auditEventId: number;
+  readonly entryChecksum: string;
+  readonly recordedAt: string;
 }
 
 export interface PortfolioSaveRequest {
@@ -709,6 +770,104 @@ export class DurablePortfolioStore {
       }
       return work(this);
     });
+  }
+
+  /**
+   * Retains the security-identity qualification outcome of one committed
+   * broker import as one line of the local hash-chained audit ledger.
+   *
+   * It runs only inside the import's own transaction, so the record and the
+   * revision commit or roll back together: a revision cannot be committed with
+   * its qualification outcome lost, and no record can exist for a revision
+   * that was not committed. It writes no holding, revision or contribution row
+   * and changes no stored identity.
+   */
+  recordBrokerImportQualification(
+    owner: OwnerRef,
+    portfolioId: string,
+    revision: number,
+    record: BrokerImportQualificationRecord,
+  ): void {
+    if (this.transactionDepth < 1) {
+      throw new InvalidPortfolioRequestError('a broker-import qualification record is written only inside the import transaction');
+    }
+    const committed = this.db
+      .prepare(
+        `SELECT r.holdings_count AS holdings_count, p.current_revision AS current_revision
+           FROM portfolio_revisions r
+           JOIN portfolios p
+             ON p.canonical_owner_id = r.canonical_owner_id AND p.portfolio_id = r.portfolio_id
+          WHERE r.canonical_owner_id = ? AND p.tenant_id = ? AND r.portfolio_id = ? AND r.revision = ?`,
+      )
+      .get(owner.canonicalOwnerId, owner.tenantId, portfolioId, revision) as unknown as
+      | { holdings_count: number | bigint; current_revision: number | bigint }
+      | undefined;
+    if (!committed || Number(committed.current_revision) !== revision) {
+      throw new InvalidPortfolioRequestError('the qualification record does not belong to the revision this transaction wrote');
+    }
+    if (Number(committed.holdings_count) !== record.holdings.length || record.counts.holdings !== record.holdings.length) {
+      throw new InvalidPortfolioRequestError('the qualification record does not cover every holding of the revision');
+    }
+    appendAuditEvent(this.db, {
+      eventType: BROKER_IMPORT_QUALIFICATION_AUDIT_EVENT,
+      subjectType: 'portfolio',
+      subjectId: portfolioId,
+      detail: {
+        canonicalOwnerId: owner.canonicalOwnerId,
+        tenantId: owner.tenantId,
+        revision,
+        contentDigest: record.contentDigest,
+        provenanceDigest: record.provenanceDigest,
+        importedAt: record.importedAt,
+        sources: record.sources,
+        counts: record.counts,
+        holdings: record.holdings,
+      },
+    });
+    this.afterMutation('broker-import-qualification-audit');
+  }
+
+  /**
+   * Read-only: the retained qualification records of one portfolio of this
+   * owner, in audit-chain order. Imports committed before this record existed
+   * have none; that absence is reported as an empty list and never filled in.
+   */
+  brokerImportQualificationRecords(owner: OwnerRef, portfolioId: string): StoredBrokerImportQualificationRecord[] {
+    const rows = this.db
+      .prepare(
+        `SELECT id, detail_json, entry_checksum, created_at
+           FROM audit_events
+          WHERE event_type = ? AND subject_type = 'portfolio' AND subject_id = ?
+          ORDER BY id ASC`,
+      )
+      .all(BROKER_IMPORT_QUALIFICATION_AUDIT_EVENT, portfolioId) as unknown as Array<{
+      id: number | bigint;
+      detail_json: string;
+      entry_checksum: string;
+      created_at: string;
+    }>;
+    const records: StoredBrokerImportQualificationRecord[] = [];
+    for (const row of rows) {
+      const detail = JSON.parse(row.detail_json) as BrokerImportQualificationRecord & {
+        canonicalOwnerId?: unknown;
+        tenantId?: unknown;
+        revision?: unknown;
+      };
+      if (detail.canonicalOwnerId !== owner.canonicalOwnerId || detail.tenantId !== owner.tenantId) continue;
+      records.push({
+        revision: Number(detail.revision),
+        auditEventId: Number(row.id),
+        entryChecksum: row.entry_checksum,
+        recordedAt: row.created_at,
+        contentDigest: detail.contentDigest,
+        provenanceDigest: detail.provenanceDigest,
+        importedAt: detail.importedAt,
+        sources: detail.sources,
+        counts: detail.counts,
+        holdings: detail.holdings,
+      });
+    }
+    return records;
   }
 
   /**
