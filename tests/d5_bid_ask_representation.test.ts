@@ -596,6 +596,109 @@ describe('D-5 canonical entry points', () => {
 });
 
 // ---------------------------------------------------------------------------
+// 5b. Ingress versioning: D01 v2 envelopes must never fall back to 1.0.0
+// ---------------------------------------------------------------------------
+
+describe('D-5 ingress emits D01 2.0.0 explicitly', () => {
+  /** Run one payload through the generic canonical ingress pipeline. */
+  function ingest(rawPayload: unknown, domain: 'D01_QUOTES' | 'D02_OHLCV' = 'D01_QUOTES') {
+    const pipeline = new IngestionPipeline(new DeadLetterQueue());
+    return pipeline.process<MarketQuotePayload>({
+      domain,
+      mode: 'SNAPSHOT',
+      companyId: 'COMP-INFY',
+      rawPayload,
+      asOf: RECEIVED_AT,
+      receivedAt: RECEIVED_AT,
+    });
+  }
+
+  it('D5-37: a populated D01 quote through generic ingress carries 2.0.0', () => {
+    const result = ingest(payload());
+    assert.strictEqual(result.success, true, JSON.stringify(result));
+    if (!result.success) throw new Error('unreachable');
+    assert.strictEqual(result.envelope.schemaVersion, '2.0.0');
+    assert.strictEqual(result.envelope.schemaVersion, D01_SCHEMA_VERSION);
+    assert.strictEqual(result.envelope.payload.bid, 1520.25);
+    assert.strictEqual(result.envelope.payload.ask, 1520.5);
+  });
+
+  it('D5-38: both bid and ask null through generic ingress carries 2.0.0', () => {
+    const result = ingest(payload({ bid: null, ask: null }));
+    assert.strictEqual(result.success, true, JSON.stringify(result));
+    if (!result.success) throw new Error('unreachable');
+    assert.strictEqual(result.envelope.schemaVersion, '2.0.0');
+    assert.strictEqual(result.envelope.payload.bid, null);
+    assert.strictEqual(result.envelope.payload.ask, null);
+  });
+
+  it('D5-39: bid null with a populated ask through generic ingress carries 2.0.0', () => {
+    const result = ingest(payload({ bid: null, ask: 1520.5 }));
+    assert.strictEqual(result.success, true, JSON.stringify(result));
+    if (!result.success) throw new Error('unreachable');
+    assert.strictEqual(result.envelope.schemaVersion, '2.0.0');
+    assert.strictEqual(result.envelope.payload.bid, null);
+    assert.strictEqual(result.envelope.payload.ask, 1520.5);
+  });
+
+  it('D5-40: ask null with a populated bid through generic ingress carries 2.0.0', () => {
+    const result = ingest(payload({ bid: 1520.25, ask: null }));
+    assert.strictEqual(result.success, true, JSON.stringify(result));
+    if (!result.success) throw new Error('unreachable');
+    assert.strictEqual(result.envelope.schemaVersion, '2.0.0');
+    assert.strictEqual(result.envelope.payload.bid, 1520.25);
+    assert.strictEqual(result.envelope.payload.ask, null);
+  });
+
+  it('D5-41: the emitted D01 version is explicit, not the shared default', () => {
+    // Regression guard for the defect: ingress used to omit schemaVersion, so the
+    // shared 1.0.0 default was applied to D01 payloads. The two must differ.
+    const result = ingest(payload());
+    assert.strictEqual(result.success, true);
+    if (!result.success) throw new Error('unreachable');
+    const sharedDefault = createCanonicalEnvelope({
+      envelopeId: 'env-shared-default',
+      domain: 'D02_OHLCV',
+      mode: 'SNAPSHOT',
+      companyId: 'COMP-INFY',
+      payload: {},
+      provenance: { sourceClassification: 'CANONICAL_MARKET_DATA' } as never,
+      timestamp: RECEIVED_AT,
+    }).schemaVersion;
+    assert.strictEqual(sharedDefault, '1.0.0', 'the shared envelope default must remain 1.0.0');
+    assert.notStrictEqual(result.envelope.schemaVersion, sharedDefault,
+      'a D01 envelope must not carry the shared default version');
+  });
+
+  it('D5-42: a non-D01 domain through the same ingress keeps 1.0.0', () => {
+    const candle = {
+      companyId: 'COMP-INFY',
+      symbol: 'INFY',
+      interval: '1d',
+      candleStart: '2026-09-25T00:00:00.000Z',
+      candleEnd: '2026-09-25T23:59:59.000Z',
+      open: 1510,
+      high: 1530,
+      low: 1505.5,
+      close: 1520.35,
+      volume: 2540000,
+      isAdjusted: false,
+    };
+    const result = ingest(candle, 'D02_OHLCV');
+    assert.strictEqual(result.success, true, JSON.stringify(result));
+    if (!result.success) throw new Error('unreachable');
+    assert.strictEqual(result.envelope.schemaVersion, '1.0.0',
+      'the D01 bump must not leak into other domains');
+  });
+
+  it('D5-43: malformed values are still rejected by ingress, never versioned', () => {
+    assert.strictEqual(ingest(payload({ bid: 0 })).success, false);
+    assert.strictEqual(ingest(payload({ ask: NaN })).success, false);
+    assert.strictEqual(ingest(payload({ bid: -5 })).success, false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 6. Regression protection: 18 November 2026 numeric security-ID correction
 // ---------------------------------------------------------------------------
 
