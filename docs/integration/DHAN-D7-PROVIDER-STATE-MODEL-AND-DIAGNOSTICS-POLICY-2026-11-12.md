@@ -281,9 +281,22 @@ not an implementation choice.
    independently generated lowercase UUIDv4 values. Each is opaque: it identifies a unit of work and
    nothing else. It must not be derived from, hashed from, or computed over a credential, a payload, a
    DTO, a business identifier, a URL, a path or a header value (§4.2).
-2. **D01 correlation.** In the D01 quote path, `traceId` identifies the **current** action and
-   `correlationId` identifies the **original producer** of the data. They are distinct roles and must
-   not be collapsed into one value.
+2. **D01 correlation — distinct roles, not necessarily distinct values.** In the D01 quote path,
+   `traceId` identifies the **current** action and `correlationId` identifies the **original producer**
+   of the data. The two fields carry distinct **semantic roles**, and neither may be silently
+   re-interpreted as the other. Their **UUID values, however, may legitimately be identical**: in the
+   cases below a single action is both the current action and the original producer, so requiring the
+   values to differ would be wrong. Equal values are **not** a defect and **not** an indication that the
+   roles were collapsed; nothing requires the two fields to differ.
+   * **New, non-coalesced observation** — there is no earlier producer, so both fields may identify the
+     same action.
+   * **Cache hit** — `traceId` carries the **current requester's** action; `correlationId` carries the
+     **original producer's** action, which first produced the cached data.
+   * **Coalesced requests** — each requester retains **its own** `traceId`, while the **shared producer**
+     action remains in `correlationId` for all of them.
+
+   Rule 3 still binds in every case: cached provenance is never mutated to satisfy this rule, and a
+   producer is never invented.
 3. **No retroactive provenance.** Implementing correlation **does not** permit mutating provenance that
    is already cached, and **does not** permit inventing provenance for D02. Where D02 has no producer
    correlation, it reports none (§4.10's rules on absence apply by extension); a value is never
@@ -380,12 +393,28 @@ what that prohibition does and does not claim. It **adds no permission** and **r
    *intentional* disclosure; they must not be rewritten to assert universal substring absence, which
    rule 2 disclaims, and they must not be deleted.
 6. **Trusted generation, untrusted input.** Identifiers minted inside the process must come from a
-   trusted generator (the platform UUID facility). Identifiers arriving from transport are **untrusted**
-   and must be validated before use — but **UUID syntax validation alone does not prove independent
-   generation**: a syntactically valid UUID could have been constructed *from* a secret by another party.
-   Input identifiers are therefore treated as opaque correlation handles only: they are never used to
-   build a secret, never compared against secret material, and never echoed into a surface that §4.2
-   governs.
+   trusted generator (the platform UUID facility). Identifiers arriving from authenticated transport are
+   **untrusted** and must be validated before use — but **UUID syntax validation alone does not prove
+   independent generation**: a syntactically valid UUID could have been constructed *from* a secret by
+   another party. Input identifiers are therefore treated as opaque correlation handles only: they are
+   never used to build a secret, never compared against secret material, and never echoed into a surface
+   that §4.2 governs.
+
+   **Where a validated transport-supplied identifier may appear.** A validated identifier received over
+   the authenticated IRR↔IPD loopback transport may be recorded or returned **only** on the surfaces
+   §4.9 approves:
+
+   * **allowlisted structured diagnostic events** (§4.6 field set) and their **authenticated operator
+     readers** (§4.9 reader safeguards);
+   * **D01 `traceId` / `correlationId`**, per §4.6 rule 2;
+   * the **IRR response action reference** (the current action ID).
+
+   It must **never** be echoed into arbitrary logs, error responses, HTTP bodies, or any existing §4.3
+   surface. In particular: the §4.3 surfaces (`/v1/diagnostics`, `ServiceHealth`, the public Status,
+   startup lines), which are governed by the exhaustive §4.1 MAY list, gain nothing from this rule and
+   must not carry transport-supplied identifiers; the approved trace headers are **not** logged as
+   headers and are **not** serialized into events, which carry only the allowlisted identifier fields;
+   and no request to Dhan carries an identifier header or parameter.
 
 ## 5. Security and fail-closed requirements (binding on every implementing item)
 
