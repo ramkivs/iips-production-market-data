@@ -50,7 +50,7 @@ param(
     [string] $LogRoot = '',
 
     [Parameter(Mandatory = $false)]
-    [int[]] $Ports = @(8787, 5176, 5174),
+    [int[]] $Ports = @(8787, 5176, 5174, 8791),
 
     [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
@@ -108,7 +108,7 @@ try {
 
     $irrPath = (Join-Path $InstallRoot 'iips-review-recovered').ToLowerInvariant()
     $ipdPath = (Join-Path $InstallRoot 'iips-production-market-data').ToLowerInvariant()
-    $entrypoints = @('executive-transport.ts', 'dist\src\ipc\entrypoint.js', 'vite')
+    $entrypoints = @('executive-transport.ts', 'dist\src\ipc\entrypoint.js', 'dhan_local_daemon.js', 'vite')
 
     $manifestPids = New-Object System.Collections.Generic.List[int]
     if (Test-Path -LiteralPath $LogRoot) {

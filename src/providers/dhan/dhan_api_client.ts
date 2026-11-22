@@ -29,6 +29,17 @@ import {
   DhanMarketQuoteResponseDto,
   parseDhanMarketQuoteResponse,
 } from './dhan_dto.js';
+import {
+  DHAN_DEPTH_CAPTURE_LABEL_ENV,
+  captureDhanQuoteDepth,
+  claimDepthCaptureSlot,
+  disarmDepthCapture,
+  isDepthCaptureArmed,
+  isSelectedDepthCaptureRequest,
+  readQuoteRequestInstruments,
+  resolveDepthCapturePath,
+  writeDepthCapture,
+} from './dhan_depth_capture.js';
 import { DhanFailureCode, DhanResult, dhanFailure, dhanOk } from './dhan_failures.js';
 import {
   DhanProviderObservedState,
@@ -485,11 +496,78 @@ export class DhanApiClient {
       });
     }
 
+    // TEMPORARY DIAGNOSTIC (D-18 evidence capture). Off unless explicitly
+    // configured. Purely observational: the parsed body is passed by reference and
+    // never mutated, the return value is discarded, and every failure inside the
+    // capture is swallowed so it cannot change this call's outcome. Normalisation
+    // and D-5 validation are untouched.
+    this.captureRawDepthIfEnabled(pathSuffix, body, parsedJson, response.status);
+
     if (!options?.deferSuccessRecording) {
       this.stateRecorder.recordSuccess({ at, latencyMs });
     }
 
     return dhanOk({ json: parsedJson, metrics: { latencyMs, httpStatus: response.status } });
+  }
+
+  /**
+   * TEMPORARY DIAGNOSTIC — writes the original `depth` block of one quote
+   * response when `IIPS_DHAN_DEPTH_CAPTURE_PATH` is set, for one selected
+   * instrument only. Never throws and never affects the caller.
+   */
+  private captureRawDepthIfEnabled(
+    pathSuffix: string,
+    requestBody: string,
+    parsedJson: unknown,
+    httpStatus: number
+  ): void {
+    if (pathSuffix !== DHAN_MARKET_QUOTE_PATH) return;
+    try {
+      const runtimeEnv = typeof process !== 'undefined' && process.env ? process.env : {};
+      const targetPath = resolveDepthCapturePath(runtimeEnv);
+      if (!targetPath) return;
+
+      // Arming gate: capture only when the sibling `.arm` marker exists. The
+      // marker is how one-shot is armed/re-armed without an env change (which a
+      // running daemon cannot observe) and without a restart.
+      if (!isDepthCaptureArmed(targetPath)) return;
+
+      // INSTRUMENT gate: this capture belongs to one selected request — exactly one
+      // instrument, NSE_EQ, Dhan security ID 2885. Any other quote (another company, a
+      // same-numbered security on another segment, or a multi-instrument batch) returns
+      // here without consuming the slot or touching the arm marker, so it cannot spend
+      // the one-shot or leave an empty document behind. A body that cannot be read is
+      // also a non-match: the slot survives for the request the operator intended.
+      const instruments = readQuoteRequestInstruments(DhanApiClient.parseQuoteRequestBodyForCapture(requestBody));
+      if (!isSelectedDepthCaptureRequest(instruments)) return;
+
+      // One-shot: claim the single slot before writing. A second matching quote
+      // in the same process can never overwrite the captured evidence.
+      if (!claimDepthCaptureSlot(targetPath)) return;
+
+      const document = captureDhanQuoteDepth(parsedJson, {
+        httpStatus,
+        label: runtimeEnv[DHAN_DEPTH_CAPTURE_LABEL_ENV] ?? null,
+        capturedAtUtc: new Date(this.now()).toISOString(),
+        requestedSecurityIds: instruments.map((instrument) => instrument.securityId),
+      });
+
+      if (writeDepthCapture(targetPath, document) === undefined) return;
+
+      // Captured: disarm so the next quote needs an explicit re-arm.
+      disarmDepthCapture(targetPath);
+    } catch {
+      // Diagnostics must never affect quote processing.
+    }
+  }
+
+  /** Parses the outbound request body for the capture gate. Returns `undefined` on any anomaly. */
+  private static parseQuoteRequestBodyForCapture(requestBody: string): unknown {
+    try {
+      return JSON.parse(requestBody);
+    } catch {
+      return undefined;
+    }
   }
 
   /**

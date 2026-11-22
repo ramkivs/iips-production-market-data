@@ -59,6 +59,7 @@ $script:ExpectedFiles = @(
     '04-Validate-BackendEndpoints.ps1',
     '05-Validate-PersistenceRestart.ps1',
     '06-Stop-IipsServers.ps1',
+    '07-Prepare-DepthCapture.ps1',
     'Iips-Common.ps1',
     'Make-SetupBundle.ps1',
     'README.md',

@@ -107,6 +107,13 @@ param(
     [switch] $StartIpdShell,
 
     [Parameter(Mandatory = $false)]
+    [ValidateRange(1, 65535)]
+    [int] $MarketDataPort = 8791,
+
+    [Parameter(Mandatory = $false)]
+    [switch] $StartMarketDataDaemon,
+
+    [Parameter(Mandatory = $false)]
     [switch] $NoPause
 
 )
@@ -152,7 +159,7 @@ function Invoke-IipsRollback {
     # Verify release, because a stop that reports success but leaves a port held is a false success.
     Write-Host ''
     Write-Host '  verifying release:' -ForegroundColor Yellow
-    foreach ($port in @($TransportPort, $FrontendPort, $IpdShellPort)) {
+    foreach ($port in @($TransportPort, $FrontendPort, $IpdShellPort, $MarketDataPort)) {
         $released = Wait-IipsPortReleased -Port $port -TimeoutSeconds $CleanupTimeoutSeconds
         $verdict = 'STILL HELD'
         $portColour = 'Red'
@@ -242,6 +249,7 @@ try {
     Assert-IipsPortFree -Port $TransportPort -Label 'the IRR executive transport'
     Assert-IipsPortFree -Port $FrontendPort -Label 'the IRR Vite dev server'
     if ($StartIpdShell) { Assert-IipsPortFree -Port $IpdShellPort -Label 'the IPD shell' }
+    if ($StartMarketDataDaemon) { Assert-IipsPortFree -Port $MarketDataPort -Label 'the IPD market-data daemon' }
 
     $transportEnv = @{
         'EXEC_TRANSPORT_PORT'     = "$TransportPort"
@@ -309,6 +317,94 @@ try {
         Write-IipsStep '03-ipd-ipc' 'Skipped - pass -StartIpdIpc to enable User Portfolios and Broker Import'
         Write-IipsInfo 'the Direct P1 database was provisioned previously; -StartIpdIpc uses it read-only and never re-provisions it'
         Write-IipsInfo 'without it /api/user-portfolios fails closed with HTTP 503 - which is correct behaviour'
+    }
+
+    # -----------------------------------------------------------------------------------------
+    if ($StartMarketDataDaemon) {
+        Write-IipsStep '03b-market-data' 'Starting the IPD market-data daemon (owned by this run)'
+
+        # The daemon runs compiled output. Refuse rather than start a stale module: a daemon built
+        # from an earlier commit would answer with the previous implementation and look healthy.
+        $daemonEntry = Join-Path $ipdRoot 'dist\src\providers\dhan\dhan_local_daemon.js'
+        if (-not (Test-Path -LiteralPath $daemonEntry)) {
+            throw "compiled market-data daemon entrypoint missing at $daemonEntry - run 'npm.cmd run build:tsc' in the IPD checkout (07-Prepare-DepthCapture.ps1 -Build does this)."
+        }
+        Write-IipsOk "market-data daemon entrypoint present: $daemonEntry"
+
+        # Ownership discipline: this script never kills a process it did not start. If the port is
+        # already held, that is an operator problem to resolve with the stop script, not something
+        # to solve by terminating an unknown process here.
+        $existingMarketOwner = Get-IipsPortOwner -Port $MarketDataPort
+        if ($null -ne $existingMarketOwner) {
+            throw "port $MarketDataPort is already held by PID $($existingMarketOwner.OwningProcess), so the market-data daemon cannot be started as a managed child of this run. Stop it with 06-Stop-IipsServers.ps1 first. This script never kills a process it did not start."
+        }
+
+        # The token is the only variable this script injects. Everything else the daemon reads -
+        # including any IIPS_DHAN_* capture switch - is INHERITED from the session that launched
+        # this script, which is exactly why the capture variables must be set in that same session.
+        # They are deliberately not copied into this hashtable: doing so would silently mask a
+        # missing operator variable and make a stale environment look correct.
+        $daemonEnv = @{
+            'NODE_ENV'                          = 'development'
+            'IIPS_MARKET_DATA_DAEMON_HOST'      = $BindAddress
+            'IIPS_MARKET_DATA_DAEMON_PORT'      = "$MarketDataPort"
+            'IIPS_MARKET_DATA_TRANSPORT_TOKEN'  = [string] $env:IIPS_MARKET_DATA_TRANSPORT_TOKEN
+        }
+        if ([string]::IsNullOrEmpty($daemonEnv['IIPS_MARKET_DATA_TRANSPORT_TOKEN'])) {
+            throw "IIPS_MARKET_DATA_TRANSPORT_TOKEN is not set in this session. The market-data daemon fails closed without it, so it cannot be started. Set it in this window and re-run."
+        }
+
+        $marketData = Start-IipsService -Label 'ipd-market-data-daemon' -Executable $toolchain.NodeExe `
+            -Arguments @($daemonEntry) -WorkingDirectory $ipdRoot `
+            -LogDirectory $script:ServiceLogDir -Environment $daemonEnv
+        $script:Started.Add($marketData)
+
+        # The daemon writes one sanitized line to stderr on bind. Wait for it, so readiness is
+        # established from the daemon's own statement rather than inferred from a port alone.
+        $bindDeadline = (Get-Date).AddSeconds(120)
+        $bindLine = $null
+        while ((Get-Date) -lt $bindDeadline) {
+            Start-Sleep -Seconds 2
+            if (-not (Test-Path -LiteralPath $marketData.ErrLog)) { continue }
+            $errText = Get-Content -LiteralPath $marketData.ErrLog -Raw -ErrorAction SilentlyContinue
+            if ($null -eq $errText) { continue }
+            if ($errText -match 'listening on http://') {
+                $bindLine = (@($errText -split "`n") | Where-Object { $_ -match 'listening on http://' } | Select-Object -First 1)
+                break
+            }
+            if ($errText -match 'refused at phase') {
+                throw "the market-data daemon refused to start:`n$errText"
+            }
+        }
+        if ($null -eq $bindLine) {
+            throw "the market-data daemon did not report a bound listener within 120 seconds. Log: $($marketData.ErrLog)"
+        }
+        Write-IipsOk 'market-data daemon reported its listener'
+        Write-IipsInfo ([string] $bindLine).Trim()
+
+        $marketListen = Wait-IipsPortListening -Port $MarketDataPort -Label 'the IPD market-data daemon' -TimeoutSeconds 30 -ExpectedAddress $BindAddress
+        Write-IipsOk "market-data daemon bound loopback-only: $($marketListen.LocalAddress):$MarketDataPort"
+
+        # Health is authenticated: the token is already in this session, so a 200 here proves the
+        # daemon accepted the same credential the operator holds. Nothing vendor-side is implied.
+        $marketHealth = Wait-IipsHttpReady -Url "http://$BindAddress`:$MarketDataPort/v1/health" -Label 'the market-data daemon health check' -TimeoutSeconds 60
+        Write-IipsOk "market-data daemon health -> $($marketHealth.StatusCode)"
+
+        # Assert the bound listener really belongs to the PID this run started, so the manifest entry
+        # is the listener and not merely a process that happens to be alive.
+        $owner = Get-IipsPortOwner -Port $MarketDataPort
+        if ($null -eq $owner) {
+            throw "port $MarketDataPort reports no listener after a successful bind; the daemon cannot be attributed to a PID."
+        }
+        if ([int] $owner.OwningProcess -ne [int] $marketData.Pid) {
+            throw "port $MarketDataPort is owned by PID $($owner.OwningProcess) but this run started PID $($marketData.Pid). Refusing to record a manifest entry that does not own the listener."
+        }
+        Write-IipsOk "listener ownership verified: port $MarketDataPort -> PID $($marketData.Pid)"
+    }
+    if (-not $StartMarketDataDaemon) {
+        Write-IipsStep '03b-market-data' 'Skipped - pass -StartMarketDataDaemon to start the market-data daemon (127.0.0.1:8791) as a managed child'
+        Write-IipsInfo 'without it the daemon is not started, not recorded in the PID manifest, and not stopped by 06-Stop-IipsServers.ps1'
+        Write-IipsInfo 'starting it by hand produces an unmanaged process with no manifest entry - use this switch instead'
     }
 
     # -----------------------------------------------------------------------------------------
@@ -385,6 +481,8 @@ try {
     if ($StartIpdShell) { $manifestShellPort = $IpdShellPort }
     $manifestPipeName = $null
     if ($StartIpdIpc) { $manifestPipeName = $PipeName }
+    $manifestMarketDataPort = $null
+    if ($StartMarketDataDaemon) { $manifestMarketDataPort = $MarketDataPort }
 
     $manifest = [pscustomobject]@{
         runStamp      = $script:RunStamp
@@ -393,6 +491,7 @@ try {
         transportPort = $TransportPort
         frontendPort  = $FrontendPort
         ipdShellPort  = $manifestShellPort
+        marketDataPort = $manifestMarketDataPort
         pipeName      = $manifestPipeName
         processes     = $record
     }
