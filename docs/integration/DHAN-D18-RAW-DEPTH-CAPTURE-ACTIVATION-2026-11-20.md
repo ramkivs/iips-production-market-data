@@ -29,14 +29,17 @@ The hook sits before `dhan_normalizer.ts` in the call order, so what is recorded
 
 | File | Change | Size |
 | :--- | :--- | :--- |
-| `src/providers/dhan/dhan_depth_capture.ts` | **New.** Extractor, environment/path resolution, one-shot latch, arm/disarm marker API, **request-body instrument reader and selector**. | 345 lines |
-| `src/providers/dhan/dhan_api_client.ts` | **Modified.** One import block, one call site in `executeJsonPost` (now passing the request body), one private `captureRawDepthIfEnabled`, one body parser. | +75 / −0 |
-| `tests/dhan_depth_capture.test.ts` | **New.** 31 tests in 5 suites (CAP-01 … CAP-30, incl. CAP-14a), of which CAP-24 … CAP-30 cover instrument scoping. | 658 lines |
-| `windows-setup/07-Prepare-DepthCapture.ps1` | **New.** Operator preparation: build, capture directory outside the checkout, arm/disarm. Starts nothing, requests nothing. | 270 lines |
-| `windows-setup/README.md` | **Modified.** File table and an execution-order section for the diagnostic. | +2 rows / +1 section |
-| `windows-setup/Make-SetupBundle.ps1` | **Modified.** Adds the new script to the bundle's expected-file list (one line). | +1 line |
-| `windows-setup/MANIFEST.txt`, `SHA256SUMS.txt` | **Modified.** Regenerated hashes and the corrected IPD pin. | mechanical |
-| `docs/integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md` | **Modified.** §6.4 records the market-data daemon ownership gap. | +9 lines |
+| `src/providers/dhan/dhan_depth_capture.ts` | **New.** Extractor, env/path resolution, one-shot latch, arm/disarm marker API, request-body instrument reader and selector. | 345 lines |
+| `src/providers/dhan/dhan_api_client.ts` | **Modified.** Import block, one call site in `executeJsonPost` (passing the request body), one private `captureRawDepthIfEnabled`, one body parser. | +75 / −0 |
+| `tests/dhan_depth_capture.test.ts` | **New.** 31 tests / 5 suites (CAP-01 … CAP-30 incl. CAP-14a); CAP-24 … CAP-30 cover instrument scoping. | 658 lines |
+| `windows-setup/03-Start-IipsServers.ps1` | **Modified.** `-MarketDataPort`, `-StartMarketDataDaemon`, port guard, `03b-market-data` step, ownership assertion, manifest field, rollback coverage. | 477 → 576 lines |
+| `windows-setup/06-Stop-IipsServers.ps1` | **Modified.** `8791` in `-Ports`; `dhan_local_daemon.js` in `$entrypoints`. | 2 lines |
+| `windows-setup/07-Prepare-DepthCapture.ps1` | **New.** Build, capture directory, `-Verify` ownership chain, arm/disarm. Starts nothing, requests nothing. | 352 lines |
+| `windows-setup/README.md`, `Make-SetupBundle.ps1` | **Modified.** New script documented and registered as a bundle input. | +22 / +1 lines |
+| `docs/integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md` | **Modified.** §6.4 records the ownership gap and its resolution. | +9 lines |
+
+`windows-setup/MANIFEST.txt` and `SHA256SUMS.txt` are **not** edited: they are generated outputs of
+`Make-SetupBundle.ps1`, regenerated on the Windows host (§12.3, §12.5).
 
 **Verified unchanged** (blob hashes identical to `HEAD`):
 
@@ -176,16 +179,19 @@ would have captured the wrong instrument.
 
 So: `$env:` in a second window is inert for this purpose. The variable must be present in the environment of the shell that launches the daemon.
 
-### 6.2 The exact restart requirement — once, for code; then never for arming
+### 6.2 The exact restart requirement — once, and it is now a managed restart
 
 | Change | Restart needed? |
 | :--- | :--- |
-| Deploying the new code (compiled `dist/`) | **Yes — once.** The running process holds the old module graph in memory. |
-| Setting / changing / clearing `IIPS_DHAN_DEPTH_CAPTURE_PATH` or `…_LABEL` | **Yes.** Launch-time environment (§6.1). |
-| Arming (`New-Item … .arm`) or re-arming | **No.** Read from the filesystem per request. |
-| Capturing, or a second quote after a capture | **No.** The one-shot is enforced in-process and by the marker. |
+| Deploying the new code (rebuilt `dist/`) | **Yes — once**, and now through `06-Stop` then `03 -StartMarketDataDaemon`, which stops and restarts the daemon as a managed child. |
+| Setting / changing / clearing `IIPS_DHAN_DEPTH_CAPTURE_PATH` or `…_LABEL` | **Yes.** Launch-time environment, inherited at process creation. |
+| Arming (`07 -Arm`) or re-arming | **No.** Read from the filesystem per request. |
+| Capturing, or a quote after a capture | **No.** The one-shot is enforced in-process and by the marker. |
 
-Practical consequence: get the environment right **before** the launch, because fixing it later costs another restart. The recommended sequence is therefore one build, one launch with the variables already set, then arm/request/verify as many times as needed with no further restarts.
+Get the environment right before the launch, because fixing it later costs another stop/start cycle.
+Note what the earlier version of this document got wrong: `06` → `03 -StartIpdIpc` does **not**
+restart this daemon, because `-StartIpdIpc` starts the portfolio IPC provider and `06` did not
+recognise the daemon at all. That is corrected in §12.
 
 ### 6.3 Build requirement (the daemon runs `dist/`, not `src/`)
 
@@ -197,115 +203,115 @@ Test-Path .\dist\src\providers\dhan\dhan_depth_capture.js   # must be True
 
 Note that `prebuild:tsc` purges old output before emitting, so a stale or orphaned `dist/` cannot silently serve this module.
 
-## 7. Windows activation procedure — via the managed startup mechanism
+## 7. The Windows procedure
 
-> **Status: BLOCKED on one ownership prerequisite (§13).** The managed mechanism this procedure
-> requires — `03-Start-IipsServers.ps1` owning the market-data daemon and recording its PID in the
-> run manifest — does not exist yet. Delivery of that change is blocked in this environment for a
-> stated reason, not by preference. Read §13 before using anything below.
+One procedure. Every step is through the managed scripts; nothing is launched by hand.
 
-### 7.0 What the managed mechanism does, and why it is mandatory
+Preconditions, all verified by the scripts rather than assumed: `H:\IIPS` holds both checkouts;
+`IIPS_MARKET_DATA_TRANSPORT_TOKEN` is set in the operator's session; the IPD checkout is on the branch
+carrying this diagnostic.
 
-`03-Start-IipsServers.ps1` is start-of-record for this host: it writes one
-`<InstallRoot>\logs\iips-pids-<stamp>.json` manifest, and `06-Stop-IipsServers.ps1` terminates only
-processes whose PID appears in such a manifest **and** whose command line names an IIPS entrypoint
-under the checkout. Anything started outside that mechanism is unmanaged: absent from the manifest,
-not matched by the stop script, and reachable only by an operator killing a process by hand.
-
-Given that, the requirement is unambiguous: **the daemon must be a child of the managed launch.**
-Launching it from its own window with `npm run start:market-data-daemon` would satisfy the capture
-but violate the ownership rule, so this procedure does not do that.
-
-The one hard constraint that shapes everything below: the capture switch is read from
-`process.env` in the daemon process, and a Windows process's environment is fixed at creation.
-Setting `$env:` in one window and launching from another therefore achieves nothing. The variables
-must be set in the **same session** that launches step 3.
-
-### 7.1 Step 1 — code and build (once)
-
-```powershell
-cd H:\IIPS\iips-production-market-data
-git fetch origin
-git checkout arena/b210f700-iips-production-market-data
-git pull
-```
-
-Build with the setup bundle's own preparation script, which uses the shared toolchain resolver and
-verifies the compiled module exists afterwards:
+### Step 1 — build and deploy the daemon code
 
 ```powershell
 cd H:\IIPS-scripts
+
+# Stop first. 06 now recognises dhan_local_daemon.js and checks port 8791, so this really does
+# stop the daemon - the thing the earlier sequence could not do.
+powershell -ExecutionPolicy Bypass -File .\06-Stop-IipsServers.ps1
+
+# Build the daemon's compiled output and prepare the capture directory. -Build runs
+# `npm run build:tsc` through the shared toolchain resolver and refuses to continue if the
+# compiled module is absent. Without this the daemon would run a stale dist\.
 powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build
 ```
 
-It prints the capture path, the arm marker, and the exact launch instruction for this host. Confirm
-the compiled module directly if you want your own evidence:
+Expected: `06` exits 0 with every port released; `07` reports the diagnostic source, the compiled
+module, the capture directory, and the launch instruction. It arms nothing yet.
+
+### Step 2 — set the capture environment in the launching session
+
+**This must be the window that launches step 3.** A Windows process cannot be given a new environment
+after creation, so a variable set anywhere else is invisible to the daemon.
 
 ```powershell
-Test-Path H:\IIPS\iips-production-market-data\dist\src\providers\dhan\dhan_depth_capture.js   # expect True
-```
-
-### 7.2 Step 2 — stop the stack through the managed stop script
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\06-Stop-IipsServers.ps1
-```
-
-Exit 0 means every IIPS port was released and the named pipe disappeared. Do not continue if it
-reports a port still held: that is a real fault, not a warning.
-
-### 7.3 Step 3 — launch the managed stack WITH the capture variables, in one session
-
-```powershell
-# Same PowerShell window as the 03 launch below. Not a second window.
+# Same PowerShell window used for step 3. Do not open a second window and do not re-enter the token
+# from memory - use the value this session already holds.
 $env:IIPS_DHAN_DEPTH_CAPTURE_PATH  = 'H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json'
 $env:IIPS_DHAN_DEPTH_CAPTURE_LABEL = 'D-18 Reliance NSE_EQ 2885, one market-closed quote'
-$env:IIPS_MARKET_DATA_TRANSPORT_TOKEN = '<the token this daemon already uses>'
 
-$env:IIPS_DHAN_DEPTH_CAPTURE_PATH      # echo back: must show the path
-
-powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc
+$env:IIPS_DHAN_DEPTH_CAPTURE_PATH                       # echo back: must print the path
+[System.IO.Path]::IsPathRooted($env:IIPS_DHAN_DEPTH_CAPTURE_PATH)   # must print True
+[bool]$env:IIPS_MARKET_DATA_TRANSPORT_TOKEN            # must print True
 ```
 
-Everything the daemon needs is inherited from this window, and every process in the stack — including
-the market-data daemon, once §13 is delivered — is recorded in that run's PID manifest.
+The capture path is outside the repository; `07` later refuses a path inside the git tree.
 
-### 7.4 Step 4 — prove the daemon is owned before arming
-
-This is the check that distinguishes a managed launch from the unmanaged one this procedure forbids.
+### Step 3 — start the daemon as a managed child of the run
 
 ```powershell
-$pids = 'H:\IIPS\logs\iips-pids-' + (Get-ChildItem H:\IIPS\logs -Filter 'iips-pids-*.json' |
-        Sort-Object LastWriteTime -Descending | Select-Object -First 1).Name.Substring(10)
-$manifest = Get-Content $pids -Raw | ConvertFrom-Json
-$manifest.processes | Format-Table label, pid, errLog -AutoSize
-$manifest.processes | Where-Object { $_.label -eq 'ipd-market-data-daemon' }   # must not be empty
+powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc -StartMarketDataDaemon
 ```
 
-If that last line prints nothing, the daemon is not under management: **stop and report**, do not
-proceed to arm. A capture obtained that way would be evidence produced by an unmanaged process.
+`-StartMarketDataDaemon` is the new switch, and it is the only supported way to start this daemon.
+`03` then:
 
-Confirm the listener is the managed one and is loopback-only:
+1. refuses if port `8791` is already held (it never kills a process it did not start);
+2. refuses if the compiled daemon entrypoint is missing, rather than running a stale module;
+3. refuses if `IIPS_MARKET_DATA_TRANSPORT_TOKEN` is empty in this session;
+4. starts the daemon via `Start-IipsService` with **only** the token and listener variables injected;
+   the `IIPS_DHAN_DEPTH_CAPTURE_*` variables are inherited from this window;
+5. waits for the daemon's own sanitised stderr bind line;
+6. requires an authenticated `200` from `/v1/health` using the same token;
+7. asserts that the PID owning port `8791` **is** the PID it started;
+8. adds `ipd-market-data-daemon` to `$script:Started` and `marketDataPort` to the manifest.
+
+If any of those fail, the run rolls back, verifies every port including `8791` is released, and exits
+non-zero. A failed launch leaves no half-started stack.
+
+### Step 4 — verify ownership before arming
 
 ```powershell
-Get-NetTCPConnection -LocalPort 8791 -ErrorAction SilentlyContinue |
-  Select-Object LocalAddress, LocalPort, OwningProcess, State
+powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Verify
 ```
 
-`LocalAddress` must be `127.0.0.1`. Cross-check the owning PID against the manifest row.
+This reads `<InstallRoot>\logs\iips-pids-<stamp>.json` — the newest manifest, the file `03` just
+wrote — and proves the whole chain:
 
-### 7.5 Step 5 — arm exactly one capture
+| Check | Failure message if it does not hold |
+| :--- | :--- |
+| a manifest exists under the log root | `no PID manifest found under …` |
+| it has an `ipd-market-data-daemon` row | `the daemon was NOT started by 03 … so it is unmanaged` |
+| that PID is alive | `records PID … but that process is no longer running` |
+| that PID owns port `8791` | `port 8791 is owned by PID … but the manifest records PID …` |
+| the capture variables are not on the command line | `environment variables must never travel on a command line` |
+
+**If this step fails, stop. Do not arm.** A capture taken through an unmanaged process is a different
+piece of evidence, and not the one this diagnostic is supposed to produce.
+
+It also prints this warning, which is honest rather than reassuring:
+
+```
+WARN the daemon environment cannot be read back from outside the process.
+WARN If the capture variables were not set in the session that launched 03, the capture will
+WARN silently produce no file. ...
+```
+
+There is no route that echoes the daemon's environment, and the diagnostic is silent on success. The
+only positive evidence that the environment arrived is the capture file appearing after step 6; its
+absence proves nothing (see §8.3).
+
+### Step 5 — arm exactly one capture
 
 ```powershell
-cd H:\IIPS-scripts
 powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm
 ```
 
-That clears any previous capture, removes a stale marker, and creates
-`H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json.arm`. Arming is a filesystem action,
-so it needs no restart and no environment change.
+Clears any previous capture, writes
+`H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json.arm`, and prints the state. Arming is a
+filesystem action: no restart, no environment change.
 
-### 7.6 Step 6 — issue exactly one Reliance quote
+### Step 6 — issue exactly one quote request
 
 ```powershell
 curl.exe -sS -X POST http://127.0.0.1:8791/v1/quotes `
@@ -314,43 +320,39 @@ curl.exe -sS -X POST http://127.0.0.1:8791/v1/quotes `
   -d '{"companyId":"EQ_RELIANCE_IN","securityId":"ISIN:INE002A01018:EQ","exchangeSegment":"NSE_EQ"}'
 ```
 
-### 7.7 Step 7 — verify the capture
+One request. The capture is scoped to exactly this instrument (§5.5), so no other quote can consume
+the one-shot or overwrite it.
+
+### Step 7 — verify the capture
 
 ```powershell
 $Out = 'H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json'
 Test-Path $Out            # expect True
-Test-Path "$Out.arm"      # expect False — the capture consumed the one-shot
+Test-Path "$Out.arm"      # expect False - the one-shot was consumed
 
 $doc = Get-Content $Out -Raw | ConvertFrom-Json
-$doc.captureSchemaVersion       # expect 2
-$doc.requestedSecurityIds       # expect 2885
+$doc.captureSchemaVersion     # expect 2
+$doc.requestedSecurityIds     # expect 2885
 $doc.quotes | Select-Object segment, securityId, depthState
 $doc.quotes[0] | ConvertTo-Json -Depth 8
 ```
 
-`requestedSecurityIds` and `quotes[].securityId` are both `2885`, so the evidence identifies its own
-instrument — no inference from file names. Because the capture is now scoped to that request
-(§5.5), a file can only exist if the selected request produced it.
-
-### 7.8 Step 8 — teardown, still through the managed scripts
+### Step 8 — stop, still through the managed script
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\06-Stop-IipsServers.ps1
 ```
 
-The capture file survives shutdown — it is a file, not process state. Clear it only deliberately:
+The capture file survives; it is a file, not process state. Clear it only deliberately:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Disarm -ClearCapture
 ```
 
-### 7.9 If a second capture is ever needed
+### Re-arming for a second capture
 
-No restart, no environment change: re-arm and repeat step 6.
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm
-```
+No rebuild, no restart, no environment change: `07 -Arm`, then one request. The manifest and the
+daemon PID are untouched.
 
 ## 8. Limitations and failure modes — read before interpreting "no file"
 
@@ -465,96 +467,144 @@ covered by CAP-24 … CAP-30 against the current build.
 
 | Question | Answer |
 | :--- | :--- |
-| **Is the capture Reliance-specific?** | **Yes.** The gate reads the outbound request body and captures only an `NSE_EQ` / Dhan `2885` request — exactly one instrument. Any other quote returns before the slot is claimed and before the marker is touched, so it can neither spend the one-shot nor block the intended capture. Verified by CAP-24 … CAP-30, including the non-Reliance-then-Reliance regression (CAP-28). |
-| **How does the daemon receive `IIPS_DHAN_DEPTH_CAPTURE_PATH`?** | At **process launch**, from the environment of the launching shell, inherited through the managed `03-Start-IipsServers.ps1` launch. `$env:` set in a separate window affects only that window and does nothing to an already-running `node.exe` — a hard constraint, not an assumption. |
-| **One-shot guarantee** | Four layers: instrument gate (consumes nothing unless the request is the selected one), arm-marker gate, slot claimed before write (concurrency-safe), marker deleted after a successful write. Evidence cannot be overwritten for the process lifetime; a further capture needs an explicit re-arm, which needs no restart. |
-| **Deployment / activation mechanism** | `07-Prepare-DepthCapture.ps1 -Build`, then `06-Stop-IipsServers.ps1`, then `03-Start-IipsServers.ps1 -StartIpdIpc` launched from the window that holds the variables. One restart, to load the code and the environment; arming and re-arming thereafter need none. |
-| **Exact Windows output path** | `H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json` (marker `…\reliance-depth.json.arm`), outside the git working tree. |
-| **Is daemon ownership preserved?** | **Not yet — blocked (§12).** `03` does not start the market-data daemon today, so its PID is absent from the manifest and `06` cannot stop it. The required change is specified exactly; delivering it here would have shipped a checksum-pinned bundle whose hashes cannot be regenerated without a PowerShell host. The procedure must not be operated until this is decided. |
-| **Live request performed?** | **No.** No Dhan or vendor request was made, and no service was started, stopped or restarted. |
+| **Is there an earlier managed helper with `-RestartMarketDataDaemon`?** | **No.** Only one version of `03` has ever existed (blob `eda43b53…`, SHA-256 `e55515cf…`, 25,590 bytes), added in PR #181 and unchanged since; it has never accepted that switch. The string appears in no branch of this repository, not in `iips-review-recovered`, and PID 13768 is recorded nowhere except option-chain rows in a scrip-master CSV. The authenticated run W-06 records was performed with a manual `Start-Process` + `Stop-Process` — unmanaged. |
+| **Is the capture Reliance-specific?** | **Yes.** Only exactly one instrument, `NSE_EQ`, Dhan `2885`. Other requests return before the slot is claimed and before the marker is touched. CAP-24 … CAP-30, mutation-checked. |
+| **Does `06` → `03 -StartIpdIpc` restart the daemon?** | **No** — that was wrong. `-StartIpdIpc` is the portfolio IPC provider, and `06` neither matched `dhan_local_daemon.js` nor checked port `8791`. Both are now fixed, and the daemon is started by `-StartMarketDataDaemon`. |
+| **Supported stop/start with ownership preserved** | `06-Stop-IipsServers.ps1` (now matches the daemon and port 8791) then `03-Start-IipsServers.ps1 -StartIpdIpc -StartMarketDataDaemon`, which starts it via `Start-IipsService`, records its PID in the run manifest, and asserts the listening PID equals the started PID. |
+| **Manifest location** | `<InstallRoot>\logs\iips-pids-<timestamp>.json` — i.e. `H:\IIPS\logs\…` with the default `-InstallRoot H:\IIPS` and `-LogRoot` unset, which is also how `07 -Verify` derives it. Portable: pass `-LogRoot` if the host differs. |
+| **Live request performed?** | **No.** No Dhan request, no service start/stop/restart, no host change. |
+
 ## 11. Removal
 
 When D-18 is resolved: delete `src/providers/dhan/dhan_depth_capture.ts` and `tests/dhan_depth_capture.test.ts`, remove the import block, the single call in `executeJsonPost`, and the private `captureRawDepthIfEnabled` method from `dhan_api_client.ts`, then delete the runtime directory. Nothing else depends on the feature and no behaviour changes when it is absent — the diagnostic is inert without `IIPS_DHAN_DEPTH_CAPTURE_PATH`, so the code can also simply be left unset if removal is deferred.
 
-## 12. The ownership prerequisite — blocker
+## 12. Daemon ownership — resolved
 
-### 13.1 What was asked
+### 12.1 Premise check: there is no `-RestartMarketDataDaemon` helper
 
-The activation procedure must use the existing `03-Start-IipsServers.ps1` startup mechanism, preserve
-its PID manifest, and give daemon ownership to that mechanism rather than introducing a separate
-unmanaged daemon launch.
+Before building on the earlier blocker, the premise was checked against every reachable source.
 
-### 13.2 What is true today (verified in this checkout)
-
-`03-Start-IipsServers.ps1` starts four things: the IPD IPC provider (when `-StartIpdIpc`), the IRR
-executive transport, the IRR Vite dev server, and the IPD shell (when `-StartIpdShell`). It
-**never** starts the IPD market-data daemon on `127.0.0.1:8791`. The consequences compound:
-
-| Surface | Current behaviour for the market-data daemon |
+| Question | Verified answer |
 | :--- | :--- |
-| `03` PID manifest (`iips-pids-<stamp>.json`) | the daemon's PID is absent |
-| `06-Stop-IipsServers.ps1` termination | will not match it — `$entrypoints` is exactly `executive-transport.ts`, `dist\src\ipc\entrypoint.js`, `vite` |
-| `06` port verification | `-Ports` defaults to `8787, 5176, 5174` — `8791` is never checked |
-| Any managed launch path | none exists |
+| Does `03-Start-IipsServers.ps1` accept `-RestartMarketDataDaemon`? | **No.** Its parameter list is `InstallRoot, RuntimeRoot, LogRoot, NodeExecutable, TransportPort, FrontendPort, IpdShellPort, BindAddress, PipeName, DatabasePath, ReadyTimeoutSeconds, CleanupTimeoutSeconds, StartIpdIpc, StartIpdShell, NoPause`. |
+| Does the string `RestartMarketDataDaemon` appear anywhere in this repository or its history? | **No.** `git log --all -S` over the full history (640 commits, 181 branches, unshallowed) returns nothing; GitHub code search returns 0. |
+| Does it appear in `iips-review-recovered`? | **No.** Code search returns 0, and no `*daemon*`, `*market*`, `*iips-servers*` or `*common*` PowerShell file exists there. |
+| How many distinct versions of `03` has this repository ever contained? | **One.** A single blob, `eda43b538724c3bb1bc06555e4084a813f1b4eca`, first added in PR #181 and unchanged since. |
+| What is the recorded evidence of a daemon that answered HTTP 200? | `DHAN-W06-LOCAL-TRANSPORT-RECOVERY-EVIDENCE-2026-11-12.md` — and its method is `Start-Process -FilePath 'npm.cmd' -ArgumentList 'run','start:market-data-daemon'` in the foreground, after a manual `Stop-Process` matching `*dhan_local_daemon.js*`. **Manual, unmanaged, and recorded in no manifest.** |
+| Is PID 13768 recorded anywhere? | **No.** No document, commit or script in this repository contains it. The only `13768` occurrences are option-chain rows in `evidence/dhan-p7/source/api-scrip-master*.csv`. |
 
-So on this host the daemon is started some other way — an outcome that is neither recorded in the
-manifest nor verifiable by the stop script. That is precisely the unmanaged launch the requirement
-forbids, and it predates this diagnostic.
+So the two scripts the question asks me to compare **cannot both exist**: there is only one
+`03-Start-IipsServers.ps1` in existence, and it has never had a daemon-restart capability. There is no
+"earlier managed helper" to diff against. The earlier successful authenticated run was performed the
+manual way W-06 §4.2 documents — which is exactly the unmanaged launch the requirement excludes.
 
-### 13.3 Why this change was not delivered here
+Recorded hashes for the file I inspected, for the avoidance of doubt:
 
-The change itself is small and specified in §13.4, but it could not be shipped in this environment
-without leaving the setup bundle in a broken state, for a reason that is mechanical rather than
-judgemental:
+| Field | Value |
+| :--- | :--- |
+| Path | `H:\IIPS\iips-production-market-data\windows-setup\03-Start-IipsServers.ps1` (in this workspace: `/home/user/iips-production-market-data/windows-setup/03-Start-IipsServers.ps1`) |
+| Branch | `arena/b210f700-iips-production-market-data`, based on `cbb116d` (`main`) |
+| State inspected | unmodified from `HEAD` (`git status` clean for this file) |
+| git blob | `eda43b538724c3bb1bc06555e4084a813f1b4eca` |
+| SHA-256 | `e55515cfbda94ba3619bc83df235d975ca535192b432c20b7b12c66860448d0c` |
+| Size | 25,590 bytes / 477 lines (as inspected) |
 
-1. `windows-setup/SHA256SUMS.txt` and `MANIFEST.txt` pin the SHA-256 of every bundle member, and
-   `03-Start-IipsServers.ps1` documents itself as checksum-pinned.
-2. Those hashes are regenerated by `Make-SetupBundle.ps1`, which **requires a PowerShell runtime** —
-   none exists in this sandbox (`pwsh` is unavailable), and the structural validator exists precisely
-   because no real PowerShell parse is possible here.
-3. Therefore the modified `03` would ship with checksums that no longer match its own contents, or
-   with hand-computed ones asserted as if the generator had produced them.
+After the ownership change in §12.4 the same file is:
 
-Editing the runtime startup path of a live Windows host in a bundle whose integrity manifest can
-only be validated on that host was judged a worse risk than delivering the prerequisite openly and
-leaving it for a host-verified change. This is a stated blocker, not a completed item.
+| Field | Value |
+| :--- | :--- |
+| git blob | `2cd6d9b74ca0628fbc496823bc11f8174ef7d8f5` |
+| SHA-256 | `fd9124ec0db89ddaff86c07a7c352407eede80867514b38fe61551443ddc9c4a` |
+| Size | 32,109 bytes / 576 lines |
 
-### 13.4 The exact change required
+### 12.2 The sequence in the previous version of this document was wrong
 
-In `windows-setup/03-Start-IipsServers.ps1`:
+`06-Stop-IipsServers.ps1` then `03-Start-IipsServers.ps1 -StartIpdIpc` does **not** stop and restart
+the market-data daemon, for two independent reasons:
 
-1. Add `[int] $MarketDataPort = 8791` (matching `DEFAULT_MARKET_DATA_DAEMON_PORT`), and guard it with
-   `Assert-IipsPortFree` alongside `8787`/`5176`/`5174`.
-2. Start the daemon **after** the IPC provider and **before** the IRR transport, so the consumer
-   never addresses a listener that is not yet up:
+- **`-StartIpdIpc` is not a daemon start.** It starts the Gate-3 *portfolio IPC provider* on a named
+  pipe. It has nothing to do with the market-data daemon on `127.0.0.1:8791`.
+- **`06` could not stop the daemon even if it were running.** Its `$entrypoints` list held
+  `executive-transport.ts`, `dist\src\ipc\entrypoint.js` and `vite` — no `dhan_local_daemon.js` —
+  and its `-Ports` default was `8787, 5176, 5174`, which does not include `8791`.
 
-   ```powershell
-   $marketDataEnv = @{ 'IIPS_MARKET_DATA_TRANSPORT_TOKEN' = $transportToken }
-   # capture variables are inherited from the launching window; nothing is set here
-   $marketData = Start-IipsService -Label 'ipd-market-data-daemon' -Executable $toolchain.NodeExe `
-       -Arguments @((Join-Path $ipdRoot 'dist\src\providers\dhan\dhan_local_daemon.js')) `
-       -WorkingDirectory $ipdRoot -LogDirectory $script:ServiceLogDir -Environment $marketDataEnv
-   $script:Started.Add($marketData)
-   ```
+So the earlier sequence would have left the old daemon process running with the old `dist/` and the
+old environment, then reported success. That is the precise failure mode that would have produced a
+capture file that never appeared, with no indication why.
 
-   Note that `Start-IipsService` already supports this: it takes `-Label`, `-Executable`,
-   `-Arguments`, `-WorkingDirectory`, `-LogDirectory` and `-Environment`, and returns
-   `Label/Pid/OutLog/ErrLog`, which is exactly the manifest row shape. No helper change is needed.
-3. Readiness: poll `http://127.0.0.1:8791/v1/health` until it answers, then verify the bound address
-   through `Wait-IipsPortListening -ExpectedAddress $BindAddress`. The daemon writes one sanitised
-   line to **stderr** on bind, so the existing log file is the second source of evidence.
-4. Manifest: add `marketDataPort = $MarketDataPort` to the manifest object and let the existing
-   `$script:Started` loop record the PID. The operator check in §7.4 then becomes meaningful.
-5. `windows-setup/06-Stop-IipsServers.ps1`: add `dhan_local_daemon.js` to `$entrypoints` and `8791`
-   to the `-Ports` default, so the stop side actually matches what the start side created.
-6. Add `07-Prepare-DepthCapture.ps1`'s outputs to the validation checklist, then regenerate
-   `MANIFEST.txt`/`SHA256SUMS.txt` with `Make-SetupBundle.ps1` **on Windows** and re-run
-   `00-Validate-PowerShell-Syntax.ps1` and `.validate-scripts.py`.
+### 12.3 Correction: the blocker I reported was overstated
 
-### 13.5 What is needed to close it
+The previous version of this document claimed the ownership change could not be delivered because
+`MANIFEST.txt` and `SHA256SUMS.txt` are checksum-pinned and `Make-SetupBundle.ps1` needs a PowerShell
+host. Re-reading the generator shows that reasoning was wrong:
 
-Either authorize the change above to be delivered alongside a note that the bundle checksums are
-regenerated on the Windows host before use, or confirm that the daemon should stay outside step 3 and
-that `06-Stop` should be extended to recover it by port. Until one of those is decided,
-**§7 step 3 cannot claim daemon ownership**, and the capture should not be operated.
+- `$script:ExpectedFiles` is the bundle's **input** list; `MANIFEST.txt` and `SHA256SUMS.txt` are
+  **outputs** it writes into `-OutputDirectory`, alongside the zip and tar. They are not members.
+- `Get-FileHash` is run over the source files **on the host, at generation time**. Nothing declares
+  their digests in the repository, so no repository-side hash can go stale when a script changes.
+- The bundle's real integrity property is `05-verify`: it reopens the archive and compares every
+  entry against the source **byte for byte**. That check is unaffected by a source edit.
+
+The correct conclusion — now applied below — is that the scripts are edited in the repository and the
+bundle is regenerated on the Windows host. Hand-editing the two generated files in the repository is
+unnecessary and was removed; they are restored to their published state.
+
+### 12.3a Manifest and log location — checked, not assumed
+
+`03-Start-IipsServers.ps1` resolves its paths at startup:
+
+```powershell
+if ([string]::IsNullOrWhiteSpace($LogRoot))    { $LogRoot    = Join-Path $InstallRoot 'logs' }
+if ([string]::IsNullOrWhiteSpace($RuntimeRoot)) { $RuntimeRoot = Join-Path $InstallRoot 'runtime' }
+$script:ServiceLogDir = Join-Path $LogRoot "services-$($script:RunStamp)"
+$pidFile = Join-Path $LogRoot "iips-pids-$($script:RunStamp).json"
+```
+
+With the documented defaults (`-InstallRoot 'H:\IIPS'`, `-LogRoot` unset) that is
+`H:\IIPS\logs\iips-pids-<yyyyMMdd-HHmmss>.json`, with per-service logs under
+`H:\IIPS\logs\services-<stamp>\`.
+
+Host evidence in this repository corroborates that root: `DHAN-W02-WINDOWS-ACCEPTANCE-EVIDENCE`
+writes to `H:\IIPS\logs\w02-dpapi-acceptance\…`, and
+`docs/investigations/2026-11-11-live-class-p-retrieval-feasibility.md` §6 reports reading
+`H:\IIPS\logs\services-20261111-162751\{ipd-ipc.err.log, ipd-ipc.out.log, irr-transport.err.log}`.
+Those directories contain exactly the `ipd-ipc` and `irr-transport` logs `03` produces, which is
+consistent with `H:\IIPS\logs` being the real log root.
+
+**However**, no `iips-pids-*.json` manifest is recorded anywhere in the repository's evidence. That is
+expected rather than alarming: no `03` run has ever started the market-data daemon, so no prior
+manifest can contain it. It also means the path above is derived from source plus adjacent host
+evidence, **not** observed on the host in a manifest file. `07 -Verify` fails closed if the manifest is
+absent, so a wrong path produces a clear refusal rather than a silent proceed. Pass `-LogRoot`
+explicitly if the host deviates from the default.
+
+### 12.4 What was delivered
+
+| File | Change |
+| :--- | :--- |
+| `windows-setup/03-Start-IipsServers.ps1` | `-MarketDataPort` (default `8791`) and `-StartMarketDataDaemon`; port guard; a `03b-market-data` step that starts the daemon through `Start-IipsService` and adds it to `$script:Started`; readiness from the daemon's own stderr bind line; authenticated `/v1/health`; **listener-ownership assertion** (`Get-IipsPortOwner` PID must equal the PID this run started); `marketDataPort` recorded in the manifest; rollback verifies `8791`. |
+| `windows-setup/06-Stop-IipsServers.ps1` | `8791` added to the `-Ports` default; `dhan_local_daemon.js` added to `$entrypoints`, so the stop half can actually match the start half. |
+| `windows-setup/07-Prepare-DepthCapture.ps1` | `-Verify` and `-MarketDataPort`/`-LogRoot`; an `04b-verify` step that proves the ownership chain **manifest row → live PID → bound listener**, and refuses to arm if any link is broken. |
+
+Design points that matter:
+
+- **The daemon is started by the same script, in the same process tree, and recorded by the same
+  loop.** It is not a second launch mechanism; the existing `$script:Started` mechanism and the
+  existing `Start-IipsService` helper are reused unchanged.
+- **The capture variables are deliberately not injected** by `03`. They are inherited from the
+  launching session. Copying them into the environment hashtable would silently mask a missing
+  operator variable; inheriting means the operator's window is the single source of truth.
+- **Ownership is asserted, not assumed.** A daemon that is alive but does not own `8791`, or a
+  listener owned by a different PID, is a hard failure rather than a manifest entry that merely looks
+  plausible.
+- **`03` still refuses to kill a process it did not start.** If `8791` is already held, it stops with
+  an actionable message pointing at `06`, which is the component that owns termination.
+
+### 12.5 What remains host-side
+
+`MANIFEST.txt` and `SHA256SUMS.txt` in this repository still describe the previous bundle contents
+(13 files, pin `fe66bead`). They are regenerated by `Make-SetupBundle.ps1` on the Windows host, which
+is the only place the generator can run. Until then the checked-in copies are stale by design — they
+are outputs, and treating them as authoritative inputs is the mistake this section corrects. Verify
+with `00-Validate-PowerShell-Syntax.ps1` and the bundle build on the host.
 

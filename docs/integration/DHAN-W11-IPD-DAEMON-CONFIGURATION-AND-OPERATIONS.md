@@ -294,17 +294,18 @@ vendor request or successful authentication.
      `--port`, `--host`, or tokens on the command line.
 4. **Relationship to `windows-setup/03-Start-IipsServers.ps1`**:
    - The checksum-pinned `windows-setup/` bundle (`03-Start-IipsServers.ps1`) starts IRR
-     (`127.0.0.1:8787` API, `127.0.0.1:5176` frontend) and optional IPD portfolio IPC. As
-     delivered on `main` it **does not** start `start:market-data-daemon` (`127.0.0.1:8791`).
-   - **Ownership gap, recorded 2026-11-20.** Because step 3 does not own the market-data daemon,
-     the Windows host currently has **no managed launch path for it**: its PID is absent from the
-     `iips-pids-<stamp>.json` manifest, `06-Stop-IipsServers.ps1` will not terminate it (it matches
-     only `executive-transport.ts`, `dist\src\ipc\entrypoint.js` and `vite`, and its default
-     `-Ports` are `8787, 5176, 5174`), and a launch outside that mechanism is exactly the
-     "separate unmanaged daemon launch" that must be avoided. Both the PID manifest and the daemon
-     launch path must therefore be **owned by `03-Start-IipsServers.ps1`** before the D-18 capture is
-     operated — see `DHAN-D18-RAW-DEPTH-CAPTURE-ACTIVATION-2026-11-20.md` §13. This is a stated
-     blocker, not a resolved claim.
+     (`127.0.0.1:8787` API, `127.0.0.1:5176` frontend), optional IPD portfolio IPC, and — with
+     `-StartMarketDataDaemon` — the market-data daemon on `127.0.0.1:8791` as a managed child.
+   - **Ownership gap — recorded and resolved 2026-11-20.** As delivered on `main`, step 3 did **not**
+     own the market-data daemon: its PID was absent from the `iips-pids-<stamp>.json` manifest,
+     `06-Stop-IipsServers.ps1` could not match it (entrypoints were `executive-transport.ts`,
+     `dist\src\ipc\entrypoint.js`, `vite`; ports were `8787, 5176, 5174`), and there was no managed
+     launch path at all. The daemon is now started by
+     `03-Start-IipsServers.ps1 -StartMarketDataDaemon`, recorded in the run manifest, and its
+     listening PID is asserted to equal the PID the run started; `06` matches
+     `dhan_local_daemon.js` and checks port `8791`. There is no `-RestartMarketDataDaemon` switch in
+     this or any earlier version of `03`, and no other managed helper exists. See
+     `DHAN-D18-RAW-DEPTH-CAPTURE-ACTIVATION-2026-11-20.md` §12.
    - Start the IPD market-data daemon **before** starting IRR market-data/identity consumers,
      and stop IRR consumers **before** stopping the daemon.
 5. **Offline Registry Loading & Sanitized Startup Output**:

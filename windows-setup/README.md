@@ -109,6 +109,7 @@ powershell -ExecutionPolicy Bypass -File .\01-Fresh-Clone-And-Install.ps1
 powershell -ExecutionPolicy Bypass -File .\02-Provision-OwnerContext.ps1
 
 # 3. EACH SESSION - start the services (-StartIpdIpc uses the already-provisioned Direct P1 DB)
+#    add -StartMarketDataDaemon to also start and record the market-data daemon on 127.0.0.1:8791
 powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc
 
 # 4. NOW - verify every screen by hand in the browser (the actual objective)
@@ -128,29 +129,40 @@ Optional:
 
 ```powershell
 .\03-Start-IipsServers.ps1 -StartIpdIpc -StartIpdShell   # also the IPD shell on 5174
+.\03-Start-IipsServers.ps1 -StartIpdIpc -StartMarketDataDaemon  # also the market-data daemon on 8791
 .\03-Start-IipsServers.ps1                               # without User Portfolios / Broker Import
 .\01-Fresh-Clone-And-Install.ps1 -AllowCommitDrift       # only after reviewing the listed drift
 ```
 
 ### D-18 depth-capture diagnostic (temporary, operator-run)
 
-`07-Prepare-DepthCapture.ps1` deploys and arms the temporary raw-depth capture. It builds nothing
-unless `-Build` is passed, starts no process, and makes no vendor request. The capture itself is
-enabled by the **market-data daemon's** environment, so the variables must be set in the same window
-that launches step 3 - a running process cannot be given a new environment afterwards:
+`07-Prepare-DepthCapture.ps1` builds, prepares and arms the temporary raw-depth capture. It starts no
+process and makes no vendor request. The daemon itself is started by `03` with
+`-StartMarketDataDaemon`, which records its PID in the run manifest; there is no separate launch.
 
 ```powershell
-# one-time: build and prepare, then arm
-powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build
-powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm
+cd H:\IIPS-scripts
 
-# launch the managed stack WITH the capture variables in this same window
+# 1. stop, then build the daemon code and prepare the capture directory
+powershell -ExecutionPolicy Bypass -File .\06-Stop-IipsServers.ps1
+powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build
+
+# 2. set the capture environment IN THIS WINDOW - a running process cannot receive it later
 $env:IIPS_DHAN_DEPTH_CAPTURE_PATH  = 'H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json'
 $env:IIPS_DHAN_DEPTH_CAPTURE_LABEL = 'D-18 Reliance NSE_EQ 2885, one market-closed quote'
-powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc
+
+# 3. start the daemon as a managed child of this run
+powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc -StartMarketDataDaemon
+
+# 4. prove ownership (manifest row -> live PID -> listener) BEFORE arming
+powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Verify
+
+# 5. arm exactly one capture, then issue exactly one quote request
+powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm
 ```
 
-The full procedure, guarantees and limitations are in
+`-StartIpdIpc` starts the portfolio IPC provider, **not** the market-data daemon. The daemon requires
+`-StartMarketDataDaemon`. The full procedure, guarantees and limitations are in
 `docs/integration/DHAN-D18-RAW-DEPTH-CAPTURE-ACTIVATION-2026-11-20.md`.
 
 ---

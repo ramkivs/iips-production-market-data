@@ -91,6 +91,16 @@ param(
     [switch] $ClearCapture,
 
     [Parameter(Mandatory = $false)]
+    [int] $MarketDataPort = 8791,
+
+    [Parameter(Mandatory = $false)]
+    [ValidateNotNullOrEmpty()]
+    [string] $LogRoot = '',
+
+    [Parameter(Mandatory = $false)]
+    [switch] $Verify,
+
+    [Parameter(Mandatory = $false)]
     [switch] $NoPause
 )
 
@@ -100,6 +110,9 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Iips-Common.ps1')
 
 if ([string]::IsNullOrWhiteSpace($RuntimeRoot)) { $RuntimeRoot = Join-Path $InstallRoot 'runtime' }
+# The manifest lives where 03-Start-IipsServers.ps1 writes it: <LogRoot>\iips-pids-<stamp>.json,
+# where LogRoot defaults to <InstallRoot>\logs. This is derived the same way, never assumed.
+if ([string]::IsNullOrWhiteSpace($LogRoot)) { $LogRoot = Join-Path $InstallRoot 'logs' }
 if ([string]::IsNullOrWhiteSpace($CapturePath)) {
     $CapturePath = Join-Path (Join-Path $RuntimeRoot 'dhan-d18-depth-capture') 'reliance-depth.json'
 }
@@ -115,25 +128,30 @@ $captureDir = Split-Path -Parent $CapturePath
 $ipdRoot = Join-Path $InstallRoot 'iips-production-market-data'
 
 function Show-LaunchInstruction {
-    param([string] $CaptureFile, [string] $ArmFile)
+    param([string] $CaptureFile)
 
     Write-Host ''
-    Write-Host '  NEXT: the market-data daemon must be LAUNCHED with these variables.' -ForegroundColor Yellow
-    Write-Host '  A running process cannot be given a new environment, so it must be started' -ForegroundColor Yellow
-    Write-Host '  from the same window that holds them - set them and launch in ONE session:' -ForegroundColor Yellow
+    Write-Host '  NEXT: the daemon must be started by 03-Start-IipsServers.ps1 -StartMarketDataDaemon' -ForegroundColor Yellow
+    Write-Host '  FROM THE SAME WINDOW that holds the capture variables.' -ForegroundColor Yellow
     Write-Host ''
-    Write-Host "    `$env:IIPS_DHAN_DEPTH_CAPTURE_PATH  = '$CaptureFile'" -ForegroundColor Cyan
-    Write-Host "    `$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL = '$Label'" -ForegroundColor Cyan
+    Write-Host '  Two reasons, both hard:' -ForegroundColor Gray
+    Write-Host '    1. Only a managed launch records the daemon PID in the run manifest, which is what' -ForegroundColor Gray
+    Write-Host '       makes 06-Stop-IipsServers.ps1 able to stop it. A separate launch is unmanaged.' -ForegroundColor Gray
+    Write-Host '    2. A running Windows process cannot be given a new environment. The variables must' -ForegroundColor Gray
+    Write-Host '       exist when the daemon is created, or the capture silently does nothing.' -ForegroundColor Gray
+    Write-Host ''
+    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_PATH  = ' + "'" + $CaptureFile + "'" -ForegroundColor Cyan
+    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL = ' + "'" + $Label + "'" -ForegroundColor Cyan
+    Write-Host '    (IIPS_MARKET_DATA_TRANSPORT_TOKEN must also be set in this window)' -ForegroundColor Cyan
     Write-Host ''
     Write-Host '    powershell -ExecutionPolicy Bypass -File .\06-Stop-IipsServers.ps1' -ForegroundColor Cyan
-    Write-Host '    powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc' -ForegroundColor Cyan
+    Write-Host '    powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc -StartMarketDataDaemon' -ForegroundColor Cyan
     Write-Host ''
-    Write-Host '  The daemon on port 8791 is part of that managed launch: it is recorded in the run'"'"'s' -ForegroundColor Gray
-    Write-Host '  PID manifest under <InstallRoot>\logs, and 06-Stop-IipsServers.ps1 terminates it and the' -ForegroundColor Gray
-    Write-Host '  rest of the tree. Do not start it separately.' -ForegroundColor Gray
+    Write-Host '  Then verify ownership - the daemon row must exist and own port 8791:' -ForegroundColor Yellow
+    Write-Host '    powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Verify' -ForegroundColor Cyan
     Write-Host ''
-    Write-Host "  Then arm and issue the single request (see section 8 of the activation record):" -ForegroundColor Gray
-    Write-Host "    New-Item -ItemType File -Force -Path '$ArmFile'" -ForegroundColor Gray
+    Write-Host "  Then arm and issue exactly one request:" -ForegroundColor Gray
+    Write-Host  '    powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm' -ForegroundColor Gray
     Write-Host '    POST http://127.0.0.1:8791/v1/quotes for EQ_RELIANCE_IN / ISIN:INE002A01018:EQ / NSE_EQ' -ForegroundColor Gray
     Write-Host ''
 }
@@ -224,6 +242,70 @@ try {
     }
 
     # -----------------------------------------------------------------------------------------
+    if ($Verify) {
+        Write-IipsStep '04b-verify' 'Verifying daemon ownership and the inherited capture environment'
+
+        # 1. The manifest must exist where 03 writes it, and must contain a market-data row.
+        $manifestFiles = @()
+        if (Test-Path -LiteralPath $LogRoot) {
+            $manifestFiles = @(Get-ChildItem -LiteralPath $LogRoot -Filter 'iips-pids-*.json' -File -ErrorAction SilentlyContinue |
+                Sort-Object LastWriteTime -Descending)
+        }
+        if ($manifestFiles.Count -eq 0) {
+            throw "no PID manifest found under $LogRoot. 03-Start-IipsServers.ps1 writes iips-pids-<stamp>.json there; without one the daemon was not started as a managed child."
+        }
+        $manifestPath = $manifestFiles[0].FullName
+        Write-IipsInfo "manifest: $manifestPath"
+        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+
+        $daemonRow = @($manifest.processes) | Where-Object { $_.label -eq 'ipd-market-data-daemon' }
+        if (@($daemonRow).Count -eq 0) {
+            throw "the manifest $manifestPath contains no ipd-market-data-daemon row. The daemon was NOT started by 03-Start-IipsServers.ps1 -StartMarketDataDaemon, so it is unmanaged. Do not arm: stop it with 06-Stop-IipsServers.ps1 (which will not match it either) or end that process deliberately, then start the stack through 03."
+        }
+        $daemonPid = [int] @($daemonRow)[0].pid
+        Write-IipsOk "daemon recorded in the manifest: PID $daemonPid"
+
+        # 2. That PID must still be alive.
+        $daemonProcess = Get-Process -Id $daemonPid -ErrorAction SilentlyContinue
+        if ($null -eq $daemonProcess) {
+            throw "the manifest records PID $daemonPid but that process is no longer running. The stack has exited or was replaced; start it again through 03-Start-IipsServers.ps1."
+        }
+        Write-IipsOk "daemon process is alive: $($daemonProcess.ProcessName) PID $daemonPid"
+
+        # 3. And it must actually own the listener - a manifest entry alone proves nothing.
+        $owner = Get-IipsPortOwner -Port $MarketDataPort
+        if ($null -eq $owner) {
+            throw "nothing is listening on port $MarketDataPort, so the daemon recorded as PID $daemonPid is not serving. Start it through 03-Start-IipsServers.ps1 -StartMarketDataDaemon."
+        }
+        if ([int] $owner.OwningProcess -ne $daemonPid) {
+            throw "port $MarketDataPort is owned by PID $($owner.OwningProcess), but the manifest records PID $daemonPid. The listener and the manifest disagree; do not arm."
+        }
+        Write-IipsOk "listener ownership verified: port $MarketDataPort -> PID $daemonPid (matches the manifest)"
+        Write-IipsInfo "bound address: $($owner.LocalAddress) (must be a loopback address)"
+
+        # 4. Report the command line so the entrypoint is visible, and confirm the capture variable
+        #    was NOT put on it. The environment is inherited, and a Windows process environment
+        #    cannot be read back from outside - so this is the strongest available check.
+        $cim = Get-CimInstance Win32_Process -Filter "ProcessId = $daemonPid" -ErrorAction SilentlyContinue
+        if ($null -ne $cim -and $null -ne $cim.CommandLine) {
+            $cmdLine = [string] $cim.CommandLine
+            if ($cmdLine -like '*IIPS_DHAN_DEPTH_CAPTURE*') {
+                throw "the daemon command line mentions IIPS_DHAN_DEPTH_CAPTURE. Environment variables must never travel on a command line; investigate before arming."
+            }
+            Write-IipsInfo "command line: $cmdLine"
+        }
+
+        Write-IipsWarn 'the daemon environment cannot be read back from outside the process.'
+        Write-IipsWarn 'If the capture variables were not set in the session that launched 03, the capture will'
+        Write-IipsWarn 'silently produce no file. The only positive evidence is a capture file appearing after the'
+        Write-IipsWarn 'single quote; a missing file is not proof of anything (see section 8 of the activation record).'
+        Write-IipsOk 'ownership chain verified: manifest row -> live PID -> bound listener'
+    }
+    if (-not $Verify) {
+        Write-IipsStep '04b-verify' 'Skipped - pass -Verify to check manifest ownership and the listener PID before arming'
+    }
+
+    # -----------------------------------------------------------------------------------------
     Write-IipsStep '05-arm' 'Arming exactly one capture'
 
     if ($Disarm) {
@@ -253,7 +335,7 @@ try {
         Write-IipsWarn 'a capture AND an arm marker both exist: the marker will be consumed by the next selected quote, overwriting that capture'
     }
 
-    Show-LaunchInstruction -CaptureFile $CapturePath -ArmFile $armMarker
+    Show-LaunchInstruction -CaptureFile $CapturePath
 
     Write-Host '  Reminder: no vendor request has been made and no service was restarted.' -ForegroundColor Yellow
     Write-Host ''
