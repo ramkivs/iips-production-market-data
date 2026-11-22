@@ -180,14 +180,26 @@ function Wait-IipsHttpReady {
         [Parameter(Mandatory = $true)][string] $Url,
         [Parameter(Mandatory = $true)][string] $Label,
         [Parameter(Mandatory = $true)][int] $TimeoutSeconds,
-        [Parameter(Mandatory = $false)][int] $ExpectedStatus = 200
+        [Parameter(Mandatory = $false)][int] $ExpectedStatus = 200,
+        # Headers the endpoint requires. The IPD market-data daemon gates EVERY route, /v1/health
+        # included, behind `Authorization: Bearer <IIPS_MARKET_DATA_TRANSPORT_TOKEN>`
+        # (dhan_market_data_http.ts: the auth block precedes the health route). A probe that sends no
+        # header is answered 401 by design, so a caller that forgets this can never observe readiness.
+        [Parameter(Mandatory = $false)][hashtable] $Headers = @{}
     )
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     $attempt = 0
     while ((Get-Date) -lt $deadline) {
         $attempt++
         try {
-            $resp = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
+            $requestParams = @{
+                Uri             = $Url
+                UseBasicParsing = $true
+                TimeoutSec      = 5
+                ErrorAction     = 'Stop'
+            }
+            if ($Headers.Count -gt 0) { $requestParams['Headers'] = $Headers }
+            $resp = Invoke-WebRequest @requestParams
             if ($resp.StatusCode -eq $ExpectedStatus) {
                 Write-IipsOk "$Label ready after $attempt attempt(s): $Url -> $($resp.StatusCode)"
                 return $resp
@@ -385,9 +397,13 @@ try {
         $marketListen = Wait-IipsPortListening -Port $MarketDataPort -Label 'the IPD market-data daemon' -TimeoutSeconds 30 -ExpectedAddress $BindAddress
         Write-IipsOk "market-data daemon bound loopback-only: $($marketListen.LocalAddress):$MarketDataPort"
 
-        # Health is authenticated: the token is already in this session, so a 200 here proves the
-        # daemon accepted the same credential the operator holds. Nothing vendor-side is implied.
-        $marketHealth = Wait-IipsHttpReady -Url "http://$BindAddress`:$MarketDataPort/v1/health" -Label 'the market-data daemon health check' -TimeoutSeconds 60
+        # The daemon requires the bearer credential on every route, including this one. Sending it
+        # is not a weakening of authentication: it is the client half of the same contract the
+        # daemon enforces. Without it the probe would receive 401 forever and report a false failure.
+        # Built from $daemonEnv, not from $env: - so the probe authenticates with the exact value the
+        # child was given. If the two ever diverged, this would fail loudly instead of hiding it.
+        $marketHealthHeaders = @{ 'Authorization' = "Bearer $($daemonEnv['IIPS_MARKET_DATA_TRANSPORT_TOKEN'])" }
+        $marketHealth = Wait-IipsHttpReady -Url "http://$BindAddress`:$MarketDataPort/v1/health" -Label 'the market-data daemon health check' -TimeoutSeconds 60 -Headers $marketHealthHeaders
         Write-IipsOk "market-data daemon health -> $($marketHealth.StatusCode)"
 
         # Assert the bound listener really belongs to the PID this run started, so the manifest entry

@@ -75,7 +75,13 @@ $ErrorActionPreference = 'Stop'
 if ([string]::IsNullOrWhiteSpace($LogRoot)) { $LogRoot = Join-Path $InstallRoot 'logs' }
 
 function Log {
-    param([Parameter(Mandatory = $true)][string] $Message, [Parameter(Mandatory = $false)][string] $Colour = 'Gray')
+    # -AllowEmptyString: this function is called with '' purely to emit a blank separator line.
+    # Under Set-StrictMode, a Mandatory string parameter rejects an empty string, so without this
+    # every blank-logging call threw and the stop script aborted at its first separator (line 87).
+    param(
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string] $Message,
+        [Parameter(Mandatory = $false)][string] $Colour = 'Gray'
+    )
     Write-Host $Message -ForegroundColor $Colour
     $script:IipsStepLog.Add($Message)
 }
