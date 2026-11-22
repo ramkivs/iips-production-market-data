@@ -32,6 +32,16 @@ export const DHAN_DEPTH_CAPTURE_ENV = 'IIPS_DHAN_DEPTH_CAPTURE_PATH';
 /** Environment variable used only to label which request this capture belongs to. */
 export const DHAN_DEPTH_CAPTURE_LABEL_ENV = 'IIPS_DHAN_DEPTH_CAPTURE_LABEL';
 
+/**
+ * The single Dhan security ID this one-shot diagnostic will capture.
+ *
+ * Reliance on NSE_EQ is Dhan ID `2885` (see the P7 qualification manifest, as recorded in
+ * DHAN-QUOTE-NUMERIC-SERIALIZATION-COMPLETION-RECORD-2026-11-18). Scoping the capture to
+ * this ID — rather than to the quote endpoint — is what stops any other instrument's quote
+ * from consuming the one-shot slot.
+ */
+export const DHAN_DEPTH_CAPTURE_SECURITY_ID = '2885';
+
 /** One depth level, with each field preserved exactly as received. */
 export interface CapturedDepthLevel {
   /** `present` when the field existed, `missing` when the key was absent or null. */
@@ -110,6 +120,50 @@ function captureSide(side: unknown): CapturedDepthSide {
 /** True when the value is a plain JSON object. */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** One instrument named in a Dhan quote request body. */
+export interface DepthCaptureRequestInstrument {
+  readonly segment: string;
+  readonly securityId: string;
+}
+
+/**
+ * Reads the instruments from a parsed Dhan quote request body.
+ *
+ * The request body is `{"<segment>":[<id>,...],...}` (see `buildQuoteRequestBody`). Any other
+ * shape yields an empty list, which can never match the target — the safe direction, because a
+ * failed read must not consume the one-shot slot.
+ */
+export function readQuoteRequestInstruments(parsedRequestBody: unknown): DepthCaptureRequestInstrument[] {
+  if (!isRecord(parsedRequestBody)) return [];
+  const instruments: DepthCaptureRequestInstrument[] = [];
+  for (const [segment, segmentValue] of Object.entries(parsedRequestBody)) {
+    if (!Array.isArray(segmentValue)) continue;
+    for (const entry of segmentValue) {
+      if (typeof entry === 'number' && Number.isSafeInteger(entry) && entry > 0) {
+        instruments.push({ segment, securityId: String(entry) });
+        continue;
+      }
+      if (typeof entry === 'string' && entry.trim() !== '') {
+        instruments.push({ segment, securityId: entry.trim() });
+      }
+    }
+  }
+  return instruments;
+}
+
+/**
+ * True when this request is the selected one — exactly one instrument, `NSE_EQ`, Dhan ID `2885`.
+ *
+ * Requiring the segment as well as the ID means a same-numbered security on another exchange
+ * segment cannot be mistaken for Reliance. Deliberately strict: an ambiguous body returns
+ * `false`, so the slot survives for the request the operator intended.
+ */
+export function isSelectedDepthCaptureRequest(instruments: readonly DepthCaptureRequestInstrument[]): boolean {
+  if (instruments.length !== 1) return false;
+  const only = instruments[0]!;
+  return only.segment === 'NSE_EQ' && only.securityId === DHAN_DEPTH_CAPTURE_SECURITY_ID;
 }
 
 /**

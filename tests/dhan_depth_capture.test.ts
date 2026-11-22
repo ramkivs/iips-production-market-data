@@ -15,7 +15,7 @@
 
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import * as assert from 'node:assert';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -32,10 +32,13 @@ import {
 import {
   DHAN_DEPTH_CAPTURE_ENV,
   DHAN_DEPTH_CAPTURE_LABEL_ENV,
+  DHAN_DEPTH_CAPTURE_SECURITY_ID,
   armDepthCapture,
   captureDhanQuoteDepth,
   depthCaptureArmMarkerPath,
   isDepthCaptureArmed,
+  isSelectedDepthCaptureRequest,
+  readQuoteRequestInstruments,
   resetDepthCaptureLatchForTests,
   resolveDepthCapturePath,
 } from '../src/providers/dhan/dhan_depth_capture.js';
@@ -80,6 +83,14 @@ function quoteBody(depth: unknown, securityId = '2885'): string {
 }
 
 const parseBody = (body: string): unknown => JSON.parse(body);
+
+const isDirectory = (path: string): boolean => {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+};
 
 const captureContext = { capturedAtUtc: '2026-11-22T00:00:00.000Z', httpStatus: 200 };
 
@@ -327,19 +338,22 @@ describe('depth capture — client integration and non-interference', () => {
   });
 
   it('CAP-16: a capture write failure never fails the quote request', async () => {
-    // A path that cannot be created: a regular file used as a directory.
-    const blocking = join(dir, 'blocking-file');
-    (await import('node:fs')).writeFileSync(blocking, 'x');
-    process.env[DHAN_DEPTH_CAPTURE_ENV] = join(blocking, 'capture.json');
-    // Arming fails on this path (a file is used as a directory); claim the slot
-    // directly so the write-failure branch is still exercised.
-    process.env[DHAN_DEPTH_CAPTURE_ENV] = join(dir, 'capture.json');
-    assert.strictEqual(armDepthCapture(join(dir, 'capture.json')), true);
+    // The target path IS a directory, so writeDepthCapture fails deterministically
+    // (EISDIR / EPERM on Windows) AFTER the slot has been claimed. This is the real
+    // fail-safe path: the diagnostic breaks, the quote does not.
+    const target = join(dir, 'target-is-a-directory');
+    mkdirSync(target);
+    process.env[DHAN_DEPTH_CAPTURE_ENV] = target;
+    assert.strictEqual(armDepthCapture(target), true, 'arming writes a sibling marker, which is valid');
 
     const body = quoteBody({ buy: [{ quantity: 1, orders: 1, price: 10 }], sell: [{ quantity: 1, orders: 1, price: 11 }] });
     const result = await buildClient(new FixedQuoteTransport(body)).fetchMarketQuotes(INSTRUMENT);
 
     assert.strictEqual(result.ok, true, 'a diagnostic write failure must not affect the quote request');
+    assert.strictEqual(isDirectory(target), true, 'nothing was written over the directory');
+    // The write failed, so the capture never completed and the marker was not consumed:
+    // the operator can fix the path and capture without re-arming the slot.
+    assert.strictEqual(isDepthCaptureArmed(target), true, 'a failed write leaves the arm marker in place');
   });
 
   it('CAP-17: captures even when the response body would fail normalisation (market-closed shape)', async () => {
@@ -360,11 +374,175 @@ describe('depth capture — client integration and non-interference', () => {
   it('CAP-18: non-quote endpoints are not captured', async () => {
     const target = join(dir, 'should-not-exist.json');
     process.env[DHAN_DEPTH_CAPTURE_ENV] = target;
+    // ARMED: without this the test would pass for the wrong reason (the arm gate
+    // alone would suppress the capture) and would not prove the endpoint filter.
+    assert.strictEqual(armDepthCapture(target), true);
     const client = buildClient(new FixedQuoteTransport(JSON.stringify({ ok: true })));
 
     await client.executeJsonPost('/marketfeed/ohlc', '{}');
 
     assert.strictEqual(existsSync(target), false, 'only the quote endpoint is captured');
+    assert.strictEqual(isDepthCaptureArmed(target), true, 'the slot is untouched by a non-quote endpoint');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 3b. The capture is scoped to ONE instrument: NSE_EQ / Dhan ID 2885
+// ---------------------------------------------------------------------------
+
+describe('depth capture — selected-instrument scoping', () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'iips-depth-scope-'));
+    resetDepthCaptureLatchForTests();
+    delete process.env[DHAN_DEPTH_CAPTURE_ENV];
+    delete process.env[DHAN_DEPTH_CAPTURE_LABEL_ENV];
+  });
+
+  afterEach(() => {
+    delete process.env[DHAN_DEPTH_CAPTURE_ENV];
+    delete process.env[DHAN_DEPTH_CAPTURE_LABEL_ENV];
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const buildClient = (transport: DhanHttpTransport): DhanApiClient =>
+    new DhanApiClient({
+      config: resolveDhanProviderConfig(CONFIGURED_ENV).config,
+      transport,
+      credentialResolver: new SyntheticCredentialResolver(),
+    });
+
+  const RELIANCE = [{ dhanSecurityId: '2885', exchangeSegment: 'NSE_EQ' as const }];
+  const OTHER_COMPANY = [{ dhanSecurityId: '11536', exchangeSegment: 'NSE_EQ' as const }];
+  const SAME_ID_OTHER_SEGMENT = [{ dhanSecurityId: '2885', exchangeSegment: 'BSE_EQ' as const }];
+
+  /** Serves a body whose only instrument is the one the request named. */
+  const bodyFor = (instrument: { dhanSecurityId: string; exchangeSegment: 'NSE_EQ' | 'BSE_EQ' }): string =>
+    JSON.stringify({
+      status: 'success',
+      data: {
+        [instrument.exchangeSegment]: {
+          [instrument.dhanSecurityId]: {
+            last_price: 1363,
+            ohlc: { open: 1370, close: 1363, high: 1376.5, low: 1354 },
+            volume: 1000,
+            last_trade_time: '22/11/2026 15:29:58',
+            depth: { buy: [{ quantity: 0, orders: 0, price: 0 }], sell: [{ quantity: 0, orders: 0, price: 0 }] },
+          },
+        },
+      },
+    });
+
+  it('CAP-24: the selected instrument is captured', async () => {
+    const target = join(dir, 'reliance.json');
+    process.env[DHAN_DEPTH_CAPTURE_ENV] = target;
+    assert.strictEqual(armDepthCapture(target), true);
+
+    await buildClient(new FixedQuoteTransport(bodyFor(RELIANCE[0]!))).fetchMarketQuotes(RELIANCE);
+
+    assert.strictEqual(existsSync(target), true, 'the selected request must capture');
+    const doc = JSON.parse(readFileSync(target, 'utf8'));
+    assert.deepStrictEqual(doc.requestedSecurityIds, ['2885']);
+    assert.strictEqual(doc.quotes[0].securityId, '2885');
+    assert.strictEqual(isDepthCaptureArmed(target), false, 'the capture consumed the one-shot');
+  });
+
+  it('CAP-25: another company\'s quote neither captures nor consumes the slot', async () => {
+    const target = join(dir, 'other.json');
+    process.env[DHAN_DEPTH_CAPTURE_ENV] = target;
+    assert.strictEqual(armDepthCapture(target), true);
+
+    const result = await buildClient(new FixedQuoteTransport(bodyFor(OTHER_COMPANY[0]!))).fetchMarketQuotes(OTHER_COMPANY);
+
+    assert.strictEqual(result.ok, true);
+    assert.strictEqual(existsSync(target), false, 'a different security must not be captured');
+    assert.strictEqual(isDepthCaptureArmed(target), true, 'the arm marker must survive, so the one-shot is still available');
+  });
+
+  it('CAP-26: Dhan ID 2885 on another exchange segment is not mistaken for Reliance', async () => {
+    const target = join(dir, 'other-segment.json');
+    process.env[DHAN_DEPTH_CAPTURE_ENV] = target;
+    assert.strictEqual(armDepthCapture(target), true);
+
+    await buildClient(new FixedQuoteTransport(bodyFor(SAME_ID_OTHER_SEGMENT[0]!))).fetchMarketQuotes(SAME_ID_OTHER_SEGMENT);
+
+    assert.strictEqual(existsSync(target), false, 'the segment must match too');
+    assert.strictEqual(isDepthCaptureArmed(target), true);
+  });
+
+  it('CAP-27: a multi-instrument batch is not captured (ambiguous request)', async () => {
+    const target = join(dir, 'batch.json');
+    process.env[DHAN_DEPTH_CAPTURE_ENV] = target;
+    assert.strictEqual(armDepthCapture(target), true);
+
+    const batch = [
+      { dhanSecurityId: '2885', exchangeSegment: 'NSE_EQ' as const },
+      { dhanSecurityId: '11536', exchangeSegment: 'NSE_EQ' as const },
+    ];
+    const body = JSON.stringify({
+      status: 'success',
+      data: { NSE_EQ: { '2885': { last_price: 1, depth: { buy: [], sell: [] } }, '11536': { last_price: 2, depth: { buy: [], sell: [] } } } },
+    });
+    await buildClient(new FixedQuoteTransport(body)).fetchMarketQuotes(batch);
+
+    assert.strictEqual(existsSync(target), false, 'only an unambiguous single-instrument request is captured');
+    assert.strictEqual(isDepthCaptureArmed(target), true);
+  });
+
+  it('CAP-28: a non-Reliance quote does not block a later Reliance capture in the same process', async () => {
+    const target = join(dir, 'sequential.json');
+    process.env[DHAN_DEPTH_CAPTURE_ENV] = target;
+    assert.strictEqual(armDepthCapture(target), true);
+
+    // Other traffic first — this is the scenario the earlier endpoint-level gate failed.
+    await buildClient(new FixedQuoteTransport(bodyFor(OTHER_COMPANY[0]!))).fetchMarketQuotes(OTHER_COMPANY);
+    assert.strictEqual(existsSync(target), false);
+
+    // The intended request still captures.
+    await buildClient(new FixedQuoteTransport(bodyFor(RELIANCE[0]!))).fetchMarketQuotes(RELIANCE);
+    assert.strictEqual(existsSync(target), true, 'the slot was preserved for the selected request');
+    const doc = JSON.parse(readFileSync(target, 'utf8'));
+    assert.strictEqual(doc.quotes[0].securityId, '2885');
+  });
+
+  it('CAP-29: after the selected capture, further selected quotes do not overwrite it', async () => {
+    const target = join(dir, 'immutable.json');
+    process.env[DHAN_DEPTH_CAPTURE_ENV] = target;
+    assert.strictEqual(armDepthCapture(target), true);
+
+    await buildClient(new FixedQuoteTransport(bodyFor(RELIANCE[0]!))).fetchMarketQuotes(RELIANCE);
+    const captured = readFileSync(target, 'utf8');
+
+    // Second Reliance quote, different depth: must not replace the evidence.
+    const changed = JSON.stringify({
+      status: 'success',
+      data: { NSE_EQ: { '2885': { last_price: 999, depth: { buy: [{ quantity: 9, orders: 9, price: 999 }], sell: [] } } } },
+    });
+    await buildClient(new FixedQuoteTransport(changed)).fetchMarketQuotes(RELIANCE);
+
+    assert.strictEqual(readFileSync(target, 'utf8'), captured, 'the captured evidence must be immutable');
+  });
+
+  it('CAP-30: the request-body reader and matcher are strict about shape', () => {
+    assert.deepStrictEqual(readQuoteRequestInstruments({ NSE_EQ: [2885] }), [{ segment: 'NSE_EQ', securityId: '2885' }]);
+    assert.deepStrictEqual(readQuoteRequestInstruments({}), []);
+    assert.deepStrictEqual(readQuoteRequestInstruments(undefined), []);
+    assert.deepStrictEqual(readQuoteRequestInstruments('not-json'), []);
+    assert.deepStrictEqual(readQuoteRequestInstruments({ NSE_EQ: '2885' }), [], 'a non-array segment yields nothing');
+
+    assert.strictEqual(DHAN_DEPTH_CAPTURE_SECURITY_ID, '2885');
+    assert.strictEqual(isSelectedDepthCaptureRequest([{ segment: 'NSE_EQ', securityId: '2885' }]), true);
+    assert.strictEqual(isSelectedDepthCaptureRequest([{ segment: 'BSE_EQ', securityId: '2885' }]), false);
+    assert.strictEqual(isSelectedDepthCaptureRequest([{ segment: 'NSE_EQ', securityId: '2886' }]), false);
+    assert.strictEqual(isSelectedDepthCaptureRequest([]), false);
+    assert.strictEqual(
+      isSelectedDepthCaptureRequest([
+        { segment: 'NSE_EQ', securityId: '2885' },
+        { segment: 'NSE_EQ', securityId: '11536' },
+      ]),
+      false
+    );
   });
 });
 

@@ -24,6 +24,7 @@ repositories at those commits, or executed against them.
 | `04-Validate-BackendEndpoints.ps1` | strict API contract validation |
 | `05-Validate-PersistenceRestart.ps1` | durability + restart recovery |
 | `06-Stop-IipsServers.ps1` | stop only IIPS process trees, verify ports and pipe released |
+| `07-Prepare-DepthCapture.ps1` | D-18 support: deploy the depth-capture diagnostic, create the capture directory, arm/disarm the one-shot marker. Starts nothing and makes no vendor request |
 | `Make-SetupBundle.ps1` | build and verify the distributable bundle from this source |
 | `IRR-PORT-5176.patch` | the IRR-side port change, pending publication to that repository |
 | `.validate-scripts.py` | structural validator (Arena-side; 233 checks, 0 failures) |
@@ -130,6 +131,27 @@ Optional:
 .\03-Start-IipsServers.ps1                               # without User Portfolios / Broker Import
 .\01-Fresh-Clone-And-Install.ps1 -AllowCommitDrift       # only after reviewing the listed drift
 ```
+
+### D-18 depth-capture diagnostic (temporary, operator-run)
+
+`07-Prepare-DepthCapture.ps1` deploys and arms the temporary raw-depth capture. It builds nothing
+unless `-Build` is passed, starts no process, and makes no vendor request. The capture itself is
+enabled by the **market-data daemon's** environment, so the variables must be set in the same window
+that launches step 3 - a running process cannot be given a new environment afterwards:
+
+```powershell
+# one-time: build and prepare, then arm
+powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build
+powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm
+
+# launch the managed stack WITH the capture variables in this same window
+$env:IIPS_DHAN_DEPTH_CAPTURE_PATH  = 'H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json'
+$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL = 'D-18 Reliance NSE_EQ 2885, one market-closed quote'
+powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc
+```
+
+The full procedure, guarantees and limitations are in
+`docs/integration/DHAN-D18-RAW-DEPTH-CAPTURE-ACTIVATION-2026-11-20.md`.
 
 ---
 
