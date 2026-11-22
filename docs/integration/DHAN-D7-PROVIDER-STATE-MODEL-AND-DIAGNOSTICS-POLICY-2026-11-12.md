@@ -467,14 +467,30 @@ exhaustive list — the same four enumerated in §4.2.1:
 
 **Reader safeguards (binding on any implementation).** Each operator reader must:
 
-1. **Reuse the existing operator bearer** credential rather than mint a new one;
+1. **Reuse the existing operator bearer** credential rather than mint a new one — a bearer that is already
+   available, already authorized and already held in server memory for its own legitimate purpose. The
+   reader **consumes** that value; it never resolves, retrieves, refreshes, rotates, re-reads or
+   re-derives it, and never probes a backend or warms a cache to obtain one;
 2. **Verify in constant time**, so a failing comparison leaks no timing signal;
 3. **Bind loopback-only** — no non-loopback origin is served, and the check is on the bound socket, not on
    a header that a caller can set;
 4. Be **read-only**: no mutation, no eviction control, no ring reset;
 5. Be **never exposed to a browser**, directly or via any proxy the product ships;
-6. Have **no unauthenticated fallback** — a missing or unverifiable credential fails closed, and there is
-   no debug, localhost-exempt or "trusted network" bypass.
+6. Have **no unauthenticated fallback** — there is no debug, localhost-exempt or "trusted network" bypass.
+
+**Bearer unavailable or invalid — fail closed, with no credential fallback.** If the server-held bearer is
+absent, unset, expired, unverifiable or does not match, the reader **denies the request**: it returns an
+authentication failure and **no diagnostic entries** — no partial page, no sample row, no count, no hint
+from ring contents. It must **never** respond by retrieving, refreshing, re-reading, rotating or
+re-deriving a credential to make the check succeed, and it must never start a credential resolution, a
+backend probe or a cache warm as a fallback. An unavailable bearer is an expected deny state, not an
+error to be repaired at request time; the reader fails closed and stays closed.
+
+**Why this is not a tracing credential access.** Authenticating a reader with a bearer that is already in
+memory is a *different purpose* from tracing, and it is the one case where the policy permits credential
+material to be **used**. It never permits material to be **obtained**. §4.10 rule 3 states this split
+explicitly: trace generation never touches credential material at all; operator-reader authentication uses
+only an already-available authorized bearer and fails closed when it is missing.
 
 ### 4.10 Clarification of the §4.2 substring rule
 
@@ -517,8 +533,21 @@ widen §4.2.1.
    §4.7 permit, without attempting access.
 
    This prohibition **adds no permission and removes none**: the existing bar on comparing an identifier
-   against secret material stands, and neither this rule nor §4.10 authorizes any access to credential
-   material for any purpose.
+   against secret material stands unchanged.
+
+   **Scope — two purposes that must not be conflated.** This rule bars credential access *for tracing*.
+   It does not, and must not be read to, forbid an operator reader from **authenticating** (§4.9
+   safeguards 1–6). The two are separate purposes with separate rules:
+
+   | Purpose | May it touch credential material? |
+   | --- | --- |
+   | **Trace generation** — minting, validating, correlating, acknowledging, recording or diagnosing an identifier, header, event or ring entry | **No.** Never triggers retrieval, resolution or refresh, for any reason, in IPD or across the IRR↔IPD boundary. It uses only already-authorized in-process context (§4.10 rule 3). |
+   | **Operator-reader authentication** — deciding whether a caller may read a ring | **Only an already-available, authorized server-held bearer**, already resolved for its own legitimate purpose and held in memory. Authentication **uses** that value; it never resolves, retrieves, refreshes, rotates, re-reads or re-derives it (§4.9). |
+
+   Consequently, an operator reader authenticating with the server-held bearer is **not** a tracing
+   credential access and is **not** a breach of this rule. It becomes a breach the moment authentication
+   is used as a route to *obtain* the credential — resolving, refreshing or re-reading it, probing a
+   backend, or warming a cache to make the check succeed. Those remain prohibited without exception.
 4. **The intentional-disclosure prohibitions are preserved in full.** Deliberately embedding, encoding,
    hashing or salting a secret into an identifier remains prohibited. §4.10 does not authorize
    intentional disclosure and must not be cited as if it did.
