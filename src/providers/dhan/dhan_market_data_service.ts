@@ -49,14 +49,26 @@ import { parseStrictUtcTimestamp } from './dhan_utc_timestamp.js';
 import {
   DhanBoundedCache,
   DhanConcurrencyLimiter,
+  DhanHistoricalCache,
   DhanRateLimiter,
   DhanRefreshOrchestrator,
   DhanRequestCoalescer,
   DhanSecurityScope,
+  dhanHistoricalCacheKey,
   dhanQuoteCacheKey,
   type DhanAggregateCacheState,
+  type DhanHistoricalCacheEntry,
   type DhanQuoteCacheDiagnostics,
 } from './dhan_operational_controls.js';
+import {
+  D02_NOMINAL_THRESHOLD_SECONDS,
+  projectHistoricalFreshness,
+  type HistoricalFreshnessEvidence,
+} from './dhan_historical_freshness.js';
+import {
+  dhanFreshnessTimestamps,
+  NO_DHAN_FRESHNESS_TIMESTAMPS,
+} from './dhan_historical_provenance.js';
 
 // ── Consumer-facing (provider-neutral) request/response contracts ────────────
 
@@ -673,6 +685,8 @@ export interface DhanMarketDataServiceOptions {
   securityMaster: SecurityMaster;
   instrumentRegistry: DhanInstrumentRegistry;
   cache?: DhanBoundedCache<CanonicalEnvelope<MarketQuotePayload>>;
+  /** W-19: bounded historical observation cache; defaults to 256 entries. */
+  historicalCache?: DhanHistoricalCache;
   limiter?: DhanRateLimiter;
   concurrency?: DhanConcurrencyLimiter;
   coalescer?: DhanRequestCoalescer;
@@ -691,6 +705,7 @@ export class DhanMarketDataService {
   private readonly instrumentRegistry: DhanInstrumentRegistry;
   private readonly orchestrator: DhanRefreshOrchestrator;
   private readonly cache: DhanBoundedCache<CanonicalEnvelope<MarketQuotePayload>>;
+  private readonly historicalCache: DhanHistoricalCache;
   private readonly limiter: DhanRateLimiter;
   private readonly client: DhanApiClient;
   private readonly now: () => Date;
@@ -699,6 +714,13 @@ export class DhanMarketDataService {
   private quoteRequests = 0;
   private quoteCacheHits = 0;
   private historicalRequests = 0;
+  private historicalCacheHits = 0;
+  /** W-19: retained per-identity content digest so a revision is reported, never silently overwritten. */
+  private readonly historicalDigests = new Map<string, string>();
+  /** W-19: outcome of the most recent historical attempt; never inferred from the cache. */
+  private lastHistoricalRefresh: RefreshStatus | null = null;
+  /** W-19: the retention the freshness projection reads (identity + storage instant). */
+  private lastHistoricalEvidence: { cacheKey: string; cachedAt: string | null } | null = null;
   private verificationProbes = 0;
   private running = false;
 
@@ -721,6 +743,7 @@ export class DhanMarketDataService {
     this.resolution = new DhanInstrumentResolutionService(options.securityMaster, options.instrumentRegistry);
     this.cache = options.cache ?? new DhanBoundedCache<CanonicalEnvelope<MarketQuotePayload>>(256);
     this.cache.setTradingCalendar(this.tradingCalendar);
+    this.historicalCache = options.historicalCache ?? new DhanHistoricalCache(256);
     this.limiter = options.limiter ?? new DhanRateLimiter({ maxRequests: 60, windowMs: 60_000, now: () => this.now().getTime() });
     const concurrency = options.concurrency ?? new DhanConcurrencyLimiter(8);
     const coalescer = options.coalescer ?? new DhanRequestCoalescer();
@@ -838,23 +861,196 @@ export class DhanMarketDataService {
   public getFreshness(request: { domain: 'D01_QUOTES'; companyId: string; exchangeSegment: DhanExchangeSegment; securityIdentity: D114SecurityIdentity } | { domain: 'D02_OHLCV' }): FreshnessStatus {
     const evaluatedAt = this.now().toISOString();
     const unknown: RefreshStatus = { outcome: 'UNKNOWN', lastFailure: null };
-    // The composed D02 adapter does not use DhanHistoricalCache or the refresh orchestrator.
-    if (request.domain === 'D02_OHLCV') return freshnessStatus(request.domain, null, evaluatedAt, unknown);
+    if (request.domain === 'D02_OHLCV') {
+      // W-19 / D-4.3: D02 freshness is reported from retained IPD evidence only. Until a
+      // historical observation exists in this process, it stays honestly unknown — never
+      // SNAPSHOT, never inferred from a candle. `refreshOutcome` of the last historical
+      // attempt is reported alongside, and only when an attempt actually happened.
+      const retained = this.historicalEvidence();
+      const refresh = retained.lastRefresh ?? unknown;
+      if (!retained.projection) {
+        return {
+          ...freshnessStatus(request.domain, null, evaluatedAt, refresh),
+          thresholdSeconds: D02_NOMINAL_THRESHOLD_SECONDS,
+          timestamps: retained.timestamps,
+          timestampStates: retained.timestamps.evidence,
+          evidenceSource: 'NO_OBSERVATION',
+          refreshOutcome: refresh.outcome,
+        };
+      }
+      return {
+        ...retained.projection,
+        domain: request.domain,
+        evaluatedAt,
+        thresholdSeconds: D02_NOMINAL_THRESHOLD_SECONDS,
+        lastRefresh: refresh,
+        refreshOutcome: refresh.outcome,
+      };
+    }
     const scope: DhanSecurityScope = { companyId: request.companyId, exchangeSegment: request.exchangeSegment, isin: request.securityIdentity.isin, series: request.securityIdentity.series };
     const key = dhanQuoteCacheKey(scope);
     return freshnessStatus(request.domain, this.cache.peek(key, evaluatedAt), evaluatedAt, this.refreshStatus.get(key) ?? unknown, this.tradingCalendar ? { kind: 'QUOTE', calendar: this.tradingCalendar, exchange: request.exchangeSegment === 'NSE_EQ' ? 'NSE' : 'BSE' } : undefined);
   }
 
-  /** Canonical historical request through the existing D02 adapter path. */
+  /**
+   * Canonical historical request through the existing D02 adapter path.
+   *
+   * W-19: the composed path now retains its own observations. Cache identity is the
+   * complete resolved request identity (security + segment + interval + range +
+   * adjustment), so different intervals and ranges never coalesce. Only validated,
+   * successful results are stored — failures are never cached and never overwrite a
+   * retained observation. A retained observation is reused without any provider call.
+   */
   public async getHistorical(request: HistoricalServiceRequest): Promise<HistoricalResponse> {
     this.historicalRequests += 1;
     if (!this.running) return { ok: false, failure: dhanFailure('PROVIDER_STATUS_FAILURE', 'service not started').failure };
+
+    const cacheKey = this.historicalIdentity(request);
+    const retained = cacheKey === null ? undefined : this.historicalCache.get(cacheKey);
+    if (retained) {
+      this.historicalCacheHits += 1;
+      // Session history: something was served, and nothing was fetched.
+      this.recordHistoricalRefresh('SKIPPED_FRESH');
+      return { ok: true, result: retained.provenance ? this.asCachedServed(retained) : retained.result };
+    }
+
     if (!this.limiter.tryAcquire()) {
+      // A request refused before the provider path is not a refresh failure, exactly as
+      // on the D01 path: no attempt was made, so no outcome is claimed.
+      this.recordHistoricalRefresh('BLOCKED');
       return { ok: false, failure: dhanFailure('RATE_LIMITED', 'provider request budget exhausted').failure };
     }
-    const result = await this.historical.fetchDailyCandles(request);
-    if (result.ok) return { ok: true, result: result.value };
-    return { ok: false, failure: result.failure };
+    const result = await this.historical.fetchDailyCandles(
+      request,
+      cacheKey === null ? undefined : { priorContentDigest: this.historicalDigests.get(cacheKey) ?? null }
+    );
+    if (!result.ok) {
+      this.recordHistoricalRefresh('FAILURE');
+      return { ok: false, failure: result.failure };
+    }
+
+    this.recordHistoricalRefresh('SUCCESS');
+    const provenance = result.value.provenance ?? null;
+    if (cacheKey !== null && provenance) {
+      // The cache instant is the storage instant — never the retrieval instant re-used
+      // as a stand-in, which would misreport when the observation became available here.
+      this.historicalCache.set(cacheKey, result.value, this.now().toISOString(), provenance);
+      this.historicalDigests.set(cacheKey, provenance.revision.contentDigest);
+      this.lastHistoricalEvidence = { cacheKey, cachedAt: this.historicalCache.peek(cacheKey)?.cachedAt ?? null };
+    }
+    return { ok: true, result: result.value };
+  }
+
+  /**
+   * The cache identity of a historical request, using the identity the governed registry
+   * resolved — never a caller-supplied vendor id. `null` means the request cannot be
+   * keyed, in which case nothing is cached and nothing is served from cache.
+   */
+  private historicalIdentity(request: HistoricalServiceRequest): string | null {
+    const resolution = request.exchangeSegment
+      ? request.isin
+        ? this.instrumentRegistry.resolveSecurity(request.companyId, request.exchangeSegment, request.isin)
+        : this.instrumentRegistry.resolveListing(request.companyId, request.exchangeSegment)
+      : this.instrumentRegistry.resolve(request.companyId);
+    if (resolution.status === 'UNRESOLVED') return null;
+    return dhanHistoricalCacheKey({
+      companyId: resolution.mapping.companyId,
+      exchangeSegment: resolution.mapping.exchangeSegment,
+      ...(resolution.mapping.isin ? { isin: resolution.mapping.isin } : {}),
+      interval: request.interval,
+      fromDate: request.fromDate,
+      toDate: request.toDate,
+      isAdjusted: false,
+    });
+  }
+
+  /**
+   * A cache hit is reported as a served observation, not as a new retrieval. The cached
+   * body keeps its original `retrievalTimestamp` and gains the cache instant; it is
+   * never re-stamped as if the provider had just replied.
+   */
+  private asCachedServed(entry: DhanHistoricalCacheEntry): DhanHistoricalNormalizationResult {
+    const provenance = entry.provenance!;
+    const timestamps = dhanFreshnessTimestamps({
+      marketTimestamp: provenance.timestamps.marketTimestamp,
+      marketTimestampDerivation: provenance.timestamps.marketTimestampDerivation,
+      retrievalTimestamp: provenance.timestamps.retrievalTimestamp,
+      cacheTimestamp: entry.cachedAt,
+    });
+    return {
+      ...entry.result,
+      provenance: Object.freeze({
+        ...provenance,
+        timestamps,
+        servedFromCache: true,
+        // The revision state observed when the entry was stored; a re-read is not a revision.
+        revision: provenance.revision,
+      }),
+    };
+  }
+
+  /**
+   * Records session history only. `BLOCKED` means the request never reached the provider,
+   * so it is not a refresh failure and no failure detail is claimed.
+   */
+  private recordHistoricalRefresh(outcome: 'SUCCESS' | 'SKIPPED_FRESH' | 'FAILURE' | 'BLOCKED'): void {
+    this.lastHistoricalRefresh = outcome === 'BLOCKED'
+      ? { outcome: 'UNKNOWN', lastFailure: null }
+      : {
+          outcome,
+          lastFailure: outcome === 'FAILURE' ? { code: 'REFRESH_FAILED', priorPreserved: this.historicalCache.size > 0 } : null,
+        };
+  }
+
+  /**
+   * Retained D02 evidence for the freshness projection, without touching LRU order or
+   * invoking any provider path.
+   *
+   * The identity served by the most recent successful fetch is preferred, because that is
+   * the observation a caller most recently asked about. If it has since been evicted, the
+   * most recently stored retained observation is used instead, so a real observation is
+   * not hidden by LRU churn. With nothing retained, the caller reports honestly unknown.
+   */
+  private historicalEvidence():
+    | { projection: HistoricalFreshnessEvidence | null; lastRefresh: RefreshStatus | null; timestamps: ReturnType<typeof dhanFreshnessTimestamps> } {
+    const unknownTimestamps = NO_DHAN_FRESHNESS_TIMESTAMPS;
+    const evidence = this.lastHistoricalEvidence;
+    if (!evidence) return { projection: null, lastRefresh: this.lastHistoricalRefresh, timestamps: unknownTimestamps };
+    const tracked = this.historicalCache.peek(evidence.cacheKey);
+    const entry = tracked ?? this.historicalCache.mostRecent();
+    const cachedAt = tracked ? evidence.cachedAt : entry?.cachedAt ?? null;
+    const projection = projectHistoricalFreshness(
+      entry,
+      cachedAt,
+      this.now().toISOString(),
+      this.tradingCalendar,
+      entry?.provenance?.revision ?? null
+    );
+    return {
+      projection,
+      lastRefresh: this.lastHistoricalRefresh,
+      timestamps: projection ? projection.timestamps : unknownTimestamps,
+    };
+  }
+
+  /**
+   * W-19 observational summary of IPD's retained historical observations.
+   *
+   * Observation-only: never invokes a provider, never reads credentials, never touches
+   * LRU order. Deliberately NOT part of the governed `/v1/diagnostics` contract — the
+   * governed wire contract is unchanged by W-19 — and it exposes no identities or
+   * payloads, only counts and the retention capacity.
+   */
+  public getHistoricalRetentionSummary(): {
+    readonly retained: number;
+    readonly capacity: number;
+    readonly cacheHits: number;
+  } {
+    return Object.freeze({
+      retained: this.historicalCache.size,
+      capacity: this.historicalCache.maxEntries,
+      cacheHits: this.historicalCacheHits,
+    });
   }
 
   /**

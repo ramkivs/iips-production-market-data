@@ -94,6 +94,24 @@ export type {
 } from './dhan_instrument_mapping_integration.js';
 // Historical adapter (server-side only); vendor historical DTO stays internal.
 export { DhanHistoricalAdapter, normalizeDhanHistoricalToCandles } from './dhan_historical_adapter.js';
+// W-19 / D-4.3 four-timestamp provenance and D02 freshness projection.
+export {
+  dhanFreshnessTimestamps,
+  dhanHistoricalContentDigest,
+  NO_DHAN_FRESHNESS_TIMESTAMPS,
+} from './dhan_historical_provenance.js';
+export type {
+  DhanFreshnessTimestamps,
+  DhanHistoricalProvenance,
+  DhanHistoricalRevision,
+  DhanHistoricalRevisionState,
+  DhanMarketTimestampDerivation,
+  DhanObservationScope,
+  DhanTimestampEvidence,
+  DhanTimestampState,
+} from './dhan_historical_provenance.js';
+export { projectHistoricalFreshness } from './dhan_historical_freshness.js';
+export type { HistoricalFreshnessEvidence } from './dhan_historical_freshness.js';
 export type { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
 export type {
   DhanHistoricalRequest,
