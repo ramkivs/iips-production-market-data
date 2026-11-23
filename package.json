@@ -15,6 +15,7 @@
     "build:dhan-package": "tsc -p tsconfig.dhan-package.json",
     "start:market-data-daemon": "node dist/src/providers/dhan/dhan_local_daemon.js",
     "dhan:credential": "node dist/src/providers/dhan/dhan_credential_store_cli.js",
+    "dhan:w27-expand": "node scripts/dhan-w27-expand.mjs",
     "dev": "vite",
     "test": "node scripts/run-tests.mjs",
     "test:direct": "node --test --experimental-strip-types tests/*.test.ts",
