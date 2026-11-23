@@ -10,7 +10,8 @@ architecture decisions `D-4.1`–`D-4.7`, including source authority, source sel
 corporate-action handling, D114/PIT admission, D01/D02 identity symmetry and report reproducibility.
 **Repository:** `ramkivs/iips-production-market-data` (IPD), branch `arena/c76ff83a-iips-production-market-data`
 **IPD verification baseline:** `main` `84e988b092058df8075ffa52f5dfb0f4fef07eaf` (merge of IPD PR #189)
-**IPD publication commit:** `<see §10 — recorded in the follow-up commit that carries this identifier>`
+**IPD publication commit:** `447b86e2585b95fdea4627b90faa4fd3cc3bcf60` (initial publication of this record; see §10)
+**IPD review:** pull request #191 (`arena/c76ff83a-iips-production-market-data` → `main`)
 
 ### Authoritative IRR counterpart records (verified by inspection, not by assertion)
 
@@ -419,13 +420,20 @@ occurred.
 
 ## 10. Publication and independent verification
 
-- Branch: `arena/c76ff83a-iips-production-market-data`; IPD publication commit: recorded in the follow-up
-  commit that supplies this value (the record's first publication commit is the parent of that commit).
+- Branch: `arena/c76ff83a-iips-production-market-data`; pull request **#191**.
+- Initial publication commit: **`447b86e2585b95fdea4627b90faa4fd3cc3bcf60`** — the commit that first added this
+  record. The commit that supplies this identifier is its immediate successor, so the record is verifiable
+  both at `447b86e` (without this line) and at every later commit on the branch.
 - Verify the approval act itself:
   `git -C <irr-clone> show 8f893112:docs/integration/DHAN-D4-OWNER-ACCEPTANCE-2026-11-23.md`
 - Verify the canonical wording:
   `git -C <irr-clone> show b9d6c2f:docs/integration/DHAN-D4-OWNER-DECISION-PROPOSAL-2026-11-23.md` (§7, §20)
 - Verify this record's history:
   `git log --oneline -- docs/integration/D-4-D02-D114-PIT-MIRROR-ACCEPTANCE-2026-11-23.md`
-- Verify the IPD facts: `node scripts/dhan-w27-expand.mjs --check` (if present in a later revision) or the
-  committed manifests cited in §7.4; probes in §7.5 re-run against `dist/` after `npm run build`.
+- Verify the IPD figures: read `evidence/dhan-w27/expansion-manifest.json` (`counts.proposedAdditions`,
+  `counts.alreadyQualified`) and `evidence/dhan-p7/qualification-report.md`; both are committed at
+  `84e988b`, so the numbers in §7.4 are checkable without executing anything.
+- Re-run the §7.5 probes: `npm run build`, then import
+  `dist/src/providers/dhan/dhan_historical_dto.js`, `dist/src/providers/dhan/dhan_market_data_http.js` and
+  `dist/src/providers/dhan/dhan_freshness_status.js` and call the same functions. The probes are offline and
+  make no vendor request.
