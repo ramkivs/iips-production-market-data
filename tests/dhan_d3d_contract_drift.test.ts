@@ -138,7 +138,21 @@ describe('DHAN-D3D contract-drift prevention', () => {
     assert.strictEqual(candle.interval, '1d');
     assert.ok(!('ltp' in candle) && !('bid' in candle), 'historical candle must not carry D01 quote fields');
     const serialized = JSON.stringify(r.value).toLowerCase();
-    for (const token of VENDOR_TOKENS) assert.ok(!serialized.includes(token.toLowerCase()));
+    // `ohlc` needs care: as a bare substring it also matches `D02_OHLCV`, which is IIPS's
+    // own canonical domain identifier (src/contracts/types.ts) carried by the W-19
+    // provenance block — a canonical name, not a vendor field. The vendor block can only
+    // reach JSON as a KEY, so assert that form, then prove that every `ohlcv` occurrence in
+    // the whole payload is the canonical domain literal and nothing else. That is strictly
+    // stronger than the bare-substring check it replaces.
+    for (const token of VENDOR_TOKENS.filter((t) => t !== 'ohlc')) {
+      assert.ok(!serialized.includes(token.toLowerCase()), `vendor token leaked into canonical D02 result: ${token}`);
+    }
+    assert.ok(!serialized.includes('"ohlc":'), 'vendor ohlc block must not leak into the canonical D02 result');
+    const ohlcvOccurrences = [...serialized.matchAll(/[a-z0-9_]*ohlcv/g)].map((m) => m[0]);
+    assert.ok(ohlcvOccurrences.length > 0, 'the canonical domain identifier must still be present');
+    for (const occurrence of ohlcvOccurrences) {
+      assert.strictEqual(occurrence, 'd02_ohlcv', `unexpected ohlcv-containing text in canonical D02 result: ${occurrence}`);
+    }
   });
 
   it('D3D-03: identity separation — companyId, P04 security identity and Dhan instrument id stay distinct; multi-ISIN resolves independently; incomplete identity fails closed', () => {

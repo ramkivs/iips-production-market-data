@@ -89,14 +89,19 @@ New: `tests/dhan_w19_d02_freshness_cache.test.ts` — **25 cases, 25 pass, 0 fai
 | Revisions (`W19-4`) | `UNCHANGED`; `REVISED`; digest excludes provenance; cached revision preserved |
 | Safeguards (`W19-5`) | unadjusted + unverified; no vendor leakage; invalid instants refused; HTTP parity; D01 unchanged; anti-skip guard (`W19-AS1`) |
 
-Two existing suites changed behaviour and both changes are corrections, not accommodations:
+Three existing suites changed, and every change is a correction or a strengthening — none is an accommodation:
+
+- `tests/dhan_d3d_contract_drift.test.ts` (`D3D-02`) — its no-vendor-leakage scan rejects the bare substring `ohlc`, which also matches **`D02_OHLCV`**, IIPS's *own* canonical domain identifier (`src/contracts/types.ts`). The new provenance block legitimately carries that canonical name, so the bare-substring check could no longer distinguish "canonical domain name" from "vendor ohlc block". The check was **replaced by a stronger one**, not relaxed: `"ohlc":` (the only form a vendor block can take in JSON) is rejected outright, and every `ohlcv`-containing run of text in the whole payload must be exactly `d02_ohlcv`. Verified against synthetic leaks: `{"ohlc":{...}}` → caught, `provider:"dhan"` → caught, `"ohlcv_raw"` → caught, canonical output → pass. The other five vendor tokens are unchanged.
+
 
 - `tests/dhan_w11_daemon_configuration.test.ts` — `lastRefresh.outcome` for D02 after a failed pre-flight fetch is now `FAILURE`, not `UNKNOWN`. `UNKNOWN` there would have been the fabrication: an attempt was made and it failed. A request refused *before* the provider path still leaves `UNKNOWN` (`W19-103`).
 - `tests/irr_stage2_market_data_route.test.ts` — unchanged; it **caught** the vendor-name leak described in §5. No test was weakened to satisfy it.
 
 ### Validation
 
-`npx tsc` → clean. Targeted suites, **154 tests, 154 pass, 0 fail**:
+`npx tsc` → clean. **Full suite: 2,179 tests, 2,165 pass, 0 fail, 14 skipped** — the same 14 pre-existing skips as the baseline; W-19 adds 25 executed cases.
+
+Targeted suites, **154 tests, 154 pass, 0 fail**:
 
 | Suite | Pass |
 |---|---|
