@@ -30,6 +30,12 @@ import {
   validateDhanHistoricalRequest,
 } from './dhan_historical_dto.js';
 import { DhanExchangeSegment } from './dhan_dto.js';
+import {
+  dhanFreshnessTimestamps,
+  dhanHistoricalContentDigest,
+  type DhanHistoricalProvenance,
+  type DhanHistoricalRevision,
+} from './dhan_historical_provenance.js';
 
 export interface DhanHistoricalNormalizationResult {
   candles: OHLCVCandle[];
@@ -40,6 +46,12 @@ export interface DhanHistoricalNormalizationResult {
   /** Candle count actually returned; never presented as coverage evidence. */
   returnedCandleCount: number;
   coverageClaim: 'ACCESS_PENDING_UNVERIFIED';
+  /**
+   * W-19 / D-4.3: source provenance and the four freshness instants. Present on every
+   * result this module produces; `null` only when an observation was assembled outside
+   * the governed path, in which case every instant stays explicitly unknown.
+   */
+  provenance?: DhanHistoricalProvenance | null;
 }
 
 /**
@@ -55,6 +67,16 @@ export function normalizeDhanHistoricalToCandles(params: {
   interval: DhanHistoricalRequest['interval'];
   fromDate: string;
   toDate: string;
+  /**
+   * W-19: IPD receipt instant of the provider response that carried this payload.
+   * Supplied ONLY by the fetch boundary that actually received the response; when a
+   * caller normalizes a payload it did not receive from the provider, it is absent and
+   * the retrieval instant stays explicitly NOT_AVAILABLE rather than being stamped
+   * with a fabricated clock read.
+   */
+  retrievalTimestamp?: string;
+  /** W-19: revision context (retained digest for this identity), when one is known. */
+  priorContentDigest?: string | null;
 }): DhanResult<DhanHistoricalNormalizationResult> {
   const { dto, mapping } = params;
   const interval = params.interval;
@@ -114,12 +136,47 @@ export function normalizeDhanHistoricalToCandles(params: {
     candles.push(candle);
   }
 
+  // W-19: the market instant is the newest source-DECLARED candle period start. It is
+  // reported as a market instant only; it never becomes the observation's `asOf`.
+  const contentDigest = dhanHistoricalContentDigest(candles);
+  const prior = params.priorContentDigest ?? null;
+  const revision: DhanHistoricalRevision = {
+    state: prior === null ? 'BASELINE' : prior === contentDigest ? 'UNCHANGED' : 'REVISED',
+    contentDigest,
+    priorContentDigest: prior !== null && prior !== contentDigest ? prior : null,
+  };
+  const retrievalTimestamp = params.retrievalTimestamp ?? null;
+  const timestamps = dhanFreshnessTimestamps({
+    marketTimestamp: candles.length > 0 ? candles[candles.length - 1]!.candleStart : null,
+    marketTimestampDerivation: 'SOURCE_DECLARED_CANDLE_PERIOD_START',
+    retrievalTimestamp,
+    // The cache instant exists only once the observation is stored; see the cache path.
+    cacheTimestamp: null,
+  });
+  const provenance: DhanHistoricalProvenance = Object.freeze({
+    domain: 'D02_OHLCV',
+    observationScope: Object.freeze({
+      companyId: mapping.companyId,
+      exchangeSegment: mapping.exchangeSegment,
+      isin: mapping.isin ?? null,
+      interval: canonicalInterval,
+    }),
+    retrievalTimestamp: timestamps.retrievalTimestamp,
+    providerResponseTimestamp: null,
+    timestamps,
+    revision,
+    servedFromCache: false,
+    isAdjusted: false,
+    coverageClaim: 'ACCESS_PENDING_UNVERIFIED',
+  });
+
   return dhanOk({
     candles,
     requestedFromDate: params.fromDate,
     requestedToDate: params.toDate,
     returnedCandleCount: candles.length, // 0 is a valid empty result, never a failure
     coverageClaim: 'ACCESS_PENDING_UNVERIFIED',
+    provenance,
     ...(params.tradingCalendar && interval === '1D' ? { dailyFreshness: candles.map(c => {
       const observationDate = istDate(Date.parse(c.candleStart));
       const assessment = evaluateFreshness(c.candleStart, 'D02_OHLCV', params.evaluationTime ?? '', {
@@ -147,7 +204,8 @@ export class DhanHistoricalAdapter {
   }
 
   public async fetchDailyCandles(
-    request: DhanHistoricalRequest
+    request: DhanHistoricalRequest,
+    options?: { priorContentDigest?: string | null }
   ): Promise<DhanResult<DhanHistoricalNormalizationResult>> {
     const range = validateDhanHistoricalRequest(request);
     if (!range.ok) return range;
@@ -198,6 +256,10 @@ export class DhanHistoricalAdapter {
       interval: request.interval,
       fromDate: range.value.fromDate,
       toDate: range.value.toDate,
+      // W-19: the response was received at `at` (captured immediately after the
+      // transport call); this is the retrieval instant, not a publication instant.
+      retrievalTimestamp: at,
+      priorContentDigest: options?.priorContentDigest ?? null,
     });
     if (!normalized.ok) {
       this.client.getStateRecorder().recordFailure({

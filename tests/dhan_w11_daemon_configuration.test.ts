@@ -690,12 +690,23 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
         domain: string;
         cacheState: string;
         verdict: string;
+        asOf: string | null;
+        evidenceSource: string;
         lastRefresh: { outcome: string };
+        refreshOutcome: string;
       };
       assert.equal(freshD02.domain, 'D02_OHLCV');
+      // W-19: the earlier historical request above failed pre-flight
+      // (CREDENTIALS_UNAVAILABLE, zero vendor egress), so nothing is retained and the
+      // freshness report stays honestly unknown: no cache state, no verdict, no
+      // observation instant. It is never reported as SNAPSHOT freshness.
       assert.equal(freshD02.cacheState, 'NOT_AVAILABLE');
       assert.equal(freshD02.verdict, 'UNKNOWN');
-      assert.equal(freshD02.lastRefresh.outcome, 'UNKNOWN');
+      assert.equal(freshD02.asOf, null);
+      assert.equal(freshD02.evidenceSource, 'NO_OBSERVATION');
+      // Session history, not projection state: the most recent attempt failed.
+      assert.equal(freshD02.lastRefresh.outcome, 'FAILURE');
+      assert.equal(freshD02.refreshOutcome, 'FAILURE');
 
       const freshD01Resp = await fetch(
         `${baseUrl}${MARKET_DATA_ROUTES.freshness}?domain=D01_QUOTES&companyId=EQ_INFY_IN&exchangeSegment=NSE_EQ&securityId=ISIN:INE009A01021:EQ`,

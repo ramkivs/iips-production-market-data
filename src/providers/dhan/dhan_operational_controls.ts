@@ -20,6 +20,7 @@ import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
 import { evaluateFreshness } from '../../quality/freshness_evaluator.js';
 import { DhanResult, DhanFailureCode } from './dhan_failures.js';
 import { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
+import type { DhanHistoricalProvenance } from './dhan_historical_provenance.js';
 import { DhanExchangeSegment } from './dhan_dto.js';
 
 // ── Cache identity (security level, never company level) ─────────────────────
@@ -467,8 +468,17 @@ export class DhanRefreshOrchestrator {
 export interface DhanHistoricalCacheEntry {
   result: DhanHistoricalNormalizationResult;
   cachedAt: string;
+  /** W-19: provenance of the observation that produced this entry (source, instants, revision). */
+  provenance?: DhanHistoricalProvenance;
 }
 
+/**
+ * Bounded LRU cache for immutable historical observations.
+ *
+ * W-19 adds `peek`, so a read-only freshness projection can inspect an entry
+ * WITHOUT mutating LRU order — the same non-mutating guarantee the quote cache
+ * already provides through `peek`. `get` keeps its existing LRU-touching contract.
+ */
 export class DhanHistoricalCache {
   private readonly map = new Map<string, DhanHistoricalCacheEntry>();
   constructor(private readonly capacity: number) {
@@ -484,9 +494,14 @@ export class DhanHistoricalCache {
     return entry;
   }
 
-  public set(key: string, result: DhanHistoricalNormalizationResult, cachedAt: string): void {
+  /** Inspect without touching LRU order. Never mutates the cache. */
+  public peek(key: string): DhanHistoricalCacheEntry | undefined {
+    return this.map.get(key);
+  }
+
+  public set(key: string, result: DhanHistoricalNormalizationResult, cachedAt: string, provenance?: DhanHistoricalProvenance): void {
     if (this.map.has(key)) this.map.delete(key);
-    this.map.set(key, { result, cachedAt });
+    this.map.set(key, { result, cachedAt, ...(provenance ? { provenance } : {}) });
     while (this.map.size > this.capacity) {
       const oldest = this.map.keys().next();
       if (oldest.done) break;
@@ -498,7 +513,22 @@ export class DhanHistoricalCache {
     return this.map.delete(key);
   }
 
+  /**
+   * The most recently STORED observation, without touching LRU order. Map insertion
+   * order makes the final key the newest write, so this is evidence, not a guess.
+   * Used only as a fallback when the last-requested identity is no longer retained.
+   */
+  public mostRecent(): DhanHistoricalCacheEntry | undefined {
+    let newest: DhanHistoricalCacheEntry | undefined;
+    for (const entry of this.map.values()) newest = entry;
+    return newest;
+  }
+
   public get size(): number {
     return this.map.size;
+  }
+
+  public get maxEntries(): number {
+    return this.capacity;
   }
 }

@@ -2,6 +2,11 @@ import type { SessionFreshnessContext } from '../../quality/trading_calendar.js'
 /** Read-only freshness projection. Evaluation is owned by the P07 evaluator. */
 import { DEFAULT_FRESHNESS_CONFIG, evaluateFreshness } from '../../quality/freshness_evaluator.js';
 import type { CacheLookup } from './dhan_operational_controls.js';
+import type {
+  DhanFreshnessTimestamps,
+  DhanHistoricalRevision,
+  DhanTimestampEvidence,
+} from './dhan_historical_provenance.js';
 
 export type FreshnessDomain = 'D01_QUOTES' | 'D02_OHLCV';
 export interface RefreshStatus {
@@ -32,6 +37,30 @@ export interface FreshnessStatus {
   readonly suppressExecution: boolean;
   readonly eligibleForUse: boolean;
   readonly lastRefresh: RefreshStatus;
+  /**
+   * W-19 / D-4.3 four-timestamp evidence. Optional so every existing consumer keeps
+   * compiling unchanged; absent means "this surface does not report it", never
+   * "fresh". Read it as evidence, not as a verdict — `verdict`/`suppressExecution`
+   * remain the authority, and an unknown instant is never inferred.
+   */
+  readonly timestamps?: DhanFreshnessTimestamps;
+  /** W-19: the four-field independent evidence state, when `timestamps` is present. */
+  readonly timestampStates?: DhanTimestampEvidence;
+  /** W-19: revision state of the served historical observation (D02 only). */
+  readonly revision?: DhanHistoricalRevision | null;
+  /**
+   * W-19: how D02 freshness was sourced. `HISTORICAL_CACHE` means retained IPD
+   * evidence backed the report; `NO_OBSERVATION` means this process holds no
+   * historical observation yet, so the report is honestly unknown — not fabricated.
+   */
+  readonly evidenceSource?: 'HISTORICAL_CACHE' | 'NO_OBSERVATION';
+  /**
+   * Session history, independent of whether an observation is retained: the outcome of
+   * the most recent historical request in this process, `UNKNOWN` before the first one.
+   * It is deliberately NOT `SKIPPED_FRESH` merely because something is retained — a
+   * cache hit is an observation fact, not the last attempt's outcome.
+   */
+  readonly refreshOutcome?: 'SUCCESS' | 'SKIPPED_FRESH' | 'FAILURE' | 'UNKNOWN';
 }
 
 const validTime = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '' && Number.isFinite(Date.parse(value));
