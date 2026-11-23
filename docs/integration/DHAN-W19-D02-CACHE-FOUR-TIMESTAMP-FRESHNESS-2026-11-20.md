@@ -99,7 +99,7 @@ Three existing suites changed, and every change is a correction or a strengtheni
 
 ### Validation
 
-`npx tsc` → clean. **Full suite: 2,179 tests, 2,165 pass, 0 fail, 14 skipped** — the same 14 pre-existing skips as the baseline; W-19 adds 25 executed cases.
+`npx tsc` → clean. **CI (run `45262236178`, head `96d34b3`): 2,179 tests executed, 2,168 passed, 0 failed**, against the 2,154 / 2,143 baseline this branch started from; all 8 CI steps green, including the zero-test guard (CV-35). A local run reports the same 2,179 executions with 2,165 passed + 14 pre-existing skips. W-19 adds 25 executed cases.
 
 Targeted suites, **154 tests, 154 pass, 0 fail**:
 
