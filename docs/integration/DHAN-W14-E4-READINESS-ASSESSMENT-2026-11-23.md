@@ -3,7 +3,8 @@
 **Workstream:** W-14 — Live Instrument Mapping Qualification · **Capability:** E4 — Bounded Live Quote Mapping Qualification
 **Repository owner:** IPD · **Repository:** `ramkivs/iips-production-market-data`
 **Baseline verified:** `84e988b092058df8075ffa52f5dfb0f4fef07eaf` (`main`)
-**Status: READINESS ASSESSMENT ONLY. NOT EXECUTED. No vendor request was made, no credential read, no daemon started.**
+**Status: READINESS ASSESSMENT ONLY. E4 NOT EXECUTED. No E4 sweep request was made, no credential read and no daemon started by this work item.**
+**Operator-held evidence for O1–O5 was supplied on 2026-11-23 and is incorporated in §6.2 — see §6.2.1 for the evidence register and §6.2.2 for the per-item classification.**
 
 > This document prepares E4. The 97-request live qualification is a **subsequent, separately authorized**
 > execution step and is not performed, simulated or anticipated here. Everything below is either
@@ -55,8 +56,11 @@ Two consequences, both requiring an owner decision before execution:
 | M1 "one real authenticated interaction" | **SATISFIED** | same record §7.1 |
 | Multi-instrument live qualification | **NOT ESTABLISHED** — the single Reliance quote is not multi-instrument evidence | §1 of that record explicitly bounds it |
 | Rate-limit behaviour at 97 requests | **NOT ESTABLISHED** — never observed against the vendor | §6 |
-| Credential validity window | **EXPIRED** — token expired `2026-11-19T10:05:01.481Z` | §6.3 |
-| Live runtime at baseline `84e988b` | **NOT ESTABLISHED** — the accepted run was at `2685562` | §6.1 |
+| Credential verification | **PASS at verification time** — `PRESENT_OK`, readable, schema-valid, `aclOwnerOnly=yes`, `expired=no`, verified 2026-11-23 09:54 UTC | §6.2 O4 |
+| Credential *current* validity for a future sweep | **UNVERIFIED at the time of any later execution** — the 2026-11-23 token expires `2026-11-23T14:55:08.861Z`; daily rotation is normal and prior-token expiry is not current-credential failure | §6.2 O4 |
+| Authenticated daemon health access | **PASS** — authenticated `GET /v1/health` returned HTTP 200 on 2026-11-22 after the startup authentication-header correction, commit `0bb5072` | §6.2 O3 |
+| Managed daemon startup | **EVIDENCED** — 2026-11-23 managed startup with PID `16732` and PID manifest recorded | §6.2 O1, O2 |
+| Live runtime at baseline `84e988b` | **NOT ESTABLISHED** — no recorded session ties a running process to `84e988b`; the accepted Reliance run was `2685562` | §6.1 |
 | D02 historical | Out of scope and unqualified | PR #176 verification §5 |
 
 ---
@@ -417,23 +421,71 @@ Producing E4 evidence today would mean 96 manual operator captures or a new writ
 | R8 | Vendor error bodies are not retained | `executeJsonPost`, D-7 §4.2 |
 | R9 | Envelope carries `lineageHash`, `asOf`, `qualityState`, `freshness` | `dhan_normalizer.ts` |
 | R10 | Loopback-only binding is enforced | `dhan_market_data_http.ts` listen wrapper |
+| R10b | An authenticated `GET /v1/health` has returned HTTP 200 on the operator's host | operator evidence OP-3, 2026-11-22, commit `0bb5072` (§6.2.1) |
 | R11 | Targeted suites green at `84e988b`: 38 tests (numeric, P4 controls, D-7 conformance, offline 400 diagnostic, stage-1 wiring) — 0 failed, 0 skipped | this work item |
 
-### 6.2 Requires the Windows host or the provider **[O]**
+### 6.2 Operator-controlled evidence **[O]**
 
 **None of the following can be established from source inspection or synthetic tests, and none may be
-presented as live-runtime readiness.**
+presented as live-runtime readiness.** What *is* available is recorded operator evidence for five of the
+eight items. It is classified below rather than being requested again.
 
-| # | Required operator evidence | Why it cannot be inferred |
+> **Scope note.** This section concerns **readiness evidence only**. It is not a decision to execute the
+> E4 sweep, and nothing here authorises one. Sweep execution remains a **separate authorisation** (D1–D6,
+> §9) and is tracked independently of the O-item classifications below.
+
+#### 6.2.1 Evidence register (operator-supplied, 2026-11-23)
+
+This evidence is **operator-held**. It is not present as a file in this repository — no 23-November
+managed-startup or session record is tracked here (verified: no document under `docs/` or `evidence/`
+mentions the PID, the 09:54 UTC verification or the `2026-11-23T14:55:08.861Z` expiry). It is recorded
+here as **operator-reported**, on the same basis as the 2026-11-18 Reliance acceptance record, and it
+carries the provenance limit that the underlying terminal output is not reproduced.
+
+| Ref | Event as reported | When | Recorded artefacts |
+| --- | --- | --- | --- |
+| **OP-1** | Managed market-data daemon startup succeeded | 2026-11-23 | PID `16732`; PID manifest |
+| **OP-2** | DPAPI credential verification: client ID and access token `PRESENT_OK`, readable, schema-valid, `aclOwnerOnly=yes`, `expired=no`; expiry `2026-11-23T14:55:08.861Z` | 2026-11-23 09:54 UTC | verification result |
+| **OP-3** | Authenticated `GET /v1/health` returned **HTTP 200** after the startup authentication-header correction, commit `0bb5072` | 2026-11-22 | HTTP 200 result |
+| **OP-4** | Two live Dhan requests made | 2026-11-23 | operator confirmation only — no timestamps, session window or vendor `asOf` value preserved |
+
+`0bb5072` is confirmed present in this repository: `0bb5072df82ed6f44a2cb175ff5a79278c9183e8`,
+2026-11-22T20:35:47Z, *"fix(windows-setup): authenticate the market-data health probe…"*.
+
+#### 6.2.2 Per-item classification
+
+"Complete" below means *the field E4 needs is preserved in the record*, not that the check was not run.
+
+| # | Required evidence | Recorded evidence | Classification | What is still missing for complete qualification |
+| --- | --- | --- | --- | --- |
+| O1 | Running daemon version | **OP-1** — managed startup succeeded, PID `16732`, PID manifest | **PARTIAL** | The running checkout's `HEAD` and the live `/v1/health` `buildCommit`/`dataVersion` values are not preserved. Startup success does not identify *which build* ran |
+| O2 | Actual endpoint and configuration | **OP-1** — managed startup recorded | **PARTIAL** | The bound host/port and contemporaneous `/v1/diagnostics` values (`vendorEgressMode`, depth-capture env) are not preserved |
+| O3 | Transport token usability | **OP-3** — authenticated `GET /v1/health` HTTP 200, 2026-11-22, commit `0bb5072` | **PASS** (for that recorded check) | Nothing for the check itself. It predates the 2026-11-23 session and `84e988b`, so it evidences *capability*, not *the sweep-day state* |
+| O4 | Dhan credential readiness | **OP-2** — `PRESENT_OK`, `aclOwnerOnly=yes`, `expired=no`, 2026-11-23 09:54 UTC | **PASS at verification time** | Current validity at sweep time. The verified token expires `2026-11-23T14:55:08.861Z`; **daily rotation is normal and that expiry is not evidence of current credential failure** |
+| O5 | Market-session execution window | **OP-4** — two live Dhan requests on 2026-11-23, operator-confirmed | **PARTIAL** | Exact request timestamps, the exchange-session window and the vendor `asOf` values. Live activity is confirmed; its placement inside a session is not evidenced |
+| O6 | Request budget and execution controls | none | **OUTSTANDING** | Authorised vendor-request ceiling, whether retries count against it, and who watches the 60/60 s budget (§5.4) |
+| O7 | Cold-cache proof | none | **OUTSTANDING** | A fresh daemon for the sweep, or per-probe proof a vendor request occurred (§5.4) |
+| O8 | Per-probe capture | none | **OUTSTANDING** | The request/status/envelope records (§5.6, G6) |
+
+#### 6.2.3 Corrections applied to the previous revision of this document
+
+Recorded so the earlier text cannot be cited by mistake:
+
+| Was | Why it was wrong | Now |
 | --- | --- | --- |
-| O1 | **Running daemon version** — `git rev-parse HEAD` in the running checkout **and** `GET /v1/health` `buildCommit`/`dataVersion` from the live process | A checkout on disk is not the process that is running; the build may predate it. The accepted Reliance run was `2685562`, **not** `84e988b` |
-| O2 | **Runtime endpoint and config** — the actually-bound host/port, `vendorEgressMode` from `/v1/diagnostics`, `IIPS_DHAN_DEPTH_CAPTURE_PATH` unset | Config is process state; §5.1 describes intended behaviour only |
-| O3 | **Transport token usability** — an authenticated `GET /v1/health` returning 200 (token value never disclosed) | A token file existing is not a token that works |
-| O4 | **Dhan credential readiness** — `npm run dhan:credential -- verify` output showing `PRESENT_OK`, `aclOwnerOnly=yes`, `expired=no`, with the **new expiry instant** | The 2026-11-18 token **expired `2026-11-19T10:05:01.481Z`**. Entitlement state is unknowable until re-verified |
-| O5 | **Market-session window** — the intended execution window, with the exchange session and the vendor `asOf` both inside it | Off-session probes return stale/closed-session values and would make the pass meaningless. The Reliance quote showed `bid=0/ask=0` consistent with a post-close snapshot |
-| O6 | **Request budget and execution controls** — the authorized vendor-request ceiling, whether retries count against it, and who watches the 60/60 s budget | §5.4 shows the budget is not self-enforcing; the ceiling is an owner authorization, not a code property |
-| O7 | **Cold-cache proof** — daemon started fresh for E4, or per-probe evidence that a vendor request occurred | Otherwise probes silently become cache hits (§5.4) |
-| O8 | **Per-probe capture** — the actual request/status/envelope records (§5.6, G6) | No recorder exists for a sweep |
+| O3 listed among items requiring operator evidence, as if unperformed | An authenticated `GET /v1/health` HTTP 200 **already exists** (2026-11-22, `0bb5072`) | **PASS**, §6.2.2 |
+| O4 described as `EXPIRED`, tying `2026-11-19T10:05:01.481Z` to credential *failure* | That expiry belongs to a **previous, rotated token**. A successful verification exists on 2026-11-23 09:54 UTC | **PASS at verification time**; expiry restated as a forward-validity boundary, not a failure |
+| O1/O2 presented flatly as outstanding | Managed startup **is** evidenced (PID `16732`) | **PARTIAL** — startup evidenced; only the version/config fields are absent |
+| O5 silent on live activity | The operator reports **two live Dhan requests on 2026-11-23** | **PARTIAL** — activity confirmed; timestamps/`asOf` not preserved |
+| "Eight operator items stand between this assessment and a defensible run" (§8) | Overstated: three are outstanding (O6–O8), not eight; O3/O4 pass | §8 restated |
+
+#### 6.2.4 What remains genuinely outstanding
+
+- **O1/O2** — one session that captures `HEAD`, `/v1/health` `buildCommit`, the bound port and
+  `/v1/diagnostics` **from the same running process**. A single command transcript closes both.
+- **O5** — the timestamps and vendor `asOf` for the two 2026-11-23 requests, or the timestamp of a
+  future session-verified request.
+- **O6/O7/O8** — untouched by the recorded evidence; see §7.2 and §10.
 
 ---
 
@@ -489,18 +541,34 @@ secret. This must be **executed and evidenced**, not asserted. Covered by
 
 ## 8. Readiness verdict
 
-**Not ready to execute E4. Eight operator items (O1–O8) and seven repository gaps (G1–G7) stand between
-this assessment and a defensible 97-request run.**
+**Not ready to execute E4 — but not because O1–O5 are unmet.** Operator evidence exists for all five:
+O3 and O4 **pass** as recorded, and O1, O2 and O5 are **partial** with specific fields absent from the
+record (§6.2.2). The blockers are elsewhere.
 
-Two are **blocking** and neither can be resolved by code:
+What actually stands between this assessment and a defensible run differs by category:
 
-- **O4 — the credential expired on 2026-11-19.** No E4 execution is possible until re-verified, and the
-  new expiry must bound every capture.
+| Category | Items | Position |
+| --- | --- | --- |
+| Operator readiness evidence | O3, O4 | **PASS** — recorded; not to be re-requested |
+| Operator readiness evidence | O1, O2, O5 | **PARTIAL** — startup, health access and live activity are evidenced; version, endpoint/config and session timestamps are not preserved |
+| Operator readiness evidence | O6, O7, O8 | **OUTSTANDING** — no evidence recorded |
+| Repository gaps | G1–G8 | see §10 |
+
+**Blocking, and not resolvable by code:**
+
 - **O7 — cache suppression.** Without a cold cache or per-probe request proof, a "successful" sweep could
-  be a cache demonstration. This would make the entire E4 result unsound while appearing green.
+  be a cache demonstration. This would make the whole E4 result unsound while appearing green.
+- **O6 — request budget.** 97 requests is a best case; retries can triple it (§5.4). The ceiling is an
+  owner authorisation, not a code property, and it must be set before the first probe.
 
-One is **blocking for the stated scope**: the sample is the superseded registry (§0, §3.3), and the
-owner must choose a scope in §9 before probes are issued.
+**Blocking for the stated scope:** the sample is the superseded registry (§0, §3.3). The owner must
+choose a scope in §9 before probes are issued.
+
+**Explicitly *not* blocking:** O3 and O4. Both have recorded successful evidence. The 2026-11-23
+credential verification passed at 09:54 UTC; its `2026-11-23T14:55:08.861Z` expiry is a forward-validity
+boundary for a *future* sweep, not a current failure. A credential re-verification is required before any
+sweep runs, but on the ordinary basis that token expiry must bound every capture — **not** because the
+recorded evidence shows a failure.
 
 ---
 
@@ -512,7 +580,7 @@ owner must choose a scope in §9 before probes are issued.
 | **D2** | Is the company-ID correction authorized? | yes / no | If no, D1(a) is forced and 6 failures are unexplainable to a reader who does not know about the rename |
 | **D3** | Is the wrong-ID control §4.2 acceptable, given it never reaches the vendor? | accept / require vendor-level control (separate authorization) | §4.4 |
 | **D4** | Request ceiling — 96, 97, or up to 291 with retries? | owner sets | §5.4; the budget is not self-enforcing |
-| **D5** | Session window for execution | owner sets | O5 |
+| **D5** | Session window for execution | owner sets | O5 is **PARTIAL** (§6.2.2): two live requests are confirmed for 2026-11-23 but their timestamps and vendor `asOf` are not preserved, so the *sweep* window is still unset |
 | **D6** | Independent value cross-check source | supply a second source, or accept "internal consistency only" | G5 |
 
 ---
@@ -571,4 +639,4 @@ owner must choose a scope in §9 before probes are issued.
 
 ---
 
-*Readiness assessment only. No vendor request, no credential access, no daemon start, no production claim.*
+*Readiness assessment only. No E4 sweep request, no credential access and no daemon start were performed by this work item. Operator-held session evidence for O1–O5 (2026-11-22/23) is incorporated and classified in §6.2, on an operator-reported basis; its underlying terminal output is not reproduced here. No production claim.*
