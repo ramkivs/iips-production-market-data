@@ -139,6 +139,53 @@ describe('DHAN-P5 composed service & transport (synthetic)', () => {
     });
   });
 
+  it('P5-03a: the unauthenticated health probe used by the startup script is refused (root cause of the 03 startup 401)', async () => {
+    // Regression for a real Windows-host failure that followed PR #187:
+    //   03-Start-IipsServers.ps1 bound the market-data daemon, then polled /v1/health with
+    //   Invoke-WebRequest and NO Authorization header. The daemon gates every route - the health
+    //   route included - so the probe was answered 401, `03` waited 60 s and rolled back, killing a
+    //   daemon that had started correctly.
+    //
+    // The defect was in the CALLER, not the daemon: authentication must not be weakened to make a
+    // probe pass. This test pins both halves of that contract, so the same mistake cannot be made
+    // again silently - if the health route ever stopped requiring auth, the first assertion would
+    // fail and demand the probe be reconsidered rather than assumed safe.
+    const service = makeService(okTransport());
+    await withServer(service, async (base) => {
+      const healthUrl = `${base}${MARKET_DATA_ROUTES.health}`;
+
+      // 1. Exactly what the broken probe did: no header at all.
+      const unauth = await fetch(healthUrl);
+      assert.strictEqual(unauth.status, 401, 'an unauthenticated health probe must be refused');
+      const body = (await unauth.json()) as { error?: { code?: string } };
+      assert.strictEqual(body.error?.code, 'UNAUTHENTICATED');
+
+      // 2. An empty Authorization value is not a credential.
+      const emptyHeader = await fetch(healthUrl, { headers: { authorization: '' } });
+      assert.strictEqual(emptyHeader.status, 401, 'an empty Authorization header must be refused');
+
+      // 3. A same-length but different token must be refused: this is not a length check.
+      const wrongSameLength = await fetch(healthUrl, {
+        headers: { authorization: `Bearer ${'x'.repeat(TOKEN.length)}` },
+      });
+      assert.strictEqual(wrongSameLength.status, 401, 'a wrong token of equal length must be refused');
+
+      // 4. The corrected probe: the bearer credential the daemon was configured with. This is the
+      //    client half of the same contract, not a bypass.
+      const authed = await fetch(healthUrl, { headers: { authorization: `Bearer ${TOKEN}` } });
+      assert.strictEqual(authed.status, 200, 'the authenticated health probe must succeed');
+      const health = (await authed.json()) as { service?: string };
+      assert.strictEqual(health.service, 'UP');
+
+      // 5. Authentication must not depend on the route: every other gated route refuses the same
+      //    header-less request, which is what makes "no unauthenticated liveness endpoint" true.
+      for (const route of [MARKET_DATA_ROUTES.diagnostics, MARKET_DATA_ROUTES.freshness]) {
+        const res = await fetch(`${base}${route}${route === MARKET_DATA_ROUTES.freshness ? '?domain=D01_QUOTES' : ''}`);
+        assert.strictEqual(res.status, 401, `${route} must be gated before routing`);
+      }
+    });
+  });
+
   it('P5-04: ambiguous company-only request fails closed; multi-ISIN and NSE/BSE stay distinct; exact ISIN resolves', async () => {
     const service = makeService(okTransport());
     // Two securities on the same segment for one company -> company+segment ambiguous without ISIN.

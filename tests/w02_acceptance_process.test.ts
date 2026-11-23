@@ -748,3 +748,71 @@ describe('W-02 / repository-owned process runner and toolchain resolver', () => 
     );
   });
 });
+
+// ------------------------------------------------------------------------------------------------
+// Startup-script contract regressions. Each assertion below exists because of an observed failure on
+// the operator's Windows host, not a preference.
+// ------------------------------------------------------------------------------------------------
+describe('windows-setup startup/shutdown script contracts', () => {
+  const START = path.resolve('windows-setup/03-Start-IipsServers.ps1');
+  const STOP = path.resolve('windows-setup/06-Stop-IipsServers.ps1');
+
+  it('W-SETUP-01: every IPD market-data health probe sends the bearer credential', () => {
+    // Observed failure (after PR #187): 03 bound the daemon on 127.0.0.1:8791, then polled /v1/health
+    // with NO Authorization header. dhan_market_data_http.ts gates every route before routing, so the
+    // probe got 401 for the full 60 s timeout and 03 rolled back a daemon that had started correctly.
+    //
+    // The daemon is NOT unauthenticated for health, and it must not be made so. The caller has to
+    // send the credential it configured the daemon with.
+    const code = stripComments(readText(START));
+
+    // The helper must accept headers at all, otherwise no authenticated probe is expressible.
+    assert.ok(/\[hashtable\]\s*\$Headers/.test(code), 'Wait-IipsHttpReady must accept -Headers');
+
+    // Every call that targets the market-data daemon must pass an Authorization header.
+    const calls = code.match(/Wait-IipsHttpReady\s+[^\n]*/g) ?? [];
+    const marketDataCalls = calls.filter((call) => call.includes('MarketDataPort'));
+    assert.ok(marketDataCalls.length > 0, 'the market-data health probe must exist');
+    for (const call of marketDataCalls) {
+      assert.ok(call.includes('-Headers'), `market-data health probe must pass -Headers: ${call.trim()}`);
+    }
+
+    // And that header must carry the exact value handed to the child process, not a re-read of $env:.
+    assert.ok(
+      /'Authorization'\s*=\s*"Bearer \$\(\$daemonEnv\['IIPS_MARKET_DATA_TRANSPORT_TOKEN'\]\)"/.test(code),
+      'the probe must authenticate with the token actually given to the daemon child'
+    );
+
+    // The daemon's auth must not be weakened to accommodate a header-less probe.
+    const http = stripComments(readText(path.resolve('src/providers/dhan/dhan_market_data_http.ts')));
+    assert.ok(
+      /parseBearerAuthorization\(req\.headers\.authorization\)/.test(http),
+      'the auth gate must read the Authorization header'
+    );
+  });
+
+  it('W-SETUP-02: the stop script can log a blank separator line', () => {
+    // Observed failure: 06-Stop-IipsServers.ps1 aborted at line 87 because `Log ''` was passed to a
+    // Mandatory [string] parameter, which rejects an empty string under Set-StrictMode. The script
+    // therefore failed before it stopped anything.
+    const code = stripComments(readText(STOP));
+    assert.ok(/function\s+Log\b/.test(code), 'the Log helper must exist');
+    assert.ok(
+      /\[AllowEmptyString\(\)\]/.test(code),
+      'the Log Message parameter must allow an empty string, because it is called with \'\' for separators'
+    );
+    // The empty-string call sites must still exist; if they were removed the allowance is unnecessary
+    // and this assertion would be misleading rather than protective.
+    assert.ok(/Log ''/.test(code), 'blank separator calls must still be present');
+  });
+
+  it('W-SETUP-03: the placeholder patterns are not weakened by either fix', () => {
+    const start = stripComments(readText(START));
+    // Authentication is not bypassed: no unauthenticated probe, no token on a command line.
+    assert.ok(!/SkipCertificateCheck|AllowUnencrypted/.test(start), 'no transport downgrade');
+    assert.ok(
+      !/-ArgumentList[^\n]*IIPS_MARKET_DATA_TRANSPORT_TOKEN/.test(start),
+      'the transport token must never travel on a command line'
+    );
+  });
+});

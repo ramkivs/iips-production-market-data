@@ -772,7 +772,11 @@ describe('W-02 / static ACL programs', () => {
     assert.ok(applyScript.includes("'S-1-5-18'"));
     assert.ok(applyScript.includes('FileSystemRights]::FullControl'));
     assert.ok(applyScript.includes('PropagationFlags]::None'));
-    assert.ok(applyScript.includes('Set-Acl'));
+    // It must apply the descriptor through the .NET API. `Set-Acl` is provided by the
+    // autoloaded Microsoft.PowerShell.Security module, which cannot be imported in this
+    // Node-spawned child, so the cmdlet is not a valid mechanism here (W-12).
+    assert.ok(applyScript.includes('SetAccessControl'), 'the apply program must write through SetAccessControl');
+    assert.ok(!/Set-Acl/.test(applyScript), 'the apply program must not depend on the module-provided Set-Acl');
     assert.ok(applyScript.includes('[Console]::In.ReadToEnd()'));
     // It must never evaluate the policy itself, never read its own result back and never slurp
     // stderr into the pipeline: those are the caller's job, in `dhan_dpapi_acl.ts`.
