@@ -361,4 +361,25 @@ describe('W-12 / DPAPI ACL programs execute on a real Windows host', () => {
     const { parsed } = await runProgram('describe-acl', { paths: [fixtureRoot] });
     assert.equal(parsed?.ok, true, 'the ACL program must work with no module import at all');
   });
+
+  it('W-12-20: the runtime harness is genuinely executing, not silently skipping', (t) => {
+    // `node --test` exits 0 when every case in a file skips, so a green Windows job could
+    // otherwise mean "the gating never opened" rather than "the programs work". This case
+    // fails loudly if the platform/flag combination lets the suite degrade to all-skips.
+    //
+    // It is gated like every other case so the cross-platform default run stays green; the
+    // `windows-latest` job sets the flag and is therefore the run where it actually asserts.
+    if (!IS_WINDOWS || !RUNTIME_ENABLED) return t.skip(skipReason());
+    assert.equal(IS_WINDOWS, true, 'this file must only be executed on Windows');
+    assert.equal(
+      RUNTIME_ENABLED,
+      true,
+      'IIPS_POWERSHELL_RUNTIME_TESTS=1 must be set for the runtime suite to be meaningful'
+    );
+    assert.ok(
+      POWERSHELL !== null,
+      'a PowerShell executable must resolve, otherwise every other case in this file skips'
+    );
+    t.diagnostic(`PowerShell under test: ${String(POWERSHELL)}`);
+  });
 });
