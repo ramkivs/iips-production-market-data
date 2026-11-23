@@ -58,6 +58,30 @@ export const DEFAULT_DPAPI_PROCESS_TIMEOUT_MS = 15_000;
 export const DEFAULT_DPAPI_MAX_STDOUT_BYTES = 2 * 1024 * 1024;
 
 /**
+ * Descriptor read for one path, using the .NET access-control API directly.
+ *
+ * WHY NOT `Get-Acl` (Windows host defect, 2026-11-23): `Get-Acl` is provided by the
+ * `Microsoft.PowerShell.Security` *script module*, which is autoloaded on demand. On the
+ * operator's host that module **cannot be imported** in this child (`Import-Module` raises
+ * `RuntimeException`), so `Get-Acl` does not exist and — under `$ErrorActionPreference =
+ * 'Stop'` — the resulting `CommandNotFoundException` was swallowed by the script's own
+ * `catch`, surfacing as a bare `ACL_READ_FAILED` that looked exactly like a permissions
+ * fault. The credentials were never even reached: the ACL gate runs before decryption.
+ *
+ * `[System.IO.Directory|File]::GetAccessControl()` needs no module. It was verified working
+ * in this exact child (PowerShell 5.1, CLR 4.0.30319) together with `GetAccessRules`,
+ * `SetAccessRuleProtection` and `SetAccessControl`, without any `Add-Type`.
+ *
+ * `$acl.Access` returned *both* explicit and inherited rules, so `GetAccessRules($true, ...)`
+ * keeps `includeInherited = $true`: dropping inherited entries would change the owner-only
+ * verdict, which is a security regression, not a cosmetic one.
+ */
+const READ_ACL_DESCRIPTOR = [
+  '    $aclTarget = Get-Item -LiteralPath ([string]$p) -Force',
+  '    if ($aclTarget.PSIsContainer) { $acl = [System.IO.Directory]::GetAccessControl([string]$p) } else { $acl = [System.IO.File]::GetAccessControl([string]$p) }',
+].join('\n');
+
+/**
  * ACL probe. Accepts `{ paths: string[] }` and returns per-path:
  * `{ exists, protected, onlyOwnerAndSystem, ownerIsCurrentUser }`.
  * Reports a coarse failure category only.
@@ -74,11 +98,11 @@ const ACL_SCRIPT = [
   '      $items += @{ path = [string]$p; exists = $false; protected = $false; onlyOwnerAndSystem = $false; ownerIsCurrentUser = $false }',
   '      continue',
   '    }',
-  '    $acl = Get-Acl -LiteralPath ([string]$p)',
+  READ_ACL_DESCRIPTOR,
   '    $ownerSid = $null',
   '    try { $ownerSid = (New-Object System.Security.Principal.NTAccount($acl.Owner)).Translate([System.Security.Principal.SecurityIdentifier]).Value } catch { $ownerSid = [string]$acl.Owner }',
   '    $onlyOwnerAndSystem = $true',
-  '    foreach ($rule in $acl.Access) {',
+  '    foreach ($rule in @($acl.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier]))) {',
   "      if ($rule.AccessControlType -ne 'Allow') { continue }",
   '      $sid = $null',
   '      try { $sid = $rule.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value } catch { $sid = $null }',
@@ -110,11 +134,12 @@ const READ_ACL_SCRIPT = [
   '  $p = [string]$req.path',
   "  $me = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value",
   "  if (-not (Test-Path -LiteralPath $p)) { @{ ok = $true; exists = $false; currentUserSid = [string]$me } | ConvertTo-Json -Compress; return }",
-  '  $acl = Get-Acl -LiteralPath $p',
+  "  $aclTarget = Get-Item -LiteralPath $p -Force",
+  '  if ($aclTarget.PSIsContainer) { $acl = [System.IO.Directory]::GetAccessControl($p) } else { $acl = [System.IO.File]::GetAccessControl($p) }',
   "  $ownerSid = ''",
   '  try { $ownerSid = (New-Object System.Security.Principal.NTAccount($acl.Owner)).Translate([System.Security.Principal.SecurityIdentifier]).Value } catch { $ownerSid = [string]$acl.Owner }',
   '  $rules = @()',
-  '  foreach ($rule in @($acl.Access)) {',
+  '  foreach ($rule in @($acl.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier]))) {',
   "    $sid = ''",
   "    try { $sid = $rule.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value } catch { $sid = '' }",
   '    $rules += @{ sid = [string]$sid; accessControlType = [string]$rule.AccessControlType; rights = [int]$rule.FileSystemRights; inheritanceFlags = [int]$rule.InheritanceFlags; propagationFlags = [int]$rule.PropagationFlags; inherited = [bool]$rule.IsInherited }',
@@ -143,9 +168,11 @@ const APPLY_ACL_SCRIPT = [
   '  $req = $raw | ConvertFrom-Json',
   '  $p = [string]$req.path',
   '  $kind = [string]$req.kind',
-  '  $acl = Get-Acl -LiteralPath $p',
+  "  $aclTarget = Get-Item -LiteralPath $p -Force",
+  '  $isContainer = [bool]$aclTarget.PSIsContainer',
+  '  if ($isContainer) { $acl = [System.IO.Directory]::GetAccessControl($p) } else { $acl = [System.IO.File]::GetAccessControl($p) }',
   '  $acl.SetAccessRuleProtection($true, $false)',
-  '  foreach ($rule in @($acl.Access)) { [void]$acl.RemoveAccessRule($rule) }',
+  '  foreach ($rule in @($acl.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier]))) { [void]$acl.RemoveAccessRule($rule) }',
   '  $inherit = [System.Security.AccessControl.InheritanceFlags]::None',
   "  if ($kind -eq 'directory') { $inherit = [System.Security.AccessControl.InheritanceFlags]::ContainerInherit -bor [System.Security.AccessControl.InheritanceFlags]::ObjectInherit }",
   '  $me = [System.Security.Principal.WindowsIdentity]::GetCurrent().User',
@@ -154,7 +181,7 @@ const APPLY_ACL_SCRIPT = [
   '  $acl.AddAccessRule($ownerRule)',
   '  $systemRule = New-Object System.Security.AccessControl.FileSystemAccessRule($system, [System.Security.AccessControl.FileSystemRights]::FullControl, $inherit, [System.Security.AccessControl.PropagationFlags]::None, [System.Security.AccessControl.AccessControlType]::Allow)',
   '  $acl.AddAccessRule($systemRule)',
-  '  Set-Acl -LiteralPath $p -AclObject $acl',
+  '  if ($isContainer) { [System.IO.Directory]::SetAccessControl($p, $acl) } else { [System.IO.File]::SetAccessControl($p, $acl) }',
   '  @{ ok = $true; changed = $true } | ConvertTo-Json -Compress',
   '} catch {',
   "  @{ ok = $false; kind = 'ACL_APPLY_FAILED' } | ConvertTo-Json -Compress",
@@ -209,7 +236,7 @@ const PROTECT_SCRIPT = [
   '}',
 ].join('\n');
 
-const SCRIPT_BY_OPERATION: Readonly<Record<DpapiProcessOperation, string>> = Object.freeze({
+export const SCRIPT_BY_OPERATION: Readonly<Record<DpapiProcessOperation, string>> = Object.freeze({
   'describe-acl': ACL_SCRIPT,
   'read-acl': READ_ACL_SCRIPT,
   'apply-acl': APPLY_ACL_SCRIPT,

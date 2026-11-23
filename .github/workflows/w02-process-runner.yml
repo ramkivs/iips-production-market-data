@@ -17,6 +17,11 @@ on:
       - tests/w02_acceptance_process.test.ts
       - tests/w02_acceptance_harness.test.ts
       - tests/fixtures/fake_dpapi_child.mjs
+      - src/providers/dhan/dhan_dpapi_process.ts
+      - src/providers/dhan/dhan_dpapi_acl.ts
+      - src/providers/dhan/dhan_dpapi_vault_backend.ts
+      - tests/dhan_w12_dpapi_acl_windows_runtime.test.ts
+      - tests/dhan_w12_dpapi_acl_cmdlet_independence.test.ts
       - .github/workflows/w02-process-runner.yml
   workflow_dispatch:
 
@@ -48,6 +53,18 @@ jobs:
         run: |
           python3 windows-setup/.validate-scripts.py windows-setup
           python3 windows-setup/.validate-scripts.py windows-acceptance
+
+      # W-12: the DPAPI child ACL programs must reach the filesystem through the .NET
+      # access-control API, never through the autoloaded `Get-Acl`/`Set-Acl` cmdlets. That can
+      # only be proven by executing the real embedded programs on a host with Windows security
+      # descriptors, so the case runs here (windows-latest) and skips elsewhere.
+      - name: DPAPI ACL programs on this host's PowerShell (Windows)
+        if: runner.os == 'Windows'
+        env:
+          IIPS_POWERSHELL_RUNTIME_TESTS: '1'
+        run: |
+          node --test dist/tests/dhan_w12_dpapi_acl_windows_runtime.test.js
+          node --test dist/tests/dhan_w12_dpapi_acl_cmdlet_independence.test.js
 
       - name: Real runner on this host's PowerShell
         shell: bash
