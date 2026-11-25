@@ -32,7 +32,16 @@ Quote cache classification and the response use the existing `evaluateFreshness`
 
 `lastRefresh.outcome` is `SUCCESS`, `SKIPPED_FRESH`, `FAILURE`, or `UNKNOWN`. For D01 it records completed quote orchestrator outcomes reached through the composed service, not failed validation before orchestration. For D02 it records historical request outcomes; a request refused before the provider path (service not started, rate limit) leaves it `UNKNOWN` rather than claiming an attempt failed. `lastFailure` is either null or `{ "code": "REFRESH_FAILED", "priorPreserved": boolean }`; provider messages, codes, HTTP details and credentials are deliberately omitted. It reflects the most recent failure even if a later refresh succeeds. `priorPreserved` is the orchestrator's indication that a prior cache entry existed; it is not a claim that entry remains fresh. Diagnostic history is bounded to 256 recently updated keys and is in-memory; `UNKNOWN` includes not-yet-run, evicted and restarted states. Cache eviction or service stop can leave refresh history without an observation. No refresh timestamp or live connectivity is inferred.
 
-Requests with invalid, duplicate, extra or incomplete parameters get HTTP 400; missing/invalid bearer authentication gets 401. Unexpected errors use the existing sanitized HTTP 500 error envelope. Unsupported methods follow the existing 404 convention. The HTTP endpoint shares the existing loopback/production restrictions. The `FreshnessStatus`, `RefreshStatus` and `FreshnessDomain` types are exported from the server-only package.
+Requests with invalid, duplicate, extra or incomplete parameters get HTTP 400; missing/invalid bearer authentication gets 401. Unexpected errors use the existing sanitized HTTP 500 error envelope. Unsupported methods follow the existing 404 convention. The HTTP endpoint shares the existing loopback/production restrictions. The `FreshnessStatus`, `RefreshStatus`, `FreshnessDomain`, `FreshnessRequest`, `MarketDataTransportFreshnessOutcome` types and `validateDhanFreshnessStatus` validator are exported from the server-only `./dhan-server` package.
+
+## Transport client (`MarketDataTransportClient.getFreshness`, W-26)
+
+`MarketDataTransportClient.getFreshness(request)` provides the single shared client boundary for `GET /v1/freshness`. It enforces the exact same preflight and transport guards as `getQuote`, `getHistorical`, `health`, `diagnostics` and `verifyConnection` (non-production refusal, `http:` loopback-only host with no URL credentials or query string, printable ASCII non-whitespace bearer credential, bounded timeout, `redirect: 'error'`, and typed fail-closed error envelopes).
+
+* `D02_OHLCV`: `{ domain: 'D02_OHLCV' }` (domain alone; extra fields fail closed with `MALFORMED_REQUEST`).
+* `D01_QUOTES`: `{ domain: 'D01_QUOTES', companyId, exchangeSegment, securityIdentity }` or `{ domain: 'D01_QUOTES', companyId, exchangeSegment, securityId }` (canonical `ISIN:<isin>:<series>`).
+
+Responses are validated fail-closed via `validateDhanFreshnessStatus` (and checked against the requested `domain`), returning `{ ok: true, status: FreshnessStatus }` with full W-19 D02 four-timestamp/revision evidence and W-22 session-calendar fields preserved verbatim, or `{ ok: false, failure: MarketDataTransportFailure }` on any transport, authentication, request, or response-schema failure.
 
 ## Historical retention (W-19)
 

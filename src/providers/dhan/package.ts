@@ -176,10 +176,12 @@ export {
   MARKET_DATA_TRANSPORT_TOKEN_ENV,
 } from './dhan_market_data_http.js';
 export type {
+  FreshnessRequest,
   MarketDataHttpOptions,
   MarketDataTransportClientOptions,
   MarketDataTransportFailure,
   MarketDataTransportFailureCode,
+  MarketDataTransportFreshnessOutcome,
   MarketDataTransportQuoteOutcome,
   MarketDataTransportHistoricalOutcome,
   MarketDataTransportHealthOutcome,
@@ -208,6 +210,7 @@ export { DhanIdentityApiService } from './dhan_identity_api.js';
 export type { IdentityApiResult, ExactIdentityRequest, InstrumentSearchResult } from './dhan_identity_api.js';
 export type { HoldingIdentityInput, SecurityIdentityQualificationResult, SecurityIdentityQualified, SecurityIdentityUnresolved } from './dhan_security_identity_service.js';
 
+export { validateDhanFreshnessStatus } from './dhan_freshness_status.js';
 export type { FreshnessDomain, FreshnessStatus, RefreshStatus } from './dhan_freshness_status.js';
 
 // Offline session-calendar input; no calendar service or implicit market coverage.
