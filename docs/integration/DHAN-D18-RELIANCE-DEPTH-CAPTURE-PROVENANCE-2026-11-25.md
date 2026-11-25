@@ -140,12 +140,12 @@ No work item is marked resolved, complete, accepted or unlocked by this record.
 
 ## 7. Outstanding items
 
-1. **D-18 activation record supersession.** Its header claims the capture "has never run against the vendor, in this session or any other". That is no longer true for the 23 November capture. A narrowly scoped correction is required and is **not** made here.
+1. ~~**D-18 activation record supersession.**~~ **RESOLVED in this publication.** The activation record's header claimed the capture "has never run against the vendor, in this session or any other". That was corrected in the same change set by adding a §0 that records the operator-confirmed execution, preserves the superseded statement verbatim as historical context, and states the `POST_REGULAR_SESSION_CLOSE` classification. The build record and test evidence below §0 are unaltered.
 2. **True post-close or market-closed capture.** The 23 November capture is post-*regular-close* but inside the CAS window. A capture after 15:50 IST, or on a non-trading day, would settle the whole-session question and would also test whether the all-zero form persists.
 3. **Correct the 25 November label** before any future run, so a file cannot again describe itself inaccurately.
 4. **The §5 interaction** — supplied-zero depth causing `MALFORMED_RESPONSE` — needs its own scoped investigation. It is not authorised by this record.
 5. **Runtime binding.** Without a running-process-to-revision binding and a request identifier, no capture can be tied to a build or to a vendor response. This is the same gap recorded in the E4 readiness assessment.
-6. **`requestedSecurityIds` documentation.** The activation record's §5.1 annotation ("reserved; not populated by this call site") contradicts the implementation, which populates it. Minor, but it misleads a reader about what is evidence.
+6. **`requestedSecurityIds` documentation.** The activation record's §5.1 annotation ("reserved; not populated by this call site") contradicts the implementation, which populates it. The annotation is now also noted as inaccurate in the activation record's §0.5 rather than silently edited, so the original §5.1 text still reads as written.
 
 ## 8. File manifest
 
@@ -155,5 +155,7 @@ No work item is marked resolved, complete, accepted or unlocked by this record.
 | `evidence/dhan-d18/reliance-depth-20261125.json` | **New.** Byte-identical copy of the operator's `reliance-depth.txt`. SHA-256 `6c53e973…a6bb6e`. |
 | `evidence/dhan-d18/manifest.json` | **New.** Integrity digests, per-file operator-confirmed vs independently-verified facts, classifications, and explicit non-claims. |
 | `docs/integration/DHAN-D18-RELIANCE-DEPTH-CAPTURE-PROVENANCE-2026-11-25.md` | **New.** This record. |
+| `docs/integration/DHAN-D18-RAW-DEPTH-CAPTURE-ACTIVATION-2026-11-20.md` | **Modified, additive §0 + header correction.** Records the operator execution and supersedes the "never run against the vendor" header claim; the superseded line is preserved verbatim in §0.1. Build record, procedure and test evidence below §0 unchanged. |
+| `docs/integration/dhan-api-v2-assessment-2026-11-13/05-DOCUMENTATION-DISCREPANCY-AND-AMBIGUITY-REGISTER.md` | **Modified, +1 row.** An "Evidence to date" row under D-18 pointing here. No status text altered; D-18 remains OPEN. |
 
 No other file is touched. No implementation, contract, test, script, credential or runtime artefact is modified. The originals supplied by the operator remain unaltered outside the repository and are not overwritten.

@@ -3,8 +3,58 @@
 - **Date:** 2026-11-20
 - **Branch:** `arena/b210f700-iips-production-market-data`, based on `cbb116d2a221b82a704b4b96cf17efe0560e2498` (`main` after PR #186)
 - **Scope:** one temporary, opt-in, one-shot diagnostic. No change to normalisation, D-5 validation, DTOs, or provider semantics.
-- **Live request performed:** **no.** Nothing in this record was obtained from a Dhan or vendor response. The capture has never run against the vendor, in this session or any other.
-- **Status:** implementation complete, unit-tested, one-shot verified offline. Awaiting operator execution on the Windows host, which requires the restart described in §6.
+- **Live request performed:** **yes — since 2026-11-23, by operator execution.** See §0 below. The statement originally published here ("**no** … has never run against the vendor, in this session or any other") was accurate when written on 2026-11-20 and is **superseded**. It is preserved verbatim in §0.1 as historical context rather than deleted.
+- **Status:** implementation complete, unit-tested, one-shot verified offline on 2026-11-20. **Operator execution has since occurred**: one post-regular-session-close capture on 2026-11-23, provenance recorded in [`DHAN-D18-RELIANCE-DEPTH-CAPTURE-PROVENANCE-2026-11-25.md`](DHAN-D18-RELIANCE-DEPTH-CAPTURE-PROVENANCE-2026-11-25.md). The D-18 finding itself remains **OPEN** — see §0.4.
+
+---
+
+## 0. Operator execution — recorded 2026-11-25
+
+This section was added on 2026-11-25. It records what has since happened. It does **not** revise the build record, the activation procedure, or the test evidence below, all of which remain as written on 2026-11-20.
+
+### 0.1 The superseded statement, preserved verbatim
+
+> - **Live request performed:** **no.** Nothing in this record was obtained from a Dhan or vendor response. The capture has never run against the vendor, in this session or any other.
+> - **Status:** implementation complete, unit-tested, one-shot verified offline. Awaiting operator execution on the Windows host, which requires the restart described in §6.
+
+Both lines were true on 2026-11-20. They are no longer true. They are retained so the record's own history is not rewritten.
+
+### 0.2 Operator-confirmed facts (testimony)
+
+- The capture file `reliance-depth.json` was **personally executed by the operator** on **23 November 2026**.
+- Execution occurred at **approximately 15:31 IST**, described by the operator as **one minute after regular NSE equity trading closed at 15:30 IST**.
+- The captured response contained **five buy and five sell levels**, with **price, quantity and orders explicitly present and all values zero**.
+- The capture label reads *"one market-closed quote"*.
+- A separate **25 November** capture is a **different, market-hours** capture and **must not be conflated** with the 23 November evidence.
+
+### 0.3 Independently verified from the retained files
+
+- `capturedAtUtc` = `2026-11-23T10:01:24.819Z` = **15:31:24 IST**, consistent with the operator's stated time to within 24 seconds. Consistency, **not** independent proof of authorship.
+- `captureSchemaVersion: 2`, `httpStatus: 200`, `responseStatus: "success"`.
+- `requestedSecurityIds: ["2885"]`, `instrumentsInResponse: 1`, segment `NSE_EQ`, `securityId: "2885"`.
+- `depthState: "object"`; `buy.state: "array"`, `count: 5`; `sell.state: "array"`, `count: 5`.
+- All 30 level fields (5 levels × 2 sides × price/quantity/orders) have `state: "present"`; all 30 values are `0`.
+- Both files are LF-only and byte-identical to what the operator supplied; SHA-256 digests are pinned in `evidence/dhan-d18/manifest.json`.
+
+### 0.4 The two captures, and the classification
+
+| | 23 November 2026 | 25 November 2026 |
+|---|---|---|
+| Retained as | `evidence/dhan-d18/reliance-depth-20261123.json` | `evidence/dhan-d18/reliance-depth-20261125.json` |
+| Local time (IST) | **15:31:24** | **13:45:15** |
+| Depth values | all ten levels `0 / 0 / 0` | populated, 1368.90–1369.50 |
+| Classification | **`POST_REGULAR_SESSION_CLOSE`** | `DURING_REGULAR_SESSION` |
+| Answers D-18? | Partly — see below | **No** |
+
+**Classification of the 23 November capture is `POST_REGULAR_SESSION_CLOSE`, and no stronger.** It is 1 minute 24 seconds after the 15:30 IST regular close, and therefore **inside the 15:30–15:35 closing-auction (CAS) window**. This record does **not** claim the entire NSE closing process had finished. No capture taken after the 15:50 IST post-close boundary, or on a non-trading day, exists.
+
+**What this settles.** D-18's market-closed *shape* question: when not in continuous trading, the vendor sent a **populated object** with **five levels per side**, every price/quantity/orders field **present and `0`**. It is *not* `null`, *not* an empty array, and the `depth` key is *not* omitted — i.e. the `0` row of §5.2, not the `missing` or `array: []` rows.
+
+**What it does not settle.** Side labelling (an all-zero book carries no information about which array is bid and which is ask, so D-3, DQ-8 and OR-10 are untouched); book ordering and level-count validation (DQ-7); or the schema as a whole (Q-03, which also covers volume, `last_trade_time` and `net_change`). **D-18 remains OPEN**, and no work-item status is changed by this section.
+
+### 0.5 Note on this record's own §5.1 annotation
+
+§5.1 below annotates `requestedSecurityIds` as *"reserved; not populated by this call site"*. That annotation is **inaccurate**: `dhan_depth_capture.ts:219` does populate it, and the retained capture carries `["2885"]`. The annotation is left in place here as part of the original record; the corrected statement is recorded in the provenance document.
 
 ---
 
