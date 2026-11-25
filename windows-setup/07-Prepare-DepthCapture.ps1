@@ -15,21 +15,22 @@
          <InstallRoot>\runtime\ (the existing runtime convention on this host).
       4. Clears any stale capture and arm marker so the one-shot starts from a known state.
       5. When -Arm (and not -Disarm) is passed, creates the arm marker for exactly one capture.
-      6. Reports the state that 03-Start-IipsServers.ps1 must be launched in.
+      6. Reports the state that 03-Start-IipsServers.ps1 must be launched in, including the
+         explicit target instrument env vars (segment + security ID).
 
     WHAT IT DELIBERATELY DOES NOT DO
       * No process is started, stopped or restarted. Starting the services - and restarting them so
         the daemon picks up its environment - is 03-Start-IipsServers.ps1's job, with 06 for the
         stop. This script never introduces a second, unmanaged daemon launch.
-      * No external vendor request is made. The single Reliance quote that produces the evidence is
+      * No external vendor request is made. The single quote that produces the evidence is
         issued by the operator, deliberately and separately.
       * No source file, database, carrier or journal is modified.
 
     THE ENVIRONMENT PROBLEM THIS SCRIPT EXISTS TO SOLVE
       A running Windows process cannot receive a new environment variable. The market-data daemon
-      therefore only sees IIPS_DHAN_DEPTH_CAPTURE_PATH if it was present in the environment of the
-      PowerShell window that launched it. Arming, by contrast, is a filesystem marker read on every
-      request, so arming and re-arming need no restart at all.
+      therefore only sees IIPS_DHAN_DEPTH_CAPTURE_* variables if they were present in the environment
+      of the PowerShell window that launched it. Arming, by contrast, is a filesystem marker read on
+      every request, so arming and re-arming need no restart at all.
 
       Consequence: 03-Start-IipsServers.ps1 must be launched FROM the same window in which the
       variables below are set, in the same invocation - not from a second window that inherits
@@ -41,8 +42,12 @@
     powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build
 
 .EXAMPLE
-    # Arm the one-shot immediately before the single Reliance request.
+    # Arm the one-shot immediately before the single configured-target request.
     powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm
+
+.EXAMPLE
+    # Configure AGI Greenpac (NSE_EQ / 1412) instead of the default Reliance target.
+    powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build -CaptureSegment NSE_EQ -CaptureSecurityId 1412 -CapturePath 'H:\IIPS\runtime\dhan-d18-depth-capture\agi-depth.json'
 
 .EXAMPLE
     # Report state only - changes nothing.
@@ -72,7 +77,15 @@ param(
 
     [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
-    [string] $Label = 'D-18 Reliance NSE_EQ 2885, one market-closed quote',
+    [string] $CaptureSegment = 'NSE_EQ',
+
+    [Parameter(Mandatory = $false)]
+    [ValidateNotNullOrEmpty()]
+    [string] $CaptureSecurityId = '2885',
+
+    [Parameter(Mandatory = $false)]
+    [ValidateNotNullOrEmpty()]
+    [string] $Label = '',
 
     [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
@@ -114,13 +127,25 @@ if ([string]::IsNullOrWhiteSpace($RuntimeRoot)) { $RuntimeRoot = Join-Path $Inst
 # where LogRoot defaults to <InstallRoot>\logs. This is derived the same way, never assumed.
 if ([string]::IsNullOrWhiteSpace($LogRoot)) { $LogRoot = Join-Path $InstallRoot 'logs' }
 if ([string]::IsNullOrWhiteSpace($CapturePath)) {
-    $CapturePath = Join-Path (Join-Path $RuntimeRoot 'dhan-d18-depth-capture') 'reliance-depth.json'
+    $CapturePath = Join-Path (Join-Path $RuntimeRoot 'dhan-d18-depth-capture') 'depth-capture.json'
+}
+if ([string]::IsNullOrWhiteSpace($Label)) {
+    $Label = "D-18 depth capture $CaptureSegment $CaptureSecurityId, one market-closed quote"
 }
 
 # Absolute by construction: a relative capture path would resolve against whatever directory the
 # daemon happened to be started in, which is not something the operator can reason about.
 if (-not [System.IO.Path]::IsPathRooted($CapturePath)) {
     throw "the capture path must be absolute so the daemon resolves it unambiguously: '$CapturePath'"
+}
+$CaptureSegment = $CaptureSegment.Trim()
+$CaptureSecurityId = $CaptureSecurityId.Trim()
+$allowedCaptureSegments = @('NSE_EQ', 'BSE_EQ')
+if ($allowedCaptureSegments -notcontains $CaptureSegment) {
+    throw "CaptureSegment must be one of: $($allowedCaptureSegments -join ', ') (got '$CaptureSegment')."
+}
+if ($CaptureSecurityId -notmatch '^[1-9][0-9]*$') {
+    throw "CaptureSecurityId must be a positive integer string (got '$CaptureSecurityId')."
 }
 $armMarker = "$CapturePath.arm"
 $captureDir = Split-Path -Parent $CapturePath
@@ -140,8 +165,10 @@ function Show-LaunchInstruction {
     Write-Host '    2. A running Windows process cannot be given a new environment. The variables must' -ForegroundColor Gray
     Write-Host '       exist when the daemon is created, or the capture silently does nothing.' -ForegroundColor Gray
     Write-Host ''
-    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_PATH  = ' + "'" + $CaptureFile + "'" -ForegroundColor Cyan
-    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL = ' + "'" + $Label + "'" -ForegroundColor Cyan
+    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_PATH        = ' + "'" + $CaptureFile + "'" -ForegroundColor Cyan
+    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_SEGMENT     = ' + "'" + $CaptureSegment + "'" -ForegroundColor Cyan
+    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID = ' + "'" + $CaptureSecurityId + "'" -ForegroundColor Cyan
+    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL       = ' + "'" + $Label + "'" -ForegroundColor Cyan
     Write-Host '    (IIPS_MARKET_DATA_TRANSPORT_TOKEN must also be set in this window)' -ForegroundColor Cyan
     Write-Host ''
     Write-Host '    powershell -ExecutionPolicy Bypass -File .\06-Stop-IipsServers.ps1' -ForegroundColor Cyan
@@ -152,7 +179,7 @@ function Show-LaunchInstruction {
     Write-Host ''
     Write-Host "  Then arm and issue exactly one request:" -ForegroundColor Gray
     Write-Host  '    powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm' -ForegroundColor Gray
-    Write-Host '    POST http://127.0.0.1:8791/v1/quotes for EQ_RELIANCE_IN / ISIN:INE002A01018:EQ / NSE_EQ' -ForegroundColor Gray
+    Write-Host "    POST http://127.0.0.1:8791/v1/quotes for the configured target ($CaptureSegment / security ID $CaptureSecurityId)" -ForegroundColor Gray
     Write-Host ''
 }
 
@@ -163,6 +190,8 @@ try {
     Write-IipsInfo "InstallRoot : $InstallRoot"
     Write-IipsInfo "RuntimeRoot : $RuntimeRoot"
     Write-IipsInfo "CapturePath : $CapturePath"
+    Write-IipsInfo "Segment     : $CaptureSegment"
+    Write-IipsInfo "Security ID : $CaptureSecurityId"
     Write-IipsInfo "Arm marker  : $armMarker"
     Write-IipsInfo "Label       : $Label"
 

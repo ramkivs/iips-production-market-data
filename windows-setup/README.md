@@ -139,6 +139,8 @@ Optional:
 `07-Prepare-DepthCapture.ps1` builds, prepares and arms the temporary raw-depth capture. It starts no
 process and makes no vendor request. The daemon itself is started by `03` with
 `-StartMarketDataDaemon`, which records its PID in the run manifest; there is no separate launch.
+The capture target is explicitly configurable (exchange segment + Dhan security ID); capture fails
+safe when enabled without a valid target configuration.
 
 ```powershell
 cd H:\IIPS-scripts
@@ -146,10 +148,13 @@ cd H:\IIPS-scripts
 # 1. stop, then build the daemon code and prepare the capture directory
 powershell -ExecutionPolicy Bypass -File .\06-Stop-IipsServers.ps1
 powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build
+# AGI example: add -CaptureSegment NSE_EQ -CaptureSecurityId 1412 -CapturePath 'H:\IIPS\runtime\dhan-d18-depth-capture\agi-depth.json'
 
 # 2. set the capture environment IN THIS WINDOW - a running process cannot receive it later
-$env:IIPS_DHAN_DEPTH_CAPTURE_PATH  = 'H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json'
-$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL = 'D-18 Reliance NSE_EQ 2885, one market-closed quote'
+$env:IIPS_DHAN_DEPTH_CAPTURE_PATH        = 'H:\IIPS\runtime\dhan-d18-depth-capture\depth-capture.json'
+$env:IIPS_DHAN_DEPTH_CAPTURE_SEGMENT     = 'NSE_EQ'
+$env:IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID = '2885'   # Reliance; use 1412 for AGI Greenpac
+$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL       = 'D-18 NSE_EQ 2885, one market-closed quote'
 
 # 3. start the daemon as a managed child of this run
 powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc -StartMarketDataDaemon
@@ -157,7 +162,7 @@ powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc
 # 4. prove ownership (manifest row -> live PID -> listener) BEFORE arming
 powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Verify
 
-# 5. arm exactly one capture, then issue exactly one quote request
+# 5. arm exactly one capture, then issue exactly one quote request for the configured target
 powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm
 ```
 

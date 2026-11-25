@@ -38,6 +38,7 @@ import {
   isSelectedDepthCaptureRequest,
   readQuoteRequestInstruments,
   resolveDepthCapturePath,
+  resolveDepthCaptureTarget,
   writeDepthCapture,
 } from './dhan_depth_capture.js';
 import { DhanFailureCode, DhanResult, dhanFailure, dhanOk } from './dhan_failures.js';
@@ -497,10 +498,11 @@ export class DhanApiClient {
     }
 
     // TEMPORARY DIAGNOSTIC (D-18 evidence capture). Off unless explicitly
-    // configured. Purely observational: the parsed body is passed by reference and
-    // never mutated, the return value is discarded, and every failure inside the
-    // capture is swallowed so it cannot change this call's outcome. Normalisation
-    // and D-5 validation are untouched.
+    // configured with a capture path and an explicit instrument target. Purely
+    // observational: the parsed body is passed by reference and never mutated,
+    // the return value is discarded, and every failure inside the capture is
+    // swallowed so it cannot change this call's outcome. Normalisation and D-5
+    // validation are untouched.
     this.captureRawDepthIfEnabled(pathSuffix, body, parsedJson, response.status);
 
     if (!options?.deferSuccessRecording) {
@@ -512,8 +514,9 @@ export class DhanApiClient {
 
   /**
    * TEMPORARY DIAGNOSTIC — writes the original `depth` block of one quote
-   * response when `IIPS_DHAN_DEPTH_CAPTURE_PATH` is set, for one selected
-   * instrument only. Never throws and never affects the caller.
+   * response when `IIPS_DHAN_DEPTH_CAPTURE_PATH` is set and an explicit capture
+   * target (segment + security ID) is configured. Never throws and never affects
+   * the caller.
    */
   private captureRawDepthIfEnabled(
     pathSuffix: string,
@@ -532,14 +535,21 @@ export class DhanApiClient {
       // running daemon cannot observe) and without a restart.
       if (!isDepthCaptureArmed(targetPath)) return;
 
+      // TARGET gate: capture target must be explicitly configured. When capture
+      // is enabled but target configuration is missing or invalid, fail safe:
+      // do not capture, do not claim the slot, and do not select an instrument.
+      const targetResolution = resolveDepthCaptureTarget(runtimeEnv);
+      if (targetResolution.state !== 'valid') return;
+
       // INSTRUMENT gate: this capture belongs to one selected request — exactly one
-      // instrument, NSE_EQ, Dhan security ID 2885. Any other quote (another company, a
-      // same-numbered security on another segment, or a multi-instrument batch) returns
-      // here without consuming the slot or touching the arm marker, so it cannot spend
-      // the one-shot or leave an empty document behind. A body that cannot be read is
-      // also a non-match: the slot survives for the request the operator intended.
+      // instrument matching the explicitly configured exchange segment and Dhan
+      // security ID. Any other quote (wrong instrument, wrong segment, or a
+      // multi-instrument batch) returns here without consuming the slot or touching
+      // the arm marker, so it cannot spend the one-shot or leave an empty document
+      // behind. A body that cannot be read is also a non-match: the slot survives for
+      // the request the operator intended.
       const instruments = readQuoteRequestInstruments(DhanApiClient.parseQuoteRequestBodyForCapture(requestBody));
-      if (!isSelectedDepthCaptureRequest(instruments)) return;
+      if (!isSelectedDepthCaptureRequest(instruments, targetResolution.target)) return;
 
       // One-shot: claim the single slot before writing. A second matching quote
       // in the same process can never overwrite the captured evidence.
