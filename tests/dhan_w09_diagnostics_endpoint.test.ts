@@ -108,6 +108,7 @@ const EXPECTED_DIAGNOSTICS_KEYS = [
   'lastLatencyMs',
   'lastSuccessAt',
   'liveCredentialResolutionSupported',
+  'persistence',
   'liveProviderConnectivity',
   'providerConfiguration',
   'providerQualification',
@@ -361,8 +362,9 @@ function assertD7NonDisclosure(serializedBody: string): void {
 describe('W-09 authenticated loopback /v1/diagnostics route & D-7 disclosure policy (synthetic, offline)', () => {
   it('W09-00: publishes governed W-09 route, contract version, and validator on ./dhan-server', () => {
     assert.strictEqual(dhanServerEntry.MARKET_DATA_ROUTES.diagnostics, '/v1/diagnostics');
-    // W-25 added the required `freshness` block; additive-but-required fields move the version.
-    assert.strictEqual(dhanServerEntry.DHAN_DIAGNOSTICS_CONTRACT_VERSION, 2);
+    // W-25 added the required `freshness` block and W-23 the required `persistence` block;
+    // additive-but-required fields move the version, so the validator and the constant agree.
+    assert.strictEqual(dhanServerEntry.DHAN_DIAGNOSTICS_CONTRACT_VERSION, 3);
     assert.strictEqual(typeof dhanServerEntry.validateDhanServiceDiagnostics, 'function');
     assert.strictEqual(typeof dhanServerEntry.sanitizeVaultBackendId, 'function');
   });
@@ -463,6 +465,16 @@ describe('W-09 authenticated loopback /v1/diagnostics route & D-7 disclosure pol
               D09_ALTDATA: 14 * 24 * 60 * 60,
             },
             overrides: [],
+          },
+          persistence: {
+            enabled: false,
+            restoreStatus: 'DISABLED',
+            restoreReason: null,
+            quotesRestored: 0,
+            quotesDroppedAsUnavailable: 0,
+            refreshEntriesRestored: 0,
+            observedStateRestored: false,
+            authLatchClearedByRestart: false,
           },
           quoteCache: {
             size: 0,
@@ -954,11 +966,14 @@ describe('W-09 authenticated loopback /v1/diagnostics route & D-7 disclosure pol
     const invalidPayloads: unknown[] = [
       null,
       {},
-      // W-25: version 1 is now the rejected predecessor, and a payload that omits the
-      // required freshness block is rejected rather than accepted with a guessed threshold.
+      // W-25/W-23: versions 1 and 2 are the rejected predecessors, and a payload that omits
+      // a required block is rejected rather than accepted with a guessed value.
       { ...validSample, contractVersion: 1 },
+      { ...validSample, contractVersion: 2 },
       { ...validSample, freshness: undefined },
       { ...validSample, freshness: { thresholds: { D01_QUOTES: 900 }, overrides: [] } },
+      { ...validSample, persistence: undefined },
+      { ...validSample, persistence: { ...validSample.persistence, restoreStatus: 'INVENTED' } },
       { ...validSample, providerState: 'CONNECTED' },
       { ...validSample, vaultBackendId: CANARY_WIN_CARRIER_PATH },
       { ...validSample, vaultBackendId: CANARY_TOKEN_REF },

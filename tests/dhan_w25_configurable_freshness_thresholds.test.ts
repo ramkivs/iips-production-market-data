@@ -135,7 +135,7 @@ describe('W25-1: defaults are preserved exactly when nothing is configured', () 
   it('W25-103: an unconfigured service reports the compiled defaults and no overrides', async () => {
     const { service } = buildService();
     const diag = await service.getDiagnostics();
-    assert.equal(diag.contractVersion, 2);
+    assert.equal(diag.contractVersion, 3);
     for (const domain of domains) {
       assert.equal(diag.freshness.thresholds[domain], DEFAULT_FRESHNESS_CONFIG[domain]);
     }
@@ -423,6 +423,7 @@ describe('W25-6: diagnostics expose the effective values and validate fail-close
     const valid = await service.getDiagnostics();
     assert.notStrictEqual(validateDhanServiceDiagnostics(valid), null);
     assert.strictEqual(validateDhanServiceDiagnostics({ ...valid, contractVersion: 1 }), null);
+    assert.strictEqual(validateDhanServiceDiagnostics({ ...valid, contractVersion: 2 }), null);
 
     const bad: unknown[] = [
       undefined,
@@ -479,8 +480,8 @@ describe('W25-6: diagnostics expose the effective values and validate fail-close
     assert.deepEqual(validated!.overrides, [{ domain: 'D02_OHLCV', seconds: 43200, source: 'OPTION', raw: '43200', issue: null }]);
   });
 
-  it('W25-607: the contract version is 2 and the validator agrees with it', () => {
-    assert.equal(DHAN_DIAGNOSTICS_CONTRACT_VERSION, 2);
+  it('W25-607: the contract version is 3 (W-25 freshness + W-23 persistence both required)', () => {
+    assert.equal(DHAN_DIAGNOSTICS_CONTRACT_VERSION, 3);
   });
 });
 
@@ -676,7 +677,7 @@ describe('W25-8: existing freshness and transport contracts are unchanged', () =
       assert.equal(diag.ok, true);
       if (diag.ok) {
         assert.equal(diag.freshness.thresholds.D02_OHLCV, 43200);
-        assert.equal(diag.contractVersion, 2);
+        assert.equal(diag.contractVersion, 3);
         assert.equal(diag.service, 'UP');
       }
     } finally {

@@ -69,6 +69,15 @@ import {
   NO_DHAN_FRESHNESS_TIMESTAMPS,
 } from './dhan_historical_provenance.js';
 import {
+  DHAN_PERSISTED_STATE_SCHEMA_VERSION,
+  NOOP_DHAN_STATE_STORE,
+  parseDhanPersistedState,
+  type DhanPersistedRefreshEntry,
+  type DhanPersistedState,
+  type DhanStateLoadOutcome,
+  type DhanStateStorePort,
+} from './dhan_state_store.js';
+import {
   FRESHNESS_DOMAINS,
   resolveFreshnessThresholds,
   type FreshnessEnvSource,
@@ -160,12 +169,16 @@ export function validateDhanServiceHealth(input: unknown): ServiceHealth | null 
 // ── W-09 / D-7 governed diagnostics contract (MAY list only) ─────────────────
 
 /**
- * W-25: version 2 adds the required `freshness` block (effective thresholds + override
- * dispositions). Additive-but-required fields move the version, following the W-07
- * precedent for `ServiceHealth`: the validator below rejects version 1 payloads, so the
- * constant and the validator must agree rather than one describing the other's input.
+ * Version history:
+ *   1 — W-09 baseline.
+ *   2 — W-25 adds the required `freshness` block (effective thresholds + override dispositions).
+ *   3 — W-23 adds the required `persistence` block (start-up restore outcome).
+ *
+ * Additive-but-required fields move the version, following the W-07 precedent for
+ * `ServiceHealth`: the validator rejects every earlier version, so the constant and the
+ * validator must agree rather than one describing the other's input.
  */
-export const DHAN_DIAGNOSTICS_CONTRACT_VERSION = 2 as const;
+export const DHAN_DIAGNOSTICS_CONTRACT_VERSION = 3 as const;
 export type DhanDiagnosticsContractVersion = typeof DHAN_DIAGNOSTICS_CONTRACT_VERSION;
 
 /** Normative D-7 §2 eight-state provider vocabulary (re-exported from dhan_provider_state). */
@@ -247,6 +260,27 @@ export interface ServiceDiagnostics {
    * "my override did not apply" is answerable from the payload itself.
    */
   readonly freshness: DhanDiagnosticsFreshnessConfig;
+  /**
+   * W-23: what persistence did at start-up.
+   *
+   * Always present so a consumer can distinguish a first-ever cold start from a restored
+   * process from a cold start caused by a corrupt store. Absent-store and failed-restore are
+   * different operational facts and collapsing them is how a broken store stays invisible.
+   */
+  readonly persistence: DhanDiagnosticsPersistenceState;
+}
+
+export interface DhanDiagnosticsPersistenceState {
+  readonly enabled: boolean;
+  /** `DISABLED` when no store is configured; otherwise the outcome of the start-up load. */
+  readonly restoreStatus: 'DISABLED' | 'ABSENT' | 'LOADED' | 'CORRUPT';
+  /** Failure reason, or `null`. Never a filesystem message — those can carry a path. */
+  readonly restoreReason: string | null;
+  readonly quotesRestored: number;
+  readonly quotesDroppedAsUnavailable: number;
+  readonly refreshEntriesRestored: number;
+  readonly observedStateRestored: boolean;
+  readonly authLatchClearedByRestart: boolean;
 }
 
 const VALID_PROVIDER_STATES: ReadonlySet<DhanProviderState> = new Set(DHAN_PROVIDER_STATES);
@@ -366,6 +400,58 @@ export function validateDhanDiagnosticsFreshness(input: unknown): DhanDiagnostic
   }
 
   return { thresholds: Object.freeze(cleanThresholds), overrides: Object.freeze(cleanOverrides) };
+}
+
+const VALID_PERSISTENCE_RESTORE_STATUS: ReadonlySet<string> = new Set([
+  'DISABLED',
+  'ABSENT',
+  'LOADED',
+  'CORRUPT',
+]);
+const VALID_PERSISTENCE_RESTORE_REASONS: ReadonlySet<string> = new Set([
+  'FILE_ABSENT',
+  'INVALID_JSON',
+  'SCHEMA_MISMATCH',
+  'INVALID_SHAPE',
+  'TOO_LARGE',
+  'READ_ERROR',
+]);
+
+/** Validates the W-23 `persistence` block fail-closed. Returns `null` on any defect. */
+export function validateDhanDiagnosticsPersistence(input: unknown): DhanDiagnosticsPersistenceState | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const p = input as Record<string, unknown>;
+  if (typeof p.enabled !== 'boolean') return null;
+  if (typeof p.restoreStatus !== 'string' || !VALID_PERSISTENCE_RESTORE_STATUS.has(p.restoreStatus)) return null;
+  if (p.restoreReason !== null && (typeof p.restoreReason !== 'string' || !VALID_PERSISTENCE_RESTORE_REASONS.has(p.restoreReason))) {
+    return null;
+  }
+  for (const field of ['quotesRestored', 'quotesDroppedAsUnavailable', 'refreshEntriesRestored'] as const) {
+    if (!isNonNegativeInt(p[field])) return null;
+  }
+  if (typeof p.observedStateRestored !== 'boolean') return null;
+  if (typeof p.authLatchClearedByRestart !== 'boolean') return null;
+
+  // Consistency the emitter guarantees and a consumer must be able to rely on.
+  if (p.restoreStatus === 'DISABLED' && p.enabled) return null;
+  if (!p.enabled && p.restoreStatus !== 'DISABLED') return null;
+  if (p.restoreStatus === 'CORRUPT' && p.restoreReason === null) return null;
+  if (p.restoreStatus === 'LOADED' && p.restoreReason !== null) return null;
+  if (p.restoreStatus === 'LOADED' && p.quotesRestored === 0 && p.refreshEntriesRestored === 0 && p.observedStateRestored === false) {
+    // A LOADED outcome that admitted nothing is a statement the emitter never makes.
+    return null;
+  }
+
+  return Object.freeze({
+    enabled: p.enabled,
+    restoreStatus: p.restoreStatus as DhanDiagnosticsPersistenceState['restoreStatus'],
+    restoreReason: p.restoreReason as string | null,
+    quotesRestored: p.quotesRestored as number,
+    quotesDroppedAsUnavailable: p.quotesDroppedAsUnavailable as number,
+    refreshEntriesRestored: p.refreshEntriesRestored as number,
+    observedStateRestored: p.observedStateRestored,
+    authLatchClearedByRestart: p.authLatchClearedByRestart,
+  });
 }
 
 /**
@@ -493,6 +579,12 @@ export function validateDhanServiceDiagnostics(input: unknown): ServiceDiagnosti
   const freshness = validateDhanDiagnosticsFreshness(p.freshness);
   if (freshness === null) return null;
 
+  // W-23: persistence state is validated the same fail-closed way. A consumer that cannot
+  // trust these counts must not be handed them; they decide whether a "restored" process is
+  // actually reporting restored evidence.
+  const persistence = validateDhanDiagnosticsPersistence(p.persistence);
+  if (persistence === null) return null;
+
   return {
     contractVersion: DHAN_DIAGNOSTICS_CONTRACT_VERSION,
     service: p.service,
@@ -523,6 +615,7 @@ export function validateDhanServiceDiagnostics(input: unknown): ServiceDiagnosti
     },
     qualifiedMappingsLoaded: p.qualifiedMappingsLoaded,
     freshness,
+    persistence,
     quoteCache: {
       size: qc.size,
       capacity: qc.capacity,
@@ -796,6 +889,32 @@ export function validateDhanConnectionVerification(
   });
 }
 
+/**
+ * W-23: what the last store load did.
+ *
+ * Public because an operator must be able to tell a genuinely first-ever cold start from a
+ * restore that failed: those are different operational facts and the difference is exactly
+ * what a corrupt store would otherwise hide.
+ */
+export interface DhanStateRestoreReport {
+  /** `ABSENT` / `CORRUPT` both mean the process started cold; `reason` says which. */
+  readonly status: DhanStateLoadOutcome['status'] | 'NO_STORE';
+  readonly reason: string | null;
+  /** Entries admitted after re-classification under the current clock and thresholds. */
+  readonly quotesRestored: number;
+  /** Entries DROPPED because they had aged past suppression during the outage. */
+  readonly quotesDroppedAsUnavailable: number;
+  readonly refreshEntriesRestored: number;
+  readonly observedStateRestored: boolean;
+  /**
+   * The previous process was auth-latched and this one is not.
+   *
+   * Surfaced so the deliberate W-23 decision (a restart clears the latch so the documented
+   * credential-rotation route stays reachable) can never be mistaken for a lost latch.
+   */
+  readonly authLatchClearedByRestart: boolean;
+}
+
 export interface DhanMarketDataServiceOptions {
   /** Explicit offline calendar; absent means legacy elapsed-time mode, not guessed sessions. */
   tradingCalendar?: TradingCalendar;
@@ -826,6 +945,15 @@ export interface DhanMarketDataServiceOptions {
    * mid-flight, and tests stay hermetic regardless of the ambient environment.
    */
   freshnessEnv?: FreshnessEnvSource;
+  /**
+   * W-23: where retained state is read at start and written on demand.
+   *
+   * Absent means `NOOP_DHAN_STATE_STORE`: the process starts cold and saves nothing, which
+   * is the pre-W-23 behaviour exactly. The daemon supplies a file-backed store; a test
+   * supplies an in-memory one. The provider never chooses a path and never imports
+   * `src/persistence/**` — see `dhan_state_store.ts`.
+   */
+  stateStore?: DhanStateStorePort;
 }
 
 /**
@@ -862,6 +990,10 @@ export class DhanMarketDataService {
   private readonly freshnessThresholds: ResolvedFreshnessThresholds;
   /** W-25: only the domains configuration mentioned, accepted or rejected. */
   private readonly freshnessThresholdOverrides: readonly FreshnessThresholdOverrideReport[];
+  /** W-23: the storage seam. NOOP when unconfigured, so an unconfigured process is unchanged. */
+  private readonly stateStore: DhanStateStorePort;
+  /** W-23: what the last load attempt did, and what it admitted. Reported, never inferred. */
+  private stateRestoreReport: DhanStateRestoreReport;
 
   constructor(options: DhanMarketDataServiceOptions) {
     this.tradingCalendar = options.tradingCalendar ? parseTradingCalendar(options.tradingCalendar) : undefined;
@@ -876,6 +1008,18 @@ export class DhanMarketDataService {
     );
     this.freshnessThresholds = resolvedThresholds.thresholds;
     this.freshnessThresholdOverrides = resolvedThresholds.overrides;
+    this.stateStore = options.stateStore ?? NOOP_DHAN_STATE_STORE;
+    // W-23: restore BEFORE the first request can be served. The cache is constructed after
+    // this point, so the restore is handed the reference it needs below.
+    this.stateRestoreReport = {
+      status: 'NO_STORE',
+      reason: null,
+      quotesRestored: 0,
+      quotesDroppedAsUnavailable: 0,
+      refreshEntriesRestored: 0,
+      observedStateRestored: false,
+      authLatchClearedByRestart: false,
+    };
     this.source = new DhanMarketDataSource({
       tradingCalendar: this.tradingCalendar,
       client: options.client,
@@ -890,6 +1034,10 @@ export class DhanMarketDataService {
     this.resolution = new DhanInstrumentResolutionService(options.securityMaster, options.instrumentRegistry);
     this.cache = options.cache ?? new DhanBoundedCache<CanonicalEnvelope<MarketQuotePayload>>(256);
     this.cache.setTradingCalendar(this.tradingCalendar);
+    // W-23: restore now that the cache and calendar exist. Restoring AFTER setTradingCalendar
+    // matters: re-classification of a restored entry must use the same session policy a live
+    // entry would, or a restored quote could be judged on a different basis than a fetched one.
+    this.stateRestoreReport = this.restoreRetainedState();
     this.historicalCache = options.historicalCache ?? new DhanHistoricalCache(256);
     this.limiter = options.limiter ?? new DhanRateLimiter({ maxRequests: 60, windowMs: 60_000, now: () => this.now().getTime() });
     const concurrency = options.concurrency ?? new DhanConcurrencyLimiter(8);
@@ -1188,6 +1336,151 @@ export class DhanMarketDataService {
   }
 
   /**
+   * W-23: the last store load outcome. Never inferred — a cold process that lost a corrupt
+   * store and a cold process on its first ever run report different `reason`s here.
+   */
+  public getStateRestoreReport(): DhanStateRestoreReport {
+    return this.stateRestoreReport;
+  }
+
+  /**
+   * W-23: everything this process would need to come back after a restart.
+   *
+   * Pure read: never mutates the cache, the refresh map or the recorder, never calls the
+   * provider and never touches the store. Persisting is the caller's job (`persistRetainedState`),
+   * so a snapshot can be inspected in a test without writing anything.
+   *
+   * Entries are emitted in LRU order with an explicit `order` so a restore preserves which
+   * quote would have been evicted next.
+   */
+  public snapshotRetainedState(): DhanPersistedState {
+    const quotes = this.cache.snapshotInLruOrder().map((row, index) => ({
+      key: row.key,
+      envelope: row.entry,
+      order: index,
+    }));
+    const refresh: DhanPersistedRefreshEntry[] = Array.from(this.refreshStatus.entries(), ([key, status]) => ({
+      key,
+      outcome: status.outcome,
+      lastFailure: status.lastFailure,
+    }));
+    const observed = this.client.getObservedState();
+    return {
+      schemaVersion: DHAN_PERSISTED_STATE_SCHEMA_VERSION,
+      writtenAt: this.now().toISOString(),
+      quotes,
+      refresh,
+      observed: {
+        lastSuccessAt: observed.lastSuccessAt,
+        lastFailure: observed.lastFailure,
+        lastAuthOutcome: observed.lastAuthOutcome,
+        lastLatencyMs: observed.lastLatencyMs,
+        authLatched: observed.authLatched,
+        consecutiveAuthFailures: observed.consecutiveAuthFailures,
+      },
+    };
+  }
+
+  /**
+   * W-23: snapshots and writes through the configured store.
+   *
+   * A store failure is REPORTED, never thrown: persistence must not be able to fail a
+   * shutdown, because a daemon that cannot stop is a worse outcome than one that lost a
+   * cache. The caller (the daemon) surfaces the outcome.
+   */
+  public persistRetainedState(): { readonly snapshot: DhanPersistedState; readonly outcome: ReturnType<DhanStateStorePort['save']> } {
+    const snapshot = this.snapshotRetainedState();
+    return { snapshot, outcome: this.stateStore.save(snapshot) };
+  }
+
+  /**
+   * W-23: admits persisted state, fail-closed and freshness-consistent.
+   *
+   * Three rules, all from the W-23 contract:
+   *
+   *  1. **Nothing is invented.** A CORRUPT/ABSENT outcome leaves the process exactly as it
+   *     would be on a first run. The parser already refused any partial payload, so by the
+   *     time state is here it is whole.
+   *  2. **Verdicts are recomputed, not replayed.** Each entry is classified under THIS
+   *     process's clock and thresholds. A quote that was CURRENT at shutdown is STALE or
+   *     UNAVAILABLE after an outage, because that is the truth now.
+   *  3. **Suppressed evidence is dropped, not admitted.** An entry that has aged past
+   *     suppression is counted and discarded, so the cache size never includes evidence no
+   *     caller may use.
+   *
+   * The provenance instants are never re-stamped: `asOf` keeps its original value, so age is
+   * measured from when the quote was actually observed.
+   */
+  private restoreRetainedState(): DhanStateRestoreReport {
+    const base: DhanStateRestoreReport = {
+      status: 'NO_STORE',
+      reason: null,
+      quotesRestored: 0,
+      quotesDroppedAsUnavailable: 0,
+      refreshEntriesRestored: 0,
+      observedStateRestored: false,
+      authLatchClearedByRestart: false,
+    };
+    if (this.stateStore === NOOP_DHAN_STATE_STORE) return base;
+
+    let outcome: DhanStateLoadOutcome;
+    try {
+      outcome = this.stateStore.load();
+    } catch {
+      // A port implementation that throws is a defect, but it must not stop the boot.
+      return { ...base, status: 'CORRUPT', reason: 'READ_ERROR' };
+    }
+    if (outcome.status === 'ABSENT') return { ...base, status: 'ABSENT' };
+    if (outcome.status === 'CORRUPT') return { ...base, status: 'CORRUPT', reason: outcome.reason };
+
+    // Re-validate: a port is untrusted input like any other boundary, even an in-process one.
+    const parsed = parseDhanPersistedState(outcome.state);
+    if (!parsed) return { ...base, status: 'CORRUPT', reason: 'INVALID_SHAPE' };
+
+    const nowIso = this.now().toISOString();
+    let quotesRestored = 0;
+    let quotesDropped = 0;
+    // Ascending `order` = least-recently-used first, so re-admission rebuilds the same LRU
+    // shape and the next eviction lands where it would have.
+    for (const row of [...parsed.quotes].sort((a, b) => a.order - b.order)) {
+      const lookup = this.cache.classify(row.envelope, nowIso);
+      // `classify` only yields MISS for an absent key, and this entry is in hand, so the
+      // admission state is one of the three real classifications.
+      const classification = lookup.state === 'MISS' ? 'UNAVAILABLE' : lookup.state;
+      if (this.cache.restoreEntry(row.key, row.envelope, classification)) {
+        quotesRestored += 1;
+      } else {
+        quotesDropped += 1;
+      }
+    }
+
+    let refreshEntriesRestored = 0;
+    for (const entry of parsed.refresh) {
+      // A refresh status describes an ATTEMPT, not an observation, so it does not age out.
+      this.refreshStatus.set(entry.key, { outcome: entry.outcome, lastFailure: entry.lastFailure });
+      refreshEntriesRestored += 1;
+    }
+
+    let observedStateRestored = false;
+    let authLatchClearedByRestart = false;
+    if (parsed.observed) {
+      const restored = this.client.getStateRecorder().restoreObservedState(parsed.observed);
+      observedStateRestored = restored.restored;
+      authLatchClearedByRestart = restored.restored && restored.priorAuthLatched;
+    }
+
+    return {
+      status: 'LOADED',
+      reason: null,
+      quotesRestored,
+      quotesDroppedAsUnavailable: quotesDropped,
+      refreshEntriesRestored,
+      observedStateRestored,
+      authLatchClearedByRestart,
+    };
+  }
+
+  /**
    * W-19 observational summary of IPD's retained historical observations.
    *
    * Observation-only: never invokes a provider, never reads credentials, never touches
@@ -1438,6 +1731,7 @@ export class DhanMarketDataService {
       qualifiedMappingsLoaded,
       quoteCache,
       freshness: this.describeFreshnessConfig(),
+      persistence: this.describePersistenceState(),
     });
   }
 
@@ -1448,6 +1742,27 @@ export class DhanMarketDataService {
    * what the evaluator applies — not a re-read of the environment that could disagree.
    * Thresholds are configuration, never credential-adjacent, so every value is publishable.
    */
+  /**
+   * W-23: publish what the start-up restore did.
+   *
+   * `restoreReason` is a declared enum value, never a filesystem error string: those can
+   * carry the path, and the path is not something this payload should echo.
+   */
+  private describePersistenceState(): DhanDiagnosticsPersistenceState {
+    const report = this.stateRestoreReport;
+    const enabled = this.stateStore !== NOOP_DHAN_STATE_STORE;
+    return Object.freeze({
+      enabled,
+      restoreStatus: !enabled ? 'DISABLED' : report.status === 'NO_STORE' ? 'DISABLED' : report.status,
+      restoreReason: report.reason,
+      quotesRestored: report.quotesRestored,
+      quotesDroppedAsUnavailable: report.quotesDroppedAsUnavailable,
+      refreshEntriesRestored: report.refreshEntriesRestored,
+      observedStateRestored: report.observedStateRestored,
+      authLatchClearedByRestart: report.authLatchClearedByRestart,
+    });
+  }
+
   private describeFreshnessConfig(): DhanDiagnosticsFreshnessConfig {
     return Object.freeze({
       thresholds: Object.freeze({ ...this.freshnessThresholds }),
