@@ -66,11 +66,44 @@ function round2(value: number): number {
  * requires that a missing side is `null`, but that a *supplied* malformed price
  * is rejected — never silently converted into `null`, which would make bad data
  * look like legitimate absence.
+ *
+ * `absentMarketBook` is the D-5 addendum case (approved 2026-11-25): the vendor
+ * returned a fully populated book whose every price, quantity and order count is
+ * zero. That is an absent market book, not malformed data, and normalises to
+ * `null` exactly like a genuinely absent side.
  */
 type TopOfBookResult =
   | { kind: 'present'; price: number }
   | { kind: 'absent' }
+  | { kind: 'absentMarketBook' }
   | { kind: 'invalid'; price: unknown };
+
+/**
+ * True when a level is a structurally valid, entirely zero-filled entry.
+ *
+ * D-5 addendum: the vendor emits `{price: 0, quantity: 0, orders: 0}` for every
+ * level of a book with no market. Each of the three fields must be the number
+ * zero. A non-zero value, a non-numeric value, a missing field or a non-finite
+ * value is *not* a zero-filled level and continues down the malformed path.
+ */
+function isZeroFilledLevel(level: unknown): boolean {
+  if (!level || typeof level !== 'object') return false;
+  const { price, quantity, orders } = level as { price?: unknown; quantity?: unknown; orders?: unknown };
+  return price === 0 && quantity === 0 && orders === 0;
+}
+
+/**
+ * True when BOTH sides are supplied, non-empty, and every level on every side is
+ * entirely zero-filled. Both sides are required: a book with a populated bid and
+ * an all-zero ask is not a uniformly absent book, and must stay per-side.
+ */
+function isEntirelyZeroFilledBook(depth: { buy?: readonly unknown[]; sell?: readonly unknown[] }): boolean {
+  const buy = depth.buy;
+  const sell = depth.sell;
+  if (!Array.isArray(buy) || !Array.isArray(sell)) return false;
+  if (buy.length === 0 || sell.length === 0) return false;
+  return buy.every(isZeroFilledLevel) && sell.every(isZeroFilledLevel);
+}
 
 /**
  * Reads the best price of one depth side.
@@ -82,6 +115,10 @@ type TopOfBookResult =
  *
  * D-5: an unavailable side is reported as `null` and is never substituted with
  * `0`, but a malformed supplied price is never laundered into `null` either.
+ *
+ * The entirely zero-filled book is resolved before this function is reached (see
+ * `isEntirelyZeroFilledBook`), so `zero` here means a genuinely malformed
+ * supplied level rather than the approved absent-market-book condition.
  */
 function topOfBook(levels: Array<{ price: number }> | undefined): TopOfBookResult {
   if (!levels || levels.length === 0) return { kind: 'absent' };
@@ -163,8 +200,21 @@ export function normalizeDhanQuoteToCanonical(
 
   // Depth sides are read before the payload is built so that a supplied but
   // malformed price is rejected rather than laundered into `null`.
-  const bidSide = topOfBook(quote.depth?.buy);
-  const askSide = topOfBook(quote.depth?.sell);
+  //
+  // D-5 addendum (approved 2026-11-25): an ENTIRELY zero-filled order book is an
+  // ABSENT MARKET BOOK, not a malformed response. The vendor returns five buy and
+  // five sell levels in which every price, quantity and order count is zero once
+  // the market closes. That condition resolves to `absentMarketBook` for both
+  // sides independently of ordering, so neither side is ever reported as `0` and
+  // the quote remains valid. Every other supplied-but-malformed value still takes
+  // the `invalid` path below and fails closed.
+  const zeroFilledBook = isEntirelyZeroFilledBook(quote.depth ?? {});
+  const bidSide: TopOfBookResult = zeroFilledBook
+    ? { kind: 'absentMarketBook' }
+    : topOfBook(quote.depth?.buy);
+  const askSide: TopOfBookResult = zeroFilledBook
+    ? { kind: 'absentMarketBook' }
+    : topOfBook(quote.depth?.sell);
   for (const [field, side] of [['bid', bidSide], ['ask', askSide]] as const) {
     if (side.kind === 'invalid') {
       return dhanFailure(
@@ -183,6 +233,9 @@ export function normalizeDhanQuoteToCanonical(
     symbol: mapping.symbol,
     exchange: mapping.exchange,
     currency: 'INR',
+    // `null` means unavailable. Both an absent side and the approved entirely
+    // zero-filled book (absent market book) resolve here, per side and
+    // independently; neither is ever reported as `0`.
     bid: bidSide.kind === 'present' ? bidSide.price : null,
     ask: askSide.kind === 'present' ? askSide.price : null,
     ltp: quote.last_price,

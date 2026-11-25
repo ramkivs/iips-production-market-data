@@ -1,7 +1,7 @@
 # D-5 — Bid/Ask Representation and Validation Decision
 
 **Decision ID:** D-5
-**Status:** **ACCEPTED — APPROVED**
+**Status:** **ACCEPTED — APPROVED** (amended by **Addendum A**, §7, 25 November 2026)
 **Approved by:** Programme Owner
 **Approval date:** 21 November 2026
 **Scope:** IPD canonical D01 quote contract, Dhan normalisation and D114 historical parsers. Coordinated IRR consumer changes are separate work owned by IRR.
@@ -139,6 +139,13 @@ Dhan normalisation distinguishes three outcomes per depth side:
 A malformed supplied price is **never** converted into `null`: doing so would make bad data
 indistinguishable from a genuinely absent side. One-sided quotes remain valid.
 
+> **Superseded in part — see Addendum A (§7).** The third row above governs a *supplied
+> malformed level*, not a book in which **every** level on **both** sides is zero-filled.
+> Since 25 November 2026 that entirely zero-filled book is classified **ABSENT MARKET
+> BOOK** and yields `bid: null` / `ask: null` with a **valid** quote. Individual malformed
+> levels — including a single reachable zero inside an otherwise real book, and any mixed
+> or half-empty book — are still rejected exactly as this section states.
+
 ### 6.3 Test-count reconciliation
 
 Guarded-suite counts before this pass differed between local and CI because CI sets
@@ -154,3 +161,148 @@ PowerShell-gated cases on an image that has `pwsh`:
 
 So `# tests` is identical on both hosts and the passed/skipped split differs by exactly three.
 No assertion is skipped to make a count look better.
+
+---
+
+## 7. Addendum A — the entirely zero-filled order book is an absent market book
+
+- **Addendum ID:** D-5/A
+- **Status:** **DECIDED — APPROVED**
+- **Decided by:** Programme Authority
+- **Decision date:** 25 November 2026
+- **Date recorded:** 25 November 2026
+- **Amends:** §6.2 (`Absent depth vs malformed supplied price`) by adding a third *state*
+  of the market book — not by weakening the supplied-zero rule for individual levels.
+- **Does not amend:** decisions 1–7 in §2, the D01 `2.0.0` contract, or the validation
+  rules in §2.5. `bid`/`ask` representation, contract version and the treatment of
+  historical bhavcopy are unchanged.
+
+### 7.1 The contradiction this addendum resolves
+
+§2 decision 2 states that a **supplied zero price is invalid**, and §6.2 restates it:
+"supplied zero, negative, non-finite, non-numeric or missing price → **invalid** →
+`MALFORMED_RESPONSE`, quote rejected".
+
+That rule was written for the case it was intended to catch: a single level carrying a
+nonsensical price where a real price was expected. It was **not** written for a book in
+which the vendor has deliberately populated every level with zeros.
+
+The vendor does exactly that. `evidence/dhan-d18/reliance-depth-20261123.json`
+(OPERATOR-confirmed, `rawDepth`, SHA-256 `3fb343db…b68e`) is a genuine vendor response,
+captured at `2026-11-23T10:01:24.819Z` = **15:31:24 IST**, one minute after regular NSE
+equity trading closed at 15:30 IST, `httpStatus: 200`, `responseStatus: "success"`,
+`depthState: "object"`. It carries **five buy and five sell levels**, every one of them
+`{price: 0, quantity: 0, orders: 0}`, every field `state: "present"`.
+
+Under the unamended rule that response is `MALFORMED_RESPONSE`, so **every ordinary
+post-close quote fails closed**. That is a defect introduced by the D-5 fix, not a
+protection it provides: the response is not malformed, and the market genuinely has no
+book after the close. The vendor is telling the truth; the normaliser was misreading it.
+
+### 7.2 The approved decision
+
+> An order book in which **all five buy levels and all five sell levels are present**, and
+> in which **every** `price`, `quantity` and `orders` value is **zero**, represents an
+> **ABSENT MARKET BOOK**. It is **not** a malformed response.
+
+Consequences, all of which are binding:
+
+| # | Requirement |
+|---|---|
+| A-1 | The condition is classified **ABSENT**, never `MALFORMED_RESPONSE`. |
+| A-2 | The normalized quote publishes `bid = null` and `ask = null`, **per side and independently**. |
+| A-3 | The **quote response remains VALID**. This condition must not fail closed. |
+| A-4 | `null` here means *unavailable*, exactly as in §2.1. **No `0` sentinel** is introduced; the absent book is never reported as `bid: 0, ask: 0`. |
+| A-5 | Validation of **individually** malformed or invalid supplied levels remains fully applicable and unchanged. |
+
+A-5 is the boundary of the amendment and must be read strictly. The absent-market-book
+classification requires the **whole** book to be zero-filled. Anything less is still
+governed by §6.2:
+
+- **one** reachable (non-zero) level anywhere in the book → the book is real; the ordinary
+  per-side rules apply, and any zero price elsewhere is `MALFORMED_RESPONSE` as before;
+- a **mixed** book (for example an all-zero buy side with a priced sell side) → **not**
+  a uniformly absent book, so the supplied-zero rule rejects it as before;
+- a token that is not *exactly* the number zero — negative, `NaN`, `±Infinity`, the string
+  `'0'`, or a **missing** field — does **not** satisfy the zero-filled test and stays
+  malformed;
+- an absent or empty side, with or without a zero-filled counterpart, keeps its existing
+  §6.2 treatment.
+
+### 7.3 Why the condition is defined on the whole book, not per side
+
+The vendor emits the zero-filled book **symmetrically** — both sides, all levels — because
+the market as a whole is closed. A one-sided zero book has no such meaning: it would most
+plausibly be a vendor or transport defect affecting half the payload, and silently
+promoting that to "no market" would launder malformed data into legitimate absence — the
+exact failure mode §2 decision 2 and §6.2 exist to prevent. Requiring **both** sides to be
+non-empty **and** entirely zero-filled keeps the amendment as narrow as the evidence
+supports. Where the evidence does not support it, the pre-existing rule stands.
+
+### 7.4 Implementation
+
+`src/providers/dhan/dhan_normalizer.ts`:
+
+- `isZeroFilledLevel(level)` — a level satisfies the condition only when `price === 0`,
+  `quantity === 0` and `orders === 0` as **numbers**. Non-numeric, non-finite, negative,
+  string and missing values are not zero-filled.
+- `isEntirelyZeroFilledBook(depth)` — requires `buy` and `sell` to both be arrays, both
+  **non-empty**, and **every** level on **both** sides to satisfy `isZeroFilledLevel`.
+- `TopOfBookResult` gains a fourth case, `{ kind: 'absentMarketBook' }`, deliberately
+  distinct from both `absent` and `invalid` so the three outcomes remain distinguishable
+  in code and in any diagnostic that inspects the result.
+- The call site resolves the book-level condition **before** reading either side; both
+  sides then take `absentMarketBook` together, and the payload maps every non-`present`
+  side to `null`.
+
+`topOfBook()` itself is **unchanged**. It still returns `{ kind: 'invalid' }` for a
+supplied zero, and it is still reached for every book that is not entirely zero-filled —
+so §6.2's rejection of malformed individual levels is preserved by construction rather
+than by a new guard.
+
+### 7.5 Regression coverage
+
+`tests/d5_bid_ask_representation.test.ts`, describe block
+`D-5 addendum — entirely zero-filled book is an absent market book`:
+
+| Case | Assertion |
+|---|---|
+| D5-A0 | The fixture is loaded from the **retained D-18 evidence file**, not an inline reconstruction; five buy + five sell levels, every one exactly `{quantity: 0, orders: 0, price: 0}`. |
+| D5-A1 | Zero-filled 5×5 book → `bid: null`, `ask: null`, **quote valid**. |
+| D5-A2 | Bid and ask are resolved independently; neither side is derived from the other. |
+| D5-A3 | Unrelated payload fields (LTP, volume, freshness, quality) are untouched by the classification. |
+| D5-A4 | A zero-filled book produces the **same payload** as a genuinely absent depth block. |
+| D5-A5 | One reachable non-zero level → still `MALFORMED_RESPONSE`. |
+| D5-A6 | Mixed book (all-zero buy, priced sell) → still `MALFORMED_RESPONSE`. |
+| D5-A7 | `NaN`, `±Infinity`, `'0'` and `-1` are **not** zero-filled. |
+| D5-A8 | A level missing a field is **not** zero-filled. |
+| D5-A9 | No `0` sentinel is emitted anywhere in the payload for this condition. |
+| D5-A10 | An ordinary priced book is unaffected. |
+
+D5-A0 fails if the evidence file is ever removed from the repository, so the regression
+cannot silently drift back onto a hand-written approximation of the vendor response.
+
+### 7.6 Verification (25 November 2026)
+
+| Check | Result |
+|---|---|
+| `npm run build:tsc` | exit 0 |
+| `dist/tests/d5_bid_ask_representation.test.js` | **61 tests, 61 pass, 0 fail, 0 skipped** (baseline 50; +11) |
+| Full guarded suite (`npm test`) | **2,200 tests, 2,186 pass, 0 fail, 14 skipped** (baseline 2,189 / 2,175 / 14; +11) |
+| `evidence/dhan-d18/` | unmodified; 11-23 file SHA-256 still `3fb343db…b68e` |
+| `providerQualification` | unchanged — `SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED` in every declared and emitted location; no qualification identifier appears in this change's diff |
+
+The 14 skips are the pre-existing host-gated set described in §6.3 (three of which pass
+under CI's `IIPS_POWERSHELL_RUNTIME_TESTS=1`); no assertion was skipped by this addendum.
+
+### 7.7 What this addendum does not do
+
+- It does **not** qualify the provider for live use. `providerQualification` remains
+  `SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED`.
+- It does **not** amend any W-item acceptance, milestone, or evidence gate outside D-5.
+- It does **not** decide anything about *why* the vendor zero-fills. The observed
+  behaviour is recorded as evidence; the market-microstructure explanation is outside the
+  scope of this record.
+- It does **not** touch the D-18 captures. `evidence/dhan-d18/reliance-depth-20261125.json`
+  remains a **market-hours** capture mislabelled as market-closed, and is not evidence for
+  this decision.
