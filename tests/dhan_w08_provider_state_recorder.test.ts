@@ -199,6 +199,8 @@ function createHarness(options: HarnessOptions = {}) {
     enqueue: (...more: ScriptedResponseStep[]) => queue.push(...more),
     getTransportCalls: () => requests.length,
     getResolverCalls: () => resolverCalls,
+    /** W-05: disclosure-safe D-2 session descriptor (counters only, never material). */
+    getCredentialSession: () => client.getCredentialSessionDescriptor(),
     getClockIso: () => new Date(clockMs).toISOString(),
     advanceClock,
   };
@@ -328,27 +330,66 @@ describe('W-08 observed provider state recorder, health & bounded verification (
       securityIdentity: ID_INFY,
       exchangeSegment: 'NSE_EQ',
     });
-    assert.strictEqual(res.ok, false);
-    if (!res.ok) assert.strictEqual(res.failure.code, 'AUTHENTICATION_FAILURE');
 
-    // Permanent auth failure is not retried by refresh orchestrator (1 vendor call).
-    assert.strictEqual(h.getTransportCalls(), 1);
+    // D-2 / W-05: a 401 spends the session's single bounded re-read and retries ONCE. Only one
+    // 401 is scripted, so the replacement material meets the harness default 200 and the call
+    // SUCCEEDS — the approved recovery path.
+    assert.strictEqual(res.ok, true, 'the single rejection is recovered by the bounded retry');
+    //
+    // (Before W-05 this assertion was `getTransportCalls() === 1` with the quote failing.
+    // D-2 replaced "never retry" with "retry exactly once after re-reading the vault"; the
+    // zero-retry rule that survives is the one on OTHER failure codes, asserted in W06-09.)
+    assert.strictEqual(h.getTransportCalls(), 2, 'exactly one bounded retry after the 401');
+    assert.strictEqual(h.getResolverCalls(), 2, 'one start-up read plus exactly one re-read');
+    assert.strictEqual(h.getCredentialSession().vaultReadCount, 2);
+    assert.strictEqual(h.getCredentialSession().authLatched, false);
+    assert.strictEqual(h.getCredentialSession().authRejectionBudgetRemaining, false);
 
+    // The rejection was recorded and then cleared by the accepted retry: D-2 / D-7 T7 says an
+    // accepted authenticated interaction on an unlatched recorder resets the counter and clears
+    // `lastFailure`, so the surviving observable is the success, not the 401 that preceded it.
     const state = h.service.getObservedProviderState();
     assert.deepStrictEqual(state, {
-      lastSuccessAt: null,
-      lastFailure: {
-        category: 'AUTHENTICATION_FAILURE',
-        at: '2026-11-16T04:45:00.031Z',
-      },
-      lastAuthOutcome: 'AUTHENTICATION_FAILURE',
-      lastLatencyMs: 31,
-      consecutiveAuthFailures: 1,
+      lastSuccessAt: '2026-11-16T04:45:00.068Z',
+      lastFailure: null,
+      lastAuthOutcome: 'AUTHENTICATED',
+      lastLatencyMs: 37,
+      consecutiveAuthFailures: 0,
       authLatched: false,
     });
+    assert.strictEqual((await h.service.health()).liveProviderConnectivity, 'CONNECTED_LIVE');
+  });
 
-    const health = await h.service.health();
-    assert.strictEqual(health.liveProviderConnectivity, 'NOT_CHECKED_PRE_ACCESS');
+  it('W08-02a: the bounded re-read is what recovers the request — a rejected replacement surfaces the failure', async () => {
+    // Same 401, but the replacement material is rejected as well, so the request fails and
+    // latches. This is the pair to W08-02: identical first rejection, different replacement.
+    const h = createHarness({
+      steps: [
+        {
+          kind: 'http',
+          status: 401,
+          bodyText: JSON.stringify({ errorCode: 'DH-901', errorMessage: CANARY_VENDOR_MESSAGE }),
+          latencyMs: 31,
+        },
+        {
+          kind: 'http',
+          status: 401,
+          bodyText: JSON.stringify({ errorCode: 'DH-901', errorMessage: CANARY_VENDOR_MESSAGE }),
+          latencyMs: 24,
+        },
+      ],
+    });
+
+    const res = await h.service.getQuote({
+      companyId: 'EQ_INFY_IN',
+      securityIdentity: ID_INFY,
+      exchangeSegment: 'NSE_EQ',
+    });
+    assert.strictEqual(res.ok, false);
+    if (!res.ok) assert.strictEqual(res.failure.code, 'AUTHENTICATION_FAILURE');
+    assert.strictEqual(h.getTransportCalls(), 2);
+    assert.strictEqual(h.getResolverCalls(), 2);
+    assert.strictEqual(h.getCredentialSession().authLatched, true);
   });
 
   it('W08-03: credential expiration records CREDENTIALS_EXPIRED pre-flight with zero vendor calls and without incrementing consecutiveAuthFailures', async () => {
@@ -452,37 +493,56 @@ describe('W-08 observed provider state recorder, health & bounded verification (
   it('W08-05: successful authentication when unlatched resets consecutiveAuthFailures and clears lastFailure per D-2 / D-7 T7', async () => {
     const h = createHarness({
       steps: [
-        // 1st failure: HTTP 401 -> consecutiveAuthFailures = 1, authLatched = false (below threshold 2)
+        // D-2 / W-05 order: the FIRST 401 is answered by the bounded re-read plus one retry, so a
+        // single scripted 401 no longer ends the call. Two 401s are needed to reach the latched
+        // state W08-06 asserts, and one 401 followed by a 200 is the clean-recovery path.
+        //
+        // 1st: 401 -> re-read -> 2nd: 200 accepted -> recovers within the same call.
         { kind: 'http', status: 401, bodyText: '{"error":"unauthorized"}', latencyMs: 22 },
-        // Subsequent call with valid material accepted -> recovers cleanly
         { kind: 'http', status: 200, bodyText: JSON.stringify(validQuoteVendorPayload()), latencyMs: 34 },
       ],
     });
 
+    // One request: rejected, re-read, retried, accepted. It succeeds and the recorder shows the
+    // success — the counter that briefly reached 1 was reset by the accepted retry (T7).
     const first = await h.service.getQuote({
       companyId: 'EQ_INFY_IN',
       securityIdentity: ID_INFY,
       exchangeSegment: 'NSE_EQ',
     });
-    assert.strictEqual(first.ok, false);
-    assert.strictEqual(h.service.getObservedProviderState().consecutiveAuthFailures, 1);
+    assert.strictEqual(first.ok, true);
+    assert.strictEqual(h.getTransportCalls(), 2, 'the rejection and the bounded retry');
+    assert.strictEqual(h.getResolverCalls(), 2, 'the start-up read and the single re-read');
+    assert.strictEqual(h.service.getObservedProviderState().consecutiveAuthFailures, 0);
     assert.strictEqual(h.service.getObservedProviderState().authLatched, false);
-    assert.strictEqual(h.service.getObservedProviderState().lastFailure?.category, 'AUTHENTICATION_FAILURE');
 
-    h.advanceClock(200);
-    const recovered = await h.service.getQuote({
+    // A LATER identical request is a D02 cache hit: no vendor call and no vault read at all.
+    const cached = await h.service.getQuote({
       companyId: 'EQ_INFY_IN',
       securityIdentity: ID_INFY,
       exchangeSegment: 'NSE_EQ',
     });
-    assert.strictEqual(recovered.ok, true);
+    assert.strictEqual(cached.ok, true);
+    assert.strictEqual(h.getTransportCalls(), 2, 'the repeat is served from the D02 cache');
+    assert.strictEqual(h.getResolverCalls(), 2, 'a cache hit never reads the vault');
+
+    // A request that DOES reach the vendor is served from the held session: one vendor call and
+    // no vault read. V2 (`verifyConnection`) is used because it is guaranteed to make a live
+    // authenticated probe (D-7 §3), so the reuse claim is tested on a real egress path rather
+    // than on a cache hit.
+    h.advanceClock(120_000);
+    const probe = await h.service.verifyConnection();
+    assert.strictEqual(probe.outcome, 'VERIFIED_VENDOR_ACCEPTED');
+    assert.strictEqual(probe.probeCount, 1);
+    assert.strictEqual(h.getTransportCalls(), 3, 'one vendor call for the verification probe');
+    assert.strictEqual(h.getResolverCalls(), 2, 'the probe reuses the held session — no vault read');
 
     const state = h.service.getObservedProviderState();
     assert.deepStrictEqual(state, {
-      lastSuccessAt: '2026-11-16T04:45:00.256Z',
+      lastSuccessAt: '2026-11-16T04:47:00.093Z',
       lastFailure: null,
       lastAuthOutcome: 'AUTHENTICATED',
-      lastLatencyMs: 34,
+      lastLatencyMs: 37,
       consecutiveAuthFailures: 0,
       authLatched: false,
     });
@@ -493,6 +553,10 @@ describe('W-08 observed provider state recorder, health & bounded verification (
     assert.strictEqual(DHAN_AUTH_LATCH_THRESHOLD, 2);
     const h = createHarness({
       steps: [
+        // D-2 / W-05: ONE quote request now produces the whole latch sequence by itself —
+        // initial rejection (count 1), the single bounded re-read, then a rejected replacement
+        // (count 2) which latches. Before W-05 two separate quote requests were needed because
+        // nothing retried.
         { kind: 'http', status: 401, bodyText: '{"error":"unauthorized-1"}', latencyMs: 18 },
         { kind: 'http', status: 403, bodyText: '{"error":"forbidden-2"}', latencyMs: 21 },
         // Queued 200 MUST never be reached once latched:
@@ -500,17 +564,20 @@ describe('W-08 observed provider state recorder, health & bounded verification (
       ],
     });
 
-    // 1st vendor auth rejection -> consecutiveAuthFailures = 1, not latched yet.
+    // A single quote request: 401 -> one re-read -> 403 -> latch.
     const r1 = await h.service.getQuote({
       companyId: 'EQ_INFY_IN',
       securityIdentity: ID_INFY,
       exchangeSegment: 'NSE_EQ',
     });
     assert.strictEqual(r1.ok, false);
-    assert.strictEqual(h.service.getObservedProviderState().consecutiveAuthFailures, 1);
-    assert.strictEqual(h.service.getObservedProviderState().authLatched, false);
+    if (!r1.ok) assert.strictEqual(r1.failure.code, 'AUTHENTICATION_FAILURE');
+    assert.strictEqual(h.getTransportCalls(), 2, 'the rejection plus exactly one bounded retry');
+    assert.strictEqual(h.getResolverCalls(), 2, 'the start-up read plus exactly one re-read');
+    assert.strictEqual(h.service.getObservedProviderState().consecutiveAuthFailures, 2);
+    assert.strictEqual(h.service.getObservedProviderState().authLatched, true);
 
-    // 2nd consecutive vendor auth rejection -> consecutiveAuthFailures = 2, authLatched = true.
+    // A second request is refused before any read or call, so the counters cannot move.
     h.advanceClock(100);
     const r2 = await h.service.getQuote({
       companyId: 'EQ_INFY_IN',
@@ -525,8 +592,9 @@ describe('W-08 observed provider state recorder, health & bounded verification (
     assert.deepStrictEqual(latchedState, {
       lastSuccessAt: null,
       lastFailure: {
+        // The second (replacement) rejection, at 18ms + 21ms into the call.
         category: 'AUTHENTICATION_FAILURE',
-        at: '2026-11-16T04:45:00.139Z',
+        at: '2026-11-16T04:45:00.039Z',
       },
       lastAuthOutcome: 'AUTHENTICATION_FAILURE',
       lastLatencyMs: 21,

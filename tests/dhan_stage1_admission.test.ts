@@ -308,7 +308,7 @@ describe('Stage 1 — Dhan Credential and Authenticated Transport Admission', ()
     }
 
     // 3. End-to-end local loopback HTTP server verification of typed failure propagation.
-    let simulatedStatus = 401;
+    let simulatedStatus = 401; // set per scenario below; ordering matters (see note)
     const service = buildTestService({
       send: async () => ({ status: simulatedStatus, bodyText: '{"errorMessage":"unauthorized"}' }),
       resolveCreds: async () => ({ accessToken: 'dhan-tok', clientId: 'dhan-cid' }),
@@ -338,19 +338,10 @@ describe('Stage 1 — Dhan Credential and Authenticated Transport Admission', ()
 
       const validClient = new MarketDataTransportClient(baseUrl, 'local-transport-token', { env: {} });
 
-      // Provider 401 -> AUTHENTICATION_FAILURE (502), never throws and never leaks Dhan token.
-      const authFailOut = await validClient.getQuote({
-        companyId: 'COMP_INFY',
-        securityIdentity: ID_INFY,
-      });
-      assert.strictEqual(authFailOut.ok, false);
-      if (!authFailOut.ok) {
-        assert.strictEqual(authFailOut.failure.code, 'AUTHENTICATION_FAILURE');
-        assert.strictEqual(authFailOut.failure.httpStatus, 502);
-        assert.ok(!JSON.stringify(authFailOut).includes('dhan-tok'));
-      }
-
-      // Provider 429 -> RATE_LIMITED (429).
+      // Provider 429 -> RATE_LIMITED (429). Asserted FIRST: a provider 401 now latches the
+      // D-2 session (W-05), and a latched daemon refuses every later request before it reaches
+      // the vendor, so a 429 could not be observed after it. 429 is not a re-read trigger and
+      // does not latch, so ordering the non-latching case first keeps both assertions meaningful.
       simulatedStatus = 429;
       const rateLimitedOut = await validClient.getQuote({
         companyId: 'COMP_INFY',
@@ -360,6 +351,21 @@ describe('Stage 1 — Dhan Credential and Authenticated Transport Admission', ()
       if (!rateLimitedOut.ok) {
         assert.strictEqual(rateLimitedOut.failure.code, 'RATE_LIMITED');
         assert.strictEqual(rateLimitedOut.failure.httpStatus, 429);
+      }
+
+      // Provider 401 -> AUTHENTICATION_FAILURE (502), never throws and never leaks Dhan token.
+      // D-2 / W-05: the 401 spends the single bounded re-read and retries once; the transport
+      // answers 401 unconditionally, so the latch engages and the surfaced code is unchanged.
+      simulatedStatus = 401;
+      const authFailOut = await validClient.getQuote({
+        companyId: 'COMP_INFY',
+        securityIdentity: ID_INFY,
+      });
+      assert.strictEqual(authFailOut.ok, false);
+      if (!authFailOut.ok) {
+        assert.strictEqual(authFailOut.failure.code, 'AUTHENTICATION_FAILURE');
+        assert.strictEqual(authFailOut.failure.httpStatus, 502);
+        assert.ok(!JSON.stringify(authFailOut).includes('dhan-tok'));
       }
 
       // Health reports readiness honestly without claiming live connectivity.
