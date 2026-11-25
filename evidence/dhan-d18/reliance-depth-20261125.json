@@ -1,0 +1,226 @@
+{
+  "captureSchemaVersion": 2,
+  "capturedAtUtc": "2026-11-25T08:15:15.655Z",
+  "label": "D-18 Reliance NSE_EQ 2885, one market-closed quote",
+  "httpStatus": 200,
+  "responseStatus": "success",
+  "requestedSecurityIds": [
+    "2885"
+  ],
+  "instrumentsInResponse": 1,
+  "quotes": [
+    {
+      "segment": "NSE_EQ",
+      "securityId": "2885",
+      "depthState": "object",
+      "buy": {
+        "state": "array",
+        "count": 5,
+        "levels": [
+          {
+            "price": {
+              "state": "present",
+              "value": 1368.9
+            },
+            "quantity": {
+              "state": "present",
+              "value": 1759
+            },
+            "orders": {
+              "state": "present",
+              "value": 6
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 1368.8
+            },
+            "quantity": {
+              "state": "present",
+              "value": 613
+            },
+            "orders": {
+              "state": "present",
+              "value": 7
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 1368.7
+            },
+            "quantity": {
+              "state": "present",
+              "value": 1270
+            },
+            "orders": {
+              "state": "present",
+              "value": 10
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 1368.6
+            },
+            "quantity": {
+              "state": "present",
+              "value": 846
+            },
+            "orders": {
+              "state": "present",
+              "value": 8
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 1368.5
+            },
+            "quantity": {
+              "state": "present",
+              "value": 849
+            },
+            "orders": {
+              "state": "present",
+              "value": 10
+            }
+          }
+        ]
+      },
+      "sell": {
+        "state": "array",
+        "count": 5,
+        "levels": [
+          {
+            "price": {
+              "state": "present",
+              "value": 1369.1
+            },
+            "quantity": {
+              "state": "present",
+              "value": 15
+            },
+            "orders": {
+              "state": "present",
+              "value": 5
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 1369.2
+            },
+            "quantity": {
+              "state": "present",
+              "value": 156
+            },
+            "orders": {
+              "state": "present",
+              "value": 6
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 1369.3
+            },
+            "quantity": {
+              "state": "present",
+              "value": 10
+            },
+            "orders": {
+              "state": "present",
+              "value": 1
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 1369.4
+            },
+            "quantity": {
+              "state": "present",
+              "value": 65
+            },
+            "orders": {
+              "state": "present",
+              "value": 1
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 1369.5
+            },
+            "quantity": {
+              "state": "present",
+              "value": 1189
+            },
+            "orders": {
+              "state": "present",
+              "value": 10
+            }
+          }
+        ]
+      },
+      "rawDepth": {
+        "buy": [
+          {
+            "quantity": 1759,
+            "orders": 6,
+            "price": 1368.9
+          },
+          {
+            "quantity": 613,
+            "orders": 7,
+            "price": 1368.8
+          },
+          {
+            "quantity": 1270,
+            "orders": 10,
+            "price": 1368.7
+          },
+          {
+            "quantity": 846,
+            "orders": 8,
+            "price": 1368.6
+          },
+          {
+            "quantity": 849,
+            "orders": 10,
+            "price": 1368.5
+          }
+        ],
+        "sell": [
+          {
+            "quantity": 15,
+            "orders": 5,
+            "price": 1369.1
+          },
+          {
+            "quantity": 156,
+            "orders": 6,
+            "price": 1369.2
+          },
+          {
+            "quantity": 10,
+            "orders": 1,
+            "price": 1369.3
+          },
+          {
+            "quantity": 65,
+            "orders": 1,
+            "price": 1369.4
+          },
+          {
+            "quantity": 1189,
+            "orders": 10,
+            "price": 1369.5
+          }
+        ]
+      }
+    }
+  ]
+}
