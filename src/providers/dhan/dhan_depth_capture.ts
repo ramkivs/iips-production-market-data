@@ -33,14 +33,31 @@ export const DHAN_DEPTH_CAPTURE_ENV = 'IIPS_DHAN_DEPTH_CAPTURE_PATH';
 export const DHAN_DEPTH_CAPTURE_LABEL_ENV = 'IIPS_DHAN_DEPTH_CAPTURE_LABEL';
 
 /**
- * The single Dhan security ID this one-shot diagnostic will capture.
- *
- * Reliance on NSE_EQ is Dhan ID `2885` (see the P7 qualification manifest, as recorded in
- * DHAN-QUOTE-NUMERIC-SERIALIZATION-COMPLETION-RECORD-2026-11-18). Scoping the capture to
- * this ID — rather than to the quote endpoint — is what stops any other instrument's quote
- * from consuming the one-shot slot.
+ * Environment variable that selects the exchange segment of the one instrument to capture.
+ * Required when capture is enabled. A request on any other segment is not a match.
  */
-export const DHAN_DEPTH_CAPTURE_SECURITY_ID = '2885';
+export const DHAN_DEPTH_CAPTURE_SEGMENT_ENV = 'IIPS_DHAN_DEPTH_CAPTURE_SEGMENT';
+
+/**
+ * Environment variable that selects the Dhan security ID of the one instrument to capture.
+ * Required when capture is enabled. A request for any other security ID is not a match.
+ */
+export const DHAN_DEPTH_CAPTURE_SECURITY_ID_ENV = 'IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID';
+
+/** Exchange segments accepted by the Dhan quote request body this diagnostic inspects. */
+export const DHAN_DEPTH_CAPTURE_ALLOWED_SEGMENTS = ['NSE_EQ', 'BSE_EQ'] as const;
+export type DhanDepthCaptureSegment = (typeof DHAN_DEPTH_CAPTURE_ALLOWED_SEGMENTS)[number];
+
+/** Explicitly configured capture target. No instrument is selected unless both fields are valid. */
+export interface DepthCaptureTarget {
+  readonly segment: DhanDepthCaptureSegment;
+  readonly securityId: string;
+}
+
+export type DepthCaptureTargetResolution =
+  | { readonly state: 'disabled' }
+  | { readonly state: 'valid'; readonly target: DepthCaptureTarget }
+  | { readonly state: 'invalid'; readonly reason: string };
 
 /** One depth level, with each field preserved exactly as received. */
 export interface CapturedDepthLevel {
@@ -153,17 +170,80 @@ export function readQuoteRequestInstruments(parsedRequestBody: unknown): DepthCa
   return instruments;
 }
 
+function normalizeConfiguredSecurityId(value: string | undefined): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if (trimmed === '') return undefined;
+  // Dhan security IDs are positive integer identifiers carried as strings in request bodies.
+  if (!/^[1-9][0-9]*$/.test(trimmed)) return undefined;
+  return trimmed;
+}
+
+function normalizeConfiguredSegment(value: string | undefined): DhanDepthCaptureSegment | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return (DHAN_DEPTH_CAPTURE_ALLOWED_SEGMENTS as readonly string[]).includes(trimmed)
+    ? (trimmed as DhanDepthCaptureSegment)
+    : undefined;
+}
+
 /**
- * True when this request is the selected one — exactly one instrument, `NSE_EQ`, Dhan ID `2885`.
+ * Resolves the explicitly configured capture target.
+ *
+ * - `disabled` when neither target env var is set (capture has no target to select).
+ * - `invalid` when capture is enabled/configured but the target is missing or malformed.
+ *   Callers must fail safe: do not capture, do not claim the slot, do not select an instrument.
+ * - `valid` only when both segment and security ID are explicitly configured and valid.
+ */
+export function resolveDepthCaptureTarget(env: Record<string, string | undefined>): DepthCaptureTargetResolution {
+  const rawSegment = env[DHAN_DEPTH_CAPTURE_SEGMENT_ENV];
+  const rawSecurityId = env[DHAN_DEPTH_CAPTURE_SECURITY_ID_ENV];
+  const hasSegment = typeof rawSegment === 'string' && rawSegment.trim() !== '';
+  const hasSecurityId = typeof rawSecurityId === 'string' && rawSecurityId.trim() !== '';
+
+  if (!hasSegment && !hasSecurityId) return { state: 'disabled' };
+
+  if (!hasSegment) {
+    return { state: 'invalid', reason: `${DHAN_DEPTH_CAPTURE_SEGMENT_ENV} must be explicitly configured when depth capture target selection is enabled` };
+  }
+  if (!hasSecurityId) {
+    return { state: 'invalid', reason: `${DHAN_DEPTH_CAPTURE_SECURITY_ID_ENV} must be explicitly configured when depth capture target selection is enabled` };
+  }
+
+  const segment = normalizeConfiguredSegment(rawSegment);
+  if (!segment) {
+    return {
+      state: 'invalid',
+      reason: `${DHAN_DEPTH_CAPTURE_SEGMENT_ENV} must be one of ${DHAN_DEPTH_CAPTURE_ALLOWED_SEGMENTS.join(', ')}`,
+    };
+  }
+
+  const securityId = normalizeConfiguredSecurityId(rawSecurityId);
+  if (!securityId) {
+    return {
+      state: 'invalid',
+      reason: `${DHAN_DEPTH_CAPTURE_SECURITY_ID_ENV} must be a positive integer string`,
+    };
+  }
+
+  return { state: 'valid', target: { segment, securityId } };
+}
+
+/**
+ * True when this request is the selected one — exactly one instrument, matching the
+ * explicitly configured segment and Dhan security ID.
  *
  * Requiring the segment as well as the ID means a same-numbered security on another exchange
- * segment cannot be mistaken for Reliance. Deliberately strict: an ambiguous body returns
+ * segment cannot be mistaken for the target. Deliberately strict: an ambiguous body returns
  * `false`, so the slot survives for the request the operator intended.
  */
-export function isSelectedDepthCaptureRequest(instruments: readonly DepthCaptureRequestInstrument[]): boolean {
+export function isSelectedDepthCaptureRequest(
+  instruments: readonly DepthCaptureRequestInstrument[],
+  target: DepthCaptureTarget
+): boolean {
   if (instruments.length !== 1) return false;
   const only = instruments[0]!;
-  return only.segment === 'NSE_EQ' && only.securityId === DHAN_DEPTH_CAPTURE_SECURITY_ID;
+  return only.segment === target.segment && only.securityId === target.securityId;
 }
 
 /**

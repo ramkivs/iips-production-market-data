@@ -398,12 +398,12 @@ correctness*. **No such second source is currently retained in this repository**
 | --- | --- |
 | `GET /v1/health`, `GET /v1/diagnostics` | counters, state vocabulary, latency, mapping count — **counts only** per D-7 §4.1 |
 | Provider state recorder | last failure **category**, last-success timestamp, latency |
-| D-18 depth capture (one-shot) | writes the raw `depth` block for a **single selected instrument** (`NSE_EQ`, security id 2885) to a path set by `IIPS_DHAN_DEPTH_CAPTURE_PATH`; temporary, observational |
+| D-18 depth capture (one-shot) | writes the raw `depth` block for **one explicitly configured instrument** (segment + Dhan security ID via `IIPS_DHAN_DEPTH_CAPTURE_SEGMENT` / `IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID`) to a path set by `IIPS_DHAN_DEPTH_CAPTURE_PATH`; temporary, observational; fails safe without valid target config |
 | Request bodies | **not persisted**; the numeric body is asserted only in tests |
 | Vendor response bodies (non-2xx) | **discarded by policy** |
 
 **Gap G6:** there is **no per-probe evidence recorder** that captures (redacted request, HTTP status,
-envelope, classification) for a 97-request sweep. One-shot depth capture exists for one instrument only.
+envelope, classification) for a 97-request sweep. One-shot depth capture exists for one explicitly configured instrument at a time (configurable; no code change required).
 Producing E4 evidence today would mean 96 manual operator captures or a new writer.
 
 ---

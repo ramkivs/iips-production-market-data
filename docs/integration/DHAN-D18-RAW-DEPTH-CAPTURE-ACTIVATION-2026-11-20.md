@@ -29,12 +29,12 @@ The hook sits before `dhan_normalizer.ts` in the call order, so what is recorded
 
 | File | Change | Size |
 | :--- | :--- | :--- |
-| `src/providers/dhan/dhan_depth_capture.ts` | **New.** Extractor, env/path resolution, one-shot latch, arm/disarm marker API, request-body instrument reader and selector. | 345 lines |
-| `src/providers/dhan/dhan_api_client.ts` | **Modified.** Import block, one call site in `executeJsonPost` (passing the request body), one private `captureRawDepthIfEnabled`, one body parser. | +75 / −0 |
-| `tests/dhan_depth_capture.test.ts` | **New.** 31 tests / 5 suites (CAP-01 … CAP-30 incl. CAP-14a); CAP-24 … CAP-30 cover instrument scoping. | 658 lines |
+| `src/providers/dhan/dhan_depth_capture.ts` | **New/updated.** Extractor, env/path resolution, explicit target configuration (segment + security ID), one-shot latch, arm/disarm marker API, request-body instrument reader and selector. | (see current file) |
+| `src/providers/dhan/dhan_api_client.ts` | **Modified.** Import block, one call site in `executeJsonPost`, one private `captureRawDepthIfEnabled` with fail-safe target-config validation. | (see git diff) |
+| `tests/dhan_depth_capture.test.ts` | **New/updated.** 41 tests / 6 suites (CAP-01 … CAP-30, CFG-01 … CFG-10); covers configurable target selection, Reliance/AGI/other instrument, wrong segment/id, multi-instrument, missing/invalid target config, one-shot/arm, failure handling. | (see current file) |
 | `windows-setup/03-Start-IipsServers.ps1` | **Modified.** `-MarketDataPort`, `-StartMarketDataDaemon`, port guard, `03b-market-data` step, ownership assertion, manifest field, rollback coverage. | 477 → 576 lines |
 | `windows-setup/06-Stop-IipsServers.ps1` | **Modified.** `8791` in `-Ports`; `dhan_local_daemon.js` in `$entrypoints`. | 2 lines |
-| `windows-setup/07-Prepare-DepthCapture.ps1` | **New.** Build, capture directory, `-Verify` ownership chain, arm/disarm. Starts nothing, requests nothing. | 352 lines |
+| `windows-setup/07-Prepare-DepthCapture.ps1` | **New/updated.** Build, capture directory, explicit `-CaptureSegment`/`-CaptureSecurityId` target config, `-Verify` ownership chain, arm/disarm. Starts nothing, requests nothing. | (see current file) |
 | `windows-setup/README.md`, `Make-SetupBundle.ps1` | **Modified.** New script documented and registered as a bundle input. | +22 / +1 lines |
 | `docs/integration/DHAN-W11-IPD-DAEMON-CONFIGURATION-AND-OPERATIONS.md` | **Modified.** §6.4 records the ownership gap and its resolution. | +9 lines |
 
@@ -51,17 +51,28 @@ The hook sits before `dhan_normalizer.ts` in the call order, so what is recorded
 
 `git diff --stat` reports exactly one modified file (`dhan_api_client.ts`, 52 insertions) plus the two new untracked files. No other file in the repository is touched.
 
-## 4. Enablement — two independent controls
+## 4. Enablement — destination, target, and arming controls
 
 ### 4.1 `IIPS_DHAN_DEPTH_CAPTURE_PATH` — the *destination* (required, read at request time)
 
 The absolute path of the capture file. Unset, empty or whitespace-only means the diagnostic is off and `captureRawDepthIfEnabled` returns on its second line. This is read from `process.env` **per request**, but see §6: for a running daemon that value is whatever was present when the process was launched.
 
-### 4.2 `IIPS_DHAN_DEPTH_CAPTURE_LABEL` — optional provenance stamp
+### 4.2 `IIPS_DHAN_DEPTH_CAPTURE_SEGMENT` and `IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID` — the *target* (required)
+
+The capture target is explicitly configurable. Both variables are required when capture is enabled:
+
+| Variable | Meaning | Validation |
+| :--- | :--- | :--- |
+| `IIPS_DHAN_DEPTH_CAPTURE_SEGMENT` | Exchange segment of the single instrument to capture | Must be one of `NSE_EQ`, `BSE_EQ` |
+| `IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID` | Dhan security ID of the single instrument to capture | Must be a positive integer string |
+
+When capture is enabled (`IIPS_DHAN_DEPTH_CAPTURE_PATH` set) without a valid target configuration, the capture fails safe: it does not capture, does not claim the one-shot slot, does not consume the arm marker, and does not silently select an instrument.
+
+### 4.3 `IIPS_DHAN_DEPTH_CAPTURE_LABEL` — optional provenance stamp
 
 Free text written into the document as `label`, so a later reader knows which request produced the file. Purely descriptive; never used for gating.
 
-### 4.3 `<path>.arm` — the *arming* marker (this is what makes it one-shot)
+### 4.4 `<path>.arm` — the *arming* marker (this is what makes it one-shot)
 
 A zero-byte sibling file. Nothing is written into it; **its mere existence means "armed"**.
 
@@ -71,7 +82,7 @@ A zero-byte sibling file. Nothing is written into it; **its mere existence means
 
 This exists precisely because a running daemon cannot observe a later environment change (§6): arming has to be a filesystem action, not an environment action.
 
-**Capture occurs only when all four hold:** the outbound path is `/marketfeed/quote`; `IIPS_DHAN_DEPTH_CAPTURE_PATH` is non-blank; the `.arm` marker exists; the in-process slot for that path has not already been consumed.
+**Capture occurs only when all hold:** the outbound path is `/marketfeed/quote`; `IIPS_DHAN_DEPTH_CAPTURE_PATH` is non-blank; the target segment and security ID are explicitly configured and valid; the `.arm` marker exists; the in-process slot for that path has not already been consumed; and the request is for exactly that configured instrument.
 
 ## 5. What is written, and what is guaranteed about the values
 
@@ -126,7 +137,7 @@ This exists precisely because a running daemon cannot observe a later environmen
 ### 5.4 The one-shot guarantee — four independent layers
 
 1. **Arm gate.** `isDepthCaptureArmed` checks the `.arm` marker first. No marker, no capture.
-2. **Instrument gate.** The request must be exactly one instrument, `NSE_EQ`, Dhan ID `2885` (see §5.5). A request for anything else returns *before* the slot is claimed and *before* the marker is touched, so it can neither spend the one-shot nor block the intended capture.
+2. **Instrument gate.** The request must be exactly one instrument matching the explicitly configured exchange segment and Dhan security ID (see §5.5). A request for anything else returns *before* the slot is claimed and *before* the marker is touched, so it can neither spend the one-shot nor block the intended capture.
 3. **Slot claim.** `claimDepthCaptureSlot` adds the path to an in-process `Set` **before** the write, so two concurrent quote responses cannot both capture (CAP-22).
 4. **Disarm.** After a successful write, `disarmDepthCapture` deletes the marker and clears the latch.
 
@@ -147,26 +158,27 @@ and captures only when the request is:
 | Condition | Required value |
 | :--- | :--- |
 | instruments in the request | exactly **one** |
-| exchange segment | `NSE_EQ` |
-| Dhan security ID | **`2885`** (Reliance, NSE) |
+| exchange segment | exactly the configured `IIPS_DHAN_DEPTH_CAPTURE_SEGMENT` |
+| Dhan security ID | exactly the configured `IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID` |
 
-`DHAN_DEPTH_CAPTURE_SECURITY_ID` is the single constant that defines the selection. The request
-body is parsed from the same string that was sent to the vendor, so the match is on what was
-actually requested rather than on anything reconstructed later.
+The target is explicit operator configuration, not a code constant. This supports Reliance, AGI,
+and any other valid Dhan instrument through the same mechanism. The request body is parsed from the
+same string that was sent to the vendor, so the match is on what was actually requested rather than
+on anything reconstructed later.
 
 Three deliberate choices:
 
-- **Segment is required as well as ID.** A same-numbered security on `BSE_EQ` cannot be mistaken for
-  Reliance. (The BSE Reliance row is `500325`, but the segment check does not depend on knowing that.)
-- **A multi-instrument batch is refused.** If Reliance travelled inside a batch, the evidence could
+- **Segment is required as well as ID.** A same-numbered security on another exchange segment cannot
+  be mistaken for the target.
+- **A multi-instrument batch is refused.** If the target travelled inside a batch, the evidence could
   not be attributed to one deliberate request, so the slot is preserved instead.
-- **An unreadable body is a non-match.** `readQuoteRequestInstruments` returns an empty list for
-  anything that is not `{segment: [id, ...]}`, which can never equal the target. The failure
-  direction is safe: the slot survives.
+- **An unreadable body or missing/invalid target config is a non-match.** `readQuoteRequestInstruments`
+  returns an empty list for anything that is not `{segment: [id, ...]}`, and an invalid/missing target
+  config causes a fail-safe return before slot claim. The failure direction is safe: the slot survives.
 
-Verified by CAP-24 … CAP-30, including the specific regression that motivated the change — a
-non-Reliance quote followed by the intended one (CAP-28), where the earlier endpoint-level gate
-would have captured the wrong instrument.
+Verified by CAP-24 … CAP-30 and CFG-01 … CFG-10, including the regression that motivated the change
+(non-target quote followed by the intended one, where an endpoint-level gate would have captured the
+wrong instrument).
 
 ## 6. Deployment and restart requirement — the precise answer
 
@@ -184,7 +196,7 @@ So: `$env:` in a second window is inert for this purpose. The variable must be p
 | Change | Restart needed? |
 | :--- | :--- |
 | Deploying the new code (rebuilt `dist/`) | **Yes — once**, and now through `06-Stop` then `03 -StartMarketDataDaemon`, which stops and restarts the daemon as a managed child. |
-| Setting / changing / clearing `IIPS_DHAN_DEPTH_CAPTURE_PATH` or `…_LABEL` | **Yes.** Launch-time environment, inherited at process creation. |
+| Setting / changing / clearing `IIPS_DHAN_DEPTH_CAPTURE_PATH`, `…_SEGMENT`, `…_SECURITY_ID`, or `…_LABEL` | **Yes.** Launch-time environment, inherited at process creation. |
 | Arming (`07 -Arm`) or re-arming | **No.** Read from the filesystem per request. |
 | Capturing, or a quote after a capture | **No.** The one-shot is enforced in-process and by the marker. |
 
@@ -237,10 +249,21 @@ after creation, so a variable set anywhere else is invisible to the daemon.
 ```powershell
 # Same PowerShell window used for step 3. Do not open a second window and do not re-enter the token
 # from memory - use the value this session already holds.
-$env:IIPS_DHAN_DEPTH_CAPTURE_PATH  = 'H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json'
-$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL = 'D-18 Reliance NSE_EQ 2885, one market-closed quote'
+# Reliance example (preserved D-18 default):
+$env:IIPS_DHAN_DEPTH_CAPTURE_PATH        = 'H:\IIPS\runtime\dhan-d18-depth-capture\depth-capture.json'
+$env:IIPS_DHAN_DEPTH_CAPTURE_SEGMENT     = 'NSE_EQ'
+$env:IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID = '2885'
+$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL       = 'D-18 Reliance NSE_EQ 2885, one market-closed quote'
+
+# AGI Greenpac example:
+# $env:IIPS_DHAN_DEPTH_CAPTURE_PATH        = 'H:\IIPS\runtime\dhan-d18-depth-capture\agi-depth.json'
+# $env:IIPS_DHAN_DEPTH_CAPTURE_SEGMENT     = 'NSE_EQ'
+# $env:IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID = '1412'
+# $env:IIPS_DHAN_DEPTH_CAPTURE_LABEL       = 'D-18 AGI Greenpac NSE_EQ 1412, one market-closed quote'
 
 $env:IIPS_DHAN_DEPTH_CAPTURE_PATH                       # echo back: must print the path
+$env:IIPS_DHAN_DEPTH_CAPTURE_SEGMENT                    # must print the configured segment
+$env:IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID                # must print the configured security ID
 [System.IO.Path]::IsPathRooted($env:IIPS_DHAN_DEPTH_CAPTURE_PATH)   # must print True
 [bool]$env:IIPS_MARKET_DATA_TRANSPORT_TOKEN            # must print True
 ```
@@ -308,31 +331,40 @@ powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm
 ```
 
 Clears any previous capture, writes
-`H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json.arm`, and prints the state. Arming is a
+`<CapturePath>.arm` (e.g. `H:\IIPS\runtime\dhan-d18-depth-capture\depth-capture.json.arm`), and prints the state. Arming is a
 filesystem action: no restart, no environment change.
 
 ### Step 6 — issue exactly one quote request
 
+Issue exactly one quote request for the **configured target** instrument. Examples:
+
 ```powershell
+# Reliance (NSE_EQ / 2885)
 curl.exe -sS -X POST http://127.0.0.1:8791/v1/quotes `
   -H "Authorization: Bearer $env:IIPS_MARKET_DATA_TRANSPORT_TOKEN" `
   -H "Content-Type: application/json" `
   -d '{"companyId":"EQ_RELIANCE_IN","securityId":"ISIN:INE002A01018:EQ","exchangeSegment":"NSE_EQ"}'
+
+# AGI Greenpac (NSE_EQ / 1412)
+# curl.exe -sS -X POST http://127.0.0.1:8791/v1/quotes `
+#   -H "Authorization: Bearer $env:IIPS_MARKET_DATA_TRANSPORT_TOKEN" `
+#   -H "Content-Type: application/json" `
+#   -d '{"companyId":"EQ_AGI_IN","securityId":"ISIN:INE415A01038:EQ","exchangeSegment":"NSE_EQ"}'
 ```
 
-One request. The capture is scoped to exactly this instrument (§5.5), so no other quote can consume
+One request. The capture is scoped to exactly the configured target instrument (§5.5), so no other quote can consume
 the one-shot or overwrite it.
 
 ### Step 7 — verify the capture
 
 ```powershell
-$Out = 'H:\IIPS\runtime\dhan-d18-depth-capture\reliance-depth.json'
+$Out = 'H:\IIPS\runtime\dhan-d18-depth-capture\depth-capture.json'  # or your configured capture path
 Test-Path $Out            # expect True
 Test-Path "$Out.arm"      # expect False - the one-shot was consumed
 
 $doc = Get-Content $Out -Raw | ConvertFrom-Json
 $doc.captureSchemaVersion     # expect 2
-$doc.requestedSecurityIds     # expect 2885
+$doc.requestedSecurityIds     # expect the configured security ID
 $doc.quotes | Select-Object segment, securityId, depthState
 $doc.quotes[0] | ConvertTo-Json -Depth 8
 ```
@@ -358,7 +390,7 @@ daemon PID are untouched.
 
 ### 8.1 The filter matches the request, not the response
 
-The gate reads the outbound request body (§5.5), so only an `NSE_EQ` / `2885` request can capture. Two consequences worth stating plainly:
+The gate reads the outbound request body (§5.5), so only a request matching the explicitly configured segment/security ID can capture. Two consequences worth stating plainly:
 
 - A document records **every** instrument present in the response (`quotes[]`, `instrumentsInResponse`). With a single-instrument request that is exactly one entry; if the vendor ever returned extra instruments unprompted, they would appear here too. The requested identity is recorded separately in `requestedSecurityIds`.
 - **The filter reads success, not failure.** If the selected request is rejected (non-2xx), the hook is never reached (§8.3) and the marker survives — so a retry after fixing the cause still captures. That is the intended behaviour, but it also means an armed marker can persist indefinitely if the request keeps failing.
@@ -401,7 +433,7 @@ verbatim, and it is not equivalent to `"missing"`.
 
 ### 9.1 Focused suite — 24/24
 
-`node --test dist/tests/dhan_depth_capture.test.js` → **31 tests, 5 suites, 31 pass, 0 fail**.
+`node --test dist/tests/dhan_depth_capture.test.js` → **41 tests, 6 suites, 41 pass, 0 fail** (after configurable-target expansion).
 
 | Suite | Tests |
 | :--- | :--- |
@@ -409,7 +441,7 @@ verbatim, and it is not equivalent to `"missing"`.
 | Enablement | CAP-11 unset / empty / whitespace is off; CAP-12 path trimmed |
 | Client integration and non-interference | CAP-13 captures one request; CAP-14 disabled writes nothing; CAP-14a enabled-but-unarmed writes nothing; CAP-15 result identical with and without capture (DTO deep equality); CAP-16 write failure never fails the quote; CAP-17 captures a market-closed shape that would fail normalisation; CAP-18 non-quote endpoints not captured |
 | One-shot | CAP-19 first captures, second cannot overwrite; CAP-20 marker removed after capture; CAP-21 no capture until re-armed; CAP-22 concurrent quotes capture exactly once; CAP-23 arming an uncreatable path fails safe |
-| **Instrument scoping** | CAP-24 the selected `NSE_EQ`/`2885` request captures and consumes the one-shot; CAP-25 another company's quote neither captures nor consumes the slot; CAP-26 `2885` on `BSE_EQ` is not mistaken for Reliance; CAP-27 a multi-instrument batch is refused; CAP-28 a non-Reliance quote does not block a later Reliance capture (the regression that motivated the change); CAP-29 after capture, further selected quotes cannot overwrite; CAP-30 request-body reader and matcher are strict about shape |
+| **Instrument scoping** | CAP-24 selected target request captures and consumes the one-shot; CAP-25 wrong security ID neither captures nor consumes the slot; CAP-26 same ID on wrong segment is rejected; CAP-27 multi-instrument batch is refused; CAP-28 non-target quote does not block a later target capture (regression); CAP-29 after capture, further selected quotes cannot overwrite; CAP-30 request-body reader and matcher are strict about shape; CFG-01/02/03/04/05/06/07/08/09/10 cover configurable Reliance/AGI/other-valid targets and fail-safe invalid config |
 
 ### 9.2 Regression — D-5 and adjacent suites, 0 failures
 
@@ -468,7 +500,7 @@ covered by CAP-24 … CAP-30 against the current build.
 | Question | Answer |
 | :--- | :--- |
 | **Is there an earlier managed helper with `-RestartMarketDataDaemon`?** | **No.** Only one version of `03` has ever existed (blob `eda43b53…`, SHA-256 `e55515cf…`, 25,590 bytes), added in PR #181 and unchanged since; it has never accepted that switch. The string appears in no branch of this repository, not in `iips-review-recovered`, and PID 13768 is recorded nowhere except option-chain rows in a scrip-master CSV. The authenticated run W-06 records was performed with a manual `Start-Process` + `Stop-Process` — unmanaged. |
-| **Is the capture Reliance-specific?** | **Yes.** Only exactly one instrument, `NSE_EQ`, Dhan `2885`. Other requests return before the slot is claimed and before the marker is touched. CAP-24 … CAP-30, mutation-checked. |
+| **Is the capture instrument-specific?** | **No.** The target is explicitly configured via `IIPS_DHAN_DEPTH_CAPTURE_SEGMENT` + `IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID`. Reliance, AGI Greenpac, and any other valid instrument can be selected by configuration without code changes. Missing/invalid target config fails safe. CAP-24 … CAP-30, CFG-01 … CFG-10. |
 | **Does `06` → `03 -StartIpdIpc` restart the daemon?** | **No** — that was wrong. `-StartIpdIpc` is the portfolio IPC provider, and `06` neither matched `dhan_local_daemon.js` nor checked port `8791`. Both are now fixed, and the daemon is started by `-StartMarketDataDaemon`. |
 | **Supported stop/start with ownership preserved** | `06-Stop-IipsServers.ps1` (now matches the daemon and port 8791) then `03-Start-IipsServers.ps1 -StartIpdIpc -StartMarketDataDaemon`, which starts it via `Start-IipsService`, records its PID in the run manifest, and asserts the listening PID equals the started PID. |
 | **Manifest location** | `<InstallRoot>\logs\iips-pids-<timestamp>.json` — i.e. `H:\IIPS\logs\…` with the default `-InstallRoot H:\IIPS` and `-LogRoot` unset, which is also how `07 -Verify` derives it. Portable: pass `-LogRoot` if the host differs. |
@@ -476,7 +508,7 @@ covered by CAP-24 … CAP-30 against the current build.
 
 ## 11. Removal
 
-When D-18 is resolved: delete `src/providers/dhan/dhan_depth_capture.ts` and `tests/dhan_depth_capture.test.ts`, remove the import block, the single call in `executeJsonPost`, and the private `captureRawDepthIfEnabled` method from `dhan_api_client.ts`, then delete the runtime directory. Nothing else depends on the feature and no behaviour changes when it is absent — the diagnostic is inert without `IIPS_DHAN_DEPTH_CAPTURE_PATH`, so the code can also simply be left unset if removal is deferred.
+When D-18 is resolved: delete `src/providers/dhan/dhan_depth_capture.ts` and `tests/dhan_depth_capture.test.ts`, remove the import block, the single call in `executeJsonPost`, and the private `captureRawDepthIfEnabled` method from `dhan_api_client.ts`, then delete the runtime directory. Nothing else depends on the feature and no behaviour changes when it is absent — the diagnostic is inert without `IIPS_DHAN_DEPTH_CAPTURE_PATH` and a valid explicit target configuration, so the code can also simply be left unset if removal is deferred.
 
 ## 12. Daemon ownership — resolved
 
