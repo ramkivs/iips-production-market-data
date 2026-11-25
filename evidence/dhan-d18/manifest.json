@@ -1,0 +1,87 @@
+{
+  "evidenceId": "DHAN-D18-RELIANCE-DEPTH-CAPTURES",
+  "purpose": "Preserve the two operator-executed D-18 raw depth captures verbatim, with their provenance separated from file metadata.",
+  "captureFeature": "src/providers/dhan/dhan_depth_capture.ts (captureSchemaVersion 2)",
+  "operatorInstructionDate": "2026-11-25",
+  "noLiveRequestPerformedByThisRecord": true,
+  "files": [
+    {
+      "retainedName": "reliance-depth-20261123.json",
+      "originalFileName": "reliance-depth.json",
+      "purpose": "D-18 post-regular-session-close depth capture",
+      "sha256": "3fb343db35ac9911bc02c2fb4dd105ddf7aac128bb5d74c403888c2d2b93b68e",
+      "bytes": 4857,
+      "lineEndings": "LF only (226 lines, no CRLF)",
+      "operatorConfirmed": {
+        "executedBy": "operator, personally",
+        "executionApproximateLocalTime": "2026-11-25 operator statement: approximately 15:31 IST on 2026-11-23",
+        "operatorPosition": "one minute after regular NSE equity trading closed at 15:30 IST",
+        "responseShape": "five buy levels and five sell levels; price, quantity and orders explicitly present; all values zero",
+        "labelAsWritten": "D-18 Reliance NSE_EQ 2885, one market-closed quote"
+      },
+      "independentlyVerifiedFileMetadata": {
+        "capturedAtUtc": "2026-11-23T10:01:24.819Z",
+        "capturedAtIst": "2026-11-23 15:31:24 IST",
+        "httpStatus": 200,
+        "responseStatus": "success",
+        "requestedSecurityIds": ["2885"],
+        "instrumentsInResponse": 1,
+        "segment": "NSE_EQ",
+        "securityId": "2885",
+        "depthState": "object",
+        "buyCount": 5,
+        "sellCount": 5,
+        "allLevelFieldStatesPresent": true,
+        "allLevelValuesZero": true
+      },
+      "classification": "POST_REGULAR_SESSION_CLOSE",
+      "classificationBasis": "capturedAtUtc 10:01:24Z = 15:31:24 IST exceeds the 15:30 IST regular equity close; it does not establish whether any closing-auction or post-close process had completed",
+      "cannotEstablish": [
+        "which build produced it; no running-process-to-revision binding exists",
+        "that the response was served from the vendor rather than an IPD layer; no request identifier or response digest is present",
+        "whether closing-auction or post-close processes had completed at 15:31 IST"
+      ]
+    },
+    {
+      "retainedName": "reliance-depth-20261125.json",
+      "originalFileName": "reliance-depth.txt",
+      "originalNote": "supplied as a .txt; contents are valid JSON and were preserved byte-for-byte",
+      "purpose": "market-hours depth capture, retained only to prevent conflation with the 23 November evidence",
+      "sha256": "6c53e9735eda29073bba918eb959091a8b79fb3b1fa43c466c511fc6a3a6bb6e",
+      "bytes": 5003,
+      "lineEndings": "LF only (226 lines, no CRLF)",
+      "operatorConfirmed": {
+        "statement": "a different, market-hours capture; must not be conflated with the 23 November evidence",
+        "labelAsWritten": "D-18 Reliance NSE_EQ 2885, one market-closed quote (label is inaccurate for this capture)"
+      },
+      "independentlyVerifiedFileMetadata": {
+        "capturedAtUtc": "2026-11-25T08:15:15.655Z",
+        "capturedAtIst": "2026-11-25 13:45:15 IST",
+        "httpStatus": 200,
+        "responseStatus": "success",
+        "requestedSecurityIds": ["2885"],
+        "instrumentsInResponse": 1,
+        "depthState": "object",
+        "buyCount": 5,
+        "sellCount": 5,
+        "buyTopOfBook": { "price": 1368.9, "quantity": 1759, "orders": 6 },
+        "sellTopOfBook": { "price": 1369.1, "quantity": 15, "orders": 5 }
+      },
+      "classification": "DURING_REGULAR_SESSION",
+      "classificationBasis": "capturedAtUtc 08:15:15Z = 13:45:15 IST, inside 09:15-15:30 IST regular trading",
+      "doesNotAnswerD18": true
+    }
+  ],
+  "structuralComparison": {
+    "identicalAfterRemovingTimestampAndNumericValues": true,
+    "meaning": "both captures share schema v2 shape, key order, and all-present field states; they differ only in the captured instant and the level values",
+    "significance": "the all-zero shape is a populated 5x5 book of zeros, not an absent, null or empty side"
+  },
+  "notClaimed": [
+    "D-18 resolution or closure",
+    "vendor documentation of the depth schema",
+    "acceptance of D-5 or DQ-5",
+    "any downstream work-item unlock",
+    "that either capture is market-closed in the whole-session sense"
+  ]
+}
