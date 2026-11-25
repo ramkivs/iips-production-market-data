@@ -101,6 +101,7 @@ const EXPECTED_DIAGNOSTICS_KEYS = [
   'consecutiveAuthFailures',
   'contractVersion',
   'credentialResolutionOutcome',
+  'freshness',
   'lastAuthOutcome',
   'lastFailure',
   'lastFailureCategory',
@@ -360,7 +361,8 @@ function assertD7NonDisclosure(serializedBody: string): void {
 describe('W-09 authenticated loopback /v1/diagnostics route & D-7 disclosure policy (synthetic, offline)', () => {
   it('W09-00: publishes governed W-09 route, contract version, and validator on ./dhan-server', () => {
     assert.strictEqual(dhanServerEntry.MARKET_DATA_ROUTES.diagnostics, '/v1/diagnostics');
-    assert.strictEqual(dhanServerEntry.DHAN_DIAGNOSTICS_CONTRACT_VERSION, 1);
+    // W-25 added the required `freshness` block; additive-but-required fields move the version.
+    assert.strictEqual(dhanServerEntry.DHAN_DIAGNOSTICS_CONTRACT_VERSION, 2);
     assert.strictEqual(typeof dhanServerEntry.validateDhanServiceDiagnostics, 'function');
     assert.strictEqual(typeof dhanServerEntry.sanitizeVaultBackendId, 'function');
   });
@@ -448,6 +450,20 @@ describe('W-09 authenticated loopback /v1/diagnostics route & D-7 disclosure pol
             providerFailures: 0,
           },
           qualifiedMappingsLoaded: 1,
+          freshness: {
+            thresholds: {
+              D01_QUOTES: 900,
+              D02_OHLCV: 86400,
+              D03_FUNDAMENTALS: 105 * 24 * 60 * 60,
+              D04_CORPORATE_ACTIONS: 7 * 24 * 60 * 60,
+              D05_SECURITY_MASTER: 30 * 24 * 60 * 60,
+              D06_NEWS: 6 * 60 * 60,
+              D07_ESTIMATES: 30 * 24 * 60 * 60,
+              D08_MACRO: 45 * 24 * 60 * 60,
+              D09_ALTDATA: 14 * 24 * 60 * 60,
+            },
+            overrides: [],
+          },
           quoteCache: {
             size: 0,
             capacity: 32,
@@ -938,7 +954,11 @@ describe('W-09 authenticated loopback /v1/diagnostics route & D-7 disclosure pol
     const invalidPayloads: unknown[] = [
       null,
       {},
-      { ...validSample, contractVersion: 2 },
+      // W-25: version 1 is now the rejected predecessor, and a payload that omits the
+      // required freshness block is rejected rather than accepted with a guessed threshold.
+      { ...validSample, contractVersion: 1 },
+      { ...validSample, freshness: undefined },
+      { ...validSample, freshness: { thresholds: { D01_QUOTES: 900 }, overrides: [] } },
       { ...validSample, providerState: 'CONNECTED' },
       { ...validSample, vaultBackendId: CANARY_WIN_CARRIER_PATH },
       { ...validSample, vaultBackendId: CANARY_TOKEN_REF },
