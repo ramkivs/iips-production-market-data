@@ -149,6 +149,7 @@ export {
   DHAN_VERIFICATION_CONTRACT_VERSION,
   validateDhanServiceHealth,
   validateDhanServiceDiagnostics,
+  validateDhanDiagnosticsFreshness,
   validateDhanConnectionVerification,
 } from './dhan_market_data_service.js';
 export type {
@@ -167,6 +168,8 @@ export type {
   DhanLiveProviderConnectivity,
   DhanProviderQualification,
   DhanHealthContractVersion,
+  DhanDiagnosticsFreshnessConfig,
+  DhanDiagnosticsFreshnessThresholdOverride,
 } from './dhan_market_data_service.js';
 export {
   createMarketDataHttpServer,

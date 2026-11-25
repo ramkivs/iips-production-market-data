@@ -14,7 +14,7 @@ import { parseTradingCalendar, type TradingCalendar } from '../../quality/tradin
 
 import { freshnessStatus, type FreshnessStatus, type RefreshStatus } from './dhan_freshness_status.js';
 import { CanonicalEnvelope } from '../../contracts/envelope.js';
-import { isD114SecurityIdentity, type D114SecurityIdentity } from '../../contracts/types.js';
+import { isD114SecurityIdentity, type D114SecurityIdentity, type DataDomain } from '../../contracts/types.js';
 import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
 import { SecurityMaster } from '../../identity/security_master.js';
 import {
@@ -61,7 +61,6 @@ import {
   type DhanQuoteCacheDiagnostics,
 } from './dhan_operational_controls.js';
 import {
-  D02_NOMINAL_THRESHOLD_SECONDS,
   projectHistoricalFreshness,
   type HistoricalFreshnessEvidence,
 } from './dhan_historical_freshness.js';
@@ -69,6 +68,14 @@ import {
   dhanFreshnessTimestamps,
   NO_DHAN_FRESHNESS_TIMESTAMPS,
 } from './dhan_historical_provenance.js';
+import {
+  FRESHNESS_DOMAINS,
+  resolveFreshnessThresholds,
+  type FreshnessEnvSource,
+  type FreshnessThresholdOverrides,
+  type FreshnessThresholdOverrideReport,
+  type ResolvedFreshnessThresholds,
+} from '../../quality/freshness_thresholds.js';
 
 // ── Consumer-facing (provider-neutral) request/response contracts ────────────
 
@@ -152,7 +159,13 @@ export function validateDhanServiceHealth(input: unknown): ServiceHealth | null 
 
 // ── W-09 / D-7 governed diagnostics contract (MAY list only) ─────────────────
 
-export const DHAN_DIAGNOSTICS_CONTRACT_VERSION = 1 as const;
+/**
+ * W-25: version 2 adds the required `freshness` block (effective thresholds + override
+ * dispositions). Additive-but-required fields move the version, following the W-07
+ * precedent for `ServiceHealth`: the validator below rejects version 1 payloads, so the
+ * constant and the validator must agree rather than one describing the other's input.
+ */
+export const DHAN_DIAGNOSTICS_CONTRACT_VERSION = 2 as const;
 export type DhanDiagnosticsContractVersion = typeof DHAN_DIAGNOSTICS_CONTRACT_VERSION;
 
 /** Normative D-7 §2 eight-state provider vocabulary (re-exported from dhan_provider_state). */
@@ -185,6 +198,24 @@ export interface DhanDiagnosticsRequestCounters {
  * `vault://` references, filesystem/carrier paths, child-process output, or
  * raw provider error messages (D-7 §4.2).
  */
+export interface DhanDiagnosticsFreshnessThresholdOverride {
+  readonly domain: DataDomain;
+  /** Effective threshold after validation. */
+  readonly seconds: number;
+  readonly source: 'DEFAULT' | 'ENVIRONMENT' | 'OPTION';
+  /** The supplied literal, echoed so the operator can see what was ignored. */
+  readonly raw: string;
+  /** `null` means the override was accepted and applied. */
+  readonly issue: 'INVALID_NUMBER' | 'OUT_OF_RANGE' | null;
+}
+
+export interface DhanDiagnosticsFreshnessConfig {
+  /** Effective threshold per domain, complete for every `DataDomain`. */
+  readonly thresholds: Readonly<Record<DataDomain, number>>;
+  /** Only domains configuration mentioned; an absent domain is unmentioned, not rejected. */
+  readonly overrides: readonly DhanDiagnosticsFreshnessThresholdOverride[];
+}
+
 export interface ServiceDiagnostics {
   readonly contractVersion: DhanDiagnosticsContractVersion;
   readonly service: 'UP' | 'DOWN';
@@ -207,6 +238,15 @@ export interface ServiceDiagnostics {
   readonly requestCounters: DhanDiagnosticsRequestCounters;
   readonly qualifiedMappingsLoaded: number;
   readonly quoteCache: DhanQuoteCacheDiagnostics;
+  /**
+   * W-25: the effective freshness configuration.
+   *
+   * `thresholds` is complete for every `DataDomain`, so a consumer never has to merge the
+   * response with a compiled-in default to learn the value the evaluator actually used.
+   * `overrides` lists only domains configuration *mentioned*, accepted or rejected, so
+   * "my override did not apply" is answerable from the payload itself.
+   */
+  readonly freshness: DhanDiagnosticsFreshnessConfig;
 }
 
 const VALID_PROVIDER_STATES: ReadonlySet<DhanProviderState> = new Set(DHAN_PROVIDER_STATES);
@@ -255,6 +295,77 @@ function isCanonicalIsoUtc(value: unknown): value is string {
 
 function isNonNegativeInt(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+}
+
+const VALID_FRESHNESS_OVERRIDE_SOURCES: ReadonlySet<string> = new Set([
+  'DEFAULT',
+  'ENVIRONMENT',
+  'OPTION',
+]);
+const VALID_FRESHNESS_OVERRIDE_ISSUES: ReadonlySet<string> = new Set([
+  'INVALID_NUMBER',
+  'OUT_OF_RANGE',
+]);
+const FRESHNESS_DOMAIN_SET: ReadonlySet<string> = new Set(FRESHNESS_DOMAINS);
+
+/**
+ * Validates the W-25 `freshness` block. Returns `null` for any payload that is not a
+ * complete, whitelisted configuration statement.
+ *
+ * Completeness is checked against `FRESHNESS_DOMAINS` rather than a literal list, so
+ * adding a domain cannot leave a hole here that a truncated payload would satisfy.
+ */
+export function validateDhanDiagnosticsFreshness(input: unknown): DhanDiagnosticsFreshnessConfig | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const f = input as Record<string, unknown>;
+
+  const thresholds = f.thresholds;
+  if (!thresholds || typeof thresholds !== 'object' || Array.isArray(thresholds)) return null;
+  const t = thresholds as Record<string, unknown>;
+  const keys = Object.keys(t);
+  if (keys.length !== FRESHNESS_DOMAINS.length) return null;
+  const cleanThresholds = {} as Record<DataDomain, number>;
+  for (const domain of FRESHNESS_DOMAINS) {
+    const value = t[domain];
+    if (!Number.isSafeInteger(value) || (value as number) <= 0) return null;
+    cleanThresholds[domain] = value as number;
+  }
+  // Any key outside `DataDomain` would have made the count check pass by displacing a real
+  // domain, so membership is verified rather than assumed from the length.
+  if (keys.some((key) => !FRESHNESS_DOMAIN_SET.has(key))) return null;
+
+  if (!Array.isArray(f.overrides)) return null;
+  const cleanOverrides: DhanDiagnosticsFreshnessThresholdOverride[] = [];
+  const seen = new Set<string>();
+  for (const entry of f.overrides) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
+    const o = entry as Record<string, unknown>;
+    if (typeof o.domain !== 'string' || !FRESHNESS_DOMAIN_SET.has(o.domain)) return null;
+    if (seen.has(o.domain)) return null;
+    seen.add(o.domain);
+    if (!Number.isSafeInteger(o.seconds) || (o.seconds as number) <= 0) return null;
+    if (typeof o.source !== 'string' || !VALID_FRESHNESS_OVERRIDE_SOURCES.has(o.source)) return null;
+    // `raw` is always a string: the emitter supplies `String(value)`, so a null or a
+    // non-string is not a shape this contract produces and is rejected rather than coerced.
+    if (typeof o.raw !== 'string' || o.raw.length > 64) return null;
+    if (o.issue !== null && (typeof o.issue !== 'string' || !VALID_FRESHNESS_OVERRIDE_ISSUES.has(o.issue))) {
+      return null;
+    }
+    // An accepted override's value IS the threshold; a rejected one reports the fallback.
+    // Either way the reported value must equal what `thresholds` states for the domain.
+    if (o.seconds !== cleanThresholds[o.domain as DataDomain]) return null;
+    if (o.issue === null && o.source === 'DEFAULT') return null;
+    if (o.issue !== null && o.source !== 'DEFAULT') return null;
+    cleanOverrides.push({
+      domain: o.domain as DataDomain,
+      seconds: o.seconds as number,
+      source: o.source as DhanDiagnosticsFreshnessThresholdOverride['source'],
+      raw: o.raw,
+      issue: o.issue as DhanDiagnosticsFreshnessThresholdOverride['issue'],
+    });
+  }
+
+  return { thresholds: Object.freeze(cleanThresholds), overrides: Object.freeze(cleanOverrides) };
 }
 
 /**
@@ -376,6 +487,12 @@ export function validateDhanServiceDiagnostics(input: unknown): ServiceDiagnosti
     return null;
   }
 
+  // W-25: the effective freshness configuration is validated fail-closed. A payload that
+  // omits a domain, invents one, or carries a non-integer threshold is rejected outright —
+  // a partial map would silently reintroduce the guess this field exists to remove.
+  const freshness = validateDhanDiagnosticsFreshness(p.freshness);
+  if (freshness === null) return null;
+
   return {
     contractVersion: DHAN_DIAGNOSTICS_CONTRACT_VERSION,
     service: p.service,
@@ -405,6 +522,7 @@ export function validateDhanServiceDiagnostics(input: unknown): ServiceDiagnosti
       providerFailures: rc.providerFailures,
     },
     qualifiedMappingsLoaded: p.qualifiedMappingsLoaded,
+    freshness,
     quoteCache: {
       size: qc.size,
       capacity: qc.capacity,
@@ -691,6 +809,23 @@ export interface DhanMarketDataServiceOptions {
   concurrency?: DhanConcurrencyLimiter;
   coalescer?: DhanRequestCoalescer;
   now?: () => Date;
+  /**
+   * W-25: explicit per-domain freshness thresholds. Validated by the same rules as the
+   * environment source and takes precedence over it. Omitted domains use the compiled
+   * default in `DEFAULT_FRESHNESS_CONFIG`.
+   */
+  freshnessThresholds?: FreshnessThresholdOverrides;
+  /**
+   * W-25: the environment map to read threshold overrides from.
+   *
+   * Supplied by the caller — never read from `process.env` implicitly — matching the rest
+   * of the provider, where `resolveDhanProviderConfig(env)` and `DhanApiClient`'s
+   * `envOverride` also receive their environment explicitly. The daemon passes its own
+   * resolved environment; a consumer with no environment passes nothing. Configuration is
+   * read once at construction, so a threshold cannot change under a request that is
+   * mid-flight, and tests stay hermetic regardless of the ambient environment.
+   */
+  freshnessEnv?: FreshnessEnvSource;
 }
 
 /**
@@ -723,12 +858,24 @@ export class DhanMarketDataService {
   private lastHistoricalEvidence: { cacheKey: string; cachedAt: string | null } | null = null;
   private verificationProbes = 0;
   private running = false;
+  /** W-25: effective thresholds, resolved once at construction (configuration never drifts). */
+  private readonly freshnessThresholds: ResolvedFreshnessThresholds;
+  /** W-25: only the domains configuration mentioned, accepted or rejected. */
+  private readonly freshnessThresholdOverrides: readonly FreshnessThresholdOverrideReport[];
 
   constructor(options: DhanMarketDataServiceOptions) {
     this.tradingCalendar = options.tradingCalendar ? parseTradingCalendar(options.tradingCalendar) : undefined;
     this.client = options.client;
     this.instrumentRegistry = options.instrumentRegistry;
     this.now = options.now ?? (() => new Date());
+    // W-25: resolve once. An invalid override is rejected per domain and falls back to the
+    // compiled default; the rejection is retained for diagnostics rather than logged and lost.
+    const resolvedThresholds = resolveFreshnessThresholds(
+      options.freshnessEnv ?? {},
+      options.freshnessThresholds ?? {}
+    );
+    this.freshnessThresholds = resolvedThresholds.thresholds;
+    this.freshnessThresholdOverrides = resolvedThresholds.overrides;
     this.source = new DhanMarketDataSource({
       tradingCalendar: this.tradingCalendar,
       client: options.client,
@@ -868,10 +1015,16 @@ export class DhanMarketDataService {
       // attempt is reported alongside, and only when an attempt actually happened.
       const retained = this.historicalEvidence();
       const refresh = retained.lastRefresh ?? unknown;
+      // W-25: the reported threshold is the EFFECTIVE one. With no override configured this
+      // is byte-identical to the previous `D02_NOMINAL_THRESHOLD_SECONDS`; with one, the
+      // report no longer contradicts the threshold the projection was classified against.
+      const d02Threshold = this.freshnessThresholds.D02_OHLCV;
       if (!retained.projection) {
+        // No observation means no evaluation, so the only honest statement is the
+        // configured nominal threshold for this domain.
         return {
-          ...freshnessStatus(request.domain, null, evaluatedAt, refresh),
-          thresholdSeconds: D02_NOMINAL_THRESHOLD_SECONDS,
+          ...freshnessStatus(request.domain, null, evaluatedAt, refresh, undefined, this.freshnessThresholds),
+          thresholdSeconds: d02Threshold,
           timestamps: retained.timestamps,
           timestampStates: retained.timestamps.evidence,
           evidenceSource: 'NO_OBSERVATION',
@@ -882,14 +1035,14 @@ export class DhanMarketDataService {
         ...retained.projection,
         domain: request.domain,
         evaluatedAt,
-        thresholdSeconds: D02_NOMINAL_THRESHOLD_SECONDS,
+        thresholdSeconds: d02Threshold,
         lastRefresh: refresh,
         refreshOutcome: refresh.outcome,
       };
     }
     const scope: DhanSecurityScope = { companyId: request.companyId, exchangeSegment: request.exchangeSegment, isin: request.securityIdentity.isin, series: request.securityIdentity.series };
     const key = dhanQuoteCacheKey(scope);
-    return freshnessStatus(request.domain, this.cache.peek(key, evaluatedAt), evaluatedAt, this.refreshStatus.get(key) ?? unknown, this.tradingCalendar ? { kind: 'QUOTE', calendar: this.tradingCalendar, exchange: request.exchangeSegment === 'NSE_EQ' ? 'NSE' : 'BSE' } : undefined);
+    return freshnessStatus(request.domain, this.cache.peek(key, evaluatedAt), evaluatedAt, this.refreshStatus.get(key) ?? unknown, this.tradingCalendar ? { kind: 'QUOTE', calendar: this.tradingCalendar, exchange: request.exchangeSegment === 'NSE_EQ' ? 'NSE' : 'BSE' } : undefined, this.freshnessThresholds);
   }
 
   /**
@@ -1024,7 +1177,8 @@ export class DhanMarketDataService {
       cachedAt,
       this.now().toISOString(),
       this.tradingCalendar,
-      entry?.provenance?.revision ?? null
+      entry?.provenance?.revision ?? null,
+      this.freshnessThresholds
     );
     return {
       projection,
@@ -1283,6 +1437,23 @@ export class DhanMarketDataService {
       requestCounters,
       qualifiedMappingsLoaded,
       quoteCache,
+      freshness: this.describeFreshnessConfig(),
+    });
+  }
+
+  /**
+   * W-25: the effective freshness configuration.
+   *
+   * Built from the values resolved once at construction, so what is published is exactly
+   * what the evaluator applies — not a re-read of the environment that could disagree.
+   * Thresholds are configuration, never credential-adjacent, so every value is publishable.
+   */
+  private describeFreshnessConfig(): DhanDiagnosticsFreshnessConfig {
+    return Object.freeze({
+      thresholds: Object.freeze({ ...this.freshnessThresholds }),
+      overrides: Object.freeze(
+        this.freshnessThresholdOverrides.map((o) => Object.freeze({ ...o }))
+      ),
     });
   }
 }

@@ -546,6 +546,9 @@ export async function startMarketDataDaemon(
     securityMaster,
     instrumentRegistry,
     now,
+    // W-25: the daemon resolves the operator's own environment, so a threshold override
+    // reaches the served `/v1/freshness` and `/v1/diagnostics` without another config path.
+    freshnessEnv: env,
   });
   service.start();
 

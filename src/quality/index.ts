@@ -7,6 +7,7 @@
 
 export * from './anomaly_detector.js';
 export * from './freshness_evaluator.js';
+export * from './freshness_thresholds.js';
 export * from './quality_rollup.js';
 
 export * from './trading_calendar.js';

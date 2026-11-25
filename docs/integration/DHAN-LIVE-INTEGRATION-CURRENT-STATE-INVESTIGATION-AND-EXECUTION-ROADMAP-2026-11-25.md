@@ -221,7 +221,7 @@ Classification key — **Implementation:** NOT STARTED · IN PROGRESS · PARTIAL
 | 28 | **W-22** | Session-aware freshness (governed local calendar, deterministic instants) | **No outstanding work.** `IPD-D3-…` records formal owner acceptance and closure at `8f00d7ae63e43e712a75bff2a5854fbdb4d63021`, snapshot `calendars/ipd-equity-2026.v2026-11-19.2.json` (SHA-256 `b7cc69dd…a650ff`), coverage 1–19 Nov 2026 for BSE_EQ and NSE_EQ. Implemented: offline calendar schema/validator, session-aware evaluator (`IIPS_TRADING_CALENDAR_PATH`), accumulated covered open-session seconds (900/1,800 s unchanged), closed-session retention never changes `asOf`, exceptional live dates count once, missing/UNKNOWN dates suppress the calculation, explicit-instant evaluation with no wall-clock default, `calendarMode: LEGACY_ELAPSED_UNQUALIFIED \| SESSION_CALENDAR_CONFIGURED \| NOT_APPLICABLE`. **Verified by execution: 8/8 BSE bounded-calendar tests.** Reported at acceptance: full suite 1,982 passed / 4 skipped (superseded by this investigation's 2,175/2,189). **Note: coverage is bounded to 1–19 Nov 2026 (+PR #193 extending NSE to 11-26, open); other dates remain UNKNOWN by design.** | IPD **#179**; **#193** (open) | **COMPLETE** | VERIFIED | IPD | D-3 ✔ |
 | 29 | **W-23** | Persist cache/freshness/observed state; three separate acceptances | **Entirely outstanding.** No persistence store, no load-at-start, no storage port. All three acceptances (restart / cold-cache restart / persistence) unperformed; corrupt-store degradation untested; provider-package import isolation unproven. | — | **NOT STARTED** | MISSING | IPD | W-08 ✔, W-19 ✔ |
 | 30 | **W-24** | Trace correlation IRR→IPD→Dhan + bounded log rings | **Design and policy approved; implementation not authorised.** D-7 amendment published (§4.5–§4.10): three opaque lowercase-UUIDv4 identifiers (`actionId`, `workId`, `attemptId`), never derived from payloads; allowlisted event fields; §4.2.1 sole identifier exception on §4.9 surfaces; §4.10 substring clarification; ring capacities 512 IRR / 1,024 IPD. M4 Dhan-leg interpretation **resolved 2026-11-21**: `actionId` must reach IPD and be associated with IPD's local egress-attempt record — not vendor acknowledgement; no header sent to Dhan. **Outstanding: (1) IRR acceptance of the amendment (IPD U-3); (2) implementation — IPD first (daemon, client, provenance, ring), then IRR (correlation + ring); (3) joined synthetic/security regression; (4) Windows acceptance.** IPD states explicitly: "W-24 remains open … implementation is **not authorized**". | IPD **#186**; IRR #565 lineage | **NOT STARTED** | MISSING | IPD + IRR | W-08 ✔, W-09 ✔, D-7 (IRR acceptance pending) → **blocks M4 trace criterion**, W-34 |
-| 31 | **W-25** | Configurable freshness thresholds | **Entirely outstanding.** Thresholds are compile-time constants (`D02_NOMINAL_THRESHOLD_SECONDS = DEFAULT_FRESHNESS_CONFIG.D02_OHLCV`); no override source, no validation, no effective-value exposure in diagnostics. | — | **NOT STARTED** | MISSING | IPD | None (independent) |
+| 31 | **W-25** | Configurable freshness thresholds | **No outstanding work.** Resolver `src/quality/freshness_thresholds.ts` (`IIPS_FRESHNESS_THRESHOLD_SECONDS_<DOMAIN>` env + `DhanMarketDataServiceOptions.freshnessThresholds`, per-domain validation `INVALID_NUMBER`/`OUT_OF_RANGE`, bounds 1…604 800 intraday / 1…31 536 000 calendar, option > environment > default); `evaluateFreshness` resolves the threshold **once** per call (the three-way split at L61/L72/L106 and the unreachable `\|\| 3600` are gone) and remains the owner of AD-12 arithmetic; `ServiceDiagnostics.freshness` publishes the complete effective map plus override dispositions, validated fail-closed by `validateDhanDiagnosticsFreshness`; diagnostics `contractVersion` **1 → 2**; `D02_NOMINAL_THRESHOLD_SECONDS` retained unchanged as the compiled reference and no longer forced over the effective value. `DEFAULT_FRESHNESS_CONFIG` unchanged, proven value-by-value. **37/37** new tests; full suite **2 263 / 2 249 / 0 fail / 14 skipped**; package consumer PASS; `build:tsc` exit 0. | — | **COMPLETE** | VERIFIED | IPD | None (independent) |
 | 32 | **W-26** | Add `getFreshness` to `MarketDataTransportClient`; delete IRR's duplicate guards | **Entirely outstanding.** The server exposes `GET /v1/freshness` (lines 398/409 of `dhan_market_data_http.ts`), but `MarketDataTransportClient` exposes only `getQuote`, `getHistorical`, `health`, `diagnostics`, `verifyConnection` — **no `getFreshness`**. IRR therefore still hand-rolls the loopback/token/timeout guard. | — | **NOT STARTED** | MISSING | IPD + IRR | W-19 ✔ |
 
 ### Phase 6 — Track 2 foundation
@@ -256,17 +256,17 @@ Classification key — **Implementation:** NOT STARTED · IN PROGRESS · PARTIAL
 
 | Classification | Units | Which |
 |---|---|---|
-| **COMPLETE** | **22** | D-1, D-2, D-3, D-4, D-5*, D-6, D-7*, W-01, W-02, W-03, W-04, **W-05**, W-07, W-08, W-09, W-10, W-13, W-15, W-19, W-22, W-27, W-29** |
+| **COMPLETE** | **23** | D-1, D-2, D-3, D-4, D-5*, D-6, D-7*, W-01, W-02, W-03, W-04, **W-05**, W-07, W-08, W-09, W-10, W-13, W-15, W-19, W-22, **W-25**, W-27, W-29** |
 | **IMPLEMENTED** (code in place; not formally accepted) | **3** | W-06, W-28, W-29 (E2-only) |
 | **PARTIAL** | **8** | W-11, W-12, W-18, W-20, W-21, W-36, W-37, W-39, W-33 |
-| **NOT STARTED** | **12** | W-14, W-17, W-23, W-24, W-25, W-26, W-30, W-31, W-32, W-34, W-35, W-38 |
+| **NOT STARTED** | **11** | W-14, W-17, W-23, W-24, W-26, W-30, W-31, W-32, W-34, W-35, W-38 |
 | **BLOCKED** | **1** | W-30/W-33 chain blocked on W-28's host measurement — tracked under blockers |
 | **DEFERRED** | **0** | Nothing was formally deferred; automated token acquisition is out of scope by D-6, not deferred |
 
 \* D-5's depth defect was **closed on 2026-11-25** by Addendum A (§7 of the D-5 record); D-7 carries the pending IRR acceptance of its amendment, which does not reverse the decision itself.
 \** W-29 is counted COMPLETE for its build scope with live acceptance pending at M2.
 
-**Movement since the 2026-11-11 roadmap:** from 0 complete work items to **22 of 38 complete** (W-05 closed 2026-11-25), plus 3 implemented. **M1 is substantively met.** Milestones M2a, M2, M3a, M3, M4, M5, M6 remain **unachieved** — M2a's evidence exists but is not accepted as an M2a record.
+**Movement since the 2026-11-11 roadmap:** from 0 complete work items to **23 of 38 complete** (W-05 and W-25 closed 2026-11-25), plus 3 implemented. **M1 is substantively met.** Milestones M2a, M2, M3a, M3, M4, M5, M6 remain **unachieved** — M2a's evidence exists but is not accepted as an M2a record.
 
 ---
 
@@ -276,7 +276,7 @@ Classification key — **Implementation:** NOT STARTED · IN PROGRESS · PARTIAL
 |---|---|---|---|---|---|---|---|
 | 1 | **W-05** | Read posture + bounded re-read/latch | IPD | **READY** | D-2 accepted; W-02 backend complete and green; the required assertions are fully specified (one re-read on 401/403, zero on success, second 401 latches, expired pre-flight issues no vendor call, latency assertion) | Session holder; four-trigger re-read; `authLatched`; latency proof | D-2 ✔, W-02 ✔ |
 | 2 | **W-26** | `getFreshness` on the transport client | IPD + IRR | **READY** | `GET /v1/freshness` fully served (lines 398/409); the client's other methods establish the exact guard pattern to copy; W-19 evidence is now real so parity is testable | Add client method; parity test; delete IRR's duplicated guard | W-19 ✔ |
-| 3 | **W-25** | Configurable thresholds | IPD | **READY** | Appendix A: no prerequisites; constants are isolated in `DEFAULT_FRESHNESS_CONFIG` | Override source, validation, effective-value exposure | None |
+| 3 | **W-25** | Configurable thresholds | IPD | **COMPLETE** | Closed 2026-11-25 — [`DHAN-W25-CONFIGURABLE-FRESHNESS-THRESHOLDS-2026-11-25.md`](DHAN-W25-CONFIGURABLE-FRESHNESS-THRESHOLDS-2026-11-25.md). Independently executable as the worksheet stated; the lane ordering was scheduling, not a data dependency (reconciliation in §5 of that record) | Override source, validation, effective-value exposure — **all delivered** | None |
 | 4 | **W-23** | Persistence (3 acceptances) | IPD | **READY** | W-08 ✔ and W-19 ✔ (both prerequisites now met); the three acceptances are separately specified | Storage port + restart / cold-cache / persistence acceptances + corrupt-store degradation | W-08 ✔, W-19 ✔ |
 | 5 | **W-24** | Trace correlation + rings | IPD → IRR | **READY** *(one governance step first)* | D-7 amendment **published** with three-ID model, event field set, §4.2.1 exception, §4.10 substring clarification, ring capacities, and the resolved M4 interpretation | IPD daemon/client/provenance/ring, then IRR correlation + ring, then joined regression | W-08 ✔, W-09 ✔, D-7 amendment (IRR acceptance) |
 | 6 | **W-36** | Launcher completion | IPD | **READY** | `-StartMarketDataDaemon`, 8791 guard, manifest row and `06-Stop` handling **already merged**; only `04-Validate` and the E3 transcript remain | Add `04-Validate-BackendEndpoints.ps1` health checks; produce E3 transcript | W-03 ✔, W-11 ✔ |
@@ -327,7 +327,7 @@ Classification key — **Implementation:** NOT STARTED · IN PROGRESS · PARTIAL
 | **2** | **D-7 follow-up** | IRR acceptance of the W-24 amendment | NOW | Pure governance; unblocks all W-24 work | BLK-6 (part) → W-24 | D-7 ✔ | IRR / PA |
 | **3** | **W-05** | Read posture + bounded re-read | NOW | M4 conjunct; zero external dependencies | BLK-5 → M4 | D-2 ✔, W-02 ✔ | IPD |
 | **4** | **W-26** | `getFreshness` on the client | NOW | Now testable because W-19 evidence is real | Divergence risk ↓ | W-19 ✔ | IPD + IRR |
-| **5** | **W-25** | Configurable thresholds | NOW | Trivial, independent | — | — | IPD |
+| **5** | **W-25** | Configurable thresholds | **DONE** | Closed 2026-11-25; independent, as recorded | Divergence removed (single threshold resolution) | Effective values observable | IPD |
 | **6** | **W-23** | Persistence (3 acceptances) | NOW | Both prerequisites met | Operational recovery | W-08 ✔, W-19 ✔ | IPD |
 | **7** | **W-24 impl (IPD first)** | Daemon/client/provenance/ring | after 2 | Owner-approved IPD-first sequencing | M4 trace | D-7 amendment | IPD |
 | **8** | **W-24 impl (IRR second)** | IRR correlation + ring | after 7 | Consumes the published IPD artefact | → W-34 | W-24 IPD | IRR |
@@ -364,7 +364,7 @@ Classification key — **Implementation:** NOT STARTED · IN PROGRESS · PARTIAL
 
 | Lane | Items | Repo | Contention |
 |---|---|---|---|
-| **A — IPD freshness/completion** | W-26 → W-23 → W-25 | IPD | W-23 touches the provider package boundary — keep clear of W-24's daemon change |
+| **A — IPD freshness/completion** | W-25 ✔ → W-26 → W-23 | IPD | W-23 touches the provider package boundary — keep clear of W-24's daemon change. **W-25 shipped first (2026-11-25)**: it moves the diagnostics contract to version 2, so doing it ahead of W-26/W-23 keeps the version bump out of their re-baselines |
 | **B — IPD credentials/perf** | W-05 | IPD | Isolated |
 | **C — IPD observability** | W-24 IPD half → (IRR half) | IPD → IRR | Coordinates with lane A on `dhan_market_data_service.ts` |
 | **D — IPD ops** | W-36 → (W-38, W-37 in IRR) | IPD → IRR | Isolated from A/B/C |
@@ -399,7 +399,7 @@ Classification key — **Implementation:** NOT STARTED · IN PROGRESS · PARTIAL
 The work that remains is no longer architectural. Of 13 unstarted items, 9 are evidence/acceptance or independent low-risk work; only **W-17/W-18** (live historical) is genuinely substantial engineering.
 
 ### 8.2 Immediate execution opportunities
-Ten items with zero external decisions: D-5 follow-up, D-7 follow-up, W-05, W-26, W-25, W-23, W-36, W-38, W-37, W-06 fix — plus W-28 and W-30/W-31 in host/fixture mode.
+Ten items with zero external decisions: D-5 follow-up, D-7 follow-up, W-05 ✔, W-26, W-25 ✔, W-23, W-36, W-38, W-37, W-06 fix — plus W-28 and W-30/W-31 in host/fixture mode.
 
 ### 8.3 Highest-priority blocker
 **BLK-1 — the zero-depth fatality.** It is a live product defect, newly discovered, invisible to all 503 passing Dhan tests, and it breaks M2 in everyday post-close operation.
@@ -422,7 +422,7 @@ Eight lanes (§7), two mutation hot-spots (`dhan_market_data_service.ts`, `dhan_
 **Caveat I will not fudge:** **W-14** remains the higher-priority item *on the roadmap*. It is not recommended *next* only because it cannot proceed — the sample is invalid and the window is unauthorised. Once BLK-2 is resolved, W-14 should run immediately and exclusively.
 
 ### 8.7 Completion pathway
-1. **Now (8 lanes):** D-5 follow-up · D-7 follow-up · W-06 fix · W-05 · W-26 · W-25 · W-23 · W-36 → W-38 → W-37 · W-28 · W-30/W-31 fixtures.
+1. **Now (8 lanes):** D-5 follow-up ✔ · D-7 follow-up · W-06 fix · W-05 ✔ · W-25 ✔ · W-26 · W-23 · W-36 → W-38 → W-37 · W-28 · W-30/W-31 fixtures.
 2. **Then:** W-24 (IPD→IRR) · W-11 four-capability dry-run.
 3. **Governance gate:** re-derive the 97-request sample, then authorise the bounded E4 window.
 4. **Live:** W-14 → M2; then W-17 → W-12 → W-18 → M3.
