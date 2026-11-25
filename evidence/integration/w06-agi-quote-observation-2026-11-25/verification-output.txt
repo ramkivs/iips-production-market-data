@@ -22,5 +22,7 @@ PASS  V21  the D114 identity in the registry for this quote is ISIN:INE415A01038
 PASS  V22  the tracked P7 registry holds exactly one QUALIFIED NSE row for EQ_AGI_IN/INE415A01038/EQ  [qualifiedRows=1]
 PASS  V23  that registry row matches the quote: symbol, exchange and numeric vendor id 1412  [symbol=AGI GREENPAC LIMITED dhanSecurityId=1412 active=true]
 PASS  V24  the published calendar .2 has NO NSE row for the observation date, so a session-aware D01 read of this quote would fail MISSING_COVERAGE  [observationIstDate=2026-11-25 calendarVersion=2026-11-19.2 row=absent]
+PASS  V25  the paired freshness observation exists and reports on this quote's own asOf and receivedAt  [freshness asOf=25-11-2026 08:57:35 quote asOf=25-11-2026 08:57:35]
+PASS  V26  that freshness observation is scoped to D01_QUOTES and carries a verdict, which this envelope does not  [freshness verdict=UNAVAILABLE]
 
-24/24 checks passed.
+26/26 checks passed.

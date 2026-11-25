@@ -179,6 +179,35 @@ check('V24', 'the published calendar .2 has NO NSE row for the observation date,
   calendar !== null && calendarRow === undefined,
   `observationIstDate=${observationIstDate} calendarVersion=${calendar?.version ?? 'unreadable'} row=${calendarRow ? calendarRow.status : 'absent'}`);
 
+// ---- 6. the paired freshness observation, linked by its own recorded bytes
+// V24 above records what the calendar *could* not do. The freshness read that was subsequently
+// performed is recorded alongside; assert it describes this quote rather than trusting a filename.
+let freshness = null;
+try {
+  freshness = readFileSync(fileURLToPath(new URL('./freshness-observation-output.txt', import.meta.url)), 'utf8');
+} catch {
+  freshness = null;
+}
+const fresh = {};
+for (const line of (freshness ?? '').split('\n')) {
+  const m = /^([A-Za-z]+)\s*: (.*)$/.exec(line);
+  if (m) fresh[m[1]] = m[2];
+}
+const utcRendered = (iso) => {
+  const d = new Date(Date.parse(iso));
+  const p2 = (n) => String(n).padStart(2, '0');
+  return `${p2(d.getUTCDate())}-${p2(d.getUTCMonth() + 1)}-${d.getUTCFullYear()} ` +
+    `${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())}`;
+};
+const quoteProvenance = response?.envelope?.provenance ?? null;
+check('V25', 'the paired freshness observation exists and reports on this quote\'s own asOf and receivedAt',
+  quoteProvenance !== null && fresh.asOf === utcRendered(quoteProvenance.asOf) &&
+  fresh.receivedAt === utcRendered(quoteProvenance.receivedAt),
+  `freshness asOf=${fresh.asOf} quote asOf=${quoteProvenance ? utcRendered(quoteProvenance.asOf) : 'n/a'}`);
+check('V26', 'that freshness observation is scoped to D01_QUOTES and carries a verdict, which this envelope does not',
+  fresh.domain === 'D01_QUOTES' && fresh.verdict !== undefined && response?.verdict === undefined,
+  `freshness verdict=${fresh.verdict}`);
+
 // ------------------------------------------------------------------------------------ 4. reporting
 const failed = results.filter((r) => !r.ok);
 for (const r of results) {

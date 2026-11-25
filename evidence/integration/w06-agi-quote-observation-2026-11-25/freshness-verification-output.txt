@@ -1,0 +1,29 @@
+PASS  F01  the recorded freshness output is byte-identical to the bytes this verifier was written against  [sha256=d3202701a6142480d87e196e4acfd69b3f64e7647b3fb217f76eaa8615a49c41 bytes=626]
+PASS  F02  the recorded output has exactly 16 field lines and no value was truncated away
+PASS  F03  every line parses as key-space-padded colon value, with no unparseable line
+PASS  F04  the emitted field set and ordering match FreshnessStatus as built by this commit  [16 fields]
+PASS  F05  no session-aware field is present (no ageBasis, sessionState, calendarVersion or calendarIssue)  [consistent with a read made with no calendar configured]
+PASS  F06  the quote evidence this read reports on is unchanged since it was recorded  [sha256=e11287abe464653a444ae9045be9e0fa51915dc4b9f0d2e014060704e46dc371]
+PASS  F07  the displayed asOf is the quote evidence asOf rendered as UTC whole seconds  [displayed=25-11-2026 08:57:35 derived=25-11-2026 08:57:35]
+PASS  F07b  the displayed asOf is NOT an IST rendering, so the transcript carries UTC clock time with no zone marker  [an IST reading would be 25-11-2026 14:27:35; the observed value is 25-11-2026 08:57:35]
+PASS  F08  the displayed receivedAt and observationEvaluatedAt both match the quote evidence as UTC whole seconds  [receivedAt=25-11-2026 08:58:04 observationEvaluatedAt=25-11-2026 08:58:04]
+PASS  F09  asOf + ageSeconds lands on the displayed evaluatedAt to within one second  [implied=2026-11-25T09:43:06.174Z displayed=25-11-2026 09:43:06 (whole seconds)]
+PASS  F10  cacheState UNAVAILABLE is reproduced for an entry the cache classified as UNAVAILABLE
+PASS  F11  verdict UNAVAILABLE is what the evaluator returns at this age  [age=2731.174s vs 2x threshold 1800s]
+PASS  F12  ageSeconds and thresholdSeconds match the D01 contract and the evaluator
+PASS  F13  suppressExecution True and eligibleForUse False follow from an UNAVAILABLE verdict
+PASS  F14  staleConcessionActive False is correct beyond twice the threshold (concession is < 2x only)
+PASS  F15  timestampEvidence VALID is correct for a well-formed asOf
+PASS  F16  the bare evaluator agrees on quality, concession and suppression at this instant  [quality=UNAVAILABLE]
+PASS  F17  calendarMode LEGACY_ELAPSED_UNQUALIFIED means no calendar was configured for the daemon
+PASS  F18  calendarAssessment NOT_CONFIGURED is the no-calendar label, not a coverage finding  [the read is elapsed-seconds based, so it is not session-qualified]
+PASS  F19  the published calendar .2 has no NSE row for the observation date, so configuring it would fail MISSING_COVERAGE  [observationIstDate=2026-11-25 calendarVersion=2026-11-19.2]
+PASS  F20  with .2 configured the same read would report SESSION_CALENDAR_CONFIGURED / UNAVAILABLE / MISSING_COVERAGE
+PASS  F21  the recorded output carries freshness-status fields a quote envelope never carries
+PASS  F22  the recorded output carries no quote payload field, so it is not a quote response
+PASS  F23  lastRefresh renders outcome SUCCESS with an empty lastFailure (PowerShell formatting of a null)
+PASS  F24  the freshness read is scoped to the same security as the quote evidence (D01_QUOTES / EQ_AGI_IN)  [domain=D01_QUOTES]
+PASS  F25  the freshness asOf/receivedAt are the quote envelope's own provenance instants, not re-derived
+PASS  F26  lastRefresh SUCCESS is session history of the quote request, reported separately from the verdict  [a successful refresh and an unavailable verdict coexist by design]
+
+27/27 checks passed.
