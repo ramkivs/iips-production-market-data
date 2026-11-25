@@ -41,9 +41,18 @@ import type { ListenOptions } from 'node:net';
 import { timingSafeEqual } from 'node:crypto';
 import { CanonicalEnvelope } from '../../contracts/envelope.js';
 import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
-import { buildD114SecurityIdentity, isD114SecurityId, isD114SecurityIdentity } from '../../contracts/types.js';
+import {
+  buildD114SecurityIdentity,
+  isD114SecurityId,
+  isD114SecurityIdentity,
+  type D114SecurityIdentity,
+} from '../../contracts/types.js';
 import { isDhanProductionEnvironment, type DhanEnvSource } from './dhan_config.js';
 import { DhanFailureCode } from './dhan_failures.js';
+import {
+  validateDhanFreshnessStatus,
+  type FreshnessStatus,
+} from './dhan_freshness_status.js';
 import { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
 import type {
   DhanVerificationMode,
@@ -131,6 +140,35 @@ export type MarketDataTransportDiagnosticsOutcome =
 
 export type MarketDataTransportVerifyOutcome =
   | ({ readonly ok: true } & ServiceConnectionVerification)
+  | { readonly ok: false; readonly failure: MarketDataTransportFailure };
+
+/**
+ * Request scope for `MarketDataTransportClient.getFreshness` (`GET /v1/freshness`).
+ *
+ * Matches the server route contract:
+ *   - `D02_OHLCV`: domain alone (no additional scope parameters).
+ *   - `D01_QUOTES`: exact quote scope (`companyId`, `exchangeSegment`, and either
+ *     a validated `D114SecurityIdentity` or its canonical `ISIN:<isin>:<series>` string).
+ */
+export type FreshnessRequest =
+  | { readonly domain: 'D02_OHLCV' }
+  | {
+      readonly domain: 'D01_QUOTES';
+      readonly companyId: string;
+      readonly exchangeSegment: 'NSE_EQ' | 'BSE_EQ';
+      readonly securityIdentity: D114SecurityIdentity;
+      readonly securityId?: never;
+    }
+  | {
+      readonly domain: 'D01_QUOTES';
+      readonly companyId: string;
+      readonly exchangeSegment: 'NSE_EQ' | 'BSE_EQ';
+      readonly securityId: string;
+      readonly securityIdentity?: never;
+    };
+
+export type MarketDataTransportFreshnessOutcome =
+  | { readonly ok: true; readonly status: FreshnessStatus }
   | { readonly ok: false; readonly failure: MarketDataTransportFailure };
 
 export interface MarketDataTransportClientOptions {
@@ -992,6 +1030,158 @@ export class MarketDataTransportClient {
       failure: {
         code: 'MALFORMED_RESPONSE',
         message: 'market-data transport returned a malformed connection verification payload',
+        httpStatus: call.status,
+      },
+    };
+  }
+
+  /**
+   * Read-only authenticated loopback `/v1/freshness` read (W-26 / IPD-P5 / W-19 / W-22).
+   * Enforces the same production, loopback, bearer-token, timeout and fail-closed
+   * validation guards as every other transport method, never mutates cache state or
+   * invokes the vendor, and returns the validated IPD `FreshnessStatus` verbatim
+   * (including W-19 D02 four-timestamp/revision evidence and W-22 calendar fields).
+   */
+  public async getFreshness(
+    request: FreshnessRequest
+  ): Promise<MarketDataTransportFreshnessOutcome> {
+    if (typeof request !== 'object' || request === null || Array.isArray(request)) {
+      return {
+        ok: false,
+        failure: {
+          code: 'MALFORMED_REQUEST',
+          message: 'freshness request must be an object specifying domain D01_QUOTES or D02_OHLCV',
+        },
+      };
+    }
+
+    const rawReq = request as unknown as Record<string, unknown>;
+    const domain = rawReq.domain;
+    let path: string;
+
+    if (domain === 'D02_OHLCV') {
+      if (Object.keys(rawReq).some((k) => k !== 'domain')) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message: 'D02_OHLCV freshness accepts the domain field alone',
+          },
+        };
+      }
+      path = `${MARKET_DATA_ROUTES.freshness}?domain=D02_OHLCV`;
+    } else if (domain === 'D01_QUOTES') {
+      const allowedKeys = new Set([
+        'domain',
+        'companyId',
+        'exchangeSegment',
+        'securityIdentity',
+        'securityId',
+      ]);
+      if (Object.keys(rawReq).some((k) => !allowedKeys.has(k))) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message:
+              'D01_QUOTES freshness allows only domain, companyId, exchangeSegment, and securityIdentity or securityId',
+          },
+        };
+      }
+
+      const companyId = rawReq.companyId;
+      const exchangeSegment = rawReq.exchangeSegment;
+      const hasIdentity = rawReq.securityIdentity !== undefined;
+      const hasSecurityId = rawReq.securityId !== undefined;
+
+      if (
+        typeof companyId !== 'string' ||
+        !companyId.trim() ||
+        companyId.length > 100 ||
+        (exchangeSegment !== 'NSE_EQ' && exchangeSegment !== 'BSE_EQ') ||
+        hasIdentity === hasSecurityId
+      ) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message:
+              'D01_QUOTES freshness requires companyId, exchangeSegment (NSE_EQ or BSE_EQ), and an exact canonical D114 securityIdentity or securityId',
+          },
+        };
+      }
+
+      let resolvedSecurityId: string | null = null;
+      if (hasIdentity) {
+        if (
+          isD114SecurityIdentity(rawReq.securityIdentity) &&
+          rawReq.securityIdentity.securityId.length <= 100
+        ) {
+          resolvedSecurityId = rawReq.securityIdentity.securityId;
+        }
+      } else if (
+        typeof rawReq.securityId === 'string' &&
+        rawReq.securityId.length <= 100 &&
+        isD114SecurityId(rawReq.securityId)
+      ) {
+        const parts = rawReq.securityId.split(':');
+        if (buildD114SecurityIdentity(parts[1], parts[2]) !== null) {
+          resolvedSecurityId = rawReq.securityId;
+        }
+      }
+
+      if (resolvedSecurityId === null) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message:
+              'D01_QUOTES freshness requires a canonical D114 security identity (ISIN:<isin>:<series>)',
+          },
+        };
+      }
+
+      const params = new URLSearchParams({
+        domain: 'D01_QUOTES',
+        companyId,
+        exchangeSegment,
+        securityId: resolvedSecurityId,
+      });
+      path = `${MARKET_DATA_ROUTES.freshness}?${params.toString()}`;
+      if (path.length > 2048) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message: 'freshness request URL exceeds maximum allowed length',
+          },
+        };
+      }
+    } else {
+      return {
+        ok: false,
+        failure: {
+          code: 'MALFORMED_REQUEST',
+          message: 'freshness requires a domain of D01_QUOTES or D02_OHLCV',
+        },
+      };
+    }
+
+    const call = await this.requestJson('GET', path);
+    if (!call.ok) {
+      return { ok: false, failure: call.failure };
+    }
+
+    const payload = validateDhanFreshnessStatus(call.json);
+    if (payload !== null && payload.domain === domain) {
+      return { ok: true, status: payload };
+    }
+
+    return {
+      ok: false,
+      failure: {
+        code: 'MALFORMED_RESPONSE',
+        message: 'market-data transport returned a malformed freshness payload',
         httpStatus: call.status,
       },
     };
