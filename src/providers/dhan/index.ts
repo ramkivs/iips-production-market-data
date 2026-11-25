@@ -12,6 +12,7 @@
 export * from './dhan_failures.js';
 export * from './dhan_utc_timestamp.js';
 export * from './dhan_provider_state_recorder.js';
+export * from './dhan_credential_session.js';
 export * from './dhan_config.js';
 export * from './dhan_dto.js';
 export * from './dhan_instrument_map.js';
