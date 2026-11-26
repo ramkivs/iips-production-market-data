@@ -331,7 +331,7 @@ vendor request or successful authentication.
 
 ## 7. Authenticated Loopback HTTP Endpoints (`MARKET_DATA_ROUTES`)
 
-All **9** routes require `Authorization: Bearer <IIPS_MARKET_DATA_TRANSPORT_TOKEN>`, return
+All **10** routes require `Authorization: Bearer <IIPS_MARKET_DATA_TRANSPORT_TOKEN>`, return
 `application/json`, enforce `MARKET_DATA_MAX_REQUEST_BYTES = 16,384` bytes (`16 KiB`) on `POST`
 bodies (`413 REQUEST_TOO_LARGE`), and emit transport errors as
 `{"error":{"code":"<CODE>","message":"<MESSAGE>"}}`:
@@ -342,6 +342,7 @@ bodies (`413 REQUEST_TOO_LARGE`), and emit transport errors as
 | `GET /v1/diagnostics` (`diagnostics`) | Sanitized D-7 §4.1 operational diagnostics (`ServiceDiagnostics`, W-09 `contractVersion: 1` → **W-25 bumped to `contractVersion: 2`** by the required `freshness` block; 8-state `providerState`: `'UNCONFIGURED' \| 'CONFIGURED' \| 'CREDENTIALS_RESOLVED' \| 'AUTHENTICATED' \| 'OPERATIONAL' \| 'EXPIRED' \| 'DEGRADED' \| 'UNAVAILABLE'`). Rejects any query string or `req.url.length > 2048` with `400`. | `{ contractVersion: 2, service, providerState, providerConfiguration, providerReadiness, vaultBackendId, liveCredentialResolutionSupported, vendorEgressMode, credentialResolutionOutcome, liveProviderConnectivity, providerQualification, lastSuccessAt, lastFailureCategory, lastFailure, lastAuthOutcome, lastLatencyMs, consecutiveAuthFailures, authLatched, requestCounters, qualifiedMappingsLoaded, quoteCache, freshness }` — see the W-25 configuration contract for the `freshness` block: complete effective `thresholds` per `DataDomain` plus the per-domain `overrides` dispositions. | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `404` (wrong method) | **Never** (pure read-only snapshot; never mutates state or reads secrets). |
 | `POST /v1/connection/verify` (`verifyConnection`) | Explicit operator-initiated single-shot connection verification (`ServiceConnectionVerification`, W-08 / W-10 `contractVersion: 1`). Rejects query params; empty `{}` or `{ mode?: 'LIVE_PROBE' \| 'LOCAL_ONLY' }` body (`mode` defaults to `'LIVE_PROBE'`). | `{ contractVersion: 1, mode, outcome, providerState, localReadinessEstablished, probeAttempted, probeCount, failureCategory, checkedAt, latencyMs, observedState, diagnostics }` | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `413` (`REQUEST_TOO_LARGE`), `504` (`REQUEST_TIMEOUT`) | **`LOCAL_ONLY`: Never.** **`LIVE_PROBE`:** At most **1** probe (`probeCount <= 1`, zero retries), only when service is running, credentials resolve, auth latch is clear, rate permit succeeds, and vendor egress is enabled. |
 | `GET /v1/freshness` (`freshness`) | Read-only cache/observation freshness (`FreshnessStatus`, P5). Query params: `?domain=D02_OHLCV` (alone) or `?domain=D01_QUOTES&companyId=<id>&exchangeSegment=NSE_EQ\|BSE_EQ&securityId=ISIN:<isin>:<series>`. | `{ domain, cacheState: 'CURRENT' \| 'STALE' \| 'UNAVAILABLE' \| 'MISS' \| 'NOT_AVAILABLE', asOf, receivedAt, evaluatedAt, observationEvaluatedAt, timestampEvidence, thresholdSeconds, ageSeconds, verdict: 'GOOD' \| 'STALE' \| 'UNAVAILABLE' \| 'UNKNOWN', staleConcessionActive, suppressExecution, eligibleForUse, lastRefresh: { outcome, lastFailure } }` *(Note: `D02_OHLCV` currently returns `cacheState: 'NOT_AVAILABLE'`, `verdict: 'UNKNOWN'`, `lastRefresh.outcome: 'UNKNOWN'` because `DhanHistoricalAdapter` is uncached pending W-19.)* | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `404` (wrong method) | **Never** (`cache.peek` only; never refreshes or touches LRU order). |
+| `GET /v1/trace/ring` (`traceRing`) | W-24 read-only, bearer-authenticated, loopback-only bounded diagnostic-ring query. Optional `?limit=<positive integer>` (clamped to `1,024`) and `?sinceSequence=<non-negative integer>` filter the in-memory events; only these two query parameters are accepted. Never mutates, evicts, or resets the ring. | `{ ok: true, contractVersion: 1, events: DhanDiagnosticEvent[], stats: { capacity, size, evictedCount, resetCount, nextSequence }, schemaVersion: 1 }` | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `403` (`AUTHORIZATION_FAILED` for a non-loopback source), `404` (wrong method) | **Never** (reads the local in-memory ring only; zero outbound vendor calls). |
 | `POST /v1/quotes` (`quotes`) | Canonical D01 quote fetch via P4 orchestrator. Body: `{ companyId, securityId: 'ISIN:<isin>:<series>', exchangeSegment?: 'NSE_EQ' \| 'BSE_EQ' }` (`exchangeSegment` defaults to `'NSE_EQ'`). | `{ ok: true, envelope: CanonicalEnvelope<MarketQuotePayload>, freshness: 'CURRENT' \| 'STALE' }` | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `413` (`REQUEST_TOO_LARGE`), `429` (`RATE_LIMITED`), `502` (provider/domain failure), `504` (`REQUEST_TIMEOUT`) | **Yes, on cache miss/stale** when identity resolves and live credentials + egress are active (otherwise fails closed before socket I/O). |
 | `POST /v1/historical` (`historical`) | Canonical D02 daily OHLCV fetch. Body: `{ companyId, exchangeSegment?, isin?, interval, fromDate, toDate, isAdjusted? }`. | `{ ok: true, result: DhanHistoricalNormalizationResult }` | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `413` (`REQUEST_TOO_LARGE`), `429` (`RATE_LIMITED`), `502` (provider/domain failure), `504` (`REQUEST_TIMEOUT`) | **Yes**, single-shot when identity resolves and live credentials + egress are active. |
 | `POST /v1/instruments/search` (`instrumentSearch`) | Offline P4 registry + P04 master search (`DhanIdentityApiService.search`). Body: `{ query: string }` (non-empty trimmed, `<= 100` chars). | `{ results: InstrumentSearchResult[] }` (at most `100` rows) | `400` (`MALFORMED_REQUEST`), `401` (`UNAUTHENTICATED`), `413` (`REQUEST_TOO_LARGE`) | **Never** (offline local master/registry only). |
@@ -394,15 +395,15 @@ three identity routes also return `404 NOT_FOUND`; `startMarketDataDaemon` alway
    record while correcting stale readers on post-Stage-1 `main` facts (`4,680` qualified P7
    mappings after PR `#164` vs historical `96`; actual `DhanMarketDataService` operational
    defaults of `256` quote cache / `60 per 60,000 ms` shared rate limiter / `8` concurrency /
-   uncached D02 historical pending W-19 vs historical narrative numbers; and the complete 9-route
+   uncached D02 historical pending W-19 vs historical narrative numbers; and the complete 10-route
    HTTP surface including P4 identity, P5 `/v1/freshness`, W-07 `ServiceHealth` v2, W-09
-   `/v1/diagnostics`, and W-10 `POST /v1/connection/verify`).
+   `/v1/diagnostics`, W-10 `POST /v1/connection/verify`, and W-24 `GET /v1/trace/ring`).
 4. **`docs/integration/DHAN-W07-HEALTH-CONTRACT-HANDOFF.md`**: Added a post-merge status banner
    clarifying that W-07 (`#168` + IRR `#567`), W-08 (`#169`), W-09 (`#170`), and W-10 (`#172` +
    IRR `#569`) are merged on `main` and pointing to this W-11 operational specification.
-5. **`src/providers/dhan/dhan_market_data_http.ts` integration**: Preserved all **9**
-   routes in `MARKET_DATA_ROUTES` (including `/v1/freshness`, `/v1/instruments/search`,
-   `/v1/identity/resolve`, and `/v1/identity/qualify`) while restoring strict bearer-token
+5. **`src/providers/dhan/dhan_market_data_http.ts` integration**: Preserved all **10**
+   routes in `MARKET_DATA_ROUTES` (including `/v1/freshness`, `GET /v1/trace/ring`,
+   `/v1/instruments/search`, `/v1/identity/resolve`, and `/v1/identity/qualify`) while restoring strict bearer-token
    validation and parser behavior from the DPAPI/P7 lineage.
 
 ### 9.2 Synthetic Offline Verification Evidence
@@ -410,8 +411,8 @@ three identity routes also return `404 NOT_FOUND`; `startMarketDataDaemon` alway
 - **`tests/dhan_w11_daemon_configuration.test.ts` (`W11-01..06`)**: Verifies parity between
   documented constants/defaults/routes and this branch's exports, non-alias isolation against IRR
   consumer variables, the restored DPAPI selector and SecretRef pair, strict UTC expiry,
-  loopback/port/CLI-arg/bearer/production refusal guards, full 9-route loopback HTTP
-  compatibility (`health`, `diagnostics`, `connection/verify`, `freshness`, `quotes`,
+  loopback/port/CLI-arg/bearer/production refusal guards, full 10-route loopback HTTP
+  compatibility (`health`, `diagnostics`, `connection/verify`, `freshness`, `trace/ring`, `quotes`,
   `historical`, `instruments/search`, `identity/resolve`, `identity/qualify`), `./dhan-server`
   vs browser export boundaries, and AD-17 / D-7 secret-scanner compliance (`scanTextForSecrets`:
   zero violations).
