@@ -1,0 +1,226 @@
+{
+  "captureSchemaVersion": 2,
+  "capturedAtUtc": "2026-11-26T16:37:12.539Z",
+  "label": "D-18 Reliance NSE_EQ 2885, one-sided zero-filled book",
+  "httpStatus": 200,
+  "responseStatus": "success",
+  "requestedSecurityIds": [
+    "2885"
+  ],
+  "instrumentsInResponse": 1,
+  "quotes": [
+    {
+      "segment": "NSE_EQ",
+      "securityId": "2885",
+      "depthState": "object",
+      "buy": {
+        "state": "array",
+        "count": 5,
+        "levels": [
+          {
+            "price": {
+              "state": "present",
+              "value": 0
+            },
+            "quantity": {
+              "state": "present",
+              "value": 0
+            },
+            "orders": {
+              "state": "present",
+              "value": 0
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 0
+            },
+            "quantity": {
+              "state": "present",
+              "value": 0
+            },
+            "orders": {
+              "state": "present",
+              "value": 0
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 0
+            },
+            "quantity": {
+              "state": "present",
+              "value": 0
+            },
+            "orders": {
+              "state": "present",
+              "value": 0
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 0
+            },
+            "quantity": {
+              "state": "present",
+              "value": 0
+            },
+            "orders": {
+              "state": "present",
+              "value": 0
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 0
+            },
+            "quantity": {
+              "state": "present",
+              "value": 0
+            },
+            "orders": {
+              "state": "present",
+              "value": 0
+            }
+          }
+        ]
+      },
+      "sell": {
+        "state": "array",
+        "count": 5,
+        "levels": [
+          {
+            "price": {
+              "state": "present",
+              "value": 1396.2
+            },
+            "quantity": {
+              "state": "present",
+              "value": 8767
+            },
+            "orders": {
+              "state": "present",
+              "value": 32
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 0
+            },
+            "quantity": {
+              "state": "present",
+              "value": 0
+            },
+            "orders": {
+              "state": "present",
+              "value": 0
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 0
+            },
+            "quantity": {
+              "state": "present",
+              "value": 0
+            },
+            "orders": {
+              "state": "present",
+              "value": 0
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 0
+            },
+            "quantity": {
+              "state": "present",
+              "value": 0
+            },
+            "orders": {
+              "state": "present",
+              "value": 0
+            }
+          },
+          {
+            "price": {
+              "state": "present",
+              "value": 0
+            },
+            "quantity": {
+              "state": "present",
+              "value": 0
+            },
+            "orders": {
+              "state": "present",
+              "value": 0
+            }
+          }
+        ]
+      },
+      "rawDepth": {
+        "buy": [
+          {
+            "quantity": 0,
+            "orders": 0,
+            "price": 0
+          },
+          {
+            "quantity": 0,
+            "orders": 0,
+            "price": 0
+          },
+          {
+            "quantity": 0,
+            "orders": 0,
+            "price": 0
+          },
+          {
+            "quantity": 0,
+            "orders": 0,
+            "price": 0
+          },
+          {
+            "quantity": 0,
+            "orders": 0,
+            "price": 0
+          }
+        ],
+        "sell": [
+          {
+            "quantity": 8767,
+            "orders": 32,
+            "price": 1396.2
+          },
+          {
+            "quantity": 0,
+            "orders": 0,
+            "price": 0
+          },
+          {
+            "quantity": 0,
+            "orders": 0,
+            "price": 0
+          },
+          {
+            "quantity": 0,
+            "orders": 0,
+            "price": 0
+          },
+          {
+            "quantity": 0,
+            "orders": 0,
+            "price": 0
+          }
+        ]
+      }
+    }
+  ]
+}

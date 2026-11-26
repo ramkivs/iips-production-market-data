@@ -96,6 +96,10 @@ function isZeroFilledLevel(level: unknown): boolean {
  * True when BOTH sides are supplied, non-empty, and every level on every side is
  * entirely zero-filled. Both sides are required: a book with a populated bid and
  * an all-zero ask is not a uniformly absent book, and must stay per-side.
+ *
+ * Retained for backwards compatibility — the per-side `isZeroFilledSide` now covers
+ * the one-sided case as well. A fully zero-filled 5×5 book still satisfies both
+ * this check and the per-side check; the two are equivalent for that shape.
  */
 function isEntirelyZeroFilledBook(depth: { buy?: readonly unknown[]; sell?: readonly unknown[] }): boolean {
   const buy = depth.buy;
@@ -106,9 +110,47 @@ function isEntirelyZeroFilledBook(depth: { buy?: readonly unknown[]; sell?: read
 }
 
 /**
+ * True when ONE side is supplied, non-empty, and every level on that side is
+ * entirely zero-filled. Per-side unavailable book — D-5 follow-up 2026-11-26:
+ * the vendor emits a one-sided zero-filled book (`buy` 5×0, `sell` L1
+ * 1396.2/8767/32 + 4×0 in `reliance-depth-20261126.json`), which is an absent
+ * side, not malformed data. The whole-book check above remains for the symmetric
+ * 5×5 zero case; this check handles the one-sided case before strict validation.
+ */
+function isZeroFilledSide(levels: readonly unknown[] | undefined): boolean {
+  if (!Array.isArray(levels) || levels.length === 0) return false;
+  return levels.every(isZeroFilledLevel);
+}
+
+/**
+ * Returns a view of `levels` with trailing entirely zero-filled entries removed.
+ *
+ * The vendor appends zero-filled levels after the last real price (e.g. sell
+ * side `1396.2` followed by 4×`{0,0,0}` in the 26 Nov Reliance capture). Those
+ * trailing zeros are unavailable depth, not malformed data, and must be
+ * normalised away before strict per-side validation — otherwise a valid book
+ * would be rejected because of unavailable depth appended after it. Only
+ * trailing zero-filled levels are removed; a mixed level (`price:0` +
+ * positive qty/orders), a leading zero, or any non-zero-filled level is left
+ * intact and will still fail strict validation as `MALFORMED_RESPONSE`.
+ */
+function withoutTrailingZeroLevels(levels: readonly unknown[]): readonly unknown[] {
+  let end = levels.length;
+  while (end > 0 && isZeroFilledLevel(levels[end - 1])) end--;
+  return levels.slice(0, end);
+}
+
+/**
  * Reads the best price of one depth side.
  *
  * - no side, or an empty side → `absent` (a genuine absence, reported as null);
+ * - a side that is entirely zero-filled (`every` level `{price:0,quantity:0,orders:0}`)
+ *   → `absentMarketBook` (an unavailable side, reported as null — D-5 addendum A
+ *   for the whole book, extended 2026-11-26 to per-side for the one-sided Reliance
+ *   capture buy 5×0 / sell `1396.2`+4×0);
+ * - a side with trailing zero-filled levels → trailing zeros are stripped before
+ *   validation, so a valid top-of-book followed by unavailable depth (`1396.2`
+ *   followed by 4×0) is still `present`;
  * - a supplied price that is a finite, strictly positive number → `present`;
  * - any other supplied price (zero, negative, non-finite, non-numeric, or a
  *   missing price on a supplied level) → `invalid`, to be rejected upstream.
@@ -116,13 +158,18 @@ function isEntirelyZeroFilledBook(depth: { buy?: readonly unknown[]; sell?: read
  * D-5: an unavailable side is reported as `null` and is never substituted with
  * `0`, but a malformed supplied price is never laundered into `null` either.
  *
- * The entirely zero-filled book is resolved before this function is reached (see
- * `isEntirelyZeroFilledBook`), so `zero` here means a genuinely malformed
- * supplied level rather than the approved absent-market-book condition.
+ * The entirely zero-filled book (both sides) is also covered: each side
+ * independently satisfies `isZeroFilledSide`, so both resolve to
+ * `absentMarketBook` without needing the book-level check. The book-level
+ * `isEntirelyZeroFilledBook` is retained for documentation and backwards
+ * compatibility but is no longer the sole gate.
  */
 function topOfBook(levels: Array<{ price: number }> | undefined): TopOfBookResult {
   if (!levels || levels.length === 0) return { kind: 'absent' };
-  const price: unknown = levels[0]?.price;
+  if (isZeroFilledSide(levels as readonly unknown[])) return { kind: 'absentMarketBook' };
+  const effective = withoutTrailingZeroLevels(levels as readonly unknown[]) as Array<{ price: number }>;
+  if (effective.length === 0) return { kind: 'absentMarketBook' };
+  const price: unknown = effective[0]?.price;
   if (typeof price === 'number' && Number.isFinite(price) && price > 0) {
     return { kind: 'present', price };
   }
@@ -201,20 +248,25 @@ export function normalizeDhanQuoteToCanonical(
   // Depth sides are read before the payload is built so that a supplied but
   // malformed price is rejected rather than laundered into `null`.
   //
-  // D-5 addendum (approved 2026-11-25): an ENTIRELY zero-filled order book is an
-  // ABSENT MARKET BOOK, not a malformed response. The vendor returns five buy and
-  // five sell levels in which every price, quantity and order count is zero once
-  // the market closes. That condition resolves to `absentMarketBook` for both
-  // sides independently of ordering, so neither side is ever reported as `0` and
-  // the quote remains valid. Every other supplied-but-malformed value still takes
-  // the `invalid` path below and fails closed.
-  const zeroFilledBook = isEntirelyZeroFilledBook(quote.depth ?? {});
-  const bidSide: TopOfBookResult = zeroFilledBook
-    ? { kind: 'absentMarketBook' }
-    : topOfBook(quote.depth?.buy);
-  const askSide: TopOfBookResult = zeroFilledBook
-    ? { kind: 'absentMarketBook' }
-    : topOfBook(quote.depth?.sell);
+  // D-5 addendum A (approved 2026-11-25) + follow-up B (2026-11-26): an ENTIRELY
+  // zero-filled order book — now **per side** — is an ABSENT MARKET BOOK, not a
+  // malformed response. The vendor returns (a) five buy + five sell levels all
+  // `{price:0,quantity:0,orders:0}` after the close (2026-11-23 capture), or
+  // (b) one side entirely zero-filled with the other side showing a valid
+  // top-of-book followed by trailing zeros (`buy` 5×0 / `sell` 1396.2+4×0 in
+  // `reliance-depth-20261126.json` at 2026-11-26T16:37:12.539Z). Each side is
+  // classified independently: entirely zero-filled → `absentMarketBook`;
+  // otherwise trailing zero-filled levels are stripped before strict validation,
+  // so a valid L1 followed by unavailable depth is still `present`. Every other
+  // supplied-but-malformed value (zero with positive qty/orders, negative,
+  // non-finite, wrong type, missing price) still takes the `invalid` path below
+  // and fails closed.
+  //
+  // The book-level `isEntirelyZeroFilledBook` is retained but no longer the
+  // gate: per-side `topOfBook` now handles both the whole-book and one-sided
+  // cases. Keeping the helper preserves the documented whole-book invariant.
+  const bidSide: TopOfBookResult = topOfBook(quote.depth?.buy);
+  const askSide: TopOfBookResult = topOfBook(quote.depth?.sell);
   for (const [field, side] of [['bid', bidSide], ['ask', askSide]] as const) {
     if (side.kind === 'invalid') {
       return dhanFailure(
