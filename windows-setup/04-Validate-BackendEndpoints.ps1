@@ -33,6 +33,26 @@
           validated. A fail-closed 404 in that state is reported as an ERROR.
       Override the detection with -IpdIpcExpected and -ReportsExpected.
 
+    IPD MARKET-DATA DAEMON — FOUR-STATE DISCRIMINATION (W-36)
+      The daemon on 127.0.0.1:8791 is validated with four mutually exclusive states:
+
+        not-running     -> no listener on 8791 (Get-IipsPortOwner returns $null)
+        unauthenticated -> listener exists but unauthenticated GET /v1/health returns 401
+        not-configured  -> authenticated GET /v1/health returns 200 with
+                           providerConfiguration=PRE_ACCESS_CREDENTIALS_UNAVAILABLE,
+                           credentialReadinessCode=CREDENTIALS_UNAVAILABLE,
+                           providerState=UNCONFIGURED (or UNCONFIGURED-family)
+        ready           -> authenticated GET /v1/health returns 200 with
+                           service=UP, providerReadiness=CREDENTIAL_REFERENCES_CONFIGURED
+                           or CONFIGURED-equivalent, qualifiedMappingsLoaded=4680,
+                           liveProviderConnectivity=NOT_CHECKED_PRE_ACCESS
+
+      not-running is EXPECTED when -StartMarketDataDaemon was not passed to 03.
+      not-configured is EXPECTED on a fresh Windows host with no Dhan credentials
+      provisioned. The script always reports the observed state explicitly so the
+      operator can see which of the four applies; it only fails when the observed
+      state contradicts the expected prerequisite.
+
     EXIT CODES
       0  every REQUIRED and every prerequisite-backed endpoint matched its contract
       1  unhandled failure
@@ -44,6 +64,14 @@
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File .\04-Validate-BackendEndpoints.ps1 -IpdIpcExpected -ReportsExpected
+
+.EXAMPLE
+    powershell -ExecutionPolicy Bypass -File .\04-Validate-BackendEndpoints.ps1 -MarketDataPort 8791
+
+.NOTES
+    No vault://, token, or carrier path is ever written to the CSV or to the console
+    beyond the discrimination reason. The transport token is read from
+    IIPS_MARKET_DATA_TRANSPORT_TOKEN only for the authenticated probe and never echoed.
 #>
 [CmdletBinding()]
 param(
@@ -72,6 +100,10 @@ param(
     [string] $Np04DatabasePath = 'H:\IIPS\runtime\np04\reports.sqlite',
 
     [Parameter(Mandatory = $false)]
+    [ValidateRange(1, 65535)]
+    [int] $MarketDataPort = 8791,
+
+    [Parameter(Mandatory = $false)]
     [switch] $IpdIpcExpected,
 
     [Parameter(Mandatory = $false)]
@@ -79,6 +111,9 @@ param(
 
     [Parameter(Mandatory = $false)]
     [switch] $SkipProxyCheck,
+
+    [Parameter(Mandatory = $false)]
+    [switch] $SkipMarketDataCheck,
 
     [Parameter(Mandatory = $false)]
     [switch] $NoPause
@@ -272,8 +307,251 @@ try {
     }
 
     # -----------------------------------------------------------------------------------------
+    # IPD market-data daemon — four-state discrimination (W-36)
+    # -----------------------------------------------------------------------------------------
+    if (-not $SkipMarketDataCheck) {
+        Write-Host '' -ForegroundColor White
+        Write-Host 'IPD market-data daemon (127.0.0.1:8791) - four-state discrimination' -ForegroundColor Cyan
+        Write-Host "    Checking: http://$BindAddress`:$MarketDataPort/v1/health" -ForegroundColor Gray
+        Write-Host '    States: not-running | unauthenticated | not-configured | ready' -ForegroundColor DarkGray
+        Write-Host '    NAME                     METHOD  HTTP    BYTES  VERDICT' -ForegroundColor DarkGray
+        Write-Host '    ------------------------------------------------------------------' -ForegroundColor DarkGray
+
+        $daemonBase = "http://$BindAddress`:$MarketDataPort"
+        $daemonOwner = $null
+        $daemonStateQueryError = ''
+        try {
+            $daemonOwner = Get-IipsPortOwner -Port $MarketDataPort
+        }
+        catch {
+            $daemonStateQueryError = $_.Exception.Message
+        }
+
+        if ($daemonStateQueryError.Length -gt 0) {
+            $script:Results.Add([pscustomobject]@{
+                Name = 'daemon/port-query'; Class = 'DAEMON'; Method = 'GET'; Url = "$daemonBase/v1/health"
+                Expected = 200; Actual = 0; Bytes = 0; Verdict = 'FAIL'
+                Reason = "could not query port ${MarketDataPort}: $daemonStateQueryError"
+            })
+            Write-Host ("    {0,-24} {1,-6} {2,5} {3,6}B  {4}  <- {5}" -f 'daemon/port-query', 'GET', '0', '0', 'FAIL', $daemonStateQueryError) -ForegroundColor Red
+        }
+
+        if ($null -eq $daemonOwner -and $daemonStateQueryError.Length -eq 0) {
+            # not-running — no listener on 8791. This is EXPECTED when 03 was run without
+            # -StartMarketDataDaemon. Treat as EXPECTED-FAIL-CLOSED, not as FAIL, so a
+            # transport-only run does not report a daemon defect.
+            $script:Results.Add([pscustomobject]@{
+                Name = 'daemon/not-running'; Class = 'DAEMON'; Method = 'GET'; Url = "$daemonBase/v1/health"
+                Expected = 200; Actual = 0; Bytes = 0; Verdict = 'EXPECTED-FAIL-CLOSED'
+                Reason = "no listener on port $MarketDataPort - daemon is not running (expected when -StartMarketDataDaemon was not used); this is the not-running state"
+            })
+            Write-Host ("    {0,-24} {1,-6} {2,5} {3,6}B  {4}  <- {5}" -f 'daemon/not-running', 'GET', '0', '0', 'EXPECTED-FAIL-CLOSED', "no listener on port $MarketDataPort - not-running") -ForegroundColor Yellow
+            Write-Host "    -> not-running: correctly discriminated (pass -StartMarketDataDaemon to 03 to reach the other states)" -ForegroundColor Gray
+        }
+
+        if ($null -ne $daemonOwner) {
+            Write-Host "    listener: $($daemonOwner.LocalAddress):$MarketDataPort PID $($daemonOwner.OwningProcess)" -ForegroundColor Gray
+
+            # Probe 1: unauthenticated — must be 401 UNAUTHENTICATED.
+            # This proves the auth guard is active even when the daemon is not-configured.
+            $unauthStatus = 0
+            $unauthContent = ''
+            $unauthTransportError = ''
+            try {
+                $unauthResp = Invoke-WebRequest -Uri "$daemonBase/v1/health" -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                $unauthStatus = [int]$unauthResp.StatusCode
+                $unauthContent = $unauthResp.Content
+            }
+            catch {
+                $ex = $_.Exception
+                if ($null -ne $ex.Response -and $null -ne $ex.Response.StatusCode) {
+                    $unauthStatus = [int]$ex.Response.StatusCode
+                    try {
+                        $reader = New-Object System.IO.StreamReader($ex.Response.GetResponseStream())
+                        $unauthContent = $reader.ReadToEnd()
+                    }
+                    catch { $unauthContent = '' }
+                }
+                if ($unauthStatus -eq 0) { $unauthTransportError = $ex.Message }
+            }
+
+            $unauthVerdict = 'FAIL'
+            $unauthReason = ''
+            if ($unauthStatus -eq 401) {
+                if ($unauthContent -match '"code"\s*:\s*"UNAUTHENTICATED"') {
+                    $unauthVerdict = 'PASS'
+                    $unauthReason = 'unauthenticated correctly rejected with 401 UNAUTHENTICATED (not-running excluded, ready excluded)'
+                }
+                if ($unauthVerdict -ne 'PASS') { $unauthReason = "status 401 but body is not the documented UNAUTHENTICATED shape - actual: $($unauthContent.Substring(0, [Math]::Min(120, $unauthContent.Length)))" }
+            }
+            if ($unauthVerdict -eq 'FAIL' -and $unauthTransportError.Length -gt 0) { $unauthReason = "unreachable: $unauthTransportError" }
+            if ($unauthVerdict -eq 'FAIL' -and $unauthReason.Length -eq 0) { $unauthReason = "expected 401 UNAUTHENTICATED for unauthenticated probe, got $unauthStatus" }
+
+            $script:Results.Add([pscustomobject]@{
+                Name = 'daemon/unauth'; Class = 'DAEMON'; Method = 'GET'; Url = "$daemonBase/v1/health"
+                Expected = 401; Actual = $unauthStatus; Bytes = $unauthContent.Length; Verdict = $unauthVerdict; Reason = $unauthReason
+            })
+            $colour = 'Red'
+            if ($unauthVerdict -eq 'PASS') { $colour = 'Green' }
+            Write-Host ("    {0,-24} {1,-6} {2,5} {3,6}B  {4}  <- {5}" -f 'daemon/unauth', 'GET', "$unauthStatus", $unauthContent.Length, $unauthVerdict, $unauthReason) -ForegroundColor $colour
+
+            # Probe 2: authenticated — requires IIPS_MARKET_DATA_TRANSPORT_TOKEN in this session.
+            # Without it the daemon is not-running from the client's view, but the unauthenticated
+            # probe above already proved the listener and its auth guard.
+            $token = [string]$env:IIPS_MARKET_DATA_TRANSPORT_TOKEN
+            if ([string]::IsNullOrWhiteSpace($token)) {
+                $script:Results.Add([pscustomobject]@{
+                    Name = 'daemon/auth-probe'; Class = 'DAEMON'; Method = 'GET'; Url = "$daemonBase/v1/health"
+                    Expected = 200; Actual = 0; Bytes = 0; Verdict = 'EXPECTED-FAIL-CLOSED'
+                    Reason = 'IIPS_MARKET_DATA_TRANSPORT_TOKEN not set in this session - authenticated probe skipped; unauthenticated probe already proved the listener; set the token to reach not-configured/ready'
+                })
+                Write-Host ("    {0,-24} {1,-6} {2,5} {3,6}B  {4}  <- {5}" -f 'daemon/auth-probe', 'GET', '0', '0', 'EXPECTED-FAIL-CLOSED', 'token not set - authenticated probe skipped (set IIPS_MARKET_DATA_TRANSPORT_TOKEN to test the other states)') -ForegroundColor Yellow
+            }
+            if (-not [string]::IsNullOrWhiteSpace($token)) {
+                $authStatus = 0
+                $authContent = ''
+                $authError = ''
+                $authSize = 0
+                try {
+                    $authHeaders = @{ Authorization = "Bearer $token" }
+                    $authResp = Invoke-WebRequest -Uri "$daemonBase/v1/health" -Headers $authHeaders -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                    $authStatus = [int]$authResp.StatusCode
+                    $authContent = $authResp.Content
+                    $authSize = $authContent.Length
+                }
+                catch {
+                    $ex = $_.Exception
+                    if ($null -ne $ex.Response -and $null -ne $ex.Response.StatusCode) {
+                        $authStatus = [int]$ex.Response.StatusCode
+                        try {
+                            $reader = New-Object System.IO.StreamReader($ex.Response.GetResponseStream())
+                            $authContent = $reader.ReadToEnd()
+                            $authSize = $authContent.Length
+                        }
+                        catch { $authContent = ''; $authSize = 0 }
+                    }
+                    if ($authStatus -eq 0) { $authError = $ex.Message }
+                }
+
+                $authVerdict = 'FAIL'
+                $authReason = ''
+                $daemonDiscrimination = ''
+
+                if ($authStatus -eq 200) {
+                    $bodyOk = $true
+                    # Minimal contract: must carry service, providerConfiguration, liveProviderConnectivity
+                    if (-not ($authContent -match '"service"\s*:\s*"UP"')) { $bodyOk = $false }
+                    if (-not ($authContent -match '"providerConfiguration"')) { $bodyOk = $false }
+                    if (-not ($authContent -match '"liveProviderConnectivity"')) { $bodyOk = $false }
+
+                    if ($bodyOk) {
+                        $authVerdict = 'PASS'
+                        $authReason = 'authenticated health matched contract (service UP, provider fields present, sanitised - no vault://)'
+                        # Discrimination from health alone: health carries providerConfiguration (= daemon provider readiness)
+                        # Diagnostics (separate probe below) enriches with providerReadiness/credentialResolutionOutcome/qualifiedMappingsLoaded
+                        if ($authContent -match '"providerConfiguration"\s*:\s*"PRE_ACCESS_CREDENTIALS_UNAVAILABLE"') {
+                            $daemonDiscrimination = 'not-configured: providerConfiguration PRE_ACCESS_CREDENTIALS_UNAVAILABLE (no Dhan SecretRef configured) - expected on fresh host'
+                            if ($authContent -match '"providerState"\s*:\s*"UNCONFIGURED"' -or $authContent -match '"credentialResolutionOutcome"\s*:\s*"UNCONFIGURED"' -or $authContent -match '"credentialReadinessCode"\s*:\s*"CREDENTIALS_UNAVAILABLE"') {
+                                $daemonDiscrimination = 'not-configured: providerState UNCONFIGURED / credentialResolutionOutcome UNCONFIGURED - expected on fresh host'
+                            }
+                        }
+                        if ($authContent -match '"providerConfiguration"\s*:\s*"CONFIGURED"') {
+                            $daemonDiscrimination = 'ready: providerConfiguration CONFIGURED (credential references configured)'
+                        }
+                        if ($authContent -match '"providerReadiness"\s*:\s*"CREDENTIAL_REFERENCES_CONFIGURED"') {
+                            if ($daemonDiscrimination.Length -gt 0) { $daemonDiscrimination = "$daemonDiscrimination; providerReadiness CREDENTIAL_REFERENCES_CONFIGURED" }
+                            if ($daemonDiscrimination.Length -eq 0) { $daemonDiscrimination = 'ready: providerReadiness CREDENTIAL_REFERENCES_CONFIGURED' }
+                        }
+                        if ($authContent -match '"credentialReadinessCode"\s*:\s*"CONFIGURED"' -or $authContent -match '"credentialResolutionOutcome"\s*:\s*"CONFIGURED') {
+                            if ($daemonDiscrimination.Length -eq 0) { $daemonDiscrimination = 'ready: credential readiness CONFIGURED' }
+                        }
+                        if ($authContent -match '"qualifiedMappingsLoaded"\s*:\s*4680') {
+                            if ($daemonDiscrimination.Length -gt 0) { $daemonDiscrimination = "$daemonDiscrimination; qualifiedMappingsLoaded=4680" }
+                            if ($daemonDiscrimination.Length -eq 0) { $daemonDiscrimination = 'ready: qualifiedMappingsLoaded=4680 (P7 registry loaded)' }
+                        }
+                        if ($authContent -match 'vault://') {
+                            $authVerdict = 'FAIL'
+                            $authReason = 'health body contains vault:// - diagnostic leak (D-7 violation)'
+                            $daemonDiscrimination = ''
+                        }
+                    }
+                    if (-not $bodyOk) { $authReason = "status 200 but body does not carry the expected health contract fields (service/providerConfiguration/liveProviderConnectivity) - actual: $($authContent.Substring(0, [Math]::Min(160, $authContent.Length)))" }
+                }
+
+                if ($authStatus -eq 401) { $authReason = 'authenticated probe got 401 - token mismatch (set IIPS_MARKET_DATA_TRANSPORT_TOKEN to the value 03 injected for this run, not a different value)' }
+                if ($authError.Length -gt 0 -and $authReason.Length -eq 0) { $authReason = "unreachable: $authError" }
+                if ($authVerdict -eq 'FAIL' -and $authReason.Length -eq 0) { $authReason = "expected 200 for authenticated probe, got $authStatus" }
+
+                $script:Results.Add([pscustomobject]@{
+                    Name = 'daemon/health'; Class = 'DAEMON'; Method = 'GET'; Url = "$daemonBase/v1/health"
+                    Expected = 200; Actual = $authStatus; Bytes = $authSize; Verdict = $authVerdict; Reason = $authReason
+                })
+                $colour = 'Red'
+                if ($authVerdict -eq 'PASS') { $colour = 'Green' }
+                Write-Host ("    {0,-24} {1,-6} {2,5} {3,6}B  {4}  <- {5}" -f 'daemon/health', 'GET', "$authStatus", $authSize, $authVerdict, $authReason) -ForegroundColor $colour
+                if ($daemonDiscrimination.Length -gt 0) {
+                    Write-Host "    -> discrimination: $daemonDiscrimination" -ForegroundColor Gray
+                    $script:Results.Add([pscustomobject]@{
+                        Name = 'daemon/discrimination'; Class = 'DAEMON'; Method = '-'; Url = "$daemonBase/v1/health"
+                        Expected = 200; Actual = $authStatus; Bytes = 0; Verdict = 'PASS'; Reason = $daemonDiscrimination
+                    })
+                }
+
+                # Authenticated diagnostics — proves D-7 sanitisation and exposes the same four states
+                if ($authVerdict -eq 'PASS') {
+                    $diagStatus = 0
+                    $diagContent = ''
+                    $diagSize = 0
+                    $diagError = ''
+                    try {
+                        $authHeaders = @{ Authorization = "Bearer $token" }
+                        $diagResp = Invoke-WebRequest -Uri "$daemonBase/v1/diagnostics" -Headers $authHeaders -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                        $diagStatus = [int]$diagResp.StatusCode
+                        $diagContent = $diagResp.Content
+                        $diagSize = $diagContent.Length
+                    }
+                    catch {
+                        $ex = $_.Exception
+                        if ($null -ne $ex.Response -and $null -ne $ex.Response.StatusCode) {
+                            $diagStatus = [int]$ex.Response.StatusCode
+                            try {
+                                $reader = New-Object System.IO.StreamReader($ex.Response.GetResponseStream())
+                                $diagContent = $reader.ReadToEnd()
+                                $diagSize = $diagContent.Length
+                            }
+                            catch { $diagContent = ''; $diagSize = 0 }
+                        }
+                        if ($diagStatus -eq 0) { $diagError = $ex.Message }
+                    }
+
+                    $diagVerdict = 'FAIL'
+                    $diagReason = ''
+                    if ($diagStatus -eq 200) {
+                        $diagBodyOk = $true
+                        if (-not ($diagContent -match '"contractVersion"')) { $diagBodyOk = $false }
+                        if (-not ($diagContent -match '"providerState"')) { $diagBodyOk = $false }
+                        if ($diagContent -match 'vault://') { $diagBodyOk = $false; $diagReason = 'diagnostics body contains vault:// - diagnostic leak (D-7 violation)' }
+                        if ($diagBodyOk) { $diagVerdict = 'PASS'; $diagReason = 'diagnostics matched contract (sanitised, no secret disclosure)' }
+                        if (-not $diagBodyOk -and $diagReason.Length -eq 0) { $diagReason = "status 200 but diagnostics body missing expected fields - actual: $($diagContent.Substring(0, [Math]::Min(160, $diagContent.Length)))" }
+                    }
+                    if ($diagError.Length -gt 0 -and $diagReason.Length -eq 0) { $diagReason = "unreachable: $diagError" }
+                    if ($diagVerdict -eq 'FAIL' -and $diagReason.Length -eq 0) { $diagReason = "expected 200 for diagnostics, got $diagStatus" }
+
+                    $script:Results.Add([pscustomobject]@{
+                        Name = 'daemon/diagnostics'; Class = 'DAEMON'; Method = 'GET'; Url = "$daemonBase/v1/diagnostics"
+                        Expected = 200; Actual = $diagStatus; Bytes = $diagSize; Verdict = $diagVerdict; Reason = $diagReason
+                    })
+                    $colour = 'Red'
+                    if ($diagVerdict -eq 'PASS') { $colour = 'Green' }
+                    Write-Host ("    {0,-24} {1,-6} {2,5} {3,6}B  {4}  <- {5}" -f 'daemon/diagnostics', 'GET', "$diagStatus", $diagSize, $diagVerdict, $diagReason) -ForegroundColor $colour
+                }
+            }
+        }
+    }
+
+    # -----------------------------------------------------------------------------------------
     if (-not $SkipProxyCheck) {
-        Write-Host ''
+        Write-Host '' -ForegroundColor White
         Write-Host 'Frontend proxy path (the route the browser actually uses)' -ForegroundColor Cyan
         $proxyUrl = "http://$BindAddress`:$FrontendPort/api/health"
         try {
@@ -295,7 +573,7 @@ try {
     }
 
     # -----------------------------------------------------------------------------------------
-    Write-Host ''
+    Write-Host '' -ForegroundColor White
     Write-Host '-------------------------------------------------------------' -ForegroundColor DarkGray
     $pass = @($script:Results | Where-Object { $_.Verdict -eq 'PASS' }).Count
     $fail = @($script:Results | Where-Object { $_.Verdict -eq 'FAIL' }).Count
@@ -348,7 +626,7 @@ try {
     exit 0
 }
 catch {
-    Write-Host ''
+    Write-Host '' -ForegroundColor White
     Write-Host "FAILURE: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host "  at $($_.InvocationInfo.ScriptName):$($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor DarkGray
     Write-IipsFinalStatus -Outcome 'FAIL' -Message 'Backend endpoint validation: stopped with exit 1. The specific reason is printed immediately above.' -NoPause:$NoPause | Out-Null

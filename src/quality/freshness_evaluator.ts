@@ -13,6 +13,16 @@ export interface FreshnessThresholdConfig {
   nominalThresholdSeconds: number;
 }
 
+/**
+ * W-25: the per-domain thresholds an evaluation is conducted against.
+ *
+ * `DEFAULT_FRESHNESS_CONFIG` satisfies this shape directly, so an unconfigured caller
+ * needs no adapter. A configured caller passes the map resolved by
+ * `resolveFreshnessThresholds` (`freshness_thresholds.ts`), which is complete for every
+ * domain by construction.
+ */
+export type FreshnessThresholds = Readonly<Record<DataDomain, number>>;
+
 export const DEFAULT_FRESHNESS_CONFIG: Record<DataDomain, number> = {
   D01_QUOTES: 15 * 60,                // 15 minutes intraday
   D02_OHLCV: 24 * 60 * 60,            // 24 hours EOD
@@ -40,17 +50,46 @@ export interface FreshnessEvaluationResult {
 }
 
 /**
+ * Resolves the threshold a single evaluation will use.
+ *
+ * A supplied map is authoritative. A missing or non-finite entry falls back to the
+ * compiled default rather than to a constant the configuration never mentioned — an
+ * unevaluable threshold must degrade to the built-in contract, not to an invention.
+ * (Configuration never produces such a value; this guards a hand-built map.)
+ */
+function resolveThreshold(domain: DataDomain, thresholds?: FreshnessThresholds): number {
+  const supplied = thresholds?.[domain];
+  if (typeof supplied === 'number' && Number.isFinite(supplied) && supplied > 0) return supplied;
+  return DEFAULT_FRESHNESS_CONFIG[domain];
+}
+
+/**
  * Evaluates the freshness of a dataset timestamp under AD-12 concession rules:
  * - Age <= Threshold: GOOD
  * - Threshold < Age <= 2 * Threshold: STALE (Concession active; usable with warning)
  * - Age > 2 * Threshold: UNAVAILABLE (Suppressed from engine execution)
+ *
+ * W-25: `thresholds` optionally carries configured per-domain thresholds resolved by
+ * `freshness_thresholds.ts`. It defaults to `DEFAULT_FRESHNESS_CONFIG`, so a caller that
+ * does not configure anything keeps exactly the compiled numbers. This function remains
+ * the sole owner of the AD-12 arithmetic — configuration changes WHICH threshold is used,
+ * never how the bands are applied, and the `2 ×` concession edge is always derived from
+ * the effective threshold so both edges move together.
  */
 export function evaluateFreshness(
   timestamp: string,
   domain: DataDomain,
   evaluationTime: string,
-  session?: SessionFreshnessContext
+  session?: SessionFreshnessContext,
+  thresholds?: FreshnessThresholds
 ): FreshnessEvaluationResult {
+  // One resolution for the whole call. Previously the two early returns read the raw map
+  // while the classifying return read `map[domain] || 3600`; a configured threshold could
+  // therefore be reported by one return and not applied by another. The `|| 3600` fallback
+  // is removed with it: it was unreachable for a valid domain and was the only place this
+  // function could invent a number the configuration never stated.
+  const threshold = resolveThreshold(domain, thresholds);
+
   const dataTimeMs = Date.parse(timestamp);
   const evalTimeMs = Date.parse(evaluationTime);
 
@@ -58,7 +97,7 @@ export function evaluateFreshness(
     return {
       ageSeconds: Infinity,
       quality: 'UNAVAILABLE',
-      nominalThresholdSeconds: DEFAULT_FRESHNESS_CONFIG[domain],
+      nominalThresholdSeconds: threshold,
       staleConcessionActive: false,
       suppressExecution: true,
     };
@@ -69,7 +108,7 @@ export function evaluateFreshness(
   if (session) {
     const basis = session.kind === 'QUOTE' ? 'SESSION_TIME' : 'COMPLETED_TRADING_DAYS';
     const invalid = (calendarIssue: NonNullable<FreshnessEvaluationResult['calendarIssue']>): FreshnessEvaluationResult => ({
-      ageSeconds: Infinity, quality: 'UNAVAILABLE', nominalThresholdSeconds: DEFAULT_FRESHNESS_CONFIG[domain],
+      ageSeconds: Infinity, quality: 'UNAVAILABLE', nominalThresholdSeconds: threshold,
       staleConcessionActive: false, suppressExecution: true, basis, calendarIssue,
       calendarVersion: session.calendar?.version,
     });
@@ -103,7 +142,6 @@ export function evaluateFreshness(
     if (session.kind === 'DAILY_CLOSE') ageSeconds = completedTradingDays * 86_400;
     sessionEvidence = { basis, sessionState: days.get(to)!.sessions.some(s => Date.parse(s.opensAt) <= evalTimeMs && evalTimeMs < Date.parse(s.closesAt)) ? 'OPEN' : 'CLOSED', calendarVersion: calendar.version, ...(session.kind === 'DAILY_CLOSE' ? { completedTradingDays } : {}) };
   }
-  const threshold = DEFAULT_FRESHNESS_CONFIG[domain] || 3600;
 
   if (ageSeconds <= threshold) {
     return {

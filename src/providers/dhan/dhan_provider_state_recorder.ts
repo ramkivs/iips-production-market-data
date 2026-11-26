@@ -98,6 +98,15 @@ export type DhanAuthOutcome =
   | 'CREDENTIALS_EXPIRED'
   | 'CREDENTIALS_UNAVAILABLE';
 
+/** The governed auth-outcome vocabulary. A value outside it is never restored (W-23). */
+export const GOVERNED_AUTH_OUTCOMES: ReadonlySet<string> = new Set<DhanAuthOutcome>([
+  'NOT_CHECKED',
+  'AUTHENTICATED',
+  'AUTHENTICATION_FAILURE',
+  'CREDENTIALS_EXPIRED',
+  'CREDENTIALS_UNAVAILABLE',
+]);
+
 export interface DhanProviderObservedState {
   readonly lastSuccessAt: string | null;
   readonly lastFailure: DhanRecordedFailure | null;
@@ -296,6 +305,62 @@ export class DhanProviderStateRecorder {
    * Pure observation-only snapshot. Never mutates recorder state and returns
    * a deeply frozen object containing only governed W-08 fields.
    */
+  /**
+   * W-23: admits last-known observed state restored from a persisted store.
+   *
+   * Three deliberate rules, all recorded in the W-23 contract:
+   *
+   *  1. **History is restored, liveness is not.** `lastSuccessAt`, `lastFailure`,
+   *     `lastAuthOutcome`, `lastLatencyMs` and `consecutiveAuthFailures` are carried over
+   *     verbatim: they say what the PREVIOUS process observed, which is exactly the
+   *     recovery evidence an operator needs after a restart.
+   *  2. **The auth latch is NOT restored as active.** The W-05 latch exists to stop THIS
+   *     process hammering the vendor with a credential it just had rejected. A restart is
+   *     the operator's opportunity to rotate that credential, so restoring an active latch
+   *     would turn the documented recovery route into a no-op. The recorded value is
+   *     returned so the caller can report that the previous process WAS latched, and the
+   *     threshold (2 consecutive failures) re-latches quickly if the credential is still bad.
+   *  3. **Interaction counters are untouched.** `vendorSuccesses`, `providerFailures`,
+   *     `marketDataSuccesses` and `localReadinessVerified` describe what the CURRENT process
+   *     did and are never restored.
+   *
+   * Returns the latch value that was in the store, so the caller can publish it as history.
+   * A value that fails the governed vocabularies is not restored at all: an unrecognised
+   * category would otherwise become a diagnostic the platform cannot justify.
+   */
+  public restoreObservedState(input: {
+    readonly lastSuccessAt: string | null;
+    readonly lastFailure: { readonly category: string; readonly at: string } | null;
+    readonly lastAuthOutcome: string;
+    readonly lastLatencyMs: number | null;
+    readonly authLatched: boolean;
+    readonly consecutiveAuthFailures: number;
+  }): { readonly restored: boolean; readonly priorAuthLatched: boolean } {
+    const outcome = input.lastAuthOutcome;
+    if (!GOVERNED_AUTH_OUTCOMES.has(outcome)) {
+      return { restored: false, priorAuthLatched: input.authLatched === true };
+    }
+    // A failure whose category is outside the governed list is not admitted: dropping just
+    // the failure keeps the restorable history rather than discarding all of it.
+    let failure: DhanRecordedFailure | null = null;
+    if (input.lastFailure !== null && isGovernedProviderFailureCategory(input.lastFailure.category)) {
+      const at = normalizeIsoUtcTimestamp(input.lastFailure.at, this.now);
+      failure = Object.freeze({ category: input.lastFailure.category, at });
+    }
+
+    this.lastSuccessAt = input.lastSuccessAt === null ? null : normalizeIsoUtcTimestamp(input.lastSuccessAt, this.now);
+    this.lastFailure = failure;
+    this.lastAuthOutcome = outcome as DhanAuthOutcome;
+    this.lastLatencyMs = normalizeLatencyMs(input.lastLatencyMs);
+    this.consecutiveAuthFailures =
+      Number.isSafeInteger(input.consecutiveAuthFailures) && input.consecutiveAuthFailures >= 0
+        ? input.consecutiveAuthFailures
+        : 0;
+    // Rule 2: never restored as active.
+    this.authLatched = false;
+    return { restored: true, priorAuthLatched: input.authLatched === true };
+  }
+
   public snapshot(): DhanProviderObservedState {
     const failureSnapshot: DhanRecordedFailure | null =
       this.lastFailure === null

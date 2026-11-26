@@ -785,7 +785,12 @@ describe('Dhan authenticated loopback POST /v1/connection/verify endpoint (offli
         assert.strictEqual(s4.observedState.authLatched, true);
         assert.strictEqual(s4.providerState, 'DEGRADED');
       }
-      assert.strictEqual(h.getResolverCalls(), 4);
+      // D-2 / W-05 + D-7 §3 rule 2: verification NEVER re-reads the credential. Four operator
+      // probes are four vendor calls but only ONE vault read — the V2 probe uses the material
+      // already in memory, which is exactly the narrowing D-7 chose and deliberately refused to
+      // add as a fifth D-2 trigger. Before W-05 this asserted 4/4 because resolution was
+      // per-request; the vault half is now 1 and the vendor half is unchanged at 4.
+      assert.strictEqual(h.getResolverCalls(), 1, 'V2 verification never re-reads the credential');
       assert.strictEqual(h.getTransportCalls(), 4);
 
       // 5. Subsequent verifyConnection is refused pre-flight by the auth latch (zero resolver calls, zero probes).
@@ -800,7 +805,12 @@ describe('Dhan authenticated loopback POST /v1/connection/verify endpoint (offli
         assert.strictEqual(s5.latencyMs, null);
         assert.strictEqual(s5.observedState.authLatched, true);
       }
-      assert.strictEqual(h.getResolverCalls(), 4);
+      // D-2 / W-05 + D-7 §3 rule 2: verification NEVER re-reads the credential. Four operator
+      // probes are four vendor calls but only ONE vault read — the V2 probe uses the material
+      // already in memory, which is exactly the narrowing D-7 chose and deliberately refused to
+      // add as a fifth D-2 trigger. Before W-05 this asserted 4/4 because resolution was
+      // per-request; the vault half is now 1 and the vendor half is unchanged at 4.
+      assert.strictEqual(h.getResolverCalls(), 1, 'V2 verification never re-reads the credential');
       assert.strictEqual(h.getTransportCalls(), 4);
     });
 

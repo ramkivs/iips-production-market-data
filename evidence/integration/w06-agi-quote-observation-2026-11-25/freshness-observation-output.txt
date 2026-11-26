@@ -1,0 +1,16 @@
+calendarMode           : LEGACY_ELAPSED_UNQUALIFIED
+calendarAssessment     : NOT_CONFIGURED
+domain                 : D01_QUOTES
+cacheState             : UNAVAILABLE
+asOf                   : 25-11-2026 08:57:35
+timestampEvidence      : VALID
+receivedAt             : 25-11-2026 08:58:04
+evaluatedAt            : 25-11-2026 09:43:06
+observationEvaluatedAt : 25-11-2026 08:58:04
+thresholdSeconds       : 900
+ageSeconds             : 2731.174
+verdict                : UNAVAILABLE
+staleConcessionActive  : False
+suppressExecution      : True
+eligibleForUse         : False
+lastRefresh            : @{outcome=SUCCESS; lastFailure=}

@@ -67,13 +67,17 @@ import {
   MARKET_DATA_TRANSPORT_TOKEN_ENV,
   validateTransportToken,
 } from './dhan_market_data_http.js';
-import { DhanMarketDataService } from './dhan_market_data_service.js';
+import { DhanDiagnosticRing, W24_RING_CAPACITY_IPD } from './dhan_diagnostic_ring.js';
+import { DhanMarketDataService, type DhanStateRestoreReport } from './dhan_market_data_service.js';
 import {
   deriveDhanProviderState,
   type DhanConfigObservation,
   type DhanProviderState,
 } from './dhan_provider_state.js';
 import { DhanServerHttpsTransport } from './dhan_server_egress.js';
+import { DhanFileStateStore } from './dhan_file_state_store.js';
+import { NOOP_DHAN_STATE_STORE, type DhanStateSaveOutcome, type DhanStateStorePort } from './dhan_state_store.js';
+import { join } from 'node:path';
 
 export const MARKET_DATA_DAEMON_HOST_ENV = 'IIPS_MARKET_DATA_DAEMON_HOST';
 export const MARKET_DATA_DAEMON_PORT_ENV = 'IIPS_MARKET_DATA_DAEMON_PORT';
@@ -92,6 +96,19 @@ export const DEFAULT_DAEMON_SHUTDOWN_TIMEOUT_MS = 5_000;
  *  - `windows-dpapi`          → `WindowsDpapiHostVaultBackend`. Startup awaits its probe; only a
  *                               supported verdict may enable vendor egress.
  */
+/**
+ * W-23: where retained market-data state is persisted across restarts.
+ *
+ * Resolution order: this variable, else `<IIPS_DATA_DIR>/dhan/market-data-state.json`, else
+ * NO default at all — persistence is DISABLED. A daemon that invents a write location is
+ * worse than one that does not write, because state then lands somewhere nobody intends to
+ * inspect or back up, and two deployments can silently share it.
+ */
+export const MARKET_DATA_STATE_PATH_ENV = 'IIPS_MARKET_DATA_STATE_PATH';
+export const IIPS_DATA_DIR_ENV = 'IIPS_DATA_DIR';
+/** Relative path appended to `IIPS_DATA_DIR` when the explicit override is unset. */
+export const DEFAULT_MARKET_DATA_STATE_RELATIVE_PATH = 'dhan/market-data-state.json';
+
 export const DHAN_VAULT_BACKEND_ENV = 'IIPS_DHAN_VAULT_BACKEND';
 export const DHAN_VAULT_BACKEND_DISABLED = 'disabled';
 export const DHAN_VAULT_BACKEND_WINDOWS_DPAPI = 'windows-dpapi';
@@ -208,6 +225,19 @@ export interface MarketDataDaemonDiagnostics {
   readonly qualifiedMappingsLoaded: number;
   readonly liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS';
   readonly providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED';
+  /**
+   * W-23: whether persistence is configured, which file it uses (or that it is disabled), and
+   * what the start-up load admitted. A cold start after a corrupt store and a first-ever cold
+   * start are different operational facts; this is where an operator tells them apart.
+   */
+  readonly statePersistence: MarketDataDaemonStatePersistence;
+}
+
+export interface MarketDataDaemonStatePersistence {
+  readonly enabled: boolean;
+  /** The path the daemon will write, or `null` when persistence is disabled. */
+  readonly path: string | null;
+  readonly restore: DhanStateRestoreReport;
 }
 
 export interface MarketDataDaemonHandle {
@@ -215,6 +245,39 @@ export interface MarketDataDaemonHandle {
   readonly service: DhanMarketDataService;
   readonly server: Server;
   shutdown(): Promise<void>;
+  /**
+   * W-23: outcome of the save performed by `shutdown()`, or `null` before it has run.
+   *
+   * Exposed so an operator (and an acceptance test) can tell a clean persist from a store
+   * that was disabled, too large or unwritable — without reading a log.
+   */
+  readonly lastPersistOutcome: DhanStateSaveOutcome | null;
+}
+
+/**
+ * W-23: resolves the daemon's state store from the environment.
+ *
+ * Resolution order is fixed by the W-23 contract, and the last branch is DISABLED rather than
+ * a default path. Writing state to an unspecified location would mean two deployments could
+ * share a store, or that an operator inspecting `IIPS_DATA_DIR` would not find what the
+ * daemon wrote.
+ *
+ * Returns a port in every branch, so the service needs no null-handling.
+ */
+export function resolveStateStorePath(env: DhanEnvSource): string | null {
+  const explicit = env[MARKET_DATA_STATE_PATH_ENV]?.trim();
+  if (explicit) return explicit;
+  const dataDir = env[IIPS_DATA_DIR_ENV]?.trim();
+  if (dataDir) return join(dataDir, DEFAULT_MARKET_DATA_STATE_RELATIVE_PATH);
+  return null;
+}
+
+export function resolveStateStore(env: DhanEnvSource): DhanStateStorePort {
+  const path = resolveStateStorePath(env);
+  // When disabled the NOOP singleton is returned so the service sees the canonical
+  // NO_STORE state (identity-compared against the singleton) rather than an ABSENT
+  // miss from a disabled file stub.
+  return path === null ? NOOP_DHAN_STATE_STORE : new DhanFileStateStore({ path });
 }
 
 export type MarketDataDaemonStartupOutcome =
@@ -238,6 +301,13 @@ export interface StartMarketDataDaemonOptions {
   readonly transportToken?: string;
   readonly requestTimeoutMs?: number;
   readonly shutdownTimeoutMs?: number;
+  /**
+   * W-23: an explicit state store. Overrides path resolution entirely, so a caller (or a
+   * test) can persist to memory or to a chosen location without the daemon guessing.
+   */
+  readonly stateStore?: DhanStateStorePort;
+  /** W-24: bounded diagnostic ring. Overrides default capacity when supplied. */
+  readonly diagnosticRing?: DhanDiagnosticRing;
   readonly vaultBackend?: LocalHostVaultSecretBackend;
   /** Test/operator seam for the `windows-dpapi` backend's carrier directory. */
   readonly vaultCarrierDirectory?: string;
@@ -540,12 +610,26 @@ export async function startMarketDataDaemon(
 
   const calendarPath = options.tradingCalendarPath ?? env['IIPS_TRADING_CALENDAR_PATH'];
   const tradingCalendar = calendarPath ? parseTradingCalendar(JSON.parse(readFileSync(calendarPath, 'utf8'))) : undefined;
+  // W-23: resolve the state store. Explicit option wins; otherwise the env variable; otherwise
+  // a path under IIPS_DATA_DIR; otherwise persistence is off rather than guessed.
+  const stateStore = options.stateStore ?? resolveStateStore(env);
+  // Reported separately from the store itself: an injected store has no path to report.
+  const stateStorePath = resolveStateStorePath(env);
+
+  // W-24: bounded diagnostic ring — oldest eviction, never persisted
+  const diagnosticRing = options.diagnosticRing ?? new DhanDiagnosticRing(W24_RING_CAPACITY_IPD);
+
   const service = new DhanMarketDataService({
     tradingCalendar,
     client: apiClient,
     securityMaster,
     instrumentRegistry,
     now,
+    stateStore,
+    diagnosticRing,
+    // W-25: the daemon resolves the operator's own environment, so a threshold override
+    // reaches the served `/v1/freshness` and `/v1/diagnostics` without another config path.
+    freshnessEnv: env,
   });
   service.start();
 
@@ -639,14 +723,27 @@ export async function startMarketDataDaemon(
     qualifiedMappingsLoaded: instrumentRegistry.list().length,
     liveProviderConnectivity: 'NOT_CHECKED_PRE_ACCESS',
     providerQualification: 'SYNTHETIC_ONLY_NOT_LIVE_QUALIFIED',
+    statePersistence: {
+      enabled: stateStorePath !== null,
+      // The path is operator-supplied configuration, not a secret and not a credential
+      // location; it is reported so the operator can go and look at the file.
+      path: stateStorePath,
+      restore: service.getStateRestoreReport(),
+    },
   };
 
   const shutdownTimeoutMs = options.shutdownTimeoutMs ?? DEFAULT_DAEMON_SHUTDOWN_TIMEOUT_MS;
   let shutdownPromise: Promise<void> | null = null;
+  /** W-23: the outcome of the shutdown save, surfaced through the handle. */
+  let lastPersistOutcome: DhanStateSaveOutcome | null = null;
 
   const shutdown = (): Promise<void> => {
     if (shutdownPromise) return shutdownPromise;
     shutdownPromise = new Promise<void>((resolveShutdown) => {
+      // W-23: persist BEFORE stopping, while the cache and recorder still hold this process's
+      // observations. A save failure is recorded and reported, never allowed to block shutdown.
+      const persisted = service.persistRetainedState();
+      lastPersistOutcome = persisted.outcome;
       service.stop();
       if (!server.listening) {
         resolveShutdown();
@@ -673,6 +770,9 @@ export async function startMarketDataDaemon(
       service,
       server,
       shutdown,
+      get lastPersistOutcome() {
+        return lastPersistOutcome;
+      },
     },
     diagnostics,
   };

@@ -135,6 +135,44 @@ export class DhanBoundedCache<T extends { provenance: { asOf: string } }> {
     this.map.clear();
   }
 
+  /**
+   * W-23: the current entries in LRU order (least-recently-used first), without touching
+   * that order and without exposing it for mutation.
+   *
+   * A snapshot is evidence, not a live view: the caller persists it and the entries keep
+   * their original provenance instants. Nothing here re-stamps or re-classifies.
+   */
+  public snapshotInLruOrder(): ReadonlyArray<{ readonly key: string; readonly entry: T }> {
+    return Array.from(this.map.entries(), ([key, entry]) => ({ key, entry }));
+  }
+
+  /**
+   * W-23: admits ONE restored entry, in ascending LRU order.
+   *
+   * Deliberately not `set`: `set` evicts from the tail when over capacity and touches no
+   * freshness, which is right for a live observation and wrong for a restore. This method
+   * is the restore path's only entry point, and it refuses to admit an entry whose
+   * classification under the CURRENT clock and thresholds is UNAVAILABLE.
+   *
+   * That refusal is the freshness-consistency guarantee: an entry that has aged past
+   * suppression during the outage is not resurrected, so the cache never reports a size
+   * that includes evidence no caller is allowed to use. The caller counts the refusals.
+   *
+   * `classification` is supplied by the caller because the cache has no clock of its own —
+   * `nowIso` is always passed in elsewhere in this class for the same reason.
+   */
+  public restoreEntry(key: string, entry: T, classification: 'CURRENT' | 'STALE' | 'UNAVAILABLE'): boolean {
+    if (classification === 'UNAVAILABLE') return false;
+    if (this.map.has(key)) this.map.delete(key);
+    this.map.set(key, entry);
+    return true;
+  }
+
+  /** W-23: true when the cache holds no entries — used to assert a genuinely cold start. */
+  public get isEmpty(): boolean {
+    return this.map.size === 0;
+  }
+
   public get size(): number {
     return this.map.size;
   }

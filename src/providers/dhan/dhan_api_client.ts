@@ -12,9 +12,27 @@
  *  CREDENTIALS_UNAVAILABLE failure before any transport invocation.
  *
  * SECURITY:
- *  - Credentials are resolved per request and never stored on the instance.
  *  - Credentials are never logged, never placed in error messages and never
  *    returned to callers. The client performs no console output at all.
+ *
+ * D-2 / W-05 READ POSTURE — deliberate deviation from strict per-request resolution.
+ *  Earlier revisions of this client re-resolved credentials on every request. On Windows a
+ *  DPAPI read costs a process spawn (~200–500 ms), which is unacceptable per quote, so D-2
+ *  replaced per-request resolution with a bounded session. Credential material now lives in
+ *  `DhanCredentialSessionHolder` (`dhan_credential_session.ts`), which is the only component
+ *  that may call the resolver's `resolve()`.
+ *
+ *  The deviation is bounded by construction. Exactly four events may cause a vault read, and
+ *  the session holder implements them: (a) daemon start, (b) crossing the token `expiresAt`
+ *  boundary, (c) exactly ONE bounded re-read following an HTTP 401/403 on a request, and
+ *  (d) explicit operator restart. Everything else reuses in-memory material, so repeated
+ *  quotes pay no vault read and no process spawn.
+ *
+ *  On 401/403 the client spends the session's single re-read budget, retries ONCE with the
+ *  replacement material, and — if that is rejected too — latches the failed-auth state and
+ *  makes no further vendor calls or vault reads until an operator restarts the daemon after
+ *  re-provisioning. `CREDENTIALS_EXPIRED` remains a purely local pre-flight verdict with no
+ *  vendor call at all.
  */
 
 import {
@@ -24,6 +42,10 @@ import {
   PreAccessDhanCredentialResolver,
   isDhanProductionEnvironment,
 } from './dhan_config.js';
+import {
+  DhanCredentialSessionHolder,
+  DhanCredentialSessionDescriptor,
+} from './dhan_credential_session.js';
 import {
   DhanExchangeSegment,
   DhanMarketQuoteResponseDto,
@@ -143,6 +165,14 @@ export interface DhanApiClientOptions {
   now?: () => number;
   /** Optional shared W-08 in-process observed state recorder. */
   stateRecorder?: DhanProviderStateRecorder;
+  /**
+   * Optional pre-constructed D-2 session holder (W-05).
+   *
+   * Supplied only when several components must share one credential session — or by a test that
+   * needs to observe the budget. When omitted the client owns a private holder built over
+   * `credentialResolver`, which is the production composition.
+   */
+  credentialSession?: DhanCredentialSessionHolder;
 }
 
 export interface DhanExecuteOptions {
@@ -176,6 +206,7 @@ export class DhanApiClient {
   private readonly config: DhanProviderConfig;
   private readonly transport: DhanHttpTransport;
   private readonly credentialResolver: DhanCredentialResolver;
+  private readonly credentialSession: DhanCredentialSessionHolder;
   private readonly now: () => number;
   private readonly stateRecorder: DhanProviderStateRecorder;
   private vendorRequestsTotal = 0;
@@ -187,6 +218,25 @@ export class DhanApiClient {
     this.now = options.now ?? (() => Date.now());
     this.stateRecorder =
       options.stateRecorder ?? new DhanProviderStateRecorder({ now: this.now });
+    // D-2 / W-05: the session is the only caller of `credentialResolver.resolve()`. Nothing is
+    // read at construction, so trigger (a) costs a vault read only when the first credentialed
+    // request actually arrives.
+    this.credentialSession =
+      options.credentialSession ??
+      new DhanCredentialSessionHolder({
+        resolver: this.credentialResolver,
+        now: this.now,
+      });
+  }
+
+  /**
+   * Disclosure-safe D-2 session counters (W-05 / D-7 §4.1).
+   *
+   * Counters, booleans and enumerated codes only — never material, a path or a `vault://`
+   * reference. Observation-only: reading this never triggers a vault read or a vendor call.
+   */
+  public getCredentialSessionDescriptor(): DhanCredentialSessionDescriptor {
+    return this.credentialSession.describe();
   }
 
   public getConfig(): DhanProviderConfig {
@@ -316,11 +366,22 @@ export class DhanApiClient {
   }
 
   /**
-   * Resolves and locally validates Dhan credentials once (D-2 / D-7 V1).
-   * Performs zero network calls and never retains or echoes credential material.
+   * Supplies credentials for ONE request attempt (D-2 / W-05 / D-7 V1).
+   *
+   * Local pre-flight runs first and costs nothing: production refusal, then SecretRef status and
+   * `expiresAt` validation, then the resolved token's own deadline. All of those are LOCAL
+   * verdicts and produce no vendor call.
+   *
+   * The vault is consulted only when the D-2 session holder says a permitted trigger applies —
+   * `forceReread` (the single bounded 401/403 retry) or the trigger the holder derives itself
+   * (start, or the `expiresAt` boundary). Otherwise the material already in memory is returned,
+   * so a repeated quote pays no vault read and, on Windows, no DPAPI process spawn.
+   *
+   * Zero network calls; never logs, echoes or retains credential material.
    */
   private async resolveReadyCredentials(
-    nowMs: number
+    nowMs: number,
+    forceReread: boolean
   ): Promise<DhanResult<{ accessToken: string; clientId: string; expiresAt?: string }>> {
     const runtimeEnv = typeof process !== 'undefined' && process.env ? process.env : {};
     if (isDhanProductionEnvironment(runtimeEnv)) {
@@ -345,36 +406,42 @@ export class DhanApiClient {
           );
         }
         if (expiry.epochMs <= nowMs) {
+          // D-2: known expiry is a local pre-flight verdict. The session is left untouched and
+          // no vendor call follows.
           return dhanFailure('CREDENTIALS_EXPIRED', 'Dhan credential reference has expired');
         }
       }
     }
 
-    let credentials;
-    try {
-      credentials = await this.credentialResolver.resolve(this.config);
-    } catch (err: unknown) {
-      if (err instanceof DhanProductionNotAuthorizedError) {
-        return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan credentials are not authorized');
-      }
-      const candidate = err as { reason?: unknown; code?: unknown } | null;
-      if (
-        candidate?.reason === 'EXPIRED' ||
-        candidate?.reason === 'REVOKED' ||
-        candidate?.code === 'CREDENTIALS_EXPIRED'
-      ) {
-        return dhanFailure('CREDENTIALS_EXPIRED', 'Dhan credentials are expired or revoked');
-      }
-      if (candidate?.code === 'PRODUCTION_NOT_AUTHORIZED') {
-        return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan credentials are not authorized');
-      }
-      if (candidate?.code === 'CONFIGURATION_INCOMPLETE') {
-        return dhanFailure('CONFIGURATION_INCOMPLETE', 'Dhan credential configuration is invalid or incomplete');
-      }
-      // Credential resolution internals are deliberately not echoed.
-      return dhanFailure('CREDENTIALS_UNAVAILABLE', 'Dhan credential resolution failed closed');
+    // Decide whether this attempt may use memory. `forceReread` is the bounded 401/403 retry;
+    // every other read reason comes from the holder's own view of the D-2 triggers.
+    const decision = this.credentialSession.decideForRequest();
+    if (decision.failClosed) {
+      return dhanFailure(
+        'AUTHENTICATION_FAILURE',
+        'Dhan authentication is latched after repeated rejections; operator intervention and restart required'
+      );
     }
 
+    const readReason =
+      forceReread === true ? ('AUTH_REJECTION_REREAD' as const) : decision.readReason;
+
+    if (readReason !== null) {
+      let readOk: boolean;
+      try {
+        readOk = await this.credentialSession.readForTrigger(readReason, this.config);
+      } catch (err: unknown) {
+        return this.mapCredentialResolutionError(err);
+      }
+      if (!readOk) {
+        return dhanFailure(
+          'CREDENTIALS_UNAVAILABLE',
+          'Dhan credentials are not available; provider is operating in pre-access mode'
+        );
+      }
+    }
+
+    const credentials = this.credentialSession.currentMaterial();
     if (!credentials || !credentials.accessToken || !credentials.clientId) {
       return dhanFailure(
         'CREDENTIALS_UNAVAILABLE',
@@ -395,6 +462,37 @@ export class DhanApiClient {
   }
 
   /**
+   * Maps a credential-resolution throw to a governed failure code (D-2 / D-7 §4.2).
+   *
+   * The vault's own messages are deliberately discarded: a `DhanVaultResolutionError` carries a
+   * scrubbed `reason`/`code`, and anything else — a carrier path, child-process output, a stack
+   * trace — is reduced to `CREDENTIALS_UNAVAILABLE` rather than echoed.
+   */
+  private mapCredentialResolutionError(
+    err: unknown
+  ): DhanResult<{ accessToken: string; clientId: string; expiresAt?: string }> {
+    if (err instanceof DhanProductionNotAuthorizedError) {
+      return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan credentials are not authorized');
+    }
+    const candidate = err as { reason?: unknown; code?: unknown } | null;
+    if (
+      candidate?.reason === 'EXPIRED' ||
+      candidate?.reason === 'REVOKED' ||
+      candidate?.code === 'CREDENTIALS_EXPIRED'
+    ) {
+      return dhanFailure('CREDENTIALS_EXPIRED', 'Dhan credentials are expired or revoked');
+    }
+    if (candidate?.code === 'PRODUCTION_NOT_AUTHORIZED') {
+      return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan credentials are not authorized');
+    }
+    if (candidate?.code === 'CONFIGURATION_INCOMPLETE') {
+      return dhanFailure('CONFIGURATION_INCOMPLETE', 'Dhan credential configuration is invalid or incomplete');
+    }
+    // Credential resolution internals are deliberately not echoed.
+    return dhanFailure('CREDENTIALS_UNAVAILABLE', 'Dhan credential resolution failed closed');
+  }
+
+  /**
    * DHAN-D2 / W-08: shared credential-ready POST execution used by every Dhan endpoint.
    * Performs auth-latch enforcement, credential resolution, header injection, timeout,
    * HTTP status mapping, JSON decoding, and W-08 state recording.
@@ -404,112 +502,155 @@ export class DhanApiClient {
     body: string,
     options?: DhanExecuteOptions
   ): Promise<DhanResult<{ json: unknown; metrics: DhanApiCallMetrics }>> {
-    // D-2 / D-7 §2.2–§2.3: latched auth failure blocks further credential reads and vendor calls
-    // until operator intervention and restart.
-    if (this.stateRecorder.isAuthLatched()) {
+    // D-2 / D-7 §2.2–§2.3: a latched auth failure blocks further credential reads and vendor
+    // calls until operator intervention and restart. Checked before anything else so a latched
+    // daemon costs neither a vault read nor a vendor call.
+    if (this.stateRecorder.isAuthLatched() || this.credentialSession.isAuthLatched()) {
       return dhanFailure(
         'AUTHENTICATION_FAILURE',
         'Dhan authentication is latched after repeated rejections; operator intervention and restart required'
       );
     }
 
-    const nowMs = this.now();
-    const resolved = await this.resolveReadyCredentials(nowMs);
-    if (!resolved.ok) {
-      this.stateRecorder.recordFailure({
-        category: resolved.failure.code,
-        at: new Date(nowMs).toISOString(),
-      });
-      return resolved;
-    }
+    // D-2 bounds the whole call to TWO vendor attempts: the original and, at most, the single
+    // bounded retry that follows an HTTP 401/403. The loop is written so that bound is a
+    // structural property rather than a convention — `attempt` starts at 0, increments exactly
+    // once, and `attempt > 0` can never ask for another re-read because the session budget was
+    // already spent. There is no `while (true)` and no path that resets `attempt`.
+    let attempt = 0;
+    let rereadAttempted = false;
 
-    const credentials = resolved.value;
-    const request: DhanHttpRequest = {
-      method: 'POST',
-      url: `${this.config.baseUrl}${pathSuffix}`,
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      // Credential headers are constructed per request and discarded with it.
-        'access-token': credentials.accessToken,
-        'client-id': credentials.clientId,
-      },
-      body,
-      timeoutMs: this.config.timeoutMs,
-    };
-
-    const startedAt = this.now();
-    let response: DhanHttpResponse;
-    try {
-      if (!(this.transport instanceof PreAccessNoNetworkTransport)) {
-        this.vendorRequestsTotal += 1;
+    for (;;) {
+      const nowMs = this.now();
+      const resolved = await this.resolveReadyCredentials(nowMs, rereadAttempted);
+      if (!resolved.ok) {
+        this.stateRecorder.recordFailure({
+          category: resolved.failure.code,
+          at: new Date(nowMs).toISOString(),
+        });
+        // CREDENTIALS_EXPIRED / CREDENTIALS_UNAVAILABLE are LOCAL verdicts: no vendor call was
+        // made and none will be (D-2 expired-vs-invalid, W-05 expired pre-flight).
+        return resolved;
       }
-      response = await this.withTimeout(this.transport.send(request), this.config.timeoutMs);
-    } catch (err: unknown) {
+
+      const credentials = resolved.value;
+      const request: DhanHttpRequest = {
+        method: 'POST',
+        url: `${this.config.baseUrl}${pathSuffix}`,
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          // Credential headers are constructed per attempt and discarded with it.
+          'access-token': credentials.accessToken,
+          'client-id': credentials.clientId,
+        },
+        body,
+        timeoutMs: this.config.timeoutMs,
+      };
+
+      const startedAt = this.now();
+      let response: DhanHttpResponse;
+      try {
+        if (!(this.transport instanceof PreAccessNoNetworkTransport)) {
+          this.vendorRequestsTotal += 1;
+        }
+        response = await this.withTimeout(this.transport.send(request), this.config.timeoutMs);
+      } catch (err: unknown) {
+        const finishedAt = this.now();
+        const latencyMs = Math.max(0, finishedAt - startedAt);
+        const at = new Date(finishedAt).toISOString();
+        if (err instanceof DhanProductionNotAuthorizedError) {
+          this.stateRecorder.recordFailure({ category: 'PRODUCTION_NOT_AUTHORIZED', at });
+          return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan vendor egress is not authorized');
+        }
+        if (err instanceof DhanTransportTimeoutError) {
+          this.stateRecorder.recordFailure({ category: 'TIMEOUT', at, latencyMs });
+          return dhanFailure('TIMEOUT', `Dhan request exceeded the configured timeout of ${this.config.timeoutMs}ms`);
+        }
+        if (err instanceof DhanTransportUnavailableError) {
+          const recordLatency = this.transport instanceof PreAccessNoNetworkTransport ? undefined : latencyMs;
+          this.stateRecorder.recordFailure({
+            category: 'TRANSPORT_FAILURE',
+            at,
+            ...(recordLatency !== undefined ? { latencyMs: recordLatency } : {}),
+          });
+          return dhanFailure('TRANSPORT_FAILURE', 'Dhan transport is unavailable');
+        }
+        // D-2: a transient failure is NOT a re-read trigger. A re-read keyed on a transient
+        // failure code is explicitly prohibited, so this returns without touching the vault.
+        this.stateRecorder.recordFailure({ category: 'TRANSPORT_FAILURE', at, latencyMs });
+        return dhanFailure('TRANSPORT_FAILURE', 'Dhan transport failed before a response was received');
+      }
+
       const finishedAt = this.now();
       const latencyMs = Math.max(0, finishedAt - startedAt);
       const at = new Date(finishedAt).toISOString();
-      if (err instanceof DhanProductionNotAuthorizedError) {
-        this.stateRecorder.recordFailure({ category: 'PRODUCTION_NOT_AUTHORIZED', at });
-        return dhanFailure('PRODUCTION_NOT_AUTHORIZED', 'Production Dhan vendor egress is not authorized');
-      }
-      if (err instanceof DhanTransportTimeoutError) {
-        this.stateRecorder.recordFailure({ category: 'TIMEOUT', at, latencyMs });
-        return dhanFailure('TIMEOUT', `Dhan request exceeded the configured timeout of ${this.config.timeoutMs}ms`);
-      }
-      if (err instanceof DhanTransportUnavailableError) {
-        const recordLatency = this.transport instanceof PreAccessNoNetworkTransport ? undefined : latencyMs;
+      const statusFailure = DhanApiClient.mapHttpStatus(response.status);
+
+      if (statusFailure && statusFailure.failure.code === 'AUTHENTICATION_FAILURE') {
+        // D-2 trigger (c): exactly one bounded re-read following an HTTP 401/403.
+        const mayReread = !rereadAttempted && this.credentialSession.consumeAuthRejectionBudget();
+        if (mayReread) {
+          // Record the rejection — this is what advances W-08's `consecutiveAuthFailures` — and
+          // retry once with replacement material.
+          this.stateRecorder.recordFailure({
+            category: 'AUTHENTICATION_FAILURE',
+            at,
+            latencyMs,
+          });
+          rereadAttempted = true;
+          attempt += 1;
+          continue;
+        }
+        // Either this call already retried, or the session's single budget was spent by an
+        // earlier request. The material we now hold has been rejected: latch and stop. No
+        // further re-read, no further vendor call, no automatic recovery (D-2 / D-7 §2.2–§2.3).
         this.stateRecorder.recordFailure({
-          category: 'TRANSPORT_FAILURE',
+          category: 'AUTHENTICATION_FAILURE',
           at,
-          ...(recordLatency !== undefined ? { latencyMs: recordLatency } : {}),
+          latencyMs,
         });
-        return dhanFailure('TRANSPORT_FAILURE', 'Dhan transport is unavailable');
+        this.credentialSession.latchAuthFailure();
+        return statusFailure;
       }
-      this.stateRecorder.recordFailure({ category: 'TRANSPORT_FAILURE', at, latencyMs });
-      return dhanFailure('TRANSPORT_FAILURE', 'Dhan transport failed before a response was received');
+
+      if (statusFailure) {
+        this.stateRecorder.recordFailure({
+          category: statusFailure.failure.code,
+          at,
+          latencyMs,
+        });
+        return statusFailure;
+      }
+
+      let parsedJson: unknown;
+      try {
+        parsedJson = JSON.parse(response.bodyText);
+      } catch {
+        this.stateRecorder.recordFailure({
+          category: 'MALFORMED_RESPONSE',
+          at,
+          latencyMs,
+        });
+        return dhanFailure('MALFORMED_RESPONSE', 'Dhan response body is not valid JSON', {
+          httpStatus: response.status,
+        });
+      }
+
+      // TEMPORARY DIAGNOSTIC (D-18 evidence capture). Off unless explicitly
+      // configured with a capture path and an explicit instrument target. Purely
+      // observational: the parsed body is passed by reference and never mutated,
+      // the return value is discarded, and every failure inside the capture is
+      // swallowed so it cannot change this call's outcome. Normalisation and D-5
+      // validation are untouched.
+      this.captureRawDepthIfEnabled(pathSuffix, body, parsedJson, response.status);
+
+      if (!options?.deferSuccessRecording) {
+        this.stateRecorder.recordSuccess({ at, latencyMs });
+      }
+
+      return dhanOk({ json: parsedJson, metrics: { latencyMs, httpStatus: response.status } });
     }
-
-    const finishedAt = this.now();
-    const latencyMs = Math.max(0, finishedAt - startedAt);
-    const at = new Date(finishedAt).toISOString();
-    const statusFailure = DhanApiClient.mapHttpStatus(response.status);
-    if (statusFailure) {
-      this.stateRecorder.recordFailure({
-        category: statusFailure.failure.code,
-        at,
-        latencyMs,
-      });
-      return statusFailure;
-    }
-
-    let parsedJson: unknown;
-    try {
-      parsedJson = JSON.parse(response.bodyText);
-    } catch {
-      this.stateRecorder.recordFailure({
-        category: 'MALFORMED_RESPONSE',
-        at,
-        latencyMs,
-      });
-      return dhanFailure('MALFORMED_RESPONSE', 'Dhan response body is not valid JSON', {
-        httpStatus: response.status,
-      });
-    }
-
-    // TEMPORARY DIAGNOSTIC (D-18 evidence capture). Off unless explicitly
-    // configured with a capture path and an explicit instrument target. Purely
-    // observational: the parsed body is passed by reference and never mutated,
-    // the return value is discarded, and every failure inside the capture is
-    // swallowed so it cannot change this call's outcome. Normalisation and D-5
-    // validation are untouched.
-    this.captureRawDepthIfEnabled(pathSuffix, body, parsedJson, response.status);
-
-    if (!options?.deferSuccessRecording) {
-      this.stateRecorder.recordSuccess({ at, latencyMs });
-    }
-
-    return dhanOk({ json: parsedJson, metrics: { latencyMs, httpStatus: response.status } });
   }
 
   /**
@@ -617,8 +758,13 @@ export class DhanApiClient {
       };
     }
 
-    // V1 local credential check (single resolution, zero re-reads).
-    const resolved = await this.resolveReadyCredentials(nowMs);
+    // V1 local credential check. D-7 §3 rule 2 is explicit that V2 performs NO credential
+    // re-read: it uses the material already resolved in memory. Passing `false` means the session
+    // holder is consulted normally, so a held session is reused and a cold session performs its
+    // single start-up read. A 401/403 on the probe below is deliberately NOT allowed to spend the
+    // D-2 re-read budget — D-7 makes V2 narrower than a market-data rejection — so the probe's
+    // failure path records the outcome and returns without touching the vault.
+    const resolved = await this.resolveReadyCredentials(nowMs, false);
     if (!resolved.ok) {
       if (resolved.failure.code === 'CREDENTIALS_EXPIRED') {
         const observedState = this.stateRecorder.recordFailure({

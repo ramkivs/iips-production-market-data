@@ -19,7 +19,7 @@
  *
  * No clock is read here: `evaluatedAt` is supplied by the caller's injected clock.
  */
-import { DEFAULT_FRESHNESS_CONFIG, evaluateFreshness } from '../../quality/freshness_evaluator.js';
+import { DEFAULT_FRESHNESS_CONFIG, evaluateFreshness, type FreshnessThresholds } from '../../quality/freshness_evaluator.js';
 import { istDate, type TradingCalendar } from '../../quality/trading_calendar.js';
 import type { DhanHistoricalCacheEntry } from './dhan_operational_controls.js';
 import type { DhanFreshnessTimestamps, DhanHistoricalProvenance } from './dhan_historical_provenance.js';
@@ -66,7 +66,12 @@ export function projectHistoricalFreshness(
   cachedAt: string | null,
   evaluatedAt: string,
   tradingCalendar: TradingCalendar | undefined,
-  revision: DhanHistoricalProvenance['revision'] | null
+  revision: DhanHistoricalProvenance['revision'] | null,
+  /**
+   * W-25: effective per-domain thresholds. Absent means the evaluator applies
+   * `DEFAULT_FRESHNESS_CONFIG`, which is the unconfigured behaviour unchanged.
+   */
+  thresholds?: FreshnessThresholds
 ): HistoricalFreshnessEvidence | null {
   const provenance = entry?.provenance;
   // No provenance means no evidence: the caller must report unknown rather than guess.
@@ -105,7 +110,7 @@ export function projectHistoricalFreshness(
 
   // A missing market instant is not evaluated at all: no age, no verdict.
   const evaluation = isInstant(marketTimestamp)
-    ? evaluateFreshness(marketTimestamp, 'D02_OHLCV', evaluatedAt, session)
+    ? evaluateFreshness(marketTimestamp, 'D02_OHLCV', evaluatedAt, session, thresholds)
     : null;
 
   const suppressExecution = evaluation?.suppressExecution ?? true;
@@ -149,5 +154,11 @@ export function projectHistoricalFreshness(
   };
 }
 
-/** Nominal D02 threshold, exposed so the unknown projection still states its domain threshold. */
+/**
+ * Nominal D02 threshold, exposed so the unknown projection still states its domain threshold.
+ *
+ * W-25: this is the COMPILED default, not the effective threshold. When an override is
+ * configured the service reports the effective value from the resolved map; this constant
+ * remains the immutable "what the platform was built with" reference.
+ */
 export const D02_NOMINAL_THRESHOLD_SECONDS = DEFAULT_FRESHNESS_CONFIG.D02_OHLCV;

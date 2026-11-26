@@ -241,7 +241,12 @@ describe('W-06 — first authenticated request evidence', () => {
       assert.strictEqual(quote.failure.code, 'AUTHENTICATION_FAILURE');
       assert.strictEqual(quote.failure.httpStatus, 401);
     }
-    assert.strictEqual(rejecting.calls.length, 1, 'exactly one vendor call for one quote request');
+    // D-2 / W-05: a 401 spends the session's single bounded re-read and retries ONCE. The
+    // transport answers 401 unconditionally, so the retry is rejected too and the latch engages.
+    // Two sends, not one: the bounded retry is the approved behaviour and cannot loop, because
+    // the re-read budget is spent and the latch is terminal.
+    assert.strictEqual(rejecting.calls.length, 2, 'the rejection plus exactly one bounded retry');
+    assert.strictEqual(providerService.getObservedProviderState().authLatched, true);
 
     const freshness = providerService.getFreshness({
       domain: 'D01_QUOTES',
@@ -263,6 +268,7 @@ describe('W-06 — first authenticated request evidence', () => {
     // 2. A request refused before the provider path leaves no refresh record at all.
     const untouched = countingTransport(() => ({ status: 200, bodyText: '{}' }));
     const identityService = governedService(untouched);
+    // A fresh service is a fresh D-2 session; nothing above leaks into it.
     const unknown = await identityService.getQuote({
       companyId: 'EQ_NOT_A_GOVERNED_COMPANY',
       securityIdentity: operatorIdentity,
@@ -363,7 +369,8 @@ describe('W-06 — first authenticated request evidence', () => {
     const vendorQuote = await vendorService.getQuote(operatorQuoteRequest);
     assert.strictEqual(vendorQuote.ok, false);
     if (!vendorQuote.ok) assert.strictEqual(vendorQuote.failure.code, 'AUTHENTICATION_FAILURE');
-    assert.strictEqual(rejecting.calls.length, 1);
+    // D-2 / W-05: 401 -> one bounded re-read -> one retry -> also 401 -> latch. Two sends.
+    assert.strictEqual(rejecting.calls.length, 2);
 
     // (b) credentials cannot be resolved locally — zero vendor calls.
     const unseen = countingTransport(() => ({ status: 200, bodyText: '{}' }));
@@ -457,13 +464,17 @@ describe('W-06 — first authenticated request evidence', () => {
   });
 
   it('W06-09: the decisive codes cannot arise without a vendor answer; the ambiguous ones can', async () => {
-    // Non-transient: never retried, one send, decisive.
+    // Non-transient: the D-2 bounded re-read and single retry, then the latch. Bounded at two
+    // sends — never the transient three — and never unbounded, which is the property this case
+    // has always asserted for auth codes. `isTransientFailure` remains false for the code, so
+    // the transient retry ladder below still cannot reach it.
     const rejecting = countingTransport(() => ({ status: 401, bodyText: '{"errorMessage":"denied"}' }));
     const authService = governedService(rejecting);
     const authQuote = await authService.getQuote(operatorQuoteRequest);
     assert.strictEqual(authQuote.ok, false);
     if (!authQuote.ok) assert.strictEqual(authQuote.failure.code, 'AUTHENTICATION_FAILURE');
-    assert.strictEqual(rejecting.calls.length, 1, 'an auth failure is never retried');
+    assert.strictEqual(rejecting.calls.length, 2, 'auth is bounded at two sends: rejection + one retry');
+    assert.strictEqual(authService.getObservedProviderState().authLatched, true);
 
     // Transient 5xx: bounded retry, three sends — the "one request, up to three vendor sends" fact.
     const failing = countingTransport(() => ({ status: 500, bodyText: '{"errorMessage":"boom"}' }));

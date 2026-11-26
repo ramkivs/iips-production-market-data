@@ -112,7 +112,9 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
     assert.equal(MARKET_DATA_MAX_REQUEST_BYTES, 16384);
     assert.equal(UNPROVISIONED_WINDOWS_VAULT_BACKEND_ID, 'UNPROVISIONED_WINDOWS_HOST_VAULT');
     assert.equal(DHAN_HEALTH_CONTRACT_VERSION, 2);
-    assert.equal(DHAN_DIAGNOSTICS_CONTRACT_VERSION, 1);
+    // W-25 moved the diagnostics contract to 2 (required `freshness`); W-23 moved it to 3
+    // (required `persistence`).
+    assert.equal(DHAN_DIAGNOSTICS_CONTRACT_VERSION, 3);
     assert.equal(DHAN_VERIFICATION_CONTRACT_VERSION, 1);
     assert.equal(DHAN_AUTH_LATCH_THRESHOLD, 2);
     assert.equal(DHAN_VAULT_BACKEND_ENV, 'IIPS_DHAN_VAULT_BACKEND');
@@ -619,7 +621,7 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       const diag = await client.diagnostics();
       assert.equal(diag.ok, true);
       if (diag.ok) {
-        assert.equal(diag.contractVersion, 1);
+        assert.equal(diag.contractVersion, 3);
         assert.equal(diag.service, 'UP');
         assert.equal(diag.providerState, 'UNAVAILABLE');
         assert.equal(diag.providerConfiguration, 'CONFIGURED');

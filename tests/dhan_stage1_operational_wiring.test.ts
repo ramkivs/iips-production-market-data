@@ -625,23 +625,70 @@ describe('Stage 1 — Local Operational Wiring (Synthetic Verification)', () => 
         assert.strictEqual(timeoutRes.failure.code, 'TIMEOUT');
       }
 
-      // 4. Expired token in vault fails closed as CREDENTIALS_EXPIRED before calling vendor transport.
+      // 4. Expiry is a LOCAL pre-flight verdict with zero vendor calls.
+      //
+      // D-2 / W-05 CHANGED HOW THIS MUST BE SET UP. A running daemon holds a credential session
+      // and does not re-read the vault per request — that is the whole point of W-05, and D-2
+      // permits a re-read only on its four triggers (a vault record changing underneath a warm
+      // session is none of them). Swapping `tokenRecord` mid-session is therefore invisible by
+      // design, so the pre-flight path is exercised where it actually runs: a fresh daemon whose
+      // token is already expired when it starts. Both properties that matter are kept — the
+      // governed CREDENTIALS_EXPIRED code, and the token never reaching the vendor.
       const callsBeforeExpired = vendorCalls;
-      tokenRecord = {
-        secretValue: 'SYNTH_DHAN_ACCESS_TOK_EXPIRED',
-        status: 'EXPIRED',
-        version: 'v1',
-        expiresAt: '2026-11-08T01:00:00.000Z',
+      const expiredBackend: LocalHostVaultSecretBackend = {
+        backendId: 'SYNTHETIC_TEST_VAULT',
+        describeReadiness: () => ({
+          backendId: 'SYNTHETIC_TEST_VAULT',
+          liveResolutionSupported: true,
+          prerequisiteSummary: 'synthetic test',
+        }),
+        async readSecret(ref: SecretRef) {
+          if (ref.keyPath === 'vault://dhan/local-nonprod/client-id') {
+            return { secretValue: 'SYNTH_DHAN_CLIENT_ID', status: 'ACTIVE', version: 'v1' };
+          }
+          if (ref.keyPath === 'vault://dhan/local-nonprod/access-token') {
+            return {
+              secretValue: 'SYNTH_DHAN_ACCESS_TOK_EXPIRED',
+              status: 'EXPIRED',
+              version: 'v1',
+              expiresAt: '2026-11-08T01:00:00.000Z',
+            };
+          }
+          return null;
+        },
       };
-      const expiredQuote = await client.getQuote({
-        companyId: 'EQ_ITC_IN',
-        securityIdentity: idItc,
+      const expiredDaemon = await startMarketDataDaemon({
+        env: {
+          ...VALID_VAULT_ENV,
+          [DHAN_ENV_KEYS.timeoutMs]: '120',
+          [MARKET_DATA_TRANSPORT_TOKEN_ENV]: 'LOCAL_DAEMON_BEARER_TOKEN',
+        },
+        host: '127.0.0.1',
+        port: 0,
+        vaultBackend: expiredBackend,
+        providerTransport: syntheticHttpsEgress,
+        now: () => NOW_DATE,
       });
-      assert.strictEqual(expiredQuote.ok, false);
-      assert.strictEqual(vendorCalls, callsBeforeExpired);
-      if (!expiredQuote.ok) {
-        assert.strictEqual(expiredQuote.failure.code, 'CREDENTIALS_EXPIRED');
-        assert.ok(!JSON.stringify(expiredQuote).includes('SYNTH_DHAN_ACCESS_TOK_EXPIRED'));
+      assert.strictEqual(expiredDaemon.ok, true);
+      if (!expiredDaemon.ok) return;
+      try {
+        const expiredClient = new MarketDataTransportClient(
+          expiredDaemon.diagnostics.baseUrl,
+          'LOCAL_DAEMON_BEARER_TOKEN',
+          { env: {} }
+        );
+        const expiredQuote = await expiredClient.getQuote({
+          companyId: 'EQ_ITC_IN',
+          securityIdentity: idItc,
+        });
+        assert.strictEqual(expiredQuote.ok, false);
+        assert.strictEqual(vendorCalls, callsBeforeExpired, 'an expired credential never reaches the vendor');
+        if (!expiredQuote.ok) {
+          assert.strictEqual(expiredQuote.failure.code, 'CREDENTIALS_EXPIRED');
+          assert.ok(!JSON.stringify(expiredQuote).includes('SYNTH_DHAN_ACCESS_TOK_EXPIRED'));
+        }
+      } finally {
+        await expiredDaemon.handle.shutdown();
       }
 
       // 5. Client-side vendor URL restriction & TLS/origin restriction through daemon.

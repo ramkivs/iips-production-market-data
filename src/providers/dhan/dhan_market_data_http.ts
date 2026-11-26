@@ -41,9 +41,18 @@ import type { ListenOptions } from 'node:net';
 import { timingSafeEqual } from 'node:crypto';
 import { CanonicalEnvelope } from '../../contracts/envelope.js';
 import { MarketQuotePayload } from '../../contracts/d01_quotes.js';
-import { buildD114SecurityIdentity, isD114SecurityId, isD114SecurityIdentity } from '../../contracts/types.js';
+import {
+  buildD114SecurityIdentity,
+  isD114SecurityId,
+  isD114SecurityIdentity,
+  type D114SecurityIdentity,
+} from '../../contracts/types.js';
 import { isDhanProductionEnvironment, type DhanEnvSource } from './dhan_config.js';
 import { DhanFailureCode } from './dhan_failures.js';
+import {
+  validateDhanFreshnessStatus,
+  type FreshnessStatus,
+} from './dhan_freshness_status.js';
 import { DhanHistoricalNormalizationResult } from './dhan_historical_adapter.js';
 import type {
   DhanVerificationMode,
@@ -61,6 +70,18 @@ import {
   ServiceDiagnostics,
   ServiceHealth,
 } from './dhan_market_data_service.js';
+import {
+  TRACE_HEADER_ACTION,
+  TRACE_HEADER_VERSION,
+  W24_TRACE_CONTRACT_VERSION,
+  validateTraceHeaders,
+  generateTraceId,
+  type TraceContext,
+} from './dhan_trace.js';
+import {
+  validateDhanDiagnosticEvent,
+  type DhanDiagnosticEvent,
+} from './dhan_diagnostic_ring.js';
 
 export const MARKET_DATA_TRANSPORT_TOKEN_ENV = 'IIPS_MARKET_DATA_TRANSPORT_TOKEN';
 export const MARKET_DATA_ROUTES = {
@@ -70,6 +91,7 @@ export const MARKET_DATA_ROUTES = {
   diagnostics: '/v1/diagnostics',
   verifyConnection: '/v1/connection/verify',
   freshness: '/v1/freshness',
+  traceRing: '/v1/trace/ring',
   instrumentSearch: '/v1/instruments/search',
   identityResolve: '/v1/identity/resolve',
   identityQualify: '/v1/identity/qualify',
@@ -131,6 +153,45 @@ export type MarketDataTransportDiagnosticsOutcome =
 
 export type MarketDataTransportVerifyOutcome =
   | ({ readonly ok: true } & ServiceConnectionVerification)
+  | { readonly ok: false; readonly failure: MarketDataTransportFailure };
+
+export type MarketDataTransportTraceRingOutcome =
+  | {
+      readonly ok: true;
+      readonly contractVersion: typeof W24_TRACE_CONTRACT_VERSION;
+      readonly events: DhanDiagnosticEvent[];
+      readonly stats: { capacity: number; size: number; evictedCount: number; resetCount: number; nextSequence: number };
+      readonly schemaVersion: number;
+    }
+  | { readonly ok: false; readonly failure: MarketDataTransportFailure };
+
+/**
+ * Request scope for `MarketDataTransportClient.getFreshness` (`GET /v1/freshness`).
+ *
+ * Matches the server route contract:
+ *   - `D02_OHLCV`: domain alone (no additional scope parameters).
+ *   - `D01_QUOTES`: exact quote scope (`companyId`, `exchangeSegment`, and either
+ *     a validated `D114SecurityIdentity` or its canonical `ISIN:<isin>:<series>` string).
+ */
+export type FreshnessRequest =
+  | { readonly domain: 'D02_OHLCV' }
+  | {
+      readonly domain: 'D01_QUOTES';
+      readonly companyId: string;
+      readonly exchangeSegment: 'NSE_EQ' | 'BSE_EQ';
+      readonly securityIdentity: D114SecurityIdentity;
+      readonly securityId?: never;
+    }
+  | {
+      readonly domain: 'D01_QUOTES';
+      readonly companyId: string;
+      readonly exchangeSegment: 'NSE_EQ' | 'BSE_EQ';
+      readonly securityId: string;
+      readonly securityIdentity?: never;
+    };
+
+export type MarketDataTransportFreshnessOutcome =
+  | { readonly ok: true; readonly status: FreshnessStatus }
   | { readonly ok: false; readonly failure: MarketDataTransportFailure };
 
 export interface MarketDataTransportClientOptions {
@@ -204,6 +265,30 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   const text = JSON.stringify(body);
   res.writeHead(status, { 'content-type': 'application/json', 'content-length': Buffer.byteLength(text) });
   res.end(text);
+}
+
+function isIncomingLoopback(req: IncomingMessage): boolean {
+  const addr = (req.socket as unknown as { remoteAddress?: string })?.remoteAddress ?? '';
+  // Node reports IPv4 loopback as 127.0.0.1, IPv6 as ::1 or ::ffff:127.0.0.1
+  const normalized = addr.trim().toLowerCase();
+  return (
+    normalized === '127.0.0.1' ||
+    normalized === '::1' ||
+    normalized === '::ffff:127.0.0.1' ||
+    normalized === 'localhost' ||
+    normalized.endsWith('127.0.0.1')
+  );
+}
+
+function extractTraceContext(req: IncomingMessage): { ok: true; context: TraceContext } | { ok: false; reason: string } | null {
+  const hasVersion = req.headers[TRACE_HEADER_VERSION.toLowerCase()] !== undefined || req.headers[TRACE_HEADER_VERSION] !== undefined;
+  const hasAction = req.headers[TRACE_HEADER_ACTION.toLowerCase()] !== undefined || req.headers[TRACE_HEADER_ACTION] !== undefined;
+  if (!hasVersion && !hasAction) return null; // No trace headers supplied → untraced (backward compat)
+  const result = validateTraceHeaders(req.headers as Record<string, string | string[] | undefined>);
+  if (!result.ok) {
+    return { ok: false, reason: result.rejection.reason };
+  }
+  return { ok: true, context: result.context };
 }
 
 function sendError(
@@ -387,7 +472,56 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
         return;
       }
 
+      if (path === MARKET_DATA_ROUTES.traceRing && req.method === 'GET') {
+        // W-24 operator ring reader — reuse existing bearer, loopback-only, read-only, no fallback
+        if (!isIncomingLoopback(req)) {
+          sendError(res, 403, 'AUTHORIZATION_FAILED', 'trace ring is loopback-only');
+          return;
+        }
+        const limitParam = url.searchParams.get('limit');
+        const sinceParam = url.searchParams.get('sinceSequence');
+        if ([...url.searchParams.keys()].some((k) => k !== 'limit' && k !== 'sinceSequence')) {
+          sendError(res, 400, 'MALFORMED_REQUEST', 'trace ring accepts only limit and sinceSequence');
+          return;
+        }
+        let limit: number | undefined;
+        if (limitParam !== null) {
+          const n = Number(limitParam);
+          if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
+            sendError(res, 400, 'MALFORMED_REQUEST', 'limit must be a positive integer');
+            return;
+          }
+          limit = Math.min(n, 1024);
+        }
+        let sinceSequence: number | undefined;
+        if (sinceParam !== null) {
+          const n = Number(sinceParam);
+          if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
+            sendError(res, 400, 'MALFORMED_REQUEST', 'sinceSequence must be a non-negative integer');
+            return;
+          }
+          sinceSequence = n;
+        }
+        const ring = service.getDiagnosticRing();
+        const events = ring.list({ ...(limit !== undefined ? { limit } : {}), ...(sinceSequence !== undefined ? { sinceSequence } : {}) });
+        const stats = ring.getStats();
+        sendJson(res, 200, {
+          ok: true,
+          contractVersion: W24_TRACE_CONTRACT_VERSION,
+          events,
+          stats,
+          schemaVersion: 1,
+        });
+        return;
+      }
+
       if (path === MARKET_DATA_ROUTES.freshness && req.method === 'GET') {
+        const freshnessTrace = extractTraceContext(req);
+        if (freshnessTrace && !freshnessTrace.ok) {
+          sendError(res, 400, 'CONTRACT_MISMATCH', 'trace version mismatch or invalid actionId');
+          return;
+        }
+        const traceCtx = freshnessTrace?.ok ? freshnessTrace.context : undefined;
         const params = url.searchParams;
         const allowed = new Set(['domain', 'companyId', 'exchangeSegment', 'securityId']);
         if ((req.url?.length ?? 0) > 2048 || [...params.keys()].some(k => !allowed.has(k) || params.getAll(k).length !== 1)) {
@@ -395,7 +529,7 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
         }
         const domain = params.get('domain');
         if (domain === 'D02_OHLCV' && params.size === 1) {
-          sendJson(res, 200, service.getFreshness({ domain })); return;
+          sendJson(res, 200, service.getFreshness({ domain }, traceCtx)); return;
         }
         const companyId = params.get('companyId');
         const segment = params.get('exchangeSegment');
@@ -406,7 +540,7 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
             (segment !== 'NSE_EQ' && segment !== 'BSE_EQ') || !identity || securityId!.length > 100) {
           sendError(res, 400, 'MALFORMED_REQUEST', 'freshness requires a valid domain and exact quote scope'); return;
         }
-        sendJson(res, 200, service.getFreshness({ domain, companyId, exchangeSegment: segment, securityIdentity: identity })); return;
+        sendJson(res, 200, service.getFreshness({ domain, companyId, exchangeSegment: segment, securityIdentity: identity }, traceCtx)); return;
       }
 
       if (path === MARKET_DATA_ROUTES.verifyConnection && req.method === 'POST') {
@@ -526,6 +660,14 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
         sendJson(res, 200, options.identityService.resolve({ companyId: body.companyId, exchange: body.exchange, securityId: body.securityId })); return;
       }
 
+      // W-24: extract trace headers before handling body for quotes/historical (never logged, never echoed raw)
+      const traceExtraction = extractTraceContext(req);
+      if (traceExtraction && !traceExtraction.ok) {
+        sendError(res, 400, 'CONTRACT_MISMATCH', 'trace version mismatch or invalid actionId');
+        return;
+      }
+      const traceCtx = traceExtraction?.ok ? traceExtraction.context : undefined;
+
       // Quote requests must carry the exact canonical P04 security id; a
       // malformed identity is rejected here, before the service (and thus
       // before any provider invocation).
@@ -559,8 +701,8 @@ export function createMarketDataHttpServer(options: MarketDataHttpOptions): Serv
       // Bounded execution: a hung handler must not hold the connection forever.
       const result = await Promise.race([
         path === MARKET_DATA_ROUTES.quotes
-          ? service.getQuote(quoteRequest as QuoteRequest)
-          : service.getHistorical(parsed as HistoricalServiceRequest),
+          ? service.getQuote(quoteRequest as QuoteRequest, traceCtx)
+          : service.getHistorical(parsed as HistoricalServiceRequest, traceCtx),
         new Promise<'TIMEOUT'>((resolvePromise) => setTimeout(() => resolvePromise('TIMEOUT'), timeoutMs)),
       ]);
 
@@ -742,7 +884,8 @@ export class MarketDataTransportClient {
   private async requestJson(
     method: 'GET' | 'POST',
     path: string,
-    body?: unknown
+    body?: unknown,
+    extraHeaders?: Record<string, string>
   ): Promise<{ ok: true; status: number; json: unknown } | { ok: false; failure: MarketDataTransportFailure }> {
     const preflight = this.preflightCheck();
     if (preflight) return { ok: false, failure: preflight };
@@ -755,6 +898,7 @@ export class MarketDataTransportClient {
           accept: 'application/json',
           ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
           authorization: `Bearer ${this.token}`,
+          ...(extraHeaders ?? {}),
         },
         ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
         redirect: 'error',
@@ -815,7 +959,11 @@ export class MarketDataTransportClient {
     return { ok: true, status: response.status, json: parsed };
   }
 
-  public async getQuote(request: QuoteRequest): Promise<MarketDataTransportQuoteOutcome> {
+  public generateTraceContext(): TraceContext {
+    return { traceVersion: '1', actionId: generateTraceId() };
+  }
+
+  public async getQuote(request: QuoteRequest, traceContext?: TraceContext): Promise<MarketDataTransportQuoteOutcome> {
     if (
       !request ||
       typeof request.companyId !== 'string' ||
@@ -833,11 +981,20 @@ export class MarketDataTransportClient {
 
     // The wire carries the canonical securityId string; the full validated
     // identity is reconstructed server-side. No Dhan identifiers ever cross.
-    const call = await this.requestJson('POST', MARKET_DATA_ROUTES.quotes, {
-      companyId: request.companyId,
-      securityId: request.securityIdentity.securityId,
-      ...(request.exchangeSegment ? { exchangeSegment: request.exchangeSegment } : {}),
-    });
+    const traceHeaders =
+      traceContext !== undefined
+        ? { [TRACE_HEADER_VERSION]: traceContext.traceVersion, [TRACE_HEADER_ACTION]: traceContext.actionId }
+        : undefined;
+    const call = await this.requestJson(
+      'POST',
+      MARKET_DATA_ROUTES.quotes,
+      {
+        companyId: request.companyId,
+        securityId: request.securityIdentity.securityId,
+        ...(request.exchangeSegment ? { exchangeSegment: request.exchangeSegment } : {}),
+      },
+      traceHeaders
+    );
     if (!call.ok) return call;
 
     const payload = call.json as Partial<MarketDataTransportQuoteOutcome> | null;
@@ -861,7 +1018,8 @@ export class MarketDataTransportClient {
   }
 
   public async getHistorical(
-    request: HistoricalServiceRequest
+    request: HistoricalServiceRequest,
+    traceContext?: TraceContext
   ): Promise<MarketDataTransportHistoricalOutcome> {
     if (!request || typeof request.companyId !== 'string' || !request.companyId.trim()) {
       return {
@@ -873,7 +1031,11 @@ export class MarketDataTransportClient {
       };
     }
 
-    const call = await this.requestJson('POST', MARKET_DATA_ROUTES.historical, request);
+    const traceHeaders =
+      traceContext !== undefined
+        ? { [TRACE_HEADER_VERSION]: traceContext.traceVersion, [TRACE_HEADER_ACTION]: traceContext.actionId }
+        : undefined;
+    const call = await this.requestJson('POST', MARKET_DATA_ROUTES.historical, request, traceHeaders);
     if (!call.ok) return call;
 
     const payload = call.json as Partial<MarketDataTransportHistoricalOutcome> | null;
@@ -994,6 +1156,220 @@ export class MarketDataTransportClient {
         message: 'market-data transport returned a malformed connection verification payload',
         httpStatus: call.status,
       },
+    };
+  }
+
+  /**
+   * Read-only authenticated loopback `/v1/freshness` read (W-26 / IPD-P5 / W-19 / W-22).
+   * Enforces the same production, loopback, bearer-token, timeout and fail-closed
+   * validation guards as every other transport method, never mutates cache state or
+   * invokes the vendor, and returns the validated IPD `FreshnessStatus` verbatim
+   * (including W-19 D02 four-timestamp/revision evidence and W-22 calendar fields).
+   */
+  public async getFreshness(
+    request: FreshnessRequest,
+    traceContext?: TraceContext
+  ): Promise<MarketDataTransportFreshnessOutcome> {
+    if (typeof request !== 'object' || request === null || Array.isArray(request)) {
+      return {
+        ok: false,
+        failure: {
+          code: 'MALFORMED_REQUEST',
+          message: 'freshness request must be an object specifying domain D01_QUOTES or D02_OHLCV',
+        },
+      };
+    }
+
+    const rawReq = request as unknown as Record<string, unknown>;
+    const domain = rawReq.domain;
+    let path: string;
+
+    if (domain === 'D02_OHLCV') {
+      if (Object.keys(rawReq).some((k) => k !== 'domain')) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message: 'D02_OHLCV freshness accepts the domain field alone',
+          },
+        };
+      }
+      path = `${MARKET_DATA_ROUTES.freshness}?domain=D02_OHLCV`;
+    } else if (domain === 'D01_QUOTES') {
+      const allowedKeys = new Set([
+        'domain',
+        'companyId',
+        'exchangeSegment',
+        'securityIdentity',
+        'securityId',
+      ]);
+      if (Object.keys(rawReq).some((k) => !allowedKeys.has(k))) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message:
+              'D01_QUOTES freshness allows only domain, companyId, exchangeSegment, and securityIdentity or securityId',
+          },
+        };
+      }
+
+      const companyId = rawReq.companyId;
+      const exchangeSegment = rawReq.exchangeSegment;
+      const hasIdentity = rawReq.securityIdentity !== undefined;
+      const hasSecurityId = rawReq.securityId !== undefined;
+
+      if (
+        typeof companyId !== 'string' ||
+        !companyId.trim() ||
+        companyId.length > 100 ||
+        (exchangeSegment !== 'NSE_EQ' && exchangeSegment !== 'BSE_EQ') ||
+        hasIdentity === hasSecurityId
+      ) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message:
+              'D01_QUOTES freshness requires companyId, exchangeSegment (NSE_EQ or BSE_EQ), and an exact canonical D114 securityIdentity or securityId',
+          },
+        };
+      }
+
+      let resolvedSecurityId: string | null = null;
+      if (hasIdentity) {
+        if (
+          isD114SecurityIdentity(rawReq.securityIdentity) &&
+          rawReq.securityIdentity.securityId.length <= 100
+        ) {
+          resolvedSecurityId = rawReq.securityIdentity.securityId;
+        }
+      } else if (
+        typeof rawReq.securityId === 'string' &&
+        rawReq.securityId.length <= 100 &&
+        isD114SecurityId(rawReq.securityId)
+      ) {
+        const parts = rawReq.securityId.split(':');
+        if (buildD114SecurityIdentity(parts[1], parts[2]) !== null) {
+          resolvedSecurityId = rawReq.securityId;
+        }
+      }
+
+      if (resolvedSecurityId === null) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message:
+              'D01_QUOTES freshness requires a canonical D114 security identity (ISIN:<isin>:<series>)',
+          },
+        };
+      }
+
+      const params = new URLSearchParams({
+        domain: 'D01_QUOTES',
+        companyId,
+        exchangeSegment,
+        securityId: resolvedSecurityId,
+      });
+      path = `${MARKET_DATA_ROUTES.freshness}?${params.toString()}`;
+      if (path.length > 2048) {
+        return {
+          ok: false,
+          failure: {
+            code: 'MALFORMED_REQUEST',
+            message: 'freshness request URL exceeds maximum allowed length',
+          },
+        };
+      }
+    } else {
+      return {
+        ok: false,
+        failure: {
+          code: 'MALFORMED_REQUEST',
+          message: 'freshness requires a domain of D01_QUOTES or D02_OHLCV',
+        },
+      };
+    }
+
+    const traceHeaders =
+      traceContext !== undefined
+        ? { [TRACE_HEADER_VERSION]: traceContext.traceVersion, [TRACE_HEADER_ACTION]: traceContext.actionId }
+        : undefined;
+    const call = await this.requestJson('GET', path, undefined, traceHeaders);
+    if (!call.ok) {
+      return { ok: false, failure: call.failure };
+    }
+
+    const payload = validateDhanFreshnessStatus(call.json);
+    if (payload !== null && payload.domain === domain) {
+      return { ok: true, status: payload };
+    }
+
+    return {
+      ok: false,
+      failure: {
+        code: 'MALFORMED_RESPONSE',
+        message: 'market-data transport returned a malformed freshness payload',
+        httpStatus: call.status,
+      },
+    };
+  }
+
+  /**
+   * W-24 operator trace-ring reader (GET /v1/trace/ring).
+   * Reuses existing bearer, loopback-only, read-only, bounded, fail-closed.
+   */
+  public async getTraceRing(options?: { limit?: number; sinceSequence?: number }): Promise<MarketDataTransportTraceRingOutcome> {
+    let path = MARKET_DATA_ROUTES.traceRing;
+    const params = new URLSearchParams();
+    if (options?.limit !== undefined) params.set('limit', String(options.limit));
+    if (options?.sinceSequence !== undefined) params.set('sinceSequence', String(options.sinceSequence));
+    const qs = params.toString();
+    if (qs) path += `?${qs}`;
+    if (path.length > 2048) {
+      return { ok: false, failure: { code: 'MALFORMED_REQUEST', message: 'trace ring request URL exceeds maximum allowed length' } };
+    }
+    const call = await this.requestJson('GET', path);
+    if (!call.ok) return { ok: false, failure: call.failure };
+    const raw = call.json as Record<string, unknown>;
+    if (
+      raw &&
+      raw.ok === true &&
+      raw.contractVersion === W24_TRACE_CONTRACT_VERSION &&
+      Array.isArray(raw.events) &&
+      typeof raw.stats === 'object' &&
+      raw.stats !== null
+    ) {
+      const events: DhanDiagnosticEvent[] = [];
+      for (const ev of raw.events as unknown[]) {
+        const validated = validateDhanDiagnosticEvent(ev);
+        if (!validated) {
+          return {
+            ok: false,
+            failure: { code: 'MALFORMED_RESPONSE', message: 'trace ring returned malformed event', httpStatus: call.status },
+          };
+        }
+        events.push(validated);
+      }
+      const stats = raw.stats as { capacity: number; size: number; evictedCount: number; resetCount: number; nextSequence: number };
+      if (
+        typeof stats.capacity !== 'number' ||
+        typeof stats.size !== 'number' ||
+        typeof stats.evictedCount !== 'number' ||
+        typeof stats.resetCount !== 'number' ||
+        typeof stats.nextSequence !== 'number'
+      ) {
+        return {
+          ok: false,
+          failure: { code: 'MALFORMED_RESPONSE', message: 'trace ring returned malformed stats', httpStatus: call.status },
+        };
+      }
+      return { ok: true, contractVersion: W24_TRACE_CONTRACT_VERSION, events, stats, schemaVersion: 1 };
+    }
+    return {
+      ok: false,
+      failure: { code: 'MALFORMED_RESPONSE', message: 'trace ring returned malformed payload', httpStatus: call.status },
     };
   }
 }

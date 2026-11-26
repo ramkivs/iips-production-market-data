@@ -147,8 +147,15 @@ export {
   DHAN_HEALTH_CONTRACT_LEGACY_VERSION,
   DHAN_DIAGNOSTICS_CONTRACT_VERSION,
   DHAN_VERIFICATION_CONTRACT_VERSION,
+  W24_TRACE_CONTRACT_VERSION,
+  W24_RING_CAPACITY_IPD,
+  W24_RING_CAPACITY_IRR,
+  W24_EVENT_SCHEMA_VERSION,
+  W24_MAX_EVENT_BYTES,
+  generateTraceId,
   validateDhanServiceHealth,
   validateDhanServiceDiagnostics,
+  validateDhanDiagnosticsFreshness,
   validateDhanConnectionVerification,
 } from './dhan_market_data_service.js';
 export type {
@@ -167,6 +174,8 @@ export type {
   DhanLiveProviderConnectivity,
   DhanProviderQualification,
   DhanHealthContractVersion,
+  DhanDiagnosticsFreshnessConfig,
+  DhanDiagnosticsFreshnessThresholdOverride,
 } from './dhan_market_data_service.js';
 export {
   createMarketDataHttpServer,
@@ -174,12 +183,28 @@ export {
   MarketDataTransportClient,
   MARKET_DATA_ROUTES,
   MARKET_DATA_TRANSPORT_TOKEN_ENV,
+  MARKET_DATA_MAX_REQUEST_BYTES,
+  MARKET_DATA_REQUEST_TIMEOUT_MS,
 } from './dhan_market_data_http.js';
+export {
+  DhanDiagnosticRing,
+  validateDhanDiagnosticEvent,
+  mapDhanFailureToW24Category,
+} from './dhan_diagnostic_ring.js';
+export {
+  TRACE_HEADER_VERSION,
+  TRACE_HEADER_ACTION,
+  TRACE_VERSION_VALUE,
+  isLowercaseUuidV4,
+  validateTraceHeaders,
+} from './dhan_trace.js';
 export type {
+  FreshnessRequest,
   MarketDataHttpOptions,
   MarketDataTransportClientOptions,
   MarketDataTransportFailure,
   MarketDataTransportFailureCode,
+  MarketDataTransportFreshnessOutcome,
   MarketDataTransportQuoteOutcome,
   MarketDataTransportHistoricalOutcome,
   MarketDataTransportHealthOutcome,
@@ -208,6 +233,7 @@ export { DhanIdentityApiService } from './dhan_identity_api.js';
 export type { IdentityApiResult, ExactIdentityRequest, InstrumentSearchResult } from './dhan_identity_api.js';
 export type { HoldingIdentityInput, SecurityIdentityQualificationResult, SecurityIdentityQualified, SecurityIdentityUnresolved } from './dhan_security_identity_service.js';
 
+export { validateDhanFreshnessStatus } from './dhan_freshness_status.js';
 export type { FreshnessDomain, FreshnessStatus, RefreshStatus } from './dhan_freshness_status.js';
 
 // Offline session-calendar input; no calendar service or implicit market coverage.
