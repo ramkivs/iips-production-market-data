@@ -1,0 +1,487 @@
+{
+  "workItem": "W-14",
+  "description": "Approved Scope B canonical identities for live Dhan quote requests",
+  "instrumentCount": 96,
+  "instruments": [
+    {
+      "companyId": "EQ_BEL_IN",
+      "securityId": "ISIN:INE263A01024:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_CIPLA_IN",
+      "securityId": "ISIN:INE059A01026:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_SBIN_IN",
+      "securityId": "ISIN:INE062A01020:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_TITAN_IN",
+      "securityId": "ISIN:INE280A01028:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_HDFCBANK_IN",
+      "securityId": "ISIN:INE040A01034:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_HEROMOTOCO_IN",
+      "securityId": "ISIN:INE158A01026:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_AGI_IN",
+      "securityId": "ISIN:INE415A01038:B",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_INFY_IN",
+      "securityId": "ISIN:INE009A01021:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_JSWSTEEL_IN",
+      "securityId": "ISIN:INE019A01038:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_TRENT_IN",
+      "securityId": "ISIN:INE849A01020:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_GRASIM_IN",
+      "securityId": "ISIN:INE047A01021:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_ONGC_IN",
+      "securityId": "ISIN:INE213A01029:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_RELIANCE_IN",
+      "securityId": "ISIN:INE002A01018:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_HINDALCO_IN",
+      "securityId": "ISIN:INE038A01020:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_TATASTEEL_IN",
+      "securityId": "ISIN:INE081A01020:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_LT_IN",
+      "securityId": "ISIN:INE018A01030:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_BPCL_IN",
+      "securityId": "ISIN:INE029A01011:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_TMPV_IN",
+      "securityId": "ISIN:INE155A01022:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_HINDUNILVR_IN",
+      "securityId": "ISIN:INE030A01027:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_NESTLEIND_IN",
+      "securityId": "ISIN:INE239A01024:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_TATACONSUM_IN",
+      "securityId": "ISIN:INE192A01025:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_ASIANPAINT_IN",
+      "securityId": "ISIN:INE021A01026:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_BRITANNIA_IN",
+      "securityId": "ISIN:INE216A01030:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_ITC_IN",
+      "securityId": "ISIN:INE154A01025:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_EICHERMOT_IN",
+      "securityId": "ISIN:INE066A01021:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_WIPRO_IN",
+      "securityId": "ISIN:INE075A01022:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_APOLLOHOSP_IN",
+      "securityId": "ISIN:INE437A01024:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_ADANIENT_IN",
+      "securityId": "ISIN:INE423A01024:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_SUNPHARMA_IN",
+      "securityId": "ISIN:INE044A01036:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_ICICIBANK_IN",
+      "securityId": "ISIN:INE090A01021:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_INDUSINDBK_IN",
+      "securityId": "ISIN:INE095A01012:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_AXISBANK_IN",
+      "securityId": "ISIN:INE238A01034:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_BHARTIARTL_IN",
+      "securityId": "ISIN:INE397D01024:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_DIVISLAB_IN",
+      "securityId": "ISIN:INE361B01024:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_MARUTI_IN",
+      "securityId": "ISIN:INE585B01010:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_ULTRACEMCO_IN",
+      "securityId": "ISIN:INE481G01011:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_TCS_IN",
+      "securityId": "ISIN:INE467B01029:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_NTPC_IN",
+      "securityId": "ISIN:INE733E01010:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_TECHM_IN",
+      "securityId": "ISIN:INE669C01036:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_POWERGRID_IN",
+      "securityId": "ISIN:INE752E01010:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_ADANIPORTS_IN",
+      "securityId": "ISIN:INE742F01042:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_BAJAJAUTO_IN",
+      "securityId": "ISIN:INE917I01010:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_BAJAJFINSV_IN",
+      "securityId": "ISIN:INE918I01026:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_COALINDIA_IN",
+      "securityId": "ISIN:INE522F01014:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_AIIL_IN",
+      "securityId": "ISIN:INE206F01022:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_LTM_IN",
+      "securityId": "ISIN:INE214T01019:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_SBILIFE_IN",
+      "securityId": "ISIN:INE123W01016:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_HDFCLIFE_IN",
+      "securityId": "ISIN:INE795G01014:A",
+      "exchangeSegment": "BSE_EQ"
+    },
+    {
+      "companyId": "EQ_BHARTIARTL_IN",
+      "securityId": "ISIN:INE397D01024:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_DIVISLAB_IN",
+      "securityId": "ISIN:INE361B01024:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_MARUTI_IN",
+      "securityId": "ISIN:INE585B01010:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_LT_IN",
+      "securityId": "ISIN:INE018A01030:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_ULTRACEMCO_IN",
+      "securityId": "ISIN:INE481G01011:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_TCS_IN",
+      "securityId": "ISIN:INE467B01029:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_NTPC_IN",
+      "securityId": "ISIN:INE733E01010:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_JSWSTEEL_IN",
+      "securityId": "ISIN:INE019A01038:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_GRASIM_IN",
+      "securityId": "ISIN:INE047A01021:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_HDFCBANK_IN",
+      "securityId": "ISIN:INE040A01034:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_HEROMOTOCO_IN",
+      "securityId": "ISIN:INE158A01026:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_TECHM_IN",
+      "securityId": "ISIN:INE669C01036:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_HINDALCO_IN",
+      "securityId": "ISIN:INE038A01020:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_HINDUNILVR_IN",
+      "securityId": "ISIN:INE030A01027:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_AGI_IN",
+      "securityId": "ISIN:INE415A01038:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_POWERGRID_IN",
+      "securityId": "ISIN:INE752E01010:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_ADANIPORTS_IN",
+      "securityId": "ISIN:INE742F01042:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_APOLLOHOSP_IN",
+      "securityId": "ISIN:INE437A01024:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_INFY_IN",
+      "securityId": "ISIN:INE009A01021:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_ITC_IN",
+      "securityId": "ISIN:INE154A01025:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_BAJAJAUTO_IN",
+      "securityId": "ISIN:INE917I01010:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_BAJAJFINSV_IN",
+      "securityId": "ISIN:INE918I01026:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_LTM_IN",
+      "securityId": "ISIN:INE214T01019:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_NESTLEIND_IN",
+      "securityId": "ISIN:INE239A01024:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_TRENT_IN",
+      "securityId": "ISIN:INE849A01020:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_COALINDIA_IN",
+      "securityId": "ISIN:INE522F01014:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_SBILIFE_IN",
+      "securityId": "ISIN:INE123W01016:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_AIIL_IN",
+      "securityId": "ISIN:INE206F01022:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_ASIANPAINT_IN",
+      "securityId": "ISIN:INE021A01026:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_ONGC_IN",
+      "securityId": "ISIN:INE213A01029:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_ADANIENT_IN",
+      "securityId": "ISIN:INE423A01024:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_RELIANCE_IN",
+      "securityId": "ISIN:INE002A01018:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_SBIN_IN",
+      "securityId": "ISIN:INE062A01020:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_SUNPHARMA_IN",
+      "securityId": "ISIN:INE044A01036:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_TATACONSUM_IN",
+      "securityId": "ISIN:INE192A01025:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_TMPV_IN",
+      "securityId": "ISIN:INE155A01022:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_TATASTEEL_IN",
+      "securityId": "ISIN:INE081A01020:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_TITAN_IN",
+      "securityId": "ISIN:INE280A01028:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_WIPRO_IN",
+      "securityId": "ISIN:INE075A01022:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_BEL_IN",
+      "securityId": "ISIN:INE263A01024:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_HDFCLIFE_IN",
+      "securityId": "ISIN:INE795G01014:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_ICICIBANK_IN",
+      "securityId": "ISIN:INE090A01021:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_INDUSINDBK_IN",
+      "securityId": "ISIN:INE095A01012:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_BPCL_IN",
+      "securityId": "ISIN:INE029A01011:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_BRITANNIA_IN",
+      "securityId": "ISIN:INE216A01030:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_AXISBANK_IN",
+      "securityId": "ISIN:INE238A01034:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_CIPLA_IN",
+      "securityId": "ISIN:INE059A01026:EQ",
+      "exchangeSegment": "NSE_EQ"
+    },
+    {
+      "companyId": "EQ_EICHERMOT_IN",
+      "securityId": "ISIN:INE066A01021:EQ",
+      "exchangeSegment": "NSE_EQ"
+    }
+  ]
+}

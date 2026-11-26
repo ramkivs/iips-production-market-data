@@ -1,8 +1,8 @@
 {
   "evidenceId": "DHAN-D18-RELIANCE-DEPTH-CAPTURES",
-  "purpose": "Preserve the two operator-executed D-18 raw depth captures verbatim, with their provenance separated from file metadata.",
+  "purpose": "Preserve the three operator-executed D-18 raw depth captures verbatim, with their provenance separated from file metadata.",
   "captureFeature": "src/providers/dhan/dhan_depth_capture.ts (captureSchemaVersion 2)",
-  "operatorInstructionDate": "2026-11-25",
+  "operatorInstructionDate": "2026-11-26",
   "noLiveRequestPerformedByThisRecord": true,
   "files": [
     {
@@ -24,7 +24,9 @@
         "capturedAtIst": "2026-11-23 15:31:24 IST",
         "httpStatus": 200,
         "responseStatus": "success",
-        "requestedSecurityIds": ["2885"],
+        "requestedSecurityIds": [
+          "2885"
+        ],
         "instrumentsInResponse": 1,
         "segment": "NSE_EQ",
         "securityId": "2885",
@@ -59,23 +61,74 @@
         "capturedAtIst": "2026-11-25 13:45:15 IST",
         "httpStatus": 200,
         "responseStatus": "success",
-        "requestedSecurityIds": ["2885"],
+        "requestedSecurityIds": [
+          "2885"
+        ],
         "instrumentsInResponse": 1,
         "depthState": "object",
         "buyCount": 5,
         "sellCount": 5,
-        "buyTopOfBook": { "price": 1368.9, "quantity": 1759, "orders": 6 },
-        "sellTopOfBook": { "price": 1369.1, "quantity": 15, "orders": 5 }
+        "buyTopOfBook": {
+          "price": 1368.9,
+          "quantity": 1759,
+          "orders": 6
+        },
+        "sellTopOfBook": {
+          "price": 1369.1,
+          "quantity": 15,
+          "orders": 5
+        }
       },
       "classification": "DURING_REGULAR_SESSION",
       "classificationBasis": "capturedAtUtc 08:15:15Z = 13:45:15 IST, inside 09:15-15:30 IST regular trading",
       "doesNotAnswerD18": true
+    },
+    {
+      "retainedName": "reliance-depth-20261126.json",
+      "originalFileName": "reliance-depth(2).json",
+      "purpose": "one-sided zero-filled book capture (buy 5x0, sell L1 1396.2/8767/32 + 4x0) \u2014 D-5 Addendum B per-side case",
+      "sha256": "dd89ed2bd43fc749150d727934194cfd5c059e143bc87d1fc8c746aa3d920f3d",
+      "bytes": 4878,
+      "lineEndings": "LF only (226 lines, no CRLF)",
+      "operatorConfirmed": {
+        "executedBy": "operator, personally",
+        "executionApproximateLocalTime": "2026-11-26 22:07 IST (capturedAtUtc 16:37:12.539Z +05:30)",
+        "responseShape": "five buy levels all {price:0,quantity:0,orders:0}; five sell levels L1 {price:1396.2,quantity:8767,orders:32} then 4x {0,0,0}; every field state present",
+        "labelAsWritten": "D-18 Reliance NSE_EQ 2885, one-sided zero-filled book"
+      },
+      "independentlyVerifiedFileMetadata": {
+        "capturedAtUtc": "2026-11-26T16:37:12.539Z",
+        "capturedAtIst": "2026-11-26 22:07:12 IST",
+        "httpStatus": 200,
+        "responseStatus": "success",
+        "requestedSecurityIds": [
+          "2885"
+        ],
+        "instrumentsInResponse": 1,
+        "segment": "NSE_EQ",
+        "securityId": "2885",
+        "depthState": "object",
+        "buyCount": 5,
+        "sellCount": 5,
+        "allBuyLevelValuesZero": true,
+        "allBuyFieldStatesPresent": true,
+        "sellTopOfBook": {
+          "price": 1396.2,
+          "quantity": 8767,
+          "orders": 32
+        },
+        "sellTrailingZeroLevels": 4,
+        "allSellFieldStatesPresent": true
+      },
+      "classification": "ONE_SIDED_ABSENT_BOOK",
+      "classificationBasis": "buy side entirely zero-filled (5x0) per isZeroFilledSide, sell side valid L1 1396.2 followed by trailing zeros \u2014 per-side absent-market-book (Addendum B)",
+      "extendsAddendumA": true
     }
   ],
   "structuralComparison": {
     "identicalAfterRemovingTimestampAndNumericValues": true,
-    "meaning": "both captures share schema v2 shape, key order, and all-present field states; they differ only in the captured instant and the level values",
-    "significance": "the all-zero shape is a populated 5x5 book of zeros, not an absent, null or empty side"
+    "meaning": "all three captures share schema v2 shape, key order, and all-present field states; they differ only in the captured instant and the level values",
+    "significance": "the 23 Nov all-zero shape and 26 Nov one-sided shape are both populated books with zero-filled levels denoting unavailable depth, not absent/null/empty sides"
   },
   "notClaimed": [
     "D-18 resolution or closure",

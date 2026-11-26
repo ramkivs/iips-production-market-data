@@ -3,7 +3,7 @@
  *
  * Verifies (deterministic, offline, synthetic fixtures only — zero live Dhan calls):
  *  W11-01: Exact documentation-to-implementation parity across W-11 & reconciled IPD docs
- *          (all DHAN_ENV_KEYS, daemon env keys, defaults, all 9 MARKET_DATA_ROUTES, VaultProvider
+ *          (all DHAN_ENV_KEYS, daemon env keys, defaults, all 10 MARKET_DATA_ROUTES, VaultProvider
  *          & SecretRefStatus enums, IRR separate non-alias env names, restored DPAPI selector
  *          and two-key-path convention, and AD-17 / D-7 secret-scanner hygiene).
  *  W11-02: Fail-closed daemon defaults (127.0.0.1:8791, disabled vault selector,
@@ -15,10 +15,10 @@
  *  W11-04: Complete SecretRef configuration, status, provider-enum, and strict UTC expiry
  *          startup matrix (missing paths, malformed URI, valid/invalid WINDOWS_DPAPI pair,
  *          EXPIRED/REVOKED status, unparseable/zone-less/past expiresAt).
- *  W11-05: Full 9-route authenticated loopback HTTP compatibility (health v2, diagnostics v1,
+ *  W11-05: Full 10-route authenticated loopback HTTP compatibility (health v2, diagnostics v1,
  *          connection/verify v1 LOCAL_ONLY & LIVE_PROBE, freshness D01 & D02, quotes, historical,
- *          and offline P4 identity search/resolve/qualify), bearer 401 enforcement, and clean
- *          idempotent shutdown with zero outbound vendor calls.
+ *          W-24 trace ring, and offline P4 identity search/resolve/qualify), bearer 401
+ *          enforcement, and clean idempotent shutdown with zero outbound vendor calls.
  *  W11-06: ./dhan-server and ./portfolio-ui package boundary preservation (client & route
  *          contracts exported; daemon launcher, vault resolver, and HTTPS egress withheld).
  */
@@ -174,13 +174,18 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       assert.ok(w11Doc.includes(`\`${irrEnv}\``), `W-11 doc must distinguish IRR env ${irrEnv}`);
     }
 
-    // All 9 MARKET_DATA_ROUTES must be documented in W-11 doc and http header comment.
+    // All 10 MARKET_DATA_ROUTES must be documented in W-11 doc and http header comment.
     const httpSource = readFileSync(
       resolve(repoRoot, 'src/providers/dhan/dhan_market_data_http.ts'),
       'utf8'
     );
     const routeEntries = Object.entries(MARKET_DATA_ROUTES);
-    assert.equal(routeEntries.length, 9, 'Expected all 9 governed MARKET_DATA_ROUTES');
+    assert.equal(
+      MARKET_DATA_ROUTES.traceRing,
+      '/v1/trace/ring',
+      'Expected W-24 traceRing in governed MARKET_DATA_ROUTES'
+    );
+    assert.equal(routeEntries.length, 10, 'Expected all 10 governed MARKET_DATA_ROUTES');
     for (const [, routePath] of routeEntries) {
       assert.ok(w11Doc.includes(routePath), `W-11 doc must document route ${routePath}`);
       assert.ok(httpSource.includes(routePath), `dhan_market_data_http.ts must reference ${routePath}`);
@@ -572,7 +577,7 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
     }
   });
 
-  it('W11-05: full 9-route authenticated loopback HTTP compatibility and zero vendor egress in unprovisioned mode', async () => {
+  it('W11-05: full 10-route authenticated loopback HTTP compatibility and zero vendor egress in unprovisioned mode', async () => {
     let providerCalls = 0;
     const started = await startMarketDataDaemon({
       env: {
@@ -605,7 +610,8 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       }
 
       // 2. Authenticated client exercises health (v2), diagnostics (v1), connection/verify (v1),
-      //    quotes (fail-closed CREDENTIALS_UNAVAILABLE), and historical (fail-closed CREDENTIALS_UNAVAILABLE).
+      //    quotes (fail-closed CREDENTIALS_UNAVAILABLE), historical (fail-closed
+      //    CREDENTIALS_UNAVAILABLE), and the bounded W-24 trace ring.
       const client = new MarketDataTransportClient(baseUrl, SYNTHETIC_TRANSPORT_BEARER, { env: {} });
 
       const health = await client.health();
@@ -675,6 +681,15 @@ describe('W-11: IPD Market-Data Daemon Configuration, Compatibility & Documentat
       if (!histRes.ok) {
         assert.equal(histRes.failure.code, 'CREDENTIALS_UNAVAILABLE');
         assert.equal(histRes.failure.httpStatus, 502);
+      }
+
+      const traceRing = await client.getTraceRing({ limit: 10 });
+      assert.equal(traceRing.ok, true);
+      if (traceRing.ok) {
+        assert.equal(traceRing.contractVersion, 1);
+        assert.equal(traceRing.schemaVersion, 1);
+        assert.equal(traceRing.stats.capacity, 1024);
+        assert.ok(Array.isArray(traceRing.events));
       }
 
       // 3. Direct loopback HTTP checks for /v1/freshness (D01 & D02) and P4 offline identity routes
