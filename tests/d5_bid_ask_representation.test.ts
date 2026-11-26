@@ -384,17 +384,24 @@ describe('D-5 addendum — entirely zero-filled book is an absent market book', 
     assert.strictEqual(r.failure.code, 'MALFORMED_RESPONSE');
   });
 
-  it('D5-A6: a mixed book (all-zero buy, priced sell) is not an absent market book', () => {
-    // Requiring BOTH sides prevents a half-empty book from being silently
-    // promoted to "no market".
+  it('D5-A6: a mixed book (all-zero buy, priced sell) is not an absent market book [SUPERSEDED by Addendum B]', () => {
+    // Addendum A (2026-11-25) required BOTH sides to be zero-filled and rejected
+    // this shape as MALFORMED_RESPONSE. Addendum B (2026-11-26) extends the
+    // per-side absent-market-book classification to cover the live Reliance
+    // capture buy 5x0 / sell 1396.2+4x0, so a one-sided zero-filled side is
+    // now an absent side, not malformed data. This test preserves the historical
+    // assertion as documentation but expects the new correct outcome.
     const mixed = {
       buy: Array.from({ length: 5 }, () => ({ ...D18_ZERO_LEVEL })),
       sell: [{ quantity: 10, orders: 2, price: 1520.5 }, ...Array.from({ length: 4 }, () => ({ ...D18_ZERO_LEVEL }))],
     };
     const r = normalizeOrFail(validQuote({ depth: mixed } as Partial<DhanQuoteDto>));
-    assert.strictEqual(r.ok, false, 'a mixed book must not be treated as an absent market book');
-    if (r.ok) throw new Error('unreachable');
-    assert.strictEqual(r.failure.code, 'MALFORMED_RESPONSE');
+    // Per Addendum B, a one-sided zero-filled book normalises per side:
+    // buy entirely zero -> absent, sell valid L1 -> present.
+    assert.strictEqual(r.ok, true, 'per Addendum B a one-sided zero-filled book must normalise, not fail');
+    if (!r.ok) throw new Error('unreachable');
+    assert.strictEqual(r.value.envelope.payload.bid, null, 'zero-filled buy side must be null');
+    assert.strictEqual(r.value.envelope.payload.ask, 1520.5, 'priced sell side must be preserved');
   });
 
   it('D5-A7: a zero-filled book with a non-numeric or non-finite field is not zero-filled', () => {
@@ -432,6 +439,206 @@ describe('D-5 addendum — entirely zero-filled book is an absent market book', 
     const p = normalize(validQuote());
     assert.strictEqual(p.bid, 1520.25);
     assert.strictEqual(p.ask, 1520.5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 1c. D-5 Addendum B — one-sided zero-filled book is per-side absent (2026-11-26)
+// ---------------------------------------------------------------------------
+
+/**
+ * Addendum B extends Addendum A to per-side handling.
+ *
+ * Live evidence: evidence/dhan-d18/reliance-depth-20261126.json
+ *   capturedAtUtc 2026-11-26T16:37:12.539Z, httpStatus 200, responseStatus success,
+ *   NSE_EQ 2885, buy 5x{price:0,quantity:0,orders:0}, sell L1 1396.2/8767/32 + 4x{0,0,0}
+ *   SHA256 dd89ed2bd43fc749150d727934194cfd5c059e143bc87d1fc8c746aa3d920f3d
+ *
+ * Required semantics (Task D-5 Follow-up acceptance):
+ *   Case1 entire 5+5 zero -> bid null ask null (preserve D-5/Addendum A)
+ *   Case2 buy zero sell valid -> bid null ask valid (1396.2/8767/32)
+ *   Case3 opposite (buy valid sell zero) -> bid valid ask null
+ *   Case4 partially populated valid followed by trailing zeros -> preserve valid, discard trailing zeros before validation
+ *   Case5 invalid mixed levels (0 price + positive qty/orders, negative, non-finite, wrong types) must still reject
+ */
+
+const D18_ONE_SIDED_PATH = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  'evidence',
+  'dhan-d18',
+  'reliance-depth-20261126.json',
+);
+
+interface D18OneSidedBook {
+  buy: Array<{ quantity: number; orders: number; price: number }>;
+  sell: Array<{ quantity: number; orders: number; price: number }>;
+  source: 'RETAINED_EVIDENCE' | 'INLINE_FALLBACK';
+}
+
+function loadD18OneSidedBook(): D18OneSidedBook {
+  const inline: Omit<D18OneSidedBook, 'source'> = {
+    buy: Array.from({ length: 5 }, () => ({ quantity: 0, orders: 0, price: 0 })),
+    sell: [{ quantity: 8767, orders: 32, price: 1396.2 }, ...Array.from({ length: 4 }, () => ({ quantity: 0, orders: 0, price: 0 }))],
+  };
+  try {
+    const doc = JSON.parse(readFileSync(D18_ONE_SIDED_PATH, 'utf8')) as {
+      quotes?: Array<{ rawDepth?: Omit<D18OneSidedBook, 'source'> }>;
+    };
+    const raw = doc.quotes?.[0]?.rawDepth;
+    if (!raw || !Array.isArray(raw.buy) || !Array.isArray(raw.sell)) {
+      return { ...inline, source: 'INLINE_FALLBACK' };
+    }
+    return { buy: raw.buy, sell: raw.sell, source: 'RETAINED_EVIDENCE' };
+  } catch {
+    return { ...inline, source: 'INLINE_FALLBACK' };
+  }
+}
+
+const D18_ONE_SIDED_WITH_SOURCE = loadD18OneSidedBook();
+const D18_ONE_SIDED_BOOK = { buy: D18_ONE_SIDED_WITH_SOURCE.buy, sell: D18_ONE_SIDED_WITH_SOURCE.sell };
+
+describe('D-5 Addendum B — one-sided zero-filled book is per-side absent', () => {
+  it('D5-B0: the retained D-18 23 Nov entire zero-filled 5x5 book still normalises to null/null valid', () => {
+    const result = normalizeOrFail(validQuote({ depth: D18_ZERO_BOOK } as Partial<DhanQuoteDto>));
+    assert.strictEqual(result.ok, true, 'entire zero-filled book must still be valid per Addendum A');
+    if (!result.ok) throw new Error('unreachable');
+    assert.strictEqual(result.value.envelope.payload.bid, null);
+    assert.strictEqual(result.value.envelope.payload.ask, null);
+    assert.strictEqual(validateMarketQuotePayload(result.value.envelope.payload).isValid, true);
+  });
+
+  it('D5-B1: the retained D-18 26 Nov one-sided capture (buy 5x0, sell 1396.2+4x0 from evidence) normalises to bid null ask 1396.2', () => {
+    assert.strictEqual(
+      D18_ONE_SIDED_WITH_SOURCE.source,
+      'RETAINED_EVIDENCE',
+      'D-18 2026-11-26 evidence is tracked in Git; must load it not fallback',
+    );
+    assert.strictEqual(D18_ONE_SIDED_BOOK.buy.length, 5);
+    assert.strictEqual(D18_ONE_SIDED_BOOK.sell.length, 5);
+    assert.deepStrictEqual(D18_ONE_SIDED_BOOK.buy[0], { quantity: 0, orders: 0, price: 0 });
+    assert.deepStrictEqual(D18_ONE_SIDED_BOOK.sell[0], { quantity: 8767, orders: 32, price: 1396.2 });
+    for (let i = 1; i < 5; i++) assert.deepStrictEqual(D18_ONE_SIDED_BOOK.sell[i], { quantity: 0, orders: 0, price: 0 });
+
+    const result = normalizeOrFail(validQuote({ depth: D18_ONE_SIDED_BOOK } as Partial<DhanQuoteDto>));
+    assert.strictEqual(result.ok, true, 'one-sided zero-filled book must not be MALFORMED_RESPONSE');
+    if (!result.ok) throw new Error('unreachable');
+    const p = result.value.envelope.payload;
+    assert.strictEqual(p.bid, null, 'zero-filled buy side must be null, never 0');
+    assert.strictEqual(p.ask, 1396.2, 'valid sell top-of-book must be preserved as 1396.2');
+    assert.strictEqual(p.ltp, 1520.35);
+    assert.ok(p.bid === null || p.bid > 0);
+    assert.ok(p.ask === null || p.ask > 0);
+    assert.notStrictEqual(p.bid, 0);
+    assert.notStrictEqual(p.ask, 0);
+    assert.strictEqual(validateMarketQuotePayload(p).isValid, true, `quote must be valid: ${JSON.stringify(validateMarketQuotePayload(p).errors)}`);
+    assert.strictEqual(p.bid, null);
+    assert.strictEqual(p.ask, 1396.2);
+  });
+
+  it('D5-B2: opposite one-sided book (buy valid, sell 5x0) normalises to bid valid ask null', () => {
+    const opposite = {
+      buy: [{ quantity: 8767, orders: 32, price: 1396.2 }, ...Array.from({ length: 4 }, () => ({ quantity: 0, orders: 0, price: 0 }))],
+      sell: Array.from({ length: 5 }, () => ({ quantity: 0, orders: 0, price: 0 })),
+    };
+    const result = normalizeOrFail(validQuote({ depth: opposite } as Partial<DhanQuoteDto>));
+    assert.strictEqual(result.ok, true, 'opposite one-sided book must not fail');
+    if (!result.ok) throw new Error('unreachable');
+    assert.strictEqual(result.value.envelope.payload.bid, 1396.2);
+    assert.strictEqual(result.value.envelope.payload.ask, null);
+  });
+
+  it('D5-B3: trailing zero-filled levels after a valid L1 are discarded — valid L1 + 4x0 preserves bid/ask', () => {
+    const withTrailing = {
+      buy: [{ quantity: 500, orders: 4, price: 1520.25 }, ...Array.from({ length: 4 }, () => ({ ...D18_ZERO_LEVEL }))],
+      sell: [{ quantity: 640, orders: 6, price: 1520.5 }, ...Array.from({ length: 4 }, () => ({ ...D18_ZERO_LEVEL }))],
+    };
+    const p = normalize(validQuote({ depth: withTrailing } as Partial<DhanQuoteDto>));
+    assert.strictEqual(p.bid, 1520.25, 'valid buy L1 must be preserved despite trailing zeros');
+    assert.strictEqual(p.ask, 1520.5, 'valid sell L1 must be preserved despite trailing zeros');
+    // Also verify the Reliance-specific one-sided shape with ask 1396.2 is valid when bid is null
+    const oneSidedWithTrailing = {
+      buy: Array.from({ length: 5 }, () => ({ ...D18_ZERO_LEVEL })),
+      sell: [{ quantity: 8767, orders: 32, price: 1396.2 }, ...Array.from({ length: 4 }, () => ({ ...D18_ZERO_LEVEL }))],
+    };
+    const p2 = normalize(validQuote({ depth: oneSidedWithTrailing } as Partial<DhanQuoteDto>));
+    assert.strictEqual(p2.bid, null);
+    assert.strictEqual(p2.ask, 1396.2);
+  });
+
+  it('D5-B4: two valid levels followed by trailing zeros still preserves L1 bid/ask', () => {
+    const twoValidThenZeros = {
+      buy: [
+        { quantity: 500, orders: 4, price: 1520.25 },
+        { quantity: 300, orders: 2, price: 1520.0 },
+        ...Array.from({ length: 3 }, () => ({ ...D18_ZERO_LEVEL })),
+      ],
+      sell: [
+        { quantity: 640, orders: 6, price: 1520.5 },
+        { quantity: 200, orders: 1, price: 1520.8 },
+        ...Array.from({ length: 3 }, () => ({ ...D18_ZERO_LEVEL })),
+      ],
+    };
+    const p = normalize(validQuote({ depth: twoValidThenZeros } as Partial<DhanQuoteDto>));
+    assert.strictEqual(p.bid, 1520.25);
+    assert.strictEqual(p.ask, 1520.5);
+  });
+
+  it('D5-B5: zero price with positive qty/orders is NOT zero-filled and must still reject (not laundered to null)', () => {
+    const mixedLevel = {
+      buy: [{ quantity: 5, orders: 1, price: 0 }, ...Array.from({ length: 4 }, () => ({ ...D18_ZERO_LEVEL }))],
+      sell: [{ quantity: 640, orders: 6, price: 1520.5 }, ...Array.from({ length: 4 }, () => ({ ...D18_ZERO_LEVEL }))],
+    };
+    const r = normalizeOrFail(validQuote({ depth: mixedLevel } as Partial<DhanQuoteDto>));
+    assert.strictEqual(r.ok, false, '0 price with positive qty/orders is malformed, not zero-filled, must be rejected');
+    if (r.ok) throw new Error('unreachable');
+    assert.strictEqual(r.failure.code, 'MALFORMED_RESPONSE');
+  });
+
+  it('D5-B6: negative price is rejected, not converted to null, even with trailing zeros', () => {
+    const negative = {
+      buy: [{ quantity: 500, orders: 4, price: -10 }, ...Array.from({ length: 4 }, () => ({ ...D18_ZERO_LEVEL }))],
+      sell: [{ quantity: 640, orders: 6, price: 1520.5 }],
+    };
+    const r = normalizeOrFail(validQuote({ depth: negative } as Partial<DhanQuoteDto>));
+    assert.strictEqual(r.ok, false);
+    if (r.ok) throw new Error('unreachable');
+    assert.strictEqual(r.failure.code, 'MALFORMED_RESPONSE');
+  });
+
+  it('D5-B7: non-finite price (NaN/Infinity) is rejected, not absent', () => {
+    for (const bad of [NaN, Infinity, -Infinity]) {
+      const r = normalizeOrFail(
+        validQuote({ depth: { buy: [{ quantity: 1, orders: 1, price: bad }], sell: [{ quantity: 1, orders: 1, price: 1520.5 }] } } as Partial<DhanQuoteDto>),
+      );
+      assert.strictEqual(r.ok, false, `non-finite ${String(bad)} must be rejected`);
+    }
+  });
+
+  it('D5-B8: non-numeric (string) price is rejected, not absent', () => {
+    const r = normalizeOrFail(
+      validQuote({ depth: { buy: [{ quantity: 1, orders: 1, price: '1520.25' as unknown as number }], sell: [{ quantity: 1, orders: 1, price: 1520.5 }] } } as Partial<DhanQuoteDto>),
+    );
+    assert.strictEqual(r.ok, false);
+  });
+
+  it('D5-B9: one-sided absent never fabricates LTP — bid/ask null does not equal ltp, unrelated fields intact', () => {
+    const result = normalizeOrFail(validQuote({ depth: D18_ONE_SIDED_BOOK } as Partial<DhanQuoteDto>));
+    assert.strictEqual(result.ok, true);
+    if (!result.ok) throw new Error('unreachable');
+    const p = result.value.envelope.payload;
+    assert.strictEqual(p.bid, null);
+    assert.strictEqual(p.ask, 1396.2);
+    assert.notStrictEqual(p.bid, p.ltp);
+    assert.notStrictEqual(p.ask, p.ltp);
+    assert.strictEqual(p.ltp, 1520.35);
+    assert.strictEqual(p.volume, 2540000);
+    assert.strictEqual(p.previousClose, 1508.0);
+    assert.strictEqual(validateMarketQuotePayload(p).isValid, true);
+    // No sentinel zero
+    assert.notStrictEqual(p.bid, 0);
+    assert.notStrictEqual(p.ask, 0);
   });
 });
 
