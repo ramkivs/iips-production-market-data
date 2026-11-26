@@ -1,5 +1,7 @@
 # IIPS — PHASE-1 AUTHORIZATION PREPARATION
 
+> **Historical record — not current operating authority.** This preparation artifact records the gate status, questions, and conditional approval language as they stood at its original date and branch. It is preserved as historical evidence; its statements that routine implementation must await OQ-1/OQ-2, authority approval, or operator confirmation are **superseded as current requirements** by [`docs/IPD-OPERATING-MODEL.md`](IPD-OPERATING-MODEL.md). For present personal, local, single-user, non-production work, the owner directs routine implementation, configuration, tests, data operations, and verification without repeated approvals. Technical and safety constraints still apply. No historical decision or result below is retroactively changed.
+
 **Gate:** `PHASE-1 AUTHORIZATION PREPARATION`
 **Artifact ID:** `AUTH-PREP-IIPS-FULLAPP-BI08-PHASE1-2026-09-22`
 **Type:** Authorization preparation. **No source modified. Not the implementation gate.**
