@@ -1,0 +1,1287 @@
+{
+  "schemaVersion": 1,
+  "id": "IPD-EQUITY-2026-BOUNDED",
+  "version": "2026-11-27.4",
+  "reviewedBy": "IPD automated NSE coverage extension under the accepted bounded calendar model, 2026-11-26 (not a claimed acceptance act). BSE rows, .1, .2, .3 and all 74 prior rows are unchanged.",
+  "qualification": {
+    "asOf": "2026-11-27",
+    "segment": "Cash equity exchange-wide regular/CAS/post-close session envelope; not per-security tradability or final-close publication assurance",
+    "continuousCoverage": [
+      {
+        "exchange": "NSE",
+        "segment": "NSE_EQ",
+        "startDate": "2026-11-01",
+        "endDate": "2026-11-27"
+      },
+      {
+        "exchange": "BSE",
+        "segment": "BSE_EQ",
+        "startDate": "2026-11-01",
+        "endDate": "2026-11-19"
+      }
+    ],
+    "incompleteExchanges": [],
+    "sparseCoverage": [],
+    "annualHolidayEvidence": {
+      "startDate": "2026-01-01",
+      "endDate": "2026-12-31",
+      "exchanges": [
+        "NSE",
+        "BSE"
+      ],
+      "closureDatesOnly": true,
+      "doesNotEstablishContinuousCoverage": true
+    },
+    "outsideCoverage": "UNKNOWN/UNAVAILABLE: only explicit rows qualify; no runtime weekday inference, elapsed-time or cross-venue fallback",
+    "intervalPolicy": "Exchange-wide union of normal continuous and CAS matching hours, plus explicit post-close interval. Pre-open, block-deal-only, transition 15:35-15:50 and administrative/modification periods excluded. A live exchange interval does not imply every security is trading; retained LTP is not official close.",
+    "boundedModel": {
+      "exchange": "BSE",
+      "startDate": "2026-11-01",
+      "endDate": "2026-11-19",
+      "authority": "Explicit owner instruction continuing commit 618f5459f0075eb1f5474dbeb52ea62782409db8, 2026-11-19",
+      "rule": "Monday-Friday ordinary cash-equity sessions except published weekday holidays; Saturday/Sunday closed by default; explicitly announced live sessions override weekends. Materialized as explicit rows only within this bounded range.",
+      "basis": "BSE 20251212-8 annual equity holiday/weekend separation plus 20260112-8 amendment; ordinary hours from owner-inspected 20250429-51; 20260801-1 amended hours; 20260803-35 and 20260825-29 pre-open amendments; independent 20261019-9 Sunday live session.",
+      "limitation": "A proportionate bounded model assessed and applied under owner direction, not a claim that unread 20260430-18 explicitly states trading weekdays. No full-year normal-day or arbitrary-history qualification and no exhaustive circular-archive completeness claim. No security-specific tradability/finality guarantee.",
+      "amendmentApplicability": "CAS hours effective 2026-08-03 and pre-open changes effective 2026-09-07 apply before coverage. Revised CAS effective 2026-12-07 is outside coverage and is not applied. Pre-open remains excluded from the existing exchange-wide interval policy."
+    },
+    "coverageExtension": {
+      "asOf": "2026-11-27",
+      "nse": {
+        "previousVersion": "2026-11-26.3",
+        "previousEndDate": "2026-11-26",
+        "endDate": "2026-11-27",
+        "extendedDates": [
+          "2026-11-27"
+        ],
+        "retainedDates": [
+          "2026-11-20",
+          "2026-11-21",
+          "2026-11-22",
+          "2026-11-23",
+          "2026-11-24",
+          "2026-11-25",
+          "2026-11-26"
+        ],
+        "method": "Explicit single-day NSE extension on top of 2026-11-26.3 with all 74 prior rows preserved byte-for-byte. 27-Nov-2026 is absent from the authoritative NSE 2026 equities closure list (CMTR71775 annual circular, api/holiday-master CM segment listing 20 closures of which 16 fall on weekdays, and exchange-communication-holidays 2026 Equities table) and from the bounded 01-11-2026..27-11-2026 CMTR/MSD and 25-11-2026..27-11-2026 all-department circular reviews. It is further affirmatively corroborated by dated 26-Nov-2026 NSE/NCL operational notices scheduling Capital Market dealings effective 27-Nov-2026 (NSE/CML/77632, NSE/CML/77624, NSE Listing Press Release PR_List_26112026_20261126185758.pdf, NCL/CMPT/77621) and by NSE pre-session begin-of-day equities report files already published for 27-Nov-2026 (C_VAR1_27112026_1.DAT, eq_band_changes_27112026.csv, sme_bands_complete_27112026.csv). No date was marked OPEN merely because it is a Friday/weekday.",
+        "priorForwardRowReconfirmation": {
+          "date": "2026-11-26",
+          "rowPreservedVerbatimFrom": "2026-11-26.3",
+          "confirmedOn": "2026-11-26",
+          "basis": "Independent post-close check at 2026-11-26 23:08 IST confirmed the 26-Nov-2026 NSE Capital Market session took place: api/marketStatus reported Capital Market closed for tradeDate 26-Nov-2026 15:30 (NIFTY 50 close 25,884.50) and all-reports published the complete 26-Nov-2026 post-session block (C_VAR1_26112026_1..6.DAT, BhavCopy_NSE_CM_0_0_0_20261126_F_0000.csv.zip, Daily_Settlement_Statistics_26112026.doc, FCM_INTRM_BC26112026.DAT, CM_52_wk_High_low_26112026.csv, sec_bhavdata_full_26112026.csv, ind_close_all_26112026.csv). The 2026-11-26 row itself is preserved byte-for-byte from 2026-11-26.3 so no prior snapshot row is rewritten."
+        }
+      },
+      "bse": {
+        "endDate": "2026-11-19",
+        "status": "UNCHANGED",
+        "note": "Not extended and not modified by this version. BSE rows remain byte-identical to 2026-11-19.2 and 2026-11-26.3."
+      },
+      "residualRisk": "The 2026-11-27 row is a forward session at authoring time (2026-11-26 23:08 IST): although NSE has already published dated 27-Nov-2026 begin-of-day pre-session files and dated 26-Nov-2026 Capital Market listing/clearing circulars effective 27-Nov-2026, post-session trading reports (Bhavcopy, C_VAR1_27112026_2..6.DAT, Daily_Settlement_Statistics_27112026.doc, ind_close_all_27112026.csv) cannot exist until after the 27-Nov-2026 session concludes. If an unscheduled closure or session-timing change were announced after 2026-11-26 23:08 IST, this row would require revision; post-session re-confirmation against 27-Nov-2026 NSE reports is required before relying on it for attribution."
+    }
+  },
+  "sources": [
+    {
+      "id": "NSE-HOLIDAYS-2026",
+      "exchange": "NSE",
+      "publicationDate": "2025-12-12",
+      "url": "https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf",
+      "finding": "Capital Market equity annual trading holidays; November 8 explicitly reserved for live Muhurat session.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "NSE-JAN15",
+      "exchange": "NSE",
+      "publicationDate": "2026-01-12",
+      "url": "https://nsearchives.nseindia.com/content/circulars/CMTR72260.pdf",
+      "finding": "Adds January 15 equity trading closure.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "NSE-HOLIDAY-PAGE",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.com/resources/exchange-communication-holidays",
+      "finding": "2026 Equities trading table (not clearing table), ordinary weekday/weekend rule, regular and closing-session hours. Mutable page: publication date not stated; retrieved 2026-11-19, chunk 1.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "NSE-MUHURAT-EQUITY",
+      "exchange": "NSE",
+      "publicationDate": "2026-10-19",
+      "url": "https://nsearchives.nseindia.com/content/circulars/CMTR76941.pdf",
+      "finding": "Cash equity live November 8: normal open 14:20; non-CAS close 15:30; CAS confirmation through 15:35; post-close 15:50-16:00. Settlement obligations apply.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "NSE-MUHURAT-DERIVATIVES-NOT-USED",
+      "exchange": "NSE",
+      "publicationDate": "2026-10-19",
+      "url": "https://archives.nseindia.com/content/circulars/FAOP76940.pdf",
+      "finding": "Verified, but FUTURES & OPTIONS; NOT authority for cash-equity rows or their 15:30 normal close.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "NSE-NOV7-MOCK",
+      "exchange": "NSE",
+      "publicationDate": "2026-11-06",
+      "url": "https://nsearchives.nseindia.com/content/circulars/CMTR77334.pdf",
+      "finding": "November 7 mock, no fund pay-in/pay-out; live re-login is not live trading.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "NSE-NOV14-MOCK",
+      "exchange": "NSE",
+      "publicationDate": "2026-11-13",
+      "url": "https://nsearchives.nseindia.com/content/circulars/CMTR77415.pdf",
+      "finding": "November 14 mock, no financial obligations (Annexure 1); not a live exceptional day.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "NSE-CMTR-INDEX",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR",
+      "finding": "Bounded amendment review: November 7/14 mocks and future revised CAS notice; no additional live weekend session in this result. Retrieved 2026-11-19; index metadata, not contents of unread attachments.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "NSE-MSD-INDEX",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD",
+      "finding": "Bounded review returned empty data. Retrieved 2026-11-19; not an all-history guarantee.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "BSE-HOLIDAYS-2026",
+      "exchange": "BSE",
+      "publicationDate": "2025-12-12",
+      "url": "https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8",
+      "finding": "Equity and equity derivatives annual holidays. Only equity rows used; November 8 is an exception, NOT a closed holiday.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "BSE-JAN15",
+      "exchange": "BSE",
+      "publicationDate": "2026-01-12",
+      "url": "https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20260112-8",
+      "finding": "Independently confirms January 15 Equity Segment closure.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "BSE-HOLIDAY-PAGE",
+      "exchange": "BSE",
+      "publicationDate": null,
+      "url": "https://www.bseindia.com/static/markets/marketinfo/listholi.aspx",
+      "finding": "Current equity trading table agrees with annual list plus January 15. Publication date not stated; retrieved 2026-11-19. Does not establish a continuous normal-weekend calendar in this qualification.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "BSE-MUHURAT-EQUITY",
+      "exchange": "BSE",
+      "publicationDate": "2026-10-19",
+      "url": "https://www.bseindia.com/downloads/UploadDocs/Notices/20261019-9/20261019-9.pdf",
+      "finding": "Independent BSE Equity notice: Sunday November 8 continuous 14:20-15:30, CAS confirmation through 15:35, post-close 15:50-16:00.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "BSE-REGULAR-TIMINGS",
+      "exchange": "BSE",
+      "publicationDate": "2026-08-01",
+      "url": "https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf",
+      "finding": "Notice 20260801-1, directly retrieved previously: partially modifies 20260430-18 hours; T+1 09:15-15:30, T+0 09:15-13:30, CAS confirmation through 15:35 and post-close 15:50-16:00 effective 2026-08-03. Hours authority for bounded model; not explicit weekday-rule evidence.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "BSE-MASTER-2025-HOURS",
+      "exchange": "BSE",
+      "publicationDate": "2025-04-29",
+      "url": "https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51",
+      "finding": "Notice 20250429-51. Owner-inspected pages 35-37 section 2.1: T+1 09:15-15:30, T+0 09:15-13:30. Agent previously retrieved opening chunk only. Historical hours basis, not the 2026 master or explicit weekday rule.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "BSE-PREOPEN-2026",
+      "exchange": "BSE",
+      "publicationDate": "2026-08-03",
+      "url": "https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf",
+      "finding": "Directly retrieved in prior continuation. Partially modifies Part II Chapter 1.1 of 20260430-18; revised pre-open effective 2026-09-07. No trading-weekday rule established.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "BSE-PREOPEN-UPDATE-2026",
+      "exchange": "BSE",
+      "publicationDate": "2026-08-25",
+      "url": "https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf",
+      "finding": "Directly retrieved cover notice confirms 2026-09-07 live pre-open changes and announces updated FAQ; no claim of FAQ inspection or weekday rule.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "BSE-FUTURE-CAS-NOT-APPLIED",
+      "exchange": "BSE",
+      "publicationDate": "2026-11-17",
+      "url": "https://www.bseindia.com/downloads/UploadDocs/Notices/20261117-35/20261117-35.pdf",
+      "finding": "Previously directly inspected. Revised CAS effective 2026-12-07: outside bounded November coverage, NOT applied to rows.",
+      "retrievedOn": "2026-11-19"
+    },
+    {
+      "id": "NSE-HOLIDAY-MASTER-2026",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/api/holiday-master?type=trading",
+      "finding": "Machine-readable 2026 trading-holiday master. CM (capital market) segment lists 20 closures, exactly matching the 16 weekday closures already materialized plus 4 weekend dates. 20, 23, 25 and 26 November 2026 are absent.",
+      "retrievedOn": "2026-11-25"
+    },
+    {
+      "id": "NSE-CMTR-INDEX-20261126",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=CMTR",
+      "finding": "Bounded 01-11-2026..26-11-2026 capital-market circular review: mock sessions (7/14/21 November), revised CAS modalities, eOFS mock bidding, EOD bhavcopy dissemination. No closure and no additional live weekend session.",
+      "retrievedOn": "2026-11-25"
+    },
+    {
+      "id": "NSE-MSD-INDEX-20261126",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=MSD",
+      "finding": "Bounded 01-11-2026..26-11-2026 MSD circular review returned empty data. Not an all-history guarantee.",
+      "retrievedOn": "2026-11-25"
+    },
+    {
+      "id": "NSE-DATED-REPORTS-20261125",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/all-reports",
+      "finding": "Dated daily-report inventory: 25-Nov-2026 block complete and 23-Nov-2026 block complete (both prove live sessions); 26-Nov-2026 showed 'No Report.' because at retrieval (2026-11-25 16:11 IST) that session had not yet taken place. The current-report view retains only the two most recent sessions, so it cannot prove or disprove 20-Nov-2026.",
+      "retrievedOn": "2026-11-25"
+    },
+    {
+      "id": "NSE-HOLIDAY-MASTER-2026-1126",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/api/holiday-master?type=trading",
+      "finding": "Re-verified machine-readable 2026 trading-holiday master on 2026-11-26. CM (Capital Market) segment lists exactly 20 closures (16 weekday closures matching .2/.3 identically plus 4 weekend dates). 27-Nov-2026 is absent; next weekday closure after 24-Nov-2026 is 25-Dec-2026 (Christmas).",
+      "retrievedOn": "2026-11-26"
+    },
+    {
+      "id": "NSE-HOLIDAY-PAGE-20261126",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.com/resources/exchange-communication-holidays",
+      "finding": "Re-verified 2026 Equities trading holiday table and standing Equities Market Timings at 2026-11-26 23:08 IST: 16 weekday closures (Sr. 15 24-Nov-2026, Sr. 16 25-Dec-2026; 27-Nov-2026 absent from both trading and clearing holiday tables). Standing timings unchanged: regular 09:15-15:30, CAS order matching/confirmation 15:30-15:35, transition 15:35-15:50 (excluded), closing session 15:50-16:00 IST.",
+      "retrievedOn": "2026-11-26"
+    },
+    {
+      "id": "NSE-CMTR-INDEX-20261127",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=27-11-2026&dept=CMTR",
+      "finding": "Bounded 01-11-2026..27-11-2026 Capital Market trading circular index returned 7 circulars (NSE/MSD/77581 dated 2026-11-24 through NCL/CMPT/77231 dated 2026-11-02); 26-11-2026..27-11-2026&dept=CMTR returned empty. Zero closure, holiday amendment, or special-session circulars cover 27-Nov-2026.",
+      "retrievedOn": "2026-11-26"
+    },
+    {
+      "id": "NSE-MSD-INDEX-20261127",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=27-11-2026&dept=MSD",
+      "finding": "Bounded 01-11-2026..27-11-2026 MSD circular review returned empty data. Not an all-history guarantee.",
+      "retrievedOn": "2026-11-26"
+    },
+    {
+      "id": "NSE-ALL-CIRCULARS-20261125-27",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/api/circulars?fromDate=25-11-2026&toDate=27-11-2026",
+      "finding": "Unfiltered all-department NSE/NCL circular index for 25-11-2026..27-11-2026 reviewed in full (all 4 chunks): zero trading-holiday amendments, closures, or session-timing changes affecting 27-Nov-2026; routine listing, surveillance, clearing and compliance notices published on 26-Nov-2026 schedule Capital Market dealings effective 27-Nov-2026.",
+      "retrievedOn": "2026-11-26"
+    },
+    {
+      "id": "NSE-CML-77632",
+      "exchange": "NSE",
+      "publicationDate": "2026-11-26",
+      "url": "https://nsearchives.nseindia.in/content/circulars/CML77632.pdf",
+      "finding": "NSE Listing Circular NSE/CML/77632 (Ref 2134/2026, dated 2026-11-26) notifies 9 equity further issues (ABCAPITAL, CREDITACC, GREENPLY, HEROMOTORS, ICICILIFE, INOXINDIA, MHRIL, POONAWALLA, VIYASH; Series EQ) admitted to dealings on the Capital Market segment effective November 27, 2026.",
+      "retrievedOn": "2026-11-26"
+    },
+    {
+      "id": "NSE-CML-77624",
+      "exchange": "NSE",
+      "publicationDate": "2026-11-26",
+      "url": "https://nsearchives.nseindia.in/content/circulars/CML77624.pdf",
+      "finding": "NSE Listing Circular NSE/CML/77624 (Ref 2130/2026, dated 2026-11-26) notifies equity shares of Aurum PropTech Limited (AURUM, Series EQ) admitted to dealings on the Capital Market segment effective November 27, 2026.",
+      "retrievedOn": "2026-11-26"
+    },
+    {
+      "id": "NSE-LISTING-PR-20261126",
+      "exchange": "NSE",
+      "publicationDate": "2026-11-26",
+      "url": "https://nsearchives.nseindia.in//web/pressrelease/2026-11/PR_List_26112026_20261126185758.pdf",
+      "finding": "Official NSE Listing Press Release (Mumbai, 2026-11-26) announces equity shares of Mahanadi Coalfields Limited (MAHACOAL, Series EQ, IPO) and Watrana Rentals Limited (WATRANA, Series ST, SME-IPO) listed and admitted to dealings in the Normal Market segment w.e.f. November 27, 2026.",
+      "retrievedOn": "2026-11-26"
+    },
+    {
+      "id": "NCL-CMPT-77621",
+      "exchange": "NSE",
+      "publicationDate": "2026-11-26",
+      "url": "https://nsearchives.nseindia.in/content/circulars/CMPT77621.pdf",
+      "finding": "NSE Clearing Limited Capital Market Circular NCL/CMPT/77621 (Ref 0420/2026, dated 2026-11-26) establishes Tender Offer Settlement Calendar 2026142 (Medi Assist Healthcare Services Limited buyback) with Trade Start date 27-NOV-2026.",
+      "retrievedOn": "2026-11-26"
+    },
+    {
+      "id": "NSE-PRESESSION-REPORTS-20261127",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/all-reports",
+      "finding": "Daily-report inventory at 2026-11-26 23:08 IST already lists dated 27-Nov-2026 Equities & SME pre-session/begin-of-day operational files (C_VAR1_27112026_1.DAT 1.06 MB VaR Begin Day File, eq_band_changes_27112026.csv 0.35 KB, sme_bands_complete_27112026.csv 26.26 KB). Post-session trading reports for 27-Nov-2026 cannot exist yet because the session has not yet occurred (Indices section correctly shows No Report. for 27-Nov-2026).",
+      "retrievedOn": "2026-11-26"
+    },
+    {
+      "id": "NSE-DATED-REPORTS-20261126",
+      "exchange": "NSE",
+      "publicationDate": null,
+      "url": "https://www.nseindia.in/api/marketStatus",
+      "finding": "Post-close re-confirmation for 26-Nov-2026 at 2026-11-26 23:08 IST: api/marketStatus reported Capital Market closed for tradeDate 26-Nov-2026 15:30 (NIFTY 50 close 25,884.50) and all-reports published the complete 26-Nov-2026 post-session block (C_VAR1_26112026_1..6.DAT, BhavCopy_NSE_CM_0_0_0_20261126_F_0000.csv.zip, Daily_Settlement_Statistics_26112026.doc, FCM_INTRM_BC26112026.DAT, CM_52_wk_High_low_26112026.csv, sec_bhavdata_full_26112026.csv, ind_close_all_26112026.csv). Recorded for re-confirmation provenance; the 2026-11-26 row itself remains byte-identical to 2026-11-26.3.",
+      "retrievedOn": "2026-11-26"
+    }
+  ],
+  "days": [
+    {
+      "exchange": "BSE",
+      "date": "2026-01-15",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Municipal Corporation Election - Maharashtra",
+      "source": "BSE-JAN15 [2026-01-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20260112-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-01-26",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Republic Day",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-03-03",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Holi",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-03-26",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Shri Ram Navami",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-03-31",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Shri Mahavir Jayanti",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-04-03",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Good Friday",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-04-14",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Dr. Baba Saheb Ambedkar Jayanti",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-05-01",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Maharashtra Day",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-05-28",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Bakri Id",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-06-26",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Muharram",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-09-14",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Ganesh Chaturthi",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-10-02",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Mahatma Gandhi Jayanti",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-10-20",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Dussehra",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-01",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "ORDINARY_WEEKEND",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-02",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-02T09:15:00+05:30",
+          "closesAt": "2026-11-02T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-02T15:50:00+05:30",
+          "closesAt": "2026-11-02T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-03",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-03T09:15:00+05:30",
+          "closesAt": "2026-11-03T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-03T15:50:00+05:30",
+          "closesAt": "2026-11-03T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-04",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-04T09:15:00+05:30",
+          "closesAt": "2026-11-04T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-04T15:50:00+05:30",
+          "closesAt": "2026-11-04T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-05",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-05T09:15:00+05:30",
+          "closesAt": "2026-11-05T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-05T15:50:00+05:30",
+          "closesAt": "2026-11-05T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-06",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-06T09:15:00+05:30",
+          "closesAt": "2026-11-06T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-06T15:50:00+05:30",
+          "closesAt": "2026-11-06T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-07",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "ORDINARY_WEEKEND",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-08",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-08T14:20:00+05:30",
+          "closesAt": "2026-11-08T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-08T15:50:00+05:30",
+          "closesAt": "2026-11-08T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "EXCEPTIONAL_LIVE_SESSION",
+      "description": "Sunday Diwali Muhurat trading; settlement-bearing live session, not mock",
+      "source": "BSE-MUHURAT-EQUITY [2026-10-19] https://www.bseindia.com/downloads/UploadDocs/Notices/20261019-9/20261019-9.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-09",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-09T09:15:00+05:30",
+          "closesAt": "2026-11-09T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-09T15:50:00+05:30",
+          "closesAt": "2026-11-09T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-10",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Diwali-Balipratipada",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-11",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-11T09:15:00+05:30",
+          "closesAt": "2026-11-11T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-11T15:50:00+05:30",
+          "closesAt": "2026-11-11T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-12",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-12T09:15:00+05:30",
+          "closesAt": "2026-11-12T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-12T15:50:00+05:30",
+          "closesAt": "2026-11-12T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-13",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-13T09:15:00+05:30",
+          "closesAt": "2026-11-13T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-13T15:50:00+05:30",
+          "closesAt": "2026-11-13T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-14",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "ORDINARY_WEEKEND",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-15",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "ORDINARY_WEEKEND",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-16",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-16T09:15:00+05:30",
+          "closesAt": "2026-11-16T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-16T15:50:00+05:30",
+          "closesAt": "2026-11-16T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-17",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-17T09:15:00+05:30",
+          "closesAt": "2026-11-17T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-17T15:50:00+05:30",
+          "closesAt": "2026-11-17T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-18",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-18T09:15:00+05:30",
+          "closesAt": "2026-11-18T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-18T15:50:00+05:30",
+          "closesAt": "2026-11-18T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-19",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-19T09:15:00+05:30",
+          "closesAt": "2026-11-19T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-19T15:50:00+05:30",
+          "closesAt": "2026-11-19T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "Owner-directed bounded weekday/weekend model (qualification.boundedModel), not an explicit quotation from 20260430-18; BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8; BSE-MASTER-2025-HOURS [2025-04-29] https://www.bseindia.com/markets/MarketInfo/DownloadAttach.aspx?attachedId=8a7fec3a-95bc-4bd2-82de-76e2a84e2915&id=20250429-51; BSE-REGULAR-TIMINGS [2026-08-01] https://www.bseindia.com/downloads/UploadDocs/Notices/20260801-1/20260801-1.pdf; BSE-PREOPEN-2026 [2026-08-03] https://www.bseindia.com/downloads/UploadDocs/Notices/20260803-35/20260803-35.pdf; BSE-PREOPEN-UPDATE-2026 [2026-08-25] https://www.bseindia.com/downloads/UploadDocs/Notices/20260825-29/20260825-29.pdf"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-11-24",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Prakash Gurpurb Sri Guru Nanak Dev",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "BSE",
+      "date": "2026-12-25",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Christmas",
+      "source": "BSE-HOLIDAYS-2026 [2025-12-12] https://www.bseindia.com/markets/MarketInfo/DispNewNoticesCirculars.aspx?page=20251212-8"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-01-15",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Municipal Corporation Election - Maharashtra",
+      "source": "NSE-JAN15 [2026-01-12] https://nsearchives.nseindia.com/content/circulars/CMTR72260.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-01-26",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Republic Day",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-03-03",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Holi",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-03-26",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Shri Ram Navami",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-03-31",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Shri Mahavir Jayanti",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-04-03",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Good Friday",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-04-14",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Dr. Baba Saheb Ambedkar Jayanti",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-05-01",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Maharashtra Day",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-05-28",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Bakri Id",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-06-26",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Muharram",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-09-14",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Ganesh Chaturthi",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-10-02",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Mahatma Gandhi Jayanti",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-10-20",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Dussehra",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-01",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "ORDINARY_WEEKEND",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-02",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-02T09:15:00+05:30",
+          "closesAt": "2026-11-02T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-02T15:50:00+05:30",
+          "closesAt": "2026-11-02T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-03",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-03T09:15:00+05:30",
+          "closesAt": "2026-11-03T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-03T15:50:00+05:30",
+          "closesAt": "2026-11-03T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-04",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-04T09:15:00+05:30",
+          "closesAt": "2026-11-04T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-04T15:50:00+05:30",
+          "closesAt": "2026-11-04T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-05",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-05T09:15:00+05:30",
+          "closesAt": "2026-11-05T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-05T15:50:00+05:30",
+          "closesAt": "2026-11-05T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-06",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-06T09:15:00+05:30",
+          "closesAt": "2026-11-06T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-06T15:50:00+05:30",
+          "closesAt": "2026-11-06T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-07",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "ORDINARY_WEEKEND",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD; NSE-NOV7-MOCK [2026-11-06] https://nsearchives.nseindia.com/content/circulars/CMTR77334.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-08",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-08T14:20:00+05:30",
+          "closesAt": "2026-11-08T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-08T15:50:00+05:30",
+          "closesAt": "2026-11-08T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "EXCEPTIONAL_LIVE_SESSION",
+      "description": "Sunday Diwali Muhurat trading; settlement-bearing live session, not mock",
+      "source": "NSE-MUHURAT-EQUITY [2026-10-19] https://nsearchives.nseindia.com/content/circulars/CMTR76941.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-09",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-09T09:15:00+05:30",
+          "closesAt": "2026-11-09T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-09T15:50:00+05:30",
+          "closesAt": "2026-11-09T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-10",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Diwali-Balipratipada",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-11",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-11T09:15:00+05:30",
+          "closesAt": "2026-11-11T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-11T15:50:00+05:30",
+          "closesAt": "2026-11-11T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-12",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-12T09:15:00+05:30",
+          "closesAt": "2026-11-12T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-12T15:50:00+05:30",
+          "closesAt": "2026-11-12T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-13",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-13T09:15:00+05:30",
+          "closesAt": "2026-11-13T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-13T15:50:00+05:30",
+          "closesAt": "2026-11-13T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-14",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "ORDINARY_WEEKEND",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD; NSE-NOV14-MOCK [2026-11-13] https://nsearchives.nseindia.com/content/circulars/CMTR77415.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-15",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "ORDINARY_WEEKEND",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-16",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-16T09:15:00+05:30",
+          "closesAt": "2026-11-16T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-16T15:50:00+05:30",
+          "closesAt": "2026-11-16T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-17",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-17T09:15:00+05:30",
+          "closesAt": "2026-11-17T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-17T15:50:00+05:30",
+          "closesAt": "2026-11-17T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-18",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-18T09:15:00+05:30",
+          "closesAt": "2026-11-18T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-18T15:50:00+05:30",
+          "closesAt": "2026-11-18T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-19",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-19T09:15:00+05:30",
+          "closesAt": "2026-11-19T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-19T15:50:00+05:30",
+          "closesAt": "2026-11-19T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "source": "NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-19] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=CMTR; NSE-MSD-INDEX [publication date unstated; retrieved 2026-11-19] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=19-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-20",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-20T09:15:00+05:30",
+          "closesAt": "2026-11-20T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-20T15:50:00+05:30",
+          "closesAt": "2026-11-20T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "evidenceGrade": "NOT_A_DECLARED_HOLIDAY_NO_DATED_ARTIFACT_OBSERVED",
+      "source": "NSE-HOLIDAY-MASTER-2026 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/holiday-master?type=trading; NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-25] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=CMTR; NSE-MSD-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=MSD; 20-Nov-2026 absent from the NSE 2026 equities closure list and from the 01-11-2026..26-11-2026 closure review; no dated 20-Nov-2026 report block was retrievable in the retained current-report inventory (the view retains only the two most recent sessions), so OPEN rests on the standing ordinary-session rule rather than on a dated artifact"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-21",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "ORDINARY_WEEKEND",
+      "evidenceGrade": "WEEKEND_RULE",
+      "source": "NSE-HOLIDAY-MASTER-2026 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/holiday-master?type=trading; NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-25] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=CMTR; NSE-MSD-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-22",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "ORDINARY_WEEKEND",
+      "evidenceGrade": "WEEKEND_RULE",
+      "source": "NSE-HOLIDAY-MASTER-2026 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/holiday-master?type=trading; NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-25] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=CMTR; NSE-MSD-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-23",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-23T09:15:00+05:30",
+          "closesAt": "2026-11-23T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-23T15:50:00+05:30",
+          "closesAt": "2026-11-23T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "evidenceGrade": "DATED_REPORT_ARTIFACT",
+      "source": "dated NSE post-session reports for 23-Nov-2026 observed in the daily-report inventory: C_VAR1_23112026_1..6.DAT, Daily_Settlement_Statistics_23112026.doc, CM_52_wk_High_low_23112026.csv, FCM_INTRM_BC23112026.DAT, SLBM_BC_23112026.DAT, ind_close_all_23112026.csv, BhavCopy_NSE_CM_0_0_0_20261123_F_0000.csv.zip; NSE-HOLIDAY-MASTER-2026 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/holiday-master?type=trading; NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-25] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=CMTR; NSE-MSD-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-24",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Prakash Gurpurb Sri Guru Nanak Dev",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-25",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-25T09:15:00+05:30",
+          "closesAt": "2026-11-25T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-25T15:50:00+05:30",
+          "closesAt": "2026-11-25T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "evidenceGrade": "DATED_REPORT_ARTIFACT",
+      "source": "dated NSE post-session reports for 25-Nov-2026 observed in the daily-report inventory: C_VAR1_25112026_1..5.DAT, Daily_Settlement_Statistics_25112026.doc, CM_52_wk_High_low_25112026.csv, FCM_INTRM_BC25112026.DAT, shortselling_25112026.csv, APPSEC_COLLVAL_25112026.csv; NSE-HOLIDAY-MASTER-2026 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/holiday-master?type=trading; NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-25] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=CMTR; NSE-MSD-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=MSD"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-26",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-26T09:15:00+05:30",
+          "closesAt": "2026-11-26T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-26T15:50:00+05:30",
+          "closesAt": "2026-11-26T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "evidenceGrade": "NOT_A_DECLARED_HOLIDAY_FORWARD_SESSION",
+      "source": "NSE-HOLIDAY-MASTER-2026 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/holiday-master?type=trading; NSE-HOLIDAY-PAGE [publication date unstated; retrieved 2026-11-25] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=CMTR; NSE-MSD-INDEX-20261126 [publication date unstated; retrieved 2026-11-25] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=26-11-2026&dept=MSD; 26-Nov-2026 absent from the NSE 2026 equities closure list and from the closure review, and no closure or special-session circular covers it. Forward session: at authoring time (2026-11-25 16:11 IST) the 26-Nov-2026 session had not yet occurred, so no dated post-session report for it can exist yet; the inventory correctly showed 'No Report.' for that date and that is a timing artefact, not a closure signal"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-11-27",
+      "status": "OPEN",
+      "sessions": [
+        {
+          "opensAt": "2026-11-27T09:15:00+05:30",
+          "closesAt": "2026-11-27T15:35:00+05:30"
+        },
+        {
+          "opensAt": "2026-11-27T15:50:00+05:30",
+          "closesAt": "2026-11-27T16:00:00+05:30"
+        }
+      ],
+      "dayKind": "ORDINARY_TRADING_DAY",
+      "evidenceGrade": "NOT_A_DECLARED_HOLIDAY_FORWARD_SESSION",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12; re-verified 2026-11-26] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf; NSE-HOLIDAY-MASTER-2026-1126 [publication date unstated; retrieved 2026-11-26] https://www.nseindia.in/api/holiday-master?type=trading; NSE-HOLIDAY-PAGE-20261126 [publication date unstated; retrieved 2026-11-26] https://www.nseindia.com/resources/exchange-communication-holidays; NSE-CMTR-INDEX-20261127 [publication date unstated; retrieved 2026-11-26] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=27-11-2026&dept=CMTR; NSE-MSD-INDEX-20261127 [publication date unstated; retrieved 2026-11-26] https://www.nseindia.in/api/circulars?fromDate=01-11-2026&toDate=27-11-2026&dept=MSD; NSE-ALL-CIRCULARS-20261125-27 [publication date unstated; retrieved 2026-11-26] https://www.nseindia.in/api/circulars?fromDate=25-11-2026&toDate=27-11-2026; NSE-CML-77632 [2026-11-26] https://nsearchives.nseindia.in/content/circulars/CML77632.pdf; NSE-CML-77624 [2026-11-26] https://nsearchives.nseindia.in/content/circulars/CML77624.pdf; NSE-LISTING-PR-20261126 [2026-11-26] https://nsearchives.nseindia.in//web/pressrelease/2026-11/PR_List_26112026_20261126185758.pdf; NCL-CMPT-77621 [2026-11-26] https://nsearchives.nseindia.in/content/circulars/CMPT77621.pdf; NSE-PRESESSION-REPORTS-20261127 [publication date unstated; retrieved 2026-11-26 23:08 IST] https://www.nseindia.in/all-reports (dated begin-of-day files already published for 27-Nov-2026: C_VAR1_27112026_1.DAT, eq_band_changes_27112026.csv, sme_bands_complete_27112026.csv); 27-Nov-2026 absent from the NSE 2026 equities closure list and closure circular review, affirmatively scheduled as a live Capital Market trading date by dated 26-Nov-2026 NSE/NCL circulars and press release, and prepared with dated begin-of-day files. Forward session: at authoring time (2026-11-26 23:08 IST) the 27-Nov-2026 session had not yet occurred, so post-session trading reports cannot exist yet and post-session re-confirmation is required after close"
+    },
+    {
+      "exchange": "NSE",
+      "date": "2026-12-25",
+      "status": "CLOSED",
+      "sessions": [],
+      "dayKind": "EXCHANGE_HOLIDAY",
+      "description": "Christmas",
+      "source": "NSE-HOLIDAYS-2026 [2025-12-12] https://nsearchives.nseindia.com/content/circulars/CMTR71775.pdf"
+    }
+  ]
+}
