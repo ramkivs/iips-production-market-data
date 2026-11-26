@@ -158,12 +158,8 @@ so that no previously accepted calendar row is silently rewritten.
 - **Standing W06 offline verifiers (unchanged):**
   - `verify-w06-agi-evidence.mjs` — **26/26 PASS**
   - `verify-w06-agi-freshness.mjs` — **27/27 PASS**
-- **Full IPD test suite (`npm test`, 175 files, 2,348 executed):**
-  - **2,330 passed, 14 skipped, 4 failed** — **0 failures** in any calendar, freshness, or W-06/W-22 test.
-  - All 4 failures are pre-existing on `origin/main` (`68249bc`, CI run `45782217726`, introduced in unrelated W-24 PR
-    #203): 1 failure in `tests/dhan_w11_daemon_configuration.test.ts` (`Expected all 9 governed MARKET_DATA_ROUTES,
-    10 !== 9`) and 3 failures in `tests/dhan_w24_http_safeguards.test.ts`. Per scope constraints, unrelated market-data
-    code/tests were deliberately not modified.
+- **Full IPD test suite (`npm test`, 177 files, 2,381 executed on `main` `aeb0934`):**
+  - **2,367 passed, 14 skipped, 0 failed** (`[test-guard] OK — 2381 test(s) executed, 2367 passed, exit 0`).
 
 ---
 
