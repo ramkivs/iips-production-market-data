@@ -67,6 +67,7 @@ import {
   MARKET_DATA_TRANSPORT_TOKEN_ENV,
   validateTransportToken,
 } from './dhan_market_data_http.js';
+import { DhanDiagnosticRing, W24_RING_CAPACITY_IPD } from './dhan_diagnostic_ring.js';
 import { DhanMarketDataService, type DhanStateRestoreReport } from './dhan_market_data_service.js';
 import {
   deriveDhanProviderState,
@@ -305,6 +306,8 @@ export interface StartMarketDataDaemonOptions {
    * test) can persist to memory or to a chosen location without the daemon guessing.
    */
   readonly stateStore?: DhanStateStorePort;
+  /** W-24: bounded diagnostic ring. Overrides default capacity when supplied. */
+  readonly diagnosticRing?: DhanDiagnosticRing;
   readonly vaultBackend?: LocalHostVaultSecretBackend;
   /** Test/operator seam for the `windows-dpapi` backend's carrier directory. */
   readonly vaultCarrierDirectory?: string;
@@ -613,6 +616,9 @@ export async function startMarketDataDaemon(
   // Reported separately from the store itself: an injected store has no path to report.
   const stateStorePath = resolveStateStorePath(env);
 
+  // W-24: bounded diagnostic ring — oldest eviction, never persisted
+  const diagnosticRing = options.diagnosticRing ?? new DhanDiagnosticRing(W24_RING_CAPACITY_IPD);
+
   const service = new DhanMarketDataService({
     tradingCalendar,
     client: apiClient,
@@ -620,6 +626,7 @@ export async function startMarketDataDaemon(
     instrumentRegistry,
     now,
     stateStore,
+    diagnosticRing,
     // W-25: the daemon resolves the operator's own environment, so a threshold override
     // reaches the served `/v1/freshness` and `/v1/diagnostics` without another config path.
     freshnessEnv: env,
