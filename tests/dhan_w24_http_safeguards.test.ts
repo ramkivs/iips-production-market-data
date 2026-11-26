@@ -14,6 +14,11 @@ import type { SecurityMaster } from '../src/identity/security_master.js';
 
 const IDENTITY = buildD114SecurityIdentity('INE009A01021', 'EQ')!;
 const TOKEN = 'w24-test-token-aaaaaaaaaaaaaaaa';
+// The DTO timestamp is 15:30 IST (= 10:00 UTC). Pin the service clock to that exact
+// instant so D01 freshness thresholds never depend on CI wall-clock time.
+const FIXED_NOW_ISO = '2026-11-26T10:00:00.000Z';
+const FIXED_NOW_DATE = new Date(FIXED_NOW_ISO);
+const FIXED_LAST_TRADE_TIME = '26/11/2026 15:30:00';
 function stubReg() {
   const r = new DhanInstrumentRegistry();
   r.registerAll([{ companyId: 'COMP_INFY', exchange: 'NSE' as const, symbol: 'INFY', exchangeSegment: 'NSE_EQ' as const, isin: 'INE009A01021', securityId: 'ISIN:INE009A01021:EQ', dhanSecurityId: '1333', mappingProvenance: 'SYNTHETIC_PRE_ACCESS_FIXTURE' as const }]);
@@ -21,7 +26,7 @@ function stubReg() {
 }
 // fix stubSM typo
 function makeSM(): SecurityMaster { return { getIdentity: () => IDENTITY, isEligible: () => true } as unknown as SecurityMaster; }
-function dto() { return { status: 'success', data: { NSE_EQ: { '1333': { last_price: 100, ohlc: { open: 90, high: 110, low: 80, close: 100 }, volume: 1, last_trade_time: '26/11/2026 15:30:00', net_change: 5 } } } }; }
+function dto() { return { status: 'success', data: { NSE_EQ: { '1333': { last_price: 100, ohlc: { open: 90, high: 110, low: 80, close: 100 }, volume: 1, last_trade_time: FIXED_LAST_TRADE_TIME, net_change: 5 } } } }; }
 function fakeApiClient() {
   return {
     getConfig: () => ({ readiness: 'PRE_ACCESS_CREDENTIALS_UNAVAILABLE' }),
@@ -39,7 +44,7 @@ async function withServer<T>(service: DhanMarketDataService, fn: (base: string, 
 }
 function fakeServiceWithRing(ring?: DhanDiagnosticRing): DhanMarketDataService {
   const r = ring ?? new DhanDiagnosticRing(1024);
-  const svc = new DhanMarketDataService({ client: fakeApiClient(), securityMaster: makeSM(), instrumentRegistry: stubReg(), diagnosticRing: r, now: () => new Date() });
+  const svc = new DhanMarketDataService({ client: fakeApiClient(), securityMaster: makeSM(), instrumentRegistry: stubReg(), diagnosticRing: r, now: () => FIXED_NOW_DATE });
   svc.start(); return svc;
 }
 
