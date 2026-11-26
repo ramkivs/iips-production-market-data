@@ -1,0 +1,28 @@
+PASS  V01  the recorded transcript is byte-identical to the bytes this verifier was written against  [sha256=e11287abe464653a444ae9045be9e0fa51915dc4b9f0d2e014060704e46dc371]
+PASS  V02  the recorded response line is byte-identical to its own recorded copy  [sha256=7658684fe71be35d49077685d44078411fa0a0aad16053dfb28774c37666c98b]
+PASS  V03  the transcript declares exactly one request  ["Sending exactly one AGI quote request..."]
+PASS  V04  the recorded HTTP status is 200  ["HTTP Status: 200"]
+PASS  V05  the response line parses as JSON
+PASS  V06  ok is true and an envelope is present
+PASS  V07  domain is D01_QUOTES and mode is SNAPSHOT  [D01_QUOTES/SNAPSHOT]
+PASS  V08  companyId is EQ_AGI_IN in both envelope and payload
+PASS  V09  exchange is NSE, currency is INR, symbol is AGI GREENPAC LIMITED
+PASS  V10  bid/ask are supplied positive prices (D-5 shape), not zero and not null  [bid=639.55 ask=640]
+PASS  V11  the payload passes the canonical D01 validator at this commit  [valid]
+PASS  V12  the emitted schemaVersion equals the D01 schema version at this commit  [emitted=2.0.0 repo=2.0.0]
+PASS  V13  the reported lineageHash is the hash of this exact payload/asOf/dataVersion  [recomputed=f464ef3b8313b9cd6777e1627a2df8de7b9f7efe269fb02ff816dfebbac047d3]
+PASS  V14  the envelopeId is env-d01- plus the first 16 hex of the lineage hash
+PASS  V15  provenance instants are declared and the vendor asOf precedes receipt  [asOf=2026-11-25T08:57:35.000Z receivedAt=2026-11-25T08:58:04.774Z]
+PASS  V16  evaluatedAt equals receivedAt and the envelope timestamp equals receivedAt
+PASS  V17  vendorTier is the masked commercial tier and dataVersion is unchanged from the foundation constant
+PASS  V18  qualityState GOOD is what the evaluator produces at the recorded evaluation instant  [quality=GOOD elapsed=29.774s]
+PASS  V19  the envelope freshness CURRENT agrees with elapsed age under the 900 s D01 window  [elapsed=29.774s]
+PASS  V20  the recorded response contains no /v1/freshness evidence (no cacheState, verdict, timestamps block)  [the separate freshness observation is NOT in this evidence]
+PASS  V21  the D114 identity in the registry for this quote is ISIN:INE415A01038:EQ and validates  [ISIN:INE415A01038:EQ]
+PASS  V22  the tracked P7 registry holds exactly one QUALIFIED NSE row for EQ_AGI_IN/INE415A01038/EQ  [qualifiedRows=1]
+PASS  V23  that registry row matches the quote: symbol, exchange and numeric vendor id 1412  [symbol=AGI GREENPAC LIMITED dhanSecurityId=1412 active=true]
+PASS  V24  the published calendar .2 has NO NSE row for the observation date, so a session-aware D01 read of this quote would fail MISSING_COVERAGE  [observationIstDate=2026-11-25 calendarVersion=2026-11-19.2 row=absent]
+PASS  V25  the paired freshness observation exists and reports on this quote's own asOf and receivedAt  [freshness asOf=25-11-2026 08:57:35 quote asOf=25-11-2026 08:57:35]
+PASS  V26  that freshness observation is scoped to D01_QUOTES and carries a verdict, which this envelope does not  [freshness verdict=UNAVAILABLE]
+
+26/26 checks passed.
