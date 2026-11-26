@@ -3,9 +3,9 @@
 **Document ID:** `DHAN-LIVE-INVESTIGATION-2026-11-25`
 **Date:** 2026-11-25
 **Type:** Independent investigation and execution planning. **No source, configuration, test, launcher script or runtime data was modified by this investigation.** No live Dhan call was made and no credential was requested, read, generated or used.
-> **Post-publication status notes (added 2026-11-25 and 2026-11-26).** This document is preserved as the
+> **Post-publication status notes (added 2026-11-25 and 2026-11-26, published 2026-11-26 via PR #205 → fe38819).** This document is preserved as the
 > investigation it was — findings and reasoning stand. **Two of its recommendations have since been
-> executed:** the **D-5 follow-up** (row 11 below; **BLK-1**) was decided by the Programme Authority
+> executed and published:** the **D-5 follow-up** (row 11 below; **BLK-1**) was decided by the Programme Authority
 > and implemented. An entirely zero-filled order book is an **ABSENT MARKET BOOK**, not a malformed
 > response (Addendum A, §7, 25 Nov 2026; extended 26 Nov 2026 by **Addendum B, §8** to per-side: buy 5×0 / sell 1396.2+4×0 in `reliance-depth-20261126.json` SHA `dd89ed2b…920f3d`, still an absent side per side, trailing zeros stripped before validation; regression D5-A0…A10 + D5-B0…B9, 71 tests, suite 2,210 tests). Authority: **Addenda A §7 and B §8** of
 > `docs/integration/D-5-BID-ASK-REPRESENTATION-AND-VALIDATION-DECISION-2026-11-21.md`. Implementation:
