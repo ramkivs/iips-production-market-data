@@ -835,25 +835,63 @@ function Start-IipsService {
     Write-IipsInfo "      cwd  : $WorkingDirectory"
     Write-IipsInfo "      logs : $outLog"
 
-    $proc = Start-Process -FilePath $Executable `
-        -ArgumentList $Arguments `
-        -WorkingDirectory $WorkingDirectory `
-        -WindowStyle Hidden `
-        -RedirectStandardOutput $outLog `
-        -RedirectStandardError $errLog `
-        -PassThru
+    $isCmdShim = $false
+    if ($Executable -match '\.(cmd|bat)$') { $isCmdShim = $true }
 
-    if ($null -eq $proc) { throw "$Label : Start-Process returned no process object." }
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.WorkingDirectory = $WorkingDirectory
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.RedirectStandardInput = $true
+    $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+
+    if ($isCmdShim) {
+        $cmdExe = Join-Path $env:SystemRoot 'System32\cmd.exe'
+        if (-not (Test-Path -LiteralPath $cmdExe)) { $cmdExe = [string]$env:ComSpec }
+        $inner = '"' + $Executable + '"'
+        foreach ($a in $Arguments) { $inner = $inner + ' ' + (Get-IipsQuotedArguments -Arguments @([string]$a)) }
+        $psi.FileName = $cmdExe
+        $psi.Arguments = '/d /s /c "' + $inner + '"'
+    }
+    if (-not $isCmdShim) {
+        $psi.FileName = $Executable
+        $psi.Arguments = (Get-IipsQuotedArguments -Arguments $Arguments)
+    }
+
+    $proc = New-Object System.Diagnostics.Process
+    $proc.StartInfo = $psi
+    $proc.EnableRaisingEvents = $false
+
+    $started = $false
+    $startErr = $null
+    try { $started = $proc.Start() } catch { $started = $false; $startErr = $_ }
+    if (-not $started) { throw ("$Label : Process.Start() failed: " + (Get-IipsStartFailureDetail -ErrorRecord $startErr)) }
+
+    try { $proc.StandardInput.Close() } catch { }
+
+    $outFileStream = $null
+    $errFileStream = $null
+    try {
+        $outFileStream = [System.IO.File]::Create($outLog)
+        $errFileStream = [System.IO.File]::Create($errLog)
+        $null = $proc.StandardOutput.BaseStream.CopyToAsync($outFileStream)
+        $null = $proc.StandardError.BaseStream.CopyToAsync($errFileStream)
+    } catch {
+        Write-IipsWarn "$Label : log pump init failed: $($_.Exception.Message)"
+    }
+
     Start-Sleep -Milliseconds 900
     $alive = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
     if ($null -eq $alive) {
         $tail = ''
-        if (Test-Path -LiteralPath $errLog) { $tail = (Get-Content -LiteralPath $errLog -Tail 20) -join "`n" }
+        if (Test-Path -LiteralPath $errLog) { try { $tail = (Get-Content -LiteralPath $errLog -Tail 20) -join "`n" } catch { $tail = '' } }
         throw "$Label : the process exited immediately after start. Error log tail:`n$tail"
     }
 
-    Write-IipsOk "$Label started, PID $($proc.Id)"
-    return [pscustomobject]@{ Label = $Label; Pid = $proc.Id; OutLog = $outLog; ErrLog = $errLog }
+    Write-IipsOk "$Label started, PID $($proc.Id) (stdin detached)"
+    return [pscustomobject]@{ Label = $Label; Pid = $proc.Id; OutLog = $outLog; ErrLog = $errLog; Process = $proc; OutStream = $outFileStream; ErrStream = $errFileStream }
 }
 
 # ----------------------------------------------------------------------------------------------
