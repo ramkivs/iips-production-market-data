@@ -1,4 +1,4 @@
-#requires -Version 7.2
+#requires -Version 5.1
 <#
 .SYNOPSIS
     W-14 Scope B — Hardened 96-instrument sequential live quote capture (local daemon).
@@ -104,6 +104,7 @@ batch capture. Remove -BatchMode to run the supported sequential workflow.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Resolve repo-relative defaults (script lives in <repo>/scripts/)
+# Supports both checkout-root and one-time D:\scripts co-located layout
 # ─────────────────────────────────────────────────────────────────────────────
 $RepoRoot = $null
 try {
@@ -111,9 +112,83 @@ try {
 } catch {
     $RepoRoot = (Get-Location).Path
 }
+# One-time execution: files co-located in D:\scripts (PSScriptRoot) — check there first before repo logic
+$coLocatedJson = Join-Path $PSScriptRoot 'w14-scope-b-96-identities.json'
+$coLocatedTxt  = Join-Path $PSScriptRoot 'w14-scope-b-96-identities.txt'
+$hasCoLocatedJson = Test-Path -LiteralPath $coLocatedJson
+$hasCoLocatedTxt  = Test-Path -LiteralPath $coLocatedTxt
+if (-not $IdentityJsonPath -and $hasCoLocatedJson) {
+    # If JSON is in PSScriptRoot, prefer co-located pair (D:\scripts case)
+    $IdentityJsonPath = $coLocatedJson
+    Write-Host "Found co-located JSON: $IdentityJsonPath" -ForegroundColor Yellow
+}
+if (-not $IdentityTxtPath -and $hasCoLocatedTxt) {
+    $IdentityTxtPath = $coLocatedTxt
+    Write-Host "Found co-located TXT: $IdentityTxtPath" -ForegroundColor Yellow
+}
+# Also check alternative names that might be copied from evidence folder (keep original filename but in PSScriptRoot)
+$altJsonInScriptsEvidence = Join-Path $PSScriptRoot 'evidence\dhan-w14-e4\w14-scope-b-96-identities.json'
+$altTxtInScriptsEvidence  = Join-Path $PSScriptRoot 'evidence\dhan-w14-e4\w14-scope-b-96-identities.txt'
+if (-not $IdentityJsonPath -and (Test-Path -LiteralPath $altJsonInScriptsEvidence)) {
+    $IdentityJsonPath = $altJsonInScriptsEvidence
+    Write-Host "Found identities in PSScriptRoot\evidence: $IdentityJsonPath" -ForegroundColor Yellow
+}
+if (-not $IdentityTxtPath -and (Test-Path -LiteralPath $altTxtInScriptsEvidence)) {
+    $IdentityTxtPath = $altTxtInScriptsEvidence
+    Write-Host "Found identities in PSScriptRoot\evidence: $IdentityTxtPath" -ForegroundColor Yellow
+}
+# Fallback: if expected evidence file not at RepoRoot/evidence, search upwards and in common Windows locations
+function Find-EvidenceRoot {
+    param([string]$StartPath)
+    $candidates = @()
+    if ($StartPath) { $candidates += $StartPath }
+    if ($PSScriptRoot) { $candidates += $PSScriptRoot; $candidates += (Join-Path $PSScriptRoot '..') }
+    $candidates += (Get-Location).Path
+    # Walk up from PSScriptRoot
+    $walk = $PSScriptRoot
+    for ($i=0; $i -lt 6 -and $walk; $i++) {
+        $candidates += $walk
+        $walk = Split-Path $walk -Parent
+    }
+    # Also check explicit repo name on D: (common manual copy case D:\scripts vs D:\iips-production-market-data\scripts)
+    $candidates += @('D:\iips-production-market-data', 'D:\iips-production-market-data\..\..', 'C:\iips-production-market-data')
+    $seen = @{}
+    foreach ($base in $candidates) {
+        if (-not $base -or $seen.ContainsKey($base)) { continue }
+        $seen[$base] = $true
+        try {
+            $probe = Join-Path $base 'evidence/dhan-w14-e4/w14-scope-b-96-identities.json'
+            if (Test-Path -LiteralPath $probe) { return (Resolve-Path $base -ErrorAction Stop).Path }
+            $probe2 = Join-Path (Join-Path $base '..') 'evidence/dhan-w14-e4/w14-scope-b-96-identities.json'
+            if (Test-Path -LiteralPath $probe2) { return (Resolve-Path (Join-Path $base '..') -ErrorAction Stop).Path }
+        } catch {}
+    }
+    return $null
+}
+$evidenceProbe = Join-Path $RepoRoot 'evidence/dhan-w14-e4/w14-scope-b-96-identities.json'
+if (-not $IdentityJsonPath -and -not (Test-Path -LiteralPath $evidenceProbe)) {
+    $found = Find-EvidenceRoot -StartPath $RepoRoot
+    if ($found) {
+        Write-Host "RepoRoot fallback: $RepoRoot -> $found (evidence found)" -ForegroundColor Yellow
+        $RepoRoot = $found
+    } else {
+        Write-Host "Warning: evidence not found at $evidenceProbe — will try defaults and report diagnostics if preflight fails." -ForegroundColor Yellow
+    }
+}
 if (-not $IdentityJsonPath) { $IdentityJsonPath = Join-Path $RepoRoot 'evidence/dhan-w14-e4/w14-scope-b-96-identities.json' }
 if (-not $IdentityTxtPath)  { $IdentityTxtPath  = Join-Path $RepoRoot 'evidence/dhan-w14-e4/w14-scope-b-96-identities.txt' }
-if (-not $EvidenceMirrorDir){ $EvidenceMirrorDir = Join-Path $RepoRoot 'evidence/dhan-w14-e4' }
+if (-not $EvidenceMirrorDir){
+    # Prefer repo mirror, but for D:\scripts one-time run fallback to PSScriptRoot (always writable)
+    $defaultMirror = Join-Path $RepoRoot 'evidence/dhan-w14-e4'
+    $psScriptRootMirror = $PSScriptRoot
+    # If default mirror is not writable or doesn't exist in d:\scripts case, use PSScriptRoot
+    if ($hasCoLocatedJson -and -not (Test-Path -LiteralPath $defaultMirror)) {
+        $EvidenceMirrorDir = $psScriptRootMirror
+        Write-Host "EvidenceMirrorDir defaulting to PSScriptRoot (one-time D:\scripts run): $EvidenceMirrorDir" -ForegroundColor Yellow
+    } else {
+        $EvidenceMirrorDir = $defaultMirror
+    }
+}
 
 $DaemonBaseUrl = $DaemonBaseUrl.Trim().TrimEnd('/')
 if (-not $DaemonBaseUrl) { $DaemonBaseUrl = 'http://127.0.0.1:8791' }
@@ -250,7 +325,15 @@ function Assert-StrictIdentityPreflight {
     if (Test-Path -LiteralPath $TxtPath) {
         $txtInstruments = Resolve-TxtIdentities -TxtPath $TxtPath
         if ($txtInstruments.Count -ne $instruments.Count) {
-            throw "IDENTITY PREFLIGHT FAILED: TXT count $($txtInstruments.Count) != JSON count $($instruments.Count) — published datasets diverge."
+            # Enhanced diagnostics for Windows one-time execution (was: TXT count 1 vs 96)
+            $txtFileInfo = $null
+            try { $txtFileInfo = Get-Item -LiteralPath $TxtPath -ErrorAction Stop } catch { $txtFileInfo = $null }
+            $txtSize = if ($txtFileInfo) { $txtFileInfo.Length } else { "unknown" }
+            $txtLines = "unknown"
+            try { $txtLines = (Get-Content -LiteralPath $TxtPath -Encoding UTF8 -ErrorAction Stop).Count } catch { try { $txtLines = (Get-Content -LiteralPath $TxtPath -Raw -ErrorAction Stop).Split("`n").Count } catch { $txtLines = "unknown" } }
+            $sample = "n/a"
+            try { $sample = $txtInstruments | Select-Object -First 3 | ForEach-Object { "$($_.companyId)|$($_.securityId)|$($_.exchangeSegment)" } | Out-String } catch { $sample = "n/a" }
+            throw "IDENTITY PREFLIGHT FAILED: TXT count $($txtInstruments.Count) != JSON count $($instruments.Count) — published datasets diverge.`n  TXT path: $TxtPath (size $txtSize bytes, lines $txtLines, parsed $($txtInstruments.Count))`n  JSON path: $JsonPath (count $($instruments.Count))`n  Sample parsed TXT (up to 3): $sample`n  Hint: TXT should be 96 blocks of 3 lines (companyId/securityId/exchangeSegment) with blank lines, UTF8 LF, generated from repo. If TXT on Windows has no blank lines, parser now handles both (384 with blanks or 288 without). Ensure file was not truncated/overwritten and RepoRoot correct (PSScriptRoot=$PSScriptRoot RepoRoot=$RepoRoot)."
         }
         $txtSet = @{}
         foreach ($t in $txtInstruments) { $txtSet["$($t.companyId)|$($t.securityId)|$($t.exchangeSegment)"] = $true }
@@ -278,11 +361,20 @@ function Assert-StrictIdentityPreflight {
 
 function Resolve-TxtIdentities {
     param([string]$TxtPath)
-    $lines = Get-Content -LiteralPath $TxtPath -Encoding UTF8
+    # Prefer -Raw + split to handle LF/CRLF/mixed robustly; fallback to line-by-line
+    $raw = $null
+    try { $raw = Get-Content -LiteralPath $TxtPath -Raw -Encoding UTF8 -ErrorAction Stop } catch { $raw = $null }
+    if ($null -ne $raw) {
+        $raw = $raw -replace "^\uFEFF", ""
+        $lines = $raw -split "`r?`n"
+    } else {
+        $lines = Get-Content -LiteralPath $TxtPath -Encoding UTF8
+    }
     $list = [System.Collections.Generic.List[object]]::new()
     $cur = @{}
     foreach ($line in $lines) {
-        if ([string]::IsNullOrWhiteSpace($line)) {
+        $clean = $line -replace "^\uFEFF", ""
+        if ([string]::IsNullOrWhiteSpace($clean)) {
             if ($cur.Count -eq 3) {
                 $list.Add([pscustomobject]@{ companyId = $cur['companyId']; securityId = $cur['securityId']; exchangeSegment = $cur['exchangeSegment'] })
                 $cur = @{}
@@ -291,13 +383,30 @@ function Resolve-TxtIdentities {
             }
             continue
         }
-        if ($line -match '^\s*companyId\s*=\s*(.+?)\s*$') { $cur['companyId'] = $Matches[1].Trim(); continue }
-        if ($line -match '^\s*securityId\s*=\s*(.+?)\s*$') { $cur['securityId'] = $Matches[1].Trim(); continue }
-        if ($line -match '^\s*exchangeSegment\s*=\s*(.+?)\s*$') { $cur['exchangeSegment'] = $Matches[1].Trim(); continue }
-        throw "IDENTITY PREFLIGHT FAILED: unexpected TXT line: $line"
+        if ($clean -match '^\s*companyId\s*=\s*(.+?)\s*$') {
+            if ($cur.Count -eq 3) {
+                # Previous block completed but missing blank line — flush before starting new
+                $list.Add([pscustomobject]@{ companyId = $cur['companyId']; securityId = $cur['securityId']; exchangeSegment = $cur['exchangeSegment'] })
+                $cur = @{}
+            }
+            $cur['companyId'] = $Matches[1].Trim()
+            if ($cur.Count -eq 3) { $list.Add([pscustomobject]@{ companyId = $cur['companyId']; securityId = $cur['securityId']; exchangeSegment = $cur['exchangeSegment'] }); $cur = @{} }
+            continue
+        }
+        if ($clean -match '^\s*securityId\s*=\s*(.+?)\s*$') {
+            $cur['securityId'] = $Matches[1].Trim()
+            if ($cur.Count -eq 3) { $list.Add([pscustomobject]@{ companyId = $cur['companyId']; securityId = $cur['securityId']; exchangeSegment = $cur['exchangeSegment'] }); $cur = @{} }
+            continue
+        }
+        if ($clean -match '^\s*exchangeSegment\s*=\s*(.+?)\s*$') {
+            $cur['exchangeSegment'] = $Matches[1].Trim()
+            if ($cur.Count -eq 3) { $list.Add([pscustomobject]@{ companyId = $cur['companyId']; securityId = $cur['securityId']; exchangeSegment = $cur['exchangeSegment'] }); $cur = @{} }
+            continue
+        }
+        throw "IDENTITY PREFLIGHT FAILED: unexpected TXT line: $clean (raw: $line) in $TxtPath"
     }
     if ($cur.Count -eq 3) { $list.Add([pscustomobject]@{ companyId = $cur['companyId']; securityId = $cur['securityId']; exchangeSegment = $cur['exchangeSegment'] }) }
-    elseif ($cur.Count -ne 0) { throw "IDENTITY PREFLIGHT FAILED: trailing TXT block incomplete" }
+    elseif ($cur.Count -ne 0) { throw "IDENTITY PREFLIGHT FAILED: trailing TXT block incomplete: $($cur | ConvertTo-Json -Compress) in $TxtPath" }
     return ,@($list.ToArray())
 }
 
@@ -307,6 +416,7 @@ function Resolve-TxtIdentities {
 function Assert-OutputPreflight {
     param([string[]]$Dirs)
     $validated = [System.Collections.Generic.List[string]]::new()
+    $warnings = [System.Collections.Generic.List[string]]::new()
     foreach ($dir in $Dirs) {
         if ([string]::IsNullOrWhiteSpace($dir)) { continue }
         try {
@@ -320,11 +430,32 @@ function Assert-OutputPreflight {
             $validated.Add($dir)
             Write-Host "Output preflight: writable $dir" -ForegroundColor Green
         } catch {
-            throw "OUTPUT PREFLIGHT FAILED: directory '$dir' is not writable or cannot be created — $($_.Exception.Message). Stop before making requests."
+            $msg = "OUTPUT PREFLIGHT WARNING: directory '$dir' is not writable or cannot be created — $($_.Exception.Message). Will skip if alternative writable dir exists."
+            Write-Host $msg -ForegroundColor Yellow
+            $warnings.Add($msg)
         }
     }
     if ($validated.Count -eq 0) {
-        throw "OUTPUT PREFLIGHT FAILED: no writable mandatory output location. Checked: $($Dirs -join ', ')"
+        # One-time execution fallback: try PSScriptRoot itself if nothing else worked
+        $fallback = $PSScriptRoot
+        if ($fallback -and (Test-Path -LiteralPath $fallback)) {
+            try {
+                $probe = Join-Path $fallback ".w14-write-probe-$([Guid]::NewGuid().ToString('N')).tmp"
+                [IO.File]::WriteAllText($probe, "probe", [Text.Encoding]::UTF8)
+                Remove-Item -LiteralPath $probe -Force -ErrorAction Stop
+                $validated.Add($fallback)
+                Write-Host "Output preflight fallback: writable $fallback (one-time D:\scripts co-located run)" -ForegroundColor Yellow
+            } catch {
+                $warnings.Add("Fallback $fallback also not writable: $($_.Exception.Message)")
+            }
+        }
+        if ($validated.Count -eq 0) {
+            $detail = if ($warnings.Count -gt 0) { " Warnings: $($warnings -join ' | ')" } else { "" }
+            throw "OUTPUT PREFLIGHT FAILED: no writable mandatory output location. Checked: $($Dirs -join ', ').$detail Stop before making requests. For D:\scripts one-time run, ensure at least PSScriptRoot is writable or pass -EvidenceMirrorDir D:\scripts."
+        }
+    }
+    if ($warnings.Count -gt 0 -and $validated.Count -gt 0) {
+        Write-Host "Output preflight: $($validated.Count) writable, $($warnings.Count) skipped — continuing with writable: $($validated -join ', ')" -ForegroundColor Yellow
     }
     return ,@($validated.ToArray())
 }
@@ -813,6 +944,8 @@ try {
         }
 
         $elapsedMs = [int](([DateTime]::UtcNow) - $requestAtUtc).TotalMilliseconds
+        $responseBodyParsed = $null
+        try { $responseBodyParsed = $responseBody | ConvertFrom-Json -ErrorAction Stop } catch { $responseBodyParsed = $responseBody }
 
         # Per-instrument accounting record — distinguish all categories explicitly
         $results.Add([pscustomobject]@{
@@ -822,7 +955,7 @@ try {
             requestBody         = ($body | ConvertFrom-Json)
             httpStatus          = $httpStatus  # nullable — null for transport failure
             httpStatusDisplay   = if ($null -eq $httpStatus) { 'null (transport failure — no daemon response)' } else { "$httpStatus" }
-            responseBody        = (try { $responseBody | ConvertFrom-Json -ErrorAction Stop } catch { $responseBody })
+            responseBody        = $responseBodyParsed
             responseBodyRaw     = $responseBody
             transportError      = $transportError
             evidencePersisted   = $evidencePersisted
