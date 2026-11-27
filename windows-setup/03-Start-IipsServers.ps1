@@ -562,7 +562,14 @@ try {
     Write-Host '  Stop everything with: 06-Stop-IipsServers.ps1' -ForegroundColor Yellow
     Write-Host ''
     Write-IipsStepLog -LogRoot $LogRoot -Prefix '03-start' | Out-Null
-    Write-IipsFinalStatus -Outcome 'PASS' -Message 'IIPS service startup: completed successfully.' -NoPause:$NoPause | Out-Null
+    # 2026-11-27 permanent fix: PASS must return prompt immediately; detached services
+    # (irr-transport:8787, irr-frontend:5176, ipd-market-data-daemon:8791, optional ipd-ipc pipe)
+    # remain running via Start-Process -WindowStyle Hidden. Blocking Read-Host is only for a
+    # transient Explorer double-click window, handled inside Iips-Common.ps1 Write-IipsPause.
+    # In ConsoleHost (interactive terminal) we force NoPause so the prompt returns.
+    $passNoPause = $NoPause
+    try { if ($Host.Name -eq 'ConsoleHost') { $passNoPause = $true } } catch {}
+    Write-IipsFinalStatus -Outcome 'PASS' -Message 'IIPS service startup: completed successfully.' -NoPause:$passNoPause | Out-Null
     exit 0
 }
 catch {
