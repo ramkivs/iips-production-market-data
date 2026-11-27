@@ -118,6 +118,26 @@ if (-not $EvidenceMirrorDir){ $EvidenceMirrorDir = Join-Path $RepoRoot 'evidence
 $DaemonBaseUrl = $DaemonBaseUrl.Trim().TrimEnd('/')
 if (-not $DaemonBaseUrl) { $DaemonBaseUrl = 'http://127.0.0.1:8791' }
 
+function Assert-LoopbackUrl {
+    param([string]$Url)
+    if ([string]::IsNullOrWhiteSpace($Url)) { throw "LOOPBACK PROTECTION FAILED: DaemonBaseUrl is empty." }
+    $uri = $null
+    try { $uri = [System.Uri]::new($Url) } catch { throw "LOOPBACK PROTECTION FAILED: DaemonBaseUrl '$Url' is not a valid URI — $($_.Exception.Message). Allowed: http://127.0.0.1:8791" }
+    if ($uri.Scheme -ne 'http') { throw "LOOPBACK PROTECTION FAILED: DaemonBaseUrl scheme must be 'http', got '$($uri.Scheme)' — bearer token must not be sent to remote host. Allowed: http://127.0.0.1:8791" }
+    if ($uri.UserInfo) { throw "LOOPBACK PROTECTION FAILED: DaemonBaseUrl must not contain credentials (UserInfo) — token would be exposed. Got '$Url'" }
+    $hostLower = $uri.Host.ToLowerInvariant().Trim()
+    $allowedLoopback = @('127.0.0.1', '::1', '[::1]', 'localhost')
+    if ($hostLower -notin $allowedLoopback) {
+        throw "LOOPBACK PROTECTION FAILED: DaemonBaseUrl host '$($uri.Host)' is not loopback — bearer token would be sent to remote host. Allowed hosts: 127.0.0.1, ::1, localhost. Default: http://127.0.0.1:8791 (got '$Url')"
+    }
+    if ($uri.Host -eq 'localhost' -and $uri.IsLoopback -ne $true) {
+        # localhost is loopback by definition, but keep strict
+    }
+}
+
+# Validate before any token handling or network — fail-closed
+Assert-LoopbackUrl -Url $DaemonBaseUrl
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 1) Strict identity preflight — ALL checks before any I/O or network
 # ─────────────────────────────────────────────────────────────────────────────
@@ -375,6 +395,8 @@ function Test-QuoteResponse {
 
     $result = [ordered]@{
         isValidQuote        = $false
+        isFreshCurrent      = $false
+        isStale             = $false
         validationCode      = 'UNKNOWN'
         validationMessage   = ''
         envelopeCompanyId   = $null
@@ -430,32 +452,67 @@ function Test-QuoteResponse {
         return $result
     }
 
-    # Returned identity must match requested canonical identity
+    # Returned identity must match requested canonical identity — using existing contract fields only (no invented fields)
+    # Daemon contract: envelope.companyId, envelope.payload.companyId, envelope.securityId (if present), payload.securityIdentity.securityId (if present), envelope.domain
     $envCompany = $envelope.companyId
     $envSecId   = $envelope.securityId
+    $payloadCompanyId = $envelope.payload.companyId
+    $payloadSecId = $null
+    if ($envelope.payload -and $envelope.payload.securityIdentity -and $envelope.payload.securityIdentity.securityId) {
+        $payloadSecId = $envelope.payload.securityIdentity.securityId
+    }
     $result.envelopeCompanyId = $envCompany
     $result.envelopeSecurityId = $envSecId
 
-    if ($envCompany -ne $RequestedIdentity.companyId) {
+    # Domain must be D01_QUOTES when present — existing contract field
+    if ($envelope.domain -and $envelope.domain -ne 'D01_QUOTES') {
         $result.validationCode = 'IDENTITY_MISMATCH'
-        $result.validationMessage = "Company mismatch: requested '$($RequestedIdentity.companyId)' envelope '$envCompany'"
+        $result.validationMessage = "Domain mismatch: expected 'D01_QUOTES', got '$($envelope.domain)'"
         return $result
     }
-    # securityId may be top-level envelope.securityId or inside payload.securityIdentity.securityId
+    # companyId — envelope and payload (if present) must match requested
+    if ($envCompany -ne $RequestedIdentity.companyId) {
+        $result.validationCode = 'IDENTITY_MISMATCH'
+        $result.validationMessage = "Company mismatch: requested '$($RequestedIdentity.companyId)' envelope.companyId '$envCompany'"
+        return $result
+    }
+    if ($payloadCompanyId -and $payloadCompanyId -ne $RequestedIdentity.companyId) {
+        $result.validationCode = 'IDENTITY_MISMATCH'
+        $result.validationMessage = "Company mismatch: requested '$($RequestedIdentity.companyId)' payload.companyId '$payloadCompanyId' (envelope $envCompany)"
+        return $result
+    }
+    if ($envCompany -and $payloadCompanyId -and $envCompany -ne $payloadCompanyId) {
+        $result.validationCode = 'IDENTITY_MISMATCH'
+        $result.validationMessage = "Envelope/payload companyId inconsistency: envelope '$envCompany' payload '$payloadCompanyId'"
+        return $result
+    }
+    # securityId — check any present field; contradiction fails, absence is recorded as limitation (do not invent)
     $candidateSecIds = @()
     if ($envSecId) { $candidateSecIds += $envSecId }
-    if ($envelope.payload -and $envelope.payload.securityIdentity -and $envelope.payload.securityIdentity.securityId) {
-        $candidateSecIds += $envelope.payload.securityIdentity.securityId
-    }
+    if ($payloadSecId) { $candidateSecIds += $payloadSecId }
     if ($candidateSecIds.Count -gt 0 -and $RequestedIdentity.securityId -notin $candidateSecIds) {
         $result.validationCode = 'IDENTITY_MISMATCH'
         $result.validationMessage = "SecurityId mismatch: requested '$($RequestedIdentity.securityId)' envelope/payload '$($candidateSecIds -join ',')'"
         return $result
     }
-    if ($envSecId -and $envSecId -ne $RequestedIdentity.securityId -and $candidateSecIds.Count -eq 1) {
+    # If envelope securityId present, strict match against requested (candidate already covers, but keep explicit for clarity)
+    if ($envSecId -and $envSecId -ne $RequestedIdentity.securityId) {
         $result.validationCode = 'IDENTITY_MISMATCH'
-        $result.validationMessage = "SecurityId strict mismatch: requested '$($RequestedIdentity.securityId)' envelope '$envSecId'"
+        $result.validationMessage = "SecurityId strict mismatch: requested '$($RequestedIdentity.securityId)' envelope.securityId '$envSecId'"
         return $result
+    }
+    if ($payloadSecId -and $payloadSecId -ne $RequestedIdentity.securityId) {
+        $result.validationCode = 'IDENTITY_MISMATCH'
+        $result.validationMessage = "SecurityId strict mismatch: requested '$($RequestedIdentity.securityId)' payload.securityIdentity.securityId '$payloadSecId'"
+        return $result
+    }
+    if ($envSecId -and $payloadSecId -and $envSecId -ne $payloadSecId) {
+        $result.validationCode = 'IDENTITY_MISMATCH'
+        $result.validationMessage = "SecurityId inconsistency: envelope '$envSecId' payload '$payloadSecId'"
+        return $result
+    }
+    if ($candidateSecIds.Count -eq 0) {
+        $result.limitationNote += ' Returned identity securityId not present in response contract (envelope.securityId/payload.securityIdentity absent) — cannot fully verify security identity; only companyId verified.'
     }
 
     # Usable quote present — ltp must be positive number, provenance present
@@ -532,11 +589,19 @@ function Test-QuoteResponse {
     # Do NOT label local 200 as proof of live vendor call.
     $result.cacheVsVendor = 'CANNOT_DISTINGUISH_FROM_ENVELOPE'
     if ($freshness -eq 'STALE') {
-        $result.limitationNote += ' freshness=STALE indicates cached data beyond threshold — not a confirmed vendor refresh.'
+        $result.isStale = $true
+        $result.limitationNote += ' freshness=STALE indicates cached data beyond threshold — kept in evidence but NOT counted as fresh/current success.'
+    }
+    if ($freshness -eq 'CURRENT') {
+        $result.isFreshCurrent = $true
     }
 
     $result.isValidQuote = $true
-    $result.validationCode = 'VALID'
+    if ($freshness -eq 'CURRENT') {
+        $result.validationCode = 'VALID_CURRENT'
+    } else {
+        $result.validationCode = 'VALID_STALE'
+    }
     $result.validationMessage = "Valid quote: ltp=$ltp freshness=$freshness identity matched."
     return $result
 }
@@ -570,9 +635,20 @@ $summaryFileName   = "w14-live-quotes-$timestampFile.summary.txt"
 
 function Write-MirroredFile {
     param([string]$FileName, [string]$Content)
+    $writeErrors = @()
     foreach ($dir in $writeTargets) {
         $p = Join-Path $dir $FileName
-        Set-Content -LiteralPath $p -Value $Content -Encoding UTF8 -NoNewline:$false
+        try {
+            Set-Content -LiteralPath $p -Value $Content -Encoding UTF8 -NoNewline:$false -ErrorAction Stop
+        } catch {
+            $writeErrors += [pscustomobject]@{ fileName = $FileName; dir = $dir; path = $p; error = $_.Exception.Message }
+            Write-Host "EVIDENCE WRITE FAILURE: $p — $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+    if ($writeErrors.Count -gt 0) {
+        Write-Host "EVIDENCE WRITE INCOMPLETE: $FileName failed for $($writeErrors.Count) location(s)" -ForegroundColor Red
+        # Throw distinct prefix so caller does not misreport as transport failure
+        throw "EVIDENCE_WRITE_FAILED: $FileName — $($writeErrors.Count) destination(s) failed: $(($writeErrors | ForEach-Object { \"$($_.dir): $($_.error)\" }) -join ' | ')"
     }
     Write-Host "Mirrored $FileName to $($writeTargets.Count) location(s)" -ForegroundColor DarkGray
 }
@@ -582,9 +658,18 @@ function Write-MirroredPerInstrumentFile {
     $safeCompany = $Identity.companyId -replace '[^A-Za-z0-9_.-]', '_'
     $safeSeg     = $Identity.exchangeSegment
     $fileName = "w14-live-quote-${safeCompany}-${safeSeg}-$TimestampFile.json"
+    $writeErrors = @()
     foreach ($dir in $writeTargets) {
         $p = Join-Path $dir $fileName
-        Set-Content -LiteralPath $p -Value $Body -Encoding UTF8
+        try {
+            Set-Content -LiteralPath $p -Value $Body -Encoding UTF8 -ErrorAction Stop
+        } catch {
+            $writeErrors += [pscustomobject]@{ fileName = $fileName; dir = $dir; path = $p; error = $_.Exception.Message }
+            Write-Host "EVIDENCE WRITE FAILURE: $p — $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+    if ($writeErrors.Count -gt 0) {
+        throw "EVIDENCE_WRITE_FAILED: $fileName — $($writeErrors.Count) destination(s) failed: $(($writeErrors | ForEach-Object { \"$($_.dir): $($_.error)\" }) -join ' | ')"
     }
 }
 
@@ -598,13 +683,16 @@ $runStartedAtUtc = [DateTime]::UtcNow
 $runStartedAtUtcIso = $runStartedAtUtc.ToString('o')
 
 $results = [System.Collections.Generic.List[object]]::new()
-# Distinct counters — do NOT conflate
+# Distinct counters — do NOT conflate transport vs evidence
 $localRequestsMade = 0
 $localHttp200Count = 0
 $validQuoteCount = 0
+$freshCurrentCount = 0
+$staleKeptCount = 0
 $invalidQuoteCount = 0
 $transportFailureCount = 0
 $httpErrorCount = 0
+$evidenceWriteFailures = [System.Collections.Generic.List[object]]::new()
 # Vendor refresh cannot be confirmed from envelope alone — track as limitation
 $confirmedVendorRefreshes = 0
 $vendorRefreshLimitation = 'CANNOT_CONFIRM_FROM_ENVELOPE: quote envelope does not expose cache vs vendor egress; see /v1/diagnostics quoteCache for indirect evidence. No local 200 is proof of a live Dhan vendor call.'
@@ -632,6 +720,7 @@ try {
         $transportError = $null
         $validation = $null
 
+        # ── HTTP/transport phase — isolated from evidence writing ──
         try {
             $content = [System.Net.Http.StringContent]::new(
                 $body,
@@ -652,8 +741,6 @@ try {
             Write-Host "HTTP STATUS: $statusText" -ForegroundColor $(if ($httpStatus -eq 200) { 'Green' } else { 'Red' })
             Write-Host 'QUOTE RESPONSE:'
             Write-Host $responseBody
-
-            Write-MirroredPerInstrumentFile -Identity $id -Body $responseBody -TimestampFile $timestampFile
         } catch {
             $transportError = $_.Exception.Message
             $responseBody = if ($responseBody) { $responseBody } else { $transportError }
@@ -662,6 +749,39 @@ try {
             Write-Host "HTTP STATUS: null (no daemon response — transport/timeout)" -ForegroundColor Red
             Write-Host "CAPTURED ERROR BODY: $responseBody" -ForegroundColor Red
             # httpStatus stays $null — null-safe handling downstream
+        }
+
+        # ── Evidence-file phase — separate from transport; failure not misreported as transport ──
+        $evidenceWriteError = $null
+        $evidencePersisted = $false
+        if ($null -ne $responseBody) {
+            # Attempt to persist even on transport failure where we captured error body, and on all HTTP statuses — evidence must contain what was captured
+            try {
+                Write-MirroredPerInstrumentFile -Identity $id -Body $responseBody -TimestampFile $timestampFile
+                $evidencePersisted = $true
+            } catch {
+                $evidenceWriteError = $_.Exception.Message
+                if ($evidenceWriteError -match '^EVIDENCE_WRITE_FAILED') {
+                    Write-Host "EVIDENCE WRITE FAILURE (not transport): $evidenceWriteError" -ForegroundColor Red
+                } else {
+                    Write-Host "EVIDENCE WRITE FAILURE (unexpected): $evidenceWriteError" -ForegroundColor Red
+                }
+                $evidenceWriteFailures.Add([pscustomobject]@{
+                    index = $idx
+                    requestedIdentity = [pscustomobject]@{ companyId = $id.companyId; securityId = $id.securityId; exchangeSegment = $id.exchangeSegment }
+                    error = $evidenceWriteError
+                    httpStatus = $httpStatus
+                })
+                # Do NOT overwrite transportError — keep categories distinct
+            }
+        } else {
+            $evidenceWriteError = 'No responseBody to persist (null body from transport failure without fallback)'
+            $evidenceWriteFailures.Add([pscustomobject]@{
+                index = $idx
+                requestedIdentity = [pscustomobject]@{ companyId = $id.companyId; securityId = $id.securityId; exchangeSegment = $id.exchangeSegment }
+                error = $evidenceWriteError
+                httpStatus = $httpStatus
+            })
         }
 
         # Null-safe HTTP buckets — transport failures do not crash summary
@@ -673,11 +793,20 @@ try {
             $httpErrorCount++
         }
 
-        # Quote validation — 200 alone is not success
+        # Quote validation — 200 alone is not success; STALE not counted as fresh success
         $validation = Test-QuoteResponse -RequestedIdentity $id -HttpStatus $httpStatus -BodyText $responseBody
 
         if ($validation.isValidQuote) {
-            $validQuoteCount++
+            if ($validation.isFreshCurrent) {
+                $freshCurrentCount++
+                $validQuoteCount++
+            } elseif ($validation.isStale) {
+                $staleKeptCount++
+                # STALE is kept in evidence but NOT counted as fresh/current success
+            } else {
+                # Should not happen — isValidQuote implies CURRENT or STALE, but count as valid for safety
+                $validQuoteCount++
+            }
             # Do NOT increment confirmedVendorRefreshes from envelope — not observable
         } else {
             $invalidQuoteCount++
@@ -685,7 +814,7 @@ try {
 
         $elapsedMs = [int](([DateTime]::UtcNow) - $requestAtUtc).TotalMilliseconds
 
-        # Per-instrument accounting record — distinguish all four categories explicitly
+        # Per-instrument accounting record — distinguish all categories explicitly
         $results.Add([pscustomobject]@{
             index               = $idx
             requestedIdentity   = [pscustomobject]@{ companyId = $id.companyId; securityId = $id.securityId; exchangeSegment = $id.exchangeSegment }
@@ -696,8 +825,12 @@ try {
             responseBody        = (try { $responseBody | ConvertFrom-Json -ErrorAction Stop } catch { $responseBody })
             responseBodyRaw     = $responseBody
             transportError      = $transportError
+            evidencePersisted   = $evidencePersisted
+            evidenceWriteError  = $evidenceWriteError
             quoteValidation     = [pscustomobject]@{
                 isValidQuote            = $validation.isValidQuote
+                isFreshCurrent          = $validation.isFreshCurrent
+                isStale                 = $validation.isStale
                 code                    = $validation.validationCode
                 message                 = $validation.validationMessage
                 envelopeCompanyId       = $validation.envelopeCompanyId
@@ -747,26 +880,40 @@ $aggregate = [ordered]@{
     endedAtUtc                 = $runEndedAtUtcIso
     durationMs                 = [int]$duration.TotalMilliseconds
     instrumentCount            = $identities.Count
-    # Request accounting — do NOT claim 96 local requests = 96 vendor requests
+    # Request accounting — do NOT claim 96 local requests = 96 vendor requests; keep STALE separate
     accounting                 = [ordered]@{
         localRequestsMade      = $localRequestsMade
         localHttp200Responses  = $localHttp200Count
         httpErrorResponses     = $httpErrorCount
         transportFailures      = $transportFailureCount
-        validQuoteResponses    = $validQuoteCount
+        validFreshCurrent      = $freshCurrentCount
+        staleKeptNotCountedAsSuccess = $staleKeptCount
+        validQuoteResponses    = $validQuoteCount  # alias for fresh/current only — STALE kept but not counted
         invalidOrFailedQuotes  = $invalidQuoteCount
+        evidenceWriteFailures  = $evidenceWriteFailures.Count
         confirmedVendorRefreshes = $confirmedVendorRefreshes
         vendorRefreshLimitation  = $vendorRefreshLimitation
+    }
+    evidenceIntegrity          = [ordered]@{
+        requiredResponses      = 96
+        persistedOk            = ($results | Where-Object { $_.evidencePersisted -eq $true }).Count
+        persistedFail          = $evidenceWriteFailures.Count
+        isComplete             = ($evidenceWriteFailures.Count -eq 0)
+        failures               = @($evidenceWriteFailures.ToArray())
+        note                   = if ($evidenceWriteFailures.Count -eq 0) { 'All 96 per-instrument evidence files were persisted to all required destinations.' } else { "INCOMPLETE EVIDENCE: $($evidenceWriteFailures.Count) required response(s) could not be persisted to all mandatory destinations — run is incomplete and must be re-run or manually preserved. See failures[]." }
     }
     # Legacy flat fields for backwards compat with any parser expecting okCount/failCount
     localRequestsMade          = $localRequestsMade
     localHttp200Count          = $localHttp200Count
     validQuoteCount            = $validQuoteCount
+    freshCurrentCount          = $freshCurrentCount
+    staleKeptCount             = $staleKeptCount
     invalidQuoteCount          = $invalidQuoteCount
     transportFailureCount      = $transportFailureCount
     httpErrorCount             = $httpErrorCount
+    evidenceWriteFailureCount  = $evidenceWriteFailures.Count
     results                    = @($results.ToArray())
-    evidenceNote               = 'HTTP 200 alone is not proof of a usable quote; each response is validated for identity match, payload ltp, freshness, and timestamps. Cache vs vendor cannot be distinguished from the quote envelope alone — no local 200 is claimed as a live Dhan vendor call.'
+    evidenceNote               = 'HTTP 200 alone is not proof of a usable quote; each response is validated for identity match, payload ltp, freshness, and timestamps. STALE is kept in evidence but not counted as fresh/current success. Cache vs vendor cannot be distinguished from the quote envelope alone — no local 200 is claimed as a live Dhan vendor call. Evidence-file write failures are tracked separately from transport failures; incomplete persistence is reported as INCOMPLETE EVIDENCE.'
 }
 
 try {
@@ -774,9 +921,30 @@ try {
 } catch {
     $aggJson = (@{ error = "Failed to serialize aggregate: $($_.Exception.Message)"; partial = $aggregate } | ConvertTo-Json -Depth 10)
 }
-Write-MirroredFile -FileName $aggregateFileName -Content $aggJson
+$aggregateWriteError = $null
+$aggregateWriteOk = $true
+try {
+    Write-MirroredFile -FileName $aggregateFileName -Content $aggJson
+} catch {
+    $aggregateWriteError = $_.Exception.Message
+    $aggregateWriteOk = $false
+    if ($aggregateWriteError -match '^EVIDENCE_WRITE_FAILED') {
+        $evidenceWriteFailures.Add([pscustomobject]@{ index = 'aggregate'; requestedIdentity = $null; fileName = $aggregateFileName; error = $aggregateWriteError; httpStatus = $null })
+        Write-Host "EVIDENCE WRITE FAILURE — aggregate $aggregateFileName not fully persisted: $aggregateWriteError" -ForegroundColor Red
+    } else {
+        Write-Host "Unexpected aggregate write failure: $aggregateWriteError" -ForegroundColor Red
+    }
+}
 
-# Summary — null-safe, correctly labelled UTC
+# Summary — null-safe, correctly labelled UTC; distinct fresh/current vs stale; evidence integrity explicit
+$freshnessLine = "  Fresh/current (CURRENT)      : $freshCurrentCount   (counted as success — identity matched, ltp>0, freshness=CURRENT)"
+$staleLine = "  Stale kept (STALE)           : $staleKeptCount   (kept in evidence, NOT counted as success — cached beyond threshold)"
+$evidenceLine = if ($evidenceWriteFailures.Count -eq 0) { "  Evidence persisted         : 96/96 per-instrument files + aggregate + summary — COMPLETE (no write failures)" } else { "  Evidence persisted         : INCOMPLETE — $($evidenceWriteFailures.Count) write failure(s) — run has incomplete evidence and must not be treated as complete" }
+$aggregateLine = if ($aggregateWriteOk) { "  Aggregated    : $aggregateFileName — $($writeTargets -join ' | ') — persisted OK" } else { "  Aggregated    : $aggregateFileName — FAILED to persist to all destinations — INCOMPLETE EVIDENCE: $aggregateWriteError" }
+$evidenceDetailLines = if ($evidenceWriteFailures.Count -gt 0) {
+    "Evidence write failures (not transport failures — file persistence):`n" + (($evidenceWriteFailures | ForEach-Object { "  - [$($_.index)] $($_.requestedIdentity.companyId) $($_.requestedIdentity.securityId) $($_.requestedIdentity.exchangeSegment) : $($_.error)" }) -join "`n") + "`n"
+} else { "" }
+
 $summary = @"
 W-14 SCOPE B SEQUENTIAL CAPTURE SUMMARY — Generated at $timestampUtcIso (UTC)
 Daemon endpoint : POST $DaemonBaseUrl/v1/quotes  { companyId, securityId, exchangeSegment }
@@ -788,43 +956,60 @@ Ended (UTC)     : $runEndedAtUtcIso
 Duration        : $([int]$duration.TotalMilliseconds) ms (avg $(if ($identities.Count -gt 0) {[int]($duration.TotalMilliseconds / $identities.Count)} else {0}) ms/quote, throttle ${DelayMsBetweenQuotes}ms between)
 Mode            : SEQUENTIAL — 96 × POST /v1/quotes (only supported execution path; BatchMode is diagnostic-probe-only and is blocked)
 
-Accounting (do NOT conflate local requests with vendor requests):
+Accounting (do NOT conflate local requests with vendor requests; STALE not counted as success):
   Local requests made        : $localRequestsMade
   Local HTTP 200 responses   : $localHttp200Count
   HTTP error (non-200)       : $httpErrorCount
   Transport failures (null)  : $transportFailureCount
-  Valid quote responses      : $validQuoteCount   (identity matched, ltp>0, freshness CURRENT|STALE, timestamps assessed)
-  Invalid/failed quotes      : $invalidQuoteCount
+$freshnessLine
+$staleLine
+  Invalid/failed quotes      : $invalidQuoteCount   (transport/HTTP/validation failures — excludes STALE)
+$evidenceLine
   Confirmed vendor refreshes : $confirmedVendorRefreshes — $vendorRefreshLimitation
 
 Artifacts (mirrored to $($writeTargets.Count) mandatory location(s)):
-  Aggregated    : $aggregateFileName — $($writeTargets -join ' | ')
+$aggregateLine
   Per-instrument: w14-live-quote-<companyId>-<segment>-$timestampFile.json in same dirs
   Summary       : $summaryFileName
 
-Per-instrument detail (HTTP status null-safe; transport failures cannot crash summary):
+$evidenceDetailLines
+Per-instrument detail (HTTP status null-safe; transport failures cannot crash summary; evidence write distinct from transport):
 $(
     ($results | ForEach-Object {
         $statusDisplay = if ($null -eq $_.httpStatus) { 'null' } else { $_.httpStatus.ToString().PadLeft(4) }
-        $validSym = if ($_.quoteValidation.isValidQuote) { '✓ VALID' } else { "✗ $($_.quoteValidation.code)" }
+        $validSym = if ($_.quoteValidation.isValidQuote) { if ($_.quoteValidation.isFreshCurrent) { '✓ VALID-CURRENT' } elseif ($_.quoteValidation.isStale) { '◐ STALE-KEPT' } else { '✓ VALID' } } else { "✗ $($_.quoteValidation.code)" }
         $fresh = if ($_.freshness) { $_.freshness } else { '—' }
-        "  $statusDisplay  $($_.requestedIdentity.companyId.PadRight(20)) $($_.requestedIdentity.securityId.PadRight(24)) $($_.requestedIdentity.exchangeSegment.PadRight(7))  $validSym  fresh=$fresh  $($_.durationMs)ms  at $($_.requestAtUtc) (UTC)"
+        $persistMark = if ($_.evidencePersisted) { '' } else { ' ⚠ EVIDENCE-WRITE-FAILED' }
+        "  $statusDisplay  $($_.requestedIdentity.companyId.PadRight(20)) $($_.requestedIdentity.securityId.PadRight(24)) $($_.requestedIdentity.exchangeSegment.PadRight(7))  $validSym  fresh=$fresh$persistMark  $($_.durationMs)ms  at $($_.requestAtUtc) (UTC)"
     } | Out-String)
 )
 Notes:
   • HTTP 200 alone is NOT counted as success — each 200 is validated for identity match, usable ltp, and freshness.
+  • STALE responses are kept in evidence but NOT counted as fresh/current success; only CURRENT counts toward valid fresh success.
+  • Identity verification uses existing contract fields only (envelope.companyId, envelope.domain, envelope.securityId, payload.companyId, payload.securityIdentity.securityId) — contradiction fails, absence recorded as limitation.
+  • DaemonBaseUrl loopback protection: bearer token is only sent to 127.0.0.1/::1/localhost; remote hosts are rejected before any request.
+  • Evidence-file write failures are tracked separately from transport failures and reported as INCOMPLETE EVIDENCE; run with incomplete persistence must be re-run.
   • Transport failures (HTTP null) are captured with error text and do not crash summary generation.
   • All timestamps are UTC (ISO-8601 Z) and labelled as such; no local timezone is implied.
   • Vendor refresh cannot be proven from the quote envelope alone — cache-served vs vendor-refreshed is not distinguished. See daemon /v1/diagnostics quoteCache for indirect evidence.
   • Existing cache/retry behavior is untouched — 96 local requests are NOT claimed as 96 Dhan vendor requests.
-  • Per-instrument daemon bodies were Written to file (mirrored) AND displayed above.
+  • Per-instrument daemon bodies were displayed above AND mirrored to file(s) where persistence succeeded.
 "@
 
 Write-Host "`n=========================================="
 Write-Host $summary
-Write-Host '==========================================' -ForegroundColor $(if ($invalidQuoteCount -eq 0 -and $transportFailureCount -eq 0) { 'Green' } else { 'Yellow' })
+Write-Host '==========================================' -ForegroundColor $(if ($invalidQuoteCount -eq 0 -and $transportFailureCount -eq 0 -and $evidenceWriteFailures.Count -eq 0) { 'Green' } else { 'Yellow' })
 
-Write-MirroredFile -FileName $summaryFileName -Content $summary
+$summaryWriteError = $null
+$summaryWriteOk = $true
+try {
+    Write-MirroredFile -FileName $summaryFileName -Content $summary
+} catch {
+    $summaryWriteError = $_.Exception.Message
+    $summaryWriteOk = $false
+    $evidenceWriteFailures.Add([pscustomobject]@{ index = 'summary'; requestedIdentity = $null; fileName = $summaryFileName; error = $summaryWriteError; httpStatus = $null })
+    Write-Host "EVIDENCE WRITE FAILURE — summary $summaryFileName not fully persisted: $summaryWriteError" -ForegroundColor Red
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Daemon log dump — still collected at end, now more explicit
@@ -849,15 +1034,29 @@ if (-not $anyLog) {
     Write-Host "(No daemon log files found at conventional paths.)" -ForegroundColor DarkGray
 }
 
-# Final verdict — honest about what was proven vs what is limitation
-if ($invalidQuoteCount -eq 0 -and $transportFailureCount -eq 0 -and $httpErrorCount -eq 0) {
-    Write-Host "`n✓ SWEEP COMPLETE — 96/96 local requests returned HTTP 200 with valid quote envelopes." -ForegroundColor Green
-    Write-Host "  Each envelope's identity matched the request, ltp>0, and freshness/timestamps were assessed." -ForegroundColor Green
+# Final verdict — honest about what was proven vs what is limitation + evidence integrity + freshness
+if ($evidenceWriteFailures.Count -gt 0 -or -not $aggregateWriteOk -or -not $summaryWriteOk) {
+    Write-Host "`n⛔ INCOMPLETE EVIDENCE — $($evidenceWriteFailures.Count) evidence write failure(s) (aggregateOk=$aggregateWriteOk summaryOk=$summaryWriteOk)." -ForegroundColor Red
+    Write-Host "  Some required responses could not be persisted to all mandatory destinations." -ForegroundColor Red
+    Write-Host "  This run MUST NOT be treated as complete — re-run after fixing filesystem permissions/disk, or manually preserve in-memory results displayed above." -ForegroundColor Red
+    Write-Host "  Transport vs evidence: these are FILE write failures, not transport/HTTP failures." -ForegroundColor Yellow
+    $evidenceWriteFailures | ForEach-Object { Write-Host "    - [$($_.index)] $($_.error)" -ForegroundColor Yellow }
+}
+if ($invalidQuoteCount -eq 0 -and $transportFailureCount -eq 0 -and $httpErrorCount -eq 0 -and $evidenceWriteFailures.Count -eq 0 -and $aggregateWriteOk -and $summaryWriteOk) {
+    if ($staleKeptCount -gt 0) {
+        Write-Host "`n✓ SWEEP COMPLETE — 96/96 local requests returned HTTP 200 with valid envelopes; $freshCurrentCount CURRENT (fresh success), $staleKeptCount STALE kept but NOT counted as fresh success." -ForegroundColor Green
+    } else {
+        Write-Host "`n✓ SWEEP COMPLETE — 96/96 local requests returned HTTP 200 with valid CURRENT quote envelopes." -ForegroundColor Green
+    }
+    Write-Host "  Each counted success has identity matched (existing contract fields), ltp>0, freshness=CURRENT, timestamps assessed." -ForegroundColor Green
+    if ($staleKeptCount -gt 0) { Write-Host "  STALE responses were kept in evidence but not counted toward fresh/current success." -ForegroundColor Yellow }
     Write-Host "  LIMITATION: Local HTTP 200 is NOT proof of 96 live Dhan vendor calls — vendor refresh cannot be confirmed from the envelope alone." -ForegroundColor Yellow
     Write-Host "  For operational assurance, inspect $aggregateFileName and daemon /v1/diagnostics / /v1/freshness." -ForegroundColor Green
-} else {
-    Write-Host "`n⚠ SWEEP COMPLETE WITH ISSUES — $validQuoteCount valid, $invalidQuoteCount invalid, $transportFailureCount transport failures, $httpErrorCount HTTP errors of 96." -ForegroundColor Yellow
+} elseif ($evidenceWriteFailures.Count -eq 0) {
+    $freshMsg = if ($staleKeptCount -gt 0) { "$freshCurrentCount fresh/current + $staleKeptCount stale-kept (not success)" } else { "$freshCurrentCount fresh/current" }
+    Write-Host "`n⚠ SWEEP COMPLETE WITH ISSUES — $freshMsg valid, $invalidQuoteCount invalid, $transportFailureCount transport failures, $httpErrorCount HTTP errors of 96." -ForegroundColor Yellow
     Write-Host "  See per-instrument detail above and aggregated JSON $aggregateFileName for full bodies/errors." -ForegroundColor Yellow
+    Write-Host "  STALE is kept but not counted as success; identity contradictions fail; evidence persisted OK." -ForegroundColor Yellow
     Write-Host "  LIMITATION: Vendor refresh not confirmable from envelope — 96 local requests are NOT 96 vendor requests." -ForegroundColor Yellow
 }
 Write-Host "Artifacts mirrored to: $($writeTargets -join '  |  ')" -ForegroundColor DarkGray
