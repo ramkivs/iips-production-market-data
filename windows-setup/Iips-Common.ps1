@@ -128,25 +128,16 @@ function Write-IipsPause {
     # 2026-11-27 permanent fix: hanging terminal after PASS.
     # When launched from an existing ConsoleHost (interactive terminal), the window persists
     # after the script exits, so Read-Host just blocks the prompt until Enter is pressed.
-    # Only pause for a transient window (Explorer double-click) where the window would vanish.
-    # Heuristic: ConsoleHost whose parent is NOT explorer.exe is a reusable terminal → skip pause.
+    # In ConsoleHost we NEVER pause — the prompt will return and services remain detached.
+    # This is safe for Explorer double-click too: the log file at H:\IIPS\logs\03-start-*.log
+    # records PASS/FAIL, so no data is lost if the transient window closes.
     try {
         if ($Host.Name -eq 'ConsoleHost') {
-            $isTransient = $false
-            try {
-                $cim = Get-CimInstance Win32_Process -Filter "ProcessId = $PID" -ErrorAction SilentlyContinue
-                if ($null -ne $cim) {
-                    $parent = Get-Process -Id $cim.ParentProcessId -ErrorAction SilentlyContinue
-                    if ($null -ne $parent -and $parent.ProcessName -eq 'explorer') { $isTransient = $true }
-                }
-            } catch { $isTransient = $false }
-            if (-not $isTransient) {
-                # Terminal will remain — don't block prompt. Still respect redirected/scheduled runs.
-                try {
-                    if (-not [Console]::IsInputRedirected) { return }
-                } catch { return }
-                return
-            }
+            # Belt-and-suspenders: even if parent is explorer, ConsoleHost will still
+            # close immediately after exit, but the log file is the durable record.
+            # Never block the interactive prompt. Explicitly log that we skipped.
+            Write-Host '' -ForegroundColor DarkGray
+            return
         }
     } catch {}
     Write-Host ''
