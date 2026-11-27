@@ -224,7 +224,7 @@ function Assert-StrictIdentityPreflight {
     }
 
     $raw = Get-Content -LiteralPath $JsonPath -Raw -Encoding UTF8
-    try { $doc = $raw | ConvertFrom-Json -Depth 10 } catch { throw "IDENTITY PREFLIGHT FAILED: JSON is not valid JSON at $JsonPath -- $($_.Exception.Message)" }
+    try { $doc = $raw | ConvertFrom-Json } catch { throw "IDENTITY PREFLIGHT FAILED: JSON is not valid JSON at $JsonPath -- $($_.Exception.Message)" }
 
     if ($null -eq $doc.instruments -or $doc.instruments.Count -eq 0) {
         throw "IDENTITY PREFLIGHT FAILED: instruments[] missing or empty in $JsonPath"
