@@ -477,6 +477,14 @@ function New-DaemonClient {
     return $client
 }
 
+function Get-PropValue {
+    param([object]$Obj, [string]$Name)
+    if ($null -eq $Obj) { return $null }
+    $prop = $Obj.PSObject.Properties[$Name]
+    if ($null -eq $prop) { return $null }
+    return $prop.Value
+}
+
 function Assert-HealthAndAuthPreflight {
     param([string]$BaseUrl, [string]$Token, [int]$TimeoutSec)
 
@@ -499,11 +507,14 @@ function Assert-HealthAndAuthPreflight {
                 throw "HEALTH PREFLIGHT FAILED: GET $healthUrl returned HTTP $status -- body: $bodyText"
             }
             $parsed = $bodyText | ConvertFrom-Json -ErrorAction Stop
-            if ($parsed.service -ne 'UP') {
-                throw "HEALTH PREFLIGHT FAILED: service='$($parsed.service)' expected 'UP' -- body: $bodyText"
+            $svc = Get-PropValue -Obj $parsed -Name 'service'
+            if ($svc -ne 'UP') {
+                throw "HEALTH PREFLIGHT FAILED: service='$svc' expected 'UP' -- body: $bodyText"
             }
             # Validate is parsable but do not treat non-empty token as proof of Dhan auth; actual quote 502/401 does.
-            Write-Host "Health preflight: HTTP 200 service=UP providerConfiguration=$($parsed.providerConfiguration) liveProviderConnectivity=$($parsed.liveProviderConnectivity) (token presence alone is not proof of Dhan auth)" -ForegroundColor Green
+            $provCfg = Get-PropValue -Obj $parsed -Name 'providerConfiguration'
+            $liveConn = Get-PropValue -Obj $parsed -Name 'liveProviderConnectivity'
+            Write-Host "Health preflight: HTTP 200 service=UP providerConfiguration=$provCfg liveProviderConnectivity=$liveConn (token presence alone is not proof of Dhan auth)" -ForegroundColor Green
             return $parsed
         } finally { $req.Dispose() }
     } catch {
@@ -555,8 +566,13 @@ function Test-QuoteResponse {
         try {
             $parsed = $BodyText | ConvertFrom-Json -ErrorAction Stop
             $result.rawParsed = $parsed
-            if ($parsed.error -and $parsed.error.code) {
-                $result.validationMessage += " daemon error code=$($parsed.error.code) vendorHttpStatus=$($parsed.error.vendorHttpStatus)"
+            $errObj = Get-PropValue -Obj $parsed -Name 'error'
+            if ($null -ne $errObj) {
+                $code = Get-PropValue -Obj $errObj -Name 'code'
+                $vendorHttp = Get-PropValue -Obj $errObj -Name 'vendorHttpStatus'
+                if ($code) {
+                    $result.validationMessage += " daemon error code=$code vendorHttpStatus=$vendorHttp"
+                }
             }
         } catch {}
         return $result
@@ -570,13 +586,17 @@ function Test-QuoteResponse {
     }
     $result.rawParsed = $parsed
 
-    if ($parsed.ok -ne $true) {
+    $okVal = Get-PropValue -Obj $parsed -Name 'ok'
+    if ($okVal -ne $true) {
         $result.validationCode = 'DAEMON_REPORTED_FAILURE'
-        $result.validationMessage = "HTTP 200 but ok != true (daemon envelope reports failure). Code=$($parsed.error.code) message=$($parsed.error.message)"
+        $errObj = Get-PropValue -Obj $parsed -Name 'error'
+        $errCode = if ($errObj) { Get-PropValue -Obj $errObj -Name 'code' } else { $null }
+        $errMsg = if ($errObj) { Get-PropValue -Obj $errObj -Name 'message' } else { $null }
+        $result.validationMessage = "HTTP 200 but ok != true (daemon envelope reports failure). Code=$errCode message=$errMsg"
         return $result
     }
 
-    $envelope = $parsed.envelope
+    $envelope = Get-PropValue -Obj $parsed -Name 'envelope'
     if ($null -eq $envelope) {
         $result.validationCode = 'MISSING_ENVELOPE'
         $result.validationMessage = 'HTTP 200 ok:true but missing envelope object.'
@@ -585,20 +605,24 @@ function Test-QuoteResponse {
 
     # Returned identity must match requested canonical identity -- using existing contract fields only (no invented fields)
     # Daemon contract: envelope.companyId, envelope.payload.companyId, envelope.securityId (if present), payload.securityIdentity.securityId (if present), envelope.domain
-    $envCompany = $envelope.companyId
-    $envSecId   = $envelope.securityId
-    $payloadCompanyId = $envelope.payload.companyId
+    $envCompany = Get-PropValue -Obj $envelope -Name 'companyId'
+    $envSecId   = Get-PropValue -Obj $envelope -Name 'securityId'
+    $payloadObj = Get-PropValue -Obj $envelope -Name 'payload'
+    $payloadCompanyId = $null
+    if ($null -ne $payloadObj) { $payloadCompanyId = Get-PropValue -Obj $payloadObj -Name 'companyId' }
     $payloadSecId = $null
-    if ($envelope.payload -and $envelope.payload.securityIdentity -and $envelope.payload.securityIdentity.securityId) {
-        $payloadSecId = $envelope.payload.securityIdentity.securityId
+    if ($null -ne $payloadObj) {
+        $secIdent = Get-PropValue -Obj $payloadObj -Name 'securityIdentity'
+        if ($null -ne $secIdent) { $payloadSecId = Get-PropValue -Obj $secIdent -Name 'securityId' }
     }
     $result.envelopeCompanyId = $envCompany
     $result.envelopeSecurityId = $envSecId
 
     # Domain must be D01_QUOTES when present -- existing contract field
-    if ($envelope.domain -and $envelope.domain -ne 'D01_QUOTES') {
+    $domainVal = Get-PropValue -Obj $envelope -Name 'domain'
+    if ($domainVal -and $domainVal -ne 'D01_QUOTES') {
         $result.validationCode = 'IDENTITY_MISMATCH'
-        $result.validationMessage = "Domain mismatch: expected 'D01_QUOTES', got '$($envelope.domain)'"
+        $result.validationMessage = "Domain mismatch: expected 'D01_QUOTES', got '$domainVal'"
         return $result
     }
     # companyId -- envelope and payload (if present) must match requested
@@ -647,13 +671,13 @@ function Test-QuoteResponse {
     }
 
     # Usable quote present -- ltp must be positive number, provenance present
-    $payload = $envelope.payload
+    $payload = $payloadObj
     if ($null -eq $payload) {
         $result.validationCode = 'MISSING_PAYLOAD'
         $result.validationMessage = 'Envelope missing payload (no quote data).'
         return $result
     }
-    $ltp = $payload.ltp
+    $ltp = Get-PropValue -Obj $payload -Name 'ltp'
     if ($null -eq $ltp) {
         # Some historical paths use different field, but D01 canonical requires ltp
         $result.validationCode = 'MISSING_LTP'
@@ -675,7 +699,7 @@ function Test-QuoteResponse {
     }
 
     # Timestamp and freshness assessment -- where supported, validated; otherwise limitation noted
-    $freshness = $parsed.freshness
+    $freshness = Get-PropValue -Obj $parsed -Name 'freshness'
     $result.freshness = $freshness
     if ($freshness -notin @('CURRENT','STALE')) {
         $result.validationCode = 'INVALID_FRESHNESS'
@@ -683,7 +707,7 @@ function Test-QuoteResponse {
         return $result
     }
 
-    $ts = $envelope.timestamp
+    $ts = Get-PropValue -Obj $envelope -Name 'timestamp'
     $result.timestampUtc = $ts
     if ($ts) {
         $parsedTs = [DateTime]::MinValue
@@ -695,14 +719,14 @@ function Test-QuoteResponse {
         # Label correctly: envelope.timestamp is UTC ISO; record as such
     }
 
-    $prov = $envelope.provenance
+    $prov = Get-PropValue -Obj $envelope -Name 'provenance'
     if ($prov) {
-        $result.provenanceQuality = $prov.qualityState
-        $result.provenanceAsOfUtc = $prov.asOf
-        $result.provenanceReceivedAtUtc = $prov.receivedAt
+        $result.provenanceQuality = Get-PropValue -Obj $prov -Name 'qualityState'
+        $result.provenanceAsOfUtc = Get-PropValue -Obj $prov -Name 'asOf'
+        $result.provenanceReceivedAtUtc = Get-PropValue -Obj $prov -Name 'receivedAt'
         # Validate canonical UTC shape where present, but do not fail on missing optional fields
         foreach ($field in @('asOf','receivedAt','evaluatedAt')) {
-            $val = $prov.$field
+            $val = Get-PropValue -Obj $prov -Name $field
             if ($val) {
                 $dt = [DateTime]::MinValue
                 if (-not [DateTime]::TryParse($val, [ref]$dt)) {
@@ -979,7 +1003,7 @@ try {
             durationMs          = $elapsedMs
             # Explicit cache/provenance fields -- do not invent data
             freshness           = $validation.freshness
-            provenance          = if ($validation.rawParsed -and $validation.rawParsed.envelope -and $validation.rawParsed.envelope.provenance) { $validation.rawParsed.envelope.provenance } else { $null }
+            provenance          = if ($validation.rawParsed -and (Get-PropValue -Obj $validation.rawParsed -Name 'envelope') -and (Get-PropValue -Obj (Get-PropValue -Obj $validation.rawParsed -Name 'envelope') -Name 'provenance')) { Get-PropValue -Obj (Get-PropValue -Obj $validation.rawParsed -Name 'envelope') -Name 'provenance' } else { $null }
             limitationNote      = $validation.limitationNote
         })
 
