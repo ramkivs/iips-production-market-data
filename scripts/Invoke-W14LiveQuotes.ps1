@@ -295,7 +295,7 @@ function Assert-StrictIdentityPreflight {
 
         $tripleKey = "$($it.companyId)|$($it.securityId)|$($it.exchangeSegment)"
         if ($seenTriple.ContainsKey($tripleKey)) {
-            throw "IDENTITY PREFLIGHT FAILED: duplicate identity combination at $prefix: $tripleKey"
+            throw "IDENTITY PREFLIGHT FAILED: duplicate identity combination at ${prefix}: $tripleKey"
         }
         $seenTriple[$tripleKey] = $true
 

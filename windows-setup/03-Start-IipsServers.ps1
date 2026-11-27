@@ -263,12 +263,23 @@ try {
     if ($StartIpdShell) { Assert-IipsPortFree -Port $IpdShellPort -Label 'the IPD shell' }
     if ($StartMarketDataDaemon) { Assert-IipsPortFree -Port $MarketDataPort -Label 'the IPD market-data daemon' }
 
-    $transportEnv = @{
-        'EXEC_TRANSPORT_PORT'     = "$TransportPort"
-        'IIPS_DATA_DIR'           = $dataDir
-        'IIPS_OWNER_CONTEXT_PATH' = $ownerContextPath
-        'NODE_ENV'                = 'development'
+  $marketDataBaseUrl = "http://$BindAddress`:$MarketDataPort"
+    $marketDataTransportToken = [string] $env:IIPS_MARKET_DATA_TRANSPORT_TOKEN
+
+    if ([string]::IsNullOrWhiteSpace($marketDataTransportToken)) {
+        throw 'IIPS_MARKET_DATA_TRANSPORT_TOKEN is missing from the startup session. Cannot configure IRR market-data transport.'
     }
+
+    $transportEnv = @{
+        'EXEC_TRANSPORT_PORT'              = "$TransportPort"
+        'IIPS_DATA_DIR'                    = $dataDir
+        'IIPS_OWNER_CONTEXT_PATH'          = $ownerContextPath
+        'NODE_ENV'                         = 'development'
+        'IIPS_MARKET_DATA_TRANSPORT_URL'   = $marketDataBaseUrl
+        'IIPS_MARKET_DATA_BASE_URL'        = $marketDataBaseUrl
+        'IIPS_MARKET_DATA_TRANSPORT_TOKEN' = $marketDataTransportToken
+    }
+	
     if (Test-Path -LiteralPath $reportsOwnerPath) { $transportEnv['IIPS_REPORTS_OWNER_PATH'] = $reportsOwnerPath }
     if (Test-Path -LiteralPath $np04Db) { $transportEnv['IIPS_NP04_DATABASE_PATH'] = $np04Db }
 
@@ -303,16 +314,22 @@ try {
         $ipc = Start-IipsService -Label 'ipd-ipc' -Executable $toolchain.NodeExe -Arguments @($entrypoint) -WorkingDirectory $ipdRoot -LogDirectory $script:ServiceLogDir -Environment $ipcEnv
         $script:Started.Add($ipc)
 
-        # The entrypoint prints "[g3] listening on windows-named-pipe \\.\pipe\<name>" to stderr.
+        # The entrypoint prints "[g3] listening on windows-named-pipe \\.\pipe\<name>" to stderr,
+        # but reading the log while Start-Process holds it may be locked. Pipe presence is primary.
         $deadline = (Get-Date).AddSeconds(60)
         $bound = $false
         while ((Get-Date) -lt $deadline) {
             Start-Sleep -Seconds 2
-            if (-not (Test-Path -LiteralPath $ipc.ErrLog)) { continue }
-            $content = Get-Content -LiteralPath $ipc.ErrLog -Raw -ErrorAction SilentlyContinue
-            if ($null -eq $content) { continue }
-            if ($content -match '\[g3\] listening on windows-named-pipe') { $bound = $true; break }
-            if ($content -match '\[g3\] startup refused') { throw "the IPC provider refused to start:`n$content" }
+            $foundPipe = @(Get-IipsNamedPipes -Filter $PipeName)
+            if ($foundPipe.Count -gt 0) { $bound = $true; break }
+            if (Test-Path -LiteralPath $ipc.ErrLog) {
+                try {
+                    $content = Get-Content -LiteralPath $ipc.ErrLog -Raw -ErrorAction Stop
+                    if ($content -match '\\[g3\\] startup refused') { throw "the IPC provider refused to start:`n$content" }
+                } catch {
+                    # Log locked or unreadable — ignore, pipe check is primary
+                }
+            }
         }
         if (-not $bound) { throw "the IPC provider did not report a bound named pipe within 60 seconds. Log: $($ipc.ErrLog)" }
         Write-IipsOk "IPC provider bound: $pipePath (PID $($ipc.Pid))"
@@ -371,30 +388,10 @@ try {
             -LogDirectory $script:ServiceLogDir -Environment $daemonEnv
         $script:Started.Add($marketData)
 
-        # The daemon writes one sanitized line to stderr on bind. Wait for it, so readiness is
-        # established from the daemon's own statement rather than inferred from a port alone.
-        $bindDeadline = (Get-Date).AddSeconds(120)
-        $bindLine = $null
-        while ((Get-Date) -lt $bindDeadline) {
-            Start-Sleep -Seconds 2
-            if (-not (Test-Path -LiteralPath $marketData.ErrLog)) { continue }
-            $errText = Get-Content -LiteralPath $marketData.ErrLog -Raw -ErrorAction SilentlyContinue
-            if ($null -eq $errText) { continue }
-            if ($errText -match 'listening on http://') {
-                $bindLine = (@($errText -split "`n") | Where-Object { $_ -match 'listening on http://' } | Select-Object -First 1)
-                break
-            }
-            if ($errText -match 'refused at phase') {
-                throw "the market-data daemon refused to start:`n$errText"
-            }
-        }
-        if ($null -eq $bindLine) {
-            throw "the market-data daemon did not report a bound listener within 120 seconds. Log: $($marketData.ErrLog)"
-        }
-        Write-IipsOk 'market-data daemon reported its listener'
-        Write-IipsInfo ([string] $bindLine).Trim()
-
-        $marketListen = Wait-IipsPortListening -Port $MarketDataPort -Label 'the IPD market-data daemon' -TimeoutSeconds 30 -ExpectedAddress $BindAddress
+        # Establish readiness from the actual loopback listener. Do not read redirected
+        # stderr while the child is running: Windows may deny access while Start-Process
+        # holds the log file open. The existing health and PID-ownership checks follow.
+        $marketListen = Wait-IipsPortListening -Port $MarketDataPort -Label 'the IPD market-data daemon' -TimeoutSeconds 120 -ExpectedAddress $BindAddress
         Write-IipsOk "market-data daemon bound loopback-only: $($marketListen.LocalAddress):$MarketDataPort"
 
         # The daemon requires the bearer credential on every route, including this one. Sending it
@@ -579,7 +576,13 @@ catch {
         if (Test-Path -LiteralPath $p.ErrLog) {
             Write-Host ''
             Write-Host "  --- tail of $($p.Label) error log ---" -ForegroundColor Yellow
-            Get-Content -LiteralPath $p.ErrLog -Tail 15 | ForEach-Object { Write-Host "  $_" -ForegroundColor Yellow }
+            try {
+                Get-Content -LiteralPath $p.ErrLog -Tail 15 -ErrorAction Stop |
+                    ForEach-Object { Write-Host "  $_" -ForegroundColor Yellow }
+            }
+            catch {
+                Write-Host "  Log is currently locked; original startup failure is preserved." -ForegroundColor DarkYellow
+            }
         }
     }
 
