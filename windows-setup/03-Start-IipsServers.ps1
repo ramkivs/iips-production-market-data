@@ -564,12 +564,9 @@ try {
     Write-IipsStepLog -LogRoot $LogRoot -Prefix '03-start' | Out-Null
     # 2026-11-27 permanent fix: PASS must return prompt immediately; detached services
     # (irr-transport:8787, irr-frontend:5176, ipd-market-data-daemon:8791, optional ipd-ipc pipe)
-    # remain running via Start-Process -WindowStyle Hidden. Blocking Read-Host is only for a
-    # transient Explorer double-click window, handled inside Iips-Common.ps1 Write-IipsPause.
-    # In ConsoleHost (interactive terminal) we force NoPause so the prompt returns.
-    $passNoPause = $NoPause
-    try { if ($Host.Name -eq 'ConsoleHost') { $passNoPause = $true } } catch {}
-    Write-IipsFinalStatus -Outcome 'PASS' -Message 'IIPS service startup: completed successfully.' -NoPause:$passNoPause | Out-Null
+    # remain running via Start-Process -WindowStyle Hidden. Never pause on PASS — the
+    # Execution log at H:\IIPS\logs\03-start-*.log is the durable record.
+    Write-IipsFinalStatus -Outcome 'PASS' -Message 'IIPS service startup: completed successfully.' -NoPause:$true | Out-Null
     exit 0
 }
 catch {
