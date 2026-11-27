@@ -5,9 +5,9 @@ import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 
 // Offline validation helpers — mirrors PowerShell Assert-StrictIdentityPreflight logic in JS
-const REPO_ROOT = resolve(import.meta.dirname, '..');
-const JSON_PATH = join(REPO_ROOT, 'evidence/dhan-w14-e4/w14-scope-b-96-identities.json');
-const TXT_PATH = join(REPO_ROOT, 'evidence/dhan-w14-e4/w14-scope-b-96-identities.txt');
+// Use resolve('evidence/...') so it works from repo root whether running via src/tests or dist/tests
+const JSON_PATH = resolve('evidence/dhan-w14-e4/w14-scope-b-96-identities.json');
+const TXT_PATH = resolve('evidence/dhan-w14-e4/w14-scope-b-96-identities.txt');
 
 type Instrument = { companyId: string; securityId: string; exchangeSegment: string };
 
