@@ -45,6 +45,10 @@ import {
   sanitizeVaultBackendId,
 } from './dhan_api_client.js';
 import {
+  describeDepthCaptureConfig,
+  formatDepthCaptureStartupDiagnosticLine,
+} from './dhan_depth_capture.js';
+import {
   DhanCredentialReadiness,
   DhanEnvSource,
   isDhanProductionEnvironment,
@@ -606,6 +610,7 @@ export async function startMarketDataDaemon(
     credentialResolver: resolver,
     transport: providerTransport,
     now: () => now().getTime(),
+    ...(options.env !== undefined ? { depthCaptureEnv: options.env } : {}),
   });
 
   const calendarPath = options.tradingCalendarPath ?? env['IIPS_TRADING_CALENDAR_PATH'];
@@ -794,8 +799,9 @@ export async function runMarketDataDaemonCli(
   } = {}
 ): Promise<{ readonly exitCode: number; readonly handle?: MarketDataDaemonHandle }> {
   const io = options.io ?? { writeStderr: (line: string) => console.error(line) };
+  const effectiveEnv = options.env ?? process.env;
   const outcome = await startMarketDataDaemon({
-    env: options.env ?? process.env,
+    env: effectiveEnv,
     argv: options.argv ?? process.argv.slice(2),
   });
 
@@ -807,6 +813,10 @@ export async function runMarketDataDaemonCli(
   }
 
   io.writeStderr(formatDaemonStartupLine(outcome.diagnostics));
+  const depthCaptureSummary = describeDepthCaptureConfig(effectiveEnv);
+  if (depthCaptureSummary.pathConfigured || depthCaptureSummary.debugEnabled) {
+    io.writeStderr(formatDepthCaptureStartupDiagnosticLine(depthCaptureSummary));
+  }
   return { exitCode: 0, handle: outcome.handle };
 }
 

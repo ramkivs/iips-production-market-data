@@ -38,15 +38,18 @@
       docs/integration/DHAN-D18-RAW-DEPTH-CAPTURE-ACTIVATION-2026-11-20.md.
 
 .EXAMPLE
-    # First run: build and clear the state, then read the launch instructions.
+    # First run (from H:\IIPS\iips-production-market-data\windows-setup): build and clear state.
+    Set-Location 'H:\IIPS\iips-production-market-data\windows-setup'
     powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build
 
 .EXAMPLE
     # Arm the one-shot immediately before the single configured-target request.
+    Set-Location 'H:\IIPS\iips-production-market-data\windows-setup'
     powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm
 
 .EXAMPLE
     # Configure AGI Greenpac (NSE_EQ / 1412) instead of the default Reliance target.
+    Set-Location 'H:\IIPS\iips-production-market-data\windows-setup'
     powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build -CaptureSegment NSE_EQ -CaptureSecurityId 1412 -CapturePath 'H:\IIPS\runtime\dhan-d18-depth-capture\agi-depth.json'
 
 .EXAMPLE
@@ -165,12 +168,13 @@ function Show-LaunchInstruction {
     Write-Host '    2. A running Windows process cannot be given a new environment. The variables must' -ForegroundColor Gray
     Write-Host '       exist when the daemon is created, or the capture silently does nothing.' -ForegroundColor Gray
     Write-Host ''
-    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_PATH        = ' + "'" + $CaptureFile + "'" -ForegroundColor Cyan
-    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_SEGMENT     = ' + "'" + $CaptureSegment + "'" -ForegroundColor Cyan
-    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID = ' + "'" + $CaptureSecurityId + "'" -ForegroundColor Cyan
-    Write-Host '    `$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL       = ' + "'" + $Label + "'" -ForegroundColor Cyan
+    Write-Host ("    `$env:IIPS_DHAN_DEPTH_CAPTURE_PATH        = '{0}'" -f $CaptureFile) -ForegroundColor Cyan
+    Write-Host ("    `$env:IIPS_DHAN_DEPTH_CAPTURE_SEGMENT     = '{0}'" -f $CaptureSegment) -ForegroundColor Cyan
+    Write-Host ("    `$env:IIPS_DHAN_DEPTH_CAPTURE_SECURITY_ID = '{0}'" -f $CaptureSecurityId) -ForegroundColor Cyan
+    Write-Host ("    `$env:IIPS_DHAN_DEPTH_CAPTURE_LABEL       = '{0}'" -f $Label) -ForegroundColor Cyan
     Write-Host '    (IIPS_MARKET_DATA_TRANSPORT_TOKEN must also be set in this window)' -ForegroundColor Cyan
     Write-Host ''
+    Write-Host ("    Set-Location '{0}'" -f (Join-Path $ipdRoot 'windows-setup')) -ForegroundColor Cyan
     Write-Host '    powershell -ExecutionPolicy Bypass -File .\06-Stop-IipsServers.ps1' -ForegroundColor Cyan
     Write-Host '    powershell -ExecutionPolicy Bypass -File .\03-Start-IipsServers.ps1 -StartIpdIpc -StartMarketDataDaemon' -ForegroundColor Cyan
     Write-Host ''
@@ -178,7 +182,7 @@ function Show-LaunchInstruction {
     Write-Host '    powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Verify' -ForegroundColor Cyan
     Write-Host ''
     Write-Host "  Then arm and issue exactly one request:" -ForegroundColor Gray
-    Write-Host  '    powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm' -ForegroundColor Gray
+    Write-Host ("    powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm -CaptureSegment {0} -CaptureSecurityId {1} -CapturePath '{2}'" -f $CaptureSegment, $CaptureSecurityId, $CaptureFile) -ForegroundColor Gray
     Write-Host "    POST http://127.0.0.1:8791/v1/quotes for the configured target ($CaptureSegment / security ID $CaptureSecurityId)" -ForegroundColor Gray
     Write-Host ''
 }

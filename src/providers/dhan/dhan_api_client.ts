@@ -53,15 +53,20 @@ import {
 } from './dhan_dto.js';
 import {
   DHAN_DEPTH_CAPTURE_LABEL_ENV,
+  DepthCaptureAttemptDiagnostic,
   captureDhanQuoteDepth,
   claimDepthCaptureSlot,
+  classifyDepthCaptureTargetIssue,
   disarmDepthCapture,
   isDepthCaptureArmed,
+  isDepthCaptureDebugEnabled,
   isSelectedDepthCaptureRequest,
+  publishDepthCaptureAttemptDiagnostic,
   readQuoteRequestInstruments,
   resolveDepthCapturePath,
   resolveDepthCaptureTarget,
-  writeDepthCapture,
+  sanitizeDepthCaptureInstrumentToken,
+  writeDepthCaptureDetailed,
 } from './dhan_depth_capture.js';
 import { DhanFailureCode, DhanResult, dhanFailure, dhanOk } from './dhan_failures.js';
 import {
@@ -173,6 +178,11 @@ export interface DhanApiClientOptions {
    * `credentialResolver`, which is the production composition.
    */
   credentialSession?: DhanCredentialSessionHolder;
+  /**
+   * Optional environment source for D-18 depth-capture evaluation. When omitted (production
+   * default), `process.env` is read directly per request.
+   */
+  depthCaptureEnv?: Record<string, string | undefined>;
 }
 
 export interface DhanExecuteOptions {
@@ -209,6 +219,7 @@ export class DhanApiClient {
   private readonly credentialSession: DhanCredentialSessionHolder;
   private readonly now: () => number;
   private readonly stateRecorder: DhanProviderStateRecorder;
+  private readonly depthCaptureEnv?: Record<string, string | undefined>;
   private vendorRequestsTotal = 0;
 
   constructor(options: DhanApiClientOptions) {
@@ -218,6 +229,7 @@ export class DhanApiClient {
     this.now = options.now ?? (() => Date.now());
     this.stateRecorder =
       options.stateRecorder ?? new DhanProviderStateRecorder({ now: this.now });
+    this.depthCaptureEnv = options.depthCaptureEnv;
     // D-2 / W-05: the session is the only caller of `credentialResolver.resolve()`. Nothing is
     // read at construction, so trigger (a) costs a vault read only when the first credentialed
     // request actually arrives.
@@ -658,6 +670,11 @@ export class DhanApiClient {
    * response when `IIPS_DHAN_DEPTH_CAPTURE_PATH` is set and an explicit capture
    * target (segment + security ID) is configured. Never throws and never affects
    * the caller.
+   *
+   * When `IIPS_DHAN_DEPTH_CAPTURE_PATH` is set or `IIPS_DHAN_DEPTH_CAPTURE_DEBUG=1`
+   * is enabled, records a strictly sanitized, non-secret gate diagnostic in memory
+   * and writes one single-line summary to stderr so silent gate skips/write failures
+   * are observable without exposing paths, labels, or credentials.
    */
   private captureRawDepthIfEnabled(
     pathSuffix: string,
@@ -666,21 +683,109 @@ export class DhanApiClient {
     httpStatus: number
   ): void {
     if (pathSuffix !== DHAN_MARKET_QUOTE_PATH) return;
+    const runtimeEnv =
+      this.depthCaptureEnv ?? (typeof process !== 'undefined' && process.env ? process.env : {});
+    const debugEnabled = isDepthCaptureDebugEnabled(runtimeEnv);
+    const emitDiagnostic = (record: DepthCaptureAttemptDiagnostic): void => {
+      publishDepthCaptureAttemptDiagnostic(record);
+    };
+    const nowIso = (): string => {
+      try {
+        return new Date(this.now()).toISOString();
+      } catch {
+        return '1970-01-01T00:00:00.000Z';
+      }
+    };
+
+    let targetPath: string | undefined;
+    let targetState: 'valid' | 'invalid' = 'invalid';
+    let targetSegment: DepthCaptureAttemptDiagnostic['targetSegment'] = null;
+    let targetSecurityId: string | null = null;
+    let targetIssueCode = classifyDepthCaptureTargetIssue(runtimeEnv);
+    let armedAtCheck: boolean | null = null;
+    let requestedInstruments: string[] = [];
+    let requestInstrumentCount = 0;
+
     try {
-      const runtimeEnv = typeof process !== 'undefined' && process.env ? process.env : {};
-      const targetPath = resolveDepthCapturePath(runtimeEnv);
-      if (!targetPath) return;
+      targetPath = resolveDepthCapturePath(runtimeEnv);
+      if (!targetPath) {
+        if (debugEnabled) {
+          const parsedReq = readQuoteRequestInstruments(DhanApiClient.parseQuoteRequestBodyForCapture(requestBody));
+          const targetRes = resolveDepthCaptureTarget(runtimeEnv);
+          emitDiagnostic({
+            timestampUtc: nowIso(),
+            outcome: 'DISABLED_PATH_UNSET',
+            targetState: targetRes.state === 'valid' ? 'valid' : 'invalid',
+            targetSegment: targetRes.state === 'valid' ? targetRes.target.segment : null,
+            targetSecurityId: targetRes.state === 'valid' ? targetRes.target.securityId : null,
+            targetIssueCode,
+            armedAtCheck: null,
+            requestInstrumentCount: parsedReq.length,
+            requestedInstruments: parsedReq.map(sanitizeDepthCaptureInstrumentToken),
+            httpStatus,
+            instrumentsInResponse: null,
+            writeErrorCode: null,
+            disarmed: false,
+          });
+        }
+        return;
+      }
+
+      const instruments = readQuoteRequestInstruments(DhanApiClient.parseQuoteRequestBodyForCapture(requestBody));
+      requestInstrumentCount = instruments.length;
+      requestedInstruments = instruments.map(sanitizeDepthCaptureInstrumentToken);
+
+      const targetResolution = resolveDepthCaptureTarget(runtimeEnv);
+      if (targetResolution.state === 'valid') {
+        targetState = 'valid';
+        targetSegment = targetResolution.target.segment;
+        targetSecurityId = targetResolution.target.securityId;
+      }
 
       // Arming gate: capture only when the sibling `.arm` marker exists. The
       // marker is how one-shot is armed/re-armed without an env change (which a
       // running daemon cannot observe) and without a restart.
-      if (!isDepthCaptureArmed(targetPath)) return;
+      armedAtCheck = isDepthCaptureArmed(targetPath);
+      if (!armedAtCheck) {
+        emitDiagnostic({
+          timestampUtc: nowIso(),
+          outcome: 'UNARMED_MARKER_ABSENT',
+          targetState,
+          targetSegment,
+          targetSecurityId,
+          targetIssueCode,
+          armedAtCheck,
+          requestInstrumentCount,
+          requestedInstruments,
+          httpStatus,
+          instrumentsInResponse: null,
+          writeErrorCode: null,
+          disarmed: false,
+        });
+        return;
+      }
 
       // TARGET gate: capture target must be explicitly configured. When capture
       // is enabled but target configuration is missing or invalid, fail safe:
       // do not capture, do not claim the slot, and do not select an instrument.
-      const targetResolution = resolveDepthCaptureTarget(runtimeEnv);
-      if (targetResolution.state !== 'valid') return;
+      if (targetResolution.state !== 'valid') {
+        emitDiagnostic({
+          timestampUtc: nowIso(),
+          outcome: 'TARGET_CONFIG_INVALID',
+          targetState,
+          targetSegment,
+          targetSecurityId,
+          targetIssueCode,
+          armedAtCheck,
+          requestInstrumentCount,
+          requestedInstruments,
+          httpStatus,
+          instrumentsInResponse: null,
+          writeErrorCode: null,
+          disarmed: false,
+        });
+        return;
+      }
 
       // INSTRUMENT gate: this capture belongs to one selected request — exactly one
       // instrument matching the explicitly configured exchange segment and Dhan
@@ -689,26 +794,109 @@ export class DhanApiClient {
       // the arm marker, so it cannot spend the one-shot or leave an empty document
       // behind. A body that cannot be read is also a non-match: the slot survives for
       // the request the operator intended.
-      const instruments = readQuoteRequestInstruments(DhanApiClient.parseQuoteRequestBodyForCapture(requestBody));
-      if (!isSelectedDepthCaptureRequest(instruments, targetResolution.target)) return;
+      if (!isSelectedDepthCaptureRequest(instruments, targetResolution.target)) {
+        emitDiagnostic({
+          timestampUtc: nowIso(),
+          outcome: 'REQUEST_NOT_SELECTED',
+          targetState,
+          targetSegment,
+          targetSecurityId,
+          targetIssueCode,
+          armedAtCheck,
+          requestInstrumentCount,
+          requestedInstruments,
+          httpStatus,
+          instrumentsInResponse: null,
+          writeErrorCode: null,
+          disarmed: false,
+        });
+        return;
+      }
 
       // One-shot: claim the single slot before writing. A second matching quote
       // in the same process can never overwrite the captured evidence.
-      if (!claimDepthCaptureSlot(targetPath)) return;
+      if (!claimDepthCaptureSlot(targetPath)) {
+        emitDiagnostic({
+          timestampUtc: nowIso(),
+          outcome: 'SLOT_ALREADY_CLAIMED',
+          targetState,
+          targetSegment,
+          targetSecurityId,
+          targetIssueCode,
+          armedAtCheck,
+          requestInstrumentCount,
+          requestedInstruments,
+          httpStatus,
+          instrumentsInResponse: null,
+          writeErrorCode: null,
+          disarmed: false,
+        });
+        return;
+      }
 
       const document = captureDhanQuoteDepth(parsedJson, {
         httpStatus,
         label: runtimeEnv[DHAN_DEPTH_CAPTURE_LABEL_ENV] ?? null,
-        capturedAtUtc: new Date(this.now()).toISOString(),
+        capturedAtUtc: nowIso(),
         requestedSecurityIds: instruments.map((instrument) => instrument.securityId),
       });
 
-      if (writeDepthCapture(targetPath, document) === undefined) return;
+      const writeOutcome = writeDepthCaptureDetailed(targetPath, document);
+      if (!writeOutcome.ok) {
+        emitDiagnostic({
+          timestampUtc: nowIso(),
+          outcome: 'WRITE_FAILED',
+          targetState,
+          targetSegment,
+          targetSecurityId,
+          targetIssueCode,
+          armedAtCheck,
+          requestInstrumentCount,
+          requestedInstruments,
+          httpStatus,
+          instrumentsInResponse: document.instrumentsInResponse,
+          writeErrorCode: writeOutcome.errorCode,
+          disarmed: false,
+        });
+        return;
+      }
 
       // Captured: disarm so the next quote needs an explicit re-arm.
       disarmDepthCapture(targetPath);
+      emitDiagnostic({
+        timestampUtc: nowIso(),
+        outcome: 'CAPTURED',
+        targetState,
+        targetSegment,
+        targetSecurityId,
+        targetIssueCode,
+        armedAtCheck,
+        requestInstrumentCount,
+        requestedInstruments,
+        httpStatus,
+        instrumentsInResponse: document.instrumentsInResponse,
+        writeErrorCode: null,
+        disarmed: true,
+      });
     } catch {
       // Diagnostics must never affect quote processing.
+      if (targetPath !== undefined || debugEnabled) {
+        emitDiagnostic({
+          timestampUtc: nowIso(),
+          outcome: 'UNEXPECTED_ERROR',
+          targetState,
+          targetSegment,
+          targetSecurityId,
+          targetIssueCode,
+          armedAtCheck,
+          requestInstrumentCount,
+          requestedInstruments,
+          httpStatus,
+          instrumentsInResponse: null,
+          writeErrorCode: null,
+          disarmed: false,
+        });
+      }
     }
   }
 
