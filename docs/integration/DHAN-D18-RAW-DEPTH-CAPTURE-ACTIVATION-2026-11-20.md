@@ -269,14 +269,15 @@ Note that `prebuild:tsc` purges old output before emitting, so a stale or orphan
 
 One procedure. Every step is through the managed scripts; nothing is launched by hand.
 
-Preconditions, all verified by the scripts rather than assumed: `H:\IIPS` holds both checkouts;
-`IIPS_MARKET_DATA_TRANSPORT_TOKEN` is set in the operator's session; the IPD checkout is on the branch
-carrying this diagnostic.
+Preconditions, all verified by the scripts rather than assumed: `H:\IIPS` holds both manually
+synchronized checkouts (`H:\IIPS\iips-production-market-data` and
+`H:\IIPS\iips-review-recovered`); `IIPS_MARKET_DATA_TRANSPORT_TOKEN` is set in the operator's
+session; the IPD checkout is on the commit/branch carrying this diagnostic.
 
 ### Step 1 — build and deploy the daemon code
 
 ```powershell
-cd H:\IIPS-scripts
+Set-Location 'H:\IIPS\iips-production-market-data\windows-setup'
 
 # Stop first. 06 now recognises dhan_local_daemon.js and checks port 8791, so this really does
 # stop the daemon - the thing the earlier sequence could not do.
@@ -285,7 +286,13 @@ powershell -ExecutionPolicy Bypass -File .\06-Stop-IipsServers.ps1
 # Build the daemon's compiled output and prepare the capture directory. -Build runs
 # `npm run build:tsc` through the shared toolchain resolver and refuses to continue if the
 # compiled module is absent. Without this the daemon would run a stale dist\.
+# Reliance (default):
 powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build
+
+# AGI Greenpac (NSE_EQ / 1412):
+# powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Build `
+#   -CaptureSegment NSE_EQ -CaptureSecurityId 1412 `
+#   -CapturePath 'H:\IIPS\runtime\dhan-d18-depth-capture\agi-depth.json'
 ```
 
 Expected: `06` exits 0 with every port released; `07` reports the diagnostic source, the compiled
@@ -377,12 +384,19 @@ absence proves nothing (see §8.3).
 ### Step 5 — arm exactly one capture
 
 ```powershell
+# Reliance (default):
 powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm
+
+# AGI Greenpac (NSE_EQ / 1412):
+# powershell -ExecutionPolicy Bypass -File .\07-Prepare-DepthCapture.ps1 -Arm `
+#   -CaptureSegment NSE_EQ -CaptureSecurityId 1412 `
+#   -CapturePath 'H:\IIPS\runtime\dhan-d18-depth-capture\agi-depth.json'
 ```
 
 Clears any previous capture, writes
-`<CapturePath>.arm` (e.g. `H:\IIPS\runtime\dhan-d18-depth-capture\depth-capture.json.arm`), and prints the state. Arming is a
-filesystem action: no restart, no environment change.
+`<CapturePath>.arm` (e.g. `H:\IIPS\runtime\dhan-d18-depth-capture\agi-depth.json.arm` for AGI
+Greenpac or `H:\IIPS\runtime\dhan-d18-depth-capture\depth-capture.json.arm` for Reliance), and prints
+the state. Arming is a filesystem action: no restart, no environment change.
 
 ### Step 6 — issue exactly one quote request
 
@@ -690,3 +704,43 @@ is the only place the generator can run. Until then the checked-in copies are st
 are outputs, and treating them as authoritative inputs is the mistake this section corrects. Verify
 with `00-Validate-PowerShell-Syntax.ps1` and the bundle build on the host.
 
+## 13. Read-only D-18 diagnostic scripts & established path conventions
+
+Three PowerShell 5.1 diagnostic scripts under `H:\IIPS\iips-production-market-data\scripts` support
+troubleshooting when a capture file does not appear, using the established Windows layout without
+assuming any external unpacked scripts folder:
+
+| Role | Established Windows path |
+| :--- | :--- |
+| IPD repository | `H:\IIPS\iips-production-market-data` |
+| IRR repository | `H:\IIPS\iips-review-recovered` |
+| Tracked Windows setup scripts | `H:\IIPS\iips-production-market-data\windows-setup` |
+| Tracked D-18 diagnostic scripts | `H:\IIPS\iips-production-market-data\scripts` |
+| Runtime root | `H:\IIPS\runtime` |
+| Log root & PID manifests | `H:\IIPS\logs` |
+| D-18 capture output (AGI Greenpac) | `H:\IIPS\runtime\dhan-d18-depth-capture\agi-depth.json` |
+| D-18 arm marker (AGI Greenpac) | `H:\IIPS\runtime\dhan-d18-depth-capture\agi-depth.json.arm` |
+| Diagnostic evidence bundles (separate) | `H:\IIPS\runtime\dhan-d18-diagnostics\<yyyyMMdd-HHmmssZ>\` |
+
+Repository synchronization is strictly manual; none of the scripts run repository sync commands or
+mutate either git checkout. Diagnostic evidence bundles are kept strictly separate from
+`H:\IIPS\runtime\dhan-d18-depth-capture\` (the scripts fail closed if pointed inside the capture
+directory or either git working tree).
+
+```powershell
+# All diagnostic scripts run from the IPD repository root after manual repository synchronization:
+Set-Location 'H:\IIPS\iips-production-market-data'
+
+# Diagnostic A (read-only environment, daemon process, compiled dist\, capture dir, W-23 state):
+powershell -ExecutionPolicy Bypass -File .\scripts\Test-D18EnvironmentAndProcess.ps1 -NoPause
+
+# Diagnostic B (read-only preflight; zero vendor requests):
+powershell -ExecutionPolicy Bypass -File .\scripts\Test-D18CapturePath.ps1 -NoPause
+
+# Diagnostic C (consolidated read-only evidence bundle written under H:\IIPS\runtime\dhan-d18-diagnostics\<timestamp>\):
+powershell -ExecutionPolicy Bypass -File .\scripts\Collect-D18DiagnosticEvidence.ps1 -NoPause
+
+# Diagnostic B controlled single-quote mode (only after preflight passes and arm marker is present):
+# powershell -ExecutionPolicy Bypass -File .\scripts\Test-D18CapturePath.ps1 -SendSingleQuote `
+#   -OutputFile 'H:\IIPS\runtime\dhan-d18-diagnostics\capture-path.json' -NoPause
+```
